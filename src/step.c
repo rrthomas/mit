@@ -440,20 +440,6 @@ CELL single_step(void)
             PUSH(-a);
         }
         break;
-    case O_MAX:
-        {
-            CELL a = POP;
-            CELL b = POP;
-            PUSH(MAX(a, b));
-        }
-        break;
-    case O_MIN:
-        {
-            CELL a = POP;
-            CELL b = POP;
-            PUSH(MIN(a, b));
-        }
-        break;
     case O_INVERT:
         {
             CELL a = POP;

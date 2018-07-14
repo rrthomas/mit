@@ -560,15 +560,6 @@ Sign functions:
 \inst{NEGATE}{\n1 -- \n2}{Negate \n1, giving its arithmetic inverse \n2.}
 \end{description}
 
-Maxima and minima:
-
-\nopagebreak
-
-\begin{description}
-\inst{MAX}{\n1 \n2 -- \n3}{\n3 is the greater of \n1 and \n2.}
-\inst{MIN}{\n1 \n2 -- \n3}{\n3 is the lesser of \n1 and \n2.}
-\end{description}
-
 
 \subsection{Logic and shifts}
 
@@ -747,8 +738,8 @@ undefined opcodes (\$61–\$FE) raise exception $-256$.
 \opcodetbl{0B}{?DUP}	{2C}{CELLS}	{4D}{BRANCHI}
 \opcodetbl{0C}{>R}	{2D}{ABS}	{4E}{?BRANCH}
 \opcodetbl{0D}{R>}	{2E}{NEGATE}	{4F}{?BRANCHI}
-\opcodetbl{0E}{R@}	{2F}{MAX}	{50}{EXECUTE}
-\opcodetbl{0F}{<}	{30}{MIN}	{51}{@EXECUTE}
+\opcodetbl{0E}{R@}	{2F}{undefined}	{50}{EXECUTE}
+\opcodetbl{0F}{<}	{30}{undefined}	{51}{@EXECUTE}
 \opcodetbl{10}{>}	{31}{INVERT}	{52}{CALL}
 \opcodetbl{11}{=}	{32}{AND}	{53}{CALLI}
 \opcodetbl{12}{<>}	{33}{OR}	{54}{EXIT}
