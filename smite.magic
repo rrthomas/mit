@@ -1,0 +1,8 @@
+#------------------------------------------------------------------------------
+# $File: smite,v 1.2 2018/02/05 23:42:17 rrt Exp $
+# smite:  file(1) magic for SMite VM object files
+# https://github.com/rrthomas/smite/
+
+# SMite object module
+0	search/64	SMITE\000	SMite VM object file
+!:strength + 50

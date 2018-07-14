@@ -9,19 +9,13 @@
 # RISK.
 
 LATEX_SRCS = \
-	$(srcdir)/papers/intro.tex \
-	$(srcdir)/papers/litencode.tex \
-	$(srcdir)/papers/tradeoffs.tex \
 	$(srcdir)/bibtex/bib/rrt.bib \
 	$(srcdir)/bibtex/bib/vm.bib
 
 LATEX_PDFS = \
 	@PACKAGE@.pdf \
 	c@PACKAGE@.pdf \
-	shell.pdf \
-	papers/intro.pdf \
-	papers/litencode.pdf \
-	papers/tradeoffs.pdf
+	shell.pdf
 
 if HAVE_LATEXMK
 dist_doc_DATA = $(LATEX_PDFS)

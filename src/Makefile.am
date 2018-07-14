@@ -10,20 +10,20 @@
 
 AM_CPPFLAGS = -I$(top_builddir)/lib -I$(top_srcdir)/lib $(WARN_CFLAGS)
 
-lib_LTLIBRARIES = libbeetle.la
-libbeetle_la_SOURCES = storage.c step.c run.c debug.c loadobj.c \
+lib_LTLIBRARIES = libsmite.la
+libsmite_la_SOURCES = storage.c step.c run.c debug.c loadobj.c \
 	private.h stringify.h
-libbeetle_la_LIBADD = $(top_builddir)/lib/libgnu.la
+libsmite_la_LIBADD = $(top_builddir)/lib/libgnu.la
 
-bin_PROGRAMS = beetle
+bin_PROGRAMS = smite
 bin_SCRIPTS = @PACKAGE@-dump
 if HAVE_RLWRAP
 bin_SCRIPTS += @PACKAGE@i
 endif
 man_MANS = @PACKAGE@.1 @PACKAGE@i.1 @PACKAGE@-dump.1
 pkgdata_DATA = completions
-beetle_LDADD = lib@PACKAGE@.la $(top_builddir)/lib/libgnu.la
-beetle_SOURCES = main.c tbl_opts.h tbl_commands.h tbl_registers.h $(internal_HDRS)
+smite_LDADD = lib@PACKAGE@.la $(top_builddir)/lib/libgnu.la
+smite_SOURCES = main.c tbl_opts.h tbl_commands.h tbl_registers.h $(internal_HDRS)
 internal_HDRS = public.h aux.h debug.h opcodes.h
 include_HEADERS = @PACKAGE@.h @PACKAGE@_aux.h @PACKAGE@_debug.h @PACKAGE@_opcodes.h
 
@@ -100,7 +100,7 @@ CLOC = cloc --force-lang="C",h
 loc:
 	$(CLOC) $(lib@PACKAGE@_la_SOURCES) $(@PACKAGE@_SOURCES)
 
-EXTRA_DIST = ARMbeetle.bas @PACKAGE@i.in @PACKAGE@i.1 @PACKAGE@-dump.in @PACKAGE@-dump.1 completions.h tbl_opts.h.in step.c external-syms.txt external_syms.h
+EXTRA_DIST = @PACKAGE@i.in @PACKAGE@i.1 @PACKAGE@-dump.in @PACKAGE@-dump.1 completions.h tbl_opts.h.in step.c external-syms.txt external_syms.h
 
 DISTCLEANFILES = @PACKAGE@i @PACKAGE@-dump @PACKAGE@.1 @PACKAGE@i.1 @PACKAGE-dump.1 completions tbl_opts.h $(include_HEADERS) external-defines.txt external-syms.txt
 # Ignore built files that are part of the distribution (specifically,

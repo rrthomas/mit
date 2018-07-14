@@ -1,6 +1,6 @@
 dnl Process this file with autoconf to produce a configure script
 
-AC_INIT(Beetle, 1.0, rrt@sc3d.org)
+AC_INIT(SMite, 0.1, rrt@sc3d.org)
 AC_CONFIG_AUX_DIR([build-aux])
 AM_INIT_AUTOMAKE([-Wall -Werror foreign])
 package_upper=`echo ${PACKAGE} | tr '[[:lower:]]' '[[:upper:]]'`
@@ -78,12 +78,12 @@ AC_CONFIG_FILES([
         Makefile
         lib/Makefile
         src/Makefile
-        src/beetlei.1
-        src/beetle-dump.1
+        src/smitei.1
+        src/smite-dump.1
         tests/Makefile
         doc/Makefile
-        doc/beetle.tex
-        doc/cbeetle.tex
+        doc/smite.tex
+        doc/csmite.tex
         doc/shell.tex
 ])
 AC_CONFIG_FILES([build-aux/add-symbol-prefix], [chmod +x build-aux/add-symbol-prefix])

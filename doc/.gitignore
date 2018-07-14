@@ -6,7 +6,7 @@
 *.log
 *.out
 *.synctex.gz
-/beetle.tex
-/cbeetle.tex
+/smite.tex
+/csmite.tex
 /shell.tex
 /primes

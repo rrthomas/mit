@@ -323,6 +323,7 @@ static int save_object(FILE *file, UCELL address, UCELL length)
 
     if (fputs(PACKAGE_UPPER, file) == EOF ||
         putc('\0', file) == EOF ||
+        putc('\0', file) == EOF ||
         putc((char)ENDISM, file) == EOF ||
         fwrite(&length, CELL_W, 1, file) != 1 ||
         fwrite(ptr, CELL_W, length, file) != length)

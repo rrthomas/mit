@@ -1,21 +1,18 @@
-# Beetle
+# SMite
 
 by Reuben Thomas <rrt@sc3d.org>  
-https://github.com/rrthomas/beetle  
+https://github.com/rrthomas/smite  
 
-Beetle is a simple virtual machine designed for the Forth language. It uses
+SMite is a simple virtual machine designed for the Forth language. It uses
 a byte-stream code designed for efficient execution which is binary portable
-between implementations. It has been implemented in C (for POSIX systems)
-and hand-optimised assembler (for ARM). The C implementation should run on
-any POSIX system; the assembler version runs pForth (see below) at up to
-half the speed of the corresponding native code compiler and generates more
-compact code. Beetle is designed to be embedded in other programs; a simple
+between implementations. It has been implemented in C for POSIX systems.
+SMite is designed to be embedded in other programs; a simple
 shell has been written to demonstrate this ability. In the C implementation,
 all memory references are bounds checked. An I/O library is implemented;
-access to native code routines is also possible, allowing Beetle and C
+access to native code routines is also possible, allowing SMite and C
 programs to call each other.
 
-This package comprises the definition of the Beetle virtual machine and an
+This package comprises the definition of the SMite virtual machine and an
 implementation in ISO C99 using POSIX APIs. Detailed documentation is in the
 `doc` directory; installation instructions follow.
 
@@ -28,12 +25,8 @@ RISK.
 
 ## Installation and compatibility
 
-Beetle should work on any POSIX-1.2001-compatible system. Beetle has been
+SMite should work on any POSIX-1.2001-compatible system. SMite has been
 tested on x86_64 GNU/Linux with GNU C.
-
-Previous releases were known to work on Acorn RISC OS 3, Digital UNIX
-V3.2, UNIX System V Release 4.0, ULTRIX 4.3, NetBSD 1.2, MSDOS 6, and
-Atari TOS 1.4.
 
 Reports on compatibility, whether positive or negative, are welcomed.
 
@@ -43,7 +36,7 @@ Reports on compatibility, whether positive or negative, are welcomed.
 Perl and help2man are required to build from source. For building from git,
 see below.
 
-To build Beetle from a release tarball, run
+To build SMite from a release tarball, run
 
 `./configure && make && make check`
 
@@ -51,7 +44,7 @@ For the bibliographies in the documentation to be built correctly, GNU Make
 should be used.
 
 
-### Building Beetle from git
+### Building SMite from git
 
 The GNU autotools are required: automake, autoconf and libtool.
 [Gnulib](https://www.gnu.org/software/gnulib/) is also used, with a
@@ -73,8 +66,8 @@ PDFs are supplied in release archives.
 
 ## Use
 
-Run `beetle` (see `beetle --help` and `shell.pdf` for documentation). If
-you have `rlwrap`, you can run `beetlei` instead to get readline support.
+Run `smite` (see `smite --help` and `shell.pdf` for documentation). If
+you have `rlwrap`, you can run `smitei` instead to get readline support.
 
 
 ### Demo: Hello, world!
@@ -84,8 +77,8 @@ use as a crude assembler. Run the following commands to see it in action:
 
 ```
 cd tests
-beetle < ./hello.txt
-beetle hello.obj
+smite < ./hello.txt
+smite hello.obj
 ```
 
 
@@ -93,60 +86,38 @@ beetle hello.obj
 
 The canonical documentation consists of:
 
-* _[The Beetle Forth Virtual Machine](doc/beetle.pdf)_  
-The design of the Beetle Forth virtual machine is described. Essential
+* _[The SMite Forth Virtual Machine](doc/smite.pdf)_  
+The design of the SMite Forth virtual machine is described. Essential
 reading for those programming or implementing the VM.
-* _[An implementation of the Beetle virtual machine for POSIX](doc/cbeetle.pdf)_  
-A portable implementation of Beetle is described, with instructions for
+* _[An implementation of the SMite virtual machine for POSIX](doc/csmite.pdf)_  
+A portable implementation of SMite is described, with instructions for
 porting, compiling and running it.
-* _[A simple shell for the Beetle virtual machine](doc/shell.pdf)_  
-The user guide for Beetle’s shell.
+* _[A simple shell for the SMite virtual machine](doc/shell.pdf)_  
+The user guide for SMite’s shell.
 
-The following documents contain extra material on Beetle’s design, but many
-details are out of date:
-
-* _[An Introduction to the Beetle Forth Virtual Processor](doc/papers/intro.pdf)_  
-An introduction to the system; this is the best paper to read first. It was
-published in ACM SIGPLAN Notices February 1997.
-* _[Beetle and pForth: a Forth virtual machine and compiler](https://rrt.sc3d.org/Software/Beetle/dissertation/report/badiss.pdf)_  
-I developed Beetle for my BA dissertation project. _(I used to refer to it
-as a “virtual processor”; I now use the now-standard term “virtual
-machine”.)_ My BA dissertation contains older versions of all the papers
-mentioned above, as well as a description of the project that produced them.
-* _[Tradeoffs in the implementation of the Beetle virtual machine](doc/papers/tradeoffs.pdf)_  
-A hand-coded implementation of Beetle is described, and compared to the C
-version.
-* _[Encoding literals in a portable byte-stream interpreter](doc/papers/litencode.pdf)_  
-Various methods of encoding literal numbers in a byte stream are compared.
+SMite is based on [Beetle](https://github.com/rrthomas/beetle), which I
+developed for my BA dissertation project.
 
 
 ## pForth
 
 [pForth](https://github.com/rrthomas/pforth) is an ANSI Forth compiler that
-targets Beetle.
+targets SMite.
 
 
-## Running Beetle object files
+## Running SMite object files
 
-The C implementation of Beetle allows a hash-bang line to be prepended to an object file, so that they can be run directly. A suggested line is:
+The C implementation of SMite allows a hash-bang line to be prepended to an object file, so that they can be run directly. A suggested line is:
 
 ```
-#!/usr/bin/env beetle
+#!/usr/bin/env smite
 ```
 
-A magic file for the file(1) command is also provided: beetle.magic.
+A magic file for the file(1) command is also provided: smite.magic.
 This file should be part of file >= 5.33.
-
-
-## Hand-written ARM assembler version
-
-`ARMbeetle.bas` contains a hand-written ARM assembler version of Beetle,
-written in the BBC BASIC assembler (for RISC OS). It produces AOF
-format objects equivalent to those produced by run.c and step.c, which
-can be linked in their place.
 
 
 ## Bugs and comments
 
-Please send bug reports (preferably as [GitHub issues](https://github.com/rrthomas/beetle/issues))
+Please send bug reports (preferably as [GitHub issues](https://github.com/rrthomas/smite/issues))
 and comments. I’m especially interested to know of portability bugs.
