@@ -538,8 +538,6 @@ infinity, except for {\tt S/REM}, which rounds the quotient towards zero):
 \instp{/MOD}{slash-mod}{\n1 \n2 -- \n3 \n4}{Divide \n1 by \n2, giving the single-cell remainder \n3 and the single-cell quotient \n4.}
 \instp{U/MOD}{u-slash-mod}{\U1 \U2 -- \U3 \U4}{Divide \U1 by \U2, giving the single-cell remainder \U3 and the single-cell quotient \U4.}
 \instp{S/REM}{s-slash-rem}{\n1 \n2 -- \n3 \n4}{Divide \n1 by \n2 using symmetric division, giving the single-cell remainder \n3 and the single-cell quotient \n4.}
-\instp{2/}{two-slash}{\x1 -- \x2}{\x2 is the result of shifting \x1 one bit toward the least-significant bit, leaving the most-significant bit unchanged.}
-\inst{CELLS}{\n1 -- \n2}{\n2 is the size in bytes of \n1 cells.}
 \end{description}
 
 Sign functions:
@@ -723,8 +721,8 @@ undefined opcodes (\$61–\$FE) raise exception $-256$.
 \opcodetbl{07}{TUCK}	{28}{/MOD}	{49}{MEMORY@}
 \opcodetbl{08}{NIP}	{29}{U/MOD}	{4A}{'BAD@}
 \opcodetbl{09}{PICK}	{2A}{S/REM}	{4B}{-ADDRESS@}
-\opcodetbl{0A}{ROLL}	{2B}{2/}	{4C}{BRANCH}
-\opcodetbl{0B}{?DUP}	{2C}{CELLS}	{4D}{BRANCHI}
+\opcodetbl{0A}{ROLL}	{2B}{undefined}	{4C}{BRANCH}
+\opcodetbl{0B}{?DUP}	{2C}{undefined}	{4D}{BRANCHI}
 \opcodetbl{0C}{>R}	{2D}{ABS}	{4E}{?BRANCH}
 \opcodetbl{0D}{R>}	{2E}{NEGATE}	{4F}{?BRANCHI}
 \opcodetbl{0E}{R@}	{2F}{undefined}	{50}{EXECUTE}

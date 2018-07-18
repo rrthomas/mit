@@ -361,18 +361,6 @@ CELL single_step(void)
             PUSH(dividend / divisor);
         }
         break;
-    case O_SLASH2:
-        {
-            CELL a = POP;
-            PUSH(ARSHIFT(a, 1));
-        }
-        break;
-    case O_CELLS:
-        {
-            CELL a = POP;
-            PUSH(a * CELL_W);
-        }
-        break;
     case O_ABS:
         {
             CELL a = POP;

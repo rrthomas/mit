@@ -110,7 +110,7 @@ static const char *mnemonic[UINT8_MAX + 1] = {
     ">", "=", NULL, NULL, NULL, NULL, NULL, "U<",
     "U>", "0", "1", "-1", "CELL", "-CELL", "+", "-",
     ">-<", NULL, NULL, NULL, NULL, "*", "/", "MOD",
-    "/MOD", "U/MOD", "S/REM", "2/", "CELLS", "ABS", "NEGATE", NULL,
+    "/MOD", "U/MOD", "S/REM", NULL, NULL, "ABS", "NEGATE", NULL,
     NULL, "INVERT", "AND", "OR", "XOR", "LSHIFT", "RSHIFT", NULL,
     NULL, "@", "!", "C@", "C!", "+!", "SP@", "SP!",
     "RP@", "RP!", "EP@", "S0@", "#S", "R0@", "#R", "'THROW@",
