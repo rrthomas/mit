@@ -311,30 +311,6 @@ CELL single_step(void)
             PUSH(a - b);
         }
         break;
-    case O_PLUS1:
-        {
-            CELL a = POP;
-            PUSH(a + 1);
-        }
-        break;
-    case O_MINUS1:
-        {
-            CELL a = POP;
-            PUSH(a - 1);
-        }
-        break;
-    case O_PLUSCELL:
-        {
-            CELL a = POP;
-            PUSH(a + CELL_W);
-        }
-        break;
-    case O_MINUSCELL:
-        {
-            CELL a = POP;
-            PUSH(a - CELL_W);
-        }
-        break;
     case O_STAR:
         {
             CELL multiplier = POP;

@@ -523,10 +523,6 @@ Addition and subtraction:
 \instp{+}{plus}{\noru1 \noru2 -- \noru3}{Add \noru2 to \noru1, giving the sum \noru3.}
 \instp{-}{minus}{\noru1 \noru2 -- \noru3}{Subtract \noru2 from \noru1, giving the difference \noru3.}
 \instp{>-<}{reverse-minus}{\noru1 \noru2 -- \n3{\tt |}\U3}{Perform the action of {\tt SWAP} (see section~\ref{stackinst}) followed by {\tt -}.}
-\instp{1+}{one-plus}{\noru1 -- \noru2}{Add one to \n1{\tt |}\U1, giving the sum \noru2.}
-\instp{1-}{one-minus}{\noru1 -- \noru2}{Subtract one from \noru1, giving the difference \noru2.}
-\instp{CELL+}{cell-plus}{\noru1 -- \noru2}{Add four to \n1{\tt |}\U1, giving the sum \noru2.}
-\instp{CELL-}{cell-minus}{\noru1 -- \noru2}{Subtract four from \noru1, giving the difference \noru2.}
 \end{description}
 
 Multiplication and division (note that all division instructions raise exception
@@ -719,10 +715,10 @@ undefined opcodes (\$61–\$FE) raise exception $-256$.
 \begin{tabular}{*{3}{cc}} \toprule
 \bf Opcode & \bf Instruction & \bf Opcode & \bf
     Instruction & \bf Opcode & \bf Instruction \\ \midrule
-\opcodetbl{00}{NEXT}	{21}{1+}	{42}{EP@}
-\opcodetbl{01}{DUP}	{22}{1-}	{43}{S0@}
-\opcodetbl{02}{DROP}	{23}{CELL+}	{44}{\#S}
-\opcodetbl{03}{SWAP}	{24}{CELL-}	{45}{R0@}
+\opcodetbl{00}{NEXT}	{21}{undefined}	{42}{EP@}
+\opcodetbl{01}{DUP}	{22}{undefined}	{43}{S0@}
+\opcodetbl{02}{DROP}	{23}{undefined}	{44}{\#S}
+\opcodetbl{03}{SWAP}	{24}{undefined}	{45}{R0@}
 \opcodetbl{04}{OVER}	{25}{*}		{46}{\#R}
 \opcodetbl{05}{ROT}	{26}{/}		{47}{'THROW@}
 \opcodetbl{06}{-ROT}	{27}{MOD}	{48}{'THROW!}

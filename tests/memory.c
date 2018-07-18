@@ -13,7 +13,7 @@
 
 
 const char *correct[] = {
-    "", "16384", "16380", "16380 513", "16380 513 16380", "16380",
+    "", "16384", "16384 " str(CELL_W), "16380", "16380 513", "16380 513 16380", "16380",
     "16380 16380", "16380 513", "16380",
     "16380 16380", "16380 1", "16381", "2", "2 16383", "", "16380", "33554945",
     "", "-33554432", "", "-16777216", "", "0", "", "0", "", "16384", "67305985",
@@ -47,7 +47,7 @@ int main(void)
     }
 
     start_ass(EP);
-    ass(O_MEMORYFETCH); ass(O_MINUSCELL); ass(O_LITERAL); lit(513);
+    ass(O_MEMORYFETCH); ass(O_CELL); ass(O_MINUS); ass(O_LITERAL); lit(513);
     ass(O_OVER); ass(O_STORE); ass(O_DUP); ass(O_FETCH);
     ass(O_DROP); ass(O_DUP); ass(O_CFETCH); ass(O_PLUS);
     ass(O_CFETCH); ass(O_LITERAL); lit(16383); ass(O_CSTORE); ass(O_LITERAL);

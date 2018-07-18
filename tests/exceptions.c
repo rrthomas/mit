@@ -36,9 +36,9 @@ int main(void)
     ass(O_HALT); ass(O_NEXT00); ass(O_NEXT00); ass(O_NEXT00);
     // test 4: test SP can point to just after a memory area
     ass(O_LITERALI); ilit(MEMORY);
-    ass(O_MINUSCELL); ass(O_SPSTORE); ass(O_TOR); ass(O_ZERO);
-    ass(O_HALT); ass(O_NEXT00); ass(O_NEXT00); ass(O_NEXT00);
-    ass(O_ONE); ass(O_PLUSCELL); ass(O_SPSTORE); ass(O_NEXT00);	// test 5
+    ass(O_CELL); ass(O_MINUS); ass(O_SPSTORE); ass(O_TOR);
+    ass(O_ZERO); ass(O_HALT); ass(O_NEXT00); ass(O_NEXT00);
+    ass(O_ONE); ass(O_CELL); ass(O_PLUS); ass(O_SPSTORE);	// test 5
     ass(O_ONE); ass(O_EXECUTE);	ass(O_NEXT00); ass(O_NEXT00);	// test 6
     ass(O_ONE); ass(O_ZERO); ass(O_SLASH); ass(O_NEXT00);   // test 7
     // test 8: allow execution to run off the end of a memory area

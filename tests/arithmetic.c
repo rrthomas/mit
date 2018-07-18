@@ -21,9 +21,9 @@
 const char *correct[] = {
     "", "0", "0 1", "0 1 -1", "0 1 -1 " str(CELL_W),
     "0 1 -1 " str(CELL_W) " -" str(CELL_W), "0 1 " str(CELL_W) " -" str(CELL_W) " -1",
-    "0 1 " str(CELL_W) " -5", "0 1 -1", "0 2", "0 3", "0 2", "2 0", "2 " str(CELL_W),
-    "2 0", "2 0 -1", "2 0 -1 " str(CELL_W), "2 0 -" str(CELL_W), "2 -" str(CELL_W), "-2 -1",
-    "2", "2 -1", "0", "1", str(CELL_W), "2", "", str(CELL_W), "-" str(CELL_W), str(CELL_W),
+    "0 1 " str(CELL_W) " -5", "0 1 -1", "0 2", "2 0",
+    "2 0 -1", "2 0 -1 " str(CELL_W), "2 0 -" str(CELL_W), "2 -" str(CELL_W), "-2 -1",
+    "2", "2 -1", "0", "", "1", str(CELL_W), "2", "", str(CELL_W), "-" str(CELL_W), str(CELL_W),
     str(CELL_W), "", "-" str(CELL_W), "-" str(CELL_W) " 3", "-1 -1", "-1", "-1 -2", "1 1" };
 
 
@@ -36,10 +36,9 @@ int main(void)
     start_ass(EP);
     ass(O_ZERO); ass(O_ONE); ass(O_MONE); ass(O_CELL);
     ass(O_MCELL); ass(O_ROT); ass(O_PLUS); ass(O_PLUS);
-    ass(O_MINUS); ass(O_PLUS1); ass(O_MINUS1); ass(O_SWAP);
-    ass(O_PLUSCELL); ass(O_MINUSCELL); ass(O_MONE); ass(O_CELL);
+    ass(O_MINUS); ass(O_SWAP); ass(O_MONE); ass(O_CELL);
     ass(O_STAR); ass(O_SWAPMINUS); ass(O_SLASHMOD); ass(O_SLASH);
-    ass(O_MONE); ass(O_MOD); ass(O_PLUS1); ass(O_CELLS);
+    ass(O_MONE); ass(O_MOD); ass(O_DROP); ass(O_ONE); ass(O_CELLS);
     ass(O_SLASH2); ass(O_DROP); ass(O_CELL); ass(O_NEGATE);
     ass(O_ABS); ass(O_ABS); ass(O_DROP); ass(O_MCELL);
     ass(O_LITERALI); ilit(3);
