@@ -261,13 +261,6 @@ CELL single_step(void)
             PUSH(a == b ? PACKAGE_UPPER_TRUE : PACKAGE_UPPER_FALSE);
         }
         break;
-    case O_NEQUAL:
-        {
-            CELL a = POP;
-            CELL b = POP;
-            PUSH(a != b ? PACKAGE_UPPER_TRUE : PACKAGE_UPPER_FALSE);
-        }
-        break;
     case O_ULESS:
         {
             UCELL a = POP;
