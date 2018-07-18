@@ -107,7 +107,7 @@ _GL_ATTRIBUTE_PURE UCELL ass_current(void)
 static const char *mnemonic[UINT8_MAX + 1] = {
     "NEXT00", "DUP", "DROP", "SWAP", "OVER", "ROT", "-ROT", "TUCK",
     "NIP", "PICK", "ROLL", "?DUP", ">R", "R>", "R@", "<",
-    ">", "=", "<>", "0<", "0>", "0=", "0<>", "U<",
+    ">", "=", "<>", NULL, NULL, NULL, NULL, "U<",
     "U>", "0", "1", "-1", "CELL", "-CELL", "+", "-",
     ">-<", "1+", "1-", "CELL+", "CELL-", "*", "/", "MOD",
     "/MOD", "U/MOD", "S/REM", "2/", "CELLS", "ABS", "NEGATE", NULL,

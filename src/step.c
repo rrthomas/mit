@@ -268,30 +268,6 @@ CELL single_step(void)
             PUSH(a != b ? PACKAGE_UPPER_TRUE : PACKAGE_UPPER_FALSE);
         }
         break;
-    case O_LESS0:
-        {
-            CELL a = POP;
-            PUSH(a < 0 ? PACKAGE_UPPER_TRUE : PACKAGE_UPPER_FALSE);
-        }
-        break;
-    case O_GREATER0:
-        {
-            CELL a = POP;
-            PUSH(a > 0 ? PACKAGE_UPPER_TRUE : PACKAGE_UPPER_FALSE);
-        }
-        break;
-    case O_EQUAL0:
-        {
-            CELL a = POP;
-            PUSH(a == 0 ? PACKAGE_UPPER_TRUE : PACKAGE_UPPER_FALSE);
-        }
-        break;
-    case O_NEQUAL0:
-        {
-            CELL a = POP;
-            PUSH(a != 0 ? PACKAGE_UPPER_TRUE : PACKAGE_UPPER_FALSE);
-        }
-        break;
     case O_ULESS:
         {
             UCELL a = POP;

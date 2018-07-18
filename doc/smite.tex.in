@@ -492,10 +492,6 @@ otherwise.
 \instp{>}{greater-than}{\n1 \n2 -- flag}{\spic{flag} is true if and only if \n1 is greater than \n2.}
 \instp{=}{equals}{\x1 \x2 -- flag}{\spic{flag} is true if and only if \x1 is bit-for-bit the same as \x2.}
 \instp{<>}{not-equals}{\x1 \x2 -- flag}{\spic{flag} is true if and only if \x1 is not bit-for-bit the same as \x2.}
-\instp{0<}{zero-less}{n -- flag}{\spic{flag} is true if and only if n is less than zero.}
-\instp{0>}{zero-greater}{n -- flag}{\spic{flag} is true if and only if \spic{n} is greater than zero.}
-\instp{0=}{zero-equals}{x -- flag}{\spic{flag} is true if and only if \spic{x} is equal to zero.}
-\instp{0<>}{zero-not-equals}{x -- flag}{\spic{flag} is true if and only if \spic{x} is not equal to zero.}
 \instp{U<}{u-less-than}{\U1 \U2 -- flag}{\spic{flag} is true if and only if \U1 is less than \U2.}
 \instp{U>}{u-greater-than}{\U1 \U2 -- flag}{\spic{flag} is true if and only if \U1 is greater than \U2.}
 \end{description}
@@ -743,10 +739,10 @@ undefined opcodes (\$61–\$FE) raise exception $-256$.
 \opcodetbl{10}{>}	{31}{INVERT}	{52}{CALL}
 \opcodetbl{11}{=}	{32}{AND}	{53}{CALLI}
 \opcodetbl{12}{<>}	{33}{OR}	{54}{EXIT}
-\opcodetbl{13}{0<}	{34}{XOR}	{55}{(DO)}
-\opcodetbl{14}{0>}	{35}{LSHIFT}	{56}{(LOOP)}
-\opcodetbl{15}{0=}	{36}{RSHIFT}	{57}{(LOOP)I}
-\opcodetbl{16}{0<>}	{37}{1LSHIFT}	{58}{(+LOOP)}
+\opcodetbl{13}{undefined}	{34}{XOR}	{55}{(DO)}
+\opcodetbl{14}{undefined}	{35}{LSHIFT}	{56}{(LOOP)}
+\opcodetbl{15}{undefined}	{36}{RSHIFT}	{57}{(LOOP)I}
+\opcodetbl{16}{undefined}	{37}{1LSHIFT}	{58}{(+LOOP)}
 \opcodetbl{17}{U<}	{38}{1RSHIFT}	{59}{(+LOOP)I}
 \opcodetbl{18}{U>}	{39}{@}		{5A}{UNLOOP}
 \opcodetbl{19}{0}	{3A}{!}		{5B}{J}
