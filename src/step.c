@@ -426,18 +426,6 @@ CELL single_step(void)
             PUSH(shift < (CELL)CELL_BIT ? (CELL)((UCELL)value >> shift) : 0);
         }
         break;
-    case O_LSHIFT1:
-        {
-            CELL value = POP;
-            PUSH(value << 1);
-        }
-        break;
-    case O_RSHIFT1:
-        {
-            CELL value = POP;
-            PUSH((CELL)((UCELL)(value) >> 1));
-        }
-        break;
     case O_FETCH:
         {
             CELL addr = POP;

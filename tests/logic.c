@@ -16,7 +16,7 @@
 
 const char *correct[] = {
     "-16777216 8 255 8", "-16777216 8 65280",
-    "65280 -16777216 8", "65280 16711680", "16776960", "33553920", "16776960",
+    "65280 -16777216 8", "65280 16711680", "16776960",
     "-16776961", "-16776961 1", "-16776961 1 -1", "-16776961 -2", "-16776962"};
 
 
@@ -30,8 +30,8 @@ int main(void)
 
     start_ass(EP);
     ass(O_LSHIFT); ass(O_NROT); ass(O_RSHIFT); ass(O_OR);
-    ass(O_LSHIFT1); ass(O_RSHIFT1); ass(O_INVERT); ass(O_ONE);
-    ass(O_MONE); ass(O_XOR); ass(O_AND);
+    ass(O_INVERT); ass(O_ONE); ass(O_MONE); ass(O_XOR);
+    ass(O_AND);
 
     assert(single_step() == -259);   // load first instruction word
 

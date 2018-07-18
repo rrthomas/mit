@@ -576,8 +576,6 @@ Shifts:
 \begin{description}
 \instp{LSHIFT}{l-shift}{\x1 u -- \x2}{Perform a logical left shift of \spic{u} bit-places on \x1, giving \x2. Put zero into the least significant bits vacated by the shift. If \spic{u} is greater than or equal to 32, \x2 is zero.}
 \instp{RSHIFT}{r-shift}{\x1 u -- \x2}{Perform a logical right shift of \spic{u} bit-places on \x1, giving \x2. Put zero into the most significant bits vacated by the shift. If \spic{u} is greater than or equal to 32, \x2 is zero.}
-\instp{1LSHIFT}{one-l-shift}{\x1 -- \x2}{Perform a logical left shift of one bit-place on \x1, giving \x2. Put zero into the least significant bit vacated by the shift.}
-\instp{1RSHIFT}{one-r-shift}{\x1 -- \x2}{Perform a logical right shift of one bit-place on \x1, giving \x2. Put zero into the most significant bit vacated by the shift.}
 \end{description}
 
 
@@ -737,8 +735,8 @@ undefined opcodes (\$61–\$FE) raise exception $-256$.
 \opcodetbl{13}{undefined}	{34}{XOR}	{55}{(DO)}
 \opcodetbl{14}{undefined}	{35}{LSHIFT}	{56}{(LOOP)}
 \opcodetbl{15}{undefined}	{36}{RSHIFT}	{57}{(LOOP)I}
-\opcodetbl{16}{undefined}	{37}{1LSHIFT}	{58}{(+LOOP)}
-\opcodetbl{17}{U<}	{38}{1RSHIFT}	{59}{(+LOOP)I}
+\opcodetbl{16}{undefined}	{37}{undefined}	{58}{(+LOOP)}
+\opcodetbl{17}{U<}	{38}{undefined}	{59}{(+LOOP)I}
 \opcodetbl{18}{U>}	{39}{@}		{5A}{UNLOOP}
 \opcodetbl{19}{0}	{3A}{!}		{5B}{J}
 \opcodetbl{1A}{1}	{3B}{C@}	{5C}{(LITERAL)}
