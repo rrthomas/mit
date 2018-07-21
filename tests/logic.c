@@ -30,8 +30,9 @@ int main(void)
 
     start_ass(EP);
     ass(O_LSHIFT); ass(O_NROT); ass(O_RSHIFT); ass(O_OR);
-    ass(O_INVERT); ass(O_ONE); ass(O_MONE); ass(O_XOR);
-    ass(O_AND);
+    ass(O_INVERT); ass(O_LITERALI); ilit(1);
+    ass(O_LITERALI); ilit(-1);
+    ass(O_XOR); ass(O_AND);
 
     assert(single_step() == -259);   // load first instruction word
 

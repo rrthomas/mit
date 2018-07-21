@@ -25,25 +25,35 @@ int main(void)
     start_ass(EP);
     // Address 0: 3 0 DO  R>  LOOP
     ass(O_LITERALI); ilit(3);
-    ass(O_ZERO); ass(O_DO); ass(O_NEXT00); ass(O_NEXT00);
-    ass(O_RFETCH); ass(O_LOOP); lit(8); ass(O_NEXT00); ass(O_NEXT00);
-    // Address 16: 0 3 DO  R>  -1 +LOOP
-    ass(O_ZERO); ass(O_LITERAL); lit(3); ass(O_DO); ass(O_NEXT00);
-    ass(O_RFETCH); ass(O_MONE); ass(O_PLOOPI); ilit(-1);
-    // Address 32: CELL 1 DO  R>  CELL +LOOP
-    ass(O_CELL); ass(O_ONE); ass(O_DO); ass(O_NEXT00);
-    ass(O_RFETCH); ass(O_CELL); ass(O_PLOOP); lit(32); ass(O_NEXT00);
-    // Address 40: 1 1 DO  R>  LOOP  (infinite loop!)
-    ass(O_ONE); ass(O_ONE); ass(O_DO); ass(O_NEXT00);
+    ass(O_LITERALI); ilit(0);
+    ass(O_DO); ass(O_NEXT00); ass(O_NEXT00); ass(O_NEXT00);
+    ass(O_RFETCH); ass(O_LOOP); lit(12); ass(O_NEXT00); ass(O_NEXT00);
+    // Address 20: 0 3 DO  R>  -1 +LOOP
+    ass(O_LITERALI); ilit(0);
+    ass(O_LITERAL); lit(3); ass(O_DO); ass(O_NEXT00); ass(O_NEXT00);
+    ass(O_RFETCH); ass(O_LITERALI); ilit(-1);
+    ass(O_PLOOPI); ilit(-2);
+    // Address 40: CELL 1 DO  R>  CELL +LOOP
+    ass(O_LITERALI); ilit(CELL_W);
+    ass(O_LITERALI); ilit(1);
+    ass(O_DO); ass(O_NEXT00); ass(O_NEXT00); ass(O_NEXT00);
+    ass(O_RFETCH); ass(O_LITERALI); ilit(CELL_W);
+    ass(O_PLOOP); lit(52); ass(O_NEXT00); ass(O_NEXT00); ass(O_NEXT00);
+    // Address 64: 1 1 DO  R>  LOOP  (infinite loop!)
+    ass(O_LITERALI); ilit(1);
+    ass(O_LITERALI); ilit(1);
+    ass(O_DO); ass(O_NEXT00); ass(O_NEXT00); ass(O_NEXT00);
     ass(O_RFETCH); ass(O_LOOPI); ilit(-1);
-    // Address 48: 1 >R CELL >R -1 >R J DUP UNLOOP
-    ass(O_ONE); ass(O_TOR); ass(O_CELL); ass(O_TOR);
-    ass(O_MONE); ass(O_TOR); ass(O_J); ass(O_NEXT00);
+    // Address 80: 1 >R CELL >R -1 >R J DUP UNLOOP
+    ass(O_LITERALI); ilit(1);
+    ass(O_TOR); ass(O_LITERALI); ilit(CELL_W);
+    ass(O_TOR); ass(O_LITERALI); ilit(-1);
+    ass(O_TOR); ass(O_J); ass(O_NEXT00); ass(O_NEXT00);
     ass(O_DUP); ass(O_UNLOOP);
 
     assert(single_step() == -259);
 
-    while (EP < 20) single_step();
+    while (EP < 24) single_step();
     show_data_stack();
     printf("Correct stack: %s\n\n", correct[0]);
     if (strcmp(correct[0], val_data_stack())) {
@@ -52,7 +62,7 @@ int main(void)
     }
     SP = S0;
 
-    while (EP < 32) single_step();
+    while (EP < 44) single_step();
     show_data_stack();
     printf("Correct stack: %s\n\n", correct[1]);
     if (strcmp(correct[1], val_data_stack())) {
@@ -61,7 +71,7 @@ int main(void)
     }
     SP = S0;
 
-    while (EP < 40) single_step();
+    while (EP < 68) single_step();
     show_data_stack();
     printf("Correct stack: %s\n\n", correct[2]);
     if (strcmp(correct[2], val_data_stack())) {
@@ -79,9 +89,9 @@ int main(void)
     }
     SP = S0;
 
-    assert(EP == 48);
+    assert(EP == 80);
     A = 0; I = 0; // Exit infinite loop
-    while (EP < 60) single_step();
+    while (EP < 100) single_step();
     CELL ret3 = LOAD_CELL(RP - 2 * CELL_W * STACK_DIRECTION);
     printf("3rd item on return stack is %"PRId32" (should be %"PRId32")\n", ret3, LOAD_CELL(SP));
     if (ret3 != LOAD_CELL(SP)) {

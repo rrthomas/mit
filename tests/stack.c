@@ -31,7 +31,8 @@ int main(void)
     ass(O_ROT); ass(O_NROT); ass(O_TUCK); ass(O_NIP);
     ass(O_PICK); ass(O_PICK); ass(O_DUP); ass(O_ROLL);
     ass(O_DUP); ass(O_ROLL); ass(O_TOR); ass(O_RFETCH);
-    ass(O_RFROM); ass(O_QDUP); ass(O_ZERO); ass(O_QDUP);
+    ass(O_RFROM); ass(O_QDUP); ass(O_LITERALI); ilit(0);
+    ass(O_QDUP);
 
     assert(single_step() == -259);   // load first instruction word
 

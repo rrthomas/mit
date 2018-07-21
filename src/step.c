@@ -275,21 +275,6 @@ CELL single_step(void)
             PUSH(b > a ? PACKAGE_UPPER_TRUE : PACKAGE_UPPER_FALSE);
         }
         break;
-    case O_ZERO:
-        PUSH(0);
-        break;
-    case O_ONE:
-        PUSH(1);
-        break;
-    case O_MONE:
-        PUSH(-1);
-        break;
-    case O_CELL:
-        PUSH(CELL_W);
-        break;
-    case O_MCELL:
-        PUSH(-CELL_W);
-        break;
     case O_PLUS:
         {
             CELL a = POP;

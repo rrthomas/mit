@@ -499,21 +499,9 @@ otherwise.
 \subsection{Arithmetic}
 \label{arithmetic}
 
-These instructions consist of monadic and dyadic operators, and numeric
-constants. All calculations are made without bounds or overflow checking, except
+These instructions consist of monadic and dyadic operators.
+All calculations are made without bounds or overflow checking, except
 as detailed for certain instructions.
-
-Constants:
-
-\nopagebreak
-
-\begin{description}
-\instp{0}{zero}{-- $0$}{Leave zero on the stack.}
-\instp{1}{one}{-- $1$}{Leave one on the stack.}
-\instp{-1}{minus-one}{-- $-1$}{Leave minus one on the stack.}
-\inst{CELL}{-- $4$}{Leave four on the stack.}
-\instp{-CELL}{minus-cell}{-- $-4$}{Leave minus four on the stack.}
-\end{description}
 
 Addition and subtraction:
 
@@ -736,11 +724,11 @@ undefined opcodes (\$61–\$FE) raise exception $-256$.
 \opcodetbl{16}{undefined}	{37}{undefined}	{58}{(+LOOP)}
 \opcodetbl{17}{U<}	{38}{undefined}	{59}{(+LOOP)I}
 \opcodetbl{18}{U>}	{39}{@}		{5A}{UNLOOP}
-\opcodetbl{19}{0}	{3A}{!}		{5B}{J}
-\opcodetbl{1A}{1}	{3B}{C@}	{5C}{(LITERAL)}
-\opcodetbl{1B}{-1}	{3C}{C!}        {5D}{(LITERAL)I}
-\opcodetbl{1C}{CELL}	{3D}{+!}        {5E}{THROW}
-\opcodetbl{1D}{-CELL}	{3E}{SP@}	{5F}{HALT}
+\opcodetbl{19}{undefined}	{3A}{!}		{5B}{J}
+\opcodetbl{1A}{undefined}	{3B}{C@}	{5C}{(LITERAL)}
+\opcodetbl{1B}{undefined}	{3C}{C!}        {5D}{(LITERAL)I}
+\opcodetbl{1C}{undefined}	{3D}{+!}        {5E}{THROW}
+\opcodetbl{1D}{undefined}	{3E}{SP@}	{5F}{HALT}
 \opcodetbl{1E}{+}	{3F}{SP!}       {60}{LINK}
 \opcodetbl{1F}{-}	{40}{RP@}	{80–\$FE}{\textrm{extra instructions}}
 \opcodetbl{20}{>-<}	{41}{RP!}       {FF}{NEXT}

@@ -13,11 +13,11 @@
 
 
 const char *correct[] = {
-    "", "16384", "16384 " str(CELL_W), "16380", "16380 513", "16380 513 16380", "16380",
+    "", "16384", "16384 " str(CELL_W), "16380", "16380 513", "16380 513 16380", "16380", "16380",
     "16380 16380", "16380 513", "16380",
-    "16380 16380", "16380 1", "16381", "2", "2 16383", "", "16380", "33554945",
-    "", "-33554432", "", "-16777216", "", "0", "", "0", "", "16384", "67305985",
-    "", "16389", "2", "", "1", "1 16385", "", "16385", "1", "", "16392", "16392 16392", "-20",
+    "16380 16380", "16380 16380", "16380 1", "16381", "2", "2 16383", "2 16383", "", "16380", "33554945",
+    "", "", "-33554432", "", "-16777216", "", "", "0", "", "0", "", "16384", "16384", "67305985",
+    "", "16389", "2", "2", "", "1", "1 16385", "", "16385", "1", "1", "", "16392", "16392 16392", "-20",
 };
 
 const unsigned area[] = {0x4000, 0x4004, 0x4005, 0x4008};
@@ -47,17 +47,19 @@ int main(void)
     }
 
     start_ass(EP);
-    ass(O_MEMORYFETCH); ass(O_CELL); ass(O_MINUS); ass(O_LITERAL); lit(513);
+    ass(O_MEMORYFETCH); ass(O_LITERALI); ilit(CELL_W);
+    ass(O_MINUS); ass(O_LITERAL); lit(513);
     ass(O_OVER); ass(O_STORE); ass(O_DUP); ass(O_FETCH);
     ass(O_DROP); ass(O_DUP); ass(O_CFETCH); ass(O_PLUS);
     ass(O_CFETCH); ass(O_LITERAL); lit(16383); ass(O_CSTORE); ass(O_LITERAL);
         lit(16380);
     ass(O_FETCH); ass(O_DROP); ass(O_SPFETCH); ass(O_SPSTORE);
-    ass(O_RPFETCH); ass(O_DROP); ass(O_ZERO); ass(O_RPSTORE);
-    ass(O_RPFETCH); ass(O_DROP);
+    ass(O_RPFETCH); ass(O_DROP); ass(O_LITERALI); ilit(0);
+    ass(O_RPSTORE); ass(O_RPFETCH); ass(O_DROP);
     ass(O_LITERAL); lit(size * CELL_W); ass(O_FETCH); ass(O_DROP);
     ass(O_LITERAL); lit(size * CELL_W + 5); ass(O_CFETCH); ass(O_DROP);
-    ass(O_ONE); ass(O_LITERAL); lit(size * CELL_W + 1); ass(O_CSTORE);
+    ass(O_LITERALI); ilit(1);
+    ass(O_LITERAL); lit(size * CELL_W + 1); ass(O_CSTORE);
     ass(O_LITERAL); lit(size * CELL_W + 1); ass(O_CFETCH); ass(O_DROP);
     ass(O_LITERAL); lit(size * CELL_W + 8); ass(O_DUP); ass(O_CSTORE);
 
@@ -65,8 +67,8 @@ int main(void)
 
     for (size_t i = 0; i < sizeof(correct) / sizeof(correct[0]); i++) {
         show_data_stack();
-        printf("Correct stack: %s\n\n", correct[i - i / 5]);
-        if (strcmp(correct[i - i / 5], val_data_stack())) {
+        printf("Correct stack: %s\n\n", correct[i]);
+        if (strcmp(correct[i], val_data_stack())) {
             printf("Error in memory tests: EP = %"PRIu32"\n", EP);
             exit(1);
         }

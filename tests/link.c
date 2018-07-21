@@ -25,7 +25,8 @@ int main(void)
     init((CELL *)malloc(16384), 4096);
 
     start_ass(EP);
-    plit(test); ass(O_LINK); ass(O_ZERO); ass(O_HALT);
+    plit(test); ass(O_LINK); ass(O_LITERALI); ilit(0);
+    ass(O_HALT);
 
     assert(single_step() == -259);   // load first instruction word
     CELL res = run();

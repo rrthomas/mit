@@ -11,9 +11,9 @@
 #include "tests.h"
 
 
-UCELL test[] = { 0, 8, 16, 24, 36, 40, 44, 48, 56, 64, 68, 72 };
+UCELL test[] = { 0, 8, 16, 24, 44, 48, 56, 68, 76, 84, 92, 96 };
 CELL result[] = { -257, -257, 42, 0, -23, -23, -10, -9, -9, -23, -256, -258 };
-UCELL bad[] = { -1, -1, -1, 28, 40, 44, 48, 16388, 64, 68, 72, 80 };
+UCELL bad[] = { -1, -1, -1, 28, 52, 56, 68, 16388, 84, 92, 96, 104 };
 UCELL address[] = { -16, 16384, 0, 0, 5, 1, 0, 16384, -20, 1, 0, 1 };
 
 
@@ -25,31 +25,50 @@ int main(void)
     init((CELL *)calloc(size, CELL_W), size);
 
     start_ass(0);
+    fprintf(stderr, "EP = %u\n", ass_current());
     // test 1: DUP into non-existent memory
     ass(O_LITERAL); lit(0xfffffff0);
     ass(O_SPSTORE); ass(O_DUP); ass(O_NEXT00);
+    fprintf(stderr, "EP = %u\n", ass_current());
     // test 2: set SP to MEMORY, then try to pop (>R) the stack
     ass(O_LITERALI); ilit(MEMORY);
     ass(O_SPSTORE); ass(O_TOR); ass(O_NEXT00); ass(O_NEXT00);
+    fprintf(stderr, "EP = %u\n", ass_current());
     // test 3: test arbitrary throw code
     ass(O_LITERALI); ilit(42);
     ass(O_HALT); ass(O_NEXT00); ass(O_NEXT00); ass(O_NEXT00);
     // test 4: test SP can point to just after a memory area
+    fprintf(stderr, "EP = %u\n", ass_current());
     ass(O_LITERALI); ilit(MEMORY);
-    ass(O_CELL); ass(O_MINUS); ass(O_SPSTORE); ass(O_TOR);
-    ass(O_ZERO); ass(O_HALT); ass(O_NEXT00); ass(O_NEXT00);
-    ass(O_ONE); ass(O_CELL); ass(O_PLUS); ass(O_SPSTORE);	// test 5
-    ass(O_ONE); ass(O_EXECUTE);	ass(O_NEXT00); ass(O_NEXT00);	// test 6
-    ass(O_ONE); ass(O_ZERO); ass(O_SLASH); ass(O_NEXT00);   // test 7
+    ass(O_LITERALI); ilit(CELL_W);
+    ass(O_MINUS); ass(O_SPSTORE); ass(O_TOR); ass(O_NEXT00);
+    ass(O_LITERALI); ilit(0);
+    ass(O_HALT); ass(O_NEXT00); ass(O_NEXT00); ass(O_NEXT00);
+    fprintf(stderr, "EP = %u\n", ass_current());
+    ass(O_LITERALI); ilit(5);	// test 5
+    ass(O_SPSTORE);
+    fprintf(stderr, "EP = %u\n", ass_current());
+    ass(O_LITERALI); ilit(1); // test 6
+    ass(O_EXECUTE); ass(O_NEXT00); ass(O_NEXT00); ass(O_NEXT00);
+    fprintf(stderr, "EP = %u\n", ass_current());
+    ass(O_LITERALI); ilit(1);   // test 7
+    ass(O_LITERALI); ilit(0);
+    ass(O_SLASH); ass(O_NEXT00); ass(O_NEXT00); ass(O_NEXT00);
+    fprintf(stderr, "EP = %u\n", ass_current());
     // test 8: allow execution to run off the end of a memory area
     ass(O_BRANCH); ass(O_NEXT00); ass(O_NEXT00); ass(O_NEXT00);
     lit(MEMORY - CELL_W);
+    fprintf(stderr, "EP = %u\n", ass_current());
     // test 9: fetch from an invalid address
     ass(O_LITERAL); lit(0xffffffec);
     ass(O_FETCH); ass(O_NEXT00); ass(O_NEXT00);
-    ass(O_ONE); ass(O_FETCH); ass(O_NEXT00); ass(O_NEXT00); // test 10
+    fprintf(stderr, "EP = %u\n", ass_current());
+    ass(O_LITERALI); ilit(1);   // test 10
+    ass(O_FETCH); ass(O_NEXT00); ass(O_NEXT00); ass(O_NEXT00);
+    fprintf(stderr, "EP = %u\n", ass_current());
     // test 11: test invalid opcode
     ass(O_UNDEFINED); ass(O_NEXT00); ass(O_NEXT00); ass(O_NEXT00);
+    fprintf(stderr, "EP = %u\n", ass_current());
     // test 12: test invalid 'THROW contents
     ass(O_LITERAL); lit(0xffffffec);
     ass(O_DUP); ass(O_THROWSTORE); ass(O_THROW);

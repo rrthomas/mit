@@ -15,8 +15,8 @@
 #include "tests.h"
 
 
-unsigned correct[] = { 4, 100, 52, 10004, 10004, 10008, 10008, 10012, 10012, 11004,
-                       11004, 11020, 11024, 68, 204, 304, 212, 72, 76, 80, 80, 80, 68 };
+unsigned correct[] = { 4, 100, 52, 10004, 10008, 10012, 10016, 10020, 10024, 11004,
+                       11008, 11020, 11024, 68, 204, 304, 212, 72, 76, 80, 80, 80, 68 };
 
 
 int main(void)
@@ -36,11 +36,15 @@ int main(void)
     ass(O_BRANCH); lit(10000);
 
     start_ass(10000);
-    ass(O_ONE); ass(O_QBRANCHI); ilit(0);
-    ass(O_ONE); ass(O_QBRANCH); lit(0); ass(O_ZERO); ass(O_QBRANCH); lit(11000);
+    ass(O_LITERALI); ilit(1);
+    ass(O_QBRANCHI); ilit(0);
+    ass(O_LITERALI); ilit(1);
+    ass(O_QBRANCH); lit(0); ass(O_LITERALI); ilit(0);
+    ass(O_QBRANCH); lit(11000);
 
     start_ass(11000);
-    ass(O_ZERO); ass(O_QBRANCHI); ilit(3);
+    ass(O_LITERALI); ilit(0);
+    ass(O_QBRANCHI); ilit(2);
 
     start_ass(11016);
     ass(O_LITERALI); ilit(64);
