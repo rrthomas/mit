@@ -346,12 +346,6 @@ CELL single_step(void)
             PUSH(dividend / divisor);
         }
         break;
-    case O_ABS:
-        {
-            CELL a = POP;
-            PUSH(a < 0 ? -a : a);
-        }
-        break;
     case O_NEGATE:
         {
             CELL a = POP;

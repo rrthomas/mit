@@ -528,12 +528,11 @@ infinity, except for {\tt S/REM}, which rounds the quotient towards zero):
 \instp{S/REM}{s-slash-rem}{\n1 \n2 -- \n3 \n4}{Divide \n1 by \n2 using symmetric division, giving the single-cell remainder \n3 and the single-cell quotient \n4.}
 \end{description}
 
-Sign functions:
+Sign function:
 
 \nopagebreak
 
 \begin{description}
-\instp{ABS}{abs}{n -- u}{\spic{u} is the absolute value of \spic{n}.}
 \inst{NEGATE}{\n1 -- \n2}{Negate \n1, giving its arithmetic inverse \n2.}
 \end{description}
 
@@ -711,7 +710,7 @@ undefined opcodes (\$61–\$FE) raise exception $-256$.
 \opcodetbl{09}{PICK}	{2A}{S/REM}	{4B}{-ADDRESS@}
 \opcodetbl{0A}{ROLL}	{2B}{undefined}	{4C}{BRANCH}
 \opcodetbl{0B}{?DUP}	{2C}{undefined}	{4D}{BRANCHI}
-\opcodetbl{0C}{>R}	{2D}{ABS}	{4E}{?BRANCH}
+\opcodetbl{0C}{>R}	{2D}{undefined}	{4E}{?BRANCH}
 \opcodetbl{0D}{R>}	{2E}{NEGATE}	{4F}{?BRANCHI}
 \opcodetbl{0E}{R@}	{2F}{undefined}	{50}{EXECUTE}
 \opcodetbl{0F}{<}	{30}{undefined}	{51}{@EXECUTE}
