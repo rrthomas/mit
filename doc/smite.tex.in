@@ -573,7 +573,6 @@ also an instruction to add a number to another stored in memory.
 \instp{!}{store}{x a-addr --}{Store \spic{x} at \spic{a-addr}.}
 \instp{C@}{c-fetch}{c-addr -- char}{If {\tt ENDISM} is 1, exclusive-or \spic{c-addr} with 3. Fetch the character stored at \spic{c-addr}. The unused high-order bits are all zeroes.}
 \instp{C!}{c-store}{char c-addr --}{If {\tt ENDISM} is 1, exclusive-or \spic{c-addr} with 3. Store \spic{char} at \spic{c-addr}. Only one byte is transferred.}
-\instp{+!}{plus-store}{n{\tt |}u a-addr --}{Add \spic{n{\tt |}u} to the single-cell number at \spic{a-addr}.}
 \end{description}
 
 
@@ -724,7 +723,7 @@ undefined opcodes (\$61–\$FE) raise exception $-256$.
 \opcodetbl{19}{undefined}	{3A}{!}		{5B}{J}
 \opcodetbl{1A}{undefined}	{3B}{C@}	{5C}{(LITERAL)}
 \opcodetbl{1B}{undefined}	{3C}{C!}        {5D}{(LITERAL)I}
-\opcodetbl{1C}{undefined}	{3D}{+!}        {5E}{THROW}
+\opcodetbl{1C}{undefined}	{3D}{undefined}        {5E}{THROW}
 \opcodetbl{1D}{undefined}	{3E}{SP@}	{5F}{HALT}
 \opcodetbl{1E}{+}	{3F}{SP!}       {60}{LINK}
 \opcodetbl{1F}{undefined}	{40}{RP@}	{80–\$FE}{\textrm{extra instructions}}

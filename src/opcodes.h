@@ -75,7 +75,7 @@ enum {
     O_STORE,
     O_CFETCH,
     O_CSTORE,
-    O_PSTORE,
+    O_UNDEF23,
     O_SPFETCH,
     O_SPSTORE,
     O_RPFETCH,

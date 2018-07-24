@@ -407,14 +407,6 @@ CELL single_step(void)
             STORE_BYTE(addr, value);
         }
         break;
-    case O_PSTORE:
-        {
-            CELL addr = POP;
-            CELL increment = POP;
-            CELL value = LOAD_CELL(addr) + increment;
-            STORE_CELL(addr, value);
-        }
-        break;
     case O_SPFETCH:
         {
             CELL value = SP;
