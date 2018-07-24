@@ -475,7 +475,6 @@ These instructions manage the data stack and move values between stacks.
 \inst{NIP}{\x1 \x2 -- \x2}{Perform the action of {\tt SWAP} followed by {\tt DROP}.}
 \inst{PICK}{\x{u}\dots\x1 \x0 u -- \x{u}\dots \x1 \x0 \x{u}}{Remove \spic{u}. Copy \x{u} to the top of the stack. If \spic{u}~$=$~0, {\tt PICK} is equivalent to {\tt DUP}. If there are fewer than \spic{u}~$+$~2 items on the stack before {\tt PICK} is executed, the memory cell which would have been \x{u} were there \spic{u}~$+$~2 items is copied to the top of the stack.}
 \inst{ROLL}{\x{u} \x{u-1}\dots\x{0} u -- \x{u-1}\dots\x0 \x{u}}{Remove \spic{u}. Rotate \spic{u}~$+$~1 items on the top of the stack. If \spic{u}~$=$~0 {\tt ROLL} does nothing, and if \spic{u}~$=$~1 {\tt ROLL} is equivalent to {\tt SWAP}. If there are fewer than \spic{u}~$+$~2 items on the stack before {\tt ROLL} is executed, the memory cells which would have been on the stack were there \spic{u}~$+$~2 items are rotated.}
-\instp{?DUP}{question-dupe}{x -- $0$ {\tt |} x x}{Duplicate \spic{x} if it is non-zero.}
 \instpr{>R}{to-r}{x --}{-- x}{Move \spic{x} to the return stack.}
 \instpr{R>}{r-from}{-- x}{x --}{Move \spic{x} from the return stack to the data stack.}
 \instpr{R@}{r-fetch}{-- x}{x -- x}{Copy \spic{x} from the return stack to the data stack.}
@@ -706,7 +705,7 @@ undefined opcodes (\$61–\$FE) raise exception $-256$.
 \opcodetbl{08}{NIP}	{29}{U/MOD}	{4A}{'BAD@}
 \opcodetbl{09}{PICK}	{2A}{S/REM}	{4B}{-ADDRESS@}
 \opcodetbl{0A}{ROLL}	{2B}{undefined}	{4C}{BRANCH}
-\opcodetbl{0B}{?DUP}	{2C}{undefined}	{4D}{BRANCHI}
+\opcodetbl{0B}{undefined}	{2C}{undefined}	{4D}{BRANCHI}
 \opcodetbl{0C}{>R}	{2D}{undefined}	{4E}{?BRANCH}
 \opcodetbl{0D}{R>}	{2E}{NEGATE}	{4F}{?BRANCHI}
 \opcodetbl{0E}{R@}	{2F}{undefined}	{50}{EXECUTE}

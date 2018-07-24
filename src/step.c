@@ -215,13 +215,6 @@ CELL single_step(void)
             STORE_CELL(SP, rollee);
         }
         break;
-    case O_QDUP:
-        {
-            CELL value = LOAD_CELL(SP);
-            if (value != 0)
-                PUSH(value);
-        }
-        break;
     case O_TOR:
         {
             CELL value = POP;

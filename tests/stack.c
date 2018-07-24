@@ -1,6 +1,6 @@
-// Test the stack operators. Also uses the 0 and NEXT instructions.
+// Test the stack operators. Also uses the NEXT instruction.
 //
-// (c) Reuben Thomas 1994-2011
+// (c) Reuben Thomas 1994-2018
 //
 // The package is distributed under the GNU Public License version 3, or,
 // at your option, any later version.
@@ -14,8 +14,7 @@
 const char *correct[] = {
     "1 2 3", "1 2 3 3", "1 2 3", "1 3 2", "1 3 2 3", "1 2 3 3",
     "1 3 2 3", "1 3 3 2 3", "1 3 3 3", "2 1 1", "2 1 2", "2 1 2 2", "1 2 2",
-    "1 2 2 2", "2 2 1", "2 2", "2 2 1", "2 2 1 1", "2 2 1 1 1", "2 2 1 1 1 0",
-    "2 2 1 1 1 0"};
+    "1 2 2 2", "2 2 1", "2 2", "2 2 1", "2 2 1 1"};
 
 
 int main(void)
@@ -31,8 +30,7 @@ int main(void)
     ass(O_ROT); ass(O_NROT); ass(O_TUCK); ass(O_NIP);
     ass(O_PICK); ass(O_PICK); ass(O_DUP); ass(O_ROLL);
     ass(O_DUP); ass(O_ROLL); ass(O_TOR); ass(O_RFETCH);
-    ass(O_RFROM); ass(O_QDUP); ass(O_LITERALI); ilit(0);
-    ass(O_QDUP);
+    ass(O_RFROM);
 
     assert(single_step() == -259);   // load first instruction word
 
