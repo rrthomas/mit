@@ -95,7 +95,7 @@ enum {
     O_QBRANCH,
     O_QBRANCHI,
     O_EXECUTE,
-    O_FEXECUTE,
+    O_UNDEF26,
     O_CALL,
     O_CALLI,
     O_EXIT,

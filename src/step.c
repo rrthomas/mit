@@ -458,17 +458,6 @@ CELL single_step(void)
             goto next;
         }
         break;
-    case O_FEXECUTE:
-        {
-            CELL addr = POP;
-            CHECK_ALIGNED_WHOLE_CELL(addr);
-            PUSH_RETURN(EP);
-            addr = LOAD_CELL(addr);
-            CHECK_ALIGNED_WHOLE_CELL(addr);
-            EP = addr;
-            goto next;
-        }
-        break;
     case O_CALL:
         {
             PUSH_RETURN(EP + CELL_W);

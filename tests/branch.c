@@ -16,7 +16,7 @@
 
 
 unsigned correct[] = { 4, 100, 52, 10004, 10008, 10012, 10016, 10020, 10024, 11004,
-                       11008, 11020, 11024, 68, 204, 304, 212, 72, 76, 80, 80, 80, 68 };
+                       11008, 11020, 11024, 68, 204, 304, 212, 72, 76, 80, 80, 80, 80, 68 };
 
 
 int main(void)
@@ -54,7 +54,7 @@ int main(void)
     ass(O_CALLI); ilit(33);
     ass(O_LITERALI); ilit(64);
     ass(O_LITERALI); ilit(20);
-    ass(O_TUCK); ass(O_STORE); ass(O_FEXECUTE);
+    ass(O_TUCK); ass(O_STORE); ass(O_FETCH); ass(O_EXECUTE);
 
     start_ass(200);
     ass(O_CALL); lit(300); ilit(0);
