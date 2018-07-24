@@ -41,7 +41,7 @@ int main(void)
     fprintf(stderr, "EP = %u\n", ass_current());
     ass(O_LITERALI); ilit(MEMORY);
     ass(O_LITERALI); ilit(CELL_W);
-    ass(O_MINUS); ass(O_SPSTORE); ass(O_TOR); ass(O_NEXT00);
+    ass(O_NEGATE); ass(O_PLUS); ass(O_SPSTORE); ass(O_TOR);
     ass(O_LITERALI); ilit(0);
     ass(O_HALT); ass(O_NEXT00); ass(O_NEXT00); ass(O_NEXT00);
     fprintf(stderr, "EP = %u\n", ass_current());

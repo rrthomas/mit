@@ -282,20 +282,6 @@ CELL single_step(void)
             PUSH(b + a);
         }
         break;
-    case O_MINUS:
-        {
-            CELL a = POP;
-            CELL b = POP;
-            PUSH(b - a);
-        }
-        break;
-    case O_SWAPMINUS:
-        {
-            CELL a = POP;
-            CELL b = POP;
-            PUSH(a - b);
-        }
-        break;
     case O_STAR:
         {
             CELL multiplier = POP;

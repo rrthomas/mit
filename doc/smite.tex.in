@@ -503,14 +503,12 @@ These instructions consist of monadic and dyadic operators.
 All calculations are made without bounds or overflow checking, except
 as detailed for certain instructions.
 
-Addition and subtraction:
+Addition:
 
 \nopagebreak
 
 \begin{description}
 \instp{+}{plus}{\noru1 \noru2 -- \noru3}{Add \noru2 to \noru1, giving the sum \noru3.}
-\instp{-}{minus}{\noru1 \noru2 -- \noru3}{Subtract \noru2 from \noru1, giving the difference \noru3.}
-\instp{>-<}{reverse-minus}{\noru1 \noru2 -- \n3{\tt |}\U3}{Perform the action of {\tt SWAP} (see section~\ref{stackinst}) followed by {\tt -}.}
 \end{description}
 
 Multiplication and division (note that all division instructions raise exception
@@ -729,8 +727,8 @@ undefined opcodes (\$61–\$FE) raise exception $-256$.
 \opcodetbl{1C}{undefined}	{3D}{+!}        {5E}{THROW}
 \opcodetbl{1D}{undefined}	{3E}{SP@}	{5F}{HALT}
 \opcodetbl{1E}{+}	{3F}{SP!}       {60}{LINK}
-\opcodetbl{1F}{-}	{40}{RP@}	{80–\$FE}{\textrm{extra instructions}}
-\opcodetbl{20}{>-<}	{41}{RP!}       {FF}{NEXT}
+\opcodetbl{1F}{undefined}	{40}{RP@}	{80–\$FE}{\textrm{extra instructions}}
+\opcodetbl{20}{undefined}	{41}{RP!}       {FF}{NEXT}
  \bottomrule
 \end{tabular}
 \caption{\label{opcodetable}@PACKAGE_NAME@'s opcodes}
