@@ -16,7 +16,7 @@
 
 
 unsigned correct[] = { 4, 100, 52, 10004, 10008, 10012, 10016, 10020, 10024, 11004,
-                       11008, 11020, 11024, 68, 204, 304, 212, 72, 76, 80, 80, 80, 80, 68 };
+                       11008, 11020, 11024, 68, 204, 304, 212, 76, 80, 84, 84, 84, 84, 68 };
 
 
 int main(void)
@@ -27,31 +27,31 @@ int main(void)
     init((CELL *)calloc(size, CELL_W), size);
 
     start_ass(EP);
-    ass(O_BRANCHI); ilit(23);
+    ass(O_BRANCH); lit(96);
 
     start_ass(96);
-    ass(O_BRANCHI); ilit(-13);
+    ass(O_BRANCH); lit(48);
 
     start_ass(48);
     ass(O_BRANCH); lit(10000);
 
     start_ass(10000);
     ass(O_LITERALI); ilit(1);
-    ass(O_QBRANCHI); ilit(0);
+    ass(O_QBRANCH); lit(10008);
     ass(O_LITERALI); ilit(1);
     ass(O_QBRANCH); lit(0); ass(O_LITERALI); ilit(0);
     ass(O_QBRANCH); lit(11000);
 
     start_ass(11000);
     ass(O_LITERALI); ilit(0);
-    ass(O_QBRANCHI); ilit(2);
+    ass(O_QBRANCH); lit(11016);
 
     start_ass(11016);
     ass(O_LITERALI); ilit(64);
     ass(O_EXECUTE);
 
     start_ass(64);
-    ass(O_CALLI); ilit(33);
+    ass(O_CALL); lit(200); ilit(0);
     ass(O_LITERALI); ilit(64);
     ass(O_LITERALI); ilit(20);
     ass(O_TUCK); ass(O_STORE); ass(O_FETCH); ass(O_EXECUTE);

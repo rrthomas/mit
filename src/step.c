@@ -431,10 +431,6 @@ CELL single_step(void)
             goto next;
         }
         break;
-    case O_BRANCHI:
-        EP += A * CELL_W;
-        goto next;
-        break;
     case O_QBRANCH:
         if (POP == PACKAGE_UPPER_FALSE) {
             CELL addr = LOAD_CELL(EP);
@@ -443,11 +439,6 @@ CELL single_step(void)
             goto next;
         } else
             EP += CELL_W;
-        break;
-    case O_QBRANCHI:
-        if (POP == PACKAGE_UPPER_FALSE)
-            EP += A * CELL_W;
-        goto next;
         break;
     case O_EXECUTE:
         {
@@ -466,11 +457,6 @@ CELL single_step(void)
             EP = addr;
             goto next;
         }
-        break;
-    case O_CALLI:
-        PUSH_RETURN(EP);
-        EP += A * CELL_W;
-        goto next;
         break;
     case O_EXIT:
         {

@@ -611,9 +611,7 @@ Branches:
 
 \begin{description}
 \inst{BRANCH}{--}{Load {\tt EP} from the cell it points to, then perform the action of {\tt NEXT}.}
-\instp{BRANCHI}{branch-i}{--}{Add {\tt A} $\times$ 4 to {\tt EP}, then perform the action of {\tt NEXT}.}
 \instp{?BRANCH}{question-branch}{flag --}{If \spic{flag} is false then load {\tt EP} from the cell it points to and perform the action of {\tt NEXT}; otherwise add four to {\tt EP}.}
-\instp{?BRANCHI}{question-branch-i}{flag --}{If \spic{flag} is false then add {\tt A} $\times$ 4 to {\tt EP}. Perform the action of {\tt NEXT}.}
 \instr{EXECUTE}{\aaddr1 --}{ -- \aaddr2}{Push {\tt EP} on to the return stack, put \spic{\aaddr1} into {\tt EP}, then perform the action of {\tt NEXT}.}
 \end{description}
 
@@ -623,7 +621,6 @@ Subroutine call and return:
 
 \begin{description}
 \instr{CALL}{--}{-- a-addr}{Push {\tt EP} $+$ 4 on to the return stack, then load {\tt EP} from the cell it points to. Perform the action of {\tt NEXT}.}
-\instpr{CALLI}{call-i}{--}{-- a-addr}{Push {\tt EP} on to the return stack, then add A $\times$ 4 to {\tt EP}. Perform the action of {\tt NEXT}.}
 \instr{EXIT}{--}{a-addr --}{Put \spic{a-addr} into {\tt EP}, then perform the action of {\tt NEXT}.}
 \end{description}
 
@@ -688,13 +685,13 @@ undefined opcodes (\$61–\$FE) raise exception $-256$.
 \opcodetbl{08}{NIP}	{29}{U/MOD}	{4A}{'BAD@}
 \opcodetbl{09}{PICK}	{2A}{S/REM}	{4B}{-ADDRESS@}
 \opcodetbl{0A}{ROLL}	{2B}{undefined}	{4C}{BRANCH}
-\opcodetbl{0B}{undefined}	{2C}{undefined}	{4D}{BRANCHI}
+\opcodetbl{0B}{undefined}	{2C}{undefined}	{4D}{undefined}
 \opcodetbl{0C}{>R}	{2D}{undefined}	{4E}{?BRANCH}
-\opcodetbl{0D}{R>}	{2E}{NEGATE}	{4F}{?BRANCHI}
+\opcodetbl{0D}{R>}	{2E}{NEGATE}	{4F}{undefined}
 \opcodetbl{0E}{R@}	{2F}{undefined}	{50}{EXECUTE}
 \opcodetbl{0F}{<}	{30}{undefined}	{51}{@EXECUTE}
 \opcodetbl{10}{>}	{31}{INVERT}	{52}{CALL}
-\opcodetbl{11}{=}	{32}{AND}	{53}{CALLI}
+\opcodetbl{11}{=}	{32}{AND}	{53}{undefined}
 \opcodetbl{12}{undefined}	{33}{OR}	{54}{EXIT}
 \opcodetbl{13}{undefined}	{34}{XOR}	{55}{undefined}
 \opcodetbl{14}{undefined}	{35}{LSHIFT}	{56}{undefined}
