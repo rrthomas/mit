@@ -219,7 +219,7 @@ instructions until {\tt EP} is equal to \angb{address}.
 
 The command {\tt TRACE}, has the same syntax as {\tt STEP}, and performs the
 same function; in addition, it performs the action of the {\tt REGISTERS}
-command after each bForth instruction is executed.
+command after each instruction is executed.
 
 The command {\tt RUN} allows @PACKAGE_NAME@ to execute until it reaches a {\tt HALT}
 instruction, if ever. The code passed to {\tt HALT} is then displayed. The
@@ -239,7 +239,7 @@ and adds four to {\tt EP}. With an argument, {\tt FROM} sets {\tt EP} to
 \angb{address}, and then performs the function of {\tt NEXT}. {\tt FROM}
 should be used in preference to assigning directly to {\tt EP}.
 
-The command {\tt DISASSEMBLE} disassembles bForth code. It may be used in the
+The command {\tt DISASSEMBLE} disassembles @PACKAGE@ code. It may be used in the
 two forms
 
 \begin{center}

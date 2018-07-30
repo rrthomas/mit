@@ -35,7 +35,7 @@
 \newcommand{\noru}[1]{\spic{n$_#1${\tt |}u$_{#1}$}}
 \newcommand{\aaddr}[1]{\spic{a-addr$_{#1}$}}
 
-% Lay out a bForth instruction definition
+% Lay out an instruction definition
 
 % Define the widths of the stack comment and description columns
 \newlength{\itemwidth}\itemwidth=\textwidth \advance\itemwidth by -0.1in
@@ -101,7 +101,7 @@ instructions to call machine code and access the operating system.
 
 \subsection*{Typographical notes}
 
-bForth instructions and @PACKAGE_NAME@'s registers are shown in {\tt Typewriter} font;
+Instructions and @PACKAGE_NAME@'s registers are shown in {\tt Typewriter} font;
 interface calls are shown in {\bf Bold} type, and followed by empty parentheses.
 Quoted pronunciations of instructions and registers are given with components
 separated by dashes; single letters should be pronounced as the name of the
@@ -192,7 +192,7 @@ All of the registers are cell-wide quantities except for {\tt I}, {\tt ENDISM} a
 CHECKED}, which are one byte wide.
 
 To ease efficient implementation, the registers may only be accessed
-by bForth instructions (see section~\ref{registerinst}); not all registers are accessible, and only a few are writable.
+by instructions (see section~\ref{registerinst}); not all registers are accessible, and only a few are writable.
 
 
 \subsection{Memory}
@@ -309,7 +309,7 @@ $-256$ & Illegal opcode (see section~\ref{opcodes}). \\ \bottomrule
 Exception $-9$ is raised whenever an attempt is made to access an invalid
 address, either by an
 instruction, or during an instruction fetch (because {\tt EP} contains an
-invalid address). Exception $-23$ is raised when a bForth instruction expecting
+invalid address). Exception $-23$ is raised when an instruction expecting
 an address of type \spic{a-addr} (cell-aligned) is given a non-aligned address.
 When @PACKAGE_NAME@ raises an address exception ($-9$ or $-23$), the offending address
 is placed in {\tt -ADDRESS}.
@@ -332,7 +332,7 @@ performed.
 \section{Instruction set}
 \label{instset}
 
-The bForth instruction set is listed in sections~\ref{stackinst} to~\ref{accessinst},
+The instruction set is listed in sections~\ref{stackinst} to~\ref{accessinst},
 with the instructions grouped according to function. The
 instructions are given in the following format:
 
@@ -756,7 +756,7 @@ following calls:
     header is checked; if the first seven bytes are not as specified above
     in section~\ref{object}, or the endianness value is not 0 or 1, then
     return $-2$. If the code will not fit into memory at the address given, or
-    the address is out of range or unaligned, return $-1$. Otherwise load the bForth code into
+    the address is out of range or unaligned, return $-1$. Otherwise load the code into
     memory, converting it if the endianness value is different from the current
     value of {\tt ENDISM}. The result is 0 if successful, and some other
     implementation-defined value if there is a filing system or other error.}
@@ -782,4 +782,4 @@ convinced me it was going to be fun working on virtual machines. He also supervi
 
 \end{document}
 
-% LocalWords:  discontiguous bForth
+% LocalWords:  discontiguous
