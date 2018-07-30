@@ -1,4 +1,4 @@
-// Test the literal instructions. Also uses the NEXT instruction.
+// Test the LITERAL instruction. Also uses the NEXT instruction.
 //
 // (c) Reuben Thomas 1994-2018
 //
@@ -11,7 +11,7 @@
 #include "tests.h"
 
 
-const char *correct[] = { "", "-257", "-257 12345678", "-257 12345678 -2" };
+const char *correct[] = { "", "-257", "-257 12345678" };
 
 
 int main(void)
@@ -22,7 +22,6 @@ int main(void)
 
     start_ass(EP);
     ass(O_LITERAL); lit(-257); ass(O_LITERAL); lit(12345678);
-    ass(O_LITERALI); ilit(-2);
 
     assert(single_step() == -259);   // load first instruction word
 

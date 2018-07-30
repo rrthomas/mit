@@ -107,7 +107,7 @@ enum {
     O_UNDEF34,
     O_J,
     O_LITERAL,
-    O_LITERALI,
+    O_UNDEF35,
     O_THROW,
     O_HALT,
     O_LINK,

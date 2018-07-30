@@ -1,5 +1,5 @@
 // Test the arithmetic operators. Also uses the NEXT, SWAP, ROT,
-// DROP, and (LITERAL)I instructions. Since unsigned arithmetic
+// DROP, and (LITERAL) instructions. Since unsigned arithmetic
 // overflow behaviour is guaranteed by the ISO C standard, we only test
 // the stack handling and basic correctness of the operators here,
 // assuming that if the arithmetic works in one case, it will work in
@@ -19,12 +19,12 @@
 
 
 const char *correct[] = {
-    "", "0", "0 1", "0 1 -1", "0 1 -1 " str(CELL_W),
+    "", "0", "0 1", "0 1 -1", "0 1 -1 " str(CELL_W), "0 1 -1 " str(CELL_W),
     "0 1 -1 " str(CELL_W) " -" str(CELL_W), "0 1 " str(CELL_W) " -" str(CELL_W) " -1",
-    "0 1 " str(CELL_W) " -5", "0 1 -1", "0 1 1", "0 1 1", "0 2", "2 0",
-    "2 0 -1", "2 0 -1 " str(CELL_W), "2 0 -" str(CELL_W), "2 -" str(CELL_W) " 0",
-    "2 -" str(CELL_W), "-2 -1", "-2 -1", "2", "2 -1", "0", "", str(CELL_W), "-" str(CELL_W),
-    "", "-" str(CELL_W), "-" str(CELL_W) " 3", "-1 -1", "-1", "-1 -2", "1 1" };
+    "0 1 " str(CELL_W) " -5", "0 1 -1", "0 1 -1", "0 1 1", "0 2", "2 0",
+    "2 0 -1", "2 0 -1", "2 0 -1 " str(CELL_W), "2 0 -" str(CELL_W), "2 -" str(CELL_W) " 0",
+    "2 -" str(CELL_W), "2 -" str(CELL_W), "-2 -1", "2", "2 -1", "0", "0", "", str(CELL_W), "-" str(CELL_W),
+    "", "", "-" str(CELL_W), "-" str(CELL_W) " 3", "-1 -1", "-1", "-1", "-1 -2", "1 1" };
 
 
 int main(void)
@@ -34,20 +34,20 @@ int main(void)
     init((CELL *)calloc(1024, 1), 256);
 
     start_ass(EP);
-    ass(O_LITERALI); ilit(0);
-    ass(O_LITERALI); ilit(1);
-    ass(O_LITERALI); ilit(-1);
-    ass(O_LITERALI); ilit(CELL_W);
-    ass(O_LITERALI); ilit(-CELL_W);
+    ass(O_LITERAL); lit(0);
+    ass(O_LITERAL); lit(1);
+    ass(O_LITERAL); lit(-1);
+    ass(O_LITERAL); lit(CELL_W);
+    ass(O_LITERAL); lit(-CELL_W);
     ass(O_ROT); ass(O_PLUS); ass(O_PLUS); ass(O_NEGATE);
-    ass(O_PLUS); ass(O_SWAP); ass(O_LITERALI); ilit(-1);
-    ass(O_LITERALI); ilit(CELL_W);
+    ass(O_PLUS); ass(O_SWAP); ass(O_LITERAL); lit(-1);
+    ass(O_LITERAL); lit(CELL_W);
     ass(O_STAR); ass(O_SWAP); ass(O_DROP); ass(O_SLASHMOD);
-    ass(O_SLASH); ass(O_LITERALI); ilit(-1);
-    ass(O_MOD); ass(O_DROP); ass(O_LITERALI); ilit(CELL_W);
-    ass(O_NEGATE); ass(O_DROP); ass(O_LITERALI); ilit(-CELL_W);
-    ass(O_LITERALI); ilit(3);
-    ass(O_SSLASHREM); ass(O_DROP); ass(O_LITERALI); ilit(-2);
+    ass(O_SLASH); ass(O_LITERAL); lit(-1);
+    ass(O_MOD); ass(O_DROP); ass(O_LITERAL); lit(CELL_W);
+    ass(O_NEGATE); ass(O_DROP); ass(O_LITERAL); lit(-CELL_W);
+    ass(O_LITERAL); lit(3);
+    ass(O_SSLASHREM); ass(O_DROP); ass(O_LITERAL); lit(-2);
     ass(O_USLASHMOD);
 
     assert(single_step() == -259);   // load first instruction word

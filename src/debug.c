@@ -72,17 +72,6 @@ void lit(CELL literal)
     here += CELL_W;
 }
 
-bool ilit(CELL literal)
-{
-    if (byte_size(literal) > CELL_W - ibytes)
-        return false;
-
-    icell |= literal << ibytes * 8;
-    store_cell(current, icell);  current = here;  here += CELL_W;
-    icell = 0;  ibytes = 0;
-    return true;
-}
-
 void plit(void (*literal)(void))
 {
     CELL_pointer address;
@@ -116,7 +105,7 @@ static const char *mnemonic[UINT8_MAX + 1] = {
     "RP@", "RP!", "EP@", "S0@", "#S", "R0@", "#R", "'THROW@",
     "'THROW!", "MEMORY@", "'BAD@", "-ADDRESS@", "BRANCH", NULL, "?BRANCH", NULL,
     "EXECUTE", NULL, "CALL", NULL, "EXIT", NULL, NULL, NULL,
-    NULL, NULL, NULL, "J", "(LITERAL)", "(LITERAL)I", "THROW", "HALT",
+    NULL, NULL, NULL, "J", "(LITERAL)", NULL, "THROW", "HALT",
     "LINK", NULL, NULL, NULL, NULL, NULL, NULL, NULL,
     NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
     NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,

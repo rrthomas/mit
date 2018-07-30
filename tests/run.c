@@ -23,7 +23,7 @@ int main(void)
     }
 
     start_ass(52);
-    ass(O_LITERALI); ilit(37);
+    ass(O_LITERAL); lit(37);
     ass(O_HALT);
 
     assert(single_step() == -259);

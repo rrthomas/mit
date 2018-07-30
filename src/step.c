@@ -473,10 +473,6 @@ CELL single_step(void)
         PUSH(LOAD_CELL(EP));
         EP += CELL_W;
         break;
-    case O_LITERALI:
-        PUSH(A);
-        goto next;
-        break;
  throw:
     case O_THROW:
         // exception may already be set, so CELL_STORE may have no effect here.

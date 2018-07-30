@@ -164,7 +164,7 @@ The registers, each with its function and pronunciation, are set out in table~\r
 {\tt I} & ``i'' & The {\tt I}nstruction. Holds the opcode of an instruction
     to be executed. \\
 {\tt A} & ``a'' & The instruction {\tt A}ccumulator. Holds the opcodes of
-    instructions to be executed, and immediate operands. \\
+    instructions to be executed. \\
 {\tt MEMORY} & ``memory'' & The size in bytes of @PACKAGE_NAME@'s main memory,
     which must be a multiple of four. \\
 {\tt SP} & ``s-p'' & The data {\tt S}tack {\tt P}ointer. \\
@@ -428,23 +428,10 @@ being placed separately in the next available cell.
 Since branch destinations must be cell-aligned, some instruction sequences may
 contain gaps. These must be padded with {\tt NEXT} (opcode \$00).
 
-Literals and branch addresses should be placed in memory as follows. If a
-literal (see section~\ref{literals}) or branch address (see section~\ref{control})
-will fit in the rest of the cell directly after its instruction
-(see below), it should be placed there, and the immediate form of the
-instruction used. Otherwise it should be placed in the cell after the
+Literals and branch addresses should be placed in the cell after the
 instruction. Further instructions may still be stored in the current cell. If
 more than one literal or branch instruction is encoded in one instruction cell,
 the literal values follow each other in successive cells.
-
-Given an instruction cell with \textit{n} bytes free, a literal will fit into
-it if it can be represented as an \textit{n}-byte twos complement number.
-Immediate mode branch destinations are given as the relative cell count from
-the value {\tt EP} will have when the instruction is executed (rather than the
-address of the instruction cell containing the instruction) to the address of
-the destination instruction cell (not as absolute addresses). The literal or
-branch is stored with the bytes in the same order as for a four-byte number, at
-the most significant end of the instruction cell.
 
 
 \subsection{Execution cycle}
@@ -627,11 +614,10 @@ Subroutine call and return:
 \subsection{Literals}
 \label{literals}
 
-These instructions encode literal values which are placed on the stack.
+This instructions encodes literal values which are placed on the stack.
 
 \begin{description}
 \instp{(LITERAL)}{bracket-literal}{-- x}{Push the cell pointed to by {\tt EP} on to the stack, then add four to {\tt EP}.}
-\instp{(LITERAL)I}{bracket-literal-i}{-- x}{Push the contents of {\tt A} on to the stack. Perform the action of {\tt NEXT}.}
 \end{description}
 
 
@@ -701,7 +687,7 @@ undefined opcodes (\$61–\$FE) raise exception $-256$.
 \opcodetbl{18}{U>}	{39}{@}		{5A}{undefined}
 \opcodetbl{19}{undefined}	{3A}{!}		{5B}{J}
 \opcodetbl{1A}{undefined}	{3B}{C@}	{5C}{(LITERAL)}
-\opcodetbl{1B}{undefined}	{3C}{C!}        {5D}{(LITERAL)I}
+\opcodetbl{1B}{undefined}	{3C}{C!}        {5D}{undefined}
 \opcodetbl{1C}{undefined}	{3D}{undefined}        {5E}{THROW}
 \opcodetbl{1D}{undefined}	{3E}{SP@}	{5F}{HALT}
 \opcodetbl{1E}{+}	{3F}{SP!}       {60}{LINK}

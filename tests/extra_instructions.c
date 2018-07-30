@@ -25,7 +25,7 @@ int main(void)
     assert(register_args(argc, argv) == 0);
 
     start_ass(EP);
-    ass(OX_ARGC); ass(O_LITERALI); ilit(1);
+    ass(OX_ARGC); ass(O_LITERAL); lit(1);
     ass(OX_ARG);
 
     assert(single_step() == -259);   // load first instruction word

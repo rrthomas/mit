@@ -15,8 +15,8 @@
 #include "tests.h"
 
 
-unsigned correct[] = { 4, 100, 52, 10004, 10008, 10012, 10016, 10020, 10024, 11004,
-                       11008, 11020, 11024, 68, 204, 304, 212, 76, 80, 84, 84, 84, 84, 68 };
+unsigned correct[] = { 4, 100, 52, 10004, 10008, 10012, 10016, 10020, 10024, 10028, 11004,
+                       11008, 11020, 11024, 68, 204, 304, 212, 76, 80, 84, 84, 84, 88, 88, 68 };
 
 
 int main(void)
@@ -36,28 +36,28 @@ int main(void)
     ass(O_BRANCH); lit(10000);
 
     start_ass(10000);
-    ass(O_LITERALI); ilit(1);
+    ass(O_LITERAL); lit(1);
     ass(O_QBRANCH); lit(10008);
-    ass(O_LITERALI); ilit(1);
-    ass(O_QBRANCH); lit(0); ass(O_LITERALI); ilit(0);
+    ass(O_LITERAL); lit(1);
+    ass(O_QBRANCH); lit(0); ass(O_LITERAL); lit(0);
     ass(O_QBRANCH); lit(11000);
 
     start_ass(11000);
-    ass(O_LITERALI); ilit(0);
+    ass(O_LITERAL); lit(0);
     ass(O_QBRANCH); lit(11016);
 
     start_ass(11016);
-    ass(O_LITERALI); ilit(64);
+    ass(O_LITERAL); lit(64);
     ass(O_EXECUTE);
 
     start_ass(64);
-    ass(O_CALL); lit(200); ilit(0);
-    ass(O_LITERALI); ilit(64);
-    ass(O_LITERALI); ilit(20);
+    ass(O_CALL); lit(200); ass(O_NEXT00); ass(O_NEXT00); ass(O_NEXT00);
+    ass(O_LITERAL); lit(64);
+    ass(O_LITERAL); lit(20);
     ass(O_TUCK); ass(O_STORE); ass(O_FETCH); ass(O_EXECUTE);
 
     start_ass(200);
-    ass(O_CALL); lit(300); ilit(0);
+    ass(O_CALL); lit(300); ass(O_NEXT00); ass(O_NEXT00); ass(O_NEXT00);
     ass(O_EXIT);
 
     start_ass(300);

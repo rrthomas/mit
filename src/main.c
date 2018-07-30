@@ -257,11 +257,6 @@ static int load_op(BYTE o)
     return o == O_BRANCH || o == O_QBRANCH || o == O_CALL || o == O_LITERAL;
 }
 
-static int imm_op(BYTE o)
-{
-    return load_op(o & 0xfe);
-}
-
 static void disassemble(UCELL start, UCELL end)
 {
     for (UCELL p = start; p < end; ) {
@@ -287,14 +282,6 @@ static void disassemble(UCELL start, UCELL end)
                 else
                     printf(" %"PRId32" ($%"PRIX32")", lit, (UCELL)lit);
                 p += CELL_W;
-            } else {
-                if (imm_op(i)) {
-                    if (i != O_LITERALI)
-                        printf(" $%"PRIX32, p + a * CELL_W);
-                    else
-                        printf(" %"PRId32" ($%"PRIX32")", a, (UCELL)a);
-                    a = 0;
-                }
             }
 
             printf("\n");
@@ -665,7 +652,6 @@ static void do_command(int no)
         }
         break;
     case c_BLITERAL:
-    case c_ILITERAL:
     case c_LITERAL:
     case c_PLITERAL:
         {
@@ -677,10 +663,6 @@ static void do_command(int no)
                 if (bytes > 1)
                     fatal("the argument to BLITERAL must fit in a byte");
                 ass((BYTE)value);
-                break;
-            case c_ILITERAL:
-                if (ilit(value) == false)
-                    fatal("ILITERAL %lld does not fit in the current instruction word", value);
                 break;
             case c_LITERAL:
                 if (bytes > CELL_W)
