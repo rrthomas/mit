@@ -474,10 +474,8 @@ otherwise.
 
 \begin{description}
 \instp{<}{less-than}{\n1 \n2 -- flag}{\spic{flag} is true if and only if \n1 is less than \n2.}
-\instp{>}{greater-than}{\n1 \n2 -- flag}{\spic{flag} is true if and only if \n1 is greater than \n2.}
 \instp{=}{equals}{\x1 \x2 -- flag}{\spic{flag} is true if and only if \x1 is bit-for-bit the same as \x2.}
 \instp{U<}{u-less-than}{\U1 \U2 -- flag}{\spic{flag} is true if and only if \U1 is less than \U2.}
-\instp{U>}{u-greater-than}{\U1 \U2 -- flag}{\spic{flag} is true if and only if \U1 is greater than \U2.}
 \end{description}
 
 
@@ -676,7 +674,7 @@ undefined opcodes (\$61–\$FE) raise exception $-256$.
 \opcodetbl{0D}{R>}	{2E}{NEGATE}	{4F}{undefined}
 \opcodetbl{0E}{R@}	{2F}{undefined}	{50}{EXECUTE}
 \opcodetbl{0F}{<}	{30}{undefined}	{51}{@EXECUTE}
-\opcodetbl{10}{>}	{31}{INVERT}	{52}{CALL}
+\opcodetbl{10}{undefined}	{31}{INVERT}	{52}{CALL}
 \opcodetbl{11}{=}	{32}{AND}	{53}{undefined}
 \opcodetbl{12}{undefined}	{33}{OR}	{54}{EXIT}
 \opcodetbl{13}{undefined}	{34}{XOR}	{55}{undefined}
@@ -684,7 +682,7 @@ undefined opcodes (\$61–\$FE) raise exception $-256$.
 \opcodetbl{15}{undefined}	{36}{RSHIFT}	{57}{undefined}
 \opcodetbl{16}{undefined}	{37}{undefined}	{58}{undefined}
 \opcodetbl{17}{U<}	{38}{undefined}	{59}{undefined}
-\opcodetbl{18}{U>}	{39}{@}		{5A}{undefined}
+\opcodetbl{18}{undefined}	{39}{@}		{5A}{undefined}
 \opcodetbl{19}{undefined}	{3A}{!}		{5B}{J}
 \opcodetbl{1A}{undefined}	{3B}{C@}	{5C}{(LITERAL)}
 \opcodetbl{1B}{undefined}	{3C}{C!}        {5D}{undefined}

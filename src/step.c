@@ -240,13 +240,6 @@ CELL single_step(void)
             PUSH(b < a ? PACKAGE_UPPER_TRUE : PACKAGE_UPPER_FALSE);
         }
         break;
-    case O_GREATER:
-        {
-            CELL a = POP;
-            CELL b = POP;
-            PUSH(b > a ? PACKAGE_UPPER_TRUE : PACKAGE_UPPER_FALSE);
-        }
-        break;
     case O_EQUAL:
         {
             CELL a = POP;
@@ -259,13 +252,6 @@ CELL single_step(void)
             UCELL a = POP;
             UCELL b = POP;
             PUSH(b < a ? PACKAGE_UPPER_TRUE : PACKAGE_UPPER_FALSE);
-        }
-        break;
-    case O_UGREATER:
-        {
-            UCELL a = POP;
-            UCELL b = POP;
-            PUSH(b > a ? PACKAGE_UPPER_TRUE : PACKAGE_UPPER_FALSE);
         }
         break;
     case O_PLUS:

@@ -16,8 +16,7 @@
 int exception = 0;
 CELL temp;
 
-CELL correct[] = { 0, -1, 0, -1, -1, 0, 0, 0, -1, 0,
-    0, -1, 0, 0, -1, 0, 0, -1};
+CELL correct[] = { 0, -1, 0, -1, -1, 0, 0, -1, 0, 0};
 
 
 static void stack1(void)
@@ -64,23 +63,17 @@ int main(void)
 
     start_ass(EP);
     ass(O_LESS); ass(O_LESS); ass(O_LESS); ass(O_LESS);
-    ass(O_GREATER); ass(O_GREATER); ass(O_GREATER); ass(O_GREATER);
     ass(O_EQUAL); ass(O_EQUAL);
     ass(O_ULESS); ass(O_ULESS); ass(O_ULESS); ass(O_ULESS);
-    ass(O_UGREATER); ass(O_UGREATER); ass(O_UGREATER); ass(O_UGREATER);
 
     assert(single_step() == -259);   // load first instruction word
 
     stack1();       // set up the stack with four standard pairs to compare
     step(0, 5);     // do the < tests
-    stack1();
-    step(5, 10);     // do the > tests
     stack2();       // set up the stack with two standard pairs to compare
-    step(10, 12);   // do the = tests
+    step(5, 7);     // do the = tests
     stack1();       // set up the stack with four standard pairs to compare
-    step(12, 17);   // do the U< tests
-    stack1();
-    step(17, 22);   // do the U> tests
+    step(7, 12);    // do the U< tests
 
     assert(exception == 0);
     printf("Comparison tests ran OK\n");
