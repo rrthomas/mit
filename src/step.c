@@ -172,32 +172,6 @@ CELL single_step(void)
             PUSH(last);
         }
         break;
-    case O_NROT:
-        {
-            CELL top = POP;
-            CELL next = POP;
-            CELL last = POP;
-            PUSH(top);
-            PUSH(last);
-            PUSH(next);
-        }
-        break;
-    case O_TUCK:
-        {
-            CELL top = POP;
-            CELL next = POP;
-            PUSH(top);
-            PUSH(next);
-            PUSH(top);
-        }
-        break;
-    case O_NIP:
-        {
-            CELL keep = POP;
-            (void)POP;
-            PUSH(keep);
-        }
-        break;
     case O_PICK:
         {
             CELL depth = POP;
