@@ -70,7 +70,7 @@ int main(void)
     // test 7
     ass(O_LITERAL); lit(1);
     ass(O_LITERAL); lit(0);
-    ass(O_SLASH); ass(O_NEXT00);
+    ass(O_SREMSLASH); ass(O_DROP);
 
     test[testno++] = ass_current();
     fprintf(stderr, "Test %d: EP = %u\n", testno, ass_current());

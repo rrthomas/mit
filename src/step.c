@@ -41,14 +41,6 @@ verify(sizeof(int) <= sizeof(CELL));
     CHECK_ADDRESS(a, CELL_IN_ONE_AREA(a), -9, badadr)
 
 
-// Division macros
-#define ABS(x) ((x) >= 0 ? (x) : -(x))
-#define SGN(x) ((x) > 0 ? 1 : -1)  // not a proper sign function!
-
-#define FDIV(a, b) ((a) / (b) - ((((a) ^ (b)) < 0) && ((a) % (b)) != 0))
-#define FMOD(a, b, t) ((t = (a) % (b), (((a) ^ (b)) >= 0 || t == 0)) ? t : \
-                       SGN(b) * (ABS(b) - ABS(t)))
-
 #define DIVZERO(x)                              \
     if (x == 0) {                               \
         PUSH(-10);                              \
@@ -242,47 +234,22 @@ CELL single_step(void)
             PUSH(multiplier * multiplicand);
         }
         break;
-    case O_SLASH:
-        {
-            CELL divisor = POP;
-            CELL dividend = POP;
-            DIVZERO(divisor);
-            PUSH(FDIV(dividend, divisor));
-        }
-        break;
-    case O_MOD:
-        {
-            CELL divisor = POP;
-            CELL dividend = POP;
-            DIVZERO(divisor);
-            PUSH(FMOD(dividend, divisor, temp));
-        }
-        break;
-    case O_SLASHMOD:
-        {
-            CELL divisor = POP;
-            CELL dividend = POP;
-            DIVZERO(divisor);
-            PUSH(FMOD(dividend, divisor, temp));
-            PUSH(FDIV(dividend, divisor));
-        }
-        break;
-    case O_USLASHMOD:
+    case O_UMODSLASH:
         {
             UCELL divisor = POP;
             UCELL dividend = POP;
             DIVZERO(divisor);
-            PUSH(dividend % divisor);
             PUSH(dividend / divisor);
+            PUSH(dividend % divisor);
         }
         break;
-    case O_SSLASHREM:
+    case O_SREMSLASH:
         {
             CELL divisor = POP;
             CELL dividend = POP;
             DIVZERO(divisor);
-            PUSH(dividend % divisor);
             PUSH(dividend / divisor);
+            PUSH(dividend % divisor);
         }
         break;
     case O_NEGATE:

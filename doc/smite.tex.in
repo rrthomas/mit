@@ -499,11 +499,8 @@ infinity, except for {\tt S/REM}, which rounds the quotient towards zero):
 
 \begin{description}
 \instp{*}{star}{\noru1 \noru2 -- \noru3}{Multiply \noru1 by \noru2 giving the product \noru3.}
-\instp{/}{slash}{\n1 \n2 -- \n3}{Divide \n1 by \n2, giving the single-cell quotient \n3.}
-\inst{MOD}{\n1 \n2 -- \n3}{Divide \n1 by \n2, giving the single-cell remainder \n3.}
-\instp{/MOD}{slash-mod}{\n1 \n2 -- \n3 \n4}{Divide \n1 by \n2, giving the single-cell remainder \n3 and the single-cell quotient \n4.}
-\instp{U/MOD}{u-slash-mod}{\U1 \U2 -- \U3 \U4}{Divide \U1 by \U2, giving the single-cell remainder \U3 and the single-cell quotient \U4.}
-\instp{S/REM}{s-slash-rem}{\n1 \n2 -- \n3 \n4}{Divide \n1 by \n2 using symmetric division, giving the single-cell remainder \n3 and the single-cell quotient \n4.}
+\instp{UMOD/}{u-mod-slash}{\U1 \U2 -- \U3 \U4}{Divide \U1 by \U2, giving the single-cell quotient \U3 and the single-cell remainder \U4.}
+\instp{SREM/}{s-rem-slash}{\n1 \n2 -- \n3 \n4}{Divide \n1 by \n2 using symmetric division, giving the single-cell quotient \n3 and the single-cell remainder \n4.}
 \end{description}
 
 Sign function:
@@ -660,11 +657,11 @@ undefined opcodes (\$61–\$FE) raise exception $-256$.
 \opcodetbl{02}{DROP}	{23}{undefined}	{44}{\#S}
 \opcodetbl{03}{SWAP}	{24}{undefined}	{45}{R0@}
 \opcodetbl{04}{OVER}	{25}{*}		{46}{\#R}
-\opcodetbl{05}{ROT}	{26}{/}		{47}{'THROW@}
-\opcodetbl{06}{undefined}	{27}{MOD}	{48}{'THROW!}
-\opcodetbl{07}{undefined}	{28}{/MOD}	{49}{MEMORY@}
-\opcodetbl{08}{undefined}	{29}{U/MOD}	{4A}{'BAD@}
-\opcodetbl{09}{PICK}	{2A}{S/REM}	{4B}{-ADDRESS@}
+\opcodetbl{05}{ROT}	{26}{undefined}		{47}{'THROW@}
+\opcodetbl{06}{undefined}	{27}{undefined}	{48}{'THROW!}
+\opcodetbl{07}{undefined}	{28}{undefined}	{49}{MEMORY@}
+\opcodetbl{08}{undefined}	{29}{UMOD/}	{4A}{'BAD@}
+\opcodetbl{09}{PICK}	{2A}{SREM/}	{4B}{-ADDRESS@}
 \opcodetbl{0A}{ROLL}	{2B}{undefined}	{4C}{BRANCH}
 \opcodetbl{0B}{undefined}	{2C}{undefined}	{4D}{undefined}
 \opcodetbl{0C}{>R}	{2D}{undefined}	{4E}{?BRANCH}
