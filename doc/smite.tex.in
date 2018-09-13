@@ -82,20 +82,16 @@
 \newcommand{\opcodetbltwo}[4]{\$#1 & {\tt #2} & \$#3 & {\tt #4} \\}
 
 
-\title{The @PACKAGE_NAME@ Forth Virtual Machine}
+\title{The @PACKAGE_NAME@ Virtual Machine}
 \author{Reuben Thomas}
-\date{29th October 1993; revised 17th April 2018}
+\date{13th September 2018}
 
 \begin{document}
 \maketitle
 
 \begin{abstract}
-\noindent The design of the @PACKAGE_NAME@ Forth virtual machine is described.
-@PACKAGE_NAME@'s purpose is to provide an easily portable environment for ANS Forth
-compilers: to move a compiler from one system to another only @PACKAGE_NAME@ and the I/O
-libraries need be rewritten. Like most interpreters, @PACKAGE_NAME@ gains portability
-and compactness at the expense of speed, but it retains flexibility by providing
-instructions to call machine code and access the operating system.
+\noindent The design of the @PACKAGE_NAME@ virtual machine is described.
+@PACKAGE_NAME@'s is a deliberately simple and highly portable low-level VM intended for study and experiment. @PACKAGE_NAME@ is able to call machine code and access the operating system.
 \end{abstract}
 
 
@@ -114,9 +110,8 @@ stated. Addresses are written in hexadecimal; hex numbers are prefixed with
 
 \section{Introduction}
 
-@PACKAGE_NAME@ is a simple virtual machine designed to enable the easy implementation
-of ANS Forth compilers, such as \href{https://github.com/rrthomas/pforth}{pForth}, on different systems. It is a stack machine; the instruction set is based on the Core Word Set of
-ANS Forth~\cite{ANSIforth}. This paper gives a full description of @PACKAGE_NAME@, but
+@PACKAGE_NAME@ is a simple virtual machine for study and experiment. It is a stack machine, based on the more complex register machine~\cite{mite}.
+This paper gives a full description of @PACKAGE_NAME@, but
 certain implementation-dependent features, such as the size of the stacks, are
 purposely left unspecified, and the exact method of implementation is left to
 the implementor in many particulars.
@@ -127,12 +122,6 @@ instruction. @PACKAGE_NAME@ supports a simple object module format.
 
 @PACKAGE_NAME@ is conceptually (and usually in fact) a library, embedded in other programs.
 A small interface is provided for other programs to control @PACKAGE_NAME@.
-
-Since @PACKAGE_NAME@ is heavily oriented towards supporting Forth compilers, it is
-useful to understand how Forth compilers operate in order to understand @PACKAGE_NAME@
-and to use it properly. An excellent introduction to Forth and Forth compilers
-is~\cite{starting4th}. An overview of the language and its compilers is also
-provided in~\cite{ANSIforth}. For an implementation of @PACKAGE_NAME@, see~\cite{c@PACKAGE@}.
 
 
 \section{Architecture}
@@ -209,8 +198,7 @@ pointer point to the second item on the stack. Instructions that change the numb
 stack implicitly pop their arguments and push their results.
 
 The data stack is used for passing values to instructions and routines and the
-return stack for holding subroutine return addresses and the index and limit of
-the Forth {\tt DO\dots LOOP} construct. The return stack may be used for other
+return stack for holding subroutine return addresses. The return stack may be used for other
 operations subject to the restrictions placed on it by its normal usage: it must
 be returned before an {\tt EXIT} instruction to the state it was in directly
 after the corresponding {\tt CALL}.
@@ -285,12 +273,8 @@ stack at the time the exception is raised. Some exceptions are raised by
 other instructions, for example by {\tt /} when division by zero is attempted;
 these push the exception code on to the stack and then execute a {\tt THROW}.
 
-Exception codes are signed numbers. $-1$ to $-255$ are reserved for ANS Forth
-exception codes, and $-256$ to $-511$ for @PACKAGE_NAME@'s own exception codes; the meanings
-of those that may be raised by @PACKAGE_NAME@ are shown in table~\ref{excepttable}. ANS
-Forth compilers may raise other exceptions in the range $-1$ to $-255$ and
-additionally reserve exceptions $-512$ to $-4095$ for their own exceptions
-(see~\cite[section 9.3.1]{ANSIforth}).
+Exception codes are signed numbers. $-1$ to $-511$ are reserved for @PACKAGE_NAME@'s own exception codes; the meanings
+of those that may be raised by @PACKAGE_NAME@ are shown in table~\ref{excepttable}.
 
 \begin{table}[htbp]
 \begin{center}
@@ -580,9 +564,8 @@ RP} may only be accessed through special instructions:
 \subsection{Control structures}
 \label{control}
 
-These instructions implement unconditional and conditional branches, subroutine
-call and return, and various aspects of the Forth {\tt DO}\dots{\tt LOOP}
-construct.
+These instructions implement unconditional and conditional branches, and subroutine
+call and return.
 
 Branches:
 
@@ -698,7 +681,7 @@ undefined opcodes (\$61–\$FE) raise exception $-256$.
 @PACKAGE_NAME@ to be controlled by other programs. The {\tt LINK} instruction and extra instructions mechanism allow implementations to provide access to system facilities, previously written code,
 code written in other languages, and the speed of machine code in time-critical
 situations. The object module format allows compiled code to be saved, reloaded
-and shared between systems. pForth is loaded from an object module.
+and shared between systems.
 
 
 \subsection{Object module format}
@@ -712,11 +695,7 @@ the same endianness as that indicated in the previous byte. Then follows the
 code, which must fill a whole number of cells.
 
 Object modules have a simple structure, as they are only intended for loading an
-initial memory image into @PACKAGE_NAME@, such as the pForth compiler. Forth does not
-typically support the loading of compiled code into the compiler, nor there is
-any need, as compilers are fast, and an incremental style of program
-development, with only a little source code being recompiled at a time, is
-typically used.
+initial memory image into @PACKAGE_NAME@.
 
 
 \subsection{Calling interface}
@@ -760,13 +739,8 @@ appropriate data objects.
 
 \section*{Acknowledgements}
 
-Leo Brodie's marvellous books~\cite{starting4th,thinking4th} turned my abstract
-enthusiasm for a mysterious language into actual knowledge and appreciation.
-
-I have taken or extrapolated the pronunciations of Forth words from~\cite{ANSIforth}.
-
 Martin Richards's demonstration of his BCPL-oriented Cintcode virtual machine~\cite{cintweb}
-convinced me it was going to be fun working on virtual machines. He also supervised my BA dissertation project, Beetle, on which @PACKAGE@ is based.
+convinced me it was going to be fun working on virtual machines. He also supervised my BA dissertation project, Beetle, on which @PACKAGE_NAME@ is based.
 
 \bibliographystyle{plain}
 \bibliography{vm,rrt}

@@ -40,7 +40,7 @@ main.o: tbl_opts.h
 ## Exit gracefully if @PACKAGE@.1 is not writeable, such as during distcheck!
 	$(AM_V_GEN)if ( touch $@.w && rm -f $@.w; ) >/dev/null 2>&1; then \
 	  $(top_srcdir)/build-aux/missing --run $(HELP2MAN) --no-info \
-		--name="Forth virtual machine" \
+		--name="Virtual machine" \
 		--output=$@ ./@PACKAGE@$(EXEEXT); \
 	fi
 

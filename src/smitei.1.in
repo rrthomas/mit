@@ -1,6 +1,6 @@
 .TH @PACKAGE@I "1" "July 2018" "@PACKAGE_NAME@" "User Commands"
 .SH NAME
-@PACKAGE@i \- @PACKAGE_NAME@ Forth virtual machine interactive wrapper
+@PACKAGE@i \- @PACKAGE_NAME@ virtual machine interactive wrapper
 .SH SYNOPSIS
 .B @PACKAGE@i
 [\fI\,OPTION\/\fR...] [\fI\,OBJECT\-FILE ARGUMENT\/\fR...]

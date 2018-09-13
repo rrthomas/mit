@@ -3,7 +3,7 @@
 by Reuben Thomas <rrt@sc3d.org>  
 https://github.com/rrthomas/smite  
 
-SMite is a simple virtual machine designed for the Forth language. It uses
+SMite is a simple virtual machine designed for study and experiment. It uses
 a byte-stream code designed for efficient execution which is binary portable
 between implementations. It has been implemented in C for POSIX systems.
 SMite is designed to be embedded in other programs; a simple
@@ -86,9 +86,9 @@ smite hello.obj
 
 The canonical documentation consists of:
 
-* _[The SMite Forth Virtual Machine](doc/smite.pdf)_  
-The design of the SMite Forth virtual machine is described. Essential
-reading for those programming or implementing the VM.
+* _[The SMite Virtual Machine](doc/smite.pdf)_  
+The design of the SMite virtual machine is described. Essential reading
+for those programming or implementing the VM.
 * _[An implementation of the SMite virtual machine for POSIX](doc/csmite.pdf)_  
 A portable implementation of SMite is described, with instructions for
 porting, compiling and running it.
