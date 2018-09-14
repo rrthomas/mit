@@ -75,8 +75,8 @@ int main(void)
     test[testno++] = ass_current();
     fprintf(stderr, "Test %d: EP = %u\n", testno, ass_current());
     // test 8: allow execution to run off the end of a memory area
-    ass(O_BRANCH); ass(O_NEXT00); ass(O_NEXT00); ass(O_NEXT00);
-    lit(MEMORY - CELL_W);
+    ass(O_LITERAL); lit(MEMORY - CELL_W);
+    ass(O_EPSTORE); ass(O_NEXT00); ass(O_NEXT00);
 
     test[testno++] = ass_current();
     fprintf(stderr, "Test %d: EP = %u\n", testno, ass_current());

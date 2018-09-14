@@ -350,37 +350,29 @@ CELL single_step(void)
             RP = value;
         }
         break;
-    case O_BRANCH:
+    case O_EPSTORE:
         {
-            CELL addr = LOAD_CELL(EP);
+            CELL addr = POP;
             CHECK_ALIGNED_WHOLE_CELL(addr);
             EP = addr;
             goto next;
         }
         break;
-    case O_QBRANCH:
-        if (POP == PACKAGE_UPPER_FALSE) {
-            CELL addr = LOAD_CELL(EP);
-            CHECK_ALIGNED_WHOLE_CELL(addr);
-            EP = addr;
-            goto next;
-        } else
-            EP += CELL_W;
-        break;
+    case O_QEPSTORE:
+        {
+            CELL addr = POP;
+            if (POP == PACKAGE_UPPER_FALSE) {
+                CHECK_ALIGNED_WHOLE_CELL(addr);
+                EP = addr;
+                goto next;
+            }
+            break;
+        }
     case O_EXECUTE:
         {
             CELL addr = POP;
             CHECK_ALIGNED_WHOLE_CELL(addr);
             PUSH_RETURN(EP);
-            EP = addr;
-            goto next;
-        }
-        break;
-    case O_CALL:
-        {
-            PUSH_RETURN(EP + CELL_W);
-            CELL addr = LOAD_CELL(EP);
-            CHECK_ALIGNED_WHOLE_CELL(addr);
             EP = addr;
             goto next;
         }

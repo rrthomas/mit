@@ -254,7 +254,7 @@ static void double_arg(char *s, long long *start, long long *end, bool default_a
 
 static int load_op(BYTE o)
 {
-    return o == O_BRANCH || o == O_QBRANCH || o == O_CALL || o == O_LITERAL;
+    return o == O_LITERAL;
 }
 
 static void disassemble(UCELL start, UCELL end)
