@@ -181,6 +181,13 @@ CELL single_step(void)
             STORE_CELL(SP, rollee);
         }
         break;
+    case O_RPICK:
+        {
+            CELL depth = POP;
+            CELL pickee = LOAD_CELL(RP - depth * CELL_W * STACK_DIRECTION);
+            PUSH(pickee);
+        }
+        break;
     case O_TOR:
         {
             CELL value = POP;
@@ -190,12 +197,6 @@ CELL single_step(void)
     case O_RFROM:
         {
             CELL value = POP_RETURN;
-            PUSH(value);
-        }
-        break;
-    case O_RFETCH:
-        {
-            CELL value = LOAD_CELL(RP);
             PUSH(value);
         }
         break;
@@ -384,9 +385,6 @@ CELL single_step(void)
             EP = addr;
             goto next;
         }
-        break;
-    case O_J:
-        PUSH(LOAD_CELL(RP - 2 * CELL_W * STACK_DIRECTION));
         break;
     case O_LITERAL:
         PUSH(LOAD_CELL(EP));

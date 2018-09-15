@@ -95,7 +95,7 @@ _GL_ATTRIBUTE_PURE UCELL ass_current(void)
 
 static const char *mnemonic[UINT8_MAX + 1] = {
     "NEXT00", "DUP", "DROP", "SWAP", "OVER", "ROT", NULL, NULL,
-    NULL, "PICK", "ROLL", NULL, ">R", "R>", "R@", "<",
+    NULL, "PICK", "ROLL", "RPICK", ">R", "R>", NULL, "<",
     NULL, "=", NULL, NULL, NULL, NULL, NULL, "U<",
     NULL, NULL, NULL, NULL, NULL, NULL, "+", NULL,
     NULL, NULL, NULL, NULL, NULL, "*", NULL, NULL,
@@ -105,7 +105,7 @@ static const char *mnemonic[UINT8_MAX + 1] = {
     "RP@", "RP!", "EP@", "S0@", "#S", "R0@", "#R", "'THROW@",
     "'THROW!", "MEMORY@", "'BAD@", "-ADDRESS@", NULL, "EP!", NULL, "?EP!",
     "EXECUTE", NULL, NULL, NULL, "EXIT", NULL, NULL, NULL,
-    NULL, NULL, NULL, "J", "(LITERAL)", NULL, "THROW", "HALT",
+    NULL, NULL, NULL, NULL, "(LITERAL)", NULL, "THROW", "HALT",
     "LINK", NULL, NULL, NULL, NULL, NULL, NULL, NULL,
     NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
     NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
