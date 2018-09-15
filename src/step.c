@@ -154,16 +154,6 @@ CELL single_step(void)
             PUSH(next);
         }
         break;
-    case O_ROT:
-        {
-            CELL top = POP;
-            CELL next = POP;
-            CELL last = POP;
-            PUSH(next);
-            PUSH(top);
-            PUSH(last);
-        }
-        break;
     case O_PICK:
         {
             CELL depth = POP;

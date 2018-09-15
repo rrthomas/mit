@@ -15,8 +15,8 @@
 
 
 const char *correct[] = {
-    "-16777216 8 255 8", "-16777216 8 65280", "8 65280 -16777216",
-    "65280 -16777216 8", "65280 16711680", "16776960",
+    "-16777216 8 255 8", "-16777216 8 65280",  "-16777216 8 65280 2", "8 65280 -16777216",
+    "8 65280 -16777216 2", "65280 -16777216 8", "65280 16711680", "16776960",
     "-16776961", "-16776961 1", "-16776961 1 -1", "-16776961 -2", "-16776962"};
 
 
@@ -29,7 +29,7 @@ int main(void)
     PUSH(0xff000000); PUSH(8); PUSH(0xff); PUSH(8);
 
     start_ass(EP);
-    ass(O_LSHIFT); ass(O_ROT); ass(O_ROT); ass(O_RSHIFT);
+    ass(O_LSHIFT); ass(O_LITERAL); lit(2); ass(O_ROLL); ass(O_LITERAL); lit(2); ass(O_ROLL); ass(O_RSHIFT);
     ass(O_OR); ass(O_INVERT); ass(O_LITERAL); lit(1);
     ass(O_LITERAL); lit(-1);
     ass(O_XOR); ass(O_AND);
