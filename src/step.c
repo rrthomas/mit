@@ -131,12 +131,6 @@ CELL single_step(void)
         EP += CELL_W;
         exception = load_cell(EP - CELL_W, &A);
         break;
-    case O_DUP:
-        {
-            CELL top = LOAD_CELL(SP);
-            PUSH(top);
-        }
-        break;
     case O_DROP:
         (void)POP;
         break;

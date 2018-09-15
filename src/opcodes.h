@@ -15,7 +15,7 @@
 
 enum {
     O_NEXT00,
-    O_DUP,
+    O_UNDEF45,
     O_DROP,
     O_SWAP,
     O_UNDEF44,

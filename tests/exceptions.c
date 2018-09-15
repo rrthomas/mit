@@ -12,8 +12,8 @@
 
 
 CELL result[] = { -257, -257, 42, 0, -23, -23, -10, -9, -9, -23, -256, -258 };
-UCELL bad[] = { -1, -1, -1, 28, 56, 64, 76, 16388, 92, 100, 104, 112 };
-UCELL address[] = { -16, 16384, 0, 0, 5, 1, 0, 16384, -20, 1, 0, 1 };
+UCELL bad[] = { -1, -1, -1, 28, 60, 68, 80, 16388, 96, 104, 108, 124 };
+UCELL address[] = { -12, 16384, 0, 0, 5, 1, 0, 16384, -20, 1, 0, 1 };
 int testno = 0;
 UCELL test[sizeof(result) / sizeof(result[0])];
 
@@ -29,10 +29,10 @@ int main(void)
 
     test[testno++] = ass_current();
     fprintf(stderr, "Test %d: EP = %u\n", testno, ass_current());
-    // test 1: DUP into non-existent memory
+    // test 1: push stack value into non-existent memory
     ass(O_LITERAL); ass(O_NEXT00); ass(O_NEXT00); ass(O_NEXT00);
     lit(0xfffffff0);
-    ass(O_SPSTORE); ass(O_DUP); ass(O_NEXT00); ass(O_NEXT00);
+    ass(O_SPSTORE); ass(O_LITERAL); lit(0); ass(O_NEXT00); ass(O_NEXT00);
 
     test[testno++] = ass_current();
     fprintf(stderr, "Test %d: EP = %u\n", testno, ass_current());
@@ -99,7 +99,7 @@ int main(void)
     fprintf(stderr, "Test %d: EP = %u\n", testno, ass_current());
     // test 12: test invalid 'THROW contents
     ass(O_LITERAL); lit(0xffffffec);
-    ass(O_DUP); ass(O_THROWSTORE); ass(O_THROW);
+    ass(O_LITERAL); lit(0); ass(O_PICK); ass(O_THROWSTORE); ass(O_THROW);
 
     start_ass(200);
     ass(O_HALT);
