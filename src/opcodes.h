@@ -18,7 +18,7 @@ enum {
     O_DUP,
     O_DROP,
     O_SWAP,
-    O_OVER,
+    O_UNDEF44,
     O_UNDEF43,
     O_UNDEF40,
     O_UNDEF41,

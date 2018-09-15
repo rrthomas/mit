@@ -94,7 +94,7 @@ _GL_ATTRIBUTE_PURE UCELL ass_current(void)
 }
 
 static const char *mnemonic[UINT8_MAX + 1] = {
-    "NEXT00", "DUP", "DROP", "SWAP", "OVER", NULL, NULL, NULL,
+    "NEXT00", "DUP", "DROP", "SWAP", NULL, NULL, NULL, NULL,
     NULL, "PICK", "ROLL", "RPICK", ">R", "R>", NULL, "<",
     NULL, "=", NULL, NULL, NULL, NULL, NULL, "U<",
     NULL, NULL, NULL, NULL, NULL, NULL, "+", NULL,

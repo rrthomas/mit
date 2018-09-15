@@ -148,12 +148,6 @@ CELL single_step(void)
             PUSH(next);
         }
         break;
-    case O_OVER:
-        {
-            CELL next = LOAD_CELL(SP - CELL_W * STACK_DIRECTION);
-            PUSH(next);
-        }
-        break;
     case O_PICK:
         {
             CELL depth = POP;
