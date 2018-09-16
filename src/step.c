@@ -136,10 +136,11 @@ CELL single_step(void)
         break;
     case O_SWAP:
         {
+            CELL depth = POP;
+            CELL swapee = LOAD_CELL(SP - depth * CELL_W * STACK_DIRECTION);
             CELL top = POP;
-            CELL next = POP;
-            PUSH(top);
-            PUSH(next);
+            PUSH(swapee);
+            STORE_CELL(SP - depth * CELL_W * STACK_DIRECTION, top);
         }
         break;
     case O_PICK:
