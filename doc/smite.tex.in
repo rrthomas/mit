@@ -40,34 +40,19 @@
 % Define the widths of the stack effect and description columns
 \newlength{\itemwidth}\itemwidth=\textwidth \advance\itemwidth by -0.1in
 \newlength{\instname}\instname=0.5in
-\newlength{\pronunc}\pronunc=1.7in
 \newlength{\stackcom}\stackcom=3.0in
 \newlength{\beforestackcom} \advance\beforestackcom by \instname
-    \advance\beforestackcom by \pronunc
 
-% With no pronunciation or return stack
+% With no return stack
 \newcommand{\inst}[3]{\item[]\parbox{\itemwidth}%
-{\makebox[\instname][l]{\tt #1}\makebox[\pronunc][r]{}%
+{\makebox[\instname][l]{\tt #1}%
 \makebox[\stackcom][r]{\tt ( \spic{#2} )}\\[0.5ex]#3}}
 
-% With pronunciation only
-\newcommand{\instp}[4]{\item[]\parbox{\itemwidth}%
-{\makebox[\instname][l]{\tt #1}\makebox[\pronunc][r]{``#2''}%
-\makebox[\stackcom][r]{\tt ( \spic{#3} )}\\[0.5ex]%
-#4}}
-
-% With return stack only
+% With return stack
 \newcommand{\instr}[4]{\item[]\parbox{\itemwidth}%
-{\makebox[\instname][l]{\tt #1}\makebox[\pronunc][r]{}%
+{\makebox[\instname][l]{\tt #1}%
 \makebox[\stackcom][r]{\tt ( \spic{#2} )}\\\makebox[\beforestackcom]{}%
 \makebox[\stackcom][r]{\tt R: ( \spic{#3} )}\\[0.5ex]#4}}
-
-% With pronunciation and return stack
-\newcommand{\instpr}[5]{\item[]\parbox{\itemwidth}%
-{\makebox[\instname][l]{\tt #1}\makebox[\pronunc][r]{``#2''}%
-\makebox[\stackcom][r]{\tt ( \spic{#3} )}\\%
-\makebox[\beforestackcom]{}\makebox[\stackcom][r]{\tt R: ( \spic{#4} )}%
-\\[0.5ex]#5}}
 
 % Lay out an external interface call
 
@@ -99,9 +84,6 @@
 
 Instructions and @PACKAGE_NAME@'s registers are shown in {\tt Typewriter} font;
 interface calls are shown in {\bf Bold} type, and followed by empty parentheses.
-Quoted pronunciations of instructions and registers are given with components
-separated by dashes; single letters should be pronounced as the name of the
-letter.
 
 Addresses are given in bytes and refer to @PACKAGE_NAME@'s address space except where
 stated. Addresses are written in hexadecimal; hex numbers are prefixed with
@@ -141,36 +123,36 @@ address of a cell is that of the byte in it with the lowest address.
 \subsection{Registers}
 \label{registers}
 
-The registers, each with its function and pronunciation, are set out in table~\ref{regtable}.
+The registers, each with its function, are set out in table~\ref{regtable}.
 
 \begin{table}[htbp]
 \begin{center}
-\begin{tabular}{ccp{3.75in}} \toprule
-\bf Register & \bf Pronunciation & \bf Function \\
+\begin{tabular}{cp{3.75in}} \toprule
+\bf Register & \bf Function \\
     \midrule
-{\tt EP} & ``e-p'' & The {\tt E}xecution {\tt P}ointer. Points to the next
+{\tt EP} & The {\tt E}xecution {\tt P}ointer. Points to the next
     cell from which an instruction word may be loaded. \\
-{\tt I} & ``i'' & The {\tt I}nstruction. Holds the opcode of an instruction
+{\tt I} & The {\tt I}nstruction. Holds the opcode of an instruction
     to be executed. \\
-{\tt A} & ``a'' & The instruction {\tt A}ccumulator. Holds the opcodes of
+{\tt A} & The instruction {\tt A}ccumulator. Holds the opcodes of
     instructions to be executed. \\
-{\tt MEMORY} & ``memory'' & The size in bytes of @PACKAGE_NAME@'s main memory,
+{\tt MEMORY} & The size in bytes of @PACKAGE_NAME@'s main memory,
     which must be a multiple of four. \\
-{\tt SP} & ``s-p'' & The data {\tt S}tack {\tt P}ointer. \\
-{\tt RP} & ``r-p'' & The {\tt R}eturn stack {\tt P}ointer. \\
-{\tt S0} & ``s-nought'' & The data {\tt S}tack base. \\
-{\tt R0} & ``r-nought'' & The {\tt R}eturn stack base. \\
-{\tt \#S} & ``hash-s'' & The number of cells allocated for the data stack. \\
-{\tt \#R} & ``hash-r'' & The number of cells allocated for the return stack. \\
-{\tt 'THROW} & ``tick-throw'' & The address placed in {\tt EP} by a {\tt THROW}
+{\tt SP} & The data {\tt S}tack {\tt P}ointer. \\
+{\tt RP} & The {\tt R}eturn stack {\tt P}ointer. \\
+{\tt S0} & The data {\tt S}tack base. \\
+{\tt R0} & The {\tt R}eturn stack base. \\
+{\tt \#S} & The number of cells allocated for the data stack. \\
+{\tt \#R} & The number of cells allocated for the return stack. \\
+{\tt 'THROW} & The address placed in {\tt EP} by a {\tt THROW}
     instruction. \\
-{\tt ENDISM} & ``endism'' & The endianness of @PACKAGE_NAME@: 0 = Little-endian,
+{\tt ENDISM} & The endianness of @PACKAGE_NAME@: 0 = Little-endian,
     1 = Big-endian. \\
-{\tt CHECKED} & ``checked'' & 0 = address checking off, 1 = address checking
+{\tt CHECKED} & 0 = address checking off, 1 = address checking
     on. \\
-{\tt 'BAD} & ``tick-bad'' & The contents of {\tt EP} when the last exception
+{\tt 'BAD} & The contents of {\tt EP} when the last exception
     was raised. \\
-{\tt -ADDRESS} & ``not-address'' & The last address which caused an address
+{\tt -ADDRESS} & The last address which caused an address
     exception. \\ \bottomrule
 \end{tabular}
 \caption{\label{regtable}@PACKAGE_NAME@'s registers}
@@ -321,11 +303,10 @@ with the instructions grouped according to function. The
 instructions are given in the following format:
 
 \begin{description}
-\instpr{NAME}{pronunciation}{before -- after}{before -- after}{Description.}
+\instr{NAME}{before -- after}{before -- after}{Description.}
 \end{description}
 
-The first line consists of the name of the instruction followed by the
-pronunciation in quotes. On the right are the
+The first line consists of the name of the instruction. On the right are the
 stack effect or effects, which show the effect of the instruction on the data and return (R) stacks.
 Underneath is the description.
 
@@ -438,9 +419,9 @@ These instructions manage the data stack and move values between stacks.
 \inst{DROP}{\x{u}\dots\x1 u --}{Remove \spic{u} items from the stack.}
 \inst{DUP}{\x{u}\dots\x0 u -- \x{u}\dots\x0 \x{u}}{Remove \spic{u}. Copy \x{u} to the top of the stack. If there are fewer than \spic{u}~$+$~2 items on the stack before {\tt DUP} is executed, the memory cell which would have been \x{u} were there \spic{u}~$+$~2 items is copied to the top of the stack.}
 \inst{SWAP}{\x{u}\dots\x0 u -- \x0\x{u-1}\dots\x1 \x{u}}{Exchange the top stack item with the \spic{u}th.}
-\instpr{>R}{to-r}{x --}{-- x}{Move \spic{x} to the return stack.}
-\instpr{R>}{r-from}{-- x}{x --}{Move \spic{x} from the return stack to the data stack.}
-\instpr{RDUP}{r-pick}{u -- x}{\x{u} \x{u-1}\dots\x{0} -- \x{u} \x{u-1}\dots\x{0}}{Remove \spic{u}. Copy \x{u} to the top of the data stack. If there are fewer than \spic{u}~$+$~2 items on the stack before {\tt RDUP} is executed, the memory cell which would have been \x{u} were there \spic{u}~$+$~2 items is copied to the top of the data stack.}
+\instr{>R}{x --}{-- x}{Move \spic{x} to the return stack.}
+\instr{R>}{-- x}{x --}{Move \spic{x} from the return stack to the data stack.}
+\instr{RDUP}{u -- x}{\x{u} \x{u-1}\dots\x{0} -- \x{u} \x{u-1}\dots\x{0}}{Remove \spic{u}. Copy \x{u} to the top of the data stack. If there are fewer than \spic{u}~$+$~2 items on the stack before {\tt RDUP} is executed, the memory cell which would have been \x{u} were there \spic{u}~$+$~2 items is copied to the top of the data stack.}
 \end{description}
 
 \subsection{Comparison}
@@ -450,9 +431,9 @@ stack, returning a flag, true with all bits set if the test succeeds and false
 otherwise.
 
 \begin{description}
-\instp{<}{less-than}{\n1 \n2 -- flag}{\spic{flag} is true if and only if \n1 is less than \n2.}
-\instp{=}{equals}{\x1 \x2 -- flag}{\spic{flag} is true if and only if \x1 is bit-for-bit the same as \x2.}
-\instp{U<}{u-less-than}{\U1 \U2 -- flag}{\spic{flag} is true if and only if \U1 is less than \U2.}
+\inst{<}{\n1 \n2 -- flag}{\spic{flag} is true if and only if \n1 is less than \n2.}
+\inst{=}{\x1 \x2 -- flag}{\spic{flag} is true if and only if \x1 is bit-for-bit the same as \x2.}
+\inst{U<}{\U1 \U2 -- flag}{\spic{flag} is true if and only if \U1 is less than \U2.}
 \end{description}
 
 
@@ -468,7 +449,7 @@ Addition:
 \nopagebreak
 
 \begin{description}
-\instp{+}{plus}{\noru1 \noru2 -- \noru3}{Add \noru2 to \noru1, giving the sum \noru3.}
+\inst{+}{\noru1 \noru2 -- \noru3}{Add \noru2 to \noru1, giving the sum \noru3.}
 \end{description}
 
 Multiplication and division (note that all division instructions raise exception
@@ -478,9 +459,9 @@ infinity, except for {\tt S/REM}, which rounds the quotient towards zero):
 \nopagebreak
 
 \begin{description}
-\instp{*}{star}{\noru1 \noru2 -- \noru3}{Multiply \noru1 by \noru2 giving the product \noru3.}
-\instp{UMOD/}{u-mod-slash}{\U1 \U2 -- \U3 \U4}{Divide \U1 by \U2, giving the single-cell quotient \U3 and the single-cell remainder \U4.}
-\instp{SREM/}{s-rem-slash}{\n1 \n2 -- \n3 \n4}{Divide \n1 by \n2 using symmetric division, giving the single-cell quotient \n3 and the single-cell remainder \n4.}
+\inst{*}{\noru1 \noru2 -- \noru3}{Multiply \noru1 by \noru2 giving the product \noru3.}
+\inst{UMOD/}{\U1 \U2 -- \U3 \U4}{Divide \U1 by \U2, giving the single-cell quotient \U3 and the single-cell remainder \U4.}
+\inst{SREM/}{\n1 \n2 -- \n3 \n4}{Divide \n1 by \n2 using symmetric division, giving the single-cell quotient \n3 and the single-cell remainder \n4.}
 \end{description}
 
 Sign function:
@@ -506,7 +487,7 @@ Logic functions:
 \inst{INVERT}{\x1 -- \x2}{Invert all bits of \x1, giving its logical inverse \x2.}
 \inst{AND}{\x1 \x2 -- \x3}{\x3 is the bit-by-bit logical ``and'' of \x1 with \x2.}
 \inst{OR}{\x1 \x2 -- \x3}{\x3 is the bit-by-bit inclusive-or of \x1 with \x2.}
-\instp{XOR}{x-or}{\x1 \x2 -- \x3}{\x3 is the bit-by-bit exclusive-or of \x1 with \x2.}
+\inst{XOR}{\x1 \x2 -- \x3}{\x3 is the bit-by-bit exclusive-or of \x1 with \x2.}
 \end{description}
 
 Shifts:
@@ -514,8 +495,8 @@ Shifts:
 \nopagebreak
 
 \begin{description}
-\instp{LSHIFT}{l-shift}{\x1 u -- \x2}{Perform a logical left shift of \spic{u} bit-places on \x1, giving \x2. Put zero into the least significant bits vacated by the shift. If \spic{u} is greater than or equal to 32, \x2 is zero.}
-\instp{RSHIFT}{r-shift}{\x1 u -- \x2}{Perform a logical right shift of \spic{u} bit-places on \x1, giving \x2. Put zero into the most significant bits vacated by the shift. If \spic{u} is greater than or equal to 32, \x2 is zero.}
+\inst{LSHIFT}{\x1 u -- \x2}{Perform a logical left shift of \spic{u} bit-places on \x1, giving \x2. Put zero into the least significant bits vacated by the shift. If \spic{u} is greater than or equal to 32, \x2 is zero.}
+\inst{RSHIFT}{\x1 u -- \x2}{Perform a logical right shift of \spic{u} bit-places on \x1, giving \x2. Put zero into the most significant bits vacated by the shift. If \spic{u} is greater than or equal to 32, \x2 is zero.}
 \end{description}
 
 
@@ -526,10 +507,10 @@ These instructions fetch and store cells and bytes to and from memory; there is
 also an instruction to add a number to another stored in memory.
 
 \begin{description}
-\instp{@}{fetch}{a-addr -- x}{\spic{x} is the value stored at \spic{a-addr}.}
-\instp{!}{store}{x a-addr --}{Store \spic{x} at \spic{a-addr}.}
-\instp{C@}{c-fetch}{c-addr -- char}{If {\tt ENDISM} is 1, exclusive-or \spic{c-addr} with 3. Fetch the character stored at \spic{c-addr}. The unused high-order bits are all zeroes.}
-\instp{C!}{c-store}{char c-addr --}{If {\tt ENDISM} is 1, exclusive-or \spic{c-addr} with 3. Store \spic{char} at \spic{c-addr}. Only one byte is transferred.}
+\inst{@}{a-addr -- x}{\spic{x} is the value stored at \spic{a-addr}.}
+\inst{!}{x a-addr --}{Store \spic{x} at \spic{a-addr}.}
+\inst{C@}{c-addr -- char}{If {\tt ENDISM} is 1, exclusive-or \spic{c-addr} with 3. Fetch the character stored at \spic{c-addr}. The unused high-order bits are all zeroes.}
+\inst{C!}{char c-addr --}{If {\tt ENDISM} is 1, exclusive-or \spic{c-addr} with 3. Store \spic{char} at \spic{c-addr}. Only one byte is transferred.}
 \end{description}
 
 
@@ -540,20 +521,20 @@ As mentioned in section~\ref{registers}, the stack pointers {\tt SP} and {\tt
 RP} may only be accessed through special instructions:
 
 \begin{description}
-\instp{SP@}{s-p-fetch}{-- a-addr}{\spic{a-addr} is the value of {\tt SP}.}
-\instp{SP!}{s-p-store}{a-addr --}{Set {\tt SP} to \spic{a-addr}.}
-\instp{RP@}{r-p-fetch}{-- a-addr}{\spic{a-addr} is the value of {\tt RP}.}
-\instp{RP!}{r-p-store}{a-addr --}{Set {\tt RP} to \spic{a-addr}.}
-\instp{EP@}{bracket-create}{-- a-addr}{Push {\tt EP} on to the stack.}
-\instp{S0@}{s-nought-fetch}{-- a-addr}{Push {\tt S0} on to the stack.}
-\instp{\#S@}{hash-s-fetch}{-- u}{Push {\tt \#S} on to the stack.}
-\instp{R0@}{r-nought-fetch}{-- a-addr}{Push {\tt R0} on to the stack.}
-\instp{\#R@}{hash-r-fetch}{-- u}{Push {\tt \#R} on to the stack.}
-\instp{'THROW@}{tick-throw-fetch}{-- a-addr}{Push {\tt 'THROW} on to the stack.}
-\instp{'THROW!}{tick-throw-store}{a-addr --}{Set {\tt 'THROW} to \spic{a-addr}.}
-\instp{MEMORY@}{memory-fetch}{-- a-addr}{Push {\tt MEMORY} on to the stack.}
-\instp{'BAD@}{tick-bad-fetch}{-- a-addr}{Push {\tt 'BAD} on to the stack.}
-\instp{-ADDRESS@}{not-address-fetch}{-- a-addr}{Push {\tt -ADDRESS} on to the stack.}
+\inst{SP@}{-- a-addr}{\spic{a-addr} is the value of {\tt SP}.}
+\inst{SP!}{a-addr --}{Set {\tt SP} to \spic{a-addr}.}
+\inst{RP@}{-- a-addr}{\spic{a-addr} is the value of {\tt RP}.}
+\inst{RP!}{a-addr --}{Set {\tt RP} to \spic{a-addr}.}
+\inst{EP@}{-- a-addr}{Push {\tt EP} on to the stack.}
+\inst{S0@}{-- a-addr}{Push {\tt S0} on to the stack.}
+\inst{\#S@}{-- u}{Push {\tt \#S} on to the stack.}
+\inst{R0@}{-- a-addr}{Push {\tt R0} on to the stack.}
+\inst{\#R@}{-- u}{Push {\tt \#R} on to the stack.}
+\inst{'THROW@}{-- a-addr}{Push {\tt 'THROW} on to the stack.}
+\inst{'THROW!}{a-addr --}{Set {\tt 'THROW} to \spic{a-addr}.}
+\inst{MEMORY@}{-- a-addr}{Push {\tt MEMORY} on to the stack.}
+\inst{'BAD@}{-- a-addr}{Push {\tt 'BAD} on to the stack.}
+\inst{-ADDRESS@}{-- a-addr}{Push {\tt -ADDRESS} on to the stack.}
 \end{description}
 
 
@@ -587,7 +568,7 @@ Subroutine call and return:
 This instructions encodes literal values which are placed on the stack.
 
 \begin{description}
-\instp{(LITERAL)}{bracket-literal}{-- x}{Push the cell pointed to by {\tt EP} on to the stack, then add four to {\tt EP}.}
+\inst{(LITERAL)}{-- x}{Push the cell pointed to by {\tt EP} on to the stack, then add four to {\tt EP}.}
 \end{description}
 
 
@@ -597,7 +578,7 @@ This instructions encodes literal values which are placed on the stack.
 These instructions give access to @PACKAGE_NAME@'s exception mechanisms.
 
 \begin{description}
-\instp{THROW}{throw}{--}{Put the contents of {\tt EP} into {\tt 'BAD}, then load {\tt EP} from {\tt 'THROW}. Perform the action of {\tt NEXT}. If {\tt 'THROW} contains an out of range or unaligned address stop @PACKAGE_NAME@, returning reason code $-258$ to the calling program (see section~\ref{calls}).}
+\inst{THROW}{--}{Put the contents of {\tt EP} into {\tt 'BAD}, then load {\tt EP} from {\tt 'THROW}. Perform the action of {\tt NEXT}. If {\tt 'THROW} contains an out of range or unaligned address stop @PACKAGE_NAME@, returning reason code $-258$ to the calling program (see section~\ref{calls}).}
 \inst{HALT}{x --}{Stop @PACKAGE_NAME@, returning reason code \spic{x} to the calling program (see section~\ref{calls}). If {\tt SP} is out of range or unaligned, $-257$ is returned as the reason code.}
 \end{description}
 
