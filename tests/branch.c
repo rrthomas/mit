@@ -55,7 +55,7 @@ int main(void)
     ass(O_LITERAL); lit(200); ass(O_EXECUTE); ass(O_NEXT00); ass(O_NEXT00);
     ass(O_LITERAL); lit(64);
     ass(O_LITERAL); lit(20);
-    ass(O_LITERAL); lit(1); ass(O_SWAP); ass(O_LITERAL); lit(1); ass(O_PICK); ass(O_STORE); ass(O_FETCH);
+    ass(O_LITERAL); lit(1); ass(O_SWAP); ass(O_LITERAL); lit(1); ass(O_DUP); ass(O_STORE); ass(O_FETCH);
     ass(O_EXECUTE);
 
     start_ass(200);

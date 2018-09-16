@@ -143,14 +143,14 @@ CELL single_step(void)
             STORE_CELL(SP - depth * CELL_W * STACK_DIRECTION, top);
         }
         break;
-    case O_PICK:
+    case O_DUP:
         {
             CELL depth = POP;
             CELL pickee = LOAD_CELL(SP - depth * CELL_W * STACK_DIRECTION);
             PUSH(pickee);
         }
         break;
-    case O_RPICK:
+    case O_RDUP:
         {
             CELL depth = POP;
             CELL pickee = LOAD_CELL(RP - depth * CELL_W * STACK_DIRECTION);

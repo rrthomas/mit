@@ -99,7 +99,7 @@ int main(void)
     fprintf(stderr, "Test %d: EP = %u\n", testno, ass_current());
     // test 12: test invalid 'THROW contents
     ass(O_LITERAL); lit(0xffffffec);
-    ass(O_LITERAL); lit(0); ass(O_PICK); ass(O_THROWSTORE); ass(O_THROW);
+    ass(O_LITERAL); lit(0); ass(O_DUP); ass(O_THROWSTORE); ass(O_THROW);
 
     start_ass(200);
     ass(O_HALT);

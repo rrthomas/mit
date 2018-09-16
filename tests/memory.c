@@ -48,8 +48,8 @@ int main(void)
 
     start_ass(EP);
     ass(O_MEMORYFETCH); ass(O_LITERAL); lit(CELL_W); ass(O_NEGATE); ass(O_PLUS);
-    ass(O_LITERAL); lit(513); ass(O_LITERAL); lit(1); ass(O_PICK); ass(O_STORE); ass(O_LITERAL); lit(0); ass(O_PICK);
-    ass(O_FETCH); ass(O_DROP); ass(O_LITERAL); lit(0); ass(O_PICK); ass(O_CFETCH);
+    ass(O_LITERAL); lit(513); ass(O_LITERAL); lit(1); ass(O_DUP); ass(O_STORE); ass(O_LITERAL); lit(0); ass(O_DUP);
+    ass(O_FETCH); ass(O_DROP); ass(O_LITERAL); lit(0); ass(O_DUP); ass(O_CFETCH);
     ass(O_PLUS); ass(O_CFETCH); ass(O_LITERAL); lit(16383); ass(O_CSTORE);
     ass(O_LITERAL); lit(16380); ass(O_FETCH); ass(O_DROP); ass(O_SPFETCH);
     ass(O_SPSTORE); ass(O_RPFETCH); ass(O_DROP); ass(O_LITERAL); lit(0);
@@ -59,7 +59,7 @@ int main(void)
     ass(O_LITERAL); lit(1);
     ass(O_LITERAL); lit(size * CELL_W + 1); ass(O_CSTORE);
     ass(O_LITERAL); lit(size * CELL_W + 1); ass(O_CFETCH); ass(O_DROP);
-    ass(O_LITERAL); lit(size * CELL_W + 8); ass(O_LITERAL); lit(0); ass(O_PICK); ass(O_CSTORE);
+    ass(O_LITERAL); lit(size * CELL_W + 8); ass(O_LITERAL); lit(0); ass(O_DUP); ass(O_CSTORE);
 
     assert(single_step() == -259);   // load first instruction word
 
