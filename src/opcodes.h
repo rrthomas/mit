@@ -24,7 +24,7 @@ enum {
     O_UNDEF41,
     O_UNDEF42,
     O_PICK,
-    O_ROLL,
+    O_UNDEF46,
     O_RPICK,
     O_TOR,
     O_RFROM,

@@ -149,16 +149,6 @@ CELL single_step(void)
             PUSH(pickee);
         }
         break;
-    case O_ROLL:
-        {
-            CELL depth = POP;
-            CELL rollee = LOAD_CELL(SP - depth * CELL_W * STACK_DIRECTION);
-            for (int i = depth; i > 0; i--)
-                STORE_CELL(SP - i * CELL_W * STACK_DIRECTION,
-                           LOAD_CELL(SP - (i - 1) * CELL_W * STACK_DIRECTION));
-            STORE_CELL(SP, rollee);
-        }
-        break;
     case O_RPICK:
         {
             CELL depth = POP;
