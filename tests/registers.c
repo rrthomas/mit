@@ -15,8 +15,15 @@
 #define SIZE 1024
 
 const char *correct[] = {
-    "", str(CELL_W), "", "-33554432", "", "16384", "", "-16777216", "",
-    "16384", "", "168", "", "168", "", str(SIZE), "", "-1", "-1 -1",
+    "", str(CELL_W), str(CELL_W) " 1", "",
+    "-33554432", "-33554432 1", "",
+    "16384", "16384 1", "",
+    "-16777216", "-16777216 1", "",
+    "16384", "16384 1", "",
+    "168", "",
+    "168", "168 1", "",
+    str(SIZE), str(SIZE) " 1", "",
+    "-1", "-1 -1",
 };
 
 
@@ -27,16 +34,20 @@ int main(void)
     init((CELL *)malloc(SIZE), SIZE / CELL_W);
 
     start_ass(EP);
-    ass(O_EPFETCH); ass(O_DROP);  ass(O_S0FETCH); ass(O_DROP);
-    ass(O_HASHS); ass(O_DROP);    ass(O_R0FETCH); ass(O_DROP);
-    ass(O_HASHR); ass(O_DROP);    ass(O_LITERAL); ass(O_THROWSTORE);
-    lit(168); // 42 CELLS
-    ass(O_THROWFETCH); ass(O_DROP);  ass(O_MEMORYFETCH); ass(O_DROP);
+    ass(O_EPFETCH); ass(O_LITERAL); lit(1); ass(O_DROP);
+    ass(O_S0FETCH); ass(O_LITERAL); lit(1); ass(O_DROP);
+    ass(O_HASHS); ass(O_LITERAL); lit(1); ass(O_DROP);
+    ass(O_R0FETCH); ass(O_LITERAL); lit(1); ass(O_DROP);
+    ass(O_HASHR); ass(O_LITERAL); lit(1); ass(O_DROP);
+    ass(O_LITERAL); lit(168); // 42 CELLS
+    ass(O_THROWSTORE);
+    ass(O_THROWFETCH); ass(O_LITERAL); lit(1); ass(O_DROP);
+    ass(O_MEMORYFETCH); ass(O_LITERAL); lit(1); ass(O_DROP);
     ass(O_BADFETCH); ass(O_NOT_ADDRESSFETCH);
 
     assert(single_step() == -259);   // load first instruction word
 
-    for (size_t i = 0; i + i / 5 < sizeof(correct) / sizeof(correct[0]); i++) {
+    for (size_t i = 0; i - i / 5 < sizeof(correct) / sizeof(correct[0]); i++) {
         show_data_stack();
         printf("Correct stack: %s\n\n", correct[i - i / 5]);
         if (strcmp(correct[i - i / 5], val_data_stack())) {

@@ -435,7 +435,7 @@ instructions in the {\tt A} register.
 These instructions manage the data stack and move values between stacks.
 
 \begin{description}
-\inst{DROP}{x --}{Remove \spic{x} from the stack.}
+\inst{DROP}{\x{u}\dots\x1 u --}{Remove \spic{u} items from the stack.}
 \inst{SWAP}{\x{u}\dots\x0 u -- \x0\x{u-1}\dots\x1 \x{u}}{Exchange the top stack item with the \spic{u}th.}
 \inst{DUP}{\x{u}\dots\x0 u -- \x{u}\dots\x0 \x{u}}{Remove \spic{u}. Copy \x{u} to the top of the stack. If there are fewer than \spic{u}~$+$~2 items on the stack before {\tt DUP} is executed, the memory cell which would have been \x{u} were there \spic{u}~$+$~2 items is copied to the top of the stack.}
 \instpr{>R}{to-r}{x --}{-- x}{Move \spic{x} to the return stack.}

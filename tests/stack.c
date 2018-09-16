@@ -12,8 +12,8 @@
 
 
 const char *correct[] = {
-    "1 2 3", "1 2 3 0", "1 2 3 3", "1 2 3", "1 2 3 1", "1 3 2", "1 3 2 1", "1 3 2 3", "1 3 2 3 1",
-    "1 3 3 2", "1 3 3", "1 3 3 0", "1 3 3 3",
+    "1 2 3", "1 2 3 0", "1 2 3 3", "1 2 3 3 1", "1 2 3", "1 2 3 1", "1 3 2", "1 3 2 1", "1 3 2 3", "1 3 2 3 1",
+    "1 3 3 2", "1 3 3 2 1", "1 3 3", "1 3 3 0", "1 3 3 3",
     "2 1 1", "2 1 2", "2 1 2 0", "2 1 2 2", "2 1 2 2 0", "2 1 2 2 2", "2 1 2 2", "2 1 2 2 0", "2 1 2 2 2", "2 1 2 2 2 2"};
 
 
@@ -28,9 +28,9 @@ int main(void)
     start_ass(EP);
 
     // First part
-    ass(O_LITERAL); lit(0); ass(O_DUP); ass(O_DROP);
+    ass(O_LITERAL); lit(0); ass(O_DUP); ass(O_LITERAL); lit(1); ass(O_DROP);
     ass(O_LITERAL); lit(1); ass(O_SWAP); ass(O_LITERAL); lit(1); ass(O_DUP);
-    ass(O_LITERAL); lit(1); ass(O_SWAP); ass(O_DROP);
+    ass(O_LITERAL); lit(1); ass(O_SWAP); ass(O_LITERAL); lit(1); ass(O_DROP);
     ass(O_LITERAL); lit(0); ass(O_DUP);
 
     // Second part
@@ -41,7 +41,7 @@ int main(void)
     assert(single_step() == -259);   // load first instruction word
 
     size_t i;
-    for (i = 0; i < 15; i++) {
+    for (i = 0; i < 17; i++) {
         show_data_stack();
         printf("Correct stack: %s\n\n", correct[i - i / 5]);
         if (strcmp(correct[i - i / 5], val_data_stack())) {

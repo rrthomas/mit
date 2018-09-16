@@ -23,8 +23,9 @@ const char *correct[] = {
     "0 1 " str(CELL_W) " -" str(CELL_W) " -1", "0 1 " str(CELL_W) " -5",
     "0 1 -1", "0 1 1", "0 1 1", "0 2", "0 2 1", "2 0", "2 0 -1", "2 0 -1", "2 0 -1 " str(CELL_W),
     "2 0 -" str(CELL_W), "2 0 -" str(CELL_W) " 1", "2 -" str(CELL_W) " 0", "2 -" str(CELL_W) " 0",
-    "2 -" str(CELL_W), "2", "-2", "-2 -1", "-2 -1", "2 0", "2 0 1", "0 2", "0", "0", "",
-    str(CELL_W), "-" str(CELL_W), "", "", "-" str(CELL_W), "-" str(CELL_W) " 3", "-1 -1", "-1", "-1", "-1 -2", "1 1" };
+    "2 -" str(CELL_W) " 0 2", "2", "-2", "-2 -1", "-2 -1", "2 0", "2 0 1", "0 2", "0 2 2", "0 2 2", "",
+    str(CELL_W), "-" str(CELL_W), "-" str(CELL_W) " 1", "-" str(CELL_W) " 1", "", "-" str(CELL_W),
+    "-" str(CELL_W) " 3", "-1 -1", "-1 -1", "-1 -1 1", "-1", "-1 -2", "1 1" };
 
 
 int main(void)
@@ -42,13 +43,13 @@ int main(void)
     ass(O_PLUS); ass(O_PLUS); ass(O_NEGATE);
     ass(O_PLUS); ass(O_LITERAL); lit(1); ass(O_SWAP); ass(O_LITERAL); lit(-1);
     ass(O_LITERAL); lit(CELL_W);
-    ass(O_STAR); ass(O_LITERAL); lit(1); ass(O_SWAP); ass(O_DROP); ass(O_DROP);
+    ass(O_STAR); ass(O_LITERAL); lit(1); ass(O_SWAP); ass(O_LITERAL); lit(2); ass(O_DROP);
     ass(O_NEGATE); ass(O_LITERAL); lit(-1);
-    ass(O_SREMSLASH); ass(O_LITERAL); lit(1); ass(O_SWAP); ass(O_DROP); ass(O_DROP);
-    ass(O_LITERAL); lit(CELL_W); ass(O_NEGATE); ass(O_DROP);
+    ass(O_SREMSLASH); ass(O_LITERAL); lit(1); ass(O_SWAP); ass(O_LITERAL); lit(2); ass(O_DROP);
+    ass(O_LITERAL); lit(CELL_W); ass(O_NEGATE); ass(O_LITERAL); lit(1); ass(O_DROP);
     ass(O_LITERAL); lit(-CELL_W);
     ass(O_LITERAL); lit(3);
-    ass(O_SREMSLASH); ass(O_DROP); ass(O_LITERAL); lit(-2);
+    ass(O_SREMSLASH); ass(O_LITERAL); lit(1); ass(O_DROP); ass(O_LITERAL); lit(-2);
     ass(O_UMODSLASH);
 
     assert(single_step() == -259);   // load first instruction word

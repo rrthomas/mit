@@ -132,7 +132,10 @@ CELL single_step(void)
         exception = load_cell(EP - CELL_W, &A);
         break;
     case O_DROP:
-        (void)POP;
+        {
+            CELL depth = POP;
+            SP -= depth * CELL_W * STACK_DIRECTION;
+        }
         break;
     case O_SWAP:
         {

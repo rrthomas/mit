@@ -12,7 +12,7 @@
 
 
 CELL result[] = { -257, -257, 42, 0, -23, -23, -10, -9, -9, -23, -256, -258 };
-UCELL bad[] = { -1, -1, -1, 28, 60, 68, 80, 16388, 96, 104, 108, 124 };
+UCELL bad[] = { -1, -1, -1, 28, 60, 68, 80, 16388, 104, 112, 116, 132 };
 UCELL address[] = { -12, 16384, 0, 0, 5, 1, 0, 16384, -20, 1, 0, 1 };
 int testno = 0;
 UCELL test[sizeof(result) / sizeof(result[0])];
@@ -70,7 +70,8 @@ int main(void)
     // test 7
     ass(O_LITERAL); lit(1);
     ass(O_LITERAL); lit(0);
-    ass(O_SREMSLASH); ass(O_DROP);
+    ass(O_SREMSLASH); ass(O_LITERAL); lit(1);
+    ass(O_DROP); ass(O_NEXT00); ass(O_NEXT00); ass(O_NEXT00);
 
     test[testno++] = ass_current();
     fprintf(stderr, "Test %d: EP = %u\n", testno, ass_current());
