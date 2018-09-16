@@ -37,7 +37,7 @@
 
 % Lay out an instruction definition
 
-% Define the widths of the stack comment and description columns
+% Define the widths of the stack effect and description columns
 \newlength{\itemwidth}\itemwidth=\textwidth \advance\itemwidth by -0.1in
 \newlength{\instname}\instname=0.5in
 \newlength{\pronunc}\pronunc=1.7in
@@ -326,18 +326,18 @@ instructions are given in the following format:
 
 The first line consists of the name of the instruction followed by the
 pronunciation in quotes. On the right are the
-stack comment or comments. Underneath is the description. The two stack comments
-show the effect of the instruction on the data and return (R) stacks.
+stack effect or effects, which show the effect of the instruction on the data and return (R) stacks.
+Underneath is the description.
 
-{\bf Stack comments} are written
+{\bf Stack effects} are written
 
 \centerline{\tt ( \spic{before -- after} )}
 
 where \spic{before} and \spic{after} are stack pictures showing the items on top
-of a stack before and after the instruction is executed (the change is called
-the {\bf stack effect}). An instruction only affects the items shown in its
-stack comments. The brackets and dashes serve merely to delimit the stack
-comment and to separate \spic{before} from \spic{after}. {\bf Stack pictures}
+of a stack before and after the instruction is executed.
+An instruction only affects the items shown in its
+stack effects. The brackets and dashes serve merely to delimit the stack
+effect and to separate \spic{before} from \spic{after}. {\bf Stack pictures}
 are a representation of the top-most items on the stack, and are written
 
 \centerline{\spic{i$_1$ i$_2$\dots i$_{n-1}$ i$_n$}}
@@ -361,7 +361,7 @@ different types of stack item are shown in table~\ref{typetable}.
 \spic{a-addr} & cell-aligned address \\
 \spic{c-addr} & character-aligned address \\ \bottomrule
 \end{tabular}
-\caption{\label{typetable}Types used in stack comments}
+\caption{\label{typetable}Types used in stack effects}
 \end{center}
 \end{table}
 
@@ -390,7 +390,7 @@ valid addresses. Numeric constants can be included in
 stack pictures, and are of type \spic{n{\tt |}u}.
 
 Each type may be suffixed by a number in stack pictures; if the same combination
-of type and suffix appears more than once in a stack comment, it refers to
+of type and suffix appears more than once in a stack effect, it refers to
 identical stack items. Alternative \spic{after} pictures are separated by ``{\tt
 |}'', and the circumstances under which each occurs are detailed in the
 instruction description.
@@ -436,8 +436,8 @@ These instructions manage the data stack and move values between stacks.
 
 \begin{description}
 \inst{DROP}{\x{u}\dots\x1 u --}{Remove \spic{u} items from the stack.}
-\inst{SWAP}{\x{u}\dots\x0 u -- \x0\x{u-1}\dots\x1 \x{u}}{Exchange the top stack item with the \spic{u}th.}
 \inst{DUP}{\x{u}\dots\x0 u -- \x{u}\dots\x0 \x{u}}{Remove \spic{u}. Copy \x{u} to the top of the stack. If there are fewer than \spic{u}~$+$~2 items on the stack before {\tt DUP} is executed, the memory cell which would have been \x{u} were there \spic{u}~$+$~2 items is copied to the top of the stack.}
+\inst{SWAP}{\x{u}\dots\x0 u -- \x0\x{u-1}\dots\x1 \x{u}}{Exchange the top stack item with the \spic{u}th.}
 \instpr{>R}{to-r}{x --}{-- x}{Move \spic{x} to the return stack.}
 \instpr{R>}{r-from}{-- x}{x --}{Move \spic{x} from the return stack to the data stack.}
 \instpr{RDUP}{r-pick}{u -- x}{\x{u} \x{u-1}\dots\x{0} -- \x{u} \x{u-1}\dots\x{0}}{Remove \spic{u}. Copy \x{u} to the top of the data stack. If there are fewer than \spic{u}~$+$~2 items on the stack before {\tt RDUP} is executed, the memory cell which would have been \x{u} were there \spic{u}~$+$~2 items is copied to the top of the data stack.}
@@ -622,47 +622,30 @@ Instructions with opcodes from \$80 to \$FE inclusive may be implemented to prov
 \subsection{Opcodes}
 \label{opcodes}
 
-In table~\ref{opcodetable} are listed the opcodes in numerical order. All
-undefined opcodes (\$61–\$FE) raise exception $-256$.
+Table~\ref{opcodetable} lists the opcodes in numerical order. Undefined opcodes raise exception $-256$.
 
 \begin{table}[htb]
 \begin{center}
 \begin{tabular}{*{3}{cc}} \toprule
 \bf Opcode & \bf Instruction & \bf Opcode & \bf
     Instruction & \bf Opcode & \bf Instruction \\ \midrule
-\opcodetbl{00}{NEXT}	{21}{undefined}	{42}{EP@}
-\opcodetbl{01}{undefined}	{22}{undefined}	{43}{S0@}
-\opcodetbl{02}{DROP}	{23}{undefined}	{44}{\#S}
-\opcodetbl{03}{SWAP}	{24}{undefined}	{45}{R0@}
-\opcodetbl{04}{undefined}	{25}{*}		{46}{\#R}
-\opcodetbl{05}{undefined}	{26}{undefined}		{47}{'THROW@}
-\opcodetbl{06}{undefined}	{27}{undefined}	{48}{'THROW!}
-\opcodetbl{07}{undefined}	{28}{undefined}	{49}{MEMORY@}
-\opcodetbl{08}{undefined}	{29}{UMOD/}	{4A}{'BAD@}
-\opcodetbl{09}{DUP}	{2A}{SREM/}	{4B}{-ADDRESS@}
-\opcodetbl{0A}{undefined}	{2B}{undefined}	{4C}{undefined}
-\opcodetbl{0B}{RDUP}	{2C}{undefined}	{4D}{EP!}
-\opcodetbl{0C}{>R}	{2D}{undefined}	{4E}{undefined}
-\opcodetbl{0D}{R>}	{2E}{NEGATE}	{4F}{?EP!}
-\opcodetbl{0E}{undefined}	{2F}{undefined}	{50}{EXECUTE}
-\opcodetbl{0F}{<}	{30}{undefined}	{51}{undefined}
-\opcodetbl{10}{undefined}	{31}{INVERT}	{52}{undefined}
-\opcodetbl{11}{=}	{32}{AND}	{53}{undefined}
-\opcodetbl{12}{undefined}	{33}{OR}	{54}{EXIT}
-\opcodetbl{13}{undefined}	{34}{XOR}	{55}{undefined}
-\opcodetbl{14}{undefined}	{35}{LSHIFT}	{56}{undefined}
-\opcodetbl{15}{undefined}	{36}{RSHIFT}	{57}{undefined}
-\opcodetbl{16}{undefined}	{37}{undefined}	{58}{undefined}
-\opcodetbl{17}{U<}	{38}{undefined}	{59}{undefined}
-\opcodetbl{18}{undefined}	{39}{@}		{5A}{undefined}
-\opcodetbl{19}{undefined}	{3A}{!}		{5B}{undefined}
-\opcodetbl{1A}{undefined}	{3B}{C@}	{5C}{(LITERAL)}
-\opcodetbl{1B}{undefined}	{3C}{C!}        {5D}{undefined}
-\opcodetbl{1C}{undefined}	{3D}{undefined}        {5E}{THROW}
-\opcodetbl{1D}{undefined}	{3E}{SP@}	{5F}{HALT}
-\opcodetbl{1E}{+}	{3F}{SP!}       {60}{LINK}
-\opcodetbl{1F}{undefined}	{40}{RP@}	{80–\$FE}{\textrm{extra instructions}}
-\opcodetbl{20}{undefined}	{41}{RP!}       {FF}{NEXT}
+\opcodetbl{00}{NEXT}	{11}{OR}	{22}{R0@}
+\opcodetbl{01}{DROP}	{12}{XOR}	{23}{\#R}
+\opcodetbl{02}{DUP}	{13}{LSHIFT}	{24}{'THROW@}
+\opcodetbl{03}{SWAP}	{14}{RSHIFT}	{25}{'THROW!}
+\opcodetbl{04}{RDUP}	{15}{@}		{26}{MEMORY@}
+\opcodetbl{05}{>R}	{16}{!}		{27}{'BAD@}
+\opcodetbl{06}{R>}	{17}{C@}	{28}{-ADDRESS@}
+\opcodetbl{07}{<}	{18}{C!}	{29}{EXECUTE}
+\opcodetbl{08}{=}	{19}{SP@}	{2A}{EXIT}
+\opcodetbl{09}{U<}	{1A}{SP!}	{2B}{THROW}
+\opcodetbl{0A}{+}	{1B}{RP@}	{2C}{HALT}
+\opcodetbl{0B}{*}	{1C}{RP!}	{2D}{LINK}
+\opcodetbl{0C}{UMOD/}	{1D}{EP@}	{2E}{(LITERAL)}
+\opcodetbl{0D}{SREM/}	{1E}{EP!}	{80–\$FE}{\textrm{extra instructions}}
+\opcodetbl{0E}{NEGATE}	{1F}{?EP!}	{FF}{NEXT}
+\opcodetbltwo{0F}{INVERT}	{20}{S0@}
+\opcodetbltwo{10}{AND}	{21}{\#S}
  \bottomrule
 \end{tabular}
 \caption{\label{opcodetable}@PACKAGE_NAME@'s opcodes}
