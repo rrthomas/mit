@@ -15,13 +15,13 @@
 int main(void)
 {
     int exception = 0;
-    CELL temp = 0;
+    WORD temp = 0;
 
     // Data for ARGC/ARG tests
     int argc = 3;
     char *argv[] = {strdup("foo"), strdup("bard"), strdup("basilisk")};
 
-    init((CELL *)malloc(4096), 1024);
+    init((WORD *)malloc(4096), 1024);
     assert(register_args(argc, argv) == 0);
 
     start_ass(EP);
@@ -31,7 +31,7 @@ int main(void)
     assert(single_step() == -259);   // load first instruction word
 
     single_step();
-    printf("argc is %"PRId32", and should be %d\n\n", LOAD_CELL(SP), argc);
+    printf("argc is %"PRId32", and should be %d\n\n", LOAD_WORD(SP), argc);
     if (POP != argc) {
        printf("Error in extra instructions tests: EP = %"PRIu32"\n", EP);
         exit(1);
@@ -39,8 +39,8 @@ int main(void)
 
     single_step();
     single_step();
-    printf("arg 1's length is %"PRId32", and should be %zu\n", LOAD_CELL(SP), strlen(argv[1]));
-    if ((UCELL)POP != strlen(argv[1])) {
+    printf("arg 1's length is %"PRId32", and should be %zu\n", LOAD_WORD(SP), strlen(argv[1]));
+    if ((UWORD)POP != strlen(argv[1])) {
         printf("Error in extra instructions tests: EP = %"PRIu32"\n", EP);
         exit(1);
     }

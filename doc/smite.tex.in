@@ -109,15 +109,15 @@ A small interface is provided for other programs to control @PACKAGE_NAME@.
 \section{Architecture}
 
 @PACKAGE_NAME@'s address unit is the byte, which is eight bits wide.
-Cells are four bytes wide. The cell is the size of the numbers
+Words are four bytes wide. The word is the size of the numbers
 and addresses on which @PACKAGE_NAME@ operates, and of the items placed on the stacks.
-The cell size is fixed to ensure compatibility of object code between
+The word size is fixed to ensure compatibility of object code between
 implementations on different machines; the size of the byte
-and cell have been chosen with a view to making efficient implementation of
+and word have been chosen with a view to making efficient implementation of
 @PACKAGE_NAME@ possible on the vast majority of current machine architectures.
 
-Cells may have the bytes stored in big-endian or little-endian order. The
-address of a cell is that of the byte in it with the lowest address.
+Words may have the bytes stored in big-endian or little-endian order. The
+address of a word is that of the byte in it with the lowest address.
 
 
 \subsection{Registers}
@@ -131,7 +131,7 @@ The registers, each with its function, are set out in table~\ref{regtable}.
 \bf Register & \bf Function \\
     \midrule
 {\tt EP} & The {\tt E}xecution {\tt P}ointer. Points to the next
-    cell from which an instruction word may be loaded. \\
+    word from which an instruction word may be loaded. \\
 {\tt I} & The {\tt I}nstruction. Holds the opcode of an instruction
     to be executed. \\
 {\tt A} & The instruction {\tt A}ccumulator. Holds the opcodes of
@@ -142,8 +142,8 @@ The registers, each with its function, are set out in table~\ref{regtable}.
 {\tt RP} & The {\tt R}eturn stack {\tt P}ointer. \\
 {\tt S0} & The data {\tt S}tack base. \\
 {\tt R0} & The {\tt R}eturn stack base. \\
-{\tt \#S} & The number of cells allocated for the data stack. \\
-{\tt \#R} & The number of cells allocated for the return stack. \\
+{\tt \#S} & The number of words allocated for the data stack. \\
+{\tt \#R} & The number of words allocated for the return stack. \\
 {\tt 'THROW} & The address placed in {\tt EP} by a {\tt THROW}
     instruction. \\
 {\tt ENDISM} & The endianness of @PACKAGE_NAME@: 0 = Little-endian,
@@ -159,7 +159,7 @@ The registers, each with its function, are set out in table~\ref{regtable}.
 \end{center}
 \end{table}
 
-All of the registers are cell-wide quantities except for {\tt I}, {\tt ENDISM} and {\tt
+All of the registers are word-wide quantities except for {\tt I}, {\tt ENDISM} and {\tt
 CHECKED}, which are one byte wide.
 
 To ease efficient implementation, the registers may only be accessed
@@ -172,9 +172,9 @@ by instructions (see section~\ref{registerinst}); not all registers are accessib
 
 \subsection{Stacks}
 
-The data and return stacks are cell-aligned LIFO stacks of cells. The stack
+The data and return stacks are word-aligned LIFO stacks of words. The stack
 pointers point to the top stack item on each stack. To {\bf push} an item on to
-a stack means to store the item in the cell beyond the stack pointer and then
+a stack means to store the item in the word beyond the stack pointer and then
 adjust the pointer to point to it; to {\bf pop} an item means to make the
 pointer point to the second item on the stack. Instructions that change the number of items on a
 stack implicitly pop their arguments and push their results.
@@ -237,7 +237,7 @@ initialisation specified above; that must be performed before calling them.
 
 When @PACKAGE_NAME@ encounters a {\tt HALT} instruction (see section~\ref{exceptinst}),
 it returns the top data stack item as the reason code, unless {\tt SP} does not
-point to a valid cell, in which case reason code $-257$ is returned (see section~\ref{exceptions}).
+point to a valid word, in which case reason code $-257$ is returned (see section~\ref{exceptions}).
 
 Reason codes which are also valid exception codes (either reserved (see section~\ref{exceptions})
 or user exception codes) should not normally be used. This
@@ -276,7 +276,7 @@ Exception $-9$ is raised whenever an attempt is made to access an invalid
 address, either by an
 instruction, or during an instruction fetch (because {\tt EP} contains an
 invalid address). Exception $-23$ is raised when an instruction expecting
-an address of type \spic{a-addr} (cell-aligned) is given a non-aligned address.
+an address of type \spic{a-addr} (word-aligned) is given a non-aligned address.
 When @PACKAGE_NAME@ raises an address exception ($-9$ or $-23$), the offending address
 is placed in {\tt -ADDRESS}.
 
@@ -324,7 +324,7 @@ are a representation of the top-most items on the stack, and are written
 \centerline{\spic{i$_1$ i$_2$\dots i$_{n-1}$ i$_n$}}
 
 where the \spic{i$_k$} are stack items, each of which occupies a whole number of
-cells, with \spic{i$_n$} being on top of the stack. The symbols denoting
+words, with \spic{i$_n$} being on top of the stack. The symbols denoting
 different types of stack item are shown in table~\ref{typetable}.
 
 \begin{table}[htbp]
@@ -338,9 +338,9 @@ different types of stack item are shown in table~\ref{typetable}.
 \spic{n} & signed number \\
 \spic{u} & unsigned number \\
 \spic{n{\tt |}u} & number (signed or unsigned) \\
-\spic{x} & unspecified cell \\
+\spic{x} & unspecified word \\
 \spic{addr} & address \\
-\spic{a-addr} & cell-aligned address \\
+\spic{a-addr} & word-aligned address \\
 \bottomrule
 \end{tabular}
 \caption{\label{typetable}Types used in stack effects}
@@ -378,26 +378,26 @@ identical stack items. Alternative \spic{after} pictures are separated by ``{\tt
 instruction description.
 
 The symbols \spic{i*x}, \spic{j*x} and \spic{k*x} are used to denote different
-collections of zero or more cells of any data type. Ellipsis is used for
-indeterminate numbers of specified types of cell.
+collections of zero or more words of any data type. Ellipsis is used for
+indeterminate numbers of specified types of word.
 
 If an instruction does not modify the return stack, the corresponding stack
 picture is omitted. Some instructions have two forms, the latter ending in
 ``{\tt I}''. This denotes {\tt I}mmediate addressing: the instruction's argument
-is included in the instruction cell (see section~\ref{conventions}), rather than
-being placed separately in the next available cell.
+is included in the instruction word (see section~\ref{conventions}), rather than
+being placed separately in the next available word.
 
 
 \subsection{Programming conventions}
 \label{conventions}
 
-Since branch destinations must be cell-aligned, some instruction sequences may
+Since branch destinations must be word-aligned, some instruction sequences may
 contain gaps. These must be padded with {\tt NEXT} (opcode \$00).
 
-Literals and branch addresses should be placed in the cell after the
-instruction. Further instructions may still be stored in the current cell. If
-more than one literal or branch instruction is encoded in one instruction cell,
-the literal values follow each other in successive cells.
+Literals and branch addresses should be placed in the word after the
+instruction. Further instructions may still be stored in the current word. If
+more than one literal or branch instruction is encoded in one instruction word,
+the literal values follow each other in successive words.
 
 
 \subsection{Execution cycle}
@@ -407,7 +407,7 @@ the literal values follow each other in successive cells.
 instructions in the {\tt A} register.
 
 \begin{description}
-\inst{NEXT}{--}{Load the cell pointed to by {\tt EP} into {\tt A} then add four to {\tt EP}.}
+\inst{NEXT}{--}{Load the word pointed to by {\tt EP} into {\tt A} then add four to {\tt EP}.}
 \end{description}
 
 
@@ -418,16 +418,16 @@ These instructions manage the data stack and move values between stacks.
 
 \begin{description}
 \inst{POP}{\x{u}\dots\x1 u --}{Remove \spic{u} items from the stack.}
-\inst{PUSH}{\x{u}\dots\x0 u -- \x{u}\dots\x0 \x{u}}{Remove \spic{u}. Copy \x{u} to the top of the stack. If there are fewer than \spic{u}~$+$~2 items on the stack before {\tt PUSH} is executed, the memory cell which would have been \x{u} were there \spic{u}~$+$~2 items is copied to the top of the stack.}
+\inst{PUSH}{\x{u}\dots\x0 u -- \x{u}\dots\x0 \x{u}}{Remove \spic{u}. Copy \x{u} to the top of the stack. If there are fewer than \spic{u}~$+$~2 items on the stack before {\tt PUSH} is executed, the memory word which would have been \x{u} were there \spic{u}~$+$~2 items is copied to the top of the stack.}
 \inst{SWAP}{\x{u}\dots\x0 u -- \x0\x{u-1}\dots\x1 \x{u}}{Exchange the top stack item with the \spic{u}th.}
 \instr{>R}{x --}{-- x}{Move \spic{x} to the return stack.}
 \instr{R>}{-- x}{x --}{Move \spic{x} from the return stack to the data stack.}
-\instr{RPUSH}{u -- x}{\x{u} \x{u-1}\dots\x{0} -- \x{u} \x{u-1}\dots\x{0}}{Remove \spic{u}. Copy \x{u} to the top of the data stack. If there are fewer than \spic{u}~$+$~2 items on the stack before {\tt RPUSH} is executed, the memory cell which would have been \x{u} were there \spic{u}~$+$~2 items is copied to the top of the data stack.}
+\instr{RPUSH}{u -- x}{\x{u} \x{u-1}\dots\x{0} -- \x{u} \x{u-1}\dots\x{0}}{Remove \spic{u}. Copy \x{u} to the top of the data stack. If there are fewer than \spic{u}~$+$~2 items on the stack before {\tt RPUSH} is executed, the memory word which would have been \x{u} were there \spic{u}~$+$~2 items is copied to the top of the data stack.}
 \end{description}
 
 \subsection{Comparison}
 
-These words compare two numbers (or, for equality tests, any two cells) on the
+These words compare two numbers (or, for equality tests, any two words) on the
 stack, returning a flag, true with all bits set if the test succeeds and false
 otherwise.
 
@@ -461,8 +461,8 @@ infinity, except for {\tt S/REM}, which rounds the quotient towards zero):
 
 \begin{description}
 \inst{*}{\noru1 \noru2 -- \noru3}{Multiply \noru1 by \noru2 giving the product \noru3.}
-\inst{UMOD/}{\U1 \U2 -- \U3 \U4}{Divide \U1 by \U2, giving the single-cell quotient \U3 and the single-cell remainder \U4.}
-\inst{SREM/}{\n1 \n2 -- \n3 \n4}{Divide \n1 by \n2 using symmetric division, giving the single-cell quotient \n3 and the single-cell remainder \n4.}
+\inst{UMOD/}{\U1 \U2 -- \U3 \U4}{Divide \U1 by \U2, giving the single-word quotient \U3 and the single-word remainder \U4.}
+\inst{SREM/}{\n1 \n2 -- \n3 \n4}{Divide \n1 by \n2 using symmetric division, giving the single-word quotient \n3 and the single-word remainder \n4.}
 \end{description}
 
 Sign function:
@@ -504,7 +504,7 @@ Shifts:
 \subsection{Memory}
 \label{memoryinst}
 
-These instructions fetch and store cells and bytes to and from memory; there is
+These instructions fetch and store words and bytes to and from memory; there is
 also an instruction to add a number to another stored in memory.
 
 \begin{description}
@@ -569,7 +569,7 @@ Subroutine call and return:
 This instructions encodes literal values which are placed on the stack.
 
 \begin{description}
-\inst{(LITERAL)}{-- x}{Push the cell pointed to by {\tt EP} on to the stack, then add four to {\tt EP}.}
+\inst{(LITERAL)}{-- x}{Push the word pointed to by {\tt EP} on to the stack, then add four to {\tt EP}.}
 \end{description}
 
 
@@ -591,7 +591,7 @@ These instructions allow access to @PACKAGE_NAME@'s libraries, the operating sys
 native machine code.
 
 \begin{description}
-\inst{LINK}{i*x --}{Make a subroutine call to the routine at the address given (in the host machine's format, padded out to a number of cells) on the data stack. The size and format of this address are machine-dependent.}
+\inst{LINK}{i*x --}{Make a subroutine call to the routine at the address given (in the host machine's format, padded out to a number of words) on the data stack. The size and format of this address are machine-dependent.}
 \end{description}
 
 
@@ -650,9 +650,9 @@ and shared between systems.
 The first seven bytes of an object module should be the ASCII codes of the letters
 ``@PACKAGE@'' padded with ASCII NULs (\$00), then the one-byte contents of
 the {\tt ENDISM} register of the system which saved the module. The next four
-bytes should contain the number of cells the code occupies. The number must have
+bytes should contain the number of words the code occupies. The number must have
 the same endianness as that indicated in the previous byte. Then follows the
-code, which must fill a whole number of cells.
+code, which must fill a whole number of words.
 
 Object modules have a simple structure, as they are only intended for loading an
 initial memory image into @PACKAGE_NAME@.
@@ -667,7 +667,7 @@ basic types are used, and the semantics are simple, it is expected that
 implementations in different language producing the same result will be easy to
 program. A Modula-like syntax is used to give the definitions here.
 Implementation-defined error codes must be documented, but are optional. All
-addresses passed as parameters must be cell-aligned. A @PACKAGE_NAME@ must provide the
+addresses passed as parameters must be word-aligned. A @PACKAGE_NAME@ must provide the
 following calls:
 
 \begin{description}

@@ -84,7 +84,7 @@ sign.
 
 For some arguments a machine instruction may also be used, preceded by ``{\tt
 O}'', for opcode. The value of a machine instruction is its opcode. Opcodes
-are byte-wide values; when used as a cell, the most significant three bytes
+are byte-wide values; when used as a word, the most significant three bytes
 are set to zero.
 
 The syntax of the commands is shown below; literal text such as command names
@@ -158,20 +158,20 @@ range or unaligned, an appropriate error message is displayed.
 {\tt PLITERAL} \angb{number}
 \end{center}
 
-Code and literal data values may be directly assembled into memory. Assembly starts at the last value explicitly assigned to {\tt EP} in the shell, defaulting to \$0 whenever @PACKAGE_NAME@ is initialised (see section~\ref{uifaceinit}). An opcode or byte literal ({\tt BLITERAL}) takes one byte, and a cell literal ({\tt LITERAL}) is stored in the next whole cell. {\tt PLITERAL} assembles the instructions required to push the given native pointer on to the stack in the form required for the {\tt LINK} instruction.
+Code and literal data values may be directly assembled into memory. Assembly starts at the last value explicitly assigned to {\tt EP} in the shell, defaulting to \$0 whenever @PACKAGE_NAME@ is initialised (see section~\ref{uifaceinit}). An opcode or byte literal ({\tt BLITERAL}) takes one byte, and a word literal ({\tt LITERAL}) is stored in the next whole word. {\tt PLITERAL} assembles the instructions required to push the given native pointer on to the stack in the form required for the {\tt LINK} instruction.
 
-Each cell is always filled before moving on to the next available cell, so for example the sequence
+Each word is always filled before moving on to the next available word, so for example the sequence
 
 \begin{center}
 {\tt (LITERAL)} {\tt ,} {\tt \$12345678} {\tt +}
 \end{center}
 
-\noindent assembles the two instructions {\tt (LITERAL)} and {\tt +} in consecutive bytes, and then the cell \$12345678.
+\noindent assembles the two instructions {\tt (LITERAL)} and {\tt +} in consecutive bytes, and then the word \$12345678.
 
 \subsection{Memory}
 
 The contents of an address may be displayed by giving the address as a
-command. If the address is cell-aligned the whole cell is displayed,
+command. If the address is word-aligned the whole word is displayed,
 otherwise the byte at that address is shown.
 
 A larger section of memory may be displayed with the command {\tt DUMP},
@@ -193,11 +193,11 @@ A command of the form
 \begin{center}\angb{address} $=$ \angb{value}\end{center}
 
 \noindent assigns the value \angb{value} to the address \angb{address}. If the address
-is not cell-aligned, the value must fit in a byte, and only that byte is
-assigned to. When assigning to an aligned memory location, a whole cell is
+is not word-aligned, the value must fit in a byte, and only that byte is
+assigned to. When assigning to an aligned memory location, a whole word is
 assigned unless the number given fits in a byte, and is given using the
 minimum number of digits required. This should be noted the other way around:
-to assign a byte-sized significand to a cell, it should be padded with a
+to assign a byte-sized significand to a word, it should be padded with a
 leading zero.
 
 \subsection{Execution}
@@ -234,7 +234,7 @@ The command {\tt FROM} sets the point of execution:
 \end{center}
 
 With no argument, {\tt FROM} performs the function of @PACKAGE_NAME@'s {\tt NEXT}
-instruction, that is, it loads {\tt A} from the cell pointed to by {\tt EP},
+instruction, that is, it loads {\tt A} from the word pointed to by {\tt EP},
 and adds four to {\tt EP}. With an argument, {\tt FROM} sets {\tt EP} to
 \angb{address}, and then performs the function of {\tt NEXT}. {\tt FROM}
 should be used in preference to assigning directly to {\tt EP}.
@@ -249,7 +249,7 @@ two forms
 
 \noindent where the first disassembles \angb{number} bytes (or $64$ if the number is omitted) starting at address
 \angb{address} (or $16$ bytes before {\tt EP}, or $0$ if that would be negative, if the address is omitted), and the second from address \angb{address_1} up to, but not
-including, address \angb{address_2}. The addresses must be cell-aligned, and
+including, address \angb{address_2}. The addresses must be word-aligned, and
 the number of bytes must be a multiple of four. An error message is displayed
 if the start address is less than or equal to the end address, or if either
 the address or number of bytes is not aligned or is out of range.
@@ -267,7 +267,7 @@ The command
 
 \noindent initialises @PACKAGE_NAME@ as in section~\ref{uifaceinit}, then loads the object
 module in file \angb{file} into memory at address \angb{address} (or address \$0 if the argument is omitted). The address
-must be cell-aligned; if it is not, or if the module would not fit in memory
+must be word-aligned; if it is not, or if the module would not fit in memory
 at the address given, or there is some filing error, an error message is
 displayed.
 
@@ -280,7 +280,7 @@ The command {\tt SAVE} saves an object module. It has the two forms
 
 \noindent where the first saves \angb{number} bytes starting at address \angb{address},
 and the second saves from address \angb{address_1} up to, but not including,
-address \angb{address_2}. The addresses must be cell-aligned, and the number
+address \angb{address_2}. The addresses must be word-aligned, and the number
 of bytes must be a multiple of four. An error message is displayed if the
 start address is less than or equal to the end address, or if either the
 address or number of bytes is not aligned or out of range.

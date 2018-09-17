@@ -23,14 +23,15 @@
 
 // Basic types
 typedef uint8_t BYTE;
-typedef int32_t CELL;
-typedef uint32_t UCELL;
-typedef uint64_t DUCELL;
+typedef int32_t WORD;
+typedef uint32_t UWORD;
+typedef uint64_t DUWORD;
 #define BYTE_BIT 8
 #define BYTE_MASK ((1 << BYTE_BIT) - 1)
-#define CELL_BIT (sizeof(CELL_W) * BYTE_BIT)
-#define CELL_MAX (UINT32_MAX)
-#define CELL_MASK CELL_MAX
+#undef WORD_BIT // FIXME: prefix this and other symbols
+#define WORD_BIT (sizeof(WORD_W) * BYTE_BIT)
+#define WORD_MAX (UINT32_MAX)
+#define WORD_MASK WORD_MAX
 
 // VM registers
 
@@ -42,55 +43,55 @@ typedef uint64_t DUCELL;
 #define ENDISM ((BYTE)0)
 #endif
 
-extern UCELL EP;
+extern UWORD EP;
 extern BYTE I;
-extern CELL A;
-extern UCELL MEMORY;
-extern UCELL SP, RP;
-extern UCELL S0, R0;
-extern UCELL HASHS, HASHR;
-extern UCELL THROW;
-extern UCELL BAD;
-extern UCELL NOT_ADDRESS;
+extern WORD A;
+extern UWORD MEMORY;
+extern UWORD SP, RP;
+extern UWORD S0, R0;
+extern UWORD HASHS, HASHR;
+extern UWORD THROW;
+extern UWORD BAD;
+extern UWORD NOT_ADDRESS;
 #define CHECKED 1       // address checking is mandatory in this implementation
 
 // Memory access
 
 // Return value is 0 if OK, or exception code for invalid or unaligned address
-int load_cell(UCELL addr, CELL *value);
-int store_cell(UCELL addr, CELL value);
-int load_byte(UCELL addr, BYTE *value);
-int store_byte(UCELL addr, BYTE value);
+int load_word(UWORD addr, WORD *value);
+int store_word(UWORD addr, WORD value);
+int load_byte(UWORD addr, BYTE *value);
+int store_byte(UWORD addr, BYTE value);
 
-int pre_dma(UCELL from, UCELL to, bool write);
-int post_dma(UCELL from, UCELL to);
+int pre_dma(UWORD from, UWORD to, bool write);
+int post_dma(UWORD from, UWORD to);
 
 // Memory mapping
-UCELL mem_here(void);
-UCELL mem_allot(void *p, size_t n, bool writable);
-UCELL mem_align(void);
+UWORD mem_here(void);
+UWORD mem_allot(void *p, size_t n, bool writable);
+UWORD mem_align(void);
 
 // Interface calls
-uint8_t *native_address(UCELL addr, bool writable);
-CELL run(void);
-CELL single_step(void);
-int load_object(FILE *file, UCELL address);
+uint8_t *native_address(UWORD addr, bool writable);
+WORD run(void);
+WORD single_step(void);
+int load_object(FILE *file, UWORD address);
 
 // Additional implementation-specific routines, macros, types and quantities
-int init(CELL *c_array, size_t size);
+int init(WORD *c_array, size_t size);
 int register_args(int argc, char *argv[]);
 
-#define PACKAGE_UPPER_TRUE CELL_MASK            // VM TRUE flag
-#define PACKAGE_UPPER_FALSE ((CELL)0)           // VM FALSE flag
+#define PACKAGE_UPPER_TRUE WORD_MASK            // VM TRUE flag
+#define PACKAGE_UPPER_FALSE ((WORD)0)           // VM FALSE flag
 
-#define CELL_W 4    // the width of a cell in bytes
-#define POINTER_W (sizeof(void *) / CELL_W)   // the width of a machine pointer in cells
+#define WORD_W 4    // the width of a word in bytes
+#define POINTER_W (sizeof(void *) / WORD_W)   // the width of a machine pointer in words
 
 // A union to allow storage of machine pointers in VM memory
-union _CELL_pointer {
-    CELL cells[POINTER_W];
+union _WORD_pointer {
+    WORD words[POINTER_W];
     void (*pointer)(void);
 };
-typedef union _CELL_pointer CELL_pointer;
+typedef union _WORD_pointer WORD_pointer;
 
 #endif

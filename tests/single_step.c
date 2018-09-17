@@ -16,7 +16,7 @@ int main(void)
 {
     int exception = 0;
 
-    init((CELL *)calloc(1024, 1), 256);
+    init((WORD *)calloc(1024, 1), 256);
 
     assert(single_step() == -259);
 

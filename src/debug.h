@@ -13,14 +13,14 @@
 #define PACKAGE_UPPER_DEBUG
 
 
-int byte_size(CELL v); // return number of significant bytes in a CELL quantity
+int byte_size(WORD v); // return number of significant bytes in a WORD quantity
 
 void ass(BYTE instr);	// assemble an instruction
-void lit(CELL literal);	// assemble a cell literal
+void lit(WORD literal);	// assemble a word literal
 void plit(void (*literal)(void));  // assemble a machine-dependent function pointer literal,
                                    // including the relevant LITERAL instructions
-void start_ass(UCELL addr);	// start assembly, initialising variables
-UCELL ass_current(void);	// return address of CELL currently being assembled to
+void start_ass(UWORD addr);	// start assembly, initialising variables
+UWORD ass_current(void);	// return address of WORD currently being assembled to
 const char *disass(BYTE opcode);  // disassemble an instruction
 BYTE toass(const char *token);    // convert a instruction to its opcode
 

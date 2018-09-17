@@ -19,7 +19,7 @@
 #include "stringify.h"
 
 #define MEMORY_MESSAGE(type, max, def) \
-  "set " type " size to the given NUMBER of cells\n"                    \
+  "set " type " size to the given NUMBER of words\n"                    \
   "                            0 < NUMBER <= " str(max) " [default " str(def) "]"
 OPT("memory", 'm', required_argument, "NUMBER", MEMORY_MESSAGE("memory", MAX_MEMORY, DEFAULT_MEMORY))
 OPT("stack", 's', required_argument, "NUMBER", MEMORY_MESSAGE("data stack", MAX_STACK_SIZE, DEFAULT_STACK_SIZE))

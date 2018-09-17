@@ -12,7 +12,7 @@
 
 
 int exception = 0;
-CELL temp;
+WORD temp;
 
 
 static void test(void)
@@ -22,22 +22,22 @@ static void test(void)
 
 int main(void)
 {
-    init((CELL *)malloc(16384), 4096);
+    init((WORD *)malloc(16384), 4096);
 
     start_ass(EP);
     plit(test); ass(O_LINK); ass(O_LITERAL); lit(0);
     ass(O_HALT);
 
     assert(single_step() == -259);   // load first instruction word
-    CELL res = run();
+    WORD res = run();
     if (res != 0) {
         printf("Error in LINK tests: test aborted with return code %"PRId32"\n", res);
         exit(1);
     }
 
-    printf("Top of stack is %d; should be %d\n", LOAD_CELL(SP), 37);
+    printf("Top of stack is %d; should be %d\n", LOAD_WORD(SP), 37);
     show_data_stack();
-    if (LOAD_CELL(SP) != 37) {
+    if (LOAD_WORD(SP) != 37) {
         printf("Error in LINK tests: incorrect value on top of stack\n");
         exit(1);
     }

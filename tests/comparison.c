@@ -14,9 +14,9 @@
 
 
 int exception = 0;
-CELL temp;
+WORD temp;
 
-CELL correct[] = { 0, -1, 0, -1, -1, 0, 0, -1, 0, 0};
+WORD correct[] = { 0, -1, 0, -1, -1, 0, 0, -1, 0, 0};
 
 
 static void stack1(void)
@@ -44,9 +44,9 @@ static void step(unsigned start, unsigned end)
             single_step();
             printf("I = %s\n", disass(I));
             if (I != O_NEXT00) {
-                printf("Result: %d; correct result: %d\n\n", LOAD_CELL(SP),
+                printf("Result: %d; correct result: %d\n\n", LOAD_WORD(SP),
                        correct[i - i / 5]);
-                if (correct[i - i / 5] != LOAD_CELL(SP)) {
+                if (correct[i - i / 5] != LOAD_WORD(SP)) {
                     printf("Error in comparison tests: EP = %"PRIu32"\n", EP);
                     exit(1);
                 }
@@ -59,7 +59,7 @@ static void step(unsigned start, unsigned end)
 
 int main(void)
 {
-    init((CELL *)malloc(1024), 256);
+    init((WORD *)malloc(1024), 256);
 
     start_ass(EP);
     ass(O_LESS); ass(O_LESS); ass(O_LESS); ass(O_LESS);

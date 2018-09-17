@@ -24,26 +24,26 @@
 
 // VM registers
 
-UCELL EP;
+UWORD EP;
 BYTE I;
-CELL A;
-UCELL SP, RP;
-UCELL HASHS = DEFAULT_STACK_SIZE;
-UCELL S0, R0;
-UCELL HASHR = DEFAULT_STACK_SIZE;
-UCELL THROW;
-UCELL MEMORY;
-UCELL BAD;
-UCELL NOT_ADDRESS;
+WORD A;
+UWORD SP, RP;
+UWORD HASHS = DEFAULT_STACK_SIZE;
+UWORD S0, R0;
+UWORD HASHR = DEFAULT_STACK_SIZE;
+UWORD THROW;
+UWORD MEMORY;
+UWORD BAD;
+UWORD NOT_ADDRESS;
 
 
 // Memory allocation and mapping
 static gl_list_t mem_areas;
-static UCELL _mem_here;
+static UWORD _mem_here;
 
 typedef struct {
-    UCELL start;
-    UCELL size;
+    UWORD start;
+    UWORD size;
     uint8_t *ptr;
     bool writable;
 } Mem_area;
@@ -68,16 +68,16 @@ static void free_mem_area(const void *a)
     free((void *)a);
 }
 
-_GL_ATTRIBUTE_PURE UCELL mem_here(void)
+_GL_ATTRIBUTE_PURE UWORD mem_here(void)
 {
     return _mem_here;
 }
 
 // Given a range of addresses, return Mem_area corresponding to some address
 // in that range.
-// This is used a) to find the area for a particular cell;
+// This is used a) to find the area for a particular word;
 //              b) to test whether part of a range has already been allocated
-static Mem_area *mem_range(UCELL start, UCELL length)
+static Mem_area *mem_range(UWORD start, UWORD length)
 {
     Mem_area a_addr = {start, length, NULL, true};
     gl_list_node_t elt = gl_sortedlist_search(mem_areas, cmp_mem_area, &a_addr);
@@ -86,7 +86,7 @@ static Mem_area *mem_range(UCELL start, UCELL length)
 
 #define addr_in_area(a, addr) (a->ptr + ((addr) - a->start))
 
-_GL_ATTRIBUTE_PURE uint8_t *native_address(UCELL addr, bool write)
+_GL_ATTRIBUTE_PURE uint8_t *native_address(UWORD addr, bool write)
 {
     Mem_area *a = mem_range(addr, 1);
     if (a == NULL || (write && !a->writable))
@@ -95,7 +95,7 @@ _GL_ATTRIBUTE_PURE uint8_t *native_address(UCELL addr, bool write)
 }
 
 // Return address of a range iff it falls inside an area
-uint8_t *native_address_range_in_one_area(UCELL start, UCELL length, bool write)
+uint8_t *native_address_range_in_one_area(UWORD start, UWORD length, bool write)
 {
     Mem_area *a = mem_range(start, 1);
     if (a == NULL || (write && !a->writable) || a->size - (start - a->start) < length)
@@ -104,10 +104,10 @@ uint8_t *native_address_range_in_one_area(UCELL start, UCELL length, bool write)
 }
 
 // Map the given native block of memory to VM address addr
-static bool mem_map(UCELL addr, void *p, size_t n, bool writable)
+static bool mem_map(UWORD addr, void *p, size_t n, bool writable)
 {
     // Return false if area is too big, or covers already-allocated addresses
-    if ((addr > 0 && n > (CELL_MAX - addr + 1)) || mem_range(addr, n) != NULL)
+    if ((addr > 0 && n > (WORD_MAX - addr + 1)) || mem_range(addr, n) != NULL)
         return false;
 
     Mem_area *area = malloc(sizeof(Mem_area));
@@ -122,17 +122,17 @@ static bool mem_map(UCELL addr, void *p, size_t n, bool writable)
     return true;
 }
 
-UCELL mem_allot(void *p, size_t n, bool writable)
+UWORD mem_allot(void *p, size_t n, bool writable)
 {
     if (!mem_map(_mem_here, p, n, writable))
-        return CELL_MASK;
+        return WORD_MASK;
 
     size_t start = _mem_here;
     _mem_here += n;
     return start;
 }
 
-UCELL mem_align(void)
+UWORD mem_align(void)
 {
     return _mem_here = ALIGN(_mem_here);
 }
@@ -142,12 +142,12 @@ UCELL mem_align(void)
 
 // Macro for byte addressing
 #ifdef WORDS_BIGENDIAN
-#define FLIP(addr) ((addr) ^ (CELL_W - 1))
+#define FLIP(addr) ((addr) ^ (WORD_W - 1))
 #else
 #define FLIP(addr) (addr)
 #endif
 
-int load_cell(UCELL addr, CELL *value)
+int load_word(UWORD addr, WORD *value)
 {
     if (!IS_ALIGNED(addr)) {
         NOT_ADDRESS = addr;
@@ -155,29 +155,29 @@ int load_cell(UCELL addr, CELL *value)
     }
 
     // Aligned access to a single memory area
-    uint8_t *ptr = native_address_range_in_one_area(addr, CELL_W, false);
+    uint8_t *ptr = native_address_range_in_one_area(addr, WORD_W, false);
     if (ptr != NULL && IS_ALIGNED((size_t)ptr)) {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wcast-align"
-        *value = *(CELL *)ptr;
+        *value = *(WORD *)ptr;
 #pragma GCC diagnostic pop
         return 0;
     }
 
     // Awkward access
     *value = 0;
-    for (unsigned i = 0; i < CELL_W; i++, addr++) {
+    for (unsigned i = 0; i < WORD_W; i++, addr++) {
         ptr = native_address(addr, false);
         if (ptr == NULL) {
             NOT_ADDRESS = addr;
             return -9;
         }
-        ((BYTE *)value)[ENDISM ? CELL_W - i : i] = *ptr;
+        ((BYTE *)value)[ENDISM ? WORD_W - i : i] = *ptr;
     }
     return 0;
 }
 
-int load_byte(UCELL addr, BYTE *value)
+int load_byte(UWORD addr, BYTE *value)
 {
     uint8_t *ptr = native_address(FLIP(addr), false);
     if (ptr == NULL)
@@ -186,7 +186,7 @@ int load_byte(UCELL addr, BYTE *value)
     return 0;
 }
 
-int store_cell(UCELL addr, CELL value)
+int store_word(UWORD addr, WORD value)
 {
     if (!IS_ALIGNED(addr)) {
         NOT_ADDRESS = addr;
@@ -194,23 +194,23 @@ int store_cell(UCELL addr, CELL value)
     }
 
     // Aligned access to a single memory allocation
-    uint8_t *ptr = native_address_range_in_one_area(addr, CELL_W, true);
+    uint8_t *ptr = native_address_range_in_one_area(addr, WORD_W, true);
     if (ptr != NULL && IS_ALIGNED((size_t)ptr)) {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wcast-align"
-        *(CELL *)ptr = value;
+        *(WORD *)ptr = value;
 #pragma GCC diagnostic pop
         return 0;
     }
 
     // Awkward access
     int exception = 0;
-    for (unsigned i = 0; exception == 0 && i < CELL_W; i++)
-        exception = store_byte(addr + i, value >> ((ENDISM ? CELL_W - i : i) * BYTE_BIT));
+    for (unsigned i = 0; exception == 0 && i < WORD_W; i++)
+        exception = store_byte(addr + i, value >> ((ENDISM ? WORD_W - i : i) * BYTE_BIT));
     return exception;
 }
 
-int store_byte(UCELL addr, BYTE value)
+int store_byte(UWORD addr, BYTE value)
 {
     Mem_area *a = mem_range(FLIP(addr), 1);
     if (a == NULL) {
@@ -225,37 +225,37 @@ int store_byte(UCELL addr, BYTE value)
 }
 
 
-_GL_ATTRIBUTE_CONST CELL reverse_cell(CELL value)
+_GL_ATTRIBUTE_CONST WORD reverse_word(WORD value)
 {
-    CELL res = 0;
-    for (unsigned i = 0; i < CELL_W / 2; i++) {
+    WORD res = 0;
+    for (unsigned i = 0; i < WORD_W / 2; i++) {
         unsigned lopos = BYTE_BIT * i;
-        unsigned hipos = BYTE_BIT * (CELL_W - 1 - i);
+        unsigned hipos = BYTE_BIT * (WORD_W - 1 - i);
         unsigned move = hipos - lopos;
-        res |= ((((UCELL)value) & (BYTE_MASK << hipos)) >> move)
-            | ((((UCELL)value) & (BYTE_MASK << lopos)) << move);
+        res |= ((((UWORD)value) & (BYTE_MASK << hipos)) >> move)
+            | ((((UWORD)value) & (BYTE_MASK << lopos)) << move);
     }
     return res;
 }
 
-int reverse(UCELL start, UCELL length)
+int reverse(UWORD start, UWORD length)
 {
     int ret = 0;
-    for (UCELL i = 0; ret == 0 && i < length; i ++) {
-        CELL c;
-        ret = load_cell(start + i * CELL_W, &c)
-            || store_cell(start + i, reverse_cell(c));
+    for (UWORD i = 0; ret == 0 && i < length; i ++) {
+        WORD c;
+        ret = load_word(start + i * WORD_W, &c)
+            || store_word(start + i, reverse_word(c));
     }
     return ret;
 }
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wsuggest-attribute=const"
-int pre_dma(UCELL from, UCELL to, bool write)
+int pre_dma(UWORD from, UWORD to, bool write)
 {
     int exception = 0;
 
-    from &= -CELL_W;
+    from &= -WORD_W;
     to = ALIGN(to);
     if (to < from || native_address_range_in_one_area(from, to - from, write) == NULL)
         exception = -1;
@@ -269,7 +269,7 @@ int pre_dma(UCELL from, UCELL to, bool write)
 }
 #pragma GCC diagnostic pop
 
-int post_dma(UCELL from, UCELL to)
+int post_dma(UWORD from, UWORD to)
 {
     return pre_dma(from, to, false);
 }
@@ -277,11 +277,11 @@ int post_dma(UCELL from, UCELL to)
 
 // Initialise registers that are not fixed
 
-int init(CELL *memory, size_t size)
+int init(WORD *memory, size_t size)
 {
     if (memory == NULL)
         return -1;
-    MEMORY = size * CELL_W;
+    MEMORY = size * WORD_W;
     memset(memory, 0, MEMORY);
 
     _mem_here = 0UL;
@@ -293,11 +293,11 @@ int init(CELL *memory, size_t size)
         == false)
         return -2;
 
-    if (mem_allot(memory, MEMORY, true) == CELL_MASK)
+    if (mem_allot(memory, MEMORY, true) == WORD_MASK)
         return -2;
 
-    CELL *d_stack = calloc(HASHS, CELL_W);
-    CELL *r_stack = calloc(HASHR, CELL_W);
+    WORD *d_stack = calloc(HASHS, WORD_W);
+    WORD *r_stack = calloc(HASHR, WORD_W);
     if (d_stack == NULL || r_stack == NULL)
         return -2;
 
@@ -310,8 +310,8 @@ int init(CELL *memory, size_t size)
     S0 = SP = DATA_STACK_SEGMENT;
     R0 = RP = RETURN_STACK_SEGMENT;
     THROW = 0;
-    BAD = CELL_MAX;
-    NOT_ADDRESS = CELL_MAX;
+    BAD = WORD_MAX;
+    NOT_ADDRESS = WORD_MAX;
 
     return 0;
 }

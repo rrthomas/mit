@@ -14,7 +14,7 @@
 static int correct[] = { -2, -2, -1, -3, 0, 0, 0 };
 
 
-static int try(char *file, UCELL address)
+static int try(char *file, UWORD address)
 {
     FILE *fp = fopen(file, "r");
     int ret = load_object(fp, address);
@@ -47,7 +47,7 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    CELL *memory = (CELL *)calloc(1024, 1);
+    WORD *memory = (WORD *)calloc(1024, 1);
     init(memory, 256);
 
     size_t i;
@@ -64,12 +64,12 @@ int main(int argc, char *argv[])
 
     for (; i < sizeof(files) / sizeof(files[0]); i++) {
         char *s = obj_name(prefix, files[i]);
-        CELL c;
+        WORD c;
         res = try(s, 0);
         free(s);
         printf(" should be %d\n", correct[i]);
-        printf("Word 0 of memory is %"PRIX32"; should be 1020304\n", (UCELL)(load_cell(0, &c), c));
-        if ((load_cell(0, &c), c) != 0x1020304) {
+        printf("Word 0 of memory is %"PRIX32"; should be 1020304\n", (UWORD)(load_word(0, &c), c));
+        if ((load_word(0, &c), c) != 0x1020304) {
             printf("Error in load_object() tests: file %s\n", files[i]);
             exit(1);
         }

@@ -15,9 +15,9 @@
 #include "public.h"
 
 
-CELL run(void)
+WORD run(void)
 {
-    CELL ret;
+    WORD ret;
 
     while ((ret = single_step()) == -259)
         ;

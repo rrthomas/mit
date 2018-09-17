@@ -29,16 +29,16 @@
 
 
 // Assumption for file functions
-verify(sizeof(int) <= sizeof(CELL));
+verify(sizeof(int) <= sizeof(WORD));
 
 
-// Check whether a VM address points to a native cell-aligned cell
-#define CELL_IN_ONE_AREA(a)                             \
-    (native_address_range_in_one_area((a), CELL_W, false) != NULL)
+// Check whether a VM address points to a native word-aligned word
+#define WORD_IN_ONE_AREA(a)                             \
+    (native_address_range_in_one_area((a), WORD_W, false) != NULL)
 
-#define CHECK_ALIGNED_WHOLE_CELL(a)                     \
+#define CHECK_ALIGNED_WHOLE_WORD(a)                     \
     CHECK_ADDRESS(a, IS_ALIGNED(a), -23, badadr)        \
-    CHECK_ADDRESS(a, CELL_IN_ONE_AREA(a), -9, badadr)
+    CHECK_ADDRESS(a, WORD_IN_ONE_AREA(a), -9, badadr)
 
 
 #define DIVZERO(x)                              \
@@ -51,7 +51,7 @@ verify(sizeof(int) <= sizeof(CELL));
 // I/O support
 
 // Copy a string from VM to native memory
-static int getstr(UCELL adr, UCELL len, char **res)
+static int getstr(UWORD adr, UWORD len, char **res)
 {
     int exception = 0;
 
@@ -67,7 +67,7 @@ static int getstr(UCELL adr, UCELL len, char **res)
 }
 
 // Convert portable open(2) flags bits to system flags
-static int getflags(UCELL perm, bool *binary)
+static int getflags(UWORD perm, bool *binary)
 {
     int flags = 0;
 
@@ -95,13 +95,13 @@ static int getflags(UCELL perm, bool *binary)
 
 // Register command-line args in VM memory
 static int main_argc = 0;
-static UCELL *main_argv;
-static UCELL *main_argv_len;
+static UWORD *main_argv;
+static UWORD *main_argv_len;
 int register_args(int argc, char *argv[])
 {
     main_argc = argc;
-    if ((main_argv = calloc(argc, sizeof(UCELL))) == NULL ||
-        (main_argv_len = calloc(argc, sizeof(UCELL))) == NULL)
+    if ((main_argv = calloc(argc, sizeof(UWORD))) == NULL ||
+        (main_argv_len = calloc(argc, sizeof(UWORD))) == NULL)
         return -1;
 
     for (int i = 0; i < argc; i++) {
@@ -116,10 +116,10 @@ int register_args(int argc, char *argv[])
 
 
 // Perform one pass of the execution cycle
-CELL single_step(void)
+WORD single_step(void)
 {
     int exception = 0;
-    CELL temp = 0, temp2 = 0;
+    WORD temp = 0, temp2 = 0;
     BYTE byte = 0;
 
     I = (BYTE)A;
@@ -128,89 +128,89 @@ CELL single_step(void)
     case O_NEXT00:
     case O_NEXTFF:
  next:
-        EP += CELL_W;
-        exception = load_cell(EP - CELL_W, &A);
+        EP += WORD_W;
+        exception = load_word(EP - WORD_W, &A);
         break;
     case O_POP:
         {
-            CELL depth = POP;
-            SP -= depth * CELL_W * STACK_DIRECTION;
+            WORD depth = POP;
+            SP -= depth * WORD_W * STACK_DIRECTION;
         }
         break;
     case O_SWAP:
         {
-            CELL depth = POP;
-            CELL swapee = LOAD_CELL(SP - depth * CELL_W * STACK_DIRECTION);
-            CELL top = POP;
+            WORD depth = POP;
+            WORD swapee = LOAD_WORD(SP - depth * WORD_W * STACK_DIRECTION);
+            WORD top = POP;
             PUSH(swapee);
-            STORE_CELL(SP - depth * CELL_W * STACK_DIRECTION, top);
+            STORE_WORD(SP - depth * WORD_W * STACK_DIRECTION, top);
         }
         break;
     case O_PUSH:
         {
-            CELL depth = POP;
-            CELL pickee = LOAD_CELL(SP - depth * CELL_W * STACK_DIRECTION);
+            WORD depth = POP;
+            WORD pickee = LOAD_WORD(SP - depth * WORD_W * STACK_DIRECTION);
             PUSH(pickee);
         }
         break;
     case O_RPUSH:
         {
-            CELL depth = POP;
-            CELL pickee = LOAD_CELL(RP - depth * CELL_W * STACK_DIRECTION);
+            WORD depth = POP;
+            WORD pickee = LOAD_WORD(RP - depth * WORD_W * STACK_DIRECTION);
             PUSH(pickee);
         }
         break;
     case O_TOR:
         {
-            CELL value = POP;
+            WORD value = POP;
             PUSH_RETURN(value);
         }
         break;
     case O_RFROM:
         {
-            CELL value = POP_RETURN;
+            WORD value = POP_RETURN;
             PUSH(value);
         }
         break;
     case O_LESS:
         {
-            CELL a = POP;
-            CELL b = POP;
+            WORD a = POP;
+            WORD b = POP;
             PUSH(b < a ? PACKAGE_UPPER_TRUE : PACKAGE_UPPER_FALSE);
         }
         break;
     case O_EQUAL:
         {
-            CELL a = POP;
-            CELL b = POP;
+            WORD a = POP;
+            WORD b = POP;
             PUSH(a == b ? PACKAGE_UPPER_TRUE : PACKAGE_UPPER_FALSE);
         }
         break;
     case O_ULESS:
         {
-            UCELL a = POP;
-            UCELL b = POP;
+            UWORD a = POP;
+            UWORD b = POP;
             PUSH(b < a ? PACKAGE_UPPER_TRUE : PACKAGE_UPPER_FALSE);
         }
         break;
     case O_PLUS:
         {
-            CELL a = POP;
-            CELL b = POP;
+            WORD a = POP;
+            WORD b = POP;
             PUSH(b + a);
         }
         break;
     case O_STAR:
         {
-            CELL multiplier = POP;
-            CELL multiplicand = POP;
+            WORD multiplier = POP;
+            WORD multiplicand = POP;
             PUSH(multiplier * multiplicand);
         }
         break;
     case O_UMODSLASH:
         {
-            UCELL divisor = POP;
-            UCELL dividend = POP;
+            UWORD divisor = POP;
+            UWORD dividend = POP;
             DIVZERO(divisor);
             PUSH(dividend / divisor);
             PUSH(dividend % divisor);
@@ -218,8 +218,8 @@ CELL single_step(void)
         break;
     case O_SREMSLASH:
         {
-            CELL divisor = POP;
-            CELL dividend = POP;
+            WORD divisor = POP;
+            WORD dividend = POP;
             DIVZERO(divisor);
             PUSH(dividend / divisor);
             PUSH(dividend % divisor);
@@ -227,88 +227,88 @@ CELL single_step(void)
         break;
     case O_NEGATE:
         {
-            CELL a = POP;
+            WORD a = POP;
             PUSH(-a);
         }
         break;
     case O_INVERT:
         {
-            CELL a = POP;
+            WORD a = POP;
             PUSH(~a);
         }
         break;
     case O_AND:
         {
-            CELL a = POP;
-            CELL b = POP;
+            WORD a = POP;
+            WORD b = POP;
             PUSH(a & b);
         }
         break;
     case O_OR:
         {
-            CELL a = POP;
-            CELL b = POP;
+            WORD a = POP;
+            WORD b = POP;
             PUSH(a | b);
         }
         break;
     case O_XOR:
         {
-            CELL a = POP;
-            CELL b = POP;
+            WORD a = POP;
+            WORD b = POP;
             PUSH(a ^ b);
         }
         break;
     case O_LSHIFT:
         {
-            CELL shift = POP;
-            CELL value = POP;
-            PUSH(shift < (CELL)CELL_BIT ? value << shift : 0);
+            WORD shift = POP;
+            WORD value = POP;
+            PUSH(shift < (WORD)WORD_BIT ? value << shift : 0);
         }
         break;
     case O_RSHIFT:
         {
-            CELL shift = POP;
-            CELL value = POP;
-            PUSH(shift < (CELL)CELL_BIT ? (CELL)((UCELL)value >> shift) : 0);
+            WORD shift = POP;
+            WORD value = POP;
+            PUSH(shift < (WORD)WORD_BIT ? (WORD)((UWORD)value >> shift) : 0);
         }
         break;
     case O_FETCH:
         {
-            CELL addr = POP;
-            CELL value = LOAD_CELL(addr);
+            WORD addr = POP;
+            WORD value = LOAD_WORD(addr);
             PUSH(value);
         }
         break;
     case O_STORE:
         {
-            CELL addr = POP;
-            CELL value = POP;
-            STORE_CELL(addr, value);
+            WORD addr = POP;
+            WORD value = POP;
+            STORE_WORD(addr, value);
         }
         break;
     case O_CFETCH:
         {
-            CELL addr = POP;
+            WORD addr = POP;
             BYTE value = LOAD_BYTE(addr);
-            PUSH((CELL)value);
+            PUSH((WORD)value);
         }
         break;
     case O_CSTORE:
         {
-            CELL addr = POP;
+            WORD addr = POP;
             BYTE value = (BYTE)POP;
             STORE_BYTE(addr, value);
         }
         break;
     case O_SPFETCH:
         {
-            CELL value = SP;
+            WORD value = SP;
             PUSH(value);
         }
         break;
     case O_SPSTORE:
         {
-            CELL value = POP;
+            WORD value = POP;
             CHECK_ALIGNED(value);
             SP = value;
         }
@@ -318,24 +318,24 @@ CELL single_step(void)
         break;
     case O_RPSTORE:
         {
-            CELL value = POP;
+            WORD value = POP;
             CHECK_ALIGNED(value);
             RP = value;
         }
         break;
     case O_EPSTORE:
         {
-            CELL addr = POP;
-            CHECK_ALIGNED_WHOLE_CELL(addr);
+            WORD addr = POP;
+            CHECK_ALIGNED_WHOLE_WORD(addr);
             EP = addr;
             goto next;
         }
         break;
     case O_QEPSTORE:
         {
-            CELL addr = POP;
+            WORD addr = POP;
             if (POP == PACKAGE_UPPER_FALSE) {
-                CHECK_ALIGNED_WHOLE_CELL(addr);
+                CHECK_ALIGNED_WHOLE_WORD(addr);
                 EP = addr;
                 goto next;
             }
@@ -343,8 +343,8 @@ CELL single_step(void)
         }
     case O_CALL:
         {
-            CELL addr = POP;
-            CHECK_ALIGNED_WHOLE_CELL(addr);
+            WORD addr = POP;
+            CHECK_ALIGNED_WHOLE_WORD(addr);
             PUSH_RETURN(EP);
             EP = addr;
             goto next;
@@ -352,21 +352,21 @@ CELL single_step(void)
         break;
     case O_RET:
         {
-            CELL addr = POP_RETURN;
-            CHECK_ALIGNED_WHOLE_CELL(addr);
+            WORD addr = POP_RETURN;
+            CHECK_ALIGNED_WHOLE_WORD(addr);
             EP = addr;
             goto next;
         }
         break;
     case O_LITERAL:
-        PUSH(LOAD_CELL(EP));
-        EP += CELL_W;
+        PUSH(LOAD_WORD(EP));
+        EP += WORD_W;
         break;
  throw:
     case O_THROW:
-        // exception may already be set, so CELL_STORE may have no effect here.
+        // exception may already be set, so WORD_STORE may have no effect here.
         BAD = EP;
-        if (!CELL_IN_ONE_AREA(THROW) || !IS_ALIGNED(THROW))
+        if (!WORD_IN_ONE_AREA(THROW) || !IS_ALIGNED(THROW))
             return -258;
         EP = THROW;
         exception = 0; // Any exception has now been dealt with
@@ -394,7 +394,7 @@ CELL single_step(void)
         break;
     case O_THROWSTORE:
         {
-            CELL value = POP;
+            WORD value = POP;
             CHECK_ALIGNED(value);
             THROW = value;
         }
@@ -410,9 +410,9 @@ CELL single_step(void)
         break;
     case O_LINK:
         {
-            CELL_pointer address;
+            WORD_pointer address;
             for (int i = POINTER_W - 1; i >= 0; i--)
-                address.cells[i] = POP;
+                address.words[i] = POP;
             address.pointer();
         }
         break;
@@ -422,8 +422,8 @@ CELL single_step(void)
         break;
     case OX_ARG: // ( u1 -- c-addr u2 )
         {
-            UCELL narg = POP;
-            if (narg >= (UCELL)main_argc) {
+            UWORD narg = POP;
+            if (narg >= (UWORD)main_argc) {
                 PUSH(0);
                 PUSH(0);
             } else {
@@ -433,39 +433,39 @@ CELL single_step(void)
         }
         break;
     case OX_STDIN:
-        PUSH((CELL)(STDIN_FILENO));
+        PUSH((WORD)(STDIN_FILENO));
         break;
     case OX_STDOUT:
-        PUSH((CELL)(STDOUT_FILENO));
+        PUSH((WORD)(STDOUT_FILENO));
         break;
     case OX_STDERR:
-        PUSH((CELL)(STDERR_FILENO));
+        PUSH((WORD)(STDERR_FILENO));
         break;
     case OX_OPEN_FILE:
         {
             bool binary = false;
             int perm = getflags(POP, &binary);
-            UCELL len = POP;
-            UCELL str = POP;
+            UWORD len = POP;
+            UWORD str = POP;
             char *file;
             exception = getstr(str, len, &file);
             int fd = exception == 0 ? open(file, perm, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH) : -1;
             free(file);
-            PUSH((CELL)fd);
+            PUSH((WORD)fd);
             PUSH(fd < 0 || (binary && set_binary_mode(fd, O_BINARY) < 0) ? -1 : 0);
         }
         break;
     case OX_CLOSE_FILE:
         {
             int fd = POP;
-            PUSH((CELL)close(fd));
+            PUSH((WORD)close(fd));
         }
         break;
     case OX_READ_FILE:
         {
             int fd = POP;
-            UCELL nbytes = POP;
-            UCELL buf = POP;
+            UWORD nbytes = POP;
+            UWORD buf = POP;
 
             ssize_t res = 0;
             if (exception == 0) {
@@ -483,8 +483,8 @@ CELL single_step(void)
     case OX_WRITE_FILE:
         {
             int fd = POP;
-            UCELL nbytes = POP;
-            UCELL buf = POP;
+            UWORD nbytes = POP;
+            UWORD buf = POP;
 
             ssize_t res = 0;
             if (exception == 0) {
@@ -502,14 +502,14 @@ CELL single_step(void)
         {
             int fd = POP;
             off_t res = lseek(fd, 0, SEEK_CUR);
-            PUSH_DOUBLE((DUCELL)res);
+            PUSH_DOUBLE((DUWORD)res);
             PUSH(res >= 0 ? 0 : -1);
         }
         break;
     case OX_REPOSITION_FILE:
         {
             int fd = POP;
-            DUCELL ud = POP_DOUBLE;
+            DUWORD ud = POP_DOUBLE;
             off_t res = lseek(fd, (off_t)ud, SEEK_SET);
             PUSH(res >= 0 ? 0 : -1);
         }
@@ -523,10 +523,10 @@ CELL single_step(void)
         break;
     case OX_RENAME_FILE:
         {
-            UCELL len1 = POP;
-            UCELL str1 = POP;
-            UCELL len2 = POP;
-            UCELL str2 = POP;
+            UWORD len1 = POP;
+            UWORD str1 = POP;
+            UWORD len2 = POP;
+            UWORD str2 = POP;
             char *from;
             char *to = NULL;
             exception = getstr(str2, len2, &from) ||
@@ -539,8 +539,8 @@ CELL single_step(void)
         break;
     case OX_DELETE_FILE:
         {
-            UCELL len = POP;
-            UCELL str = POP;
+            UWORD len = POP;
+            UWORD str = POP;
             char *file;
             exception = getstr(str, len, &file) ||
                 remove(file);
@@ -560,7 +560,7 @@ CELL single_step(void)
     case OX_RESIZE_FILE:
         {
             int fd = POP;
-            DUCELL ud = POP_DOUBLE;
+            DUWORD ud = POP_DOUBLE;
             int res = ftruncate(fd, (off_t)ud);
             PUSH(res);
         }
@@ -587,9 +587,9 @@ CELL single_step(void)
     // code from usual if SP is now invalid, push the exception code
     // "manually".
  badadr:
-    SP += CELL_W * STACK_DIRECTION;
-    if (!CELL_IN_ONE_AREA(SP) || !IS_ALIGNED(SP))
+    SP += WORD_W * STACK_DIRECTION;
+    if (!WORD_IN_ONE_AREA(SP) || !IS_ALIGNED(SP))
       return -257;
-    store_cell(SP, exception);
+    store_word(SP, exception);
     goto throw;
 }

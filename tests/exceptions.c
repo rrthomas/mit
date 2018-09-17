@@ -11,11 +11,11 @@
 #include "tests.h"
 
 
-CELL result[] = { -257, -257, 42, 0, -23, -23, -10, -9, -9, -23, -256, -258 };
-UCELL bad[] = { -1, -1, -1, 28, 60, 68, 80, 16388, 104, 112, 116, 132 };
-UCELL address[] = { -12, 16384, 0, 0, 5, 1, 0, 16384, -20, 1, 0, 1 };
+WORD result[] = { -257, -257, 42, 0, -23, -23, -10, -9, -9, -23, -256, -258 };
+UWORD bad[] = { -1, -1, -1, 28, 60, 68, 80, 16388, 104, 112, 116, 132 };
+UWORD address[] = { -12, 16384, 0, 0, 5, 1, 0, 16384, -20, 1, 0, 1 };
 int testno = 0;
-UCELL test[sizeof(result) / sizeof(result[0])];
+UWORD test[sizeof(result) / sizeof(result[0])];
 
 
 int main(void)
@@ -23,7 +23,7 @@ int main(void)
     int exception = 0;
 
     size_t size = 4096;
-    init((CELL *)calloc(size, CELL_W), size);
+    init((WORD *)calloc(size, WORD_W), size);
 
     start_ass(0);
 
@@ -50,7 +50,7 @@ int main(void)
     fprintf(stderr, "Test %d: EP = %u\n", testno, ass_current());
     // test 4: test SP can point to just after a memory area
     ass(O_LITERAL); lit(MEMORY);
-    ass(O_LITERAL); lit(CELL_W);
+    ass(O_LITERAL); lit(WORD_W);
     ass(O_NEGATE); ass(O_PLUS);
     ass(O_SPSTORE); ass(O_TOR); ass(O_LITERAL); lit(0); ass(O_HALT);
 
@@ -76,7 +76,7 @@ int main(void)
     test[testno++] = ass_current();
     fprintf(stderr, "Test %d: EP = %u\n", testno, ass_current());
     // test 8: allow execution to run off the end of a memory area
-    ass(O_LITERAL); lit(MEMORY - CELL_W);
+    ass(O_LITERAL); lit(MEMORY - WORD_W);
     ass(O_EPSTORE); ass(O_NEXT00); ass(O_NEXT00);
 
     test[testno++] = ass_current();
@@ -107,14 +107,14 @@ int main(void)
 
     THROW = 200;   // set address of exception handler
 
-    UCELL error = 0;
+    UWORD error = 0;
     for (size_t i = 0; i < sizeof(test) / sizeof(test[0]); i++) {
         SP = S0;    // reset stack pointer
 
         printf("Test %zu\n", i + 1);
         EP = test[i];
         assert(single_step() == -259);   // load first instruction word
-        CELL res = run();
+        WORD res = run();
 
         if (result[i] != res || (result[i] != 0 && bad[i] != BAD) ||
             ((result[i] <= -257 || result[i] == -9 || result[i] == -23) &&

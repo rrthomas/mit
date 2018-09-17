@@ -16,7 +16,7 @@ int main(void)
 {
     int exception = 0;
 
-    int i = init((CELL *)calloc(1024, 1), 256);
+    int i = init((WORD *)calloc(1024, 1), 256);
     if (i != 0) {
         printf("Error in run() tests: init with valid parameters failed\n");
         exit(1);
@@ -27,7 +27,7 @@ int main(void)
     ass(O_HALT);
 
     assert(single_step() == -259);
-    CELL ret = run();
+    WORD ret = run();
 
     printf("Return value should be 37 and is %"PRId32"\n", ret);
     if (ret != 37) {

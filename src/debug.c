@@ -27,15 +27,15 @@
 
 
 static int ibytes; // number of opcodes assembled in current instruction word so far
-static CELL icell;  // accumulator for instructions being assembled
-static UCELL current;	// where the current instruction word will be stored
-static UCELL here; // where we assemble the next instruction word or literal
+static WORD iword;  // accumulator for instructions being assembled
+static UWORD current;	// where the current instruction word will be stored
+static UWORD here; // where we assemble the next instruction word or literal
 
 
-// Return number of bytes required for a CELL-sized quantity
+// Return number of bytes required for a WORD-sized quantity
 // After https://stackoverflow.com/questions/2589096/find-most-significant-bit-left-most-that-is-set-in-a-bit-array
-verify(CELL_BIT == 32); // Code is hard-wired for 32 bits
-_GL_ATTRIBUTE_CONST int byte_size(CELL v)
+verify(WORD_BIT == 32); // Code is hard-wired for 32 bits
+_GL_ATTRIBUTE_CONST int byte_size(WORD v)
 {
     static const int pos[32] = {
         0, 9, 1, 10, 13, 21, 2, 29, 11, 14, 16, 18, 22, 25, 3, 30,
@@ -51,44 +51,44 @@ _GL_ATTRIBUTE_CONST int byte_size(CELL v)
     v |= v >> 8;
     v |= v >> 16;
 
-    return pos[(UCELL)(v * 0x07C4ACDDU) >> 27] / 8 + 1;
+    return pos[(UWORD)(v * 0x07C4ACDDU) >> 27] / 8 + 1;
 }
 
 void ass(BYTE instr)
 {
-    icell |= instr << ibytes * 8;
-    store_cell(current, icell);
+    iword |= instr << ibytes * 8;
+    store_word(current, iword);
     ibytes++;
-    if (ibytes == CELL_W) {
-        current = here;  here += CELL_W;
-        icell = 0;  ibytes = 0;
+    if (ibytes == WORD_W) {
+        current = here;  here += WORD_W;
+        iword = 0;  ibytes = 0;
     }
 }
 
-void lit(CELL literal)
+void lit(WORD literal)
 {
-    if (ibytes == 0) { store_cell(here - CELL_W, literal);  current += CELL_W; }
-    else { store_cell(here, literal); }
-    here += CELL_W;
+    if (ibytes == 0) { store_word(here - WORD_W, literal);  current += WORD_W; }
+    else { store_word(here, literal); }
+    here += WORD_W;
 }
 
 void plit(void (*literal)(void))
 {
-    CELL_pointer address;
+    WORD_pointer address;
     unsigned i;
     address.pointer = literal;
     for (i = 0; i < POINTER_W; i++) {
         ass(O_LITERAL);
-        lit(address.cells[i]);
+        lit(address.words[i]);
     }
 }
 
-void start_ass(UCELL addr)
+void start_ass(UWORD addr)
 {
-    here = addr;  ibytes = 0;  icell = 0;  current = here;  here += CELL_W;
+    here = addr;  ibytes = 0;  iword = 0;  current = here;  here += WORD_W;
 }
 
-_GL_ATTRIBUTE_PURE UCELL ass_current(void)
+_GL_ATTRIBUTE_PURE UWORD ass_current(void)
 {
     return current;
 }
@@ -148,11 +148,11 @@ static char *_val_data_stack(bool with_hex)
     free(picture);
     picture = xasprintf("%s", "");
     if (!STACK_UNDERFLOW(SP, S0))
-        for (UCELL i = S0; i != SP;) {
-            CELL c;
+        for (UWORD i = S0; i != SP;) {
+            WORD c;
             char *ptr;
-            i += CELL_W * STACK_DIRECTION;
-            int exception = load_cell(i, &c);
+            i += WORD_W * STACK_DIRECTION;
+            int exception = load_word(i, &c);
             if (exception != 0) {
                 ptr = xasprintf("%sinvalid address!", picture);
                 free(picture);
@@ -163,7 +163,7 @@ static char *_val_data_stack(bool with_hex)
             free(picture);
             picture = ptr;
             if (with_hex) {
-                ptr = xasprintf("%s ($%"PRIX32") ", picture, (UCELL)c);
+                ptr = xasprintf("%s ($%"PRIX32") ", picture, (UWORD)c);
                 free(picture);
                 picture = ptr;
             }
@@ -200,15 +200,15 @@ void show_return_stack(void)
         printf("Return stack underflow\n");
     else {
         printf("Return stack: ");
-        for (UCELL i = R0; i != RP;) {
-            CELL c;
-            i += CELL_W * STACK_DIRECTION;
-            int exception = load_cell(i, &c);
+        for (UWORD i = R0; i != RP;) {
+            WORD c;
+            i += WORD_W * STACK_DIRECTION;
+            int exception = load_word(i, &c);
             if (exception != 0) {
                 printf("invalid address!\n");
                 break;
             }
-            printf("$%"PRIX32" ", (UCELL)c);
+            printf("$%"PRIX32" ", (UWORD)c);
         }
         putchar('\n');
     }

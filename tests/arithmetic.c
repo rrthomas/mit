@@ -4,7 +4,7 @@
 // the stack handling and basic correctness of the operators here,
 // assuming that if the arithmetic works in one case, it will work in
 // all. Note that the correct stack values are not quite independent
-// of the cell size (in CELL_W and str(CELL_W)); some stack pictures
+// of the word size (in WORD_W and str(WORD_W)); some stack pictures
 // implicitly refer to it.
 //
 // (c) Reuben Thomas 1994-2018
@@ -19,35 +19,35 @@
 
 
 const char *correct[] = {
-    "", "0", "0 1", "0 1 " str(CELL_W), "0 1 " str(CELL_W) " -" str(CELL_W), "0 1 " str(CELL_W) " -" str(CELL_W),
-    "0 1 " str(CELL_W) " -" str(CELL_W) " -1", "0 1 " str(CELL_W) " -5",
-    "0 1 -1", "0 1 1", "0 1 1", "0 2", "0 2 1", "2 0", "2 0 -1", "2 0 -1", "2 0 -1 " str(CELL_W),
-    "2 0 -" str(CELL_W), "2 0 -" str(CELL_W) " 1", "2 -" str(CELL_W) " 0", "2 -" str(CELL_W) " 0",
-    "2 -" str(CELL_W) " 0 2", "2", "-2", "-2 -1", "-2 -1", "2 0", "2 0 1", "0 2", "0 2 2", "0 2 2", "",
-    str(CELL_W), "-" str(CELL_W), "-" str(CELL_W) " 1", "-" str(CELL_W) " 1", "", "-" str(CELL_W),
-    "-" str(CELL_W) " 3", "-1 -1", "-1 -1", "-1 -1 1", "-1", "-1 -2", "1 1" };
+    "", "0", "0 1", "0 1 " str(WORD_W), "0 1 " str(WORD_W) " -" str(WORD_W), "0 1 " str(WORD_W) " -" str(WORD_W),
+    "0 1 " str(WORD_W) " -" str(WORD_W) " -1", "0 1 " str(WORD_W) " -5",
+    "0 1 -1", "0 1 1", "0 1 1", "0 2", "0 2 1", "2 0", "2 0 -1", "2 0 -1", "2 0 -1 " str(WORD_W),
+    "2 0 -" str(WORD_W), "2 0 -" str(WORD_W) " 1", "2 -" str(WORD_W) " 0", "2 -" str(WORD_W) " 0",
+    "2 -" str(WORD_W) " 0 2", "2", "-2", "-2 -1", "-2 -1", "2 0", "2 0 1", "0 2", "0 2 2", "0 2 2", "",
+    str(WORD_W), "-" str(WORD_W), "-" str(WORD_W) " 1", "-" str(WORD_W) " 1", "", "-" str(WORD_W),
+    "-" str(WORD_W) " 3", "-1 -1", "-1 -1", "-1 -1 1", "-1", "-1 -2", "1 1" };
 
 
 int main(void)
 {
     int exception = 0;
 
-    init((CELL *)calloc(1024, 1), 256);
+    init((WORD *)calloc(1024, 1), 256);
 
     start_ass(EP);
     ass(O_LITERAL); lit(0);
     ass(O_LITERAL); lit(1);
-    ass(O_LITERAL); lit(CELL_W);
-    ass(O_LITERAL); lit(-CELL_W);
+    ass(O_LITERAL); lit(WORD_W);
+    ass(O_LITERAL); lit(-WORD_W);
     ass(O_LITERAL); lit(-1);
     ass(O_PLUS); ass(O_PLUS); ass(O_NEGATE);
     ass(O_PLUS); ass(O_LITERAL); lit(1); ass(O_SWAP); ass(O_LITERAL); lit(-1);
-    ass(O_LITERAL); lit(CELL_W);
+    ass(O_LITERAL); lit(WORD_W);
     ass(O_STAR); ass(O_LITERAL); lit(1); ass(O_SWAP); ass(O_LITERAL); lit(2); ass(O_POP);
     ass(O_NEGATE); ass(O_LITERAL); lit(-1);
     ass(O_SREMSLASH); ass(O_LITERAL); lit(1); ass(O_SWAP); ass(O_LITERAL); lit(2); ass(O_POP);
-    ass(O_LITERAL); lit(CELL_W); ass(O_NEGATE); ass(O_LITERAL); lit(1); ass(O_POP);
-    ass(O_LITERAL); lit(-CELL_W);
+    ass(O_LITERAL); lit(WORD_W); ass(O_NEGATE); ass(O_LITERAL); lit(1); ass(O_POP);
+    ass(O_LITERAL); lit(-WORD_W);
     ass(O_LITERAL); lit(3);
     ass(O_SREMSLASH); ass(O_LITERAL); lit(1); ass(O_POP); ass(O_LITERAL); lit(-2);
     ass(O_UMODSLASH);

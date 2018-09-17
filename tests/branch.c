@@ -25,7 +25,7 @@ int main(void)
     int exception = 0;
 
     size_t size = 4096;
-    init((CELL *)calloc(size, CELL_W), size);
+    init((WORD *)calloc(size, WORD_W), size);
 
     start_ass(EP);
     ass(O_LITERAL); lit(96); ass(O_EPSTORE);

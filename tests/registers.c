@@ -15,7 +15,7 @@
 #define SIZE 1024
 
 const char *correct[] = {
-    "", str(CELL_W), str(CELL_W) " 1", "",
+    "", str(WORD_W), str(WORD_W) " 1", "",
     "-33554432", "-33554432 1", "",
     "16384", "16384 1", "",
     "-16777216", "-16777216 1", "",
@@ -31,7 +31,7 @@ int main(void)
 {
     int exception = 0;
 
-    init((CELL *)malloc(SIZE), SIZE / CELL_W);
+    init((WORD *)malloc(SIZE), SIZE / WORD_W);
 
     start_ass(EP);
     ass(O_EPFETCH); ass(O_LITERAL); lit(1); ass(O_POP);
@@ -39,7 +39,7 @@ int main(void)
     ass(O_HASHS); ass(O_LITERAL); lit(1); ass(O_POP);
     ass(O_R0FETCH); ass(O_LITERAL); lit(1); ass(O_POP);
     ass(O_HASHR); ass(O_LITERAL); lit(1); ass(O_POP);
-    ass(O_LITERAL); lit(168); // 42 CELLS
+    ass(O_LITERAL); lit(168); // 42 WORDS
     ass(O_THROWSTORE);
     ass(O_THROWFETCH); ass(O_LITERAL); lit(1); ass(O_POP);
     ass(O_MEMORYFETCH); ass(O_LITERAL); lit(1); ass(O_POP);
