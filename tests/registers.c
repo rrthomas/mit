@@ -34,15 +34,15 @@ int main(void)
     init((CELL *)malloc(SIZE), SIZE / CELL_W);
 
     start_ass(EP);
-    ass(O_EPFETCH); ass(O_LITERAL); lit(1); ass(O_DROP);
-    ass(O_S0FETCH); ass(O_LITERAL); lit(1); ass(O_DROP);
-    ass(O_HASHS); ass(O_LITERAL); lit(1); ass(O_DROP);
-    ass(O_R0FETCH); ass(O_LITERAL); lit(1); ass(O_DROP);
-    ass(O_HASHR); ass(O_LITERAL); lit(1); ass(O_DROP);
+    ass(O_EPFETCH); ass(O_LITERAL); lit(1); ass(O_POP);
+    ass(O_S0FETCH); ass(O_LITERAL); lit(1); ass(O_POP);
+    ass(O_HASHS); ass(O_LITERAL); lit(1); ass(O_POP);
+    ass(O_R0FETCH); ass(O_LITERAL); lit(1); ass(O_POP);
+    ass(O_HASHR); ass(O_LITERAL); lit(1); ass(O_POP);
     ass(O_LITERAL); lit(168); // 42 CELLS
     ass(O_THROWSTORE);
-    ass(O_THROWFETCH); ass(O_LITERAL); lit(1); ass(O_DROP);
-    ass(O_MEMORYFETCH); ass(O_LITERAL); lit(1); ass(O_DROP);
+    ass(O_THROWFETCH); ass(O_LITERAL); lit(1); ass(O_POP);
+    ass(O_MEMORYFETCH); ass(O_LITERAL); lit(1); ass(O_POP);
     ass(O_BADFETCH); ass(O_NOT_ADDRESSFETCH);
 
     assert(single_step() == -259);   // load first instruction word

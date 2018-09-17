@@ -63,7 +63,7 @@ int main(void)
     test[testno++] = ass_current();
     fprintf(stderr, "Test %d: EP = %u\n", testno, ass_current());
     // test 6
-    ass(O_LITERAL); lit(1); ass(O_EXECUTE); ass(O_NEXT00); ass(O_NEXT00);
+    ass(O_LITERAL); lit(1); ass(O_CALL); ass(O_NEXT00); ass(O_NEXT00);
 
     test[testno++] = ass_current();
     fprintf(stderr, "Test %d: EP = %u\n", testno, ass_current());
@@ -71,7 +71,7 @@ int main(void)
     ass(O_LITERAL); lit(1);
     ass(O_LITERAL); lit(0);
     ass(O_SREMSLASH); ass(O_LITERAL); lit(1);
-    ass(O_DROP); ass(O_NEXT00); ass(O_NEXT00); ass(O_NEXT00);
+    ass(O_POP); ass(O_NEXT00); ass(O_NEXT00); ass(O_NEXT00);
 
     test[testno++] = ass_current();
     fprintf(stderr, "Test %d: EP = %u\n", testno, ass_current());
@@ -100,7 +100,7 @@ int main(void)
     fprintf(stderr, "Test %d: EP = %u\n", testno, ass_current());
     // test 12: test invalid 'THROW contents
     ass(O_LITERAL); lit(0xffffffec);
-    ass(O_LITERAL); lit(0); ass(O_DUP); ass(O_THROWSTORE); ass(O_THROW);
+    ass(O_LITERAL); lit(0); ass(O_PUSH); ass(O_THROWSTORE); ass(O_THROW);
 
     start_ass(200);
     ass(O_HALT);

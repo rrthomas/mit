@@ -1,5 +1,5 @@
 // Test the arithmetic operators. Also uses the NEXT, SWAP, ROT,
-// DROP, and (LITERAL) instructions. Since unsigned arithmetic
+// POP, and (LITERAL) instructions. Since unsigned arithmetic
 // overflow behaviour is guaranteed by the ISO C standard, we only test
 // the stack handling and basic correctness of the operators here,
 // assuming that if the arithmetic works in one case, it will work in
@@ -43,13 +43,13 @@ int main(void)
     ass(O_PLUS); ass(O_PLUS); ass(O_NEGATE);
     ass(O_PLUS); ass(O_LITERAL); lit(1); ass(O_SWAP); ass(O_LITERAL); lit(-1);
     ass(O_LITERAL); lit(CELL_W);
-    ass(O_STAR); ass(O_LITERAL); lit(1); ass(O_SWAP); ass(O_LITERAL); lit(2); ass(O_DROP);
+    ass(O_STAR); ass(O_LITERAL); lit(1); ass(O_SWAP); ass(O_LITERAL); lit(2); ass(O_POP);
     ass(O_NEGATE); ass(O_LITERAL); lit(-1);
-    ass(O_SREMSLASH); ass(O_LITERAL); lit(1); ass(O_SWAP); ass(O_LITERAL); lit(2); ass(O_DROP);
-    ass(O_LITERAL); lit(CELL_W); ass(O_NEGATE); ass(O_LITERAL); lit(1); ass(O_DROP);
+    ass(O_SREMSLASH); ass(O_LITERAL); lit(1); ass(O_SWAP); ass(O_LITERAL); lit(2); ass(O_POP);
+    ass(O_LITERAL); lit(CELL_W); ass(O_NEGATE); ass(O_LITERAL); lit(1); ass(O_POP);
     ass(O_LITERAL); lit(-CELL_W);
     ass(O_LITERAL); lit(3);
-    ass(O_SREMSLASH); ass(O_LITERAL); lit(1); ass(O_DROP); ass(O_LITERAL); lit(-2);
+    ass(O_SREMSLASH); ass(O_LITERAL); lit(1); ass(O_POP); ass(O_LITERAL); lit(-2);
     ass(O_UMODSLASH);
 
     assert(single_step() == -259);   // load first instruction word

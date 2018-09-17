@@ -28,15 +28,15 @@ int main(void)
     start_ass(EP);
 
     // First part
-    ass(O_LITERAL); lit(0); ass(O_DUP); ass(O_LITERAL); lit(1); ass(O_DROP);
-    ass(O_LITERAL); lit(1); ass(O_SWAP); ass(O_LITERAL); lit(1); ass(O_DUP);
-    ass(O_LITERAL); lit(1); ass(O_SWAP); ass(O_LITERAL); lit(1); ass(O_DROP);
-    ass(O_LITERAL); lit(0); ass(O_DUP);
+    ass(O_LITERAL); lit(0); ass(O_PUSH); ass(O_LITERAL); lit(1); ass(O_POP);
+    ass(O_LITERAL); lit(1); ass(O_SWAP); ass(O_LITERAL); lit(1); ass(O_PUSH);
+    ass(O_LITERAL); lit(1); ass(O_SWAP); ass(O_LITERAL); lit(1); ass(O_POP);
+    ass(O_LITERAL); lit(0); ass(O_PUSH);
 
     // Second part
-    ass(O_DUP); ass(O_DUP); ass(O_LITERAL); lit(0); ass(O_DUP);
-    ass(O_LITERAL); lit(0); ass(O_DUP); ass(O_TOR); ass(O_LITERAL);
-    lit(0); ass(O_RDUP); ass(O_RFROM);
+    ass(O_PUSH); ass(O_PUSH); ass(O_LITERAL); lit(0); ass(O_PUSH);
+    ass(O_LITERAL); lit(0); ass(O_PUSH); ass(O_TOR); ass(O_LITERAL);
+    lit(0); ass(O_RPUSH); ass(O_RFROM);
 
     assert(single_step() == -259);   // load first instruction word
 

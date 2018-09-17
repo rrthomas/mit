@@ -131,7 +131,7 @@ CELL single_step(void)
         EP += CELL_W;
         exception = load_cell(EP - CELL_W, &A);
         break;
-    case O_DROP:
+    case O_POP:
         {
             CELL depth = POP;
             SP -= depth * CELL_W * STACK_DIRECTION;
@@ -146,14 +146,14 @@ CELL single_step(void)
             STORE_CELL(SP - depth * CELL_W * STACK_DIRECTION, top);
         }
         break;
-    case O_DUP:
+    case O_PUSH:
         {
             CELL depth = POP;
             CELL pickee = LOAD_CELL(SP - depth * CELL_W * STACK_DIRECTION);
             PUSH(pickee);
         }
         break;
-    case O_RDUP:
+    case O_RPUSH:
         {
             CELL depth = POP;
             CELL pickee = LOAD_CELL(RP - depth * CELL_W * STACK_DIRECTION);
@@ -341,7 +341,7 @@ CELL single_step(void)
             }
             break;
         }
-    case O_EXECUTE:
+    case O_CALL:
         {
             CELL addr = POP;
             CHECK_ALIGNED_WHOLE_CELL(addr);
@@ -350,7 +350,7 @@ CELL single_step(void)
             goto next;
         }
         break;
-    case O_EXIT:
+    case O_RET:
         {
             CELL addr = POP_RETURN;
             CHECK_ALIGNED_WHOLE_CELL(addr);

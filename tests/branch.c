@@ -49,21 +49,21 @@ int main(void)
 
     start_ass(11016);
     ass(O_LITERAL); lit(60);
-    ass(O_EXECUTE);
+    ass(O_CALL);
 
     start_ass(60);
-    ass(O_LITERAL); lit(200); ass(O_EXECUTE); ass(O_NEXT00); ass(O_NEXT00);
+    ass(O_LITERAL); lit(200); ass(O_CALL); ass(O_NEXT00); ass(O_NEXT00);
     ass(O_LITERAL); lit(64);
     ass(O_LITERAL); lit(20);
-    ass(O_LITERAL); lit(1); ass(O_SWAP); ass(O_LITERAL); lit(1); ass(O_DUP); ass(O_STORE); ass(O_FETCH);
-    ass(O_EXECUTE);
+    ass(O_LITERAL); lit(1); ass(O_SWAP); ass(O_LITERAL); lit(1); ass(O_PUSH); ass(O_STORE); ass(O_FETCH);
+    ass(O_CALL);
 
     start_ass(200);
-    ass(O_LITERAL); lit(300); ass(O_EXECUTE); ass(O_NEXT00); ass(O_NEXT00);
-    ass(O_EXIT);
+    ass(O_LITERAL); lit(300); ass(O_CALL); ass(O_NEXT00); ass(O_NEXT00);
+    ass(O_RET);
 
     start_ass(300);
-    ass(O_EXIT);
+    ass(O_RET);
 
     assert(single_step() == -259);   // load first instruction word
 
