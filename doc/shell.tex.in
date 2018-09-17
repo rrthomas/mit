@@ -9,7 +9,7 @@
 \documentclass{article}
 \usepackage[british]{babel}
 \usepackage[utf8x]{inputenc}
-\usepackage{a4wide,newpxtext,booktabs,url,xr}
+\usepackage{a4,newpxtext,booktabs,url,xr}
 
 % Alter some default parameters for general typesetting
 

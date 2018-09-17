@@ -9,7 +9,7 @@
 \documentclass{article}
 \usepackage[british]{babel}
 \usepackage[utf8x]{inputenc}
-\usepackage{a4wide,newpxtext,booktabs,hyperref}
+\usepackage{a4,newpxtext,booktabs,hyperref}
 
 % Alter some default parameters for general typesetting
 
@@ -39,7 +39,7 @@
 
 % Define the widths of the stack effect and description columns
 \newlength{\itemwidth}\itemwidth=\textwidth \advance\itemwidth by -0.1in
-\newlength{\instname}\instname=0.5in
+\newlength{\instname}\instname=1.5in
 \newlength{\stackcom}\stackcom=3.0in
 \newlength{\beforestackcom} \advance\beforestackcom by \instname
 

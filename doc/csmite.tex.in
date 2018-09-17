@@ -9,7 +9,7 @@
 \documentclass{article}
 \usepackage[british]{babel}
 \usepackage[utf8x]{inputenc}
-\usepackage{a4wide,newpxtext,booktabs,hyperref,siunitx}
+\usepackage{a4,newpxtext,booktabs,hyperref,siunitx}
 
 % Alter some default parameters for general typesetting
 
