@@ -26,8 +26,9 @@ typedef uint8_t BYTE;
 typedef int32_t CELL;
 typedef uint32_t UCELL;
 typedef uint64_t DUCELL;
-#define CHAR_MASK ((1 << CHAR_BIT) - 1)
-#define CELL_BIT (sizeof(CELL_W) * CHAR_BIT)
+#define BYTE_BIT 8
+#define BYTE_MASK ((1 << BYTE_BIT) - 1)
+#define CELL_BIT (sizeof(CELL_W) * BYTE_BIT)
 #define CELL_MAX (UINT32_MAX)
 #define CELL_MASK CELL_MAX
 

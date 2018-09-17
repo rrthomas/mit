@@ -108,12 +108,12 @@ A small interface is provided for other programs to control @PACKAGE_NAME@.
 
 \section{Architecture}
 
-@PACKAGE_NAME@'s address unit is the byte, which is eight bits wide. Characters are one
-byte wide, and cells are four bytes wide. The cell is the size of the numbers
+@PACKAGE_NAME@'s address unit is the byte, which is eight bits wide.
+Cells are four bytes wide. The cell is the size of the numbers
 and addresses on which @PACKAGE_NAME@ operates, and of the items placed on the stacks.
 The cell size is fixed to ensure compatibility of object code between
-implementations on different machines; the size of the address unit, character
-and cell has been chosen with a view to making efficient implementation of
+implementations on different machines; the size of the byte
+and cell have been chosen with a view to making efficient implementation of
 @PACKAGE_NAME@ possible on the vast majority of current machine architectures.
 
 Cells may have the bytes stored in big-endian or little-endian order. The
@@ -334,13 +334,14 @@ different types of stack item are shown in table~\ref{typetable}.
 \spic{flag} & flag \\
 \spic{true} & true flag \\
 \spic{false} & false flag \\
-\spic{char} & character \\
+\spic{byte} & byte \\
 \spic{n} & signed number \\
 \spic{u} & unsigned number \\
 \spic{n{\tt |}u} & number (signed or unsigned) \\
 \spic{x} & unspecified cell \\
+\spic{addr} & address \\
 \spic{a-addr} & cell-aligned address \\
-\spic{c-addr} & character-aligned address \\ \bottomrule
+\bottomrule
 \end{tabular}
 \caption{\label{typetable}Types used in stack effects}
 \end{center}
@@ -358,15 +359,15 @@ shows the subtype relationships. The subtype relation is transitive.
 \begin{tabular}{c} \toprule
 \spic{u} $\Rightarrow$ \spic{x} \\
 \spic{n} $\Rightarrow$ \spic{x} \\
-\spic{char} $\Rightarrow$ \spic{u} \\
-\spic{a-addr} $\Rightarrow$ \spic{c-addr} $\Rightarrow$ \spic{u} \\
+\spic{byte} $\Rightarrow$ \spic{u} \\
+\spic{a-addr} $\Rightarrow$ \spic{addr} $\Rightarrow$ \spic{u} \\
 \spic{flag} $\Rightarrow$ \spic{x} \\ \bottomrule
 \end{tabular}
 \caption{\label{reltable}The subtype relation}
 \end{center}
 \end{table}
 
-Numbers are represented in twos complement form. \spic{c-addr} consists of all
+Numbers are represented in twos complement form. \spic{addr} consists of all
 valid addresses. Numeric constants can be included in
 stack pictures, and are of type \spic{n{\tt |}u}.
 
@@ -509,8 +510,8 @@ also an instruction to add a number to another stored in memory.
 \begin{description}
 \inst{@}{a-addr -- x}{\spic{x} is the value stored at \spic{a-addr}.}
 \inst{!}{x a-addr --}{Store \spic{x} at \spic{a-addr}.}
-\inst{C@}{c-addr -- char}{If {\tt ENDISM} is 1, exclusive-or \spic{c-addr} with 3. Fetch the character stored at \spic{c-addr}. The unused high-order bits are all zeroes.}
-\inst{C!}{char c-addr --}{If {\tt ENDISM} is 1, exclusive-or \spic{c-addr} with 3. Store \spic{char} at \spic{c-addr}. Only one byte is transferred.}
+\inst{B@}{addr -- byte}{If {\tt ENDISM} is 1, exclusive-or \spic{addr} with 3. Fetch the byte stored at \spic{addr}. The unused high-order bits are all zeroes.}
+\inst{B!}{byte addr --}{If {\tt ENDISM} is 1, exclusive-or \spic{addr} with 3. Store \spic{byte} at \spic{addr}. Only one byte is transferred.}
 \end{description}
 
 
@@ -616,8 +617,8 @@ Table~\ref{opcodetable} lists the opcodes in numerical order. Undefined opcodes 
 \opcodetbl{03}{SWAP}	{14}{RSHIFT}	{25}{'THROW!}
 \opcodetbl{04}{RPUSH}	{15}{@}		{26}{MEMORY@}
 \opcodetbl{05}{>R}	{16}{!}		{27}{'BAD@}
-\opcodetbl{06}{R>}	{17}{C@}	{28}{-ADDRESS@}
-\opcodetbl{07}{<}	{18}{C!}	{29}{CALL}
+\opcodetbl{06}{R>}	{17}{B@}	{28}{-ADDRESS@}
+\opcodetbl{07}{<}	{18}{B!}	{29}{CALL}
 \opcodetbl{08}{=}	{19}{SP@}	{2A}{RET}
 \opcodetbl{09}{U<}	{1A}{SP!}	{2B}{THROW}
 \opcodetbl{0A}{+}	{1B}{RP@}	{2C}{HALT}
@@ -707,4 +708,4 @@ convinced me it was going to be fun working on virtual machines. He also supervi
 
 \end{document}
 
-% LocalWords:  discontiguous
+% LocalWords:  discontiguous Richards's

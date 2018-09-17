@@ -206,7 +206,7 @@ int store_cell(UCELL addr, CELL value)
     // Awkward access
     int exception = 0;
     for (unsigned i = 0; exception == 0 && i < CELL_W; i++)
-        exception = store_byte(addr + i, value >> ((ENDISM ? CELL_W - i : i) * CHAR_BIT));
+        exception = store_byte(addr + i, value >> ((ENDISM ? CELL_W - i : i) * BYTE_BIT));
     return exception;
 }
 
@@ -229,11 +229,11 @@ _GL_ATTRIBUTE_CONST CELL reverse_cell(CELL value)
 {
     CELL res = 0;
     for (unsigned i = 0; i < CELL_W / 2; i++) {
-        unsigned lopos = CHAR_BIT * i;
-        unsigned hipos = CHAR_BIT * (CELL_W - 1 - i);
+        unsigned lopos = BYTE_BIT * i;
+        unsigned hipos = BYTE_BIT * (CELL_W - 1 - i);
         unsigned move = hipos - lopos;
-        res |= ((((UCELL)value) & (CHAR_MASK << hipos)) >> move)
-            | ((((UCELL)value) & (CHAR_MASK << lopos)) << move);
+        res |= ((((UCELL)value) & (BYTE_MASK << hipos)) >> move)
+            | ((((UCELL)value) & (BYTE_MASK << lopos)) << move);
     }
     return res;
 }
