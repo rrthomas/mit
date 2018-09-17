@@ -128,8 +128,8 @@ WORD single_step(void)
     case O_NEXT00:
     case O_NEXTFF:
  next:
-        EP += WORD_W;
-        exception = load_word(EP - WORD_W, &A);
+        PC += WORD_W;
+        exception = load_word(PC - WORD_W, &A);
         break;
     case O_POP:
         {
@@ -160,54 +160,54 @@ WORD single_step(void)
             PUSH(pickee);
         }
         break;
-    case O_TOR:
+    case O_POP2R:
         {
             WORD value = POP;
             PUSH_RETURN(value);
         }
         break;
-    case O_RFROM:
+    case O_RPOP:
         {
             WORD value = POP_RETURN;
             PUSH(value);
         }
         break;
-    case O_LESS:
+    case O_LT:
         {
             WORD a = POP;
             WORD b = POP;
             PUSH(b < a ? PACKAGE_UPPER_TRUE : PACKAGE_UPPER_FALSE);
         }
         break;
-    case O_EQUAL:
+    case O_EQ:
         {
             WORD a = POP;
             WORD b = POP;
             PUSH(a == b ? PACKAGE_UPPER_TRUE : PACKAGE_UPPER_FALSE);
         }
         break;
-    case O_ULESS:
+    case O_ULT:
         {
             UWORD a = POP;
             UWORD b = POP;
             PUSH(b < a ? PACKAGE_UPPER_TRUE : PACKAGE_UPPER_FALSE);
         }
         break;
-    case O_PLUS:
+    case O_ADD:
         {
             WORD a = POP;
             WORD b = POP;
             PUSH(b + a);
         }
         break;
-    case O_STAR:
+    case O_MUL:
         {
             WORD multiplier = POP;
             WORD multiplicand = POP;
             PUSH(multiplier * multiplicand);
         }
         break;
-    case O_UMODSLASH:
+    case O_UDIVMOD:
         {
             UWORD divisor = POP;
             UWORD dividend = POP;
@@ -216,7 +216,7 @@ WORD single_step(void)
             PUSH(dividend % divisor);
         }
         break;
-    case O_SREMSLASH:
+    case O_DIVMOD:
         {
             WORD divisor = POP;
             WORD dividend = POP;
@@ -272,7 +272,7 @@ WORD single_step(void)
             PUSH(shift < (WORD)WORD_BIT ? (WORD)((UWORD)value >> shift) : 0);
         }
         break;
-    case O_FETCH:
+    case O_LOAD:
         {
             WORD addr = POP;
             WORD value = LOAD_WORD(addr);
@@ -286,57 +286,57 @@ WORD single_step(void)
             STORE_WORD(addr, value);
         }
         break;
-    case O_CFETCH:
+    case O_LOADB:
         {
             WORD addr = POP;
             BYTE value = LOAD_BYTE(addr);
             PUSH((WORD)value);
         }
         break;
-    case O_CSTORE:
+    case O_STOREB:
         {
             WORD addr = POP;
             BYTE value = (BYTE)POP;
             STORE_BYTE(addr, value);
         }
         break;
-    case O_SPFETCH:
+    case O_PUSH_SP:
         {
             WORD value = SP;
             PUSH(value);
         }
         break;
-    case O_SPSTORE:
+    case O_STORE_SP:
         {
             WORD value = POP;
             CHECK_ALIGNED(value);
             SP = value;
         }
         break;
-    case O_RPFETCH:
+    case O_PUSH_RP:
         PUSH(RP);
         break;
-    case O_RPSTORE:
+    case O_STORE_RP:
         {
             WORD value = POP;
             CHECK_ALIGNED(value);
             RP = value;
         }
         break;
-    case O_EPSTORE:
+    case O_BRANCH:
         {
             WORD addr = POP;
             CHECK_ALIGNED_WHOLE_WORD(addr);
-            EP = addr;
+            PC = addr;
             goto next;
         }
         break;
-    case O_QEPSTORE:
+    case O_BRANCHZ:
         {
             WORD addr = POP;
             if (POP == PACKAGE_UPPER_FALSE) {
                 CHECK_ALIGNED_WHOLE_WORD(addr);
-                EP = addr;
+                PC = addr;
                 goto next;
             }
             break;
@@ -345,8 +345,8 @@ WORD single_step(void)
         {
             WORD addr = POP;
             CHECK_ALIGNED_WHOLE_WORD(addr);
-            PUSH_RETURN(EP);
-            EP = addr;
+            PUSH_RETURN(PC);
+            PC = addr;
             goto next;
         }
         break;
@@ -354,58 +354,58 @@ WORD single_step(void)
         {
             WORD addr = POP_RETURN;
             CHECK_ALIGNED_WHOLE_WORD(addr);
-            EP = addr;
+            PC = addr;
             goto next;
         }
         break;
     case O_LITERAL:
-        PUSH(LOAD_WORD(EP));
-        EP += WORD_W;
+        PUSH(LOAD_WORD(PC));
+        PC += WORD_W;
         break;
  throw:
     case O_THROW:
         // exception may already be set, so WORD_STORE may have no effect here.
-        BAD = EP;
+        BAD = PC;
         if (!WORD_IN_ONE_AREA(THROW) || !IS_ALIGNED(THROW))
             return -258;
-        EP = THROW;
+        PC = THROW;
         exception = 0; // Any exception has now been dealt with
         goto next;
         break;
     case O_HALT:
         return POP;
-    case O_EPFETCH:
-        PUSH(EP);
+    case O_PUSH_PC:
+        PUSH(PC);
         break;
-    case O_S0FETCH:
+    case O_PUSH_S0:
         PUSH(S0);
         break;
-    case O_HASHS:
+    case O_PUSH_SSIZE:
         PUSH(HASHS);
         break;
-    case O_R0FETCH:
+    case O_PUSH_R0:
         PUSH(R0);
         break;
-    case O_HASHR:
+    case O_PUSH_RSIZE:
         PUSH(HASHR);
         break;
-    case O_THROWFETCH:
+    case O_PUSH_HANDLER:
         PUSH(THROW);
         break;
-    case O_THROWSTORE:
+    case O_STORE_HANDLER:
         {
             WORD value = POP;
             CHECK_ALIGNED(value);
             THROW = value;
         }
         break;
-    case O_MEMORYFETCH:
+    case O_PUSH_MEMORY:
         PUSH(MEMORY);
         break;
-    case O_BADFETCH:
+    case O_PUSH_BADPC:
         PUSH(BAD);
         break;
-    case O_NOT_ADDRESSFETCH:
+    case O_PUSH_INVALID:
         PUSH(NOT_ADDRESS);
         break;
     case O_LINK:

@@ -27,25 +27,25 @@ int main(void)
     size_t size = 4096;
     init((WORD *)calloc(size, WORD_W), size);
 
-    start_ass(EP);
-    ass(O_LITERAL); lit(96); ass(O_EPSTORE);
+    start_ass(PC);
+    ass(O_LITERAL); lit(96); ass(O_BRANCH);
 
     start_ass(96);
-    ass(O_LITERAL); lit(48); ass(O_EPSTORE);
+    ass(O_LITERAL); lit(48); ass(O_BRANCH);
 
     start_ass(48);
-    ass(O_LITERAL); lit(10000); ass(O_EPSTORE);
+    ass(O_LITERAL); lit(10000); ass(O_BRANCH);
 
     start_ass(10000);
     ass(O_LITERAL); lit(1);
-    ass(O_LITERAL); lit(10008); ass(O_QEPSTORE);
+    ass(O_LITERAL); lit(10008); ass(O_BRANCHZ);
     ass(O_LITERAL); lit(1);
-    ass(O_LITERAL); lit(0); ass(O_QEPSTORE); ass(O_LITERAL); lit(0);
-    ass(O_LITERAL); lit(11000); ass(O_QEPSTORE);
+    ass(O_LITERAL); lit(0); ass(O_BRANCHZ); ass(O_LITERAL); lit(0);
+    ass(O_LITERAL); lit(11000); ass(O_BRANCHZ);
 
     start_ass(11000);
     ass(O_LITERAL); lit(0);
-    ass(O_LITERAL); lit(11016); ass(O_QEPSTORE);
+    ass(O_LITERAL); lit(11016); ass(O_BRANCHZ);
 
     start_ass(11016);
     ass(O_LITERAL); lit(60);
@@ -55,7 +55,7 @@ int main(void)
     ass(O_LITERAL); lit(200); ass(O_CALL); ass(O_NEXT00); ass(O_NEXT00);
     ass(O_LITERAL); lit(64);
     ass(O_LITERAL); lit(20);
-    ass(O_LITERAL); lit(1); ass(O_SWAP); ass(O_LITERAL); lit(1); ass(O_PUSH); ass(O_STORE); ass(O_FETCH);
+    ass(O_LITERAL); lit(1); ass(O_SWAP); ass(O_LITERAL); lit(1); ass(O_PUSH); ass(O_STORE); ass(O_LOAD);
     ass(O_CALL);
 
     start_ass(200);
@@ -68,9 +68,9 @@ int main(void)
     assert(single_step() == -259);   // load first instruction word
 
     for (size_t i = 0; i < sizeof(correct) / sizeof(correct[0]); i++) {
-        printf("Instruction %zu: EP = %u; should be %u\n\n", i, EP, correct[i]);
-        if (correct[i] != EP) {
-            printf("Error in branch tests: EP = %"PRIu32"\n", EP);
+        printf("Instruction %zu: PC = %u; should be %u\n\n", i, PC, correct[i]);
+        if (correct[i] != PC) {
+            printf("Error in branch tests: PC = %"PRIu32"\n", PC);
             exit(1);
         }
         single_step();

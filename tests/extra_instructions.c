@@ -24,7 +24,7 @@ int main(void)
     init((WORD *)malloc(4096), 1024);
     assert(register_args(argc, argv) == 0);
 
-    start_ass(EP);
+    start_ass(PC);
     ass(OX_ARGC); ass(O_LITERAL); lit(1);
     ass(OX_ARG);
 
@@ -33,7 +33,7 @@ int main(void)
     single_step();
     printf("argc is %"PRId32", and should be %d\n\n", LOAD_WORD(SP), argc);
     if (POP != argc) {
-       printf("Error in extra instructions tests: EP = %"PRIu32"\n", EP);
+       printf("Error in extra instructions tests: PC = %"PRIu32"\n", PC);
         exit(1);
     }
 
@@ -41,7 +41,7 @@ int main(void)
     single_step();
     printf("arg 1's length is %"PRId32", and should be %zu\n", LOAD_WORD(SP), strlen(argv[1]));
     if ((UWORD)POP != strlen(argv[1])) {
-        printf("Error in extra instructions tests: EP = %"PRIu32"\n", EP);
+        printf("Error in extra instructions tests: PC = %"PRIu32"\n", PC);
         exit(1);
     }
 

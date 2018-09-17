@@ -28,8 +28,8 @@ int main(void)
 
     PUSH(0xff000000); PUSH(8); PUSH(0xff); PUSH(8);
 
-    start_ass(EP);
-    ass(O_LSHIFT); ass(O_TOR); ass(O_RSHIFT); ass(O_RFROM);
+    start_ass(PC);
+    ass(O_LSHIFT); ass(O_POP2R); ass(O_RSHIFT); ass(O_RPOP);
     ass(O_OR); ass(O_INVERT); ass(O_LITERAL); lit(1);
     ass(O_LITERAL); lit(-1);
     ass(O_XOR); ass(O_AND);
@@ -40,7 +40,7 @@ int main(void)
         show_data_stack();
         printf("Correct stack: %s\n\n", correct[i - i / 5]);
         if (strcmp(correct[i - i / 5], val_data_stack())) {
-            printf("Error in logic tests: EP = %"PRIu32"\n", EP);
+            printf("Error in logic tests: PC = %"PRIu32"\n", PC);
             exit(1);
         }
         single_step();

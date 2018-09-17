@@ -25,7 +25,7 @@ int main(void)
 
     PUSH(1); PUSH(2); PUSH(3);	// initialise the stack
 
-    start_ass(EP);
+    start_ass(PC);
 
     // First part
     ass(O_LITERAL); lit(0); ass(O_PUSH); ass(O_LITERAL); lit(1); ass(O_POP);
@@ -35,8 +35,8 @@ int main(void)
 
     // Second part
     ass(O_PUSH); ass(O_PUSH); ass(O_LITERAL); lit(0); ass(O_PUSH);
-    ass(O_LITERAL); lit(0); ass(O_PUSH); ass(O_TOR); ass(O_LITERAL);
-    lit(0); ass(O_RPUSH); ass(O_RFROM);
+    ass(O_LITERAL); lit(0); ass(O_PUSH); ass(O_POP2R); ass(O_LITERAL);
+    lit(0); ass(O_RPUSH); ass(O_RPOP);
 
     assert(single_step() == -259);   // load first instruction word
 
@@ -45,7 +45,7 @@ int main(void)
         show_data_stack();
         printf("Correct stack: %s\n\n", correct[i - i / 5]);
         if (strcmp(correct[i - i / 5], val_data_stack())) {
-            printf("Error in stack tests: EP = %"PRIu32"\n", EP);
+            printf("Error in stack tests: PC = %"PRIu32"\n", PC);
             exit(1);
         }
         single_step();
@@ -61,7 +61,7 @@ int main(void)
         show_data_stack();
         printf("Correct stack: %s\n\n", correct[i - i / 5]);
         if (strcmp(correct[i - i / 5], val_data_stack()) && i != first) {
-            printf("Error in stack tests: EP = %"PRIu32"\n", EP);
+            printf("Error in stack tests: PC = %"PRIu32"\n", PC);
             exit(1);
         }
         single_step();

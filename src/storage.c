@@ -24,7 +24,7 @@
 
 // VM registers
 
-UWORD EP;
+UWORD PC;
 BYTE I;
 WORD A;
 UWORD SP, RP;
@@ -305,7 +305,7 @@ int init(WORD *memory, size_t size)
         || !mem_map(RETURN_STACK_SEGMENT, r_stack, HASHR, true))
         return -2;
 
-    EP = 0;
+    PC = 0;
     A = 0;
     S0 = SP = DATA_STACK_SEGMENT;
     R0 = RP = RETURN_STACK_SEGMENT;

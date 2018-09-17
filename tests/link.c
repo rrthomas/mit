@@ -24,7 +24,7 @@ int main(void)
 {
     init((WORD *)malloc(16384), 4096);
 
-    start_ass(EP);
+    start_ass(PC);
     plit(test); ass(O_LINK); ass(O_LITERAL); lit(0);
     ass(O_HALT);
 

@@ -48,20 +48,20 @@ int main(void)
             mem_align();
     }
 
-    start_ass(EP);
-    ass(O_MEMORYFETCH); ass(O_LITERAL); lit(WORD_W); ass(O_NEGATE); ass(O_PLUS);
+    start_ass(PC);
+    ass(O_PUSH_MEMORY); ass(O_LITERAL); lit(WORD_W); ass(O_NEGATE); ass(O_ADD);
     ass(O_LITERAL); lit(513); ass(O_LITERAL); lit(1); ass(O_PUSH); ass(O_STORE); ass(O_LITERAL); lit(0); ass(O_PUSH);
-    ass(O_FETCH); ass(O_LITERAL); lit(1); ass(O_POP); ass(O_LITERAL); lit(0); ass(O_PUSH); ass(O_CFETCH);
-    ass(O_PLUS); ass(O_CFETCH); ass(O_LITERAL); lit(16383); ass(O_CSTORE);
-    ass(O_LITERAL); lit(16380); ass(O_FETCH); ass(O_LITERAL); lit(1); ass(O_POP); ass(O_SPFETCH);
-    ass(O_SPSTORE); ass(O_RPFETCH); ass(O_LITERAL); lit(1); ass(O_POP); ass(O_LITERAL); lit(0);
-    ass(O_RPSTORE); ass(O_RPFETCH); ass(O_LITERAL); lit(1); ass(O_POP);
-    ass(O_LITERAL); lit(size * WORD_W); ass(O_FETCH); ass(O_LITERAL); lit(1); ass(O_POP);
-    ass(O_LITERAL); lit(size * WORD_W + 5); ass(O_CFETCH); ass(O_LITERAL); lit(1); ass(O_POP);
+    ass(O_LOAD); ass(O_LITERAL); lit(1); ass(O_POP); ass(O_LITERAL); lit(0); ass(O_PUSH); ass(O_LOADB);
+    ass(O_ADD); ass(O_LOADB); ass(O_LITERAL); lit(16383); ass(O_STOREB);
+    ass(O_LITERAL); lit(16380); ass(O_LOAD); ass(O_LITERAL); lit(1); ass(O_POP); ass(O_PUSH_SP);
+    ass(O_STORE_SP); ass(O_PUSH_RP); ass(O_LITERAL); lit(1); ass(O_POP); ass(O_LITERAL); lit(0);
+    ass(O_STORE_RP); ass(O_PUSH_RP); ass(O_LITERAL); lit(1); ass(O_POP);
+    ass(O_LITERAL); lit(size * WORD_W); ass(O_LOAD); ass(O_LITERAL); lit(1); ass(O_POP);
+    ass(O_LITERAL); lit(size * WORD_W + 5); ass(O_LOADB); ass(O_LITERAL); lit(1); ass(O_POP);
     ass(O_LITERAL); lit(1);
-    ass(O_LITERAL); lit(size * WORD_W + 1); ass(O_CSTORE);
-    ass(O_LITERAL); lit(size * WORD_W + 1); ass(O_CFETCH); ass(O_LITERAL); lit(1); ass(O_POP);
-    ass(O_LITERAL); lit(size * WORD_W + 8); ass(O_LITERAL); lit(0); ass(O_PUSH); ass(O_CSTORE);
+    ass(O_LITERAL); lit(size * WORD_W + 1); ass(O_STOREB);
+    ass(O_LITERAL); lit(size * WORD_W + 1); ass(O_LOADB); ass(O_LITERAL); lit(1); ass(O_POP);
+    ass(O_LITERAL); lit(size * WORD_W + 8); ass(O_LITERAL); lit(0); ass(O_PUSH); ass(O_STOREB);
 
     assert(single_step() == -259);   // load first instruction word
 
@@ -69,7 +69,7 @@ int main(void)
         show_data_stack();
         printf("Correct stack: %s\n\n", correct[i]);
         if (strcmp(correct[i], val_data_stack())) {
-            printf("Error in memory tests: EP = %"PRIu32"\n", EP);
+            printf("Error in memory tests: PC = %"PRIu32"\n", PC);
             exit(1);
         }
         single_step();

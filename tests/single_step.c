@@ -1,5 +1,5 @@
 // Test that single_step works, and that address alignment and bounds
-// checking is properly performed on EP.
+// checking is properly performed on PC.
 //
 // (c) Reuben Thomas 1994-2018
 //
@@ -21,13 +21,13 @@ int main(void)
     assert(single_step() == -259);
 
     for (int i = 0; i < 10; i++) {
-        printf("EP = %u\n", EP);
+        printf("PC = %u\n", PC);
         single_step();
     }
 
-    printf("EP should now be 44\n");
-    if (EP != 44) {
-        printf("Error in single_step() tests: EP = %"PRIu32"\n", EP);
+    printf("PC should now be 44\n");
+    if (PC != 44) {
+        printf("Error in single_step() tests: PC = %"PRIu32"\n", PC);
         exit(1);
     }
 

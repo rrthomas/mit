@@ -20,7 +20,7 @@ int main(void)
 
     init((WORD *)calloc(1024, 1), 256);
 
-    start_ass(EP);
+    start_ass(PC);
     ass(O_LITERAL); lit(-257); ass(O_LITERAL); lit(12345678);
 
     assert(single_step() == -259);   // load first instruction word
@@ -29,7 +29,7 @@ int main(void)
         show_data_stack();
         printf("Correct stack: %s\n\n", correct[i - i / 5]);
         if (strcmp(correct[i - i / 5], val_data_stack())) {
-            printf("Error in literals tests: EP = %"PRIu32"\n", EP);
+            printf("Error in literals tests: PC = %"PRIu32"\n", PC);
             exit(1);
         }
         single_step();

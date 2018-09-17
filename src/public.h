@@ -43,7 +43,7 @@ typedef uint64_t DUWORD;
 #define ENDISM ((BYTE)0)
 #endif
 
-extern UWORD EP;
+extern UWORD PC;
 extern BYTE I;
 extern WORD A;
 extern UWORD MEMORY;

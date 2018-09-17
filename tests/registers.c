@@ -33,17 +33,17 @@ int main(void)
 
     init((WORD *)malloc(SIZE), SIZE / WORD_W);
 
-    start_ass(EP);
-    ass(O_EPFETCH); ass(O_LITERAL); lit(1); ass(O_POP);
-    ass(O_S0FETCH); ass(O_LITERAL); lit(1); ass(O_POP);
-    ass(O_HASHS); ass(O_LITERAL); lit(1); ass(O_POP);
-    ass(O_R0FETCH); ass(O_LITERAL); lit(1); ass(O_POP);
-    ass(O_HASHR); ass(O_LITERAL); lit(1); ass(O_POP);
+    start_ass(PC);
+    ass(O_PUSH_PC); ass(O_LITERAL); lit(1); ass(O_POP);
+    ass(O_PUSH_S0); ass(O_LITERAL); lit(1); ass(O_POP);
+    ass(O_PUSH_SSIZE); ass(O_LITERAL); lit(1); ass(O_POP);
+    ass(O_PUSH_R0); ass(O_LITERAL); lit(1); ass(O_POP);
+    ass(O_PUSH_RSIZE); ass(O_LITERAL); lit(1); ass(O_POP);
     ass(O_LITERAL); lit(168); // 42 WORDS
-    ass(O_THROWSTORE);
-    ass(O_THROWFETCH); ass(O_LITERAL); lit(1); ass(O_POP);
-    ass(O_MEMORYFETCH); ass(O_LITERAL); lit(1); ass(O_POP);
-    ass(O_BADFETCH); ass(O_NOT_ADDRESSFETCH);
+    ass(O_STORE_HANDLER);
+    ass(O_PUSH_HANDLER); ass(O_LITERAL); lit(1); ass(O_POP);
+    ass(O_PUSH_MEMORY); ass(O_LITERAL); lit(1); ass(O_POP);
+    ass(O_PUSH_BADPC); ass(O_PUSH_INVALID);
 
     assert(single_step() == -259);   // load first instruction word
 
@@ -51,7 +51,7 @@ int main(void)
         show_data_stack();
         printf("Correct stack: %s\n\n", correct[i - i / 5]);
         if (strcmp(correct[i - i / 5], val_data_stack())) {
-            printf("Error in registers tests: EP = %"PRIu32"\n", EP);
+            printf("Error in registers tests: PC = %"PRIu32"\n", PC);
             exit(1);
         }
         single_step();

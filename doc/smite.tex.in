@@ -130,7 +130,7 @@ The registers, each with its function, are set out in table~\ref{regtable}.
 \begin{tabular}{cp{3.75in}} \toprule
 \bf Register & \bf Function \\
     \midrule
-{\tt EP} & The {\tt E}xecution {\tt P}ointer. Points to the next
+{\tt PC} & The {\tt P}rogram {\tt C}ounter. Points to the next
     word from which an instruction word may be loaded. \\
 {\tt I} & The {\tt I}nstruction. Holds the opcode of an instruction
     to be executed. \\
@@ -142,17 +142,17 @@ The registers, each with its function, are set out in table~\ref{regtable}.
 {\tt RP} & The {\tt R}eturn stack {\tt P}ointer. \\
 {\tt S0} & The data {\tt S}tack base. \\
 {\tt R0} & The {\tt R}eturn stack base. \\
-{\tt \#S} & The number of words allocated for the data stack. \\
-{\tt \#R} & The number of words allocated for the return stack. \\
-{\tt 'THROW} & The address placed in {\tt EP} by a {\tt THROW}
+{\tt SSIZE} & The number of words allocated for the data stack. \\
+{\tt RSIZE} & The number of words allocated for the return stack. \\
+{\tt HANDLER} & The address placed in {\tt PC} by a {\tt THROW}
     instruction. \\
 {\tt ENDISM} & The endianness of @PACKAGE_NAME@: 0 = Little-endian,
     1 = Big-endian. \\
 {\tt CHECKED} & 0 = address checking off, 1 = address checking
     on. \\
-{\tt 'BAD} & The contents of {\tt EP} when the last exception
+{\tt BADPC} & The contents of {\tt PC} when the last exception
     was raised. \\
-{\tt -ADDRESS} & The last address which caused an address
+{\tt INVALID} & The last address which caused an address
     exception. \\ \bottomrule
 \end{tabular}
 \caption{\label{regtable}@PACKAGE_NAME@'s registers}
@@ -198,11 +198,11 @@ Before @PACKAGE_NAME@ is started, {\tt ENDISM} should be set to $0$ or $1$ accor
 \begin{center}
 \begin{tabular}{cc} \toprule
 \bf Register & \bf Initial value \\ \midrule
-{\tt EP} & \$0 \\
+{\tt PC} & \$0 \\
 {\tt A} & \$0 \\
 {\tt THROW} & \$0 \\
-{\tt 'BAD} & {\$FFFFFFFF} \\
-{\tt -ADDRESS} & {\$FFFFFFFF} \\ \bottomrule
+{\tt BADPC} & {\$FFFFFFFF} \\
+{\tt INVALID} & {\$FFFFFFFF} \\ \bottomrule
 \end{tabular}
 \caption{\label{inittable}Registers with prescribed initial values}
 \end{center}
@@ -250,10 +250,17 @@ confusing exception codes and reason codes.
 \label{exceptions}
 
 When a {\tt THROW} instruction (see section~\ref{exceptinst}) is executed, an
+<<<<<<< HEAD
 {\bf exception} is said to have been {\bf raised}. The exception code is the number on top of the
 stack at the time the exception is raised. Some exceptions are raised by
 other instructions, for example by {\tt /} when division by zero is attempted;
 these push the exception code on to the stack and then execute a {\tt THROW}.
+=======
+{\bf exception} is said to have been {\bf raised}. Some exceptions are raised by
+other instructions, for example by {\tt DIVMOD} when division by zero is attempted;
+these also execute a {\tt THROW}. The exception code is the number on top of the
+stack at the time the exception is raised. When an exception is raised by @PACKAGE_NAME@, it pushes the exception code on to the stack.
+>>>>>>> Rename instructions and variables to avoid punctuation in names
 
 Exception codes are signed numbers. $-1$ to $-511$ are reserved for @PACKAGE_NAME@'s own exception codes; the meanings
 of those that may be raised by @PACKAGE_NAME@ are shown in table~\ref{excepttable}.
@@ -274,13 +281,13 @@ $-256$ & Illegal opcode (see section~\ref{opcodes}). \\ \bottomrule
 
 Exception $-9$ is raised whenever an attempt is made to access an invalid
 address, either by an
-instruction, or during an instruction fetch (because {\tt EP} contains an
+instruction, or during an instruction fetch (because {\tt PC} contains an
 invalid address). Exception $-23$ is raised when an instruction expecting
 an address of type \spic{a-addr} (word-aligned) is given a non-aligned address.
 When @PACKAGE_NAME@ raises an address exception ($-9$ or $-23$), the offending address
-is placed in {\tt -ADDRESS}.
+is placed in {\tt INVALID}.
 
-The initial values of {\tt 'BAD} and {\tt -ADDRESS} are unlikely to be generated
+The initial values of {\tt BADPC} and {\tt INVALID} are unlikely to be generated
 by an exception, so it may be assumed that if the initial values still hold no
 exception has yet occurred.
 
@@ -290,7 +297,7 @@ Address and alignment exceptions are only raised if {\tt CHECKED} is 1. When
 If {\tt SP} is unaligned when an exception is raised, or putting the code on the
 stack would cause {\tt SP} to be out of range, the effect of a {\tt HALT} with
 code $-257$ is performed (although the actual mechanics are not, as that too
-would involve putting a number on the stack). Similarly, if {\tt 'THROW}
+would involve putting a number on the stack). Similarly, if {\tt HANDLER}
 contains an invalid address, the effect of {\tt HALT} with code $-258$ is
 performed.
 
@@ -407,7 +414,7 @@ the literal values follow each other in successive words.
 instructions in the {\tt A} register.
 
 \begin{description}
-\inst{NEXT}{--}{Load the word pointed to by {\tt EP} into {\tt A} then add four to {\tt EP}.}
+\inst{NEXT}{--}{Load the word pointed to by {\tt PC} into {\tt A} then add four to {\tt PC}.}
 \end{description}
 
 
@@ -420,8 +427,8 @@ These instructions manage the data stack and move values between stacks.
 \inst{POP}{\x{u}\dots\x1 u --}{Remove \spic{u} items from the stack.}
 \inst{PUSH}{\x{u}\dots\x0 u -- \x{u}\dots\x0 \x{u}}{Remove \spic{u}. Copy \x{u} to the top of the stack. If there are fewer than \spic{u}~$+$~2 items on the stack before {\tt PUSH} is executed, the memory word which would have been \x{u} were there \spic{u}~$+$~2 items is copied to the top of the stack.}
 \inst{SWAP}{\x{u}\dots\x0 u -- \x0\x{u-1}\dots\x1 \x{u}}{Exchange the top stack item with the \spic{u}th.}
-\instr{>R}{x --}{-- x}{Move \spic{x} to the return stack.}
-\instr{R>}{-- x}{x --}{Move \spic{x} from the return stack to the data stack.}
+\instr{POP2R}{x --}{-- x}{Move \spic{x} to the return stack.}
+\instr{RPOP}{-- x}{x --}{Move \spic{x} from the return stack to the data stack.}
 \instr{RPUSH}{u -- x}{\x{u} \x{u-1}\dots\x{0} -- \x{u} \x{u-1}\dots\x{0}}{Remove \spic{u}. Copy \x{u} to the top of the data stack. If there are fewer than \spic{u}~$+$~2 items on the stack before {\tt RPUSH} is executed, the memory word which would have been \x{u} were there \spic{u}~$+$~2 items is copied to the top of the data stack.}
 \end{description}
 
@@ -432,9 +439,9 @@ stack, returning a flag, true with all bits set if the test succeeds and false
 otherwise.
 
 \begin{description}
-\inst{<}{\n1 \n2 -- flag}{\spic{flag} is true if and only if \n1 is less than \n2.}
-\inst{=}{\x1 \x2 -- flag}{\spic{flag} is true if and only if \x1 is bit-for-bit the same as \x2.}
-\inst{U<}{\U1 \U2 -- flag}{\spic{flag} is true if and only if \U1 is less than \U2.}
+\inst{LT}{\n1 \n2 -- flag}{\spic{flag} is true if and only if \n1 is less than \n2.}
+\inst{EQ}{\x1 \x2 -- flag}{\spic{flag} is true if and only if \x1 is bit-for-bit the same as \x2.}
+\inst{ULT}{\U1 \U2 -- flag}{\spic{flag} is true if and only if \U1 is less than \U2.}
 \end{description}
 
 
@@ -450,19 +457,18 @@ Addition:
 \nopagebreak
 
 \begin{description}
-\inst{+}{\noru1 \noru2 -- \noru3}{Add \noru2 to \noru1, giving the sum \noru3.}
+\inst{ADD}{\noru1 \noru2 -- \noru3}{Add \noru2 to \noru1, giving the sum \noru3.}
 \end{description}
 
 Multiplication and division (note that all division instructions raise exception
-$-10$ if division by zero is attempted, and round the quotient towards minus
-infinity, except for {\tt S/REM}, which rounds the quotient towards zero):
+$-10$ if division by zero is attempted):
 
 \nopagebreak
 
 \begin{description}
-\inst{*}{\noru1 \noru2 -- \noru3}{Multiply \noru1 by \noru2 giving the product \noru3.}
-\inst{UMOD/}{\U1 \U2 -- \U3 \U4}{Divide \U1 by \U2, giving the single-word quotient \U3 and the single-word remainder \U4.}
-\inst{SREM/}{\n1 \n2 -- \n3 \n4}{Divide \n1 by \n2 using symmetric division, giving the single-word quotient \n3 and the single-word remainder \n4.}
+\inst{MUL}{\noru1 \noru2 -- \noru3}{Multiply \noru1 by \noru2 giving the product \noru3.}
+\inst{UDIVMOD}{\U1 \U2 -- \U3 \U4}{Divide \U1 by \U2, giving the single-word quotient \U3 and the single-word remainder \U4.}
+\inst{DIVMOD}{\n1 \n2 -- \n3 \n4}{Divide \n1 by \n2 using symmetric division, giving the single-word quotient \n3 and the single-word remainder \n4. The quotient is rounded towards zero.}
 \end{description}
 
 Sign function:
@@ -508,10 +514,10 @@ These instructions fetch and store words and bytes to and from memory; there is
 also an instruction to add a number to another stored in memory.
 
 \begin{description}
-\inst{@}{a-addr -- x}{\spic{x} is the value stored at \spic{a-addr}.}
-\inst{!}{x a-addr --}{Store \spic{x} at \spic{a-addr}.}
-\inst{B@}{addr -- byte}{If {\tt ENDISM} is 1, exclusive-or \spic{addr} with 3. Fetch the byte stored at \spic{addr}. The unused high-order bits are all zeroes.}
-\inst{B!}{byte addr --}{If {\tt ENDISM} is 1, exclusive-or \spic{addr} with 3. Store \spic{byte} at \spic{addr}. Only one byte is transferred.}
+\inst{LOAD}{a-addr -- x}{\spic{x} is the value stored at \spic{a-addr}.}
+\inst{STORE}{x a-addr --}{Store \spic{x} at \spic{a-addr}.}
+\inst{LOADB}{addr -- byte}{If {\tt ENDISM} is 1, exclusive-or \spic{addr} with 3. Fetch the byte stored at \spic{addr}. The unused high-order bits are all zeroes.}
+\inst{STOREB}{byte addr --}{If {\tt ENDISM} is 1, exclusive-or \spic{addr} with 3. Store \spic{byte} at \spic{addr}. Only one byte is transferred.}
 \end{description}
 
 
@@ -522,20 +528,20 @@ As mentioned in section~\ref{registers}, the stack pointers {\tt SP} and {\tt
 RP} may only be accessed through special instructions:
 
 \begin{description}
-\inst{SP@}{-- a-addr}{\spic{a-addr} is the value of {\tt SP}.}
-\inst{SP!}{a-addr --}{Set {\tt SP} to \spic{a-addr}.}
-\inst{RP@}{-- a-addr}{\spic{a-addr} is the value of {\tt RP}.}
-\inst{RP!}{a-addr --}{Set {\tt RP} to \spic{a-addr}.}
-\inst{EP@}{-- a-addr}{Push {\tt EP} on to the stack.}
-\inst{S0@}{-- a-addr}{Push {\tt S0} on to the stack.}
-\inst{\#S@}{-- u}{Push {\tt \#S} on to the stack.}
-\inst{R0@}{-- a-addr}{Push {\tt R0} on to the stack.}
-\inst{\#R@}{-- u}{Push {\tt \#R} on to the stack.}
-\inst{'THROW@}{-- a-addr}{Push {\tt 'THROW} on to the stack.}
-\inst{'THROW!}{a-addr --}{Set {\tt 'THROW} to \spic{a-addr}.}
-\inst{MEMORY@}{-- a-addr}{Push {\tt MEMORY} on to the stack.}
-\inst{'BAD@}{-- a-addr}{Push {\tt 'BAD} on to the stack.}
-\inst{-ADDRESS@}{-- a-addr}{Push {\tt -ADDRESS} on to the stack.}
+\inst{PUSH\_SP}{-- a-addr}{\spic{a-addr} is the value of {\tt SP}.}
+\inst{STORE\_SP}{a-addr --}{Set {\tt SP} to \spic{a-addr}.}
+\inst{PUSH\_RP}{-- a-addr}{\spic{a-addr} is the value of {\tt RP}.}
+\inst{STORE\_RP}{a-addr --}{Set {\tt RP} to \spic{a-addr}.}
+\inst{PUSH\_PC}{-- a-addr}{Push {\tt PC} on to the stack.}
+\inst{PUSH\_S0}{-- a-addr}{Push {\tt S0} on to the stack.}
+\inst{PUSH\_SSIZE}{-- u}{Push {\tt SSIZE} on to the stack.}
+\inst{PUSH\_R0}{-- a-addr}{Push {\tt R0} on to the stack.}
+\inst{PUSH\_RSIZE}{-- u}{Push {\tt RSIZE} on to the stack.}
+\inst{PUSH\_HANDLER}{-- a-addr}{Push {\tt HANDLER} on to the stack.}
+\inst{STORE\_HANDLER}{a-addr --}{Set {\tt HANDLER} to \spic{a-addr}.}
+\inst{PUSH\_MEMORY}{-- a-addr}{Push {\tt MEMORY} on to the stack.}
+\inst{PUSH\_BADPC}{-- a-addr}{Push {\tt BADPC} on to the stack.}
+\inst{PUSH\_INVALID}{-- a-addr}{Push {\tt INVALID} on to the stack.}
 \end{description}
 
 
@@ -550,8 +556,8 @@ Branches:
 \nopagebreak
 
 \begin{description}
-\inst{EP!}{a-addr --}{Set {\tt EP} to \spic{a-addr}, then perform the action of {\tt NEXT}.}
-\inst{?EP!}{flag a-addr --}{If \spic{flag} is false then set {\tt EP} to \spic{a-addr} and perform the action of {\tt NEXT}.}
+\inst{BRANCH}{a-addr --}{Set {\tt PC} to \spic{a-addr}, then perform the action of {\tt NEXT}.}
+\inst{BRANCHZ}{flag a-addr --}{If \spic{flag} is false then set {\tt PC} to \spic{a-addr} and perform the action of {\tt NEXT}.}
 \end{description}
 
 Subroutine call and return:
@@ -559,8 +565,8 @@ Subroutine call and return:
 \nopagebreak
 
 \begin{description}
-\instr{CALL}{\aaddr1 --}{ -- \aaddr2}{Push {\tt EP} on to the return stack, put \spic{\aaddr1} into {\tt EP}, then perform the action of {\tt NEXT}.}
-\instr{RET}{--}{a-addr --}{Put \spic{a-addr} into {\tt EP}, then perform the action of {\tt NEXT}.}
+\instr{CALL}{\aaddr1 --}{ -- \aaddr2}{Push {\tt PC} on to the return stack, put \spic{\aaddr1} into {\tt PC}, then perform the action of {\tt NEXT}.}
+\instr{RET}{--}{a-addr --}{Put \spic{a-addr} into {\tt PC}, then perform the action of {\tt NEXT}.}
 \end{description}
 
 \subsection{Literals}
@@ -569,7 +575,7 @@ Subroutine call and return:
 This instructions encodes literal values which are placed on the stack.
 
 \begin{description}
-\inst{(LITERAL)}{-- x}{Push the word pointed to by {\tt EP} on to the stack, then add four to {\tt EP}.}
+\inst{LITERAL}{-- x}{Push the word pointed to by {\tt PC} on to the stack, then add four to {\tt PC}.}
 \end{description}
 
 
@@ -579,7 +585,7 @@ This instructions encodes literal values which are placed on the stack.
 These instructions give access to @PACKAGE_NAME@'s exception mechanisms.
 
 \begin{description}
-\inst{THROW}{--}{Put the contents of {\tt EP} into {\tt 'BAD}, then load {\tt EP} from {\tt 'THROW}. Perform the action of {\tt NEXT}. If {\tt 'THROW} contains an out of range or unaligned address stop @PACKAGE_NAME@, returning reason code $-258$ to the calling program (see section~\ref{calls}).}
+\inst{THROW}{--}{Put the contents of {\tt PC} into {\tt BADPC}, then load {\tt PC} from {\tt HANDLER}. Perform the action of {\tt NEXT}. If {\tt HANDLER} contains an out of range or unaligned address stop @PACKAGE_NAME@, returning reason code $-258$ to the calling program (see section~\ref{calls}).}
 \inst{HALT}{x --}{Stop @PACKAGE_NAME@, returning reason code \spic{x} to the calling program (see section~\ref{calls}). If {\tt SP} is out of range or unaligned, $-257$ is returned as the reason code.}
 \end{description}
 
@@ -611,23 +617,23 @@ Table~\ref{opcodetable} lists the opcodes in numerical order. Undefined opcodes 
 \begin{tabular}{*{3}{cc}} \toprule
 \bf Opcode & \bf Instruction & \bf Opcode & \bf
     Instruction & \bf Opcode & \bf Instruction \\ \midrule
-\opcodetbl{00}{NEXT}	{11}{OR}	{22}{R0@}
-\opcodetbl{01}{POP}	{12}{XOR}	{23}{\#R}
-\opcodetbl{02}{PUSH}	{13}{LSHIFT}	{24}{'THROW@}
-\opcodetbl{03}{SWAP}	{14}{RSHIFT}	{25}{'THROW!}
-\opcodetbl{04}{RPUSH}	{15}{@}		{26}{MEMORY@}
-\opcodetbl{05}{>R}	{16}{!}		{27}{'BAD@}
-\opcodetbl{06}{R>}	{17}{B@}	{28}{-ADDRESS@}
-\opcodetbl{07}{<}	{18}{B!}	{29}{CALL}
-\opcodetbl{08}{=}	{19}{SP@}	{2A}{RET}
-\opcodetbl{09}{U<}	{1A}{SP!}	{2B}{THROW}
-\opcodetbl{0A}{+}	{1B}{RP@}	{2C}{HALT}
-\opcodetbl{0B}{*}	{1C}{RP!}	{2D}{LINK}
-\opcodetbl{0C}{UMOD/}	{1D}{EP@}	{2E}{(LITERAL)}
-\opcodetbl{0D}{SREM/}	{1E}{EP!}	{80–\$FE}{\textrm{extra instructions}}
-\opcodetbl{0E}{NEGATE}	{1F}{?EP!}	{FF}{NEXT}
-\opcodetbltwo{0F}{INVERT}	{20}{S0@}
-\opcodetbltwo{10}{AND}	{21}{\#S}
+\opcodetbl{00}{NEXT}	{11}{OR}	{22}{PUSH\_R0}
+\opcodetbl{01}{POP}	{12}{XOR}	{23}{PUSH\_RSIZE}
+\opcodetbl{02}{PUSH}	{13}{LSHIFT}	{24}{PUSH\_HANDLER}
+\opcodetbl{03}{SWAP}	{14}{RSHIFT}	{25}{STORE\_HANDLER}
+\opcodetbl{04}{RPUSH}	{15}{LOAD}	{26}{PUSH\_MEMORY}
+\opcodetbl{05}{POP2R}	{16}{STORE}	{27}{PUSH\_BADPC}
+\opcodetbl{06}{RPOP}	{17}{LOADB}	{28}{PUSH\_INVALID}
+\opcodetbl{07}{LT}	{18}{STOREB}	{29}{CALL}
+\opcodetbl{08}{EQ}	{19}{PUSH\_SP}	{2A}{RET}
+\opcodetbl{09}{ULT}	{1A}{STORE\_SP}	{2B}{THROW}
+\opcodetbl{0A}{ADD}	{1B}{PUSH\_RP}	{2C}{HALT}
+\opcodetbl{0B}{MUL}	{1C}{STORE\_RP}	{2D}{LINK}
+\opcodetbl{0C}{UDIVMOD}	{1D}{PUSH\_PC}	{2E}{LITERAL}
+\opcodetbl{0D}{DIVMOD}	{1E}{BRANCH}	{80–\$FE}{\textrm{extra instructions}}
+\opcodetbl{0E}{NEGATE}	{1F}{BRANCHZ}	{FF}{NEXT}
+\opcodetbltwo{0F}{INVERT}	{20}{PUSH\_S0}
+\opcodetbltwo{10}{AND}	{21}{PUSH\_SSIZE}
  \bottomrule
 \end{tabular}
 \caption{\label{opcodetable}@PACKAGE_NAME@'s opcodes}

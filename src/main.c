@@ -297,7 +297,7 @@ static void reinit(void)
 {
     memset(count, 0, 256 * sizeof(long));
     init(memory, memory_size);
-    start_ass(EP);
+    start_ass(PC);
 }
 
 
@@ -349,8 +349,8 @@ static void do_assign(char *token)
             fatal("cannot assign to %s", regist[no]);
             break;
         case r_EP:
-            EP = value;
-            start_ass(EP);
+            PC = value;
+            start_ass(PC);
             break;
         case r_I:
             if (bytes > 1)
@@ -408,7 +408,7 @@ static void do_display(size_t no, const char *format)
             display = xasprintf("ENDISM = %d", ENDISM);
             break;
         case r_EP:
-            display = xasprintf("EP = $%"PRIX32" (%"PRIu32")", EP, EP);
+            display = xasprintf("PC = $%"PRIX32" (%"PRIu32")", PC, PC);
             break;
         case r_I:
             display = xasprintf("I = %-10s ($%02X)", disass(I), I);
@@ -482,7 +482,7 @@ static void do_command(int no)
         break;
     case c_DISASSEMBLE:
         {
-            long long start = (EP <= 16 ? 0 : EP - 16), end = 64;
+            long long start = (PC <= 16 ? 0 : PC - 16), end = 64;
             double_arg(strtok(NULL, ""), &start, &end, true);
             check_aligned(start, "Address");
             check_aligned(end, "Address");
@@ -504,7 +504,7 @@ static void do_command(int no)
         break;
     case c_DUMP:
         {
-            long long start = (EP <= 64 ? 0 : EP - 64), end = 256;
+            long long start = (PC <= 64 ? 0 : PC - 64), end = 256;
             double_arg(strtok(NULL, ""), &start, &end, true);
             check_range(start, end, "Address");
             while (start < end) {
@@ -529,7 +529,7 @@ static void do_command(int no)
             char *arg = strtok(NULL, " ");
             if (arg != NULL) {
                 long adr = single_arg(arg, NULL);
-                EP = adr;
+                PC = adr;
             }
             WORD ret = single_step();
             if (ret)
@@ -605,14 +605,14 @@ static void do_command(int no)
                     unsigned long long limit = single_arg(strtok(NULL, " "), NULL);
                     check_valid(limit, "Address");
                     check_aligned(limit, "Address");
-                    while ((unsigned long)EP != limit && ret == -259) {
+                    while ((unsigned long)PC != limit && ret == -259) {
                         ret = single_step();
                         if (no == c_TRACE) do_registers();
                         count[I]++;
                     }
                     if (ret != 0)
-                        printf("HALT code %"PRId32" was returned at EP = $%X\n",
-                               ret, EP);
+                        printf("HALT code %"PRId32" was returned at PC = $%X\n",
+                               ret, PC);
                 } else {
                     unsigned long long limit = single_arg(arg, NULL), i;
                     for (i = 0; i < limit && ret == -259; i++) {

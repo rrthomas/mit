@@ -47,7 +47,7 @@ static void step(unsigned start, unsigned end)
                 printf("Result: %d; correct result: %d\n\n", LOAD_WORD(SP),
                        correct[i - i / 5]);
                 if (correct[i - i / 5] != LOAD_WORD(SP)) {
-                    printf("Error in comparison tests: EP = %"PRIu32"\n", EP);
+                    printf("Error in comparison tests: PC = %"PRIu32"\n", PC);
                     exit(1);
                 }
                 (void)POP;	// drop result of comparison
@@ -61,10 +61,10 @@ int main(void)
 {
     init((WORD *)malloc(1024), 256);
 
-    start_ass(EP);
-    ass(O_LESS); ass(O_LESS); ass(O_LESS); ass(O_LESS);
-    ass(O_EQUAL); ass(O_EQUAL);
-    ass(O_ULESS); ass(O_ULESS); ass(O_ULESS); ass(O_ULESS);
+    start_ass(PC);
+    ass(O_LT); ass(O_LT); ass(O_LT); ass(O_LT);
+    ass(O_EQ); ass(O_EQ);
+    ass(O_ULT); ass(O_ULT); ass(O_ULT); ass(O_ULT);
 
     assert(single_step() == -259);   // load first instruction word
 

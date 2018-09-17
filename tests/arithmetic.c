@@ -34,23 +34,23 @@ int main(void)
 
     init((WORD *)calloc(1024, 1), 256);
 
-    start_ass(EP);
+    start_ass(PC);
     ass(O_LITERAL); lit(0);
     ass(O_LITERAL); lit(1);
     ass(O_LITERAL); lit(WORD_W);
     ass(O_LITERAL); lit(-WORD_W);
     ass(O_LITERAL); lit(-1);
-    ass(O_PLUS); ass(O_PLUS); ass(O_NEGATE);
-    ass(O_PLUS); ass(O_LITERAL); lit(1); ass(O_SWAP); ass(O_LITERAL); lit(-1);
+    ass(O_ADD); ass(O_ADD); ass(O_NEGATE);
+    ass(O_ADD); ass(O_LITERAL); lit(1); ass(O_SWAP); ass(O_LITERAL); lit(-1);
     ass(O_LITERAL); lit(WORD_W);
-    ass(O_STAR); ass(O_LITERAL); lit(1); ass(O_SWAP); ass(O_LITERAL); lit(2); ass(O_POP);
+    ass(O_MUL); ass(O_LITERAL); lit(1); ass(O_SWAP); ass(O_LITERAL); lit(2); ass(O_POP);
     ass(O_NEGATE); ass(O_LITERAL); lit(-1);
-    ass(O_SREMSLASH); ass(O_LITERAL); lit(1); ass(O_SWAP); ass(O_LITERAL); lit(2); ass(O_POP);
+    ass(O_DIVMOD); ass(O_LITERAL); lit(1); ass(O_SWAP); ass(O_LITERAL); lit(2); ass(O_POP);
     ass(O_LITERAL); lit(WORD_W); ass(O_NEGATE); ass(O_LITERAL); lit(1); ass(O_POP);
     ass(O_LITERAL); lit(-WORD_W);
     ass(O_LITERAL); lit(3);
-    ass(O_SREMSLASH); ass(O_LITERAL); lit(1); ass(O_POP); ass(O_LITERAL); lit(-2);
-    ass(O_UMODSLASH);
+    ass(O_DIVMOD); ass(O_LITERAL); lit(1); ass(O_POP); ass(O_LITERAL); lit(-2);
+    ass(O_UDIVMOD);
 
     assert(single_step() == -259);   // load first instruction word
 
@@ -58,7 +58,7 @@ int main(void)
         show_data_stack();
         printf("Correct stack: %s\n\n", correct[i]);
         if (strcmp(correct[i], val_data_stack())) {
-            printf("Error in arithmetic tests: EP = %"PRIu32"\n", EP);
+            printf("Error in arithmetic tests: PC = %"PRIu32"\n", PC);
             exit(1);
         }
         single_step();

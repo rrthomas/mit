@@ -35,9 +35,9 @@ int main(void)
         exit(1);
     }
 
-    printf("EP should now be 56\n");
-    if (EP != 60) {
-        printf("Error in run() tests: EP = %"PRIu32"\n", EP);
+    printf("PC should now be 56\n");
+    if (PC != 60) {
+        printf("Error in run() tests: PC = %"PRIu32"\n", PC);
         exit(1);
     }
 
