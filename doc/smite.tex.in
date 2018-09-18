@@ -98,7 +98,7 @@ certain implementation-dependent features, such as the size of the stacks, are
 purposely left unspecified, and the exact method of implementation is left to
 the implementor in many particulars.
 
-@PACKAGE_NAME@ is self-contained. I/O can be implemented via extra instructions (see~\ref{extrainstructions}). Machine
+@PACKAGE_NAME@ is self-contained. I/O can be implemented via extra instructions (see~\ref{accessinst}). Machine
 code routines on the host computer may be accessed using the {\tt LINK}
 instruction. @PACKAGE_NAME@ supports a simple object module format.
 
@@ -587,18 +587,11 @@ These instructions give access to @PACKAGE_NAME@'s exception mechanisms.
 \subsection{External access}
 \label{accessinst}
 
-These instructions allow access to @PACKAGE_NAME@'s libraries, the operating system and
-native machine code.
+These instructions allow access to @PACKAGE_NAME@'s libraries, the operating system and native machine code.
 
 \begin{description}
-\inst{LINK}{i*x --}{Make a subroutine call to the routine at the address given (in the host machine's format, padded out to a number of words) on the data stack. The size and format of this address are machine-dependent.}
+\inst{LINK}{i*x --}{Make a subroutine call to the routine at the address given (in the host machine's format, padded out to a number of words) on the data stack. The size and format of this address are machine-dependent. If the address given is $0$, perform implementation-dependent actions; for example, this can be used to implement system-dependent functionality such as I/O.}
 \end{description}
-
-
-\subsection{Extra instructions}
-\label{extrainstructions}
-
-Instructions with opcodes from \$80 to \$FE inclusive may be implemented to provide system-dependent functionality, such as I/O.
 
 
 \subsection{Opcodes}

@@ -61,7 +61,11 @@ enum {
     O_LINK,
     O_LITERAL,
     O_UNDEFINED = 0x7f, // Not part of the spec, just an arbitrary undefined opcode
-    OX_ARGC = 0x80,
+    O_NEXTFF = 0xff
+};
+
+enum {
+    OX_ARGC,
     OX_ARG,
     OX_STDIN,
     OX_STDOUT,
@@ -78,7 +82,6 @@ enum {
     OX_FILE_SIZE,
     OX_RESIZE_FILE,
     OX_FILE_STATUS,
-    O_NEXTFF = 0xff
 };
 
 

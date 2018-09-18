@@ -413,165 +413,168 @@ WORD single_step(void)
             WORD_pointer address;
             for (int i = POINTER_W - 1; i >= 0; i--)
                 address.words[i] = POP;
-            address.pointer();
-        }
-        break;
 
-    case OX_ARGC: // ( -- u )
-        PUSH(main_argc);
-        break;
-    case OX_ARG: // ( u1 -- c-addr u2 )
-        {
-            UWORD narg = POP;
-            if (narg >= (UWORD)main_argc) {
-                PUSH(0);
-                PUSH(0);
-            } else {
-                PUSH(main_argv[narg]);
-                PUSH(main_argv_len[narg]);
+            if (address.pointer != 0) // We mean numeric 0!
+                address.pointer();
+            else switch (POP) {
+                case OX_ARGC: // ( -- u )
+                    PUSH(main_argc);
+                    break;
+                case OX_ARG: // ( u1 -- c-addr u2 )
+                    {
+                        UWORD narg = POP;
+                        if (narg >= (UWORD)main_argc) {
+                            PUSH(0);
+                            PUSH(0);
+                        } else {
+                            PUSH(main_argv[narg]);
+                            PUSH(main_argv_len[narg]);
+                        }
+                    }
+                    break;
+                case OX_STDIN:
+                    PUSH((WORD)(STDIN_FILENO));
+                    break;
+                case OX_STDOUT:
+                    PUSH((WORD)(STDOUT_FILENO));
+                    break;
+                case OX_STDERR:
+                    PUSH((WORD)(STDERR_FILENO));
+                    break;
+                case OX_OPEN_FILE:
+                    {
+                        bool binary = false;
+                        int perm = getflags(POP, &binary);
+                        UWORD len = POP;
+                        UWORD str = POP;
+                        char *file;
+                        exception = getstr(str, len, &file);
+                        int fd = exception == 0 ? open(file, perm, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH) : -1;
+                        free(file);
+                        PUSH((WORD)fd);
+                        PUSH(fd < 0 || (binary && set_binary_mode(fd, O_BINARY) < 0) ? -1 : 0);
+                    }
+                    break;
+                case OX_CLOSE_FILE:
+                    {
+                        int fd = POP;
+                        PUSH((WORD)close(fd));
+                    }
+                    break;
+                case OX_READ_FILE:
+                    {
+                        int fd = POP;
+                        UWORD nbytes = POP;
+                        UWORD buf = POP;
+
+                        ssize_t res = 0;
+                        if (exception == 0) {
+                            exception = pre_dma(buf, buf + nbytes, true);
+                            if (exception == 0) {
+                                res = read(fd, native_address(buf, true), nbytes);
+                                exception = post_dma(buf, buf + nbytes);
+                            }
+                        }
+
+                        PUSH(res);
+                        PUSH((exception == 0 && res >= 0) ? 0 : -1);
+                    }
+                    break;
+                case OX_WRITE_FILE:
+                    {
+                        int fd = POP;
+                        UWORD nbytes = POP;
+                        UWORD buf = POP;
+
+                        ssize_t res = 0;
+                        if (exception == 0) {
+                            exception = pre_dma(buf, buf + nbytes, false);
+                            if (exception == 0) {
+                                res = write(fd, native_address(buf, false), nbytes);
+                                exception = post_dma(buf, buf + nbytes);
+                            }
+                        }
+
+                        PUSH((exception == 0 && res >= 0) ? 0 : -1);
+                    }
+                    break;
+                case OX_FILE_POSITION:
+                    {
+                        int fd = POP;
+                        off_t res = lseek(fd, 0, SEEK_CUR);
+                        PUSH_DOUBLE((DUWORD)res);
+                        PUSH(res >= 0 ? 0 : -1);
+                    }
+                    break;
+                case OX_REPOSITION_FILE:
+                    {
+                        int fd = POP;
+                        DUWORD ud = POP_DOUBLE;
+                        off_t res = lseek(fd, (off_t)ud, SEEK_SET);
+                        PUSH(res >= 0 ? 0 : -1);
+                    }
+                    break;
+                case OX_FLUSH_FILE:
+                    {
+                        int fd = POP;
+                        int res = fdatasync(fd);
+                        PUSH(res);
+                    }
+                    break;
+                case OX_RENAME_FILE:
+                    {
+                        UWORD len1 = POP;
+                        UWORD str1 = POP;
+                        UWORD len2 = POP;
+                        UWORD str2 = POP;
+                        char *from;
+                        char *to = NULL;
+                        exception = getstr(str2, len2, &from) ||
+                            getstr(str1, len1, &to) ||
+                            rename(from, to);
+                        free(from);
+                        free(to);
+                        PUSH(exception);
+                    }
+                    break;
+                case OX_DELETE_FILE:
+                    {
+                        UWORD len = POP;
+                        UWORD str = POP;
+                        char *file;
+                        exception = getstr(str, len, &file) ||
+                            remove(file);
+                        free(file);
+                        PUSH(exception);
+                    }
+                    break;
+                case OX_FILE_SIZE:
+                    {
+                        struct stat st;
+                        int fd = POP;
+                        int res = fstat(fd, &st);
+                        PUSH_DOUBLE(st.st_size);
+                        PUSH(res);
+                    }
+                    break;
+                case OX_RESIZE_FILE:
+                    {
+                        int fd = POP;
+                        DUWORD ud = POP_DOUBLE;
+                        int res = ftruncate(fd, (off_t)ud);
+                        PUSH(res);
+                    }
+                    break;
+                case OX_FILE_STATUS:
+                    {
+                        struct stat st;
+                        int fd = POP;
+                        int res = fstat(fd, &st);
+                        PUSH(st.st_mode);
+                        PUSH(res);
+                    }
+                    break;
             }
-        }
-        break;
-    case OX_STDIN:
-        PUSH((WORD)(STDIN_FILENO));
-        break;
-    case OX_STDOUT:
-        PUSH((WORD)(STDOUT_FILENO));
-        break;
-    case OX_STDERR:
-        PUSH((WORD)(STDERR_FILENO));
-        break;
-    case OX_OPEN_FILE:
-        {
-            bool binary = false;
-            int perm = getflags(POP, &binary);
-            UWORD len = POP;
-            UWORD str = POP;
-            char *file;
-            exception = getstr(str, len, &file);
-            int fd = exception == 0 ? open(file, perm, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH) : -1;
-            free(file);
-            PUSH((WORD)fd);
-            PUSH(fd < 0 || (binary && set_binary_mode(fd, O_BINARY) < 0) ? -1 : 0);
-        }
-        break;
-    case OX_CLOSE_FILE:
-        {
-            int fd = POP;
-            PUSH((WORD)close(fd));
-        }
-        break;
-    case OX_READ_FILE:
-        {
-            int fd = POP;
-            UWORD nbytes = POP;
-            UWORD buf = POP;
-
-            ssize_t res = 0;
-            if (exception == 0) {
-                exception = pre_dma(buf, buf + nbytes, true);
-                if (exception == 0) {
-                    res = read(fd, native_address(buf, true), nbytes);
-                    exception = post_dma(buf, buf + nbytes);
-                }
-            }
-
-            PUSH(res);
-            PUSH((exception == 0 && res >= 0) ? 0 : -1);
-        }
-        break;
-    case OX_WRITE_FILE:
-        {
-            int fd = POP;
-            UWORD nbytes = POP;
-            UWORD buf = POP;
-
-            ssize_t res = 0;
-            if (exception == 0) {
-                exception = pre_dma(buf, buf + nbytes, false);
-                if (exception == 0) {
-                    res = write(fd, native_address(buf, false), nbytes);
-                    exception = post_dma(buf, buf + nbytes);
-                }
-            }
-
-            PUSH((exception == 0 && res >= 0) ? 0 : -1);
-        }
-        break;
-    case OX_FILE_POSITION:
-        {
-            int fd = POP;
-            off_t res = lseek(fd, 0, SEEK_CUR);
-            PUSH_DOUBLE((DUWORD)res);
-            PUSH(res >= 0 ? 0 : -1);
-        }
-        break;
-    case OX_REPOSITION_FILE:
-        {
-            int fd = POP;
-            DUWORD ud = POP_DOUBLE;
-            off_t res = lseek(fd, (off_t)ud, SEEK_SET);
-            PUSH(res >= 0 ? 0 : -1);
-        }
-        break;
-    case OX_FLUSH_FILE:
-        {
-            int fd = POP;
-            int res = fdatasync(fd);
-            PUSH(res);
-        }
-        break;
-    case OX_RENAME_FILE:
-        {
-            UWORD len1 = POP;
-            UWORD str1 = POP;
-            UWORD len2 = POP;
-            UWORD str2 = POP;
-            char *from;
-            char *to = NULL;
-            exception = getstr(str2, len2, &from) ||
-                getstr(str1, len1, &to) ||
-                rename(from, to);
-            free(from);
-            free(to);
-            PUSH(exception);
-        }
-        break;
-    case OX_DELETE_FILE:
-        {
-            UWORD len = POP;
-            UWORD str = POP;
-            char *file;
-            exception = getstr(str, len, &file) ||
-                remove(file);
-            free(file);
-            PUSH(exception);
-        }
-        break;
-    case OX_FILE_SIZE:
-        {
-            struct stat st;
-            int fd = POP;
-            int res = fstat(fd, &st);
-            PUSH_DOUBLE(st.st_size);
-            PUSH(res);
-        }
-        break;
-    case OX_RESIZE_FILE:
-        {
-            int fd = POP;
-            DUWORD ud = POP_DOUBLE;
-            int res = ftruncate(fd, (off_t)ud);
-            PUSH(res);
-        }
-        break;
-    case OX_FILE_STATUS:
-        {
-            struct stat st;
-            int fd = POP;
-            int res = fstat(fd, &st);
-            PUSH(st.st_mode);
-            PUSH(res);
         }
         break;
 

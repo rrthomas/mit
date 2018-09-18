@@ -25,20 +25,23 @@ int main(void)
     assert(register_args(argc, argv) == 0);
 
     start_ass(PC);
-    ass(OX_ARGC); ass(O_LITERAL); lit(1);
-    ass(OX_ARG);
+    ass(O_LITERAL); lit(OX_ARGC); plit(0); ass(O_LINK);
+    ass(O_LITERAL); lit(1); ass(O_LITERAL); lit(OX_ARG); plit(0); ass(O_LINK);
 
     assert(single_step() == -259);   // load first instruction word
 
-    single_step();
+    do {
+        single_step();
+    } while (I != O_LINK);
     printf("argc is %"PRId32", and should be %d\n\n", LOAD_WORD(SP), argc);
     if (POP != argc) {
        printf("Error in extra instructions tests: PC = %"PRIu32"\n", PC);
         exit(1);
     }
 
-    single_step();
-    single_step();
+    do {
+        single_step();
+    } while (I != O_LINK);
     printf("arg 1's length is %"PRId32", and should be %zu\n", LOAD_WORD(SP), strlen(argv[1]));
     if ((UWORD)POP != strlen(argv[1])) {
         printf("Error in extra instructions tests: PC = %"PRIu32"\n", PC);

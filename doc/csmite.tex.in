@@ -88,7 +88,7 @@ C @PACKAGE_NAME@ provides the ability to map native memory blocks into @PACKAGE_
 
 \subsection{Extra instructions}
 
-C @PACKAGE_NAME@ provides the following extra instructions.
+C @PACKAGE_NAME@ provides the following extra instructions. They are accessed by executing {\tt LINK} with address $0$, and the given code as the top-most argument (under the address).
 
 \subsubsection{Command-line arguments}
 
@@ -96,9 +96,9 @@ Two calls are provided to access command-line arguments passed to C @PACKAGE_NAM
 
 \begin{center}
 \begin{tabular}{S[table-format=2.0]lll} \toprule
-\bf Opcode & \bf Forth word & \bf Stack effect & \bf Description \\ \midrule
-\$80 & {\tt ARGC} & \spic{-- u} & the number of arguments \\
-\$81 & {\tt ARG} & \spic{u1 -- c-addr u2} & the \spic{u1}th argument \\ \bottomrule
+\bf Code & \bf Name & \bf Stack effect & \bf Description \\ \midrule
+\$0 & {\tt ARGC} & \spic{-- u} & the number of arguments \\
+\$1 & {\tt ARG} & \spic{u1 -- c-addr u2} & the \spic{u1}th argument \\ \bottomrule
 \end{tabular}
 \end{center}
 
@@ -109,9 +109,9 @@ These extra instructions provide access to POSIX standard input, output and erro
 \begin{center}
 \begin{tabular}{S[table-format=2.0]l} \toprule
 \bf Opcode & \bf POSIX file descriptor \\ \midrule
-\$82 & {\tt STDIN\_FILENO} \\
-\$83 & {\tt STDOUT\_FILENO} \\
-\$84 & {\tt STDERR\_FILENO} \\ \bottomrule
+\$2 & {\tt STDIN\_FILENO} \\
+\$3 & {\tt STDOUT\_FILENO} \\
+\$4 & {\tt STDERR\_FILENO} \\ \bottomrule
 \end{tabular}
 \end{center}
 
@@ -122,18 +122,18 @@ The file system extra instructions correspond directly to ANS Forth words, as de
 \begin{center}
 \begin{tabular}{S[table-format=2.0]l} \toprule
 \bf Opcode & \bf Forth word \\ \midrule
-\$85 & {\tt OPEN-FILE} \\
-\$86 & {\tt CLOSE-FILE} \\
-\$87 & {\tt READ-FILE} \\
-\$88 & {\tt WRITE-FILE} \\
-\$89 & {\tt FILE-POSITION} \\
-\$8A & {\tt REPOSITION-FILE} \\
-\$8B & {\tt FLUSH-FILE} \\
-\$8C & {\tt RENAME-FILE} \\
-\$8D & {\tt DELETE-FILE} \\
-\$8E & {\tt FILE-SIZE} \\
-\$8F & {\tt RESIZE-FILE} \\
-\$90 & {\tt FILE-STATUS} \\
+\$5 & {\tt OPEN-FILE} \\
+\$6 & {\tt CLOSE-FILE} \\
+\$7 & {\tt READ-FILE} \\
+\$8 & {\tt WRITE-FILE} \\
+\$9 & {\tt FILE-POSITION} \\
+\$A & {\tt REPOSITION-FILE} \\
+\$B & {\tt FLUSH-FILE} \\
+\$C & {\tt RENAME-FILE} \\
+\$D & {\tt DELETE-FILE} \\
+\$E & {\tt FILE-SIZE} \\
+\$F & {\tt RESIZE-FILE} \\
+\$10 & {\tt FILE-STATUS} \\
 \bottomrule
 \end{tabular}
 \end{center}
