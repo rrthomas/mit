@@ -11,6 +11,8 @@
 
 #include "tests.h"
 
+#include "xvasprintf.h"
+
 
 #define SIZE 1024
 
@@ -23,7 +25,7 @@ const char *correct[] = {
     "168", "",
     "168", "168 1", "",
     str(SIZE), str(SIZE) " 1", "",
-    "-1", "-1 -1",
+    "-1", "-1 -1", "-1 -1 2", "",
 };
 
 
@@ -43,7 +45,8 @@ int main(void)
     ass(O_STORE_HANDLER);
     ass(O_PUSH_HANDLER); ass(O_LITERAL); lit(1); ass(O_POP);
     ass(O_PUSH_MEMORY); ass(O_LITERAL); lit(1); ass(O_POP);
-    ass(O_PUSH_BADPC); ass(O_PUSH_INVALID);
+    ass(O_PUSH_BADPC); ass(O_PUSH_INVALID); ass(O_LITERAL); lit(2); ass(O_POP);
+    ass(O_PUSH_PSIZE);
 
     assert(single_step() == -259);   // load first instruction word
 
@@ -57,6 +60,16 @@ int main(void)
         single_step();
         printf("I = %s\n", disass(I));
     }
+
+    // Cannot statically stringify POINTER_W
+    show_data_stack();
+    char *pointer_w = xasprintf("%u", (unsigned)POINTER_W);
+    printf("Correct stack: %s\n\n", pointer_w);
+    if (strcmp(pointer_w, val_data_stack())) {
+        printf("Error in registers tests: PC = %"PRIu32"\n", PC);
+        exit(1);
+    }
+    free(pointer_w);
 
     assert(exception == 0);
     printf("Registers tests ran OK\n");

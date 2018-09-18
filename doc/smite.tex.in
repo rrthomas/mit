@@ -152,6 +152,7 @@ The registers, each with its function, are set out in table~\ref{regtable}.
     was raised. \\
 {\tt INVALID} & The last address which caused an address
     exception. \\ \bottomrule
+{\tt PSIZE} & The number of words in a host machine pointer (for {\tt LINK}). \\
 \end{tabular}
 \caption{\label{regtable}@PACKAGE_NAME@'s registers}
 \end{center}
@@ -189,7 +190,7 @@ always mentioned explicitly.
 \subsection{Operation}
 \label{operation}
 
-Before @PACKAGE_NAME@ is started, {\tt ENDISM} should be set to $0$ or $1$ according to the implementation. The other registers should be initialised as shown in table~\ref{inittable}, except for {\tt I}, which need not be initialised.
+Before @PACKAGE_NAME@ is started, {\tt ENDISM} should be set to $0$ or $1$ according to the implementation, and {\tt PSIZE} to the appropriate value. The other registers should be initialised as shown in table~\ref{inittable}, except for {\tt I}, which need not be initialised.
 
 \begin{table}[htbp]
 \begin{center}
@@ -205,7 +206,7 @@ Before @PACKAGE_NAME@ is started, {\tt ENDISM} should be set to $0$ or $1$ accor
 \end{center}
 \end{table}
 
-{\tt MEMORY} and {\tt ENDISM} must not change while @PACKAGE_NAME@ is executing.
+{\tt MEMORY}, {\tt ENDISM} and {\tt PSIZE} must not change while @PACKAGE_NAME@ is executing.
 
 @PACKAGE_NAME@ is started by a call to the interface calls {\bf run()} or {\bf
 single\_step()} (see section~\ref{calls}). In the former case, the execution
@@ -247,17 +248,10 @@ confusing exception codes and reason codes.
 \label{exceptions}
 
 When a {\tt THROW} instruction (see section~\ref{exceptinst}) is executed, an
-<<<<<<< HEAD
 {\bf exception} is said to have been {\bf raised}. The exception code is the number on top of the
 stack at the time the exception is raised. Some exceptions are raised by
-other instructions, for example by {\tt /} when division by zero is attempted;
-these push the exception code on to the stack and then execute a {\tt THROW}.
-=======
-{\bf exception} is said to have been {\bf raised}. Some exceptions are raised by
 other instructions, for example by {\tt DIVMOD} when division by zero is attempted;
-these also execute a {\tt THROW}. The exception code is the number on top of the
-stack at the time the exception is raised. When an exception is raised by @PACKAGE_NAME@, it pushes the exception code on to the stack.
->>>>>>> Rename instructions and variables to avoid punctuation in names
+these push the exception code on to the stack and then execute a {\tt THROW}.
 
 Exception codes are signed numbers. $-1$ to $-511$ are reserved for @PACKAGE_NAME@'s own exception codes; the meanings
 of those that may be raised by @PACKAGE_NAME@ are shown in table~\ref{excepttable}.
@@ -536,6 +530,7 @@ RP} may only be accessed through special instructions:
 \inst{PUSH\_MEMORY}{-- a-addr}{Push {\tt MEMORY} on to the stack.}
 \inst{PUSH\_BADPC}{-- a-addr}{Push {\tt BADPC} on to the stack.}
 \inst{PUSH\_INVALID}{-- a-addr}{Push {\tt INVALID} on to the stack.}
+\inst{PUSH\_PSIZE}{-- u}{\spic{u} is the value of {\tt PSIZE}.}
 \end{description}
 
 
@@ -604,23 +599,22 @@ Table~\ref{opcodetable} lists the opcodes in numerical order. Undefined opcodes 
 \begin{tabular}{*{3}{cc}} \toprule
 \bf Opcode & \bf Instruction & \bf Opcode & \bf
     Instruction & \bf Opcode & \bf Instruction \\ \midrule
-\opcodetbl{00}{NEXT}	{11}{OR}	{22}{PUSH\_R0}
-\opcodetbl{01}{POP}	{12}{XOR}	{23}{PUSH\_RSIZE}
-\opcodetbl{02}{PUSH}	{13}{LSHIFT}	{24}{PUSH\_HANDLER}
-\opcodetbl{03}{SWAP}	{14}{RSHIFT}	{25}{STORE\_HANDLER}
-\opcodetbl{04}{RPUSH}	{15}{LOAD}	{26}{PUSH\_MEMORY}
-\opcodetbl{05}{POP2R}	{16}{STORE}	{27}{PUSH\_BADPC}
-\opcodetbl{06}{RPOP}	{17}{LOADB}	{28}{PUSH\_INVALID}
-\opcodetbl{07}{LT}	{18}{STOREB}	{29}{CALL}
-\opcodetbl{08}{EQ}	{19}{PUSH\_SP}	{2A}{RET}
-\opcodetbl{09}{ULT}	{1A}{STORE\_SP}	{2B}{THROW}
-\opcodetbl{0A}{ADD}	{1B}{PUSH\_RP}	{2C}{HALT}
-\opcodetbl{0B}{MUL}	{1C}{STORE\_RP}	{2D}{LINK}
-\opcodetbl{0C}{UDIVMOD}	{1D}{PUSH\_PC}	{2E}{LITERAL}
-\opcodetbl{0D}{DIVMOD}	{1E}{BRANCH}	{80–\$FE}{\textrm{extra instructions}}
-\opcodetbl{0E}{NEGATE}	{1F}{BRANCHZ}	{FF}{NEXT}
-\opcodetbltwo{0F}{INVERT}	{20}{PUSH\_S0}
-\opcodetbltwo{10}{AND}	{21}{PUSH\_SSIZE}
+\opcodetbl{00/FF}{NEXT}	{10}{AND}	{20}{PUSH\_S0}
+\opcodetbl{01}{POP}	{11}{OR}	{21}{PUSH\_SSIZE}
+\opcodetbl{02}{PUSH}	{12}{XOR}	{22}{PUSH\_R0}
+\opcodetbl{03}{SWAP}	{13}{LSHIFT}	{23}{PUSH\_RSIZE}
+\opcodetbl{04}{RPUSH}	{14}{RSHIFT}	{24}{PUSH\_HANDLER}
+\opcodetbl{05}{POP2R}	{15}{LOAD}	{25}{STORE\_HANDLER}
+\opcodetbl{06}{RPOP}	{16}{STORE}	{26}{PUSH\_MEMORY}
+\opcodetbl{07}{LT}	{17}{LOADB}	{27}{PUSH\_BADPC}
+\opcodetbl{08}{EQ}	{18}{STOREB}	{28}{PUSH\_INVALID}
+\opcodetbl{09}{ULT}	{19}{PUSH\_SP}	{29}{CALL}
+\opcodetbl{0A}{ADD}	{1A}{STORE\_SP}	{2A}{RET}
+\opcodetbl{0B}{MUL}	{1B}{PUSH\_RP}	{2B}{THROW}
+\opcodetbl{0C}{UDIVMOD}	{1C}{STORE\_RP}	{2C}{HALT}
+\opcodetbl{0D}{DIVMOD}	{1D}{PUSH\_PC}	{2D}{LINK}
+\opcodetbl{0E}{NEGATE}	{1E}{BRANCH}	{2E}{LITERAL}
+\opcodetbl{0F}{INVERT}	{1F}{BRANCHZ}   {2F}{PUSH\_PSIZE}
  \bottomrule
 \end{tabular}
 \caption{\label{opcodetable}@PACKAGE_NAME@'s opcodes}

@@ -60,6 +60,7 @@ enum {
     O_HALT,
     O_LINK,
     O_LITERAL,
+    O_PUSH_PSIZE,
     O_UNDEFINED = 0x7f, // Not part of the spec, just an arbitrary undefined opcode
     O_NEXTFF = 0xff
 };

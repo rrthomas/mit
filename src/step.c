@@ -362,6 +362,9 @@ WORD single_step(void)
         PUSH(LOAD_WORD(PC));
         PC += WORD_W;
         break;
+    case O_PUSH_PSIZE:
+        PUSH(POINTER_W);
+        break;
  throw:
     case O_THROW:
         // exception may already be set, so WORD_STORE may have no effect here.
