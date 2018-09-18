@@ -53,7 +53,6 @@ extern UWORD HASHS, HASHR;
 extern UWORD THROW;
 extern UWORD BAD;
 extern UWORD NOT_ADDRESS;
-#define CHECKED 1       // address checking is mandatory in this implementation
 
 // Memory access
 

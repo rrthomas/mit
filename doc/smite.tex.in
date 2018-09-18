@@ -148,8 +148,6 @@ The registers, each with its function, are set out in table~\ref{regtable}.
     instruction. \\
 {\tt ENDISM} & The endianness of @PACKAGE_NAME@: 0 = Little-endian,
     1 = Big-endian. \\
-{\tt CHECKED} & 0 = address checking off, 1 = address checking
-    on. \\
 {\tt BADPC} & The contents of {\tt PC} when the last exception
     was raised. \\
 {\tt INVALID} & The last address which caused an address
@@ -159,8 +157,7 @@ The registers, each with its function, are set out in table~\ref{regtable}.
 \end{center}
 \end{table}
 
-All of the registers are word-wide quantities except for {\tt I}, {\tt ENDISM} and {\tt
-CHECKED}, which are one byte wide.
+All of the registers are word-wide quantities except for {\tt I} and {\tt ENDISM}, which are one byte wide.
 
 To ease efficient implementation, the registers may only be accessed
 by instructions (see section~\ref{registerinst}); not all registers are accessible, and only a few are writable.
@@ -192,7 +189,7 @@ always mentioned explicitly.
 \subsection{Operation}
 \label{operation}
 
-Before @PACKAGE_NAME@ is started, {\tt ENDISM} should be set to $0$ or $1$ according to the implementation. {\tt CHECKED} should be set to $0$ or $1$ as desired. The other registers should be initialised as shown in table~\ref{inittable}, except for {\tt I}, which need not be initialised.
+Before @PACKAGE_NAME@ is started, {\tt ENDISM} should be set to $0$ or $1$ according to the implementation. The other registers should be initialised as shown in table~\ref{inittable}, except for {\tt I}, which need not be initialised.
 
 \begin{table}[htbp]
 \begin{center}
@@ -208,7 +205,7 @@ Before @PACKAGE_NAME@ is started, {\tt ENDISM} should be set to $0$ or $1$ accor
 \end{center}
 \end{table}
 
-{\tt MEMORY}, {\tt ENDISM} and {\tt CHECKED} must not change while @PACKAGE_NAME@ is executing.
+{\tt MEMORY} and {\tt ENDISM} must not change while @PACKAGE_NAME@ is executing.
 
 @PACKAGE_NAME@ is started by a call to the interface calls {\bf run()} or {\bf
 single\_step()} (see section~\ref{calls}). In the former case, the execution
@@ -290,9 +287,6 @@ is placed in {\tt INVALID}.
 The initial values of {\tt BADPC} and {\tt INVALID} are unlikely to be generated
 by an exception, so it may be assumed that if the initial values still hold no
 exception has yet occurred.
-
-Address and alignment exceptions are only raised if {\tt CHECKED} is 1. When
-{\tt CHECKED} is 0, a faster implementation of @PACKAGE_NAME@ may be used.
 
 If {\tt SP} is unaligned when an exception is raised, or putting the code on the
 stack would cause {\tt SP} to be out of range, the effect of a {\tt HALT} with

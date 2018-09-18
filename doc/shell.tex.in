@@ -108,7 +108,7 @@ registers may also (where appropriate) be assigned to using the syntax
 
 \noindent where \angb{value} is in the form given in section~\ref{commands}. An error
 message is displayed if an attempt is made to assign to a register such as
-{\tt CHECKED}, which cannot be assigned to, or to assign an unaligned or out
+{\tt ENDISM}, which cannot be assigned to, or to assign an unaligned or out
 of range address to a register which must hold an aligned address, such as
 {\tt SP}. The {\tt FROM} command (see section~\ref{from}) should be used in
 preference to assigning to {\tt EP}.

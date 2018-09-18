@@ -343,7 +343,6 @@ static void do_assign(char *token)
         case r_BAD:
             BAD = value;
             break;
-        case r_CHECKED:
         case r_ENDISM:
         case r_MEMORY:
             fatal("cannot assign to %s", regist[no]);
@@ -400,9 +399,6 @@ static void do_display(size_t no, const char *format)
             break;
         case r_BAD:
             display = xasprintf("'BAD = $%"PRIX32" (%"PRIu32")", BAD, BAD);
-            break;
-        case r_CHECKED:
-            display = xasprintf("CHECKED = %d", CHECKED);
             break;
         case r_ENDISM:
             display = xasprintf("ENDISM = %d", ENDISM);
