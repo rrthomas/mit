@@ -74,13 +74,7 @@
 \begin{document}
 \maketitle
 
-\begin{abstract}
-\noindent The design of the @PACKAGE_NAME@ virtual machine is described.
-@PACKAGE_NAME@'s is a deliberately simple and highly portable low-level VM intended for study and experiment. @PACKAGE_NAME@ is able to call machine code and access the operating system.
-\end{abstract}
-
-
-\subsection*{Typographical notes}
+\subsection*{Typographical conventions}
 
 Instructions and @PACKAGE_NAME@'s registers are shown in {\tt Typewriter} font;
 interface calls are shown in {\bf Bold} type, and followed by empty parentheses.
