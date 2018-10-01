@@ -1,5 +1,5 @@
 // Test the register instructions, except for those operating on RP and SP
-// (see memory.c). Also uses NEXT.
+// (see memory.c).
 //
 // (c) Reuben Thomas 1994-2018
 //
@@ -17,7 +17,7 @@
 #define SIZE 1024
 
 const char *correct[] = {
-    "", str(WORD_W), str(WORD_W) " 1", "",
+    "", "1", "1 1", "",
     "-33554432", "-33554432 1", "",
     "16384", "16384 1", "",
     "-16777216", "-16777216 1", "",
@@ -36,24 +36,22 @@ int main(void)
     init((WORD *)malloc(SIZE), SIZE / WORD_W);
 
     start_ass(PC);
-    ass(O_PUSH_PC); ass(O_LITERAL); lit(1); ass(O_POP);
-    ass(O_PUSH_S0); ass(O_LITERAL); lit(1); ass(O_POP);
-    ass(O_PUSH_SSIZE); ass(O_LITERAL); lit(1); ass(O_POP);
-    ass(O_PUSH_R0); ass(O_LITERAL); lit(1); ass(O_POP);
-    ass(O_PUSH_RSIZE); ass(O_LITERAL); lit(1); ass(O_POP);
-    ass(O_LITERAL); lit(168); // 42 WORDS
+    ass(O_PUSH_PC); lit(1); ass(O_POP);
+    ass(O_PUSH_S0); lit(1); ass(O_POP);
+    ass(O_PUSH_SSIZE); lit(1); ass(O_POP);
+    ass(O_PUSH_R0); lit(1); ass(O_POP);
+    ass(O_PUSH_RSIZE); lit(1); ass(O_POP);
+    lit(168); // 42 WORDS
     ass(O_STORE_HANDLER);
-    ass(O_PUSH_HANDLER); ass(O_LITERAL); lit(1); ass(O_POP);
-    ass(O_PUSH_MEMORY); ass(O_LITERAL); lit(1); ass(O_POP);
-    ass(O_PUSH_BADPC); ass(O_PUSH_INVALID); ass(O_LITERAL); lit(2); ass(O_POP);
+    ass(O_PUSH_HANDLER); lit(1); ass(O_POP);
+    ass(O_PUSH_MEMORY); lit(1); ass(O_POP);
+    ass(O_PUSH_BADPC); ass(O_PUSH_INVALID); lit(2); ass(O_POP);
     ass(O_PUSH_PSIZE);
 
-    assert(single_step() == -259);   // load first instruction word
-
-    for (size_t i = 0; i - i / 5 < sizeof(correct) / sizeof(correct[0]); i++) {
+    for (size_t i = 0; i < sizeof(correct) / sizeof(correct[0]); i++) {
         show_data_stack();
-        printf("Correct stack: %s\n\n", correct[i - i / 5]);
-        if (strcmp(correct[i - i / 5], val_data_stack())) {
+        printf("Correct stack: %s\n\n", correct[i]);
+        if (strcmp(correct[i], val_data_stack())) {
             printf("Error in registers tests: PC = %"PRIu32"\n", PC);
             exit(1);
         }

@@ -25,10 +25,8 @@ int main(void)
     assert(register_args(argc, argv) == 0);
 
     start_ass(PC);
-    ass(O_LITERAL); lit(OX_ARGC); plit(0); ass(O_LINK);
-    ass(O_LITERAL); lit(1); ass(O_LITERAL); lit(OX_ARG); plit(0); ass(O_LINK);
-
-    assert(single_step() == -259);   // load first instruction word
+    lit(OX_ARGC); plit(0); ass(O_LINK);
+    lit(1); lit(OX_ARG); plit(0); ass(O_LINK);
 
     do {
         single_step();

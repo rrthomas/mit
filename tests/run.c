@@ -23,20 +23,21 @@ int main(void)
     }
 
     start_ass(52);
-    ass(O_LITERAL); lit(37);
+    lit(37);
     ass(O_HALT);
 
-    assert(single_step() == -259);
     WORD ret = run();
 
-    printf("Return value should be 37 and is %"PRId32"\n", ret);
-    if (ret != 37) {
+    const WORD return_value = 37;
+    printf("Return value should be %d and is %"PRId32"\n", return_value, ret);
+    if (ret != return_value) {
         printf("Error in run() tests: incorrect return value from run\n");
         exit(1);
     }
 
-    printf("PC should now be 56\n");
-    if (PC != 60) {
+    const UWORD final_pc = 54;
+    printf("PC should now be %"PRIu32"\n", final_pc);
+    if (PC != final_pc) {
         printf("Error in run() tests: PC = %"PRIu32"\n", PC);
         exit(1);
     }

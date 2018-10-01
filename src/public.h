@@ -45,7 +45,6 @@ typedef uint64_t DUWORD;
 
 extern UWORD PC;
 extern BYTE I;
-extern WORD A;
 extern UWORD MEMORY;
 extern UWORD SP, RP;
 extern UWORD S0, R0;

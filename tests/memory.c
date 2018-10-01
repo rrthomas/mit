@@ -13,13 +13,13 @@
 
 
 const char *correct[] = {
-    "", "16384", "16384 " str(WORD_W), "16384 -" str(WORD_W), "16380", "16380", "16380 513", "16380 513 1", "16380 513 16380",
-    "16380", "16380", "16380 0", "16380 16380", "16380 513", "16380 513 1", "16380 513 1",
-    "16380", "16380 0", "16380 16380", "16380 1", "16380 1", "16381", "2", "2 16383", "", "",
-    "16380", "33554945", "33554945 1", "", "", "-33554432", "", "-16777216", "-16777216 1", "-16777216 1", "",
-    "0", "", "0", "0", "0 1", "", "16384", "67305985", "67305985", "67305985 1", "",
-    "16389", "2", "2", "2 1", "", "1", "1 16385", "1 16385", "", "16385", "1", "1 1", "1 1", "",
-    "16392", "16392 0", "16392 16392", "16392 16392", "-20",
+    "", "16384", "16384 " str(WORD_W), "16384 -" str(WORD_W), "16380", "16380 513", "16380 513 1", "16380 513 16380",
+    "16380", "16380 0", "16380 16380", "16380 513", "16380 513 1",
+    "16380", "16380 0", "16380 16380", "16380 1", "16381", "2", "2 16383", "",
+    "16380", "33554945", "33554945 1", "", "-33554432", "", "-16777216", "-16777216 1", "",
+    "0", "", "0", "0 1", "", "16384", "67305985", "67305985 1", "",
+    "16389", "2", "2 1", "", "1", "1 16385", "", "16385", "1", "1 1", "",
+    "16392", "16392 0", "16392 16392", "-20",
 };
 
 const unsigned area[] = {0x4000, 0x4004, 0x4005, 0x4008};
@@ -49,21 +49,20 @@ int main(void)
     }
 
     start_ass(PC);
-    ass(O_PUSH_MEMORY); ass(O_LITERAL); lit(WORD_W); ass(O_NEGATE); ass(O_ADD);
-    ass(O_LITERAL); lit(513); ass(O_LITERAL); lit(1); ass(O_PUSH); ass(O_STORE); ass(O_LITERAL); lit(0); ass(O_PUSH);
-    ass(O_LOAD); ass(O_LITERAL); lit(1); ass(O_POP); ass(O_LITERAL); lit(0); ass(O_PUSH); ass(O_LOADB);
-    ass(O_ADD); ass(O_LOADB); ass(O_LITERAL); lit(16383); ass(O_STOREB);
-    ass(O_LITERAL); lit(16380); ass(O_LOAD); ass(O_LITERAL); lit(1); ass(O_POP); ass(O_PUSH_SP);
-    ass(O_STORE_SP); ass(O_PUSH_RP); ass(O_LITERAL); lit(1); ass(O_POP); ass(O_LITERAL); lit(0);
-    ass(O_STORE_RP); ass(O_PUSH_RP); ass(O_LITERAL); lit(1); ass(O_POP);
-    ass(O_LITERAL); lit(size * WORD_W); ass(O_LOAD); ass(O_LITERAL); lit(1); ass(O_POP);
-    ass(O_LITERAL); lit(size * WORD_W + 5); ass(O_LOADB); ass(O_LITERAL); lit(1); ass(O_POP);
-    ass(O_LITERAL); lit(1);
-    ass(O_LITERAL); lit(size * WORD_W + 1); ass(O_STOREB);
-    ass(O_LITERAL); lit(size * WORD_W + 1); ass(O_LOADB); ass(O_LITERAL); lit(1); ass(O_POP);
-    ass(O_LITERAL); lit(size * WORD_W + 8); ass(O_LITERAL); lit(0); ass(O_PUSH); ass(O_STOREB);
 
-    assert(single_step() == -259);   // load first instruction word
+    ass(O_PUSH_MEMORY); lit(WORD_W); ass(O_NEGATE); ass(O_ADD);
+    lit(513); lit(1); ass(O_PUSH); ass(O_STORE); lit(0); ass(O_PUSH);
+    ass(O_LOAD); lit(1); ass(O_POP); lit(0); ass(O_PUSH); ass(O_LOADB);
+    ass(O_ADD); ass(O_LOADB); lit(16383); ass(O_STOREB);
+    lit(16380); ass(O_LOAD); lit(1); ass(O_POP); ass(O_PUSH_SP);
+    ass(O_STORE_SP); ass(O_PUSH_RP); lit(1); ass(O_POP); lit(0);
+    ass(O_STORE_RP); ass(O_PUSH_RP); lit(1); ass(O_POP);
+    lit(size * WORD_W); ass(O_LOAD); lit(1); ass(O_POP);
+    lit(size * WORD_W + 5); ass(O_LOADB); lit(1); ass(O_POP);
+    lit(1);
+    lit(size * WORD_W + 1); ass(O_STOREB);
+    lit(size * WORD_W + 1); ass(O_LOADB); lit(1); ass(O_POP);
+    lit(size * WORD_W + 8); lit(0); ass(O_PUSH); ass(O_STOREB);
 
     for (size_t i = 0; i < sizeof(correct) / sizeof(correct[0]); i++) {
         show_data_stack();

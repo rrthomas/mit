@@ -11,9 +11,9 @@
 #include "tests.h"
 
 
-WORD result[] = { -257, -257, 42, 0, -23, -23, -10, -9, -9, -23, -256, -258 };
-UWORD bad[] = { -1, -1, -1, 28, 60, 68, 80, 16388, 104, 112, 116, 132 };
-UWORD address[] = { -12, 16384, 0, 0, 5, 1, 0, 16384, -20, 1, 0, 1 };
+WORD result[] = { -257, -257, 42, 0, -23, -10, -9, -9, -23, -256 };
+UWORD badpc[] = { -1, -1, -1, -1, 22, 25, 16385, 33, 35, 36 };
+UWORD address[] = { -12, 16384, 0, 0, 5, 0, 16384, -20, 1, 0 };
 int testno = 0;
 UWORD test[sizeof(result) / sizeof(result[0])];
 
@@ -28,79 +28,62 @@ int main(void)
     start_ass(0);
 
     test[testno++] = ass_current();
-    fprintf(stderr, "Test %d: PC = %u\n", testno, ass_current());
+    printf("Test %d: PC = %u\n", testno, ass_current());
     // test 1: push stack value into non-existent memory
-    ass(O_LITERAL); ass(O_NEXT00); ass(O_NEXT00); ass(O_NEXT00);
     lit(0xfffffff0);
-    ass(O_STORE_SP); ass(O_LITERAL); lit(0); ass(O_NEXT00); ass(O_NEXT00);
+    ass(O_STORE_SP); lit(0);
 
     test[testno++] = ass_current();
-    fprintf(stderr, "Test %d: PC = %u\n", testno, ass_current());
+    printf("Test %d: PC = %u\n", testno, ass_current());
     // test 2: set SP to MEMORY, then try to pop (>R) the stack
-    ass(O_LITERAL); lit(MEMORY);
-    ass(O_STORE_SP); ass(O_POP2R); ass(O_NEXT00);
+    lit(MEMORY);
+    ass(O_STORE_SP); ass(O_POP2R);
 
     test[testno++] = ass_current();
-    fprintf(stderr, "Test %d: PC = %u\n", testno, ass_current());
+    printf("Test %d: PC = %u\n", testno, ass_current());
     // test 3: test arbitrary throw code
-    ass(O_LITERAL); lit(42);
-    ass(O_HALT); ass(O_NEXT00); ass(O_NEXT00);
+    lit(42); ass(O_HALT);
 
     test[testno++] = ass_current();
-    fprintf(stderr, "Test %d: PC = %u\n", testno, ass_current());
+    printf("Test %d: PC = %u\n", testno, ass_current());
     // test 4: test SP can point to just after a memory area
-    ass(O_LITERAL); lit(MEMORY);
-    ass(O_LITERAL); lit(WORD_W);
+    lit(MEMORY);
+    lit(WORD_W);
     ass(O_NEGATE); ass(O_ADD);
-    ass(O_STORE_SP); ass(O_POP2R); ass(O_LITERAL); lit(0); ass(O_HALT);
+    ass(O_STORE_SP); ass(O_POP2R); lit(0); ass(O_HALT);
 
     test[testno++] = ass_current();
-    fprintf(stderr, "Test %d: PC = %u\n", testno, ass_current());
+    printf("Test %d: PC = %u\n", testno, ass_current());
     // test 5
-    ass(O_LITERAL); lit(5);
-    ass(O_STORE_SP); ass(O_NEXT00); ass(O_NEXT00);
+    lit(5); ass(O_STORE_SP);
 
     test[testno++] = ass_current();
-    fprintf(stderr, "Test %d: PC = %u\n", testno, ass_current());
+    printf("Test %d: PC = %u\n", testno, ass_current());
     // test 6
-    ass(O_LITERAL); lit(1); ass(O_CALL); ass(O_NEXT00); ass(O_NEXT00);
+    lit(1); lit(0); ass(O_DIVMOD); lit(1);
+    ass(O_POP);
 
     test[testno++] = ass_current();
-    fprintf(stderr, "Test %d: PC = %u\n", testno, ass_current());
-    // test 7
-    ass(O_LITERAL); lit(1);
-    ass(O_LITERAL); lit(0);
-    ass(O_DIVMOD); ass(O_LITERAL); lit(1);
-    ass(O_POP); ass(O_NEXT00); ass(O_NEXT00); ass(O_NEXT00);
+    printf("Test %d: PC = %u\n", testno, ass_current());
+    // test 7: allow execution to run off the end of a memory area
+    // (test 4 has set MEMORY - 1 to all zeroes)
+    lit(MEMORY - 1);
+    ass(O_BRANCH);
 
     test[testno++] = ass_current();
-    fprintf(stderr, "Test %d: PC = %u\n", testno, ass_current());
-    // test 8: allow execution to run off the end of a memory area
-    ass(O_LITERAL); lit(MEMORY - WORD_W);
-    ass(O_BRANCH); ass(O_NEXT00); ass(O_NEXT00);
+    printf("Test %d: PC = %u\n", testno, ass_current());
+    // test 8: fetch from an invalid address
+    lit(0xffffffec); ass(O_LOAD);
 
     test[testno++] = ass_current();
-    fprintf(stderr, "Test %d: PC = %u\n", testno, ass_current());
-    // test 9: fetch from an invalid address
-    ass(O_LITERAL); lit(0xffffffec);
-    ass(O_LOAD); ass(O_NEXT00); ass(O_NEXT00);
+    printf("Test %d: PC = %u\n", testno, ass_current());
+    // test 9
+    lit(1); ass(O_LOAD);
 
     test[testno++] = ass_current();
-    fprintf(stderr, "Test %d: PC = %u\n", testno, ass_current());
-    // test 10
-    ass(O_LITERAL); lit(1);
-    ass(O_LOAD); ass(O_NEXT00); ass(O_NEXT00);
-
-    test[testno++] = ass_current();
-    fprintf(stderr, "Test %d: PC = %u\n", testno, ass_current());
-    // test 11: test invalid opcode
-    ass(O_UNDEFINED); ass(O_NEXT00); ass(O_NEXT00); ass(O_NEXT00);
-
-    test[testno++] = ass_current();
-    fprintf(stderr, "Test %d: PC = %u\n", testno, ass_current());
-    // test 12: test invalid HANDLER contents
-    ass(O_LITERAL); lit(0xffffffec);
-    ass(O_LITERAL); lit(0); ass(O_PUSH); ass(O_STORE_HANDLER); ass(O_THROW);
+    printf("Test %d: PC = %u\n", testno, ass_current());
+    // test 10: test invalid opcode
+    ass(O_UNDEFINED);
 
     start_ass(200);
     ass(O_HALT);
@@ -113,16 +96,15 @@ int main(void)
 
         printf("Test %zu\n", i + 1);
         PC = test[i];
-        assert(single_step() == -259);   // load first instruction word
         WORD res = run();
 
-        if (result[i] != res || (result[i] != 0 && bad[i] != BADPC) ||
+        if (result[i] != res || (result[i] != 0 && badpc[i] != BADPC) ||
             ((result[i] <= -257 || result[i] == -9 || result[i] == -23) &&
              address[i] != INVALID)) {
              printf("Error in exceptions tests: test %zu failed; PC = %"PRIu32"\n", i + 1, PC);
              printf("Return code is %d; should be %d\n", res, result[i]);
              if (result[i] != 0)
-                 printf("BADPC = %"PRIu32"; should be %"PRIu32"\n", BADPC, bad[i]);
+                 printf("BADPC = %"PRIu32"; should be %"PRIu32"\n", BADPC, badpc[i]);
              if (result[i] <= -257 || result[i] == -9 || result[i] == -23)
                  printf("INVALID = %"PRIX32"; should be %"PRIX32"\n", INVALID, address[i]);
              error++;

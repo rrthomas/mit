@@ -1,11 +1,10 @@
-// Test the arithmetic operators. Also uses the NEXT, SWAP, ROT,
-// POP, and (LITERAL) instructions. Since unsigned arithmetic
-// overflow behaviour is guaranteed by the ISO C standard, we only test
-// the stack handling and basic correctness of the operators here,
-// assuming that if the arithmetic works in one case, it will work in
-// all. Note that the correct stack values are not quite independent
-// of the word size (in WORD_W and str(WORD_W)); some stack pictures
-// implicitly refer to it.
+// Test the arithmetic operators. Also uses the SWAP and POP instructions,
+// and literals. Since unsigned arithmetic overflow behaviour is guaranteed
+// by the ISO C standard, we only test the stack handling and basic
+// correctness of the operators here, assuming that if the arithmetic works
+// in one case, it will work in all. Note that the correct stack values are
+// not quite independent of the word size (in WORD_W and str(WORD_W)); some
+// stack pictures implicitly refer to it.
 //
 // (c) Reuben Thomas 1994-2018
 //
@@ -19,13 +18,13 @@
 
 
 const char *correct[] = {
-    "", "0", "0 1", "0 1 " str(WORD_W), "0 1 " str(WORD_W) " -" str(WORD_W), "0 1 " str(WORD_W) " -" str(WORD_W),
+    "", "0", "0 1", "0 1 " str(WORD_W), "0 1 " str(WORD_W) " -" str(WORD_W),
     "0 1 " str(WORD_W) " -" str(WORD_W) " -1", "0 1 " str(WORD_W) " -5",
-    "0 1 -1", "0 1 1", "0 1 1", "0 2", "0 2 1", "2 0", "2 0 -1", "2 0 -1", "2 0 -1 " str(WORD_W),
-    "2 0 -" str(WORD_W), "2 0 -" str(WORD_W) " 1", "2 -" str(WORD_W) " 0", "2 -" str(WORD_W) " 0",
-    "2 -" str(WORD_W) " 0 2", "2", "-2", "-2 -1", "-2 -1", "2 0", "2 0 1", "0 2", "0 2 2", "0 2 2", "",
-    str(WORD_W), "-" str(WORD_W), "-" str(WORD_W) " 1", "-" str(WORD_W) " 1", "", "-" str(WORD_W),
-    "-" str(WORD_W) " 3", "-1 -1", "-1 -1", "-1 -1 1", "-1", "-1 -2", "1 1" };
+    "0 1 -1", "0 1 1", "0 2", "0 2 1", "2 0", "2 0 -1", "2 0 -1 " str(WORD_W),
+    "2 0 -" str(WORD_W), "2 0 -" str(WORD_W) " 1", "2 -" str(WORD_W) " 0",
+    "2 -" str(WORD_W) " 0 2", "2", "-2", "-2 -1", "2 0", "2 0 1", "0 2", "0 2 2", "",
+    str(WORD_W), "-" str(WORD_W), "-" str(WORD_W) " 1", "", "-" str(WORD_W),
+    "-" str(WORD_W) " 3", "-1 -1", "-1 -1 1", "-1", "-1 -2", "1 1" };
 
 
 int main(void)
@@ -35,24 +34,22 @@ int main(void)
     init((WORD *)calloc(1024, 1), 256);
 
     start_ass(PC);
-    ass(O_LITERAL); lit(0);
-    ass(O_LITERAL); lit(1);
-    ass(O_LITERAL); lit(WORD_W);
-    ass(O_LITERAL); lit(-WORD_W);
-    ass(O_LITERAL); lit(-1);
+    lit(0);
+    lit(1);
+    lit(WORD_W);
+    lit(-WORD_W);
+    lit(-1);
     ass(O_ADD); ass(O_ADD); ass(O_NEGATE);
-    ass(O_ADD); ass(O_LITERAL); lit(1); ass(O_SWAP); ass(O_LITERAL); lit(-1);
-    ass(O_LITERAL); lit(WORD_W);
-    ass(O_MUL); ass(O_LITERAL); lit(1); ass(O_SWAP); ass(O_LITERAL); lit(2); ass(O_POP);
-    ass(O_NEGATE); ass(O_LITERAL); lit(-1);
-    ass(O_DIVMOD); ass(O_LITERAL); lit(1); ass(O_SWAP); ass(O_LITERAL); lit(2); ass(O_POP);
-    ass(O_LITERAL); lit(WORD_W); ass(O_NEGATE); ass(O_LITERAL); lit(1); ass(O_POP);
-    ass(O_LITERAL); lit(-WORD_W);
-    ass(O_LITERAL); lit(3);
-    ass(O_DIVMOD); ass(O_LITERAL); lit(1); ass(O_POP); ass(O_LITERAL); lit(-2);
+    ass(O_ADD); lit(1); ass(O_SWAP); lit(-1);
+    lit(WORD_W);
+    ass(O_MUL); lit(1); ass(O_SWAP); lit(2); ass(O_POP);
+    ass(O_NEGATE); lit(-1);
+    ass(O_DIVMOD); lit(1); ass(O_SWAP); lit(2); ass(O_POP);
+    lit(WORD_W); ass(O_NEGATE); lit(1); ass(O_POP);
+    lit(-WORD_W);
+    lit(3);
+    ass(O_DIVMOD); lit(1); ass(O_POP); lit(-2);
     ass(O_UDIVMOD);
-
-    assert(single_step() == -259);   // load first instruction word
 
     for (size_t i = 0; i < sizeof(correct) / sizeof(correct[0]); i++) {
         show_data_stack();

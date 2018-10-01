@@ -92,9 +92,9 @@ certain implementation-dependent features, such as the size of the stacks, are
 purposely left unspecified, and the exact method of implementation is left to
 the implementor in many particulars.
 
-@PACKAGE_NAME@ is self-contained. I/O can be implemented via extra instructions (see~\ref{accessinst}). Machine
+@PACKAGE_NAME@ is self-contained. Machine
 code routines on the host computer may be accessed using the {\tt LINK}
-instruction. @PACKAGE_NAME@ supports a simple object module format.
+instruction, which can also be used to implement I/O (see~\ref{accessinst}). @PACKAGE_NAME@ supports a simple object module format.
 
 @PACKAGE_NAME@ is conceptually (and usually in fact) a library, embedded in other programs.
 A small interface is provided for other programs to control @PACKAGE_NAME@.
@@ -125,11 +125,9 @@ The registers, each with its function, are set out in table~\ref{regtable}.
 \bf Register & \bf Function \\
     \midrule
 {\tt PC} & The {\tt P}rogram {\tt C}ounter. Points to the next
-    word from which an instruction word may be loaded. \\
+    byte from which an instruction may be loaded. \\
 {\tt I} & The {\tt I}nstruction. Holds the opcode of an instruction
     to be executed. \\
-{\tt A} & The instruction {\tt A}ccumulator. Holds the opcodes of
-    instructions to be executed. \\
 {\tt MEMORY} & The size in bytes of @PACKAGE_NAME@'s main memory,
     which must be a multiple of four. \\
 {\tt SP} & The data {\tt S}tack {\tt P}ointer. \\
@@ -146,7 +144,7 @@ The registers, each with its function, are set out in table~\ref{regtable}.
     was raised. \\
 {\tt INVALID} & The last address which caused an address
     exception. \\ \bottomrule
-{\tt PSIZE} & The number of words in a host machine pointer (for {\tt LINK}). \\
+{\tt PSIZE} & The number of words in a host machine pointer (for {\tt LINK}; see section~\ref{accessinst}). \\
 \end{tabular}
 \caption{\label{regtable}@PACKAGE_NAME@'s registers}
 \end{center}
@@ -191,7 +189,6 @@ Before @PACKAGE_NAME@ is started, {\tt ENDISM} should be set to $0$ or $1$ accor
 \begin{tabular}{cc} \toprule
 \bf Register & \bf Initial value \\ \midrule
 {\tt PC} & \$0 \\
-{\tt A} & \$0 \\
 {\tt HANDLER} & \$0 \\
 {\tt BADPC} & {\$FFFFFFFF} \\
 {\tt INVALID} & {\$FFFFFFFF} \\ \bottomrule
@@ -208,8 +205,8 @@ cycle is entered:
 
 \begin{tabbing}
 \hspace{0.5in}\=begin\=\+\+ \\*
-copy the least-significant byte of {\tt A} to {\tt I} \\*
-shift {\tt A} arithmetically 8 bits to the right \\*
+load {\tt I} from the byte pointed to by {\tt PC} \\*
+add $1$ to {\tt PC} \\*
 execute the instruction in {\tt I} \- \\*
 repeat
 \end{tabbing}
@@ -279,9 +276,7 @@ exception has yet occurred.
 If {\tt SP} is unaligned when an exception is raised, or putting the code on the
 stack would cause {\tt SP} to be out of range, the effect of a {\tt HALT} with
 code $-257$ is performed (although the actual mechanics are not, as that too
-would involve putting a number on the stack). Similarly, if {\tt HANDLER}
-contains an invalid address, the effect of {\tt HALT} with code $-258$ is
-performed.
+would involve putting a number on the stack).
 
 
 \section{Instruction set}
@@ -371,33 +366,7 @@ collections of zero or more words of any data type. Ellipsis is used for
 indeterminate numbers of specified types of word.
 
 If an instruction does not modify the return stack, the corresponding stack
-picture is omitted. Some instructions have two forms, the latter ending in
-``{\tt I}''. This denotes {\tt I}mmediate addressing: the instruction's argument
-is included in the instruction word (see section~\ref{conventions}), rather than
-being placed separately in the next available word.
-
-
-\subsection{Programming conventions}
-\label{conventions}
-
-Since branch destinations must be word-aligned, some instruction sequences may
-contain gaps. These must be padded with {\tt NEXT} (opcode \$00).
-
-Literals and branch addresses should be placed in the word after the
-instruction. Further instructions may still be stored in the current word. If
-more than one literal or branch instruction is encoded in one instruction word,
-the literal values follow each other in successive words.
-
-
-\subsection{Execution cycle}
-\label{execinst}
-
-{\tt NEXT} performs an instruction fetch when @PACKAGE_NAME@ runs out of
-instructions in the {\tt A} register.
-
-\begin{description}
-\inst{NEXT}{--}{Load the word pointed to by {\tt PC} into {\tt A} then add four to {\tt PC}.}
-\end{description}
+picture is omitted.
 
 
 \subsection{Stack manipulation}
@@ -514,16 +483,16 @@ RP} may only be accessed through special instructions:
 \inst{STORE\_SP}{a-addr --}{Set {\tt SP} to \spic{a-addr}.}
 \inst{PUSH\_RP}{-- a-addr}{\spic{a-addr} is the value of {\tt RP}.}
 \inst{STORE\_RP}{a-addr --}{Set {\tt RP} to \spic{a-addr}.}
-\inst{PUSH\_PC}{-- a-addr}{Push {\tt PC} on to the stack.}
+\inst{PUSH\_PC}{-- addr}{Push {\tt PC} on to the stack.}
 \inst{PUSH\_S0}{-- a-addr}{Push {\tt S0} on to the stack.}
 \inst{PUSH\_SSIZE}{-- u}{Push {\tt SSIZE} on to the stack.}
 \inst{PUSH\_R0}{-- a-addr}{Push {\tt R0} on to the stack.}
 \inst{PUSH\_RSIZE}{-- u}{Push {\tt RSIZE} on to the stack.}
-\inst{PUSH\_HANDLER}{-- a-addr}{Push {\tt HANDLER} on to the stack.}
-\inst{STORE\_HANDLER}{a-addr --}{Set {\tt HANDLER} to \spic{a-addr}.}
+\inst{PUSH\_HANDLER}{-- addr}{Push {\tt HANDLER} on to the stack.}
+\inst{STORE\_HANDLER}{addr --}{Set {\tt HANDLER} to \spic{addr}.}
 \inst{PUSH\_MEMORY}{-- a-addr}{Push {\tt MEMORY} on to the stack.}
-\inst{PUSH\_BADPC}{-- a-addr}{Push {\tt BADPC} on to the stack.}
-\inst{PUSH\_INVALID}{-- a-addr}{Push {\tt INVALID} on to the stack.}
+\inst{PUSH\_BADPC}{-- addr}{Push {\tt BADPC} on to the stack.}
+\inst{PUSH\_INVALID}{-- addr}{Push {\tt INVALID} on to the stack.}
 \inst{PUSH\_PSIZE}{-- u}{\spic{u} is the value of {\tt PSIZE}.}
 \end{description}
 
@@ -532,15 +501,23 @@ RP} may only be accessed through special instructions:
 \label{control}
 
 These instructions implement unconditional and conditional branches, and subroutine
-call and return.
+call and return; there is also a no-op.
+
+No-op:
+
+\nopagebreak
+
+\begin{description}
+\inst{NOP}{--}{Do nothing.}
+\end{description}
 
 Branches:
 
 \nopagebreak
 
 \begin{description}
-\inst{BRANCH}{a-addr --}{Set {\tt PC} to \spic{a-addr}, then perform the action of {\tt NEXT}.}
-\inst{BRANCHZ}{flag a-addr --}{If \spic{flag} is false then set {\tt PC} to \spic{a-addr} and perform the action of {\tt NEXT}.}
+\inst{BRANCH}{addr --}{Set {\tt PC} to \spic{addr}.}
+\inst{BRANCHZ}{flag addr --}{If \spic{flag} is false then set {\tt PC} to \spic{addr}.}
 \end{description}
 
 Subroutine call and return:
@@ -548,18 +525,16 @@ Subroutine call and return:
 \nopagebreak
 
 \begin{description}
-\instr{CALL}{\aaddr1 --}{ -- \aaddr2}{Push {\tt PC} on to the return stack, put \spic{\aaddr1} into {\tt PC}, then perform the action of {\tt NEXT}.}
-\instr{RET}{--}{a-addr --}{Put \spic{a-addr} into {\tt PC}, then perform the action of {\tt NEXT}.}
+\instr{CALL}{\aaddr1 --}{ -- \aaddr2}{Push {\tt PC} on to the return stack, put \spic{\aaddr1} into {\tt PC}.}
+\instr{RET}{--}{addr --}{Put \spic{addr} into {\tt PC}.}
 \end{description}
 
-\subsection{Literals}
+\subsection{Literal numbers}
 \label{literals}
 
-This instructions encodes literal values which are placed on the stack.
+Literal numbers are word quantities encoded by one or more bytes, as follows: the significant bits of the number are split into groups of six bits, starting at the least significant end. The chunks are stored in consecutive bytes. All but the last byte have the seventh bit set and eighth bit clear; the final byte has the top two bits either both set or both clear, to match the number’s most significant bit.
 
-\begin{description}
-\inst{LITERAL}{-- x}{Push the word pointed to by {\tt PC} on to the stack, then add four to {\tt PC}.}
-\end{description}
+When a literal is executed, it is pushed on to the stack, and execution resumes at the first byte that did not form part of the number.
 
 
 \subsection{Exceptions}
@@ -568,7 +543,7 @@ This instructions encodes literal values which are placed on the stack.
 These instructions give access to @PACKAGE_NAME@'s exception mechanisms.
 
 \begin{description}
-\inst{THROW}{--}{Put the contents of {\tt PC} into {\tt BADPC}, then load {\tt PC} from {\tt HANDLER}. Perform the action of {\tt NEXT}. If {\tt HANDLER} contains an out of range or unaligned address stop @PACKAGE_NAME@, returning reason code $-258$ to the calling program (see section~\ref{calls}).}
+\inst{THROW}{--}{Put the contents of {\tt PC} into {\tt BADPC}, then load {\tt PC} from {\tt HANDLER}.}
 \inst{HALT}{x --}{Stop @PACKAGE_NAME@, returning reason code \spic{x} to the calling program (see section~\ref{calls}). If {\tt SP} is out of range or unaligned, $-257$ is returned as the reason code.}
 \end{description}
 
@@ -586,29 +561,29 @@ These instructions allow access to @PACKAGE_NAME@'s libraries, the operating sys
 \subsection{Opcodes}
 \label{opcodes}
 
-Table~\ref{opcodetable} lists the opcodes in numerical order. Undefined opcodes raise exception $-256$.
+Table~\ref{opcodetable} lists the opcodes in numerical order. Undefined opcodes raise exception $-256$. Opcodes \$00–7F and \$C0–FF are used for literal numbers (see section~\ref{literals}).
 
 \begin{table}[htb]
 \begin{center}
 \begin{tabular}{*{3}{cc}} \toprule
 \bf Opcode & \bf Instruction & \bf Opcode & \bf
     Instruction & \bf Opcode & \bf Instruction \\ \midrule
-\opcodetbl{00/FF}{NEXT}	{10}{AND}	{20}{PUSH\_S0}
-\opcodetbl{01}{POP}	{11}{OR}	{21}{PUSH\_SSIZE}
-\opcodetbl{02}{PUSH}	{12}{XOR}	{22}{PUSH\_R0}
-\opcodetbl{03}{SWAP}	{13}{LSHIFT}	{23}{PUSH\_RSIZE}
-\opcodetbl{04}{RPUSH}	{14}{RSHIFT}	{24}{PUSH\_HANDLER}
-\opcodetbl{05}{POP2R}	{15}{LOAD}	{25}{STORE\_HANDLER}
-\opcodetbl{06}{RPOP}	{16}{STORE}	{26}{PUSH\_MEMORY}
-\opcodetbl{07}{LT}	{17}{LOADB}	{27}{PUSH\_BADPC}
-\opcodetbl{08}{EQ}	{18}{STOREB}	{28}{PUSH\_INVALID}
-\opcodetbl{09}{ULT}	{19}{PUSH\_SP}	{29}{CALL}
-\opcodetbl{0A}{ADD}	{1A}{STORE\_SP}	{2A}{RET}
-\opcodetbl{0B}{MUL}	{1B}{PUSH\_RP}	{2B}{THROW}
-\opcodetbl{0C}{UDIVMOD}	{1C}{STORE\_RP}	{2C}{HALT}
-\opcodetbl{0D}{DIVMOD}	{1D}{PUSH\_PC}	{2D}{LINK}
-\opcodetbl{0E}{NEGATE}	{1E}{BRANCH}	{2E}{LITERAL}
-\opcodetbl{0F}{INVERT}	{1F}{BRANCHZ}   {2F}{PUSH\_PSIZE}
+\opcodetbl{80}{NOP}	{90}{AND}	{A0}{PUSH\_PSIZE}
+\opcodetbl{81}{POP}	{91}{OR}	{A1}{PUSH\_SP}
+\opcodetbl{82}{PUSH}	{92}{XOR}	{A2}{STORE\_SP}
+\opcodetbl{83}{SWAP}	{93}{LSHIFT}	{A3}{PUSH\_RP}
+\opcodetbl{84}{RPUSH}	{94}{RSHIFT}	{A4}{STORE\_RP}
+\opcodetbl{85}{POP2R}	{95}{LOAD}	{A5}{PUSH\_PC}
+\opcodetbl{86}{RPOP}	{96}{STORE}	{A6}{PUSH\_S0}
+\opcodetbl{87}{LT}	{97}{LOADB}	{A7}{PUSH\_SSIZE}
+\opcodetbl{88}{EQ}	{98}{STOREB}	{A8}{PUSH\_R0}
+\opcodetbl{89}{ULT}	{99}{BRANCH}	{A9}{PUSH\_RSIZE}
+\opcodetbl{8A}{ADD}	{9A}{BRANCHZ}	{AA}{PUSH\_HANDLER}
+\opcodetbl{8B}{MUL}	{9B}{CALL}	{AB}{STORE\_HANDLER}
+\opcodetbl{8C}{UDIVMOD}	{9C}{RET}	{AC}{PUSH\_MEMORY}
+\opcodetbl{8D}{DIVMOD}	{9D}{THROW}	{AD}{PUSH\_BADPC}
+\opcodetbl{8E}{NEGATE}	{9E}{HALT}	{AE}{PUSH\_INVALID}
+\opcodetbl{8F}{INVERT}	{9F}{LINK}	{AF–BF}{undefined}
  \bottomrule
 \end{tabular}
 \caption{\label{opcodetable}@PACKAGE_NAME@'s opcodes}
@@ -619,7 +594,7 @@ Table~\ref{opcodetable} lists the opcodes in numerical order. Undefined opcodes 
 \section{External interface}
 
 @PACKAGE_NAME@'s external interface comes in three parts. The calling interface allows
-@PACKAGE_NAME@ to be controlled by other programs. The {\tt LINK} instruction and extra instructions mechanism allow implementations to provide access to system facilities, previously written code,
+@PACKAGE_NAME@ to be controlled by other programs. The {\tt LINK} instruction (see section~\ref{accessinst}) allows implementations to provide access to system facilities, previously written code,
 code written in other languages, and the speed of machine code in time-critical
 situations. The object module format allows compiled code to be saved, reloaded
 and shared between systems.

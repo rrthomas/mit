@@ -25,10 +25,9 @@ int main(void)
     init((WORD *)malloc(16384), 4096);
 
     start_ass(PC);
-    plit(test); ass(O_LINK); ass(O_LITERAL); lit(0);
+    plit(test); ass(O_LINK); lit(0);
     ass(O_HALT);
 
-    assert(single_step() == -259);   // load first instruction word
     WORD res = run();
     if (res != 0) {
         printf("Error in LINK tests: test aborted with return code %"PRId32"\n", res);

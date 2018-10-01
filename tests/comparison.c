@@ -1,6 +1,5 @@
-// Test the comparison operators. Also uses the NEXT instruction. We
-// only test simple cases here, assuming that the C compiler's comparison
-// routines will work for other cases.
+// Test the comparison operators. We only test simple cases here, assuming
+// that the C compiler's comparison routines will work for other cases.
 //
 // (c) Reuben Thomas 1994-2018
 //
@@ -43,17 +42,13 @@ static void step(unsigned start, unsigned end)
         for (unsigned i = start; i < end; i++) {
             single_step();
             printf("I = %s\n", disass(I));
-            if (I != O_NEXT00) {
-                printf("Result: %d; correct result: %d\n\n", LOAD_WORD(SP),
-                       correct[i - i / 5]);
-                if (correct[i - i / 5] != LOAD_WORD(SP)) {
-                    printf("Error in comparison tests: PC = %"PRIu32"\n", PC);
-                    exit(1);
-                }
-                (void)POP;	// drop result of comparison
+            printf("Result: %d; correct result: %d\n\n", LOAD_WORD(SP),
+                   correct[i]);
+            if (correct[i] != LOAD_WORD(SP)) {
+                printf("Error in comparison tests: PC = %"PRIu32"\n", PC);
+                exit(1);
             }
-            else
-                putchar('\n');
+            (void)POP;	// drop result of comparison
         }
 }
 
@@ -66,14 +61,12 @@ int main(void)
     ass(O_EQ); ass(O_EQ);
     ass(O_ULT); ass(O_ULT); ass(O_ULT); ass(O_ULT);
 
-    assert(single_step() == -259);   // load first instruction word
-
     stack1();       // set up the stack with four standard pairs to compare
-    step(0, 5);     // do the < tests
+    step(0, 4);     // do the < tests
     stack2();       // set up the stack with two standard pairs to compare
-    step(5, 7);     // do the = tests
+    step(4, 6);     // do the = tests
     stack1();       // set up the stack with four standard pairs to compare
-    step(7, 12);    // do the U< tests
+    step(6, 10);    // do the U< tests
 
     assert(exception == 0);
     printf("Comparison tests ran OK\n");

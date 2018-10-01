@@ -36,11 +36,6 @@ verify(sizeof(int) <= sizeof(WORD));
 #define WORD_IN_ONE_AREA(a)                             \
     (native_address_range_in_one_area((a), WORD_W, false) != NULL)
 
-#define CHECK_ALIGNED_WHOLE_WORD(a)                     \
-    CHECK_ADDRESS(a, IS_ALIGNED(a), -23, badadr)        \
-    CHECK_ADDRESS(a, WORD_IN_ONE_AREA(a), -9, badadr)
-
-
 #define DIVZERO(x)                              \
     if (x == 0) {                               \
         PUSH(-10);                              \
@@ -122,14 +117,11 @@ WORD single_step(void)
     WORD temp = 0, temp2 = 0;
     BYTE byte = 0;
 
-    I = (BYTE)A;
-    ARSHIFT(A, 8);
+    exception = load_byte(PC++, &I);
+    if (exception != 0)
+        goto badadr;
     switch (I) {
-    case O_NEXT00:
-    case O_NEXTFF:
- next:
-        PC += WORD_W;
-        exception = load_word(PC - WORD_W, &A);
+    case O_NOP:
         break;
     case O_POP:
         {
@@ -324,43 +316,21 @@ WORD single_step(void)
         }
         break;
     case O_BRANCH:
-        {
-            WORD addr = POP;
-            CHECK_ALIGNED_WHOLE_WORD(addr);
-            PC = addr;
-            goto next;
-        }
+        PC = POP;
         break;
     case O_BRANCHZ:
         {
             WORD addr = POP;
-            if (POP == PACKAGE_UPPER_FALSE) {
-                CHECK_ALIGNED_WHOLE_WORD(addr);
+            if (POP == PACKAGE_UPPER_FALSE)
                 PC = addr;
-                goto next;
-            }
             break;
         }
     case O_CALL:
-        {
-            WORD addr = POP;
-            CHECK_ALIGNED_WHOLE_WORD(addr);
-            PUSH_RETURN(PC);
-            PC = addr;
-            goto next;
-        }
+        PUSH_RETURN(PC);
+        PC = POP;
         break;
     case O_RET:
-        {
-            WORD addr = POP_RETURN;
-            CHECK_ALIGNED_WHOLE_WORD(addr);
-            PC = addr;
-            goto next;
-        }
-        break;
-    case O_LITERAL:
-        PUSH(LOAD_WORD(PC));
-        PC += WORD_W;
+        PC = POP_RETURN;
         break;
     case O_PUSH_PSIZE:
         PUSH(POINTER_W);
@@ -369,11 +339,8 @@ WORD single_step(void)
     case O_THROW:
         // exception may already be set, so WORD_STORE may have no effect here.
         BADPC = PC;
-        if (!WORD_IN_ONE_AREA(HANDLER) || !IS_ALIGNED(HANDLER))
-            return -258;
         PC = HANDLER;
         exception = 0; // Any exception has now been dealt with
-        goto next;
         break;
     case O_HALT:
         return POP;
@@ -396,11 +363,7 @@ WORD single_step(void)
         PUSH(HANDLER);
         break;
     case O_STORE_HANDLER:
-        {
-            WORD value = POP;
-            CHECK_ALIGNED(value);
-            HANDLER = value;
-        }
+        HANDLER = POP;
         break;
     case O_PUSH_MEMORY:
         PUSH(MEMORY);
@@ -582,8 +545,36 @@ WORD single_step(void)
         break;
 
     default:
+        // Undefined instruction
+        if (I >= O_UNDEFINED && I <= O_UNDEFINED_END)
+            goto undefined;
+
+        // Literal number
+        {
+            unsigned bits = 0;
+            WORD n = 0;
+
+            // Continuation bytes
+            for (; (I & ~LITERAL_CHUNK_MASK) == 0x40; LOAD_I) {
+                n |= (I & LITERAL_CHUNK_MASK) << bits;
+                bits += LITERAL_CHUNK_BIT;
+            }
+
+            // Check for missing end byte
+            if ((I & ~LITERAL_CHUNK_MASK) == 0x80)
+                goto undefined;
+
+            n |= I << bits;
+            bits += BYTE_BIT;
+            n = ARSHIFT(n << (WORD_BIT - bits), WORD_BIT - bits);
+            PUSH(n);
+        }
+        break;
+
+ undefined:
         PUSH(-256);
         goto throw;
+        break;
     }
     if (exception == 0)
         return -259; // terminated OK

@@ -70,7 +70,13 @@ uint8_t *native_address_range_in_one_area(UWORD start, UWORD length, bool writab
 
 // Portable arithmetic right shift (the behaviour of >> on signed
 // quantities is implementation-defined in C99)
-#define ARSHIFT(n, p) ((n) = ((n) >> (p)) | (-((n) < 0) << (WORD_BIT - p)))
+#define ARSHIFT(n, p) (((n) >> (p)) | (-((n) < 0) << (WORD_BIT - p)))
+
+#define LOAD_I (exception = (load_byte(PC++, &I)))
+
+// Literals
+#define LITERAL_CHUNK_BIT 6
+#define LITERAL_CHUNK_MASK ((1 << LITERAL_CHUNK_BIT) - 1)
 
 
 #endif

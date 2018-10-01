@@ -252,43 +252,19 @@ static void double_arg(char *s, long long *start, long long *end, bool default_a
 }
 
 
-static int load_op(BYTE o)
-{
-    return o == O_LITERAL;
-}
-
 static void disassemble(UWORD start, UWORD end)
 {
-    for (UWORD p = start; p < end; ) {
+    for (UWORD p = start; p < end; p++) {
         printf("$%08"PRIX32": ", p);
-        WORD a;
-        load_word(p, &a);
-        p += WORD_W;
 
-        do {
-            BYTE i = (BYTE)a;
-            ARSHIFT(a, 8);
-            const char *token = disass(i);
-            if (strcmp(token, ""))
-                printf("%s", token);
-            else
-                printf("Undefined instruction");
-
-            if (load_op(i)) {
-                WORD lit;
-                load_word(p, &lit);
-                if (i != O_LITERAL)
-                    printf(" $%"PRIX32, (UWORD)lit);
-                else
-                    printf(" %"PRId32" ($%"PRIX32")", lit, (UWORD)lit);
-                p += WORD_W;
-            }
-
-            printf("\n");
-            if (a == 0 || a == -1)
-                break;
-            printf("           ");
-        } while (1);
+        BYTE i;
+        load_byte(p, &i);
+        const char *token = disass(i);
+        if (strcmp(token, "") != 0)
+            printf("%s", token);
+        else
+            printf("Undefined instruction");
+        putchar('\n');
     }
 }
 
@@ -334,9 +310,6 @@ static void do_assign(char *token)
 
     int no = search(token, regist, registers);
     switch (no) {
-        case r_A:
-            A = value;
-            break;
         case r_INVALID:
             INVALID = value;
             break;
@@ -391,9 +364,6 @@ static void do_display(size_t no, const char *format)
     char *display;
 
     switch (no) {
-        case r_A:
-            display = xasprintf("A = $%"PRIX32, (UWORD)A);
-            break;
         case r_INVALID:
             display = xasprintf("INVALID = $%"PRIX32" (%"PRIu32")", INVALID, INVALID);
             break;
@@ -442,7 +412,6 @@ static void do_registers(void)
 {
     do_display(r_PC, "%-25s");
     do_display(r_I, "%-22s");
-    do_display(r_A, "%-16s");
     putchar('\n');
 }
 
@@ -466,14 +435,14 @@ static void do_command(int no)
         break;
     case c_COUNTS:
         {
-            for (int i = 0; i < 92; i++) {
+            for (int i = 0x60; i <= 0x7f; i++) {
                 printf("%10s: %7ld", disass(i), count[i]);
-                if ((i + 1) % 4)
-                    putchar(' ');
-                else
-                    putchar('\n');
+                putchar((i + 1) % 4 ? ' ' : '\n');
             }
-            printf("%10s: %7ld\n", disass(255), count[255]);
+            for (int i = 0xe0; i < O_UNDEFINED; i++) {
+                printf("%10s: %7ld", disass(i), count[i]);
+                putchar((i + 1) % 4 ? ' ' : '\n');
+            }
         }
         break;
     case c_DISASSEMBLE:
@@ -518,18 +487,6 @@ static void do_command(int no)
                 start += chunk;
                 printf(" |%.*s|\n", chunk, ascii);
             }
-        }
-        break;
-    case c_FROM:
-        {
-            char *arg = strtok(NULL, " ");
-            if (arg != NULL) {
-                long adr = single_arg(arg, NULL);
-                PC = adr;
-            }
-            WORD ret = single_step();
-            if (ret)
-                printf("HALT code %"PRId32" was returned\n", ret);
         }
         break;
     case c_INITIALISE:

@@ -30,16 +30,14 @@ int main(void)
 
     start_ass(PC);
     ass(O_LSHIFT); ass(O_POP2R); ass(O_RSHIFT); ass(O_RPOP);
-    ass(O_OR); ass(O_INVERT); ass(O_LITERAL); lit(1);
-    ass(O_LITERAL); lit(-1);
+    ass(O_OR); ass(O_INVERT); lit(1);
+    lit(-1);
     ass(O_XOR); ass(O_AND);
 
-    assert(single_step() == -259);   // load first instruction word
-
-    for (size_t i = 0; i - i / 5 < sizeof(correct) / sizeof(correct[0]); i++) {
+    for (size_t i = 0; i < sizeof(correct) / sizeof(correct[0]); i++) {
         show_data_stack();
-        printf("Correct stack: %s\n\n", correct[i - i / 5]);
-        if (strcmp(correct[i - i / 5], val_data_stack())) {
+        printf("Correct stack: %s\n\n", correct[i]);
+        if (strcmp(correct[i], val_data_stack())) {
             printf("Error in logic tests: PC = %"PRIu32"\n", PC);
             exit(1);
         }

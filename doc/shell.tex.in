@@ -44,11 +44,7 @@ There are two main ways to access the shell: either start {\tt @PACKAGE@} with n
 \section{Initialisation}
 \label{uifaceinit}
 
-When the virtual machine is started, an embedded @PACKAGE_NAME@ is created. The registers are initialised as described in~\cite[section~\ref{usingcalls}]{c@PACKAGE@}; additionally, {\tt HANDLER} is set to \$0, and {\tt I} is uninitialised. {\tt A} is set to zero: this has the effect that when a {\tt STEP} or {\tt RUN} command is given, a {\tt NEXT} instruction
-will be performed. Thus, when initialisation is performed by a {\tt LOAD}
-command (see section~\ref{uifaceload}), the @PACKAGE_NAME@ may be started with {\tt
-RUN} or {\tt STEP} immediately after the {\tt LOAD} command, without the need
-for {\tt FROM}. The main memory is zeroed.
+When the virtual machine is started, an embedded @PACKAGE_NAME@ is created. The registers are initialised as described in~\cite[section~\ref{usingcalls}]{c@PACKAGE@}; additionally, {\tt HANDLER} is set to \$0, and {\tt I} is uninitialised. The main memory is zeroed.
 
 
 \section{Commands}
@@ -98,8 +94,7 @@ registers may also (where appropriate) be assigned to using the syntax
 message is displayed if an attempt is made to assign to a register such as
 {\tt ENDISM}, which cannot be assigned to, or to assign an unaligned or out
 of range address to a register which must hold an aligned address, such as
-{\tt SP}. The {\tt FROM} command (see section~\ref{from}) should be used in
-preference to assigning to {\tt EP}.
+{\tt SP}.
 
 Two additional pseudo-registers are provided by the shell: they are
 called {\tt S0} and {\tt R0}, and are the address of the base of the data and
@@ -107,8 +102,7 @@ return stacks respectively. They are set to the initial values of {\tt RP}
 and {\tt SP}, and are provided so that they can be changed if the stacks are
 moved, so the stack display commands will still work correctly.
 
-The command {\tt REGISTERS} displays the contents of {\tt EP}, {\tt I} and
-{\tt A}, useful when following the execution of a program.
+The command {\tt REGISTERS} displays the contents of {\tt PC} and {\tt I}, useful when following the execution of a program.
 
 \subsection{Stacks}
 
@@ -146,15 +140,7 @@ range or unaligned, an appropriate error message is displayed.
 {\tt PLITERAL} \angb{number}
 \end{center}
 
-Code and literal data values may be directly assembled into memory. Assembly starts at the last value explicitly assigned to {\tt EP} in the shell, defaulting to \$0 whenever @PACKAGE_NAME@ is initialised (see section~\ref{uifaceinit}). An opcode or byte literal ({\tt BLITERAL}) takes one byte, and a word literal ({\tt LITERAL}) is stored in the next whole word. {\tt PLITERAL} assembles the instructions required to push the given native pointer on to the stack in the form required for the {\tt LINK} instruction.
-
-Each word is always filled before moving on to the next available word, so for example the sequence
-
-\begin{center}
-{\tt (LITERAL)} {\tt ,} {\tt \$12345678} {\tt +}
-\end{center}
-
-\noindent assembles the two instructions {\tt (LITERAL)} and {\tt +} in consecutive bytes, and then the word \$12345678.
+Code and literal data values may be directly assembled into memory. Assembly starts at the last value explicitly assigned to {\tt PC} in the shell, defaulting to \$0 whenever @PACKAGE_NAME@ is initialised (see section~\ref{uifaceinit}). An opcode or byte literal ({\tt BLITERAL}) takes one byte, and a word literal ({\tt LITERAL}) as many bytes as required. {\tt PLITERAL} assembles the literals required to push the given native pointer on to the stack in the form required for the {\tt LINK} instruction.
 
 \subsection{Memory}
 
@@ -171,7 +157,7 @@ which may be used in the two forms
 \end{center}
 
 \noindent where the first displays \angb{number} bytes (or $256$ if the number is omitted) starting at address
-\angb{address} (or $64$ bytes before {\tt EP} if the address is omitted, or $0$ if that would be negative), and the second displays memory from address \angb{address_1}
+\angb{address} (or $64$ bytes before {\tt PC} if the address is omitted, or $0$ if that would be negative), and the second displays memory from address \angb{address_1}
 up to, but not including, address \angb{address_2}. An error message is
 displayed if the start address is less than or equal to the end address or if
 either address is out of range.
@@ -203,7 +189,7 @@ three forms:
 
 With no argument, {\tt STEP} executes one instruction. Given a number, {\tt
 STEP} executes \angb{number} instructions. {\tt STEP TO} executes
-instructions until {\tt EP} is equal to \angb{address}.
+instructions until {\tt PC} is equal to \angb{address}.
 
 The command {\tt TRACE}, has the same syntax as {\tt STEP}, and performs the
 same function; in addition, it performs the action of the {\tt REGISTERS}
@@ -214,19 +200,6 @@ instruction, if ever. The code passed to {\tt HALT} is then displayed. The
 code is also displayed if a {\tt HALT} instruction is ever executed during a
 {\tt STEP} command.
 
-\label{from}
-The command {\tt FROM} sets the point of execution:
-
-\begin{center}
-{\tt FROM} [\angb{address}]
-\end{center}
-
-With no argument, {\tt FROM} performs the function of @PACKAGE_NAME@'s {\tt NEXT}
-instruction, that is, it loads {\tt A} from the word pointed to by {\tt EP},
-and adds four to {\tt EP}. With an argument, {\tt FROM} sets {\tt EP} to
-\angb{address}, and then performs the function of {\tt NEXT}. {\tt FROM}
-should be used in preference to assigning directly to {\tt EP}.
-
 The command {\tt DISASSEMBLE} disassembles @PACKAGE@ code. It may be used in the
 two forms
 
@@ -236,7 +209,7 @@ two forms
 \end{center}
 
 \noindent where the first disassembles \angb{number} bytes (or $64$ if the number is omitted) starting at address
-\angb{address} (or $16$ bytes before {\tt EP}, or $0$ if that would be negative, if the address is omitted), and the second from address \angb{address_1} up to, but not
+\angb{address} (or $16$ bytes before {\tt PC}, or $0$ if that would be negative, if the address is omitted), and the second from address \angb{address_1} up to, but not
 including, address \angb{address_2}. The addresses must be word-aligned, and
 the number of bytes must be a multiple of four. An error message is displayed
 if the start address is less than or equal to the end address, or if either

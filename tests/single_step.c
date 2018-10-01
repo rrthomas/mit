@@ -18,15 +18,14 @@ int main(void)
 
     init((WORD *)calloc(1024, 1), 256);
 
-    assert(single_step() == -259);
-
     for (int i = 0; i < 10; i++) {
         printf("PC = %u\n", PC);
         single_step();
     }
 
-    printf("PC should now be 44\n");
-    if (PC != 44) {
+    const UWORD final_pc = 10;
+    printf("PC should now be %"PRIu32"\n", final_pc);
+    if (PC != final_pc) {
         printf("Error in single_step() tests: PC = %"PRIu32"\n", PC);
         exit(1);
     }

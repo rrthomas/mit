@@ -1,4 +1,4 @@
-// Test the stack operators. Also uses the NEXT instruction.
+// Test the stack operators.
 //
 // (c) Reuben Thomas 1994-2018
 //
@@ -28,23 +28,21 @@ int main(void)
     start_ass(PC);
 
     // First part
-    ass(O_LITERAL); lit(0); ass(O_PUSH); ass(O_LITERAL); lit(1); ass(O_POP);
-    ass(O_LITERAL); lit(1); ass(O_SWAP); ass(O_LITERAL); lit(1); ass(O_PUSH);
-    ass(O_LITERAL); lit(1); ass(O_SWAP); ass(O_LITERAL); lit(1); ass(O_POP);
-    ass(O_LITERAL); lit(0); ass(O_PUSH);
+    lit(0); ass(O_PUSH); lit(1); ass(O_POP);
+    lit(1); ass(O_SWAP); lit(1); ass(O_PUSH);
+    lit(1); ass(O_SWAP); lit(1); ass(O_POP);
+    lit(0); ass(O_PUSH);
 
     // Second part
-    ass(O_PUSH); ass(O_PUSH); ass(O_LITERAL); lit(0); ass(O_PUSH);
-    ass(O_LITERAL); lit(0); ass(O_PUSH); ass(O_POP2R); ass(O_LITERAL);
+    ass(O_PUSH); ass(O_PUSH); lit(0); ass(O_PUSH);
+    lit(0); ass(O_PUSH); ass(O_POP2R);
     lit(0); ass(O_RPUSH); ass(O_RPOP);
 
-    assert(single_step() == -259);   // load first instruction word
-
     size_t i;
-    for (i = 0; i < 17; i++) {
+    for (i = 0; i < 14; i++) {
         show_data_stack();
-        printf("Correct stack: %s\n\n", correct[i - i / 5]);
-        if (strcmp(correct[i - i / 5], val_data_stack())) {
+        printf("Correct stack: %s\n\n", correct[i]);
+        if (strcmp(correct[i], val_data_stack())) {
             printf("Error in stack tests: PC = %"PRIu32"\n", PC);
             exit(1);
         }
@@ -57,10 +55,10 @@ int main(void)
     printf("Next stack is wrong!\n");
 
     size_t first = i;
-    for (; i - i / 5 < sizeof(correct) / sizeof(correct[0]); i++) {
+    for (; i < sizeof(correct) / sizeof(correct[0]); i++) {
         show_data_stack();
-        printf("Correct stack: %s\n\n", correct[i - i / 5]);
-        if (strcmp(correct[i - i / 5], val_data_stack()) && i != first) {
+        printf("Correct stack: %s\n\n", correct[i]);
+        if (strcmp(correct[i], val_data_stack()) && i != first) {
             printf("Error in stack tests: PC = %"PRIu32"\n", PC);
             exit(1);
         }

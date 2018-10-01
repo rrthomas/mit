@@ -1,4 +1,4 @@
-// Test the LITERAL instruction. Also uses the NEXT instruction.
+// Test literals.
 //
 // (c) Reuben Thomas 1994-2018
 //
@@ -17,18 +17,24 @@ const char *correct[] = { "", "-257", "-257 12345678" };
 int main(void)
 {
     int exception = 0;
+    BYTE b;
 
     init((WORD *)calloc(1024, 1), 256);
 
     start_ass(PC);
-    ass(O_LITERAL); lit(-257); ass(O_LITERAL); lit(12345678);
+    printf("here = %"PRIu32"\n", ass_current());
+    lit(-257);
+    printf("here = %"PRIu32"\n", ass_current());
+    lit(12345678);
+    printf("here = %"PRIu32"\n", ass_current());
 
-    assert(single_step() == -259);   // load first instruction word
+    load_byte(0, &b);
+    printf("byte at 0 is %x\n", b);
 
-    for (size_t i = 0; i - i / 5 < sizeof(correct) / sizeof(correct[0]); i++) {
+    for (size_t i = 0; i < sizeof(correct) / sizeof(correct[0]); i++) {
         show_data_stack();
-        printf("Correct stack: %s\n\n", correct[i - i / 5]);
-        if (strcmp(correct[i - i / 5], val_data_stack())) {
+        printf("Correct stack: %s\n\n", correct[i]);
+        if (strcmp(correct[i], val_data_stack())) {
             printf("Error in literals tests: PC = %"PRIu32"\n", PC);
             exit(1);
         }

@@ -13,7 +13,7 @@
 #define PACKAGE_UPPER_DEBUG
 
 
-int byte_size(WORD v); // return number of significant bytes in a WORD quantity
+unsigned byte_size(WORD v); // return number of significant bytes in a WORD quantity
 
 void ass(BYTE instr);	// assemble an instruction
 void lit(WORD literal);	// assemble a word literal

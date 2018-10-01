@@ -26,7 +26,6 @@
 
 UWORD PC;
 BYTE I;
-WORD A;
 UWORD SP, RP;
 UWORD HASHS = DEFAULT_STACK_SIZE;
 UWORD S0, R0;
@@ -180,8 +179,10 @@ int load_word(UWORD addr, WORD *value)
 int load_byte(UWORD addr, BYTE *value)
 {
     uint8_t *ptr = native_address(FLIP(addr), false);
-    if (ptr == NULL)
+    if (ptr == NULL) {
+        INVALID = addr;
         return -9;
+    }
     *value = *ptr;
     return 0;
 }
@@ -306,7 +307,6 @@ int init(WORD *memory, size_t size)
         return -2;
 
     PC = 0;
-    A = 0;
     S0 = SP = DATA_STACK_SEGMENT;
     R0 = RP = RETURN_STACK_SEGMENT;
     HANDLER = 0;

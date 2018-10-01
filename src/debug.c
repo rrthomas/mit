@@ -26,18 +26,15 @@
 #include "opcodes.h"
 
 
-static int ibytes; // number of opcodes assembled in current instruction word so far
-static WORD iword;  // accumulator for instructions being assembled
-static UWORD current;	// where the current instruction word will be stored
-static UWORD here; // where we assemble the next instruction word or literal
+static UWORD here;	// where the current instruction word will be stored
 
 
-// Return number of bytes required for a WORD-sized quantity
+// Find most-significant bit set in a WORD-sized quantity
 // After https://stackoverflow.com/questions/2589096/find-most-significant-bit-left-most-that-is-set-in-a-bit-array
 verify(WORD_BIT == 32); // Code is hard-wired for 32 bits
-_GL_ATTRIBUTE_CONST int byte_size(WORD v)
+static _GL_ATTRIBUTE_CONST unsigned find_msbit(WORD v)
 {
-    static const int pos[32] = {
+    static const unsigned pos[32] = {
         0, 9, 1, 10, 13, 21, 2, 29, 11, 14, 16, 18, 22, 25, 3, 30,
         8, 12, 20, 28, 15, 17, 24, 7, 19, 27, 23, 6, 26, 5, 4, 31
     };
@@ -51,55 +48,50 @@ _GL_ATTRIBUTE_CONST int byte_size(WORD v)
     v |= v >> 8;
     v |= v >> 16;
 
-    return pos[(UWORD)(v * 0x07C4ACDDU) >> 27] / 8 + 1;
+    return pos[(UWORD)(v * 0x07C4ACDDU) >> 27];
+}
+
+// Return number of bytes required for a WORD-sized quantity
+_GL_ATTRIBUTE_CONST unsigned byte_size(WORD v)
+{
+    return find_msbit(v) / 8 + 1;
 }
 
 void ass(BYTE instr)
 {
-    iword |= instr << ibytes * 8;
-    store_word(current, iword);
-    ibytes++;
-    if (ibytes == WORD_W) {
-        current = here;  here += WORD_W;
-        iword = 0;  ibytes = 0;
-    }
+    store_byte(here++, instr);
 }
 
-void lit(WORD literal)
+void lit(WORD v)
 {
-    if (ibytes == 0) { store_word(here - WORD_W, literal);  current += WORD_W; }
-    else { store_word(here, literal); }
-    here += WORD_W;
+    // Continuation bytes
+    for (unsigned bits = find_msbit(v) + 1; bits > LITERAL_CHUNK_BIT; bits -= LITERAL_CHUNK_BIT) {
+        store_byte(here++, (BYTE)(v & LITERAL_CHUNK_MASK) | 0x40);
+        v = ARSHIFT(v, LITERAL_CHUNK_BIT);
+    }
+
+    // Last (or only) byte
+    store_byte(here++, (BYTE)v);
 }
 
 void plit(void (*literal)(void))
 {
-    WORD_pointer address;
-    unsigned i;
-    address.pointer = literal;
-    for (i = 0; i < POINTER_W; i++) {
-        ass(O_LITERAL);
+    WORD_pointer address = { .pointer = literal };
+    for (unsigned i = 0; i < POINTER_W; i++)
         lit(address.words[i]);
-    }
 }
 
 void start_ass(UWORD addr)
 {
-    here = addr;  ibytes = 0;  iword = 0;  current = here;  here += WORD_W;
+    here = addr;
 }
 
 _GL_ATTRIBUTE_PURE UWORD ass_current(void)
 {
-    return current;
+    return here;
 }
 
 static const char *mnemonic[UINT8_MAX + 1] = {
-    "NEXT00", "POP", "PUSH", "SWAP", "RPUSH", ">R", "R>", "<",
-    "=", "U<", "+", "*", "UMOD/", "SREM/", "NEGATE", "INVERT",
-    "AND", "OR", "XOR", "LSHIFT", "RSHIFT", "@", "!", "C@",
-    "C!", "SP@", "SP!", "RP@", "RP!", "PC@", "PC!", "?PC!",
-    "S0@", "#S", "R0@", "#R", "'THROW@", "'THROW!", "MEMORY@", "'BAD@",
-    "-ADDRESS@", "CALL", "RET", "THROW", "HALT", "LINK", "(LITERAL)", "PUSH_PSIZE",
     NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
     NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
     NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
@@ -116,6 +108,12 @@ static const char *mnemonic[UINT8_MAX + 1] = {
     NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
     NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
     NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+    "NOP", "POP", "PUSH", "SWAP", "RPUSH", "POP2R", "RPOP", "LT",
+    "EQ", "ULT", "ADD", "MUL", "UDIVMOD", "DIVMOD", "NEGATE", "INVERT",
+    "AND", "OR", "XOR", "LSHIFT", "RSHIFT", "LOAD", "STORE", "LOADB",
+    "STOREB", "BRANCH", "BRANCHZ", "CALL", "RET", "THROW", "HALT", "LINK",
+    "PUSH_PSIZE", "PUSH_SP", "STORE_SP", "PUSH_RP", "STORE_RP", "PUSH_PC", "PUSH_S0", "PUSH_S0",
+    "PUSH_SSIZE", "PUSH_R0", "PUSH_RSIZE", "PUSH_HANDLER", "STORE_HANDLER", "PUSH_MEMORY", "PUSH_BADPC", "PUSH_INVALID",
     NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
     NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
     NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
@@ -125,11 +123,13 @@ static const char *mnemonic[UINT8_MAX + 1] = {
     NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
     NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
     NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-    NULL, NULL, NULL, NULL, NULL, NULL, NULL, "NEXTFF" };
+    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
 
 _GL_ATTRIBUTE_CONST const char *disass(BYTE opcode)
 {
-    if (mnemonic[opcode] == NULL) return "";
+    if (opcode <= 0x7f || opcode >= 0xc0)
+        return "literal"; // FIXME: be more precise!
+    if (mnemonic[opcode] == NULL) return "undefined";
     return mnemonic[opcode];
 }
 

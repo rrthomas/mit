@@ -15,9 +15,9 @@
 #include "tests.h"
 
 
-unsigned correct[] = { 4, 8, 100, 104, 52, 56, 10004, 10008, 10012, 10012, 10016, 10020, 10024,
-                       10024, 10028, 10032, 10036, 11004, 11008, 11012, 11020, 11024, 64, 68,
-                       204, 208, 304, 212, 72, 76, 80, 84, 84, 88, 92, 92, 92, 92, 96, 68 };
+unsigned correct[] = { 0, 2, 96, 97, 48, 51, 10000, 10001, 10004, 10005, 10006, 10007, 10008,
+                       10009, 10012, 11000, 11001, 11004, 11016, 11017, 60, 62,
+                       200, 202, 300, 203, 63, 65, 66, 67, 68, 69, 70, 71, 72, 64 };
 
 
 int main(void)
@@ -28,44 +28,42 @@ int main(void)
     init((WORD *)calloc(size, WORD_W), size);
 
     start_ass(PC);
-    ass(O_LITERAL); lit(96); ass(O_BRANCH);
+    lit(96); ass(O_BRANCH);
 
     start_ass(96);
-    ass(O_LITERAL); lit(48); ass(O_BRANCH);
+    lit(48); ass(O_BRANCH);
 
     start_ass(48);
-    ass(O_LITERAL); lit(10000); ass(O_BRANCH);
+    lit(10000); ass(O_BRANCH);
 
     start_ass(10000);
-    ass(O_LITERAL); lit(1);
-    ass(O_LITERAL); lit(10008); ass(O_BRANCHZ);
-    ass(O_LITERAL); lit(1);
-    ass(O_LITERAL); lit(0); ass(O_BRANCHZ); ass(O_LITERAL); lit(0);
-    ass(O_LITERAL); lit(11000); ass(O_BRANCHZ);
+    lit(1);
+    lit(10008); ass(O_BRANCHZ);
+    lit(1);
+    lit(0); ass(O_BRANCHZ); lit(0);
+    lit(11000); ass(O_BRANCHZ);
 
     start_ass(11000);
-    ass(O_LITERAL); lit(0);
-    ass(O_LITERAL); lit(11016); ass(O_BRANCHZ);
+    lit(0);
+    lit(11016); ass(O_BRANCHZ);
 
     start_ass(11016);
-    ass(O_LITERAL); lit(60);
+    lit(60);
     ass(O_CALL);
 
     start_ass(60);
-    ass(O_LITERAL); lit(200); ass(O_CALL); ass(O_NEXT00); ass(O_NEXT00);
-    ass(O_LITERAL); lit(64);
-    ass(O_LITERAL); lit(20);
-    ass(O_LITERAL); lit(1); ass(O_SWAP); ass(O_LITERAL); lit(1); ass(O_PUSH); ass(O_STORE); ass(O_LOAD);
+    lit(200); ass(O_CALL);
+    lit(64);
+    lit(20);
+    lit(1); ass(O_SWAP); lit(1); ass(O_PUSH); ass(O_STORE); ass(O_LOAD);
     ass(O_CALL);
 
     start_ass(200);
-    ass(O_LITERAL); lit(300); ass(O_CALL); ass(O_NEXT00); ass(O_NEXT00);
+    lit(300); ass(O_CALL);
     ass(O_RET);
 
     start_ass(300);
     ass(O_RET);
-
-    assert(single_step() == -259);   // load first instruction word
 
     for (size_t i = 0; i < sizeof(correct) / sizeof(correct[0]); i++) {
         printf("Instruction %zu: PC = %u; should be %u\n\n", i, PC, correct[i]);

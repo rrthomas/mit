@@ -13,7 +13,7 @@
 
 
 enum {
-    O_NEXT00,
+    O_NOP = 0x80,
     O_POP,
     O_PUSH,
     O_SWAP,
@@ -38,13 +38,19 @@ enum {
     O_STORE,
     O_LOADB,
     O_STOREB,
+    O_BRANCH,
+    O_BRANCHZ,
+    O_CALL,
+    O_RET,
+    O_THROW,
+    O_HALT,
+    O_LINK,
+    O_PUSH_PSIZE,
     O_PUSH_SP,
     O_STORE_SP,
     O_PUSH_RP,
     O_STORE_RP,
     O_PUSH_PC,
-    O_BRANCH,
-    O_BRANCHZ,
     O_PUSH_S0,
     O_PUSH_SSIZE,
     O_PUSH_R0,
@@ -54,15 +60,8 @@ enum {
     O_PUSH_MEMORY,
     O_PUSH_BADPC,
     O_PUSH_INVALID,
-    O_CALL,
-    O_RET,
-    O_THROW,
-    O_HALT,
-    O_LINK,
-    O_LITERAL,
-    O_PUSH_PSIZE,
-    O_UNDEFINED = 0x7f, // Not part of the spec, just an arbitrary undefined opcode
-    O_NEXTFF = 0xff
+    O_UNDEFINED, // Not part of the spec
+    O_UNDEFINED_END = 0xbf
 };
 
 enum {
