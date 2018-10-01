@@ -50,9 +50,9 @@ extern UWORD MEMORY;
 extern UWORD SP, RP;
 extern UWORD S0, R0;
 extern UWORD HASHS, HASHR;
-extern UWORD THROW;
-extern UWORD BAD;
-extern UWORD NOT_ADDRESS;
+extern UWORD HANDLER;
+extern UWORD BADPC;
+extern UWORD INVALID;
 
 // Memory access
 

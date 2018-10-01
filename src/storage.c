@@ -31,10 +31,10 @@ UWORD SP, RP;
 UWORD HASHS = DEFAULT_STACK_SIZE;
 UWORD S0, R0;
 UWORD HASHR = DEFAULT_STACK_SIZE;
-UWORD THROW;
+UWORD HANDLER;
 UWORD MEMORY;
-UWORD BAD;
-UWORD NOT_ADDRESS;
+UWORD BADPC;
+UWORD INVALID;
 
 
 // Memory allocation and mapping
@@ -150,7 +150,7 @@ UWORD mem_align(void)
 int load_word(UWORD addr, WORD *value)
 {
     if (!IS_ALIGNED(addr)) {
-        NOT_ADDRESS = addr;
+        INVALID = addr;
         return -23;
     }
 
@@ -169,7 +169,7 @@ int load_word(UWORD addr, WORD *value)
     for (unsigned i = 0; i < WORD_W; i++, addr++) {
         ptr = native_address(addr, false);
         if (ptr == NULL) {
-            NOT_ADDRESS = addr;
+            INVALID = addr;
             return -9;
         }
         ((BYTE *)value)[ENDISM ? WORD_W - i : i] = *ptr;
@@ -189,7 +189,7 @@ int load_byte(UWORD addr, BYTE *value)
 int store_word(UWORD addr, WORD value)
 {
     if (!IS_ALIGNED(addr)) {
-        NOT_ADDRESS = addr;
+        INVALID = addr;
         return -23;
     }
 
@@ -214,10 +214,10 @@ int store_byte(UWORD addr, BYTE value)
 {
     Mem_area *a = mem_range(FLIP(addr), 1);
     if (a == NULL) {
-        NOT_ADDRESS = addr;
+        INVALID = addr;
         return -9;
     } else if (!a->writable) {
-        NOT_ADDRESS = addr;
+        INVALID = addr;
         return -20;
     }
     *addr_in_area(a, FLIP(addr)) = value;
@@ -309,9 +309,9 @@ int init(WORD *memory, size_t size)
     A = 0;
     S0 = SP = DATA_STACK_SEGMENT;
     R0 = RP = RETURN_STACK_SEGMENT;
-    THROW = 0;
-    BAD = WORD_MAX;
-    NOT_ADDRESS = WORD_MAX;
+    HANDLER = 0;
+    BADPC = WORD_MAX;
+    INVALID = WORD_MAX;
 
     return 0;
 }

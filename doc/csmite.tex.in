@@ -78,10 +78,10 @@ memory for @PACKAGE_NAME@, nor does it initialise any of the registers. C @PACKA
 provides the interface call {\bf @PACKAGE@\_init()} to do this (see
 section~\ref{usingcalls}).
 
-The variables {\tt EP}, {\tt I}, {\tt A}, {\tt MEMORY}, {\tt SP}, {\tt RP}, {\tt THROW}, {\tt BAD} and {\tt ADDRESS}
+The variables {\tt EP}, {\tt I}, {\tt A}, {\tt MEMORY}, {\tt SP}, {\tt RP}, {\tt HANDLER}, {\tt BADPC} and {\tt INVALID}
 correspond exactly with the @PACKAGE_NAME@ registers they represent, and may be read
 and assigned to accordingly, bearing in mind the restrictions on their use
-given in~\cite{@PACKAGE@}. {\tt THROW}, {\tt BAD} and {\tt ADDRESS} are mapped into @PACKAGE_NAME@'s memory, so they are automatically updated when the corresponding memory locations are written to, and vice versa.
+given in~\cite{@PACKAGE@}. {\tt HANDLER}, {\tt BADPC} and {\tt INVALID} are mapped into @PACKAGE_NAME@'s memory, so they are automatically updated when the corresponding memory locations are written to, and vice versa.
 
 C @PACKAGE_NAME@ provides the ability to map native memory blocks into @PACKAGE_NAME@’s address space; see below.
 

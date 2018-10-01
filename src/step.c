@@ -368,10 +368,10 @@ WORD single_step(void)
  throw:
     case O_THROW:
         // exception may already be set, so WORD_STORE may have no effect here.
-        BAD = PC;
-        if (!WORD_IN_ONE_AREA(THROW) || !IS_ALIGNED(THROW))
+        BADPC = PC;
+        if (!WORD_IN_ONE_AREA(HANDLER) || !IS_ALIGNED(HANDLER))
             return -258;
-        PC = THROW;
+        PC = HANDLER;
         exception = 0; // Any exception has now been dealt with
         goto next;
         break;
@@ -393,23 +393,23 @@ WORD single_step(void)
         PUSH(HASHR);
         break;
     case O_PUSH_HANDLER:
-        PUSH(THROW);
+        PUSH(HANDLER);
         break;
     case O_STORE_HANDLER:
         {
             WORD value = POP;
             CHECK_ALIGNED(value);
-            THROW = value;
+            HANDLER = value;
         }
         break;
     case O_PUSH_MEMORY:
         PUSH(MEMORY);
         break;
     case O_PUSH_BADPC:
-        PUSH(BAD);
+        PUSH(BADPC);
         break;
     case O_PUSH_INVALID:
-        PUSH(NOT_ADDRESS);
+        PUSH(INVALID);
         break;
     case O_LINK:
         {

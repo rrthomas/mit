@@ -98,14 +98,14 @@ int main(void)
 
     test[testno++] = ass_current();
     fprintf(stderr, "Test %d: PC = %u\n", testno, ass_current());
-    // test 12: test invalid 'THROW contents
+    // test 12: test invalid HANDLER contents
     ass(O_LITERAL); lit(0xffffffec);
     ass(O_LITERAL); lit(0); ass(O_PUSH); ass(O_STORE_HANDLER); ass(O_THROW);
 
     start_ass(200);
     ass(O_HALT);
 
-    THROW = 200;   // set address of exception handler
+    HANDLER = 200;   // set address of exception handler
 
     UWORD error = 0;
     for (size_t i = 0; i < sizeof(test) / sizeof(test[0]); i++) {
@@ -116,15 +116,15 @@ int main(void)
         assert(single_step() == -259);   // load first instruction word
         WORD res = run();
 
-        if (result[i] != res || (result[i] != 0 && bad[i] != BAD) ||
+        if (result[i] != res || (result[i] != 0 && bad[i] != BADPC) ||
             ((result[i] <= -257 || result[i] == -9 || result[i] == -23) &&
-             address[i] != NOT_ADDRESS)) {
+             address[i] != INVALID)) {
              printf("Error in exceptions tests: test %zu failed; PC = %"PRIu32"\n", i + 1, PC);
              printf("Return code is %d; should be %d\n", res, result[i]);
              if (result[i] != 0)
-                 printf("'BAD = %"PRIu32"; should be %"PRIu32"\n", BAD, bad[i]);
+                 printf("BADPC = %"PRIu32"; should be %"PRIu32"\n", BADPC, bad[i]);
              if (result[i] <= -257 || result[i] == -9 || result[i] == -23)
-                 printf("-ADDRESS = %"PRIX32"; should be %"PRIX32"\n", NOT_ADDRESS, address[i]);
+                 printf("INVALID = %"PRIX32"; should be %"PRIX32"\n", INVALID, address[i]);
              error++;
         }
         putchar('\n');

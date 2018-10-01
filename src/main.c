@@ -337,17 +337,17 @@ static void do_assign(char *token)
         case r_A:
             A = value;
             break;
-        case r_NOT_ADDRESS:
-            NOT_ADDRESS = value;
+        case r_INVALID:
+            INVALID = value;
             break;
-        case r_BAD:
-            BAD = value;
+        case r_BADPC:
+            BADPC = value;
             break;
         case r_ENDISM:
         case r_MEMORY:
             fatal("cannot assign to %s", regist[no]);
             break;
-        case r_EP:
+        case r_PC:
             PC = value;
             start_ass(PC);
             break;
@@ -368,8 +368,8 @@ static void do_assign(char *token)
         case r_S0:
             S0 = value;
             break;
-        case r_THROW:
-            THROW = value;
+        case r_HANDLER:
+            HANDLER = value;
             break;
         default:
             {
@@ -394,16 +394,16 @@ static void do_display(size_t no, const char *format)
         case r_A:
             display = xasprintf("A = $%"PRIX32, (UWORD)A);
             break;
-        case r_NOT_ADDRESS:
-            display = xasprintf("-ADDRESS = $%"PRIX32" (%"PRIu32")", NOT_ADDRESS, NOT_ADDRESS);
+        case r_INVALID:
+            display = xasprintf("INVALID = $%"PRIX32" (%"PRIu32")", INVALID, INVALID);
             break;
-        case r_BAD:
-            display = xasprintf("'BAD = $%"PRIX32" (%"PRIu32")", BAD, BAD);
+        case r_BADPC:
+            display = xasprintf("BADPC = $%"PRIX32" (%"PRIu32")", BADPC, BADPC);
             break;
         case r_ENDISM:
             display = xasprintf("ENDISM = %d", ENDISM);
             break;
-        case r_EP:
+        case r_PC:
             display = xasprintf("PC = $%"PRIX32" (%"PRIu32")", PC, PC);
             break;
         case r_I:
@@ -424,8 +424,8 @@ static void do_display(size_t no, const char *format)
         case r_S0:
             display = xasprintf("S0 = $%"PRIX32" (%"PRIu32")", S0, S0);
             break;
-        case r_THROW:
-            display = xasprintf("'THROW = $%"PRIX32" (%"PRIu32")", THROW, THROW);
+        case r_HANDLER:
+            display = xasprintf("HANDLER = $%"PRIX32" (%"PRIu32")", HANDLER, HANDLER);
             break;
         default:
             display = xasprintf("unknown register");
@@ -440,7 +440,7 @@ static void do_display(size_t no, const char *format)
 
 static void do_registers(void)
 {
-    do_display(r_EP, "%-25s");
+    do_display(r_PC, "%-25s");
     do_display(r_I, "%-22s");
     do_display(r_A, "%-16s");
     putchar('\n');

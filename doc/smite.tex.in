@@ -192,7 +192,7 @@ Before @PACKAGE_NAME@ is started, {\tt ENDISM} should be set to $0$ or $1$ accor
 \bf Register & \bf Initial value \\ \midrule
 {\tt PC} & \$0 \\
 {\tt A} & \$0 \\
-{\tt THROW} & \$0 \\
+{\tt HANDLER} & \$0 \\
 {\tt BADPC} & {\$FFFFFFFF} \\
 {\tt INVALID} & {\$FFFFFFFF} \\ \bottomrule
 \end{tabular}

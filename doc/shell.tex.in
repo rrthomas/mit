@@ -44,7 +44,7 @@ There are two main ways to access the shell: either start {\tt @PACKAGE@} with n
 \section{Initialisation}
 \label{uifaceinit}
 
-When the virtual machine is started, an embedded @PACKAGE_NAME@ is created. The registers are initialised as described in~\cite[section~\ref{usingcalls}]{c@PACKAGE@}; additionally, {\tt 'THROW} is set to \$0, and {\tt I} is uninitialised. {\tt A} is set to zero: this has the effect that when a {\tt STEP} or {\tt RUN} command is given, a {\tt NEXT} instruction
+When the virtual machine is started, an embedded @PACKAGE_NAME@ is created. The registers are initialised as described in~\cite[section~\ref{usingcalls}]{c@PACKAGE@}; additionally, {\tt HANDLER} is set to \$0, and {\tt I} is uninitialised. {\tt A} is set to zero: this has the effect that when a {\tt STEP} or {\tt RUN} command is given, a {\tt NEXT} instruction
 will be performed. Thus, when initialisation is performed by a {\tt LOAD}
 command (see section~\ref{uifaceload}), the @PACKAGE_NAME@ may be started with {\tt
 RUN} or {\tt STEP} immediately after the {\tt LOAD} command, without the need
@@ -60,18 +60,6 @@ commonly used commands the shortest minimum abbreviations, and commands
 take precedence over registers.
 Alternatively, if you have {\tt @PACKAGE@i} (which uses {\tt rlwrap}), you can use Tab-completion (press the Tab key to show possible commands and instructions starting with the letters you have typed so far).
 All commands are case-insensitive.
-
-The following registers are renamed for ease of typing:
-% FIXME: Accept original names too
-
-\begin{center}
-\begin{tabular}{cc} \toprule
-\bf Register & \bf Name in shell \\ \midrule
-{\tt 'THROW} & {\tt THROW} \\
-{\tt 'BAD} & {\tt BAD} \\
-{\tt -ADDRESS} & {\tt NOT\_ADDRESS} \\ \bottomrule
-\end{tabular}
-\end{center}
 
 If an unrecognised command is given, or the command has too few arguments, or
 they are badly formed, an error message is displayed. Command lines

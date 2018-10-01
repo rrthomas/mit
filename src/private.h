@@ -19,7 +19,7 @@
 // Address checking
 #define CHECK_ADDRESS(a, cond, code, label)     \
     if (!(cond)) {                              \
-        NOT_ADDRESS = a;                        \
+        INVALID = a;                            \
         exception = code;                       \
         goto label;                             \
     }
