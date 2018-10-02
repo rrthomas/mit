@@ -11,14 +11,6 @@
 \usepackage[utf8x]{inputenc}
 \usepackage{a4,newpxtext,booktabs,hyperref}
 
-% Alter some default parameters for general typesetting
-
-\parindent=0pt
-\parskip=1.5ex plus 0.5ex
-\topskip=0pt
-
-\frenchspacing
-
 
 % Macros for this document
 

@@ -11,9 +11,6 @@
 \usepackage[utf8x]{inputenc}
 \usepackage{a4,newpxtext,booktabs,url,xr}
 
-% Alter some default parameters for general typesetting
-
-\frenchspacing
 
 % Allow external cross-references
 \externaldocument{@PACKAGE@}
