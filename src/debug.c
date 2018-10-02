@@ -163,7 +163,7 @@ static char *_val_data_stack(bool with_hex)
             free(picture);
             picture = ptr;
             if (with_hex) {
-                ptr = xasprintf("%s ($%"PRIX32") ", picture, (UWORD)c);
+                ptr = xasprintf("%s (0x%"PRIX32") ", picture, (UWORD)c);
                 free(picture);
                 picture = ptr;
             }
@@ -208,7 +208,7 @@ void show_return_stack(void)
                 printf("invalid address!\n");
                 break;
             }
-            printf("$%"PRIX32" ", (UWORD)c);
+            printf("0x%"PRIX32" ", (UWORD)c);
         }
         putchar('\n');
     }

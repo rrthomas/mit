@@ -93,8 +93,8 @@ Two calls are provided to access command-line arguments passed to C @PACKAGE_NAM
 \begin{center}
 \begin{tabular}{S[table-format=2.0]lll} \toprule
 \bf Code & \bf Name & \bf Stack effect & \bf Description \\ \midrule
-\$0 & {\tt ARGC} & \spic{-- u} & the number of arguments \\
-\$1 & {\tt ARG} & \spic{u1 -- c-addr u2} & the \spic{u1}th argument \\ \bottomrule
+0x0 & {\tt ARGC} & \spic{-- u} & the number of arguments \\
+0x1 & {\tt ARG} & \spic{u1 -- c-addr u2} & the \spic{u1}th argument \\ \bottomrule
 \end{tabular}
 \end{center}
 
@@ -105,9 +105,9 @@ These extra instructions provide access to POSIX standard input, output and erro
 \begin{center}
 \begin{tabular}{S[table-format=2.0]l} \toprule
 \bf Opcode & \bf POSIX file descriptor \\ \midrule
-\$2 & {\tt STDIN\_FILENO} \\
-\$3 & {\tt STDOUT\_FILENO} \\
-\$4 & {\tt STDERR\_FILENO} \\ \bottomrule
+0x2 & {\tt STDIN\_FILENO} \\
+0x3 & {\tt STDOUT\_FILENO} \\
+0x4 & {\tt STDERR\_FILENO} \\ \bottomrule
 \end{tabular}
 \end{center}
 
@@ -118,18 +118,18 @@ The file system extra instructions correspond directly to ANS Forth words, as de
 \begin{center}
 \begin{tabular}{S[table-format=2.0]l} \toprule
 \bf Opcode & \bf Forth word \\ \midrule
-\$5 & {\tt OPEN-FILE} \\
-\$6 & {\tt CLOSE-FILE} \\
-\$7 & {\tt READ-FILE} \\
-\$8 & {\tt WRITE-FILE} \\
-\$9 & {\tt FILE-POSITION} \\
-\$A & {\tt REPOSITION-FILE} \\
-\$B & {\tt FLUSH-FILE} \\
-\$C & {\tt RENAME-FILE} \\
-\$D & {\tt DELETE-FILE} \\
-\$E & {\tt FILE-SIZE} \\
-\$F & {\tt RESIZE-FILE} \\
-\$10 & {\tt FILE-STATUS} \\
+0x5 & {\tt OPEN-FILE} \\
+0x6 & {\tt CLOSE-FILE} \\
+0x7 & {\tt READ-FILE} \\
+0x8 & {\tt WRITE-FILE} \\
+0x9 & {\tt FILE-POSITION} \\
+0xa & {\tt REPOSITION-FILE} \\
+0xb & {\tt FLUSH-FILE} \\
+0xc & {\tt RENAME-FILE} \\
+0xd & {\tt DELETE-FILE} \\
+0xe & {\tt FILE-SIZE} \\
+0xf & {\tt RESIZE-FILE} \\
+0x10 & {\tt FILE-STATUS} \\
 \bottomrule
 \end{tabular}
 \end{center}

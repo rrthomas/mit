@@ -191,7 +191,7 @@ static BYTE parse_instruction(const char *token)
 
 static long long parse_number(const char *s, char **endp)
 {
-    return s[0] == '$' ? strtoll(s + 1, endp, 16) :
+    return (s[0] == '0' && s[1] == 'x') ? strtoll(s + 2, endp, 16) :
         strtoll(s, endp, 10);
 }
 
@@ -246,7 +246,7 @@ static void double_arg(char *s, long long *start, long long *end, bool default_a
 static void disassemble(UWORD start, UWORD end)
 {
     for (UWORD p = start; p < end; p++) {
-        printf("$%08"PRIX32": ", p);
+        printf("0x%08"PRIX32": ", p);
 
         BYTE i;
         load_byte(p, &i);
@@ -356,37 +356,37 @@ static void do_display(size_t no, const char *format)
 
     switch (no) {
         case r_INVALID:
-            display = xasprintf("INVALID = $%"PRIX32" (%"PRIu32")", INVALID, INVALID);
+            display = xasprintf("INVALID = 0x%"PRIX32" (%"PRIu32")", INVALID, INVALID);
             break;
         case r_BADPC:
-            display = xasprintf("BADPC = $%"PRIX32" (%"PRIu32")", BADPC, BADPC);
+            display = xasprintf("BADPC = 0x%"PRIX32" (%"PRIu32")", BADPC, BADPC);
             break;
         case r_ENDISM:
             display = xasprintf("ENDISM = %d", ENDISM);
             break;
         case r_PC:
-            display = xasprintf("PC = $%"PRIX32" (%"PRIu32")", PC, PC);
+            display = xasprintf("PC = 0x%"PRIX32" (%"PRIu32")", PC, PC);
             break;
         case r_I:
-            display = xasprintf("I = %-10s ($%02X)", disass(I), I);
+            display = xasprintf("I = %-10s (0x%02X)", disass(I), I);
             break;
         case r_MEMORY:
-            display = xasprintf("MEMORY = $%"PRIX32" (%"PRIu32")", MEMORY, MEMORY);
+            display = xasprintf("MEMORY = 0x%"PRIX32" (%"PRIu32")", MEMORY, MEMORY);
             break;
         case r_RP:
-            display = xasprintf("RP = $%"PRIX32" (%"PRIu32")", RP, RP);
+            display = xasprintf("RP = 0x%"PRIX32" (%"PRIu32")", RP, RP);
             break;
         case r_R0:
-            display = xasprintf("R0 = $%"PRIX32" (%"PRIu32")", R0, R0);
+            display = xasprintf("R0 = 0x%"PRIX32" (%"PRIu32")", R0, R0);
             break;
         case r_SP:
-            display = xasprintf("SP = $%"PRIX32" (%"PRIu32")", SP, SP);
+            display = xasprintf("SP = 0x%"PRIX32" (%"PRIu32")", SP, SP);
             break;
         case r_S0:
-            display = xasprintf("S0 = $%"PRIX32" (%"PRIu32")", S0, S0);
+            display = xasprintf("S0 = 0x%"PRIX32" (%"PRIu32")", S0, S0);
             break;
         case r_HANDLER:
-            display = xasprintf("HANDLER = $%"PRIX32" (%"PRIu32")", HANDLER, HANDLER);
+            display = xasprintf("HANDLER = 0x%"PRIX32" (%"PRIu32")", HANDLER, HANDLER);
             break;
         default:
             display = xasprintf("unknown register");
@@ -447,7 +447,7 @@ static void do_command(int no)
     case c_DFROM:
         {
             WORD value = POP;
-            printf("%"PRId32" ($%"PRIX32")\n", value, (UWORD)value);
+            printf("%"PRId32" (0x%"PRIX32")\n", value, (UWORD)value);
         }
         break;
     case c_DATA:
@@ -462,7 +462,7 @@ static void do_command(int no)
             double_arg(strtok(NULL, ""), &start, &end, true);
             check_range(start, end, "Address");
             while (start < end) {
-                printf("$%08lX ", (unsigned long)start);
+                printf("0x%08lX ", (unsigned long)start);
                 const int chunk = 16;
                 char ascii[chunk];
                 for (int i = 0; i < chunk && start < end; i++) {
@@ -520,7 +520,7 @@ static void do_command(int no)
     case c_RFROM:
         {
             WORD value = POP_RETURN;
-            printf("$%"PRIX32" (%"PRId32")\n", (UWORD)value, value);
+            printf("0x%"PRIX32" (%"PRId32")\n", (UWORD)value, value);
         }
         break;
     c_ret:
@@ -552,7 +552,7 @@ static void do_command(int no)
                         count[I]++;
                     }
                     if (ret != 0)
-                        printf("HALT code %"PRId32" was returned at PC = $%X\n",
+                        printf("HALT code %"PRId32" was returned at PC = 0x%X\n",
                                ret, PC);
                 } else {
                     unsigned long long limit = single_arg(arg, NULL), i;
@@ -692,12 +692,12 @@ static void parse(char *input)
                 if (!IS_ALIGNED(adr)) {
                     BYTE b;
                     load_byte(adr, &b);
-                    display = xasprintf("$%"PRIX32": $%X (%d) (byte)", (UWORD)adr,
+                    display = xasprintf("0x%"PRIX32": 0x%X (%d) (byte)", (UWORD)adr,
                                         b, b);
                 } else {
                     WORD c;
                     load_word(adr, &c);
-                    display = xasprintf("$%"PRIX32": $%"PRIX32" (%"PRId32") (word)", (UWORD)adr,
+                    display = xasprintf("0x%"PRIX32": 0x%"PRIX32" (%"PRId32") (word)", (UWORD)adr,
                                         (UWORD)c, c);
                 }
                 printf("%s\n", display);

@@ -54,9 +54,9 @@
 
 % Lay out a line of the opcode table
 
-\newcommand{\opcodetbl}[6]{\$#1 & {\tt #2} & \$#3 & {\tt #4} & \$#5 & {\tt #6}
+\newcommand{\opcodetbl}[6]{0x#1 & {\tt #2} & 0x#3 & {\tt #4} & 0x#5 & {\tt #6}
 \\}
-\newcommand{\opcodetbltwo}[4]{\$#1 & {\tt #2} & \$#3 & {\tt #4} \\}
+\newcommand{\opcodetbltwo}[4]{0x#1 & {\tt #2} & 0x#3 & {\tt #4} \\}
 
 
 \title{The @PACKAGE_NAME@ Virtual Machine}
@@ -73,7 +73,7 @@ interface calls are shown in {\bf Bold} type, and followed by empty parentheses.
 
 Addresses are given in bytes and refer to @PACKAGE_NAME@'s address space except where
 stated. Addresses are written in hexadecimal; hex numbers are prefixed with
-“\$”.
+“0x”.
 
 
 \section{Introduction}
@@ -180,10 +180,10 @@ Before @PACKAGE_NAME@ is started, {\tt ENDISM} should be set to $0$ or $1$ accor
 \begin{center}
 \begin{tabular}{cc} \toprule
 \bf Register & \bf Initial value \\ \midrule
-{\tt PC} & \$0 \\
-{\tt HANDLER} & \$0 \\
-{\tt BADPC} & {\$FFFFFFFF} \\
-{\tt INVALID} & {\$FFFFFFFF} \\ \bottomrule
+{\tt PC} & 0 \\
+{\tt HANDLER} & 0 \\
+{\tt BADPC} & {0xffffffff} \\
+{\tt INVALID} & {0xffffffff} \\ \bottomrule
 \end{tabular}
 \caption{\label{inittable}Registers with prescribed initial values}
 \end{center}
@@ -553,29 +553,29 @@ These instructions allow access to @PACKAGE_NAME@'s libraries, the operating sys
 \subsection{Opcodes}
 \label{opcodes}
 
-Table~\ref{opcodetable} lists the opcodes in numerical order. Undefined opcodes raise exception $-256$. Opcodes \$00–7F and \$C0–FF are used for literal numbers (see section~\ref{literals}).
+Table~\ref{opcodetable} lists the opcodes in numerical order. Undefined opcodes raise exception $-256$. Opcodes 0x00–0x7f and 0xc0–0xff are used for literal numbers (see section~\ref{literals}).
 
 \begin{table}[htb]
 \begin{center}
 \begin{tabular}{*{3}{cc}} \toprule
 \bf Opcode & \bf Instruction & \bf Opcode & \bf
     Instruction & \bf Opcode & \bf Instruction \\ \midrule
-\opcodetbl{80}{NOP}	{90}{AND}	{A0}{PUSH\_PSIZE}
-\opcodetbl{81}{POP}	{91}{OR}	{A1}{PUSH\_SP}
-\opcodetbl{82}{PUSH}	{92}{XOR}	{A2}{STORE\_SP}
-\opcodetbl{83}{SWAP}	{93}{LSHIFT}	{A3}{PUSH\_RP}
-\opcodetbl{84}{RPUSH}	{94}{RSHIFT}	{A4}{STORE\_RP}
-\opcodetbl{85}{POP2R}	{95}{LOAD}	{A5}{PUSH\_PC}
-\opcodetbl{86}{RPOP}	{96}{STORE}	{A6}{PUSH\_S0}
-\opcodetbl{87}{LT}	{97}{LOADB}	{A7}{PUSH\_SSIZE}
-\opcodetbl{88}{EQ}	{98}{STOREB}	{A8}{PUSH\_R0}
-\opcodetbl{89}{ULT}	{99}{BRANCH}	{A9}{PUSH\_RSIZE}
-\opcodetbl{8A}{ADD}	{9A}{BRANCHZ}	{AA}{PUSH\_HANDLER}
-\opcodetbl{8B}{MUL}	{9B}{CALL}	{AB}{STORE\_HANDLER}
-\opcodetbl{8C}{UDIVMOD}	{9C}{RET}	{AC}{PUSH\_MEMORY}
-\opcodetbl{8D}{DIVMOD}	{9D}{THROW}	{AD}{PUSH\_BADPC}
-\opcodetbl{8E}{NEGATE}	{9E}{HALT}	{AE}{PUSH\_INVALID}
-\opcodetbl{8F}{INVERT}	{9F}{LINK}	{AF–BF}{undefined}
+\opcodetbl{80}{NOP}	{90}{AND}	{a0}{PUSH\_PSIZE}
+\opcodetbl{81}{POP}	{91}{OR}	{a1}{PUSH\_SP}
+\opcodetbl{82}{PUSH}	{92}{XOR}	{a2}{STORE\_SP}
+\opcodetbl{83}{SWAP}	{93}{LSHIFT}	{a3}{PUSH\_RP}
+\opcodetbl{84}{RPUSH}	{94}{RSHIFT}	{a4}{STORE\_RP}
+\opcodetbl{85}{POP2R}	{95}{LOAD}	{a5}{PUSH\_PC}
+\opcodetbl{86}{RPOP}	{96}{STORE}	{a6}{PUSH\_S0}
+\opcodetbl{87}{LT}	{97}{LOADB}	{a7}{PUSH\_SSIZE}
+\opcodetbl{88}{EQ}	{98}{STOREB}	{a8}{PUSH\_R0}
+\opcodetbl{89}{ULT}	{99}{BRANCH}	{a9}{PUSH\_RSIZE}
+\opcodetbl{8a}{ADD}	{9a}{BRANCHZ}	{aa}{PUSH\_HANDLER}
+\opcodetbl{8b}{MUL}	{9b}{CALL}	{ab}{STORE\_HANDLER}
+\opcodetbl{8c}{UDIVMOD}	{9c}{RET}	{ac}{PUSH\_MEMORY}
+\opcodetbl{8d}{DIVMOD}	{9d}{THROW}	{ad}{PUSH\_BADPC}
+\opcodetbl{8e}{NEGATE}	{9e}{HALT}	{ae}{PUSH\_INVALID}
+\opcodetbl{8f}{INVERT}	{9f}{LINK}	{af–0xbf}{undefined}
  \bottomrule
 \end{tabular}
 \caption{\label{opcodetable}@PACKAGE_NAME@'s opcodes}
@@ -596,7 +596,7 @@ and shared between systems.
 \label{object}
 
 The first seven bytes of an object module should be the ASCII codes of the letters
-``@PACKAGE@'' padded with ASCII NULs (\$00), then the one-byte contents of
+``@PACKAGE@'' padded with ASCII NULs (0x00), then the one-byte contents of
 the {\tt ENDISM} register of the system which saved the module. The next word should contain the number of words the code occupies. The number must have
 the same endianness as that indicated in the previous byte. Then follows the
 code, which must fill a whole number of words.

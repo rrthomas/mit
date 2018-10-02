@@ -41,7 +41,7 @@ There are two main ways to access the shell: either start {\tt @PACKAGE@} with n
 \section{Initialisation}
 \label{uifaceinit}
 
-When the virtual machine is started, an embedded @PACKAGE_NAME@ is created. The registers are initialised as described in~\cite[section~\ref{usingcalls}]{c@PACKAGE@}; additionally, {\tt HANDLER} is set to \$0, and {\tt I} is uninitialised. The main memory is zeroed.
+When the virtual machine is started, an embedded @PACKAGE_NAME@ is created. The registers are initialised as described in~\cite[section~\ref{usingcalls}]{c@PACKAGE@}; additionally, {\tt HANDLER} is set to~0, and {\tt I} is uninitialised. The main memory is zeroed.
 
 
 \section{Commands}
@@ -60,7 +60,7 @@ containing extraneous characters after a valid command are generally
 accepted, and the extra characters ignored.
 
 Numbers are all integral, and may be given in either decimal or hexadecimal
-(which must be preceded by ``\$''), with an optional minus
+(which must be preceded by ``0x''), with an optional minus
 sign.
 
 For some arguments a machine instruction may also be used, preceded by ``{\tt
@@ -136,7 +136,7 @@ range or unaligned, an appropriate error message is displayed.
 {\tt PLITERAL} \angb{number}
 \end{center}
 
-Code and literal data values may be directly assembled into memory. Assembly starts at the last value explicitly assigned to {\tt PC} in the shell, defaulting to \$0 whenever @PACKAGE_NAME@ is initialised (see section~\ref{uifaceinit}). An opcode or byte literal ({\tt BLITERAL}) takes one byte, and a word literal ({\tt LITERAL}) as many bytes as required. {\tt PLITERAL} assembles the literals required to push the given native pointer on to the stack in the form required for the {\tt LINK} instruction.
+Code and literal data values may be directly assembled into memory. Assembly starts at the last value explicitly assigned to {\tt PC} in the shell, defaulting to~0 whenever @PACKAGE_NAME@ is initialised (see section~\ref{uifaceinit}). An opcode or byte literal ({\tt BLITERAL}) takes one byte, and a word literal ({\tt LITERAL}) as many bytes as required. {\tt PLITERAL} assembles the literals required to push the given native pointer on to the stack in the form required for the {\tt LINK} instruction.
 
 \subsection{Memory}
 
@@ -222,7 +222,7 @@ The command
 \begin{center}{\tt LOAD} \angb{file} [\angb{address}]\end{center}
 
 \noindent initialises @PACKAGE_NAME@ as in section~\ref{uifaceinit}, then loads the object
-module in file \angb{file} into memory at address \angb{address} (or address \$0 if the argument is omitted). The address
+module in file \angb{file} into memory at address \angb{address} (or address~0 if the argument is omitted). The address
 must be word-aligned; if it is not, or if the module would not fit in memory
 at the address given, or there is some filing error, an error message is
 displayed.
