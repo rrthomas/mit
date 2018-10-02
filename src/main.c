@@ -147,15 +147,6 @@ static void check_valid(UWORD adr, const char *quantity)
         fatal("%s is invalid", quantity);
 }
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wsuggest-attribute=pure"
-static void check_aligned(UWORD adr, const char *quantity)
-{
-    if (!IS_ALIGNED(adr))
-        fatal("%s must be word-aligned", quantity);
-}
-#pragma GCC diagnostic pop
-
 static void check_range(UWORD start, UWORD end, const char *quantity)
 {
     check_valid(start, quantity);
@@ -449,8 +440,6 @@ static void do_command(int no)
         {
             long long start = (PC <= 16 ? 0 : PC - 16), end = 64;
             double_arg(strtok(NULL, ""), &start, &end, true);
-            check_aligned(start, "Address");
-            check_aligned(end, "Address");
             check_range(start, end, "Address");
             disassemble((UWORD)start, (UWORD)end);
         }
@@ -557,7 +546,6 @@ static void do_command(int no)
                 if (strcmp(arg, "TO") == 0) {
                     unsigned long long limit = single_arg(strtok(NULL, " "), NULL);
                     check_valid(limit, "Address");
-                    check_aligned(limit, "Address");
                     while ((unsigned long)PC != limit && ret == -259) {
                         ret = single_step();
                         if (no == c_TRACE) do_registers();

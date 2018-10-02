@@ -207,10 +207,9 @@ two forms
 
 \noindent where the first disassembles \angb{number} bytes (or $64$ if the number is omitted) starting at address
 \angb{address} (or $16$ bytes before {\tt PC}, or $0$ if that would be negative, if the address is omitted), and the second from address \angb{address_1} up to, but not
-including, address \angb{address_2}. The addresses must be word-aligned, and
-the number of bytes must be a multiple of four. An error message is displayed
+including, address \angb{address_2}.  An error message is displayed
 if the start address is less than or equal to the end address, or if either
-the address or number of bytes is not aligned or is out of range.
+the address or number of bytes is out of range.
 
 The command {\tt COUNTS} displays the number of times
 that each @PACKAGE_NAME@ instruction has been executed during {\tt STEP} or {\tt TRACE} execution since the last initialisation
