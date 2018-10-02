@@ -94,8 +94,8 @@ A small interface is provided for other programs to control @PACKAGE_NAME@.
 
 \section{Architecture}
 
-@PACKAGE_NAME@'s address unit is the byte, which is eight bits wide.
-Words are four bytes wide. The word is the size of the numbers
+@PACKAGE_NAME@'s address unit is the byte, which is eight bits.
+Words are four bytes. The word is the size of the numbers
 and addresses on which @PACKAGE_NAME@ operates, and of the items placed on the stacks.
 The word size is fixed to ensure compatibility of object code between
 implementations on different machines; the size of the byte
@@ -142,7 +142,7 @@ The registers, each with its function, are set out in table~\ref{regtable}.
 \end{center}
 \end{table}
 
-All of the registers are word-wide quantities except for {\tt I} and {\tt ENDISM}, which are one byte wide.
+All of the registers are word quantities except for {\tt I} and {\tt ENDISM}, which are one byte.
 
 To ease efficient implementation, the registers may only be accessed
 by instructions (see section~\ref{registerinst}); not all registers are accessible, and only a few are writable.

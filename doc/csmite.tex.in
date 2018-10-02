@@ -223,8 +223,8 @@ which are useful for programming with @PACKAGE_NAME@:
 flag.
 \item[{\tt @PACKAGE_UPPER@\_FALSE}:] a word with all bits clear, which @PACKAGE_NAME@ uses as a
 false flag.
-\item[{\tt @PACKAGE@\_WORD\_W}:] the width of a word in bytes (4).
-\item[{\tt @PACKAGE@\_POINTER\_W}:] the width of a machine pointer in words.
+\item[{\tt @PACKAGE@\_WORD\_W}:] the number of bytes in a word.
+\item[{\tt @PACKAGE@\_POINTER\_W}:] the number of words in a machine pointer.
 \item[{\tt @PACKAGE@\_WORD\_pointer}:] a union with members {\tt @PACKAGE@\_WORD words[@PACKAGE@\_POINTER\_W]} and {\tt void (*pointer)(void)}, which allow a function pointer suitable for the {\tt LINK} instruction to be easily stored and retrieved. It is assumed that the pointer is pushed on to the stack starting with {\tt words[0]} and ending with {\tt words[@PACKAGE@\_POINTER\_W~$-$~1]}.
 \end{description}
 

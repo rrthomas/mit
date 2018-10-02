@@ -65,8 +65,7 @@ sign.
 
 For some arguments a machine instruction may also be used, preceded by ``{\tt
 O}'', for opcode. The value of a machine instruction is its opcode. Opcodes
-are byte-wide values; when used as a word, the most significant three bytes
-are set to zero.
+are byte values; when used as a word the least significant byte holds the opcode and the rest are zero.
 
 The syntax of the commands is shown below; literal text such as command names
 and other characters are shown in {\tt Typewriter font}; meta-parameters such
