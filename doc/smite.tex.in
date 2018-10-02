@@ -121,7 +121,7 @@ The registers, each with its function, are set out in table~\ref{regtable}.
 {\tt I} & The {\tt I}nstruction. Holds the opcode of an instruction
     to be executed. \\
 {\tt MEMORY} & The size in bytes of @PACKAGE_NAME@'s main memory,
-    which must be a multiple of four. \\
+    which must be a whole number of words. \\
 {\tt SP} & The data {\tt S}tack {\tt P}ointer. \\
 {\tt RP} & The {\tt R}eturn stack {\tt P}ointer. \\
 {\tt S0} & The data {\tt S}tack base. \\
@@ -597,8 +597,7 @@ and shared between systems.
 
 The first seven bytes of an object module should be the ASCII codes of the letters
 ``@PACKAGE@'' padded with ASCII NULs (\$00), then the one-byte contents of
-the {\tt ENDISM} register of the system which saved the module. The next four
-bytes should contain the number of words the code occupies. The number must have
+the {\tt ENDISM} register of the system which saved the module. The next word should contain the number of words the code occupies. The number must have
 the same endianness as that indicated in the previous byte. Then follows the
 code, which must fill a whole number of words.
 
