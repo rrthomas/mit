@@ -45,6 +45,7 @@ enum {
     O_THROW,
     O_HALT,
     O_LINK,
+    O_EXTRA,
     O_PUSH_PSIZE,
     O_PUSH_SP,
     O_STORE_SP,

@@ -546,36 +546,37 @@ These instructions give access to @PACKAGE_NAME@'s exception mechanisms.
 These instructions allow access to @PACKAGE_NAME@'s libraries, the operating system and native machine code.
 
 \begin{description}
-\inst{LINK}{i*x --}{Make a subroutine call to the routine at the address given (in the host machine's format, padded out to a number of words) on the data stack. The size and format of this address are machine-dependent. If the address given is $0$, perform implementation-dependent actions; for example, this can be used to implement system-dependent functionality such as I/O.}
+\inst{LINK}{i*x --}{Make a subroutine call to the routine at the address given (in the host machine's format, padded out to a number of words) on the data stack. The size and format of this address are machine-dependent.}
+\inst{EXTRA}{i*x -- j*x}{Perform implementation-dependent actions; for example, this can be used to implement system-dependent functionality such as I/O.}
 \end{description}
 
 
 \subsection{Opcodes}
 \label{opcodes}
 
-Table~\ref{opcodetable} lists the opcodes in numerical order. Undefined opcodes raise exception $-256$. Opcodes 0x00–0x7f and 0xc0–0xff are used for literal numbers (see section~\ref{literals}).
+Table~\ref{opcodetable} lists the opcodes in numerical order. Undefined opcodes raise exception $-256$. Opcodes 0x00–0x7f and 0xc0–0xff are used for literal numbers (see section~\ref{literals}). Other opcodes are undefined.
 
 \begin{table}[htb]
 \begin{center}
 \begin{tabular}{*{3}{cc}} \toprule
 \bf Opcode & \bf Instruction & \bf Opcode & \bf
     Instruction & \bf Opcode & \bf Instruction \\ \midrule
-\opcodetbl{80}{NOP}	{90}{AND}	{a0}{PUSH\_PSIZE}
-\opcodetbl{81}{POP}	{91}{OR}	{a1}{PUSH\_SP}
-\opcodetbl{82}{PUSH}	{92}{XOR}	{a2}{STORE\_SP}
-\opcodetbl{83}{SWAP}	{93}{LSHIFT}	{a3}{PUSH\_RP}
-\opcodetbl{84}{RPUSH}	{94}{RSHIFT}	{a4}{STORE\_RP}
-\opcodetbl{85}{POP2R}	{95}{LOAD}	{a5}{PUSH\_PC}
-\opcodetbl{86}{RPOP}	{96}{STORE}	{a6}{PUSH\_S0}
-\opcodetbl{87}{LT}	{97}{LOADB}	{a7}{PUSH\_SSIZE}
-\opcodetbl{88}{EQ}	{98}{STOREB}	{a8}{PUSH\_R0}
-\opcodetbl{89}{ULT}	{99}{BRANCH}	{a9}{PUSH\_RSIZE}
-\opcodetbl{8a}{ADD}	{9a}{BRANCHZ}	{aa}{PUSH\_HANDLER}
-\opcodetbl{8b}{MUL}	{9b}{CALL}	{ab}{STORE\_HANDLER}
-\opcodetbl{8c}{UDIVMOD}	{9c}{RET}	{ac}{PUSH\_MEMORY}
-\opcodetbl{8d}{DIVMOD}	{9d}{THROW}	{ad}{PUSH\_BADPC}
-\opcodetbl{8e}{NEGATE}	{9e}{HALT}	{ae}{PUSH\_INVALID}
-\opcodetbl{8f}{INVERT}	{9f}{LINK}	{af–0xbf}{undefined}
+\opcodetbl{80}{NOP}	{90}{AND}       {a0}{EXTRA}
+\opcodetbl{81}{POP}	{91}{OR}	{a1}{PUSH\_PSIZE}
+\opcodetbl{82}{PUSH}	{92}{XOR}	{a2}{PUSH\_SP}
+\opcodetbl{83}{SWAP}	{93}{LSHIFT}	{a3}{STORE\_SP}
+\opcodetbl{84}{RPUSH}	{94}{RSHIFT}	{a4}{PUSH\_RP}
+\opcodetbl{85}{POP2R}	{95}{LOAD}	{a5}{STORE\_RP}
+\opcodetbl{86}{RPOP}	{96}{STORE}	{a6}{PUSH\_PC}
+\opcodetbl{87}{LT}	{97}{LOADB}	{a7}{PUSH\_S0}
+\opcodetbl{88}{EQ}	{98}{STOREB}	{a8}{PUSH\_SSIZE}
+\opcodetbl{89}{ULT}	{99}{BRANCH}	{a9}{PUSH\_R0}
+\opcodetbl{8a}{ADD}	{9a}{BRANCHZ}	{aa}{PUSH\_RSIZE}
+\opcodetbl{8b}{MUL}	{9b}{CALL}	{ab}{PUSH\_HANDLER}
+\opcodetbl{8c}{UDIVMOD}	{9c}{RET}	{ac}{STORE\_HANDLER}
+\opcodetbl{8d}{DIVMOD}	{9d}{THROW}	{ad}{PUSH\_MEMORY}
+\opcodetbl{8e}{NEGATE}	{9e}{HALT}	{ae}{PUSH\_BADPC}
+\opcodetbl{8f}{INVERT}	{9f}{LINK}	{af}{PUSH\_INVALID}
  \bottomrule
 \end{tabular}
 \caption{\label{opcodetable}@PACKAGE_NAME@'s opcodes}

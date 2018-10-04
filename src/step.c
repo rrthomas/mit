@@ -379,10 +379,12 @@ WORD single_step(void)
             WORD_pointer address;
             for (int i = POINTER_W - 1; i >= 0; i--)
                 address.words[i] = POP;
-
-            if (address.pointer != 0) // We mean numeric 0!
-                address.pointer();
-            else switch (POP) {
+            address.pointer();
+        }
+        break;
+    case O_EXTRA:
+        {
+            switch (POP) {
                 case OX_ARGC: // ( -- u )
                     PUSH(main_argc);
                     break;
