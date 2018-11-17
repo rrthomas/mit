@@ -372,7 +372,7 @@ These instructions manage the data stack and move values between stacks.
 \inst{SWAP}{\x{u}\dots\x0 u -- \x0\x{u-1}\dots\x1 \x{u}}{Exchange the top stack item with the \spic{u}th. If \spic{u} is zero, do nothing.}
 \instr{POP2R}{x --}{-- x}{Move \spic{x} to the return stack.}
 \instr{RPOP}{-- x}{x --}{Move \spic{x} from the return stack to the data stack.}
-\instr{RPUSH}{u -- x}{\x{u} \x{u-1}\dots\x{0} -- \x{u} \x{u-1}\dots\x{0}}{Remove \spic{u}. Copy \x{u} to the top of the data stack. If there are fewer than \spic{u}~$+$~2 items on the stack before {\tt RPUSH} is executed, the memory word which would have been \x{u} were there \spic{u}~$+$~2 items is copied to the top of the data stack.}
+\instr{RPUSH}{u -- \x{u}}{\x{u} \x{u-1}\dots\x{0} -- \x{u} \x{u-1}\dots\x{0}}{Remove \spic{u}. Copy \x{u} to the top of the data stack.}
 \end{description}
 
 \subsection{Comparison}
