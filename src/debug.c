@@ -31,7 +31,7 @@ static UWORD here;	// where the current instruction word will be stored
 
 // Find most-significant bit set in a WORD-sized quantity
 // After https://stackoverflow.com/questions/2589096/find-most-significant-bit-left-most-that-is-set-in-a-bit-array
-verify(WORD_BIT == 32); // Code is hard-wired for 32 bits
+verify(WORD_BIT == 32); // FIXME: Code is hard-wired for 32 bits
 static _GL_ATTRIBUTE_CONST unsigned find_msbit(WORD v)
 {
     static const unsigned pos[32] = {
