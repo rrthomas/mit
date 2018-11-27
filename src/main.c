@@ -245,16 +245,25 @@ static void double_arg(char *s, long long *start, long long *end, bool default_a
 
 static void disassemble(UWORD start, UWORD end)
 {
-    for (UWORD p = start; p < end; p++) {
+    for (UWORD p = start; p < end; ) {
         printf("0x%08"PRIX32": ", p);
 
         BYTE i;
         load_byte(p, &i);
         const char *token = disass(i);
-        if (strcmp(token, "") != 0)
-            printf("%s", token);
-        else
+        if (strcmp(token, "undefined") == 0) {
             printf("Undefined instruction");
+            p++;
+        } else if (strcmp(token, "literal") == 0) {
+            WORD n;
+            if (decode_literal(&p, &n) != 0)
+                printf("Invalid literal");
+            else
+                printf("%"PRId32" (0x%"PRIX32")", n, (UWORD)n);
+        } else {
+            printf("%s", token);
+            p++;
+        }
         putchar('\n');
     }
 }

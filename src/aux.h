@@ -72,7 +72,7 @@ uint8_t *native_address_range_in_one_area(UWORD start, UWORD length, bool writab
 // quantities is implementation-defined in C99)
 #define ARSHIFT(n, p) (((n) >> (p)) | (-((n) < 0) << (WORD_BIT - p)))
 
-#define LOAD_I (exception = (load_byte(PC++, &I)))
+int decode_literal(UWORD *addr, WORD *val);
 
 // Literals
 #define LITERAL_CHUNK_BIT 6

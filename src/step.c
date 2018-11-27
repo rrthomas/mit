@@ -110,6 +110,31 @@ int register_args(int argc, char *argv[])
 }
 
 
+int decode_literal(UWORD *addr, WORD *val)
+{
+    unsigned bits = 0;
+    WORD n = 0;
+    BYTE b;
+    int exception;
+
+    // Continuation bytes
+    for (exception = load_byte((*addr)++, &b); exception == 0 && (b & ~LITERAL_CHUNK_MASK) == 0x40; exception = load_byte((*addr)++, &b)) {
+        n |= (b & LITERAL_CHUNK_MASK) << bits;
+        bits += LITERAL_CHUNK_BIT;
+    }
+    if (exception)
+        return exception;
+
+    // Check for missing end byte
+    if ((b & ~LITERAL_CHUNK_MASK) == 0x80)
+        return -1;
+
+    n |= b << bits;
+    bits += BYTE_BIT;
+    *val = ARSHIFT(n << (WORD_BIT - bits), WORD_BIT - bits);
+    return 0;
+}
+
 // Perform one pass of the execution cycle
 WORD single_step(void)
 {
@@ -553,23 +578,12 @@ WORD single_step(void)
 
         // Literal number
         {
-            unsigned bits = 0;
-            WORD n = 0;
-
-            // Continuation bytes
-            for (; (I & ~LITERAL_CHUNK_MASK) == 0x40; LOAD_I) {
-                n |= (I & LITERAL_CHUNK_MASK) << bits;
-                bits += LITERAL_CHUNK_BIT;
-            }
-
-            // Check for missing end byte
-            if ((I & ~LITERAL_CHUNK_MASK) == 0x80)
+            WORD n;
+            --PC;
+            if ((exception = decode_literal(&PC, &n)) == 0)
+                PUSH(n);
+            else
                 goto undefined;
-
-            n |= I << bits;
-            bits += BYTE_BIT;
-            n = ARSHIFT(n << (WORD_BIT - bits), WORD_BIT - bits);
-            PUSH(n);
         }
         break;
 
