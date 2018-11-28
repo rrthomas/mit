@@ -11,7 +11,8 @@
 #include "tests.h"
 
 
-const char *correct[] = { "", "-257", "-257 12345678", "-257 12345678 4" };
+const char *correct[] = { "", "-257", "-257 12345678", "-257 12345678 4",
+                          "-257 12345678 4 -2147483648", "-257 12345678 4 -2147483648 1073741824" };
 
 
 // FIXME: Check encoding is actually correct by comparing encoded literals
@@ -30,6 +31,10 @@ int main(void)
     lit(12345678);
     printf("here = %"PRIu32"\n", ass_current());
     lit(4);
+    printf("here = %"PRIu32"\n", ass_current());
+    lit(0x80000000);
+    printf("here = %"PRIu32"\n", ass_current());
+    lit(0x40000000);
     printf("here = %"PRIu32"\n", ass_current());
 
     load_byte(0, &b);

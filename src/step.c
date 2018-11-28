@@ -131,7 +131,7 @@ int decode_literal(UWORD *addr, WORD *val)
 
     n |= b << bits;
     bits += BYTE_BIT;
-    *val = ARSHIFT(n << (WORD_BIT - bits), WORD_BIT - bits);
+    *val = bits < WORD_BIT ? ARSHIFT(n << (WORD_BIT - bits), WORD_BIT - bits) : n;
     return 0;
 }
 
