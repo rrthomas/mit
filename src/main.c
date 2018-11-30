@@ -191,7 +191,7 @@ static BYTE parse_instruction(const char *token)
 
 static long long parse_number(const char *s, char **endp)
 {
-    return (s[0] == '0' && s[1] == 'x') ? strtoll(s + 2, endp, 16) :
+    return (s[0] == '0' && (s[1] == 'X' || s[1] == 'x')) ? strtoll(s + 2, endp, 16) :
         strtoll(s, endp, 10);
 }
 
