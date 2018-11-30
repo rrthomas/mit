@@ -11,8 +11,23 @@
 #include "tests.h"
 
 
-const char *correct[] = { "", "-257", "-257 12345678", "-257 12345678 4",
-                          "-257 12345678 4 -2147483648", "-257 12345678 4 -2147483648 1073741824" };
+const char *correct[] = { "-257", "12345678", "4", "-2147483648", "1073741824", "-16777216" };
+
+static void ass_literal_test(WORD n)
+{
+    UWORD start = ass_current();
+    printf("here = %"PRIu32"\n", start);
+    lit(n);
+    UWORD len = ass_current() - start;
+    lit(1); ass(O_POP); // pop number so they don't build up on stack
+    printf("% "PRId32" (0x%"PRIx32") encoded as: ", n, (UWORD)n);
+    for (UWORD i = 0; i < len; i++) {
+        BYTE b;
+        load_byte(start + i, &b);
+        printf("%x ", b);
+    }
+    printf("\n");
+}
 
 
 // FIXME: Check encoding is actually correct by comparing encoded literals
@@ -25,21 +40,21 @@ int main(void)
     init((WORD *)calloc(1024, 1), 256);
 
     start_ass(PC);
-    printf("here = %"PRIu32"\n", ass_current());
-    lit(-257);
-    printf("here = %"PRIu32"\n", ass_current());
-    lit(12345678);
-    printf("here = %"PRIu32"\n", ass_current());
-    lit(4);
-    printf("here = %"PRIu32"\n", ass_current());
-    lit(0x80000000);
-    printf("here = %"PRIu32"\n", ass_current());
-    lit(0x40000000);
+
+    ass_literal_test(-257);
+    ass_literal_test(12345678);
+    ass_literal_test(4);
+    ass_literal_test(0x80000000);
+    ass_literal_test(0x40000000);
+    ass_literal_test(0xff000000);
+
     printf("here = %"PRIu32"\n", ass_current());
 
     load_byte(0, &b);
     printf("byte at 0 is %x\n", b);
+    printf("\n");
 
+    single_step(); // Load first literal
     for (size_t i = 0; i < sizeof(correct) / sizeof(correct[0]); i++) {
         show_data_stack();
         printf("Correct stack: %s\n\n", correct[i]);
@@ -47,6 +62,8 @@ int main(void)
             printf("Error in literals tests: PC = %"PRIu32"\n", PC);
             exit(1);
         }
+        single_step();
+        single_step(); // Execute 1 POP
         single_step();
         printf("I = %s\n", disass(I));
     }
