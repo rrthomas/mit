@@ -42,7 +42,7 @@ static _GL_ATTRIBUTE_CONST unsigned find_msbit(WORD v)
     if (v < 0)
         v = -v;
 
-    v |= v >> 1; // first round down to one less than a power of 2
+    v |= v >> 1; // first round up to one less than a power of 2
     v |= v >> 2;
     v |= v >> 4;
     v |= v >> 8;
