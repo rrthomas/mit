@@ -84,7 +84,7 @@ C @PACKAGE_NAME@ provides the ability to map native memory blocks into @PACKAGE_
 
 \subsection{Extra instructions}
 
-C @PACKAGE_NAME@ provides the following extra instructions. They are accessed by executing {\tt LINK} with address $0$, and the given code as the top-most argument (under the address).
+C @PACKAGE_NAME@ provides the following extra instructions. They are accessed by executing {\tt CALL\_NATIVE} with address $0$, and the given code as the top-most argument (under the address).
 
 \subsubsection{Command-line arguments}
 
@@ -225,7 +225,7 @@ flag.
 false flag.
 \item[{\tt @PACKAGE@\_WORD\_W}:] the number of bytes in a word.
 \item[{\tt @PACKAGE@\_POINTER\_W}:] the number of words in a machine pointer.
-\item[{\tt @PACKAGE@\_WORD\_pointer}:] a union with members {\tt @PACKAGE@\_WORD words[@PACKAGE@\_POINTER\_W]} and {\tt void (*pointer)(void)}, which allow a function pointer suitable for the {\tt LINK} instruction to be easily stored and retrieved. It is assumed that the pointer is pushed on to the stack starting with {\tt words[0]} and ending with {\tt words[@PACKAGE@\_POINTER\_W~$-$~1]}.
+\item[{\tt @PACKAGE@\_WORD\_pointer}:] a union with members {\tt @PACKAGE@\_WORD words[@PACKAGE@\_POINTER\_W]} and {\tt void (*pointer)(void)}, which allow a function pointer suitable for the {\tt CALL\_NATIVE} instruction to be easily stored and retrieved. It is assumed that the pointer is pushed on to the stack starting with {\tt words[0]} and ending with {\tt words[@PACKAGE@\_POINTER\_W~$-$~1]}.
 \end{description}
 
 

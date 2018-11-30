@@ -136,7 +136,7 @@ range or unaligned, an appropriate error message is displayed.
 {\tt PLITERAL} \angb{number}
 \end{center}
 
-Code and literal data values may be directly assembled into memory. Assembly starts at the last value explicitly assigned to {\tt PC} in the shell, defaulting to~0 whenever @PACKAGE_NAME@ is initialised (see section~\ref{uifaceinit}). An opcode or byte literal ({\tt BLITERAL}) takes one byte, and a word literal ({\tt LITERAL}) as many bytes as required. {\tt PLITERAL} assembles the literals required to push the given native pointer on to the stack in the form required for the {\tt LINK} instruction.
+Code and literal data values may be directly assembled into memory. Assembly starts at the last value explicitly assigned to {\tt PC} in the shell, defaulting to~0 whenever @PACKAGE_NAME@ is initialised (see section~\ref{uifaceinit}). An opcode or byte literal ({\tt BLITERAL}) takes one byte, and a word literal ({\tt LITERAL}) as many bytes as required. {\tt PLITERAL} assembles the literals required to push the given native pointer on to the stack in the form required for the {\tt CALL\_NATIVE} instruction.
 
 \subsection{Memory}
 

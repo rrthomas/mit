@@ -399,7 +399,7 @@ WORD single_step(void)
     case O_PUSH_INVALID:
         PUSH(INVALID);
         break;
-    case O_LINK:
+    case O_CALL_NATIVE:
         {
             WORD_pointer address;
             for (int i = POINTER_W - 1; i >= 0; i--)

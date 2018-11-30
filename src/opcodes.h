@@ -44,7 +44,7 @@ enum {
     O_RET,
     O_THROW,
     O_HALT,
-    O_LINK,
+    O_CALL_NATIVE,
     O_EXTRA,
     O_PUSH_PSIZE,
     O_PUSH_SP,

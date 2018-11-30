@@ -1,4 +1,4 @@
-// Test the LINK instruction.
+// Test the CALL_NATIVE instruction.
 //
 // (c) Reuben Thomas 1995-2018
 //
@@ -25,23 +25,23 @@ int main(void)
     init((WORD *)malloc(16384), 4096);
 
     start_ass(PC);
-    plit(test); ass(O_LINK); lit(0);
+    plit(test); ass(O_CALL_NATIVE); lit(0);
     ass(O_HALT);
 
     WORD res = run();
     if (res != 0) {
-        printf("Error in LINK tests: test aborted with return code %"PRId32"\n", res);
+        printf("Error in CALL_NATIVE tests: test aborted with return code %"PRId32"\n", res);
         exit(1);
     }
 
     printf("Top of stack is %d; should be %d\n", LOAD_WORD(SP), 37);
     show_data_stack();
     if (LOAD_WORD(SP) != 37) {
-        printf("Error in LINK tests: incorrect value on top of stack\n");
+        printf("Error in CALL_NATIVE tests: incorrect value on top of stack\n");
         exit(1);
     }
 
     assert(exception == 0);
-    printf("LINK tests ran OK\n");
+    printf("CALL_NATIVE tests ran OK\n");
     return 0;
 }

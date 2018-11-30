@@ -6,11 +6,11 @@
 /hello.output
 /arithmetic
 /branch
+/call_native
 /comparison
 /exceptions
 /extra_instructions
 /init
-/link
 /literals
 /load_object
 /logic
