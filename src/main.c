@@ -586,7 +586,7 @@ static void do_command(int no)
             FILE *handle;
             if ((handle = fopen(globdirname(file), "wb")) == NULL)
                 fatal("cannot open file %s", file);
-            int ret = save_object(handle, start, (UWORD)((end - start) / WORD_W));
+            int ret = save_object(handle, start, (UWORD)((end - start)));
             fclose(handle);
 
             switch (ret) {

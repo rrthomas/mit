@@ -57,11 +57,11 @@ int load_object(FILE *file, UWORD address)
     if (reversed)
         length = (UWORD)reverse_word((WORD)length);
 
-    uint8_t *ptr = native_address_range_in_one_area(address, length * WORD_W, true);
+    uint8_t *ptr = native_address_range_in_one_area(address, length, true);
     if (ptr == NULL)
         return -1;
 
-    if (fread(ptr, WORD_W, length, file) != length)
+    if (fread(ptr, 1, length, file) != length)
         return -3;
     if (reversed)
         reverse(address, length);
