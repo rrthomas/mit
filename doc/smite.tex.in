@@ -648,7 +648,7 @@ appropriate data objects.
 \section*{Acknowledgements}
 
 Martin Richards's demonstration of his BCPL-oriented Cintcode virtual machine~\cite{cintweb}
-convinced me it was going to be fun working on virtual machines. He also supervised my BA dissertation project, Beetle, on which @PACKAGE_NAME@ is based.
+convinced me it was going to be fun working on virtual machines. He also supervised my BA dissertation project, Beetle~\cite{beetledis}, on which @PACKAGE_NAME@ is based.
 
 \bibliographystyle{plain}
 \bibliography{vm,rrt}
