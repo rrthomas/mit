@@ -142,7 +142,7 @@ WORD single_step(void)
     WORD temp = 0, temp2 = 0;
     BYTE byte = 0;
 
-    exception = load_byte(PC++, &I);
+    I = LOAD_BYTE(PC++);
     if (exception != 0)
         goto badadr;
     switch (I) {
