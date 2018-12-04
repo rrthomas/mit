@@ -36,7 +36,7 @@ static void ass_literal_test(WORD n, const char *encoding)
     lit(1); ass(O_POP); // pop number so they don't build up on stack
 
     size_t bytes_ok = 0;
-    printf("%"PRId32" (0x%"PRIx32") encoded as: ", n, (UWORD)n);
+    printf("%"PRId32" (%#"PRIx32") encoded as: ", n, (UWORD)n);
     for (UWORD i = 0; i < len; i++) {
         BYTE b;
         load_byte(start + i, &b);
@@ -75,7 +75,7 @@ int main(void)
     single_step(); // Load first literal
     for (size_t i = 0; i < sizeof(correct) / sizeof(correct[0]); i++) {
         show_data_stack();
-        printf("Correct stack: %"PRId32" (%"PRIx32")\n\n", correct[i], (UWORD)correct[i]);
+        printf("Correct stack: %"PRId32" (%#"PRIx32")\n\n", correct[i], (UWORD)correct[i]);
         ptrdiff_t actual;
         int items = sscanf(val_data_stack(), "%td", &actual);
         if (items != 1 || correct[i] != actual) {
