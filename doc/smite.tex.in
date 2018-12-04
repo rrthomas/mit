@@ -174,20 +174,7 @@ always mentioned explicitly.
 \subsection{Operation}
 \label{operation}
 
-Before @PACKAGE_NAME@ is started, {\tt ENDISM} should be set to $0$ or $1$ according to the implementation, and {\tt PSIZE} to the appropriate value. The other registers should be initialised as shown in table~\ref{inittable}, except for {\tt I}, which need not be initialised.
-
-\begin{table}[htbp]
-\begin{center}
-\begin{tabular}{cc} \toprule
-\bf Register & \bf Initial value \\ \midrule
-{\tt PC} & 0 \\
-{\tt HANDLER} & 0 \\
-{\tt BADPC} & {0xffffffff} \\
-{\tt INVALID} & {0xffffffff} \\ \bottomrule
-\end{tabular}
-\caption{\label{inittable}Registers with prescribed initial values}
-\end{center}
-\end{table}
+Before @PACKAGE_NAME@ is started, {\tt ENDISM} should be set to $0$ or $1$ according to the implementation, and {\tt PSIZE} to the appropriate value. The other registers should be initialised to~$0$.
 
 {\tt MEMORY}, {\tt ENDISM} and {\tt PSIZE} must not change while @PACKAGE_NAME@ is executing.
 
@@ -203,15 +190,11 @@ execute the instruction in {\tt I} \- \\*
 repeat
 \end{tabbing}
 
-In the latter case, the contents of the execution loop is executed once, and
+In the latter case, the contents of the execution cycle is executed once, and
 control returns to the calling program.
 
-The execution loop need not be implemented as a single loop; it  is designed to
-be short enough that the contents of the loop can be appended  to the code
-implementing each instruction.
-
 Note that the calls {\bf run()} and {\bf single\_step()} do not perform the
-initialisation specified above; that must be performed before calling them.
+initialisation specified above.
 
 
 \subsection{Termination}

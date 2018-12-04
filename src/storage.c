@@ -307,11 +307,12 @@ int init(WORD *memory, size_t size)
         return -2;
 
     PC = 0;
+    I = 0;
     S0 = SP = DATA_STACK_SEGMENT;
     R0 = RP = RETURN_STACK_SEGMENT;
     HANDLER = 0;
-    BADPC = WORD_MAX;
-    INVALID = WORD_MAX;
+    BADPC = 0;
+    INVALID = 0;
 
     return 0;
 }
