@@ -235,7 +235,7 @@ $-9$ & Invalid address (see below). \\
 $-10$ & Division by zero attempted (see section~\ref{arithmetic}). \\
 $-20$ & Attempt to write to a read-only memory location. \\
 $-23$ & Address alignment exception (see below). \\
-$-256$ & Illegal opcode (see section~\ref{opcodes}). \\ \bottomrule
+$-256$ & Invalid opcode (see section~\ref{opcodes}). \\ \bottomrule
 \end{tabular}
 \caption{\label{excepttable}Exceptions raised by @PACKAGE_NAME@}
 \end{center}
@@ -408,9 +408,7 @@ Sign function:
 
 \subsection{Logic and shifts}
 
-These instructions consist of bitwise logical operators and bitwise shifts. The
-result of performing the specified operation on the argument or arguments is
-left on the stack.
+These instructions consist of bitwise logical operators and bitwise shifts.
 
 Logic functions:
 
