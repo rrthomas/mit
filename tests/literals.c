@@ -11,27 +11,49 @@
 #include "tests.h"
 
 
-const char *correct[] = { "-257", "12345678", "4", "-2147483648", "1073741824", "-16777216" };
+WORD correct[] = {
+  -257, 12345678, 4, 0x80000000,
+  0x40000000, 0xff000000
+};
+const char *encodings[sizeof(correct) / sizeof(correct[0])] = {
+  "\x7f\xfb", "\x4e\x45\x46\x2f", "\x04", "\x40\x40\x40\x40\x40\xfe",
+  "\x40\x40\x40\x40\x40\x01", "\x40\x40\x40\x40\xff"
+};
 
-static void ass_literal_test(WORD n)
+static void show_encoding(const char *encoding)
+{
+    size_t len = strlen(encoding);
+    for (size_t i = 0; i < len; i++)
+        printf("%02x ", (BYTE)encoding[i]);
+}
+
+static void ass_literal_test(WORD n, const char *encoding)
 {
     UWORD start = ass_current();
     printf("here = %"PRIu32"\n", start);
     lit(n);
     UWORD len = ass_current() - start;
     lit(1); ass(O_POP); // pop number so they don't build up on stack
-    printf("% "PRId32" (0x%"PRIx32") encoded as: ", n, (UWORD)n);
+
+    size_t bytes_ok = 0;
+    printf("%"PRId32" (0x%"PRIx32") encoded as: ", n, (UWORD)n);
     for (UWORD i = 0; i < len; i++) {
         BYTE b;
         load_byte(start + i, &b);
-        printf("%x ", b);
+        printf("%02x ", b);
+        if ((BYTE)encoding[i] == b)
+            bytes_ok++;
+    }
+    if (bytes_ok != strlen(encoding)) {
+        printf("Error in literals tests: encoding should be ");
+        show_encoding(encoding);
+        printf("\n");
+        exit(1);
     }
     printf("\n");
 }
 
 
-// FIXME: Check encoding is actually correct by comparing encoded literals
-// against known-correct binary patterns.
 int main(void)
 {
     int exception = 0;
@@ -41,12 +63,8 @@ int main(void)
 
     start_ass(PC);
 
-    ass_literal_test(-257);
-    ass_literal_test(12345678);
-    ass_literal_test(4);
-    ass_literal_test(0x80000000);
-    ass_literal_test(0x40000000);
-    ass_literal_test(0xff000000);
+    for (size_t i = 0; i < sizeof(correct) / sizeof(correct[0]); i++)
+        ass_literal_test(correct[i], encodings[i]);
 
     printf("here = %"PRIu32"\n", ass_current());
 
@@ -57,8 +75,10 @@ int main(void)
     single_step(); // Load first literal
     for (size_t i = 0; i < sizeof(correct) / sizeof(correct[0]); i++) {
         show_data_stack();
-        printf("Correct stack: %s\n\n", correct[i]);
-        if (strcmp(correct[i], val_data_stack())) {
+        printf("Correct stack: %"PRId32" (%"PRIx32")\n\n", correct[i], (UWORD)correct[i]);
+        ptrdiff_t actual;
+        int items = sscanf(val_data_stack(), "%td", &actual);
+        if (items != 1 || correct[i] != actual) {
             printf("Error in literals tests: PC = %"PRIu32"\n", PC);
             exit(1);
         }
