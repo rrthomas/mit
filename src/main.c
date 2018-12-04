@@ -435,12 +435,16 @@ static void do_command(int no)
         break;
     case c_COUNTS:
         {
-            for (int i = 0x60; i <= 0x7f; i++) {
-                printf("%10s: %7ld", disass(i), count[i]);
+            for (int i = O_NOP; i <= O_PUSH_INVALID; i++) {
+                printf("%14s: %10ld", disass(i), count[i]);
                 putchar((i + 1) % 4 ? ' ' : '\n');
             }
-            for (int i = 0xe0; i < O_UNDEFINED; i++) {
-                printf("%10s: %7ld", disass(i), count[i]);
+            for (unsigned i = 0x0; i < O_NOP; i++) {
+                printf("          0x%02x: %10ld", i, count[i]);
+                putchar((i + 1) % 4 ? ' ' : '\n');
+            }
+            for (unsigned i = 0xc0; i <= 0xff; i++) {
+                printf("          0x%02x: %10ld", i, count[i]);
                 putchar((i + 1) % 4 ? ' ' : '\n');
             }
         }
