@@ -290,7 +290,7 @@ Underneath is the description.
 
 \centerline{\tt ( \spic{before -- after} )}
 
-where \spic{before} and \spic{after} are stack pictures showing the items on top
+\noindent where \spic{before} and \spic{after} are stack pictures showing the items on top
 of a stack before and after the instruction is executed.
 An instruction only affects the items shown in its
 stack effects. The brackets and dashes serve merely to delimit the stack
@@ -299,7 +299,7 @@ are a representation of the top-most items on the stack, and are written
 
 \centerline{\spic{i$_1$ i$_2$\dots i$_{n-1}$ i$_n$}}
 
-where the \spic{i$_k$} are stack items, each of which occupies a whole number of
+\noindent where the \spic{i$_k$} are stack items, each of which occupies a whole number of
 words, with \spic{i$_n$} being on top of the stack. The symbols denoting
 different types of stack item are shown in table~\ref{typetable}.
 
