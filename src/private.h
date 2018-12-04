@@ -17,15 +17,14 @@
 // Memory access
 
 // Address checking
-#define CHECK_ADDRESS(a, cond, code, label)     \
+#define CHECK_ADDRESS(a, cond, code)            \
     if (!(cond)) {                              \
         INVALID = a;                            \
         exception = code;                       \
-        goto label;                             \
     }
 
-#define CHECK_ALIGNED(a)                                \
-    CHECK_ADDRESS(a, IS_ALIGNED(a), -23, badadr)
+#define CHECK_ALIGNED(a)                        \
+    CHECK_ADDRESS(a, IS_ALIGNED(a), -23)
 
 
 #endif

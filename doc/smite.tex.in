@@ -128,8 +128,7 @@ The registers, each with its function, are set out in table~\ref{regtable}.
 {\tt R0} & The {\tt R}eturn stack base. \\
 {\tt SSIZE} & The number of words allocated for the data stack. \\
 {\tt RSIZE} & The number of words allocated for the return stack. \\
-{\tt HANDLER} & The address placed in {\tt PC} by a {\tt THROW}
-    instruction. \\
+{\tt HANDLER} & The address {\tt PC} is set to when an exception is raised. \\
 {\tt ENDISM} & The endianness of @PACKAGE_NAME@: 0 = Little-endian,
     1 = Big-endian. \\
 {\tt BADPC} & The contents of {\tt PC} when the last exception
@@ -213,14 +212,20 @@ confusing exception codes and reason codes.
 \subsection{Exceptions}
 \label{exceptions}
 
-When a {\tt THROW} instruction (see section~\ref{exceptinst}) is executed, an
-{\bf exception} is said to have been {\bf raised}. The exception code is the number on top of the
-stack at the time the exception is raised. Some exceptions are raised by
-other instructions, for example by {\tt DIVMOD} when division by zero is attempted;
-these push the exception code on to the stack and then execute a {\tt THROW}.
-
-Exception codes are signed numbers. $-1$ to $-511$ are reserved for @PACKAGE_NAME@'s own exception codes; the meanings
+Exceptional and error conditions may be dealt with by {\bf raising} an {\bf exception}. The type of exception is signalled by its {\bf exception code}. Exception codes are signed numbers. $-1$ to $-511$ are reserved for @PACKAGE_NAME@'s own exception codes; the meanings
 of those that may be raised by @PACKAGE_NAME@ are shown in table~\ref{excepttable}.
+
+Raising an exception proceeds as follows:
+
+\begin{tabbing}
+\hspace{0.5in}\=push the exception code on to  the stack\=\+ \\*
+set {\tt BADPC} to the value of {\tt PC} \\*
+set {\tt PC} to the value of {\tt HANDLER} \\*
+\end{tabbing}
+
+The instruction that caused the exception to be raised is then considered to have finished executing.
+
+An exception can be raised explicitly by {\tt THROW} (see section~\ref{exceptinst}); exceptions are also raised by various errors, such as an attempt to access an invalid address, or divide by zero.
 
 \begin{table}[htbp]
 \begin{center}
@@ -241,12 +246,7 @@ address, either by an
 instruction, or during an instruction fetch (because {\tt PC} contains an
 invalid address). Exception $-23$ is raised when an instruction expecting
 an address of type \spic{a-addr} (word-aligned) is given a non-aligned address.
-When @PACKAGE_NAME@ raises an address exception ($-9$ or $-23$), the offending address
-is placed in {\tt INVALID}.
-
-The initial values of {\tt BADPC} and {\tt INVALID} are unlikely to be generated
-by an exception, so it may be assumed that if the initial values still hold no
-exception has yet occurred.
+When @PACKAGE_NAME@ raises an address exception ($-9$ or $-23$), {\tt INVALID} is first set to the offending address.
 
 If {\tt SP} is unaligned when an exception is raised, or putting the code on the
 stack would cause {\tt SP} to be out of range, the effect of a {\tt HALT} with
@@ -515,10 +515,10 @@ When a literal is executed, it is pushed on to the stack, and execution resumes 
 \subsection{Exceptions}
 \label{exceptinst}
 
-These instructions give access to @PACKAGE_NAME@'s exception mechanisms.
+These instructions give access to @PACKAGE_NAME@'s exception mechanisms (see section~\ref{exceptions}).
 
 \begin{description}
-\inst{THROW}{--}{Put the contents of {\tt PC} into {\tt BADPC}, then load {\tt PC} from {\tt HANDLER}.}
+\inst{THROW}{n --}{Raise exception \spic{n}.}
 \inst{HALT}{x --}{Stop @PACKAGE_NAME@, returning reason code \spic{x} to the calling program (see section~\ref{calls}). If {\tt SP} is out of range or unaligned, $-257$ is returned as the reason code.}
 \end{description}
 

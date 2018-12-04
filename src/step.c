@@ -37,10 +37,8 @@ verify(sizeof(int) <= sizeof(WORD));
     (native_address_range_in_one_area((a), WORD_W, false) != NULL)
 
 #define DIVZERO(x)                              \
-    if (x == 0) {                               \
-        PUSH(-10);                              \
-        goto throw;                             \
-    }
+    if (x == 0)                                 \
+        exception = -10;
 
 
 // I/O support
@@ -143,273 +141,270 @@ WORD single_step(void)
     BYTE byte = 0;
 
     I = LOAD_BYTE(PC++);
-    if (exception != 0)
-        goto badadr;
-    switch (I) {
-    case O_NOP:
-        break;
-    case O_POP:
-        {
-            WORD depth = POP;
-            SP -= depth * WORD_W * STACK_DIRECTION;
-        }
-        break;
-    case O_SWAP:
-        {
-            WORD depth = POP;
-            WORD swapee = LOAD_WORD(SP - depth * WORD_W * STACK_DIRECTION);
-            WORD top = POP;
-            PUSH(swapee);
-            STORE_WORD(SP - depth * WORD_W * STACK_DIRECTION, top);
-        }
-        break;
-    case O_PUSH:
-        {
-            WORD depth = POP;
-            WORD pickee = LOAD_WORD(SP - depth * WORD_W * STACK_DIRECTION);
-            PUSH(pickee);
-        }
-        break;
-    case O_RPUSH:
-        {
-            WORD depth = POP;
-            WORD pickee = LOAD_WORD(RP - depth * WORD_W * STACK_DIRECTION);
-            PUSH(pickee);
-        }
-        break;
-    case O_POP2R:
-        {
-            WORD value = POP;
-            PUSH_RETURN(value);
-        }
-        break;
-    case O_RPOP:
-        {
-            WORD value = POP_RETURN;
-            PUSH(value);
-        }
-        break;
-    case O_LT:
-        {
-            WORD a = POP;
-            WORD b = POP;
-            PUSH(b < a ? PACKAGE_UPPER_TRUE : PACKAGE_UPPER_FALSE);
-        }
-        break;
-    case O_EQ:
-        {
-            WORD a = POP;
-            WORD b = POP;
-            PUSH(a == b ? PACKAGE_UPPER_TRUE : PACKAGE_UPPER_FALSE);
-        }
-        break;
-    case O_ULT:
-        {
-            UWORD a = POP;
-            UWORD b = POP;
-            PUSH(b < a ? PACKAGE_UPPER_TRUE : PACKAGE_UPPER_FALSE);
-        }
-        break;
-    case O_ADD:
-        {
-            WORD a = POP;
-            WORD b = POP;
-            PUSH(b + a);
-        }
-        break;
-    case O_MUL:
-        {
-            WORD multiplier = POP;
-            WORD multiplicand = POP;
-            PUSH(multiplier * multiplicand);
-        }
-        break;
-    case O_UDIVMOD:
-        {
-            UWORD divisor = POP;
-            UWORD dividend = POP;
-            DIVZERO(divisor);
-            PUSH(dividend / divisor);
-            PUSH(dividend % divisor);
-        }
-        break;
-    case O_DIVMOD:
-        {
-            WORD divisor = POP;
-            WORD dividend = POP;
-            DIVZERO(divisor);
-            PUSH(dividend / divisor);
-            PUSH(dividend % divisor);
-        }
-        break;
-    case O_NEGATE:
-        {
-            WORD a = POP;
-            PUSH(-a);
-        }
-        break;
-    case O_INVERT:
-        {
-            WORD a = POP;
-            PUSH(~a);
-        }
-        break;
-    case O_AND:
-        {
-            WORD a = POP;
-            WORD b = POP;
-            PUSH(a & b);
-        }
-        break;
-    case O_OR:
-        {
-            WORD a = POP;
-            WORD b = POP;
-            PUSH(a | b);
-        }
-        break;
-    case O_XOR:
-        {
-            WORD a = POP;
-            WORD b = POP;
-            PUSH(a ^ b);
-        }
-        break;
-    case O_LSHIFT:
-        {
-            WORD shift = POP;
-            WORD value = POP;
-            PUSH(shift < (WORD)WORD_BIT ? value << shift : 0);
-        }
-        break;
-    case O_RSHIFT:
-        {
-            WORD shift = POP;
-            WORD value = POP;
-            PUSH(shift < (WORD)WORD_BIT ? (WORD)((UWORD)value >> shift) : 0);
-        }
-        break;
-    case O_LOAD:
-        {
-            WORD addr = POP;
-            WORD value = LOAD_WORD(addr);
-            PUSH(value);
-        }
-        break;
-    case O_STORE:
-        {
-            WORD addr = POP;
-            WORD value = POP;
-            STORE_WORD(addr, value);
-        }
-        break;
-    case O_LOADB:
-        {
-            WORD addr = POP;
-            BYTE value = LOAD_BYTE(addr);
-            PUSH((WORD)value);
-        }
-        break;
-    case O_STOREB:
-        {
-            WORD addr = POP;
-            BYTE value = (BYTE)POP;
-            STORE_BYTE(addr, value);
-        }
-        break;
-    case O_PUSH_SP:
-        {
-            WORD value = SP;
-            PUSH(value);
-        }
-        break;
-    case O_STORE_SP:
-        {
-            WORD value = POP;
-            CHECK_ALIGNED(value);
-            SP = value;
-        }
-        break;
-    case O_PUSH_RP:
-        PUSH(RP);
-        break;
-    case O_STORE_RP:
-        {
-            WORD value = POP;
-            CHECK_ALIGNED(value);
-            RP = value;
-        }
-        break;
-    case O_BRANCH:
-        PC = POP;
-        break;
-    case O_BRANCHZ:
-        {
-            WORD addr = POP;
-            if (POP == PACKAGE_UPPER_FALSE)
-                PC = addr;
+    if (exception == 0)
+        switch (I) {
+        case O_NOP:
             break;
-        }
-    case O_CALL:
-        PUSH_RETURN(PC);
-        PC = POP;
-        break;
-    case O_RET:
-        PC = POP_RETURN;
-        break;
-    case O_PUSH_PSIZE:
-        PUSH(POINTER_W);
-        break;
- throw:
-    case O_THROW:
-        // exception may already be set, so WORD_STORE may have no effect here.
-        BADPC = PC;
-        PC = HANDLER;
-        exception = 0; // Any exception has now been dealt with
-        break;
-    case O_HALT:
-        return POP;
-    case O_PUSH_PC:
-        PUSH(PC);
-        break;
-    case O_PUSH_S0:
-        PUSH(S0);
-        break;
-    case O_PUSH_SSIZE:
-        PUSH(HASHS);
-        break;
-    case O_PUSH_R0:
-        PUSH(R0);
-        break;
-    case O_PUSH_RSIZE:
-        PUSH(HASHR);
-        break;
-    case O_PUSH_HANDLER:
-        PUSH(HANDLER);
-        break;
-    case O_STORE_HANDLER:
-        HANDLER = POP;
-        break;
-    case O_PUSH_MEMORY:
-        PUSH(MEMORY);
-        break;
-    case O_PUSH_BADPC:
-        PUSH(BADPC);
-        break;
-    case O_PUSH_INVALID:
-        PUSH(INVALID);
-        break;
-    case O_CALL_NATIVE:
-        {
-            WORD_pointer address;
-            for (int i = POINTER_W - 1; i >= 0; i--)
-                address.words[i] = POP;
-            address.pointer();
-        }
-        break;
-    case O_EXTRA:
-        {
-            switch (POP) {
+        case O_POP:
+            {
+                WORD depth = POP;
+                SP -= depth * WORD_W * STACK_DIRECTION;
+            }
+            break;
+        case O_SWAP:
+            {
+                WORD depth = POP;
+                WORD swapee = LOAD_WORD(SP - depth * WORD_W * STACK_DIRECTION);
+                WORD top = POP;
+                PUSH(swapee);
+                STORE_WORD(SP - depth * WORD_W * STACK_DIRECTION, top);
+            }
+            break;
+        case O_PUSH:
+            {
+                WORD depth = POP;
+                WORD pickee = LOAD_WORD(SP - depth * WORD_W * STACK_DIRECTION);
+                PUSH(pickee);
+            }
+            break;
+        case O_RPUSH:
+            {
+                WORD depth = POP;
+                WORD pickee = LOAD_WORD(RP - depth * WORD_W * STACK_DIRECTION);
+                PUSH(pickee);
+            }
+            break;
+        case O_POP2R:
+            {
+                WORD value = POP;
+                PUSH_RETURN(value);
+            }
+            break;
+        case O_RPOP:
+            {
+                WORD value = POP_RETURN;
+                PUSH(value);
+            }
+            break;
+        case O_LT:
+            {
+                WORD a = POP;
+                WORD b = POP;
+                PUSH(b < a ? PACKAGE_UPPER_TRUE : PACKAGE_UPPER_FALSE);
+            }
+            break;
+        case O_EQ:
+            {
+                WORD a = POP;
+                WORD b = POP;
+                PUSH(a == b ? PACKAGE_UPPER_TRUE : PACKAGE_UPPER_FALSE);
+            }
+            break;
+        case O_ULT:
+            {
+                UWORD a = POP;
+                UWORD b = POP;
+                PUSH(b < a ? PACKAGE_UPPER_TRUE : PACKAGE_UPPER_FALSE);
+            }
+            break;
+        case O_ADD:
+            {
+                WORD a = POP;
+                WORD b = POP;
+                PUSH(b + a);
+            }
+            break;
+        case O_MUL:
+            {
+                WORD multiplier = POP;
+                WORD multiplicand = POP;
+                PUSH(multiplier * multiplicand);
+            }
+            break;
+        case O_UDIVMOD:
+            {
+                UWORD divisor = POP;
+                UWORD dividend = POP;
+                DIVZERO(divisor);
+                PUSH(dividend / divisor);
+                PUSH(dividend % divisor);
+            }
+            break;
+        case O_DIVMOD:
+            {
+                WORD divisor = POP;
+                WORD dividend = POP;
+                DIVZERO(divisor);
+                PUSH(dividend / divisor);
+                PUSH(dividend % divisor);
+            }
+            break;
+        case O_NEGATE:
+            {
+                WORD a = POP;
+                PUSH(-a);
+            }
+            break;
+        case O_INVERT:
+            {
+                WORD a = POP;
+                PUSH(~a);
+            }
+            break;
+        case O_AND:
+            {
+                WORD a = POP;
+                WORD b = POP;
+                PUSH(a & b);
+            }
+            break;
+        case O_OR:
+            {
+                WORD a = POP;
+                WORD b = POP;
+                PUSH(a | b);
+            }
+            break;
+        case O_XOR:
+            {
+                WORD a = POP;
+                WORD b = POP;
+                PUSH(a ^ b);
+            }
+            break;
+        case O_LSHIFT:
+            {
+                WORD shift = POP;
+                WORD value = POP;
+                PUSH(shift < (WORD)WORD_BIT ? value << shift : 0);
+            }
+            break;
+        case O_RSHIFT:
+            {
+                WORD shift = POP;
+                WORD value = POP;
+                PUSH(shift < (WORD)WORD_BIT ? (WORD)((UWORD)value >> shift) : 0);
+            }
+            break;
+        case O_LOAD:
+            {
+                WORD addr = POP;
+                WORD value = LOAD_WORD(addr);
+                PUSH(value);
+            }
+            break;
+        case O_STORE:
+            {
+                WORD addr = POP;
+                WORD value = POP;
+                STORE_WORD(addr, value);
+            }
+            break;
+        case O_LOADB:
+            {
+                WORD addr = POP;
+                BYTE value = LOAD_BYTE(addr);
+                PUSH((WORD)value);
+            }
+            break;
+        case O_STOREB:
+            {
+                WORD addr = POP;
+                BYTE value = (BYTE)POP;
+                STORE_BYTE(addr, value);
+            }
+            break;
+        case O_PUSH_SP:
+            {
+                WORD value = SP;
+                PUSH(value);
+            }
+            break;
+        case O_STORE_SP:
+            {
+                WORD value = POP;
+                CHECK_ALIGNED(value);
+                if (exception == 0)
+                    SP = value;
+            }
+            break;
+        case O_PUSH_RP:
+            PUSH(RP);
+            break;
+        case O_STORE_RP:
+            {
+                WORD value = POP;
+                CHECK_ALIGNED(value);
+                if (exception == 0)
+                    RP = value;
+            }
+            break;
+        case O_BRANCH:
+            PC = POP;
+            break;
+        case O_BRANCHZ:
+            {
+                WORD addr = POP;
+                if (POP == PACKAGE_UPPER_FALSE)
+                    PC = addr;
+                break;
+            }
+        case O_CALL:
+            PUSH_RETURN(PC);
+            PC = POP;
+            break;
+        case O_RET:
+            PC = POP_RETURN;
+            break;
+        case O_PUSH_PSIZE:
+            PUSH(POINTER_W);
+            break;
+        case O_THROW:
+            exception = POP;
+            break;
+        case O_HALT:
+            return POP;
+        case O_PUSH_PC:
+            PUSH(PC);
+            break;
+        case O_PUSH_S0:
+            PUSH(S0);
+            break;
+        case O_PUSH_SSIZE:
+            PUSH(HASHS);
+            break;
+        case O_PUSH_R0:
+            PUSH(R0);
+            break;
+        case O_PUSH_RSIZE:
+            PUSH(HASHR);
+            break;
+        case O_PUSH_HANDLER:
+            PUSH(HANDLER);
+            break;
+        case O_STORE_HANDLER:
+            HANDLER = POP;
+            break;
+        case O_PUSH_MEMORY:
+            PUSH(MEMORY);
+            break;
+        case O_PUSH_BADPC:
+            PUSH(BADPC);
+            break;
+        case O_PUSH_INVALID:
+            PUSH(INVALID);
+            break;
+        case O_CALL_NATIVE:
+            {
+                WORD_pointer address;
+                for (int i = POINTER_W - 1; i >= 0; i--)
+                    address.words[i] = POP;
+                address.pointer();
+            }
+            break;
+        case O_EXTRA:
+            {
+                switch (POP) {
                 case OX_ARGC: // ( -- u )
                     PUSH(main_argc);
                     break;
@@ -567,42 +562,38 @@ WORD single_step(void)
                         PUSH(res);
                     }
                     break;
+                }
             }
+            break;
+
+        default:
+            // Undefined instruction
+            if (I >= O_UNDEFINED && I <= O_UNDEFINED_END)
+                exception = -256;
+
+            // Literal number
+            else {
+                WORD n;
+                --PC;
+                if ((exception = decode_literal(&PC, &n)) == 0)
+                    PUSH(n);
+                else
+                    exception = -256;
+            }
+            break;
         }
-        break;
 
-    default:
-        // Undefined instruction
-        if (I >= O_UNDEFINED && I <= O_UNDEFINED_END)
-            goto undefined;
-
-        // Literal number
-        {
-            WORD n;
-            --PC;
-            if ((exception = decode_literal(&PC, &n)) == 0)
-                PUSH(n);
-            else
-                goto undefined;
-        }
-        break;
-
- undefined:
-        PUSH(-256);
-        goto throw;
-        break;
+    if (exception != 0) {
+        // Deal with address exceptions during execution cycle.
+        // Since we have already had an exception, and must return a different
+        // code from usual if SP is now invalid, push the exception code
+        // "manually".
+        SP += WORD_W * STACK_DIRECTION;
+        if (!WORD_IN_ONE_AREA(SP) || !IS_ALIGNED(SP))
+            return -257;
+        store_word(SP, exception);
+        BADPC = PC;
+        PC = HANDLER;
     }
-    if (exception == 0)
-        return -259; // terminated OK
-
-    // Deal with address exceptions during execution cycle.
-    // Since we have already had an exception, and must return a different
-    // code from usual if SP is now invalid, push the exception code
-    // "manually".
- badadr:
-    SP += WORD_W * STACK_DIRECTION;
-    if (!WORD_IN_ONE_AREA(SP) || !IS_ALIGNED(SP))
-      return -257;
-    store_word(SP, exception);
-    goto throw;
+    return -259; // terminated OK
 }

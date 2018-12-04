@@ -265,7 +265,6 @@ int pre_dma(UWORD from, UWORD to, bool write)
     if (exception == 0 && ENDISM)
         exception = reverse(from, to - from);
 
- badadr:
     return exception;
 }
 #pragma GCC diagnostic pop
