@@ -127,7 +127,7 @@ int decode_literal(UWORD *addr, WORD *val)
 
     // Check for missing end byte
     if ((b & ~LITERAL_CHUNK_MASK) == 0x80)
-        return -1;
+        return -256;
 
     n |= b << bits;
     bits += BYTE_BIT;
