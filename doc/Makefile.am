@@ -10,7 +10,8 @@
 
 LATEX_SRCS = \
 	$(srcdir)/bibtex/bib/rrt.bib \
-	$(srcdir)/bibtex/bib/vm.bib
+	$(srcdir)/bibtex/bib/vm.bib \
+	$(srcdir)/bibtex/bib/ertl.bib
 
 LATEX_PDFS = \
 	@PACKAGE@.pdf \
