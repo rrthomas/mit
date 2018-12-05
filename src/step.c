@@ -12,6 +12,7 @@
 
 #include "external_syms.h"
 
+#include <assert.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <fcntl.h>
@@ -591,7 +592,8 @@ WORD single_step(void)
         SP += WORD_W * STACK_DIRECTION;
         if (!WORD_IN_ONE_AREA(SP) || !IS_ALIGNED(SP))
             return -257;
-        store_word(SP, exception);
+        int store_exception = store_word(SP, exception);
+        assert(store_exception == 0);
         BADPC = PC - 1;
         PC = HANDLER;
     }
