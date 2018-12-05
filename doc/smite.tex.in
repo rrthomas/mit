@@ -131,8 +131,7 @@ The registers, each with its function, are set out in table~\ref{regtable}.
 {\tt HANDLER} & The address {\tt PC} is set to when an exception is raised. \\
 {\tt ENDISM} & The endianness of @PACKAGE_NAME@: 0 = Little-endian,
     1 = Big-endian. \\
-{\tt BADPC} & The contents of {\tt PC} when the last exception
-    was raised. \\
+{\tt BADPC} & The address of the instruction that raised the most recent exception. \\
 {\tt INVALID} & The last address which caused an address
     exception. \\ \bottomrule
 {\tt PSIZE} & The number of words in a host machine pointer (for {\tt CALL\_NATIVE}; see section~\ref{accessinst}). \\
@@ -219,7 +218,7 @@ Raising an exception proceeds as follows:
 
 \begin{tabbing}
 \hspace{0.5in}\=push the exception code on to  the stack\=\+ \\*
-set {\tt BADPC} to the value of {\tt PC} \\*
+set {\tt BADPC} to ${\tt PC} - 1$ \\*
 set {\tt PC} to the value of {\tt HANDLER} \\*
 \end{tabbing}
 

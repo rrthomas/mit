@@ -12,7 +12,7 @@
 
 
 WORD result[] = { -257, -257, 42, 0, -23, -10, -9, -9, -23, -256 };
-UWORD badpc[] = { 0, 0, 0, 0, 22, 25, 16385, 33, 35, 36 };
+UWORD badpc[] = { 0, 0, 0, 0, 21, 24, 16384, 32, 34, 35 };
 UWORD address[] = { -12, 16384, 0, 0, 5, 0, 16384, -20, 1, 0 };
 int testno = 0;
 UWORD test[sizeof(result) / sizeof(result[0])];

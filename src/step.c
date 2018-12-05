@@ -592,7 +592,7 @@ WORD single_step(void)
         if (!WORD_IN_ONE_AREA(SP) || !IS_ALIGNED(SP))
             return -257;
         store_word(SP, exception);
-        BADPC = PC;
+        BADPC = PC - 1;
         PC = HANDLER;
     }
     return -259; // terminated OK
