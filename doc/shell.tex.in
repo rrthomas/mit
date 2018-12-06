@@ -209,10 +209,6 @@ including, address \angb{address_2}.  An error message is displayed
 if the start address is less than or equal to the end address, or if either
 the address or number of bytes is out of range.
 
-The command {\tt COUNTS} displays the number of times
-that each @PACKAGE_NAME@ instruction has been executed during {\tt STEP} or {\tt TRACE} execution since the last initialisation
-(including loads).
-
 \subsection{Object modules}
 
 The command

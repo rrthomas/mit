@@ -104,8 +104,6 @@ enum registers {
 };
 static int registers = sizeof(regist) / sizeof(*regist);
 
-static long count[O_UNDEFINED];
-
 
 static const char *globfile(const char *file)
 {
@@ -266,7 +264,6 @@ static void disassemble(UWORD start, UWORD end)
 
 static void reinit(void)
 {
-    memset(count, 0, sizeof(count));
     init(memory, memory_size);
     start_ass(PC);
 }
@@ -426,14 +423,6 @@ static void do_command(int no)
             PUSH_RETURN(value);
         }
         break;
-    case c_COUNTS:
-        {
-            for (int i = 0x0; i < O_UNDEFINED; i++) {
-                printf("%14s: %10ld", disass(INSTRUCTION_ACTION, i), count[i]);
-                putchar((i + 1) % 4 ? ' ' : '\n');
-            }
-        }
-        break;
     case c_DISASSEMBLE:
         {
             long long start = (PC <= 16 ? 0 : PC - 16), end = 64;
@@ -538,7 +527,6 @@ static void do_command(int no)
                 if ((ret = single_step()))
                     printf("HALT code %"PRId32" was returned\n", ret);
                 if (no == c_TRACE) do_registers();
-                count[I]++;
             } else {
                 upper(arg);
                 if (strcmp(arg, "TO") == 0) {
@@ -547,7 +535,6 @@ static void do_command(int no)
                     while ((unsigned long)PC != limit && ret == -259) {
                         ret = single_step();
                         if (no == c_TRACE) do_registers();
-                        count[I]++;
                     }
                     if (ret != 0)
                         printf("HALT code %"PRId32" was returned at PC = %#x\n",
@@ -557,7 +544,6 @@ static void do_command(int no)
                     for (i = 0; i < limit && ret == -259; i++) {
                         ret = single_step();
                         if (no == c_TRACE) do_registers();
-                        count[I]++;
                     }
                     if (ret != 0)
                         printf("HALT code %"PRId32" was returned after %llu "
