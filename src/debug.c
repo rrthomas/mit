@@ -17,7 +17,6 @@
 #include <string.h>
 #include <inttypes.h>
 
-#include "verify.h"
 #include "xvasprintf.h"
 
 #include "public.h"
@@ -29,56 +28,26 @@
 static UWORD here;	// where the current instruction word will be stored
 
 
-// Find most-significant bit set in a WORD-sized quantity
-// After https://stackoverflow.com/questions/2589096/find-most-significant-bit-left-most-that-is-set-in-a-bit-array
-verify(WORD_BIT == 32); // FIXME: Code is hard-wired for 32 bits
-static _GL_ATTRIBUTE_CONST unsigned find_msbit(WORD v)
+void ass_action(WORD instr)
 {
-    static const unsigned pos[32] = {
-        0, 9, 1, 10, 13, 21, 2, 29, 11, 14, 16, 18, 22, 25, 3, 30,
-        8, 12, 20, 28, 15, 17, 24, 7, 19, 27, 23, 6, 26, 5, 4, 31
-    };
-
-    if (v < 0)
-        v = -v;
-
-    v |= v >> 1; // first round up to one less than a power of 2
-    v |= v >> 2;
-    v |= v >> 4;
-    v |= v >> 8;
-    v |= v >> 16;
-
-    return pos[(UWORD)(v * 0x07C4ACDDU) >> 27];
+    encode_instruction(&here, INSTRUCTION_ACTION, instr);
 }
 
-// Return number of bytes required for a WORD-sized quantity
-_GL_ATTRIBUTE_CONST unsigned byte_size(WORD v)
+void ass_number(WORD v)
 {
-    return find_msbit(v) / 8 + 1;
+    encode_instruction(&here, INSTRUCTION_NUMBER, v);
 }
 
-void ass(BYTE instr)
+void ass_native_pointer(void (*pointer)(void))
 {
-    store_byte(here++, instr);
-}
-
-void lit(WORD v)
-{
-    // Continuation bytes
-    for (unsigned bits = find_msbit(v) + 1; bits > LITERAL_CHUNK_BIT; bits -= LITERAL_CHUNK_BIT) {
-        store_byte(here++, (BYTE)(v & LITERAL_CHUNK_MASK) | 0x40);
-        v = ARSHIFT(v, LITERAL_CHUNK_BIT);
-    }
-
-    // Last (or only) byte
-    store_byte(here++, (BYTE)v);
-}
-
-void plit(void (*literal)(void))
-{
-    WORD_pointer address = { .pointer = literal };
+    WORD_pointer address = { .pointer = pointer };
     for (unsigned i = 0; i < POINTER_W; i++)
-        lit(address.words[i]);
+        ass_number(address.words[i]);
+}
+
+void ass_byte(BYTE byte)
+{
+    store_byte(here++, byte);
 }
 
 void start_ass(UWORD addr)
@@ -91,49 +60,35 @@ _GL_ATTRIBUTE_PURE UWORD ass_current(void)
     return here;
 }
 
-static const char *mnemonic[UINT8_MAX + 1] = {
-    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+static const char *mnemonic[O_UNDEFINED] = {
     "NOP", "POP", "PUSH", "SWAP", "RPUSH", "POP2R", "RPOP", "LT",
     "EQ", "ULT", "ADD", "MUL", "UDIVMOD", "DIVMOD", "NEGATE", "INVERT",
     "AND", "OR", "XOR", "LSHIFT", "RSHIFT", "LOAD", "STORE", "LOADB",
     "STOREB", "BRANCH", "BRANCHZ", "CALL", "RET", "THROW", "HALT", "CALL_NATIVE",
     "EXTRA", "PUSH_PSIZE", "PUSH_SP", "STORE_SP", "PUSH_RP", "STORE_RP", "PUSH_PC", "PUSH_S0",
     "PUSH_SSIZE", "PUSH_R0", "PUSH_RSIZE", "PUSH_HANDLER", "STORE_HANDLER", "PUSH_MEMORY", "PUSH_BADPC", "PUSH_INVALID",
-    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
+};
 
-_GL_ATTRIBUTE_CONST const char *disass(BYTE opcode)
+_GL_ATTRIBUTE_CONST const char *disass(enum instruction_type type, WORD opcode)
 {
-    if (opcode <= 0x7f || opcode >= 0xc0)
-        return "literal"; // FIXME: be more precise!
-    if (mnemonic[opcode] == NULL) return "undefined";
-    return mnemonic[opcode];
+    switch (type) {
+    case INSTRUCTION_NUMBER:
+        {
+            static char *number = NULL;
+            free(number);
+            number = xasprintf("%"PRId32" (%#"PRIx32")", opcode, (UWORD)opcode);
+            return number;
+        }
+    case INSTRUCTION_ACTION:
+        if (opcode < 0 || opcode >= O_UNDEFINED)
+            return "undefined";
+        return mnemonic[opcode];
+    default:
+        return "invalid type!";
+    }
 }
 
-_GL_ATTRIBUTE_PURE BYTE toass(const char *token)
+_GL_ATTRIBUTE_PURE UWORD toass(const char *token)
 {
     for (size_t i = 0; i < sizeof(mnemonic) / sizeof(mnemonic[0]); i++)
         if (mnemonic[i] && strcmp(token, mnemonic[i]) == 0) return i;

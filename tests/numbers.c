@@ -1,4 +1,4 @@
-// Test literals.
+// Test numbers.
 //
 // (c) Reuben Thomas 1994-2018
 //
@@ -27,13 +27,13 @@ static void show_encoding(const char *encoding)
         printf("%02x ", (BYTE)encoding[i]);
 }
 
-static void ass_literal_test(WORD n, const char *encoding)
+static void ass_number_test(WORD n, const char *encoding)
 {
     UWORD start = ass_current();
     printf("here = %"PRIu32"\n", start);
-    lit(n);
+    ass_number(n);
     UWORD len = ass_current() - start;
-    lit(1); ass(O_POP); // pop number so they don't build up on stack
+    ass_number(1); ass_action(O_POP); // pop number so they don't build up on stack
 
     size_t bytes_ok = 0;
     printf("%"PRId32" (%#"PRIx32") encoded as: ", n, (UWORD)n);
@@ -45,7 +45,7 @@ static void ass_literal_test(WORD n, const char *encoding)
             bytes_ok++;
     }
     if (bytes_ok != strlen(encoding)) {
-        printf("Error in literals tests: encoding should be ");
+        printf("Error in numbers tests: encoding should be ");
         show_encoding(encoding);
         printf("\n");
         exit(1);
@@ -64,7 +64,7 @@ int main(void)
     start_ass(PC);
 
     for (size_t i = 0; i < sizeof(correct) / sizeof(correct[0]); i++)
-        ass_literal_test(correct[i], encodings[i]);
+        ass_number_test(correct[i], encodings[i]);
 
     printf("here = %"PRIu32"\n", ass_current());
 
@@ -72,23 +72,23 @@ int main(void)
     printf("byte at 0 is %x\n", b);
     printf("\n");
 
-    single_step(); // Load first literal
+    single_step(); // Load first number
     for (size_t i = 0; i < sizeof(correct) / sizeof(correct[0]); i++) {
         show_data_stack();
         printf("Correct stack: %"PRId32" (%#"PRIx32")\n\n", correct[i], (UWORD)correct[i]);
         ptrdiff_t actual;
         int items = sscanf(val_data_stack(), "%td", &actual);
         if (items != 1 || correct[i] != actual) {
-            printf("Error in literals tests: PC = %"PRIu32"\n", PC);
+            printf("Error in numbers tests: PC = %"PRIu32"\n", PC);
             exit(1);
         }
         single_step();
         single_step(); // Execute 1 POP
         single_step();
-        printf("I = %s\n", disass(I));
+        printf("I = %s\n", disass(INSTRUCTION_ACTION, I));
     }
 
     assert(exception == 0);
-    printf("Literals tests ran OK\n");
+    printf("Numbers tests ran OK\n");
     return 0;
 }

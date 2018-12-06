@@ -25,8 +25,8 @@ int main(void)
     init((WORD *)malloc(16384), 4096);
 
     start_ass(PC);
-    plit(test); ass(O_CALL_NATIVE); lit(0);
-    ass(O_HALT);
+    ass_native_pointer(test); ass_action(O_CALL_NATIVE); ass_number(0);
+    ass_action(O_HALT);
 
     WORD res = run();
     if (res != 0) {

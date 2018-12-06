@@ -20,6 +20,8 @@
 #include <stdint.h>
 #include <limits.h>
 
+#include "opcodes.h"
+
 
 // Stacks location and size
 #define DATA_STACK_SEGMENT   0xfe000000
@@ -72,11 +74,17 @@ uint8_t *native_address_range_in_one_area(UWORD start, UWORD length, bool writab
 // quantities is implementation-defined in C99)
 #define ARSHIFT(n, p) (((n) >> (p)) | (-((n) < 0) << (WORD_BIT - p)))
 
-int decode_literal(UWORD *addr, WORD *val);
+int encode_instruction(UWORD *addr, enum instruction_type type, WORD v);
+int decode_instruction(UWORD *addr, WORD *val);
 
-// Literals
-#define LITERAL_CHUNK_BIT 6
-#define LITERAL_CHUNK_MASK ((1 << LITERAL_CHUNK_BIT) - 1)
+// Bit utilities
+
+_GL_ATTRIBUTE_CONST unsigned find_msbit(WORD v); // return msbit of a WORD
+unsigned byte_size(WORD v); // return number of significant bytes in a WORD quantity
+
+// Instructions
+#define INSTRUCTION_CHUNK_BIT 6
+#define INSTRUCTION_CHUNK_MASK ((1 << INSTRUCTION_CHUNK_BIT) - 1)
 
 
 #endif

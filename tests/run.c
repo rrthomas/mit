@@ -23,8 +23,8 @@ int main(void)
     }
 
     start_ass(52);
-    lit(37);
-    ass(O_HALT);
+    ass_number(37);
+    ass_action(O_HALT);
 
     WORD ret = run();
 

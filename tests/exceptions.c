@@ -30,63 +30,63 @@ int main(void)
     test[testno++] = ass_current();
     printf("Test %d: PC = %u\n", testno, ass_current());
     // test 1: push stack value into non-existent memory
-    lit(0xfffffff0);
-    ass(O_STORE_SP); lit(0);
+    ass_number(0xfffffff0);
+    ass_action(O_STORE_SP); ass_number(0);
 
     test[testno++] = ass_current();
     printf("Test %d: PC = %u\n", testno, ass_current());
     // test 2: set SP to MEMORY, then try to pop (>R) the stack
-    lit(MEMORY);
-    ass(O_STORE_SP); ass(O_POP2R);
+    ass_number(MEMORY);
+    ass_action(O_STORE_SP); ass_action(O_POP2R);
 
     test[testno++] = ass_current();
     printf("Test %d: PC = %u\n", testno, ass_current());
     // test 3: test arbitrary throw code
-    lit(42); ass(O_HALT);
+    ass_number(42); ass_action(O_HALT);
 
     test[testno++] = ass_current();
     printf("Test %d: PC = %u\n", testno, ass_current());
     // test 4: test SP can point to just after a memory area
-    lit(MEMORY);
-    lit(WORD_W);
-    ass(O_NEGATE); ass(O_ADD);
-    ass(O_STORE_SP); ass(O_POP2R); lit(0); ass(O_HALT);
+    ass_number(MEMORY);
+    ass_number(WORD_W);
+    ass_action(O_NEGATE); ass_action(O_ADD);
+    ass_action(O_STORE_SP); ass_action(O_POP2R); ass_number(0); ass_action(O_HALT);
 
     test[testno++] = ass_current();
     printf("Test %d: PC = %u\n", testno, ass_current());
     // test 5
-    lit(5); ass(O_STORE_SP);
+    ass_number(5); ass_action(O_STORE_SP);
 
     test[testno++] = ass_current();
     printf("Test %d: PC = %u\n", testno, ass_current());
     // test 6
-    lit(1); lit(0); ass(O_DIVMOD); lit(1);
-    ass(O_POP);
+    ass_number(1); ass_number(0); ass_action(O_DIVMOD); ass_number(1);
+    ass_action(O_POP);
 
     test[testno++] = ass_current();
     printf("Test %d: PC = %u\n", testno, ass_current());
     // test 7: allow execution to run off the end of a memory area
     // (test 4 has set MEMORY - 1 to all zeroes)
-    lit(MEMORY - 1);
-    ass(O_BRANCH);
+    ass_number(MEMORY - 1);
+    ass_action(O_BRANCH);
 
     test[testno++] = ass_current();
     printf("Test %d: PC = %u\n", testno, ass_current());
     // test 8: fetch from an invalid address
-    lit(0xffffffec); ass(O_LOAD);
+    ass_number(0xffffffec); ass_action(O_LOAD);
 
     test[testno++] = ass_current();
     printf("Test %d: PC = %u\n", testno, ass_current());
     // test 9
-    lit(1); ass(O_LOAD);
+    ass_number(1); ass_action(O_LOAD);
 
     test[testno++] = ass_current();
     printf("Test %d: PC = %u\n", testno, ass_current());
     // test 10: test invalid opcode
-    ass(O_UNDEFINED);
+    ass_action(O_UNDEFINED);
 
     start_ass(200);
-    ass(O_HALT);
+    ass_action(O_HALT);
 
     HANDLER = 200;   // set address of exception handler
 

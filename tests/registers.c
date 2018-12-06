@@ -36,17 +36,17 @@ int main(void)
     init((WORD *)malloc(SIZE), SIZE / WORD_W);
 
     start_ass(PC);
-    ass(O_PUSH_PC); lit(1); ass(O_POP);
-    ass(O_PUSH_S0); lit(1); ass(O_POP);
-    ass(O_PUSH_SSIZE); lit(1); ass(O_POP);
-    ass(O_PUSH_R0); lit(1); ass(O_POP);
-    ass(O_PUSH_RSIZE); lit(1); ass(O_POP);
-    lit(168); // 42 WORDS
-    ass(O_STORE_HANDLER);
-    ass(O_PUSH_HANDLER); lit(1); ass(O_POP);
-    ass(O_PUSH_MEMORY); lit(1); ass(O_POP);
-    ass(O_PUSH_BADPC); ass(O_PUSH_INVALID); lit(2); ass(O_POP);
-    ass(O_PUSH_PSIZE);
+    ass_action(O_PUSH_PC); ass_number(1); ass_action(O_POP);
+    ass_action(O_PUSH_S0); ass_number(1); ass_action(O_POP);
+    ass_action(O_PUSH_SSIZE); ass_number(1); ass_action(O_POP);
+    ass_action(O_PUSH_R0); ass_number(1); ass_action(O_POP);
+    ass_action(O_PUSH_RSIZE); ass_number(1); ass_action(O_POP);
+    ass_number(168); // 42 WORDS
+    ass_action(O_STORE_HANDLER);
+    ass_action(O_PUSH_HANDLER); ass_number(1); ass_action(O_POP);
+    ass_action(O_PUSH_MEMORY); ass_number(1); ass_action(O_POP);
+    ass_action(O_PUSH_BADPC); ass_action(O_PUSH_INVALID); ass_number(2); ass_action(O_POP);
+    ass_action(O_PUSH_PSIZE);
 
     for (size_t i = 0; i < sizeof(correct) / sizeof(correct[0]); i++) {
         show_data_stack();
@@ -56,7 +56,7 @@ int main(void)
             exit(1);
         }
         single_step();
-        printf("I = %s\n", disass(I));
+        printf("I = %s\n", disass(INSTRUCTION_ACTION, I));
     }
 
     // Cannot statically stringify POINTER_W

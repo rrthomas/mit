@@ -28,15 +28,15 @@ int main(void)
     start_ass(PC);
 
     // First part
-    lit(0); ass(O_PUSH); lit(1); ass(O_POP);
-    lit(1); ass(O_SWAP); lit(1); ass(O_PUSH);
-    lit(1); ass(O_SWAP); lit(1); ass(O_POP);
-    lit(0); ass(O_PUSH);
+    ass_number(0); ass_action(O_PUSH); ass_number(1); ass_action(O_POP);
+    ass_number(1); ass_action(O_SWAP); ass_number(1); ass_action(O_PUSH);
+    ass_number(1); ass_action(O_SWAP); ass_number(1); ass_action(O_POP);
+    ass_number(0); ass_action(O_PUSH);
 
     // Second part
-    ass(O_PUSH); ass(O_PUSH); lit(0); ass(O_PUSH);
-    lit(0); ass(O_PUSH); ass(O_POP2R);
-    lit(0); ass(O_RPUSH); ass(O_RPOP);
+    ass_action(O_PUSH); ass_action(O_PUSH); ass_number(0); ass_action(O_PUSH);
+    ass_number(0); ass_action(O_PUSH); ass_action(O_POP2R);
+    ass_number(0); ass_action(O_RPUSH); ass_action(O_RPOP);
 
     size_t i;
     for (i = 0; i < 14; i++) {
@@ -47,7 +47,7 @@ int main(void)
             exit(1);
         }
         single_step();
-        printf("I = %s\n", disass(I));
+        printf("I = %s\n", disass(INSTRUCTION_ACTION, I));
     }
 
     SP = S0;	// reset stack
@@ -63,7 +63,7 @@ int main(void)
             exit(1);
         }
         single_step();
-        printf("I = %s\n", disass(I));
+        printf("I = %s\n", disass(INSTRUCTION_ACTION, I));
     }
 
     assert(exception == 0);

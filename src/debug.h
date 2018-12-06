@@ -13,16 +13,14 @@
 #define PACKAGE_UPPER_DEBUG
 
 
-unsigned byte_size(WORD v); // return number of significant bytes in a WORD quantity
-
-void ass(BYTE instr);	// assemble an instruction
-void lit(WORD literal);	// assemble a word literal
-void plit(void (*literal)(void));  // assemble a machine-dependent function pointer literal,
-                                   // including the relevant LITERAL instructions
+void ass_action(WORD instr);	// assemble an action
+void ass_number(WORD n);	// assemble a number
+void ass_native_pointer(void (*pointer)(void));  // assemble a native function pointer
+void ass_byte(BYTE byte);	// assemble a literal byte
 void start_ass(UWORD addr);	// start assembly, initialising variables
 UWORD ass_current(void);	// return address of WORD currently being assembled to
-const char *disass(BYTE opcode);  // disassemble an instruction
-BYTE toass(const char *token);    // convert a instruction to its opcode
+const char *disass(enum instruction_type type, WORD opcode);  // disassemble an instruction
+UWORD toass(const char *token);    // convert an action to its opcode
 
 char *val_data_stack(void); // return the current data stack as a string
 void show_data_stack(void); // show the current contents of the data stack

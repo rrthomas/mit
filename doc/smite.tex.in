@@ -27,7 +27,7 @@
 \newcommand{\noru}[1]{\spic{n$_#1${\tt |}u$_{#1}$}}
 \newcommand{\aaddr}[1]{\spic{a-addr$_{#1}$}}
 
-% Lay out an instruction definition
+% Lay out an action definition
 
 % Define the widths of the stack effect and description columns
 \newlength{\itemwidth}\itemwidth=\textwidth \advance\itemwidth by -0.1in
@@ -61,14 +61,14 @@
 
 \title{The @PACKAGE_NAME@ Virtual Machine}
 \author{Reuben Thomas}
-\date{13th September 2018}
+\date{6th December 2018}
 
 \begin{document}
 \maketitle
 
 \subsection*{Typographical conventions}
 
-Instructions and @PACKAGE_NAME@'s registers are shown in {\tt Typewriter} font;
+Actions and @PACKAGE_NAME@'s registers are shown in {\tt Typewriter} font;
 interface calls are shown in {\bf Bold} type, and followed by empty parentheses.
 
 Addresses are given in bytes and refer to @PACKAGE_NAME@'s address space except where
@@ -86,7 +86,7 @@ the implementor in many particulars.
 
 @PACKAGE_NAME@ is self-contained. Machine
 code routines on the host computer may be accessed using the {\tt CALL\_NATIVE}
-instruction, which can also be used to implement I/O (see~\ref{accessinst}). @PACKAGE_NAME@ supports a simple object module format.
+action, which can also be used to implement I/O (see~\ref{accessact}). @PACKAGE_NAME@ supports a simple object module format.
 
 @PACKAGE_NAME@ is conceptually (and usually in fact) a library, embedded in other programs.
 A small interface is provided for other programs to control @PACKAGE_NAME@.
@@ -134,16 +134,16 @@ The registers, each with its function, are set out in table~\ref{regtable}.
 {\tt BADPC} & The address of the instruction that raised the most recent exception. \\
 {\tt INVALID} & The last address which caused an address
     exception. \\ \bottomrule
-{\tt PSIZE} & The number of words in a host machine pointer (for {\tt CALL\_NATIVE}; see section~\ref{accessinst}). \\
+{\tt PSIZE} & The number of words in a host machine pointer (for {\tt CALL\_NATIVE}; see section~\ref{accessact}). \\
 \end{tabular}
 \caption{\label{regtable}@PACKAGE_NAME@'s registers}
 \end{center}
 \end{table}
 
-All of the registers are word quantities except for {\tt I} and {\tt ENDISM}, which are one byte.
+The registers are word quantities.
 
 To ease efficient implementation, the registers may only be accessed
-by instructions (see section~\ref{registerinst}); not all registers are accessible, and only a few are writable.
+by actions (see section~\ref{registeract}); not all registers are accessible, and only a few are writable.
 
 
 \subsection{Memory}
@@ -156,13 +156,13 @@ The data and return stacks are word-aligned LIFO stacks of words. The stack
 pointers point to the top stack item on each stack. To {\bf push} an item on to
 a stack means to store the item in the word beyond the stack pointer and then
 adjust the pointer to point to it; to {\bf pop} an item means to make the
-pointer point to the second item on the stack. Instructions that change the number of items on a
+pointer point to the second item on the stack. Actions that change the number of items on a
 stack implicitly pop their arguments and push their results.
 
-The data stack is used for passing values to instructions and routines and the
+The data stack is used for passing values to actions and routines and the
 return stack for holding subroutine return addresses. The return stack may be used for other
 operations subject to the restrictions placed on it by its normal usage: it must
-be returned before a {\tt RET} instruction to the state it was in directly
+be returned before a {\tt RET} action to the state it was in directly
 after the corresponding {\tt CALL}.
 
 In what follows, for ``the stack'' read ``the data stack''; the return stack is
@@ -182,8 +182,8 @@ cycle is entered:
 
 \begin{tabbing}
 \hspace{0.5in}\=begin\=\+\+ \\*
-load {\tt I} from the byte pointed to by {\tt PC} \\*
-add $1$ to {\tt PC} \\*
+decode the next instruction into {\tt I} from the bytes pointed to by {\tt PC} \\*
+set {\tt PC} to point to the next byte after the end of the instruction\\*
 execute the instruction in {\tt I} \- \\*
 repeat
 \end{tabbing}
@@ -197,7 +197,7 @@ initialisation specified above.
 
 \subsection{Termination}
 
-When @PACKAGE_NAME@ encounters a {\tt HALT} instruction (see section~\ref{exceptinst}),
+When @PACKAGE_NAME@ encounters a {\tt HALT} action (see section~\ref{exceptact}),
 it returns the top data stack item as the reason code, unless {\tt SP} does not
 point to a valid word, in which case reason code $-257$ is returned (see section~\ref{exceptions}).
 
@@ -224,7 +224,7 @@ set {\tt PC} to the value of {\tt HANDLER} \\*
 
 The instruction that caused the exception to be raised is then considered to have finished executing.
 
-An exception can be raised explicitly by {\tt THROW} (see section~\ref{exceptinst}); exceptions are also raised by various errors, such as an attempt to access an invalid address, or divide by zero.
+An exception can be raised explicitly by {\tt THROW} (see section~\ref{exceptact}); exceptions are also raised by various errors, such as an attempt to access an invalid address, or divide by zero.
 
 \begin{table}[htbp]
 \begin{center}
@@ -243,7 +243,7 @@ $-256$ & Invalid opcode (see section~\ref{opcodes}). \\ \bottomrule
 Exception $-9$ is raised whenever an attempt is made to access an invalid
 address, either by an
 instruction, or during an instruction fetch (because {\tt PC} contains an
-invalid address). Exception $-23$ is raised when an instruction expecting
+invalid address). Exception $-23$ is raised when an action expecting
 an address of type \spic{a-addr} (word-aligned) is given a non-aligned address.
 When @PACKAGE_NAME@ raises an address exception ($-9$ or $-23$), {\tt INVALID} is first set to the offending address.
 
@@ -256,7 +256,7 @@ would involve putting a number on the stack).
 \section{Instruction set}
 \label{instset}
 
-The instruction set is listed in sections~\ref{stackinst} to~\ref{accessinst},
+The instruction set is listed in sections~\ref{numbers} to~\ref{accessact},
 with the instructions grouped according to function. The
 instructions are given in the following format:
 
@@ -343,10 +343,16 @@ If an instruction does not modify the return stack, the corresponding stack
 picture is omitted.
 
 
-\subsection{Stack manipulation}
-\label{stackinst}
+\subsection{Numbers}
+\label{numbers}
 
-These instructions manage the data stack and move values between stacks.
+\begin{description}
+\inst{number}{-- n}{The number is pushed on to the stack.}
+\end{description}
+
+\subsection{Stack manipulation}
+
+These actions manage the data stack and move values between stacks.
 
 \begin{description}
 \inst{POP}{\x{u}\dots\x1 u --}{Remove \spic{u} items from the stack.}
@@ -373,9 +379,9 @@ otherwise.
 \subsection{Arithmetic}
 \label{arithmetic}
 
-These instructions consist of monadic and dyadic operators.
+These actions consist of monadic and dyadic operators.
 All calculations are made without bounds or overflow checking, except
-as detailed for certain instructions.
+as detailed for certain actions.
 
 Addition:
 
@@ -385,7 +391,7 @@ Addition:
 \inst{ADD}{\noru1 \noru2 -- \noru3}{Add \noru2 to \noru1, giving the sum \noru3.}
 \end{description}
 
-Multiplication and division (note that all division instructions raise exception
+Multiplication and division (note that all division actions raise exception
 $-10$ if division by zero is attempted):
 
 \nopagebreak
@@ -407,7 +413,7 @@ Sign function:
 
 \subsection{Logic and shifts}
 
-These instructions consist of bitwise logical operators and bitwise shifts.
+These actions consist of bitwise logical operators and bitwise shifts.
 
 Logic functions:
 
@@ -431,10 +437,9 @@ Shifts:
 
 
 \subsection{Memory}
-\label{memoryinst}
 
-These instructions fetch and store words and bytes to and from memory; there is
-also an instruction to add a number to another stored in memory.
+These actions fetch and store words and bytes to and from memory; there is
+also an action to add a number to another stored in memory.
 
 \begin{description}
 \inst{LOAD}{a-addr -- x}{\spic{x} is the value stored at \spic{a-addr}.}
@@ -445,10 +450,10 @@ also an instruction to add a number to another stored in memory.
 
 
 \subsection{Registers}
-\label{registerinst}
+\label{registeract}
 
 As mentioned in section~\ref{registers}, the stack pointers {\tt SP} and {\tt
-RP} may only be accessed through special instructions:
+RP} may only be accessed through special actions:
 
 \begin{description}
 \inst{PUSH\_SP}{-- a-addr}{\spic{a-addr} is the value of {\tt SP}.}
@@ -472,7 +477,7 @@ RP} may only be accessed through special instructions:
 \subsection{Control structures}
 \label{control}
 
-These instructions implement unconditional and conditional branches, and subroutine
+These actions implement unconditional and conditional branches, and subroutine
 call and return; there is also a no-op.
 
 No-op:
@@ -501,18 +506,11 @@ Subroutine call and return:
 \instr{RET}{--}{addr --}{Put \spic{addr} into {\tt PC}.}
 \end{description}
 
-\subsection{Literal numbers}
-\label{literals}
-
-Literal numbers are word quantities encoded by one or more bytes, as follows: the significant bits of the number are split into groups of six bits, starting at the least significant end. The chunks are stored in consecutive bytes. All but the last byte have the seventh bit set and eighth bit clear; the final byte has the top two bits either both set or both clear, to match the number’s most significant bit.
-
-When a literal is executed, it is pushed on to the stack, and execution resumes at the first byte that did not form part of the number.
-
 
 \subsection{Exceptions}
-\label{exceptinst}
+\label{exceptact}
 
-These instructions give access to @PACKAGE_NAME@'s exception mechanisms (see section~\ref{exceptions}).
+These actions give access to @PACKAGE_NAME@'s exception mechanisms (see section~\ref{exceptions}).
 
 \begin{description}
 \inst{THROW}{n --}{Raise exception \spic{n}.}
@@ -521,9 +519,9 @@ These instructions give access to @PACKAGE_NAME@'s exception mechanisms (see sec
 
 
 \subsection{External access}
-\label{accessinst}
+\label{accessact}
 
-These instructions allow access to @PACKAGE_NAME@'s libraries, the operating system and native machine code.
+These actions allow access to @PACKAGE_NAME@'s libraries, the operating system and native machine code.
 
 \begin{description}
 \inst{CALL\_NATIVE}{i*x --}{Make a subroutine call to the routine at the address given (in the host machine's format, padded out to a number of words) on the data stack. The size and format of this address are machine-dependent.}
@@ -531,32 +529,37 @@ These instructions allow access to @PACKAGE_NAME@'s libraries, the operating sys
 \end{description}
 
 
-\subsection{Opcodes}
+\subsection{Instruction encoding}
+
+Instructions are words encoded by one or more bytes, as follows: the significant bits of the number are split into groups of six bits, starting at the least significant end. The chunks are stored in consecutive bytes. All but the last byte have the seventh bit set and eighth bit clear. If the instruction is a number the final byte has the top two bits either both set or both clear, to match the number’s most significant bit; otherwise, the top bit is set and the second bit clear, to indicate an action.
+
+
+\subsection{Action opcodes}
 \label{opcodes}
 
-Table~\ref{opcodetable} lists the opcodes in numerical order. Undefined opcodes raise exception $-256$. Opcodes 0x00–0x7f and 0xc0–0xff are used for literal numbers (see section~\ref{literals}). Other opcodes are undefined.
+Table~\ref{opcodetable} lists the action opcodes in numerical order. Other action opcodes are undefined. Undefined action opcodes raise exception $-256$.
 
 \begin{table}[htb]
 \begin{center}
 \begin{tabular}{*{3}{cc}} \toprule
-\bf Opcode & \bf Instruction & \bf Opcode & \bf
-    Instruction & \bf Opcode & \bf Instruction \\ \midrule
-\opcodetbl{80}{NOP}	{90}{AND}       {a0}{EXTRA}
-\opcodetbl{81}{POP}	{91}{OR}	{a1}{PUSH\_PSIZE}
-\opcodetbl{82}{PUSH}	{92}{XOR}	{a2}{PUSH\_SP}
-\opcodetbl{83}{SWAP}	{93}{LSHIFT}	{a3}{STORE\_SP}
-\opcodetbl{84}{RPUSH}	{94}{RSHIFT}	{a4}{PUSH\_RP}
-\opcodetbl{85}{POP2R}	{95}{LOAD}	{a5}{STORE\_RP}
-\opcodetbl{86}{RPOP}	{96}{STORE}	{a6}{PUSH\_PC}
-\opcodetbl{87}{LT}	{97}{LOADB}	{a7}{PUSH\_S0}
-\opcodetbl{88}{EQ}	{98}{STOREB}	{a8}{PUSH\_SSIZE}
-\opcodetbl{89}{ULT}	{99}{BRANCH}	{a9}{PUSH\_R0}
-\opcodetbl{8a}{ADD}	{9a}{BRANCHZ}	{aa}{PUSH\_RSIZE}
-\opcodetbl{8b}{MUL}	{9b}{CALL}	{ab}{PUSH\_HANDLER}
-\opcodetbl{8c}{UDIVMOD}	{9c}{RET}	{ac}{STORE\_HANDLER}
-\opcodetbl{8d}{DIVMOD}	{9d}{THROW}	{ad}{PUSH\_MEMORY}
-\opcodetbl{8e}{NEGATE}	{9e}{HALT}	{ae}{PUSH\_BADPC}
-\opcodetbl{8f}{INVERT}	{9f}{CALL\_NATIVE}	{af}{PUSH\_INVALID}
+\bf Opcode & \bf Action & \bf Opcode & \bf
+    Action & \bf Opcode & \bf Action \\ \midrule
+\opcodetbl{00}{NOP}	{10}{AND}       {20}{EXTRA}
+\opcodetbl{01}{POP}	{11}{OR}	{21}{PUSH\_PSIZE}
+\opcodetbl{02}{PUSH}	{12}{XOR}	{22}{PUSH\_SP}
+\opcodetbl{03}{SWAP}	{13}{LSHIFT}	{23}{STORE\_SP}
+\opcodetbl{04}{RPUSH}	{14}{RSHIFT}	{24}{PUSH\_RP}
+\opcodetbl{05}{POP2R}	{15}{LOAD}	{25}{STORE\_RP}
+\opcodetbl{06}{RPOP}	{16}{STORE}	{26}{PUSH\_PC}
+\opcodetbl{07}{LT}	{17}{LOADB}	{27}{PUSH\_S0}
+\opcodetbl{08}{EQ}	{18}{STOREB}	{28}{PUSH\_SSIZE}
+\opcodetbl{09}{ULT}	{19}{BRANCH}	{29}{PUSH\_R0}
+\opcodetbl{0a}{ADD}	{1a}{BRANCHZ}	{2a}{PUSH\_RSIZE}
+\opcodetbl{0b}{MUL}	{1b}{CALL}	{2b}{PUSH\_HANDLER}
+\opcodetbl{0c}{UDIVMOD}	{1c}{RET}	{2c}{STORE\_HANDLER}
+\opcodetbl{0d}{DIVMOD}	{1d}{THROW}	{2d}{PUSH\_MEMORY}
+\opcodetbl{0e}{NEGATE}	{1e}{HALT}	{2e}{PUSH\_BADPC}
+\opcodetbl{0f}{INVERT}	{1f}{CALL\_NATIVE}	{2f}{PUSH\_INVALID}
  \bottomrule
 \end{tabular}
 \caption{\label{opcodetable}@PACKAGE_NAME@'s opcodes}
@@ -567,7 +570,7 @@ Table~\ref{opcodetable} lists the opcodes in numerical order. Undefined opcodes 
 \section{External interface}
 
 @PACKAGE_NAME@'s external interface comes in three parts. The calling interface allows
-@PACKAGE_NAME@ to be controlled by other programs. The {\tt CALL\_NATIVE} instruction (see section~\ref{accessinst}) allows implementations to provide access to system facilities, previously written code,
+@PACKAGE_NAME@ to be controlled by other programs. The {\tt CALL\_NATIVE} action (see section~\ref{accessact}) allows implementations to provide access to system facilities, previously written code,
 code written in other languages, and the speed of machine code in time-critical
 situations. The object module format allows compiled code to be saved, reloaded
 and shared between systems.
@@ -603,11 +606,11 @@ following calls:
     to the given @PACKAGE_NAME@ address. If the @PACKAGE_NAME@ address is invalid, or the Boolean flag is true and the address is read-only, then a distinguished invalid pointer is returned.}
 \iface{run}{}{integer}{Start @PACKAGE_NAME@ by entering the execution cycle as
     described in section~\ref{operation}. If @PACKAGE_NAME@ ever executes a {\tt
-    HALT} instruction (see section~\ref{exceptinst}), the reason code is
+    HALT} action (see section~\ref{exceptact}), the reason code is
     returned as the result.}
 \iface{single\_step}{}{integer}{Execute a single pass of the execution
-    cycle, and return reason code $-259$, unless a {\tt HALT} instruction was
-    obeyed (see section~\ref{exceptinst}), in which case the reason code
+    cycle, and return reason code $-259$, unless a {\tt HALT} action was
+    obeyed (see section~\ref{exceptact}), in which case the reason code
     passed to it is returned.}
 \iface{load\_object}{file, address}{integer}{Load the object module
     specified by \textit{file}, which may be a filename or some other

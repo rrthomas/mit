@@ -11,10 +11,10 @@
 /exceptions
 /extra_instructions
 /init
-/literals
 /load_object
 /logic
 /memory
+/numbers
 /registers
 /run
 /single_step

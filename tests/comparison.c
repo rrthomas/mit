@@ -41,7 +41,7 @@ static void step(unsigned start, unsigned end)
     if (end > start)
         for (unsigned i = start; i < end; i++) {
             single_step();
-            printf("I = %s\n", disass(I));
+            printf("I = %s\n", disass(INSTRUCTION_ACTION, I));
             printf("Result: %d; correct result: %d\n\n", LOAD_WORD(SP),
                    correct[i]);
             if (correct[i] != LOAD_WORD(SP)) {
@@ -57,9 +57,9 @@ int main(void)
     init((WORD *)malloc(1024), 256);
 
     start_ass(PC);
-    ass(O_LT); ass(O_LT); ass(O_LT); ass(O_LT);
-    ass(O_EQ); ass(O_EQ);
-    ass(O_ULT); ass(O_ULT); ass(O_ULT); ass(O_ULT);
+    ass_action(O_LT); ass_action(O_LT); ass_action(O_LT); ass_action(O_LT);
+    ass_action(O_EQ); ass_action(O_EQ);
+    ass_action(O_ULT); ass_action(O_ULT); ass_action(O_ULT); ass_action(O_ULT);
 
     stack1();       // set up the stack with four standard pairs to compare
     step(0, 4);     // do the < tests

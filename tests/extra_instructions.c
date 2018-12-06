@@ -25,8 +25,8 @@ int main(void)
     assert(register_args(argc, argv) == 0);
 
     start_ass(PC);
-    lit(OX_ARGC); ass(O_EXTRA);
-    lit(1); lit(OX_ARG); ass(O_EXTRA);
+    ass_number(OX_ARGC); ass_action(O_EXTRA);
+    ass_number(1); ass_number(OX_ARG); ass_action(O_EXTRA);
 
     do {
         single_step();

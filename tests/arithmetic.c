@@ -1,5 +1,5 @@
 // Test the arithmetic operators. Also uses the SWAP and POP instructions,
-// and literals. Since unsigned arithmetic overflow behaviour is guaranteed
+// and numbers. Since unsigned arithmetic overflow behaviour is guaranteed
 // by the ISO C standard, we only test the stack handling and basic
 // correctness of the operators here, assuming that if the arithmetic works
 // in one case, it will work in all. Note that the correct stack values are
@@ -34,22 +34,22 @@ int main(void)
     init((WORD *)calloc(1024, 1), 256);
 
     start_ass(PC);
-    lit(0);
-    lit(1);
-    lit(WORD_W);
-    lit(-WORD_W);
-    lit(-1);
-    ass(O_ADD); ass(O_ADD); ass(O_NEGATE);
-    ass(O_ADD); lit(1); ass(O_SWAP); lit(-1);
-    lit(WORD_W);
-    ass(O_MUL); lit(1); ass(O_SWAP); lit(2); ass(O_POP);
-    ass(O_NEGATE); lit(-1);
-    ass(O_DIVMOD); lit(1); ass(O_SWAP); lit(2); ass(O_POP);
-    lit(WORD_W); ass(O_NEGATE); lit(1); ass(O_POP);
-    lit(-WORD_W);
-    lit(3);
-    ass(O_DIVMOD); lit(1); ass(O_POP); lit(-2);
-    ass(O_UDIVMOD);
+    ass_number(0);
+    ass_number(1);
+    ass_number(WORD_W);
+    ass_number(-WORD_W);
+    ass_number(-1);
+    ass_action(O_ADD); ass_action(O_ADD); ass_action(O_NEGATE);
+    ass_action(O_ADD); ass_number(1); ass_action(O_SWAP); ass_number(-1);
+    ass_number(WORD_W);
+    ass_action(O_MUL); ass_number(1); ass_action(O_SWAP); ass_number(2); ass_action(O_POP);
+    ass_action(O_NEGATE); ass_number(-1);
+    ass_action(O_DIVMOD); ass_number(1); ass_action(O_SWAP); ass_number(2); ass_action(O_POP);
+    ass_number(WORD_W); ass_action(O_NEGATE); ass_number(1); ass_action(O_POP);
+    ass_number(-WORD_W);
+    ass_number(3);
+    ass_action(O_DIVMOD); ass_number(1); ass_action(O_POP); ass_number(-2);
+    ass_action(O_UDIVMOD);
 
     for (size_t i = 0; i < sizeof(correct) / sizeof(correct[0]); i++) {
         show_data_stack();
@@ -59,7 +59,7 @@ int main(void)
             exit(1);
         }
         single_step();
-        printf("I = %s\n", disass(I));
+        printf("I = %s\n", disass(INSTRUCTION_ACTION, I));
     }
 
     assert(exception == 0);

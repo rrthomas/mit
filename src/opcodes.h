@@ -1,4 +1,4 @@
-// enum type for the opcodes.
+// Instruction opcodes.
 //
 // (c) Reuben Thomas 1994-2018
 //
@@ -12,8 +12,14 @@
 #define PACKAGE_UPPER_OPCODES
 
 
+// Instruction encoding
+enum instruction_type {
+      INSTRUCTION_NUMBER,
+      INSTRUCTION_ACTION,
+};
+
 enum {
-    O_NOP = 0x80,
+    O_NOP,
     O_POP,
     O_PUSH,
     O_SWAP,
@@ -62,7 +68,6 @@ enum {
     O_PUSH_BADPC,
     O_PUSH_INVALID,
     O_UNDEFINED, // Not part of the spec
-    O_UNDEFINED_END = 0xbf
 };
 
 enum {

@@ -109,31 +109,6 @@ int register_args(int argc, char *argv[])
 }
 
 
-int decode_literal(UWORD *addr, WORD *val)
-{
-    unsigned bits = 0;
-    WORD n = 0;
-    BYTE b;
-    int exception;
-
-    // Continuation bytes
-    for (exception = load_byte((*addr)++, &b); exception == 0 && (b & ~LITERAL_CHUNK_MASK) == 0x40; exception = load_byte((*addr)++, &b)) {
-        n |= (b & LITERAL_CHUNK_MASK) << bits;
-        bits += LITERAL_CHUNK_BIT;
-    }
-    if (exception != 0)
-        return exception;
-
-    // Check for missing end byte
-    if ((b & ~LITERAL_CHUNK_MASK) == 0x80)
-        return -256;
-
-    n |= b << bits;
-    bits += BYTE_BIT;
-    *val = bits < WORD_BIT ? ARSHIFT(n << (WORD_BIT - bits), WORD_BIT - bits) : n;
-    return 0;
-}
-
 // Perform one pass of the execution cycle
 WORD single_step(void)
 {
@@ -141,8 +116,12 @@ WORD single_step(void)
     WORD temp = 0, temp2 = 0;
     BYTE byte = 0;
 
-    I = LOAD_BYTE(PC++);
-    if (exception == 0)
+    int type = decode_instruction(&PC, &I);
+    switch (type) {
+    case INSTRUCTION_NUMBER:
+        PUSH(I);
+        break;
+    case INSTRUCTION_ACTION:
         switch (I) {
         case O_NOP:
             break;
@@ -567,22 +546,15 @@ WORD single_step(void)
             }
             break;
 
-        default:
-            // Undefined instruction
-            if (I >= O_UNDEFINED && I <= O_UNDEFINED_END)
-                exception = -256;
-
-            // Literal number
-            else {
-                WORD n;
-                --PC;
-                if ((exception = decode_literal(&PC, &n)) == 0)
-                    PUSH(n);
-                else
-                    exception = -256;
-            }
+        default: // Undefined instruction
+            exception = -256;
             break;
         }
+        break;
+    default: // Exception during instruction fetch
+        exception = type;
+        break;
+    }
 
     if (exception != 0) {
         // Deal with address exceptions during execution cycle.

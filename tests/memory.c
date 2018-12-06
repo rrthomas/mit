@@ -50,19 +50,19 @@ int main(void)
 
     start_ass(PC);
 
-    ass(O_PUSH_MEMORY); lit(WORD_W); ass(O_NEGATE); ass(O_ADD);
-    lit(513); lit(1); ass(O_PUSH); ass(O_STORE); lit(0); ass(O_PUSH);
-    ass(O_LOAD); lit(1); ass(O_POP); lit(0); ass(O_PUSH); ass(O_LOADB);
-    ass(O_ADD); ass(O_LOADB); lit(16383); ass(O_STOREB);
-    lit(16380); ass(O_LOAD); lit(1); ass(O_POP); ass(O_PUSH_SP);
-    ass(O_STORE_SP); ass(O_PUSH_RP); lit(1); ass(O_POP); lit(0);
-    ass(O_STORE_RP); ass(O_PUSH_RP); lit(1); ass(O_POP);
-    lit(size * WORD_W); ass(O_LOAD); lit(1); ass(O_POP);
-    lit(size * WORD_W + 5); ass(O_LOADB); lit(1); ass(O_POP);
-    lit(1);
-    lit(size * WORD_W + 1); ass(O_STOREB);
-    lit(size * WORD_W + 1); ass(O_LOADB); lit(1); ass(O_POP);
-    lit(size * WORD_W + 8); lit(0); ass(O_PUSH); ass(O_STOREB);
+    ass_action(O_PUSH_MEMORY); ass_number(WORD_W); ass_action(O_NEGATE); ass_action(O_ADD);
+    ass_number(513); ass_number(1); ass_action(O_PUSH); ass_action(O_STORE); ass_number(0); ass_action(O_PUSH);
+    ass_action(O_LOAD); ass_number(1); ass_action(O_POP); ass_number(0); ass_action(O_PUSH); ass_action(O_LOADB);
+    ass_action(O_ADD); ass_action(O_LOADB); ass_number(16383); ass_action(O_STOREB);
+    ass_number(16380); ass_action(O_LOAD); ass_number(1); ass_action(O_POP); ass_action(O_PUSH_SP);
+    ass_action(O_STORE_SP); ass_action(O_PUSH_RP); ass_number(1); ass_action(O_POP); ass_number(0);
+    ass_action(O_STORE_RP); ass_action(O_PUSH_RP); ass_number(1); ass_action(O_POP);
+    ass_number(size * WORD_W); ass_action(O_LOAD); ass_number(1); ass_action(O_POP);
+    ass_number(size * WORD_W + 5); ass_action(O_LOADB); ass_number(1); ass_action(O_POP);
+    ass_number(1);
+    ass_number(size * WORD_W + 1); ass_action(O_STOREB);
+    ass_number(size * WORD_W + 1); ass_action(O_LOADB); ass_number(1); ass_action(O_POP);
+    ass_number(size * WORD_W + 8); ass_number(0); ass_action(O_PUSH); ass_action(O_STOREB);
 
     for (size_t i = 0; i < sizeof(correct) / sizeof(correct[0]); i++) {
         show_data_stack();
@@ -72,7 +72,7 @@ int main(void)
             exit(1);
         }
         single_step();
-        printf("I = %s\n", disass(I));
+        printf("I = %s\n", disass(INSTRUCTION_ACTION, I));
     }
 
     assert(exception == 0);

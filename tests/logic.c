@@ -29,10 +29,10 @@ int main(void)
     PUSH(0xff000000); PUSH(8); PUSH(0xff); PUSH(8);
 
     start_ass(PC);
-    ass(O_LSHIFT); ass(O_POP2R); ass(O_RSHIFT); ass(O_RPOP);
-    ass(O_OR); ass(O_INVERT); lit(1);
-    lit(-1);
-    ass(O_XOR); ass(O_AND);
+    ass_action(O_LSHIFT); ass_action(O_POP2R); ass_action(O_RSHIFT); ass_action(O_RPOP);
+    ass_action(O_OR); ass_action(O_INVERT); ass_number(1);
+    ass_number(-1);
+    ass_action(O_XOR); ass_action(O_AND);
 
     for (size_t i = 0; i < sizeof(correct) / sizeof(correct[0]); i++) {
         show_data_stack();
@@ -42,7 +42,7 @@ int main(void)
             exit(1);
         }
         single_step();
-        printf("I = %s\n", disass(I));
+        printf("I = %s\n", disass(INSTRUCTION_ACTION, I));
     }
 
     assert(exception == 0);

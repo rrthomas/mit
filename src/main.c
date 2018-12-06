@@ -104,7 +104,7 @@ enum registers {
 };
 static int registers = sizeof(regist) / sizeof(*regist);
 
-static long count[256];
+static long count[O_UNDEFINED];
 
 
 static const char *globfile(const char *file)
@@ -178,9 +178,9 @@ static size_t search(const char *token, const char *list[], size_t entries)
     return SIZE_MAX;
 }
 
-static BYTE parse_instruction(const char *token)
+static WORD parse_instruction(const char *token)
 {
-    BYTE opcode = O_UNDEFINED;
+    WORD opcode = O_UNDEFINED;
     if (token[0] == 'O') {
         opcode = toass(token + 1);
         if (opcode == O_UNDEFINED)
@@ -248,21 +248,16 @@ static void disassemble(UWORD start, UWORD end)
     for (UWORD p = start; p < end; ) {
         printf("%#08"PRIx32": ", p);
 
-        BYTE i;
-        load_byte(p, &i);
-        const char *token = disass(i);
-        if (strcmp(token, "undefined") == 0) {
-            printf("Undefined instruction");
-            p++;
-        } else if (strcmp(token, "literal") == 0) {
-            WORD n;
-            if (decode_literal(&p, &n) != 0)
-                printf("Invalid literal");
+        WORD val;
+        int type = decode_instruction(&p, &val);
+        if (type < 0)
+            printf("Error reading memory");
+        else {
+            const char *s = disass(type, val);
+            if (strcmp(s, "undefined") == 0)
+                printf("Undefined instruction");
             else
-                printf("%"PRId32" (%#"PRIx32")", n, (UWORD)n);
-        } else {
-            printf("%s", token);
-            p++;
+                printf("%s", s);
         }
         putchar('\n');
     }
@@ -271,7 +266,7 @@ static void disassemble(UWORD start, UWORD end)
 
 static void reinit(void)
 {
-    memset(count, 0, 256 * sizeof(long));
+    memset(count, 0, sizeof(count));
     init(memory, memory_size);
     start_ass(PC);
 }
@@ -325,8 +320,6 @@ static void do_assign(char *token)
             start_ass(PC);
             break;
         case r_I:
-            if (bytes > 1)
-                fatal("only one byte can be assigned to I");
             I = value;
             break;
         case r_RP:
@@ -377,7 +370,7 @@ static void do_display(size_t no, const char *format)
             display = xasprintf("PC = %#"PRIx32" (%"PRIu32")", PC, PC);
             break;
         case r_I:
-            display = xasprintf("I = %-10s (%#02x)", disass(I), I);
+            display = xasprintf("I = %-10s (%#x)", disass(INSTRUCTION_ACTION, I), (UWORD)I);
             break;
         case r_MEMORY:
             display = xasprintf("MEMORY = %#"PRIx32" (%"PRIu32")", MEMORY, MEMORY);
@@ -435,16 +428,8 @@ static void do_command(int no)
         break;
     case c_COUNTS:
         {
-            for (int i = O_NOP; i <= O_PUSH_INVALID; i++) {
-                printf("%14s: %10ld", disass(i), count[i]);
-                putchar((i + 1) % 4 ? ' ' : '\n');
-            }
-            for (unsigned i = 0x0; i < O_NOP; i++) {
-                printf("          0x%02x: %10ld", i, count[i]);
-                putchar((i + 1) % 4 ? ' ' : '\n');
-            }
-            for (unsigned i = 0xc0; i <= 0xff; i++) {
-                printf("          0x%02x: %10ld", i, count[i]);
+            for (int i = 0x0; i < O_UNDEFINED; i++) {
+                printf("%14s: %10ld", disass(INSTRUCTION_ACTION, i), count[i]);
                 putchar((i + 1) % 4 ? ' ' : '\n');
             }
         }
@@ -605,26 +590,26 @@ static void do_command(int no)
             }
         }
         break;
-    case c_BLITERAL:
-    case c_LITERAL:
-    case c_PLITERAL:
+    case c_BYTE:
+    case c_NUMBER:
+    case c_POINTER:
         {
             int bytes;
             long long value = single_arg(strtok(NULL, " "), &bytes);
 
             switch (no) {
-            case c_BLITERAL:
+            case c_BYTE:
                 if (bytes > 1)
-                    fatal("the argument to BLITERAL must fit in a byte");
-                ass((BYTE)value);
+                    fatal("the argument to BYTE must fit in a byte");
+                ass_byte((BYTE)value);
                 break;
-            case c_LITERAL:
+            case c_NUMBER:
                 if (bytes > WORD_W)
-                    fatal("the argument to LITERAL must fit in a word");
-                lit(value);
+                    fatal("the argument to NUMBER must fit in a word");
+                ass_number(value);
                 break;
-            case c_PLITERAL:
-                plit((void *)value);
+            case c_POINTER:
+                ass_native_pointer((void *)value);
                 break;
             default: // This cannot happen
                 break;
@@ -687,9 +672,9 @@ static void parse(char *input)
         if (assign)
             do_assign(token);
         else {
-            BYTE opcode = parse_instruction(token);
+            WORD opcode = parse_instruction(token);
             if (opcode != O_UNDEFINED) {
-                ass(opcode);
+                ass_action(opcode);
                 return;
             }
 
