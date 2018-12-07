@@ -79,9 +79,6 @@ int load_object(FILE *file, UWORD address);
 int init(WORD *c_array, size_t size);
 int register_args(int argc, char *argv[]);
 
-#define PACKAGE_UPPER_TRUE WORD_MASK            // VM TRUE flag
-#define PACKAGE_UPPER_FALSE ((WORD)0)           // VM FALSE flag
-
 #define WORD_W 4    // the width of a word in bytes
 #define POINTER_W (sizeof(void *) / WORD_W)   // the width of a machine pointer in words
 

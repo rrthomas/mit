@@ -170,21 +170,21 @@ WORD single_step(void)
             {
                 WORD a = POP;
                 WORD b = POP;
-                PUSH(b < a ? PACKAGE_UPPER_TRUE : PACKAGE_UPPER_FALSE);
+                PUSH(b < a);
             }
             break;
         case O_EQ:
             {
                 WORD a = POP;
                 WORD b = POP;
-                PUSH(a == b ? PACKAGE_UPPER_TRUE : PACKAGE_UPPER_FALSE);
+                PUSH(a == b);
             }
             break;
         case O_ULT:
             {
                 UWORD a = POP;
                 UWORD b = POP;
-                PUSH(b < a ? PACKAGE_UPPER_TRUE : PACKAGE_UPPER_FALSE);
+                PUSH(b < a);
             }
             break;
         case O_ADD:
@@ -325,7 +325,7 @@ WORD single_step(void)
         case O_BRANCHZ:
             {
                 WORD addr = POP;
-                if (POP == PACKAGE_UPPER_FALSE)
+                if (POP == 0)
                     PC = addr;
                 break;
             }

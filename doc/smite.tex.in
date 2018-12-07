@@ -289,9 +289,7 @@ different types of stack item are shown in table~\ref{typetable}.
 \begin{center}
 \begin{tabular}{cl} \toprule
 \bf Symbol & \bf Data type \\ \midrule
-\spic{flag} & flag \\
-\spic{true} & true flag \\
-\spic{false} & false flag \\
+\spic{flag} & a Boolean flag, $1$ for true and $0$ for false \\
 \spic{byte} & byte \\
 \spic{n} & signed number \\
 \spic{u} & unsigned number \\
@@ -317,9 +315,10 @@ shows the subtype relationships. The subtype relation is transitive.
 \begin{tabular}{c} \toprule
 \spic{u} $\Rightarrow$ \spic{x} \\
 \spic{n} $\Rightarrow$ \spic{x} \\
+\spic{flag} $\Rightarrow$ \spic{u} \\
 \spic{byte} $\Rightarrow$ \spic{u} \\
 \spic{a-addr} $\Rightarrow$ \spic{addr} $\Rightarrow$ \spic{u} \\
-\spic{flag} $\Rightarrow$ \spic{x} \\ \bottomrule
+ \bottomrule
 \end{tabular}
 \caption{\label{reltable}The subtype relation}
 \end{center}
@@ -366,8 +365,7 @@ These actions manage the data stack and move values between stacks.
 \subsection{Comparison}
 
 These words compare two numbers (or, for equality tests, any two words) on the
-stack, returning a flag, true with all bits set if the test succeeds and false
-otherwise.
+stack, returning a flag.
 
 \begin{description}
 \inst{LT}{\n1 \n2 -- flag}{\spic{flag} is true if and only if \n1 is less than \n2.}
