@@ -15,7 +15,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include "gl_avltree_list.h"
-#include "gl_list.h"
 
 #include "public.h"
 #include "aux.h"
