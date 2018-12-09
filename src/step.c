@@ -20,7 +20,6 @@
 #include <sys/stat.h>
 #include <string.h>
 #include "binary-io.h"
-#include "minmax.h"
 #include "verify.h"
 
 #include "public.h"
