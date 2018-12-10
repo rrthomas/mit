@@ -114,7 +114,6 @@ The C implementation of SMite allows a hash-bang line to be prepended to an obje
 ```
 
 A magic file for the file(1) command is also provided: smite.magic.
-This file should be part of file >= 5.33.
 
 
 ## Bugs and comments
