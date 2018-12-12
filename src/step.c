@@ -130,6 +130,13 @@ WORD single_step(void)
                 SP -= depth * WORD_W * STACK_DIRECTION;
             }
             break;
+        case O_PUSH:
+            {
+                WORD depth = POP;
+                WORD pickee = LOAD_WORD(SP - depth * WORD_W * STACK_DIRECTION);
+                PUSH(pickee);
+            }
+            break;
         case O_SWAP:
             {
                 WORD depth = POP;
@@ -137,13 +144,6 @@ WORD single_step(void)
                 WORD top = POP;
                 PUSH(swapee);
                 STORE_WORD(SP - depth * WORD_W * STACK_DIRECTION, top);
-            }
-            break;
-        case O_PUSH:
-            {
-                WORD depth = POP;
-                WORD pickee = LOAD_WORD(SP - depth * WORD_W * STACK_DIRECTION);
-                PUSH(pickee);
             }
             break;
         case O_RPUSH:
@@ -293,31 +293,6 @@ WORD single_step(void)
                 STORE_BYTE(addr, value);
             }
             break;
-        case O_PUSH_SP:
-            {
-                WORD value = SP;
-                PUSH(value);
-            }
-            break;
-        case O_STORE_SP:
-            {
-                WORD value = POP;
-                CHECK_ALIGNED(value);
-                if (exception == 0)
-                    SP = value;
-            }
-            break;
-        case O_PUSH_RP:
-            PUSH(RP);
-            break;
-        case O_STORE_RP:
-            {
-                WORD value = POP;
-                CHECK_ALIGNED(value);
-                if (exception == 0)
-                    RP = value;
-            }
-            break;
         case O_BRANCH:
             PC = POP;
             break;
@@ -335,44 +310,11 @@ WORD single_step(void)
         case O_RET:
             PC = POP_RETURN;
             break;
-        case O_PUSH_PSIZE:
-            PUSH(POINTER_W);
-            break;
         case O_THROW:
             exception = POP;
             break;
         case O_HALT:
             return POP;
-        case O_PUSH_PC:
-            PUSH(PC);
-            break;
-        case O_PUSH_S0:
-            PUSH(S0);
-            break;
-        case O_PUSH_SSIZE:
-            PUSH(HASHS);
-            break;
-        case O_PUSH_R0:
-            PUSH(R0);
-            break;
-        case O_PUSH_RSIZE:
-            PUSH(HASHR);
-            break;
-        case O_PUSH_HANDLER:
-            PUSH(HANDLER);
-            break;
-        case O_STORE_HANDLER:
-            HANDLER = POP;
-            break;
-        case O_PUSH_MEMORY:
-            PUSH(MEMORY);
-            break;
-        case O_PUSH_BADPC:
-            PUSH(BADPC);
-            break;
-        case O_PUSH_INVALID:
-            PUSH(INVALID);
-            break;
         case O_CALL_NATIVE:
             {
                 WORD_pointer address;
@@ -543,6 +485,64 @@ WORD single_step(void)
                     break;
                 }
             }
+            break;
+        case O_PUSH_PSIZE:
+            PUSH(POINTER_W);
+            break;
+        case O_PUSH_SP:
+            {
+                WORD value = SP;
+                PUSH(value);
+            }
+            break;
+        case O_STORE_SP:
+            {
+                WORD value = POP;
+                CHECK_ALIGNED(value);
+                if (exception == 0)
+                    SP = value;
+            }
+            break;
+        case O_PUSH_RP:
+            PUSH(RP);
+            break;
+        case O_STORE_RP:
+            {
+                WORD value = POP;
+                CHECK_ALIGNED(value);
+                if (exception == 0)
+                    RP = value;
+            }
+            break;
+        case O_PUSH_PC:
+            PUSH(PC);
+            break;
+        case O_PUSH_S0:
+            PUSH(S0);
+            break;
+        case O_PUSH_SSIZE:
+            PUSH(HASHS);
+            break;
+        case O_PUSH_R0:
+            PUSH(R0);
+            break;
+        case O_PUSH_RSIZE:
+            PUSH(HASHR);
+            break;
+        case O_PUSH_HANDLER:
+            PUSH(HANDLER);
+            break;
+        case O_STORE_HANDLER:
+            HANDLER = POP;
+            break;
+        case O_PUSH_MEMORY:
+            PUSH(MEMORY);
+            break;
+        case O_PUSH_BADPC:
+            PUSH(BADPC);
+            break;
+        case O_PUSH_INVALID:
+            PUSH(INVALID);
             break;
 
         default: // Undefined instruction
