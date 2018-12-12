@@ -12,7 +12,7 @@ AM_CPPFLAGS = -I$(top_builddir)/lib -I$(top_srcdir)/lib $(WARN_CFLAGS)
 
 lib_LTLIBRARIES = libsmite.la
 libsmite_la_SOURCES = bits_util.c storage.c instruction.c step.c run.c debug.c loadobj.c \
-	private.h stringify.h
+	private.h stringify.h instruction-names.h instruction-actions.h
 libsmite_la_LIBADD = $(top_builddir)/lib/libgnu.la
 
 bin_PROGRAMS = smite
@@ -31,6 +31,8 @@ completions: tbl_registers.h tbl_commands.h
 	$(CPP) -I$(srcdir) $(srcdir)/completions.h | grep -v "^#" > $@
 
 bits_util.lo debug.lo instruction.lo loadobj.lo run.lo step.lo storage.lo main.o: external_syms.h
+step.lo: instruction-actions.h
+bits_util.lo debug.lo instruction.lo loadobj.lo step.lo storage.lo main.o: instruction-names.h
 main.o: tbl_opts.h
 
 # Depend on @PACKAGE@$(EXEEXT) rather than explicitly make-ing it, as otherwise
@@ -77,6 +79,12 @@ tbl_opts.h: tbl_opts.h.in Makefile
 external-defines.txt: $(internal_HDRS)
 	$(top_srcdir)/build-aux/find-external-defines $(srcdir) > $@
 
+instruction-names.h: gen-names.py instructions.py
+	$(PYTHON) $(srcdir)/gen-names.py > instruction-names.h
+
+instruction-actions.h: gen-actions.py instructions.py
+	$(PYTHON) $(srcdir)/gen-actions.py > instruction-actions.h
+
 # Actually needs .o files, but since find-external-syms requires GNU tools,
 # don't force remaking external-syms.txt; instead, add it to EXTRA_DIST.
 # find-external-syms takes care of remaking the executable.
@@ -98,9 +106,9 @@ external_syms.h: external-syms.txt
 CLOC = cloc --force-lang="C",h
 
 loc:
-	$(CLOC) $(lib@PACKAGE@_la_SOURCES) $(@PACKAGE@_SOURCES)
+	$(CLOC) $(lib@PACKAGE@_la_SOURCES) $(@PACKAGE@_SOURCES) instructions.py gen-names.py gen-actions.py
 
-EXTRA_DIST = @PACKAGE@i.in @PACKAGE@i.1 @PACKAGE@-dump.in @PACKAGE@-dump.1 completions.h tbl_opts.h.in step.c external-syms.txt external_syms.h
+EXTRA_DIST = @PACKAGE@i.in @PACKAGE@i.1 @PACKAGE@-dump.in @PACKAGE@-dump.1 completions.h tbl_opts.h.in step.c external-syms.txt external_syms.h gen-names.py gen-actions.py instructions.py
 
 DISTCLEANFILES = @PACKAGE@i @PACKAGE@-dump @PACKAGE@.1 @PACKAGE@i.1 @PACKAGE-dump.1 completions tbl_opts.h $(include_HEADERS) external-defines.txt external-syms.txt
 # Ignore built files that are part of the distribution (specifically,

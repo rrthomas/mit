@@ -12,6 +12,7 @@ AC_PROG_CC_C99
 gl_EARLY
 AM_PROG_AR
 LT_INIT
+AM_PATH_PYTHON([3.4])
 AC_PATH_PROG(LATEXMK, latexmk, true)
 AM_CONDITIONAL([HAVE_LATEXMK], [test "$ac_cv_path_LATEXMK" != "true"])
 
