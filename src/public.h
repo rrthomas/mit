@@ -29,7 +29,7 @@ typedef uint64_t DUWORD;
 #define BYTE_BIT 8
 #define BYTE_MASK ((1 << BYTE_BIT) - 1)
 #undef WORD_BIT // FIXME: prefix this and other symbols
-#define WORD_BIT (sizeof(WORD_W) * BYTE_BIT)
+#define WORD_BIT (sizeof(WORD_SIZE) * BYTE_BIT)
 #define WORD_MAX (UINT32_MAX)
 #define WORD_MASK WORD_MAX
 
@@ -79,12 +79,13 @@ int load_object(FILE *file, UWORD address);
 int init(WORD *c_array, size_t size);
 int register_args(int argc, char *argv[]);
 
-#define WORD_W 4    // the width of a word in bytes
-#define POINTER_W (sizeof(void *) / WORD_W)   // the width of a machine pointer in words
+#define WORD_SIZE 4
+#define ADDRESS_SIZE 4
+#define NATIVE_POINTER_SIZE (sizeof(void *))
 
 // A union to allow storage of machine pointers in VM memory
 union _WORD_pointer {
-    WORD words[POINTER_W];
+    WORD words[NATIVE_POINTER_SIZE / WORD_SIZE];
     void (*pointer)(void);
 };
 typedef union _WORD_pointer WORD_pointer;

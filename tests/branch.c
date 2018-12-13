@@ -25,7 +25,7 @@ int main(void)
     int exception = 0;
 
     size_t size = 4096;
-    init((WORD *)calloc(size, WORD_W), size);
+    init((WORD *)calloc(size, WORD_SIZE), size);
 
     start_ass(PC);
     ass_number(96); ass_action(O_BRANCH);

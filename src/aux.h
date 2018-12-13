@@ -46,29 +46,29 @@ int reverse(UWORD start, UWORD length);
 #define STORE_BYTE(a, v)                                                \
     (exception = exception ? exception : store_byte((a), (v)))
 #define PUSH(v)                                 \
-    (SP += WORD_W * STACK_DIRECTION, STORE_WORD(SP, (v)))
+    (SP += WORD_SIZE * STACK_DIRECTION, STORE_WORD(SP, (v)))
 #define POP                                     \
-    (SP -= WORD_W * STACK_DIRECTION, LOAD_WORD(SP + WORD_W * STACK_DIRECTION))
+    (SP -= WORD_SIZE * STACK_DIRECTION, LOAD_WORD(SP + WORD_SIZE * STACK_DIRECTION))
 #define PUSH_DOUBLE(ud)                         \
     PUSH((UWORD)(ud & WORD_MASK));              \
     PUSH((UWORD)((ud >> WORD_BIT) & WORD_MASK))
 #define POP_DOUBLE                              \
-    (SP -= 2 * WORD_W * STACK_DIRECTION, (UWORD)LOAD_WORD(SP + WORD_W * STACK_DIRECTION), temp | \
-     ((DUWORD)(UWORD)_LOAD_WORD(SP + 2 * WORD_W * STACK_DIRECTION, temp2) << WORD_BIT))
+    (SP -= 2 * WORD_SIZE * STACK_DIRECTION, (UWORD)LOAD_WORD(SP + WORD_SIZE * STACK_DIRECTION), temp | \
+     ((DUWORD)(UWORD)_LOAD_WORD(SP + 2 * WORD_SIZE * STACK_DIRECTION, temp2) << WORD_BIT))
 #define PUSH_RETURN(v)                          \
-    (RP += WORD_W * STACK_DIRECTION, STORE_WORD(RP, (v)))
+    (RP += WORD_SIZE * STACK_DIRECTION, STORE_WORD(RP, (v)))
 #define POP_RETURN                              \
-    (RP -= WORD_W * STACK_DIRECTION, LOAD_WORD(RP + WORD_W * STACK_DIRECTION))
+    (RP -= WORD_SIZE * STACK_DIRECTION, LOAD_WORD(RP + WORD_SIZE * STACK_DIRECTION))
 #define STACK_UNDERFLOW(ptr, base)              \
     (ptr - base == 0 ? false : (STACK_DIRECTION > 0 ? ptr < base : ptr > base))
 
 uint8_t *native_address_range_in_one_area(UWORD start, UWORD length, bool writable);
 
 // Align a VM address
-#define ALIGN(a) ((a + WORD_W - 1) & (-WORD_W))
+#define ALIGN(a) ((a + WORD_SIZE - 1) & (-WORD_SIZE))
 
 // Check whether a VM address is aligned
-#define IS_ALIGNED(a)     (((a) & (WORD_W - 1)) == 0)
+#define IS_ALIGNED(a)     (((a) & (WORD_SIZE - 1)) == 0)
 
 // Portable arithmetic right shift (the behaviour of >> on signed
 // quantities is implementation-defined in C99)

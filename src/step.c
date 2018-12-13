@@ -34,7 +34,7 @@ verify(sizeof(int) <= sizeof(WORD));
 
 // Check whether a VM address points to a native word-aligned word
 #define WORD_IN_ONE_AREA(a)                             \
-    (native_address_range_in_one_area((a), WORD_W, false) != NULL)
+    (native_address_range_in_one_area((a), WORD_SIZE, false) != NULL)
 
 #define DIVZERO(x)                              \
     if (x == 0)                                 \
@@ -304,7 +304,7 @@ WORD single_step(void)
         // Since we have already had an exception, and must return a different
         // code from usual if SP is now invalid, push the exception code
         // "manually".
-        SP += WORD_W * STACK_DIRECTION;
+        SP += WORD_SIZE * STACK_DIRECTION;
         if (!WORD_IN_ONE_AREA(SP) || !IS_ALIGNED(SP))
             return -257;
         int store_exception = store_word(SP, exception);

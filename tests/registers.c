@@ -33,7 +33,7 @@ int main(void)
 {
     int exception = 0;
 
-    init((WORD *)malloc(SIZE), SIZE / WORD_W);
+    init((WORD *)malloc(SIZE), SIZE / WORD_SIZE);
 
     start_ass(PC);
     ass_action(O_PUSH_PC); ass_number(1); ass_action(O_POP);
@@ -41,12 +41,12 @@ int main(void)
     ass_action(O_PUSH_SSIZE); ass_number(1); ass_action(O_POP);
     ass_action(O_PUSH_R0); ass_number(1); ass_action(O_POP);
     ass_action(O_PUSH_RSIZE); ass_number(1); ass_action(O_POP);
-    ass_number(168); // 42 WORDS
+    ass_number(42 * WORD_SIZE);
     ass_action(O_STORE_HANDLER);
     ass_action(O_PUSH_HANDLER); ass_number(1); ass_action(O_POP);
     ass_action(O_PUSH_MEMORY); ass_number(1); ass_action(O_POP);
     ass_action(O_PUSH_BADPC); ass_action(O_PUSH_INVALID); ass_number(2); ass_action(O_POP);
-    ass_action(O_PUSH_PSIZE);
+    ass_action(O_PUSH_NATIVE_POINTER_SIZE);
 
     for (size_t i = 0; i < sizeof(correct) / sizeof(correct[0]); i++) {
         show_data_stack();
@@ -59,9 +59,9 @@ int main(void)
         printf("I = %s\n", disass(INSTRUCTION_ACTION, I));
     }
 
-    // Cannot statically stringify POINTER_W
+    // Cannot statically stringify NATIVE_POINTER_SIZE
     show_data_stack();
-    char *pointer_w = xasprintf("%u", (unsigned)POINTER_W);
+    char *pointer_w = xasprintf("%u", (unsigned)NATIVE_POINTER_SIZE);
     printf("Correct stack: %s\n\n", pointer_w);
     if (strcmp(pointer_w, val_data_stack())) {
         printf("Error in registers tests: PC = %"PRIu32"\n", PC);

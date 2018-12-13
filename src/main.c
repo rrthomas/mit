@@ -279,8 +279,8 @@ static int save_object(FILE *file, UWORD address, UWORD length)
         putc('\0', file) == EOF ||
         putc('\0', file) == EOF ||
         putc((char)ENDISM, file) == EOF ||
-        fwrite(&length, WORD_W, 1, file) != 1 ||
-        fwrite(ptr, WORD_W, length, file) != length)
+        fwrite(&length, WORD_SIZE, 1, file) != 1 ||
+        fwrite(ptr, WORD_SIZE, length, file) != length)
         return -3;
 
     return 0;
@@ -590,7 +590,7 @@ static void do_command(int no)
                 ass_byte((BYTE)value);
                 break;
             case c_NUMBER:
-                if (bytes > WORD_W)
+                if (bytes > WORD_SIZE)
                     fatal("the argument to NUMBER must fit in a word");
                 ass_number(value);
                 break;
@@ -806,7 +806,7 @@ int main(int argc, char *argv[])
             }
     }
 
-    if ((memory = (WORD *)calloc(memory_size, WORD_W)) == NULL)
+    if ((memory = (WORD *)calloc(memory_size, WORD_SIZE)) == NULL)
         die("could not allocate %"PRIu32" words of memory", memory_size);
     reinit();
 

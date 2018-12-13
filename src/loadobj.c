@@ -52,7 +52,7 @@ int load_object(FILE *file, UWORD address)
     int reversed = endism ^ ENDISM;
 
     UWORD length = 0;
-    if (fread(&length, 1, WORD_W, file) != WORD_W)
+    if (fread(&length, 1, WORD_SIZE, file) != WORD_SIZE)
         return -3;
     if (reversed)
         length = (UWORD)reverse_word((WORD)length);

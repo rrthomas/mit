@@ -140,7 +140,7 @@ UWORD mem_align(void)
 
 // Macro for byte addressing
 #ifdef WORDS_BIGENDIAN
-#define FLIP(addr) ((addr) ^ (WORD_W - 1))
+#define FLIP(addr) ((addr) ^ (WORD_SIZE - 1))
 #else
 #define FLIP(addr) (addr)
 #endif
@@ -153,7 +153,7 @@ int load_word(UWORD addr, WORD *value)
     }
 
     // Aligned access to a single memory area
-    uint8_t *ptr = native_address_range_in_one_area(addr, WORD_W, false);
+    uint8_t *ptr = native_address_range_in_one_area(addr, WORD_SIZE, false);
     if (ptr != NULL && IS_ALIGNED((size_t)ptr)) {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wcast-align"
@@ -164,13 +164,13 @@ int load_word(UWORD addr, WORD *value)
 
     // Awkward access
     *value = 0;
-    for (unsigned i = 0; i < WORD_W; i++, addr++) {
+    for (unsigned i = 0; i < WORD_SIZE; i++, addr++) {
         ptr = native_address(addr, false);
         if (ptr == NULL) {
             INVALID = addr;
             return -9;
         }
-        ((BYTE *)value)[ENDISM ? WORD_W - i : i] = *ptr;
+        ((BYTE *)value)[ENDISM ? WORD_SIZE - i : i] = *ptr;
     }
     return 0;
 }
@@ -194,7 +194,7 @@ int store_word(UWORD addr, WORD value)
     }
 
     // Aligned access to a single memory allocation
-    uint8_t *ptr = native_address_range_in_one_area(addr, WORD_W, true);
+    uint8_t *ptr = native_address_range_in_one_area(addr, WORD_SIZE, true);
     if (ptr != NULL && IS_ALIGNED((size_t)ptr)) {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wcast-align"
@@ -205,8 +205,8 @@ int store_word(UWORD addr, WORD value)
 
     // Awkward access
     int exception = 0;
-    for (unsigned i = 0; exception == 0 && i < WORD_W; i++)
-        exception = store_byte(addr + i, value >> ((ENDISM ? WORD_W - i : i) * BYTE_BIT));
+    for (unsigned i = 0; exception == 0 && i < WORD_SIZE; i++)
+        exception = store_byte(addr + i, value >> ((ENDISM ? WORD_SIZE - i : i) * BYTE_BIT));
     return exception;
 }
 
@@ -228,9 +228,9 @@ int store_byte(UWORD addr, BYTE value)
 _GL_ATTRIBUTE_CONST WORD reverse_word(WORD value)
 {
     WORD res = 0;
-    for (unsigned i = 0; i < WORD_W / 2; i++) {
+    for (unsigned i = 0; i < WORD_SIZE / 2; i++) {
         unsigned lopos = BYTE_BIT * i;
-        unsigned hipos = BYTE_BIT * (WORD_W - 1 - i);
+        unsigned hipos = BYTE_BIT * (WORD_SIZE - 1 - i);
         unsigned move = hipos - lopos;
         res |= ((((UWORD)value) & (BYTE_MASK << hipos)) >> move)
             | ((((UWORD)value) & (BYTE_MASK << lopos)) << move);
@@ -243,7 +243,7 @@ int reverse(UWORD start, UWORD length)
     int ret = 0;
     for (UWORD i = 0; ret == 0 && i < length; i ++) {
         WORD c;
-        ret = load_word(start + i * WORD_W, &c)
+        ret = load_word(start + i * WORD_SIZE, &c)
             || store_word(start + i, reverse_word(c));
     }
     return ret;
@@ -255,7 +255,7 @@ int pre_dma(UWORD from, UWORD to, bool write)
 {
     int exception = 0;
 
-    from &= -WORD_W;
+    from &= -WORD_SIZE;
     to = ALIGN(to);
     if (to < from || native_address_range_in_one_area(from, to - from, write) == NULL)
         exception = -1;
@@ -280,7 +280,7 @@ int init(WORD *memory, size_t size)
 {
     if (memory == NULL)
         return -1;
-    MEMORY = size * WORD_W;
+    MEMORY = size * WORD_SIZE;
     memset(memory, 0, MEMORY);
 
     _mem_here = 0UL;
@@ -295,8 +295,8 @@ int init(WORD *memory, size_t size)
     if (mem_allot(memory, MEMORY, true) == WORD_MASK)
         return -2;
 
-    WORD *d_stack = calloc(HASHS, WORD_W);
-    WORD *r_stack = calloc(HASHR, WORD_W);
+    WORD *d_stack = calloc(HASHS, WORD_SIZE);
+    WORD *r_stack = calloc(HASHR, WORD_SIZE);
     if (d_stack == NULL || r_stack == NULL)
         return -2;
 

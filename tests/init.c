@@ -25,7 +25,7 @@ int main(void)
     size_t size = 1024;
     WORD *ptr = (WORD *)malloc(size);
     assert(ptr);
-    i = init(ptr, size / WORD_W);
+    i = init(ptr, size / WORD_SIZE);
     if (i != 0) {
         printf("Error in init() tests: init with valid parameters failed\n");
         exit(1);

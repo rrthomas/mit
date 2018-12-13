@@ -23,7 +23,7 @@ int main(void)
     int exception = 0;
 
     size_t size = 4096;
-    init((WORD *)calloc(size, WORD_W), size);
+    init((WORD *)calloc(size, WORD_SIZE), size);
 
     start_ass(0);
 
@@ -48,7 +48,7 @@ int main(void)
     printf("Test %d: PC = %u\n", testno, ass_current());
     // test 4: test SP can point to just after a memory area
     ass_number(MEMORY);
-    ass_number(WORD_W);
+    ass_number(WORD_SIZE);
     ass_action(O_NEGATE); ass_action(O_ADD);
     ass_action(O_STORE_SP); ass_action(O_POP2R); ass_number(0); ass_action(O_HALT);
 

@@ -34,21 +34,23 @@ class Opcodes(enum.IntEnum):
     HALT = 0x1e
     CALL_NATIVE = 0x1f
     EXTRA = 0x20
-    PUSH_PSIZE = 0x21
-    PUSH_SP = 0x22
-    STORE_SP = 0x23
-    PUSH_RP = 0x24
-    STORE_RP = 0x25
-    PUSH_PC = 0x26
-    PUSH_S0 = 0x27
-    PUSH_SSIZE = 0x28
-    PUSH_R0 = 0x29
-    PUSH_RSIZE = 0x2a
-    PUSH_HANDLER = 0x2b
-    STORE_HANDLER = 0x2c
-    PUSH_MEMORY = 0x2d
-    PUSH_BADPC = 0x2e
-    PUSH_INVALID = 0x2f
+    PUSH_WORD_SIZE = 0x21
+    PUSH_ADDRESS_SIZE = 0x22
+    PUSH_NATIVE_POINTER_SIZE = 0x23
+    PUSH_SP = 0x24
+    STORE_SP = 0x25
+    PUSH_RP = 0x26
+    STORE_RP = 0x27
+    PUSH_PC = 0x28
+    PUSH_S0 = 0x29
+    PUSH_SSIZE = 0x2a
+    PUSH_R0 = 0x2b
+    PUSH_RSIZE = 0x2c
+    PUSH_HANDLER = 0x2d
+    STORE_HANDLER = 0x2e
+    PUSH_MEMORY = 0x2f
+    PUSH_BADPC = 0x30
+    PUSH_INVALID = 0x31
 
 actions = {}
 
@@ -57,26 +59,26 @@ actions[Opcodes.NOP] = '''
 
 actions[Opcodes.POP] = '''
 WORD depth = POP;
-SP -= depth * WORD_W * STACK_DIRECTION;
+SP -= depth * WORD_SIZE * STACK_DIRECTION;
 '''
 
 actions[Opcodes.PUSH] = '''
 WORD depth = POP;
-WORD pickee = LOAD_WORD(SP - depth * WORD_W * STACK_DIRECTION);
+WORD pickee = LOAD_WORD(SP - depth * WORD_SIZE * STACK_DIRECTION);
 PUSH(pickee);
 '''
 
 actions[Opcodes.SWAP] = '''
 WORD depth = POP;
-WORD swapee = LOAD_WORD(SP - depth * WORD_W * STACK_DIRECTION);
+WORD swapee = LOAD_WORD(SP - depth * WORD_SIZE * STACK_DIRECTION);
 WORD top = POP;
 PUSH(swapee);
-STORE_WORD(SP - depth * WORD_W * STACK_DIRECTION, top);
+STORE_WORD(SP - depth * WORD_SIZE * STACK_DIRECTION, top);
 '''
 
 actions[Opcodes.RPUSH] = '''
 WORD depth = POP;
-WORD pickee = LOAD_WORD(RP - depth * WORD_W * STACK_DIRECTION);
+WORD pickee = LOAD_WORD(RP - depth * WORD_SIZE * STACK_DIRECTION);
 PUSH(pickee);
 '''
 
@@ -229,7 +231,7 @@ return POP;
 
 actions[Opcodes.CALL_NATIVE] = '''
 WORD_pointer address;
-for (int i = POINTER_W - 1; i >= 0; i--)
+for (int i = (NATIVE_POINTER_SIZE / WORD_SIZE) - 1; i >= 0; i--)
     address.words[i] = POP;
 address.pointer();
 '''
@@ -238,8 +240,16 @@ actions[Opcodes.EXTRA] = '''
 extra();
 '''
 
-actions[Opcodes.PUSH_PSIZE] = '''
-PUSH(POINTER_W);
+actions[Opcodes.PUSH_WORD_SIZE] = '''
+PUSH(WORD_SIZE);
+'''
+
+actions[Opcodes.PUSH_ADDRESS_SIZE] = '''
+PUSH(ADDRESS_SIZE);
+'''
+
+actions[Opcodes.PUSH_NATIVE_POINTER_SIZE] = '''
+PUSH(NATIVE_POINTER_SIZE);
 '''
 
 actions[Opcodes.PUSH_SP] = '''

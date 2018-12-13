@@ -41,7 +41,7 @@ void ass_number(WORD v)
 void ass_native_pointer(void (*pointer)(void))
 {
     WORD_pointer address = { .pointer = pointer };
-    for (unsigned i = 0; i < POINTER_W; i++)
+    for (unsigned i = 0; i < NATIVE_POINTER_SIZE / WORD_SIZE; i++)
         ass_number(address.words[i]);
 }
 
@@ -65,8 +65,9 @@ static const char *mnemonic[O_UNDEFINED] = {
     "EQ", "ULT", "ADD", "MUL", "UDIVMOD", "DIVMOD", "NEGATE", "INVERT",
     "AND", "OR", "XOR", "LSHIFT", "RSHIFT", "LOAD", "STORE", "LOADB",
     "STOREB", "BRANCH", "BRANCHZ", "CALL", "RET", "THROW", "HALT", "CALL_NATIVE",
-    "EXTRA", "PUSH_PSIZE", "PUSH_SP", "STORE_SP", "PUSH_RP", "STORE_RP", "PUSH_PC", "PUSH_S0",
-    "PUSH_SSIZE", "PUSH_R0", "PUSH_RSIZE", "PUSH_HANDLER", "STORE_HANDLER", "PUSH_MEMORY", "PUSH_BADPC", "PUSH_INVALID",
+    "EXTRA", "PUSH_WORD_SIZE", "PUSH_POINTER_SIZE", "PUSH_NATIVE_POINTER_SIZE", "PUSH_SP", "STORE_SP", "PUSH_RP", "STORE_RP",
+    "PUSH_PC", "PUSH_S0", "PUSH_SSIZE", "PUSH_R0", "PUSH_RSIZE", "PUSH_HANDLER", "STORE_HANDLER", "PUSH_MEMORY",
+    "PUSH_BADPC", "PUSH_INVALID",
 };
 
 _GL_ATTRIBUTE_CONST const char *disass(enum instruction_type type, WORD opcode)
@@ -106,7 +107,7 @@ static char *_val_data_stack(bool with_hex)
         for (UWORD i = S0; i != SP;) {
             WORD c;
             char *ptr;
-            i += WORD_W * STACK_DIRECTION;
+            i += WORD_SIZE * STACK_DIRECTION;
             int exception = load_word(i, &c);
             if (exception != 0) {
                 ptr = xasprintf("%sinvalid address!", picture);
@@ -157,7 +158,7 @@ void show_return_stack(void)
         printf("Return stack: ");
         for (UWORD i = R0; i != RP;) {
             WORD c;
-            i += WORD_W * STACK_DIRECTION;
+            i += WORD_SIZE * STACK_DIRECTION;
             int exception = load_word(i, &c);
             if (exception != 0) {
                 printf("invalid address!\n");

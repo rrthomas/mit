@@ -61,7 +61,7 @@
 
 \title{The @PACKAGE_NAME@ Virtual Machine}
 \author{Reuben Thomas}
-\date{6th December 2018}
+\date{12th December 2018}
 
 \begin{document}
 \maketitle
@@ -95,11 +95,10 @@ A small interface is provided for other programs to control @PACKAGE_NAME@.
 \section{Architecture}
 
 @PACKAGE_NAME@'s address unit is the byte, which is eight bits.
-Words are four bytes. The word is the size of the numbers
+Words are {\tt WORD\_SIZE} bytes. The word is the size of the numbers
 and addresses on which @PACKAGE_NAME@ operates, and of the items placed on the stacks.
-The word size is fixed to ensure compatibility of object code between
-implementations on different machines; the size of the byte
-and word have been chosen with a view to making efficient implementation of
+Addresses are {\tt ADDRESS\_SIZE} bytes.
+The size of the byte and range of word and address sizes allowed have been chosen with a view to making efficient implementation of
 @PACKAGE_NAME@ possible on the vast majority of current machine architectures.
 
 Words may have the bytes stored in big-endian or little-endian order. The
@@ -134,7 +133,9 @@ The registers, each with its function, are set out in table~\ref{regtable}.
 {\tt BADPC} & The address of the instruction that raised the most recent exception. \\
 {\tt INVALID} & The last address which caused an address
     exception. \\ \bottomrule
-{\tt PSIZE} & The number of words in a host machine pointer (for {\tt CALL\_NATIVE}; see section~\ref{accessact}). \\
+{\tt WORD\_SIZE} & The number of bytes in a word. Must be a power of $2$, and in the range $2$ to $32$ inclusive. \\
+{\tt ADDRESS\_SIZE} & The number of bytes in a virtual machine address. Must be a power of $2$, and in the range $2$ to $32$ inclusive. \\
+{\tt NATIVE\_POINTER\_SIZE} & The number of bytes in a host machine pointer (for {\tt CALL\_NATIVE}; see section~\ref{accessact}). \\
 \end{tabular}
 \caption{\label{regtable}@PACKAGE_NAME@'s registers}
 \end{center}
@@ -172,9 +173,9 @@ always mentioned explicitly.
 \subsection{Operation}
 \label{operation}
 
-Before @PACKAGE_NAME@ is started, {\tt ENDISM} should be set to $0$ or $1$ according to the implementation, and {\tt PSIZE} to the appropriate value. The other registers should be initialised to~$0$.
+Before @PACKAGE_NAME@ is started, {\tt ENDISM} should be set to $0$ or $1$ according to the implementation, and {\tt WORD\_SIZE}, {\tt ADDRESS\_SIZE} and {\tt NATIVE\_POINTER\_SIZE} to the appropriate values. The other registers should be initialised to~$0$.
 
-{\tt MEMORY}, {\tt ENDISM} and {\tt PSIZE} must not change while @PACKAGE_NAME@ is executing.
+{\tt MEMORY}, {\tt ENDISM}, {\tt WORD\_SIZE}, {\tt ADDRESS\_SIZE} and {\tt NATIVE\_POINTER\_SIZE} must not change while @PACKAGE_NAME@ is executing.
 
 @PACKAGE_NAME@ is started by a call to the interface calls {\bf run()} or {\bf
 single\_step()} (see section~\ref{calls}). In the former case, the execution
@@ -468,7 +469,9 @@ RP} may only be accessed through special actions:
 \inst{PUSH\_MEMORY}{-- a-addr}{Push {\tt MEMORY} on to the stack.}
 \inst{PUSH\_BADPC}{-- addr}{Push {\tt BADPC} on to the stack.}
 \inst{PUSH\_INVALID}{-- addr}{Push {\tt INVALID} on to the stack.}
-\inst{PUSH\_PSIZE}{-- u}{\spic{u} is the value of {\tt PSIZE}.}
+\inst{PUSH\_WORD\_SIZE}{-- u}{\spic{u} is the value of {\tt WORD\_SIZE}.}
+\inst{PUSH\_ADDRESS\_SIZE}{-- u}{\spic{u} is the value of {\tt ADDRESS\_SIZE}.}
+\inst{PUSH\_NATIVE\_POINTER\_SIZE}{-- u}{\spic{u} is the value of {\tt NATIVE\_POINTER\_SIZE}.}
 \end{description}
 
 
@@ -542,22 +545,23 @@ Table~\ref{opcodetable} lists the action opcodes in numerical order. Other actio
 \begin{tabular}{*{3}{cc}} \toprule
 \bf Opcode & \bf Action & \bf Opcode & \bf
     Action & \bf Opcode & \bf Action \\ \midrule
-\opcodetbl{00}{NOP}	{10}{AND}       {20}{EXTRA}
-\opcodetbl{01}{POP}	{11}{OR}	{21}{PUSH\_PSIZE}
-\opcodetbl{02}{PUSH}	{12}{XOR}	{22}{PUSH\_SP}
-\opcodetbl{03}{SWAP}	{13}{LSHIFT}	{23}{STORE\_SP}
-\opcodetbl{04}{RPUSH}	{14}{RSHIFT}	{24}{PUSH\_RP}
-\opcodetbl{05}{POP2R}	{15}{LOAD}	{25}{STORE\_RP}
-\opcodetbl{06}{RPOP}	{16}{STORE}	{26}{PUSH\_PC}
-\opcodetbl{07}{LT}	{17}{LOADB}	{27}{PUSH\_S0}
-\opcodetbl{08}{EQ}	{18}{STOREB}	{28}{PUSH\_SSIZE}
-\opcodetbl{09}{ULT}	{19}{BRANCH}	{29}{PUSH\_R0}
-\opcodetbl{0a}{ADD}	{1a}{BRANCHZ}	{2a}{PUSH\_RSIZE}
-\opcodetbl{0b}{MUL}	{1b}{CALL}	{2b}{PUSH\_HANDLER}
-\opcodetbl{0c}{UDIVMOD}	{1c}{RET}	{2c}{STORE\_HANDLER}
-\opcodetbl{0d}{DIVMOD}	{1d}{THROW}	{2d}{PUSH\_MEMORY}
-\opcodetbl{0e}{NEGATE}	{1e}{HALT}	{2e}{PUSH\_BADPC}
-\opcodetbl{0f}{INVERT}	{1f}{CALL\_NATIVE}	{2f}{PUSH\_INVALID}
+\opcodetbl{00}{NOP}	{11}{OR}	{22}{PUSH\_ADDRESS\_SIZE}
+\opcodetbl{01}{POP}	{12}{XOR}	{23}{PUSH\_NATIVE\_POINTER\_SIZE}
+\opcodetbl{02}{PUSH}	{13}{LSHIFT}	{24}{PUSH\_SP}
+\opcodetbl{03}{SWAP}	{14}{RSHIFT}	{25}{STORE\_SP}
+\opcodetbl{04}{RPUSH}	{15}{LOAD}	{26}{PUSH\_RP}
+\opcodetbl{05}{POP2R}	{16}{STORE}	{27}{STORE\_RP}
+\opcodetbl{06}{RPOP}	{17}{LOADB}	{28}{PUSH\_PC}
+\opcodetbl{07}{LT}	{18}{STOREB}	{29}{PUSH\_S0}
+\opcodetbl{08}{EQ}	{19}{BRANCH}	{2a}{PUSH\_SSIZE}
+\opcodetbl{09}{ULT}	{1a}{BRANCHZ}	{2b}{PUSH\_R0}
+\opcodetbl{0a}{ADD}	{1b}{CALL}	{2c}{PUSH\_RSIZE}
+\opcodetbl{0b}{MUL}	{1c}{RET}	{2d}{PUSH\_HANDLER}
+\opcodetbl{0c}{UDIVMOD}	{1d}{THROW}	{2e}{STORE\_HANDLER}
+\opcodetbl{0d}{DIVMOD}	{1e}{HALT}	{2f}{PUSH\_MEMORY}
+\opcodetbl{0e}{NEGATE}	{1f}{CALL\_NATIVE}	{30}{PUSH\_BADPC}
+\opcodetbl{0f}{INVERT}	{20}{EXTRA}	{31}{PUSH\_INVALID}
+\opcodetbltwo{10}{AND}	{21}{PUSH\_WORD\_SIZE}
  \bottomrule
 \end{tabular}
 \caption{\label{opcodetable}@PACKAGE_NAME@'s opcodes}
