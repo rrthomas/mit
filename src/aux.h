@@ -79,8 +79,8 @@ int decode_instruction(UWORD *addr, WORD *val);
 
 // Bit utilities
 
-_GL_ATTRIBUTE_CONST unsigned find_msbit(WORD v); // return msbit of a WORD
-unsigned byte_size(WORD v); // return number of significant bytes in a WORD quantity
+_GL_ATTRIBUTE_CONST int find_msbit(WORD v); // return msbit of a WORD
+int byte_size(WORD v); // return number of significant bytes in a WORD quantity
 
 // Instructions
 #define INSTRUCTION_CHUNK_BIT 6
