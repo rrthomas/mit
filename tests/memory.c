@@ -12,17 +12,73 @@
 #include "tests.h"
 
 
-const char *correct[] = {
-    "", "16384", "16384 " str(WORD_SIZE), "16384 -" str(WORD_SIZE), "16380", "16380 513", "16380 513 1", "16380 513 16380",
-    "16380", "16380 0", "16380 16380", "16380 513", "16380 513 1",
-    "16380", "16380 0", "16380 16380", "16380 1", "16381", "2", "2 16383", "",
-    "16380", "33554945", "33554945 1", "", "-33554432", "", "-16777216", "-16777216 1", "",
-    "0", "", "0", "0 1", "", "16384", "67305985", "67305985 1", "",
-    "16389", "2", "2 1", "", "1", "1 16385", "", "16385", "1", "1 1", "",
-    "16392", "16392 0", "16392 16392", "-20",
-};
+#define SIZE 4096
 
-const unsigned area[] = {0x4000, 0x4004, 0x4005, 0x4008};
+const WORD correct[][8] =
+    {
+     {},
+     {SIZE * WORD_SIZE},
+     {SIZE * WORD_SIZE, WORD_SIZE},
+     {SIZE * WORD_SIZE, -WORD_SIZE},
+     {SIZE * WORD_SIZE - WORD_SIZE},
+     {SIZE * WORD_SIZE - WORD_SIZE, 513},
+     {SIZE * WORD_SIZE - WORD_SIZE, 513, 1},
+     {SIZE * WORD_SIZE - WORD_SIZE, 513, SIZE * WORD_SIZE - WORD_SIZE},
+     {SIZE * WORD_SIZE - WORD_SIZE},
+     {SIZE * WORD_SIZE - WORD_SIZE, ZERO},
+     {SIZE * WORD_SIZE - WORD_SIZE, SIZE * WORD_SIZE - WORD_SIZE},
+     {SIZE * WORD_SIZE - WORD_SIZE, 513},
+     {SIZE * WORD_SIZE - WORD_SIZE, 513, 1},
+     {SIZE * WORD_SIZE - WORD_SIZE},
+     {SIZE * WORD_SIZE - WORD_SIZE, ZERO},
+     {SIZE * WORD_SIZE - WORD_SIZE, SIZE * WORD_SIZE - WORD_SIZE},
+     {SIZE * WORD_SIZE - WORD_SIZE, 1},
+     {SIZE * WORD_SIZE - WORD_SIZE + 1},
+     {2},
+     {2, SIZE * WORD_SIZE - 1},
+     {},
+     {SIZE * WORD_SIZE - WORD_SIZE},
+     {((UWORD)0x02 << (WORD_BIT - CHAR_BIT)) | 0x0201},
+     {((UWORD)0x02 << (WORD_BIT - CHAR_BIT)) | 0x0201, 1},
+     {},
+     {(UWORD)DATA_STACK_SEGMENT},
+     {},
+     {(UWORD)RETURN_STACK_SEGMENT},
+     {(UWORD)RETURN_STACK_SEGMENT, 1},
+     {},
+     {ZERO},
+     {},
+     {ZERO},
+     {ZERO, 1},
+     {},
+     {SIZE * WORD_SIZE},
+     {(UWORD)0x0807060504030201},
+     {(UWORD)0x0807060504030201, 1},
+     {},
+     {SIZE * WORD_SIZE + WORD_SIZE + 1},
+     {2},
+     {2, 1},
+     {},
+     {1},
+     {1, SIZE * WORD_SIZE + 1},
+     {},
+     {SIZE * WORD_SIZE + 1},
+     {1},
+     {1, 1},
+     {},
+     {SIZE * WORD_SIZE + 2 * WORD_SIZE},
+     {SIZE * WORD_SIZE + 2 * WORD_SIZE, ZERO},
+     {SIZE * WORD_SIZE + 2 * WORD_SIZE, SIZE * WORD_SIZE + 2 * WORD_SIZE},
+     {-20},
+    };
+
+const unsigned area[] =
+    {
+     0x1000 * WORD_SIZE,
+     0x1000 * WORD_SIZE + WORD_SIZE,
+     0x1000 * WORD_SIZE + WORD_SIZE + 1,
+     0x1000 * WORD_SIZE + ((WORD_SIZE + 1 + 3 + (WORD_SIZE - 1)) / WORD_SIZE) * WORD_SIZE,
+    };
 
 
 int main(void)
@@ -30,15 +86,17 @@ int main(void)
     int exception = 0;
 
     // Data for extra memory area tests
-    char *onetwothreefour = strdup("\x01\x02\x03\x04"); // Hold on to this to prevent a memory leak
-    char *item[] = {onetwothreefour, strdup("\x01"), strdup("\x02\x03"), strdup("basilisk")};
+    verify(WORD_SIZE <= 8); // If not, a longer string is needed in the next line
+    char *count = strdup("\x01\x02\x03\x04\x05\x06\x07\x08"); // Hold on to this to prevent a memory leak
+    count[WORD_SIZE] = '\0'; // Truncate to WORD_SIZE
+    char *item[] = {count, strdup("\x01"), strdup("\x02\x03"), strdup("basilisk")};
     unsigned nitems = sizeof(item) / sizeof(item[0]);
 
-    size_t size = 4096;
-    init((WORD *)calloc(size, WORD_SIZE), size);
+    init_alloc(SIZE);
+
     for (unsigned i = 0; i < nitems; i++) {
         UWORD addr = mem_allot(item[i], strlen(item[i]), i < 3);
-        printf("Extra memory area %u allocated at address %"PRIX32" (should be %"PRIX32")\n",
+        printf("Extra memory area %u allocated at address %"PRI_XWORD" (should be %x)\n",
                i, addr, area[i]);
         if (addr != area[i]) {
             printf("Error in memory tests: incorrect address for memory allocation\n");
@@ -48,29 +106,29 @@ int main(void)
             mem_align();
     }
 
-    start_ass(PC);
-
     ass_action(O_PUSH_MEMORY); ass_number(WORD_SIZE); ass_action(O_NEGATE); ass_action(O_ADD);
     ass_number(513); ass_number(1); ass_action(O_PUSH); ass_action(O_STORE); ass_number(0); ass_action(O_PUSH);
     ass_action(O_LOAD); ass_number(1); ass_action(O_POP); ass_number(0); ass_action(O_PUSH); ass_action(O_LOADB);
-    ass_action(O_ADD); ass_action(O_LOADB); ass_number(16383); ass_action(O_STOREB);
-    ass_number(16380); ass_action(O_LOAD); ass_number(1); ass_action(O_POP); ass_action(O_PUSH_SP);
+    ass_action(O_ADD); ass_action(O_LOADB); ass_number(SIZE * WORD_SIZE - 1); ass_action(O_STOREB);
+    ass_number(SIZE * WORD_SIZE - WORD_SIZE); ass_action(O_LOAD); ass_number(1); ass_action(O_POP); ass_action(O_PUSH_SP);
     ass_action(O_STORE_SP); ass_action(O_PUSH_RP); ass_number(1); ass_action(O_POP); ass_number(0);
     ass_action(O_STORE_RP); ass_action(O_PUSH_RP); ass_number(1); ass_action(O_POP);
-    ass_number(size * WORD_SIZE); ass_action(O_LOAD); ass_number(1); ass_action(O_POP);
-    ass_number(size * WORD_SIZE + 5); ass_action(O_LOADB); ass_number(1); ass_action(O_POP);
+    ass_number(SIZE * WORD_SIZE); ass_action(O_LOAD); ass_number(1); ass_action(O_POP);
+    ass_number(SIZE * WORD_SIZE + WORD_SIZE + 1); ass_action(O_LOADB); ass_number(1); ass_action(O_POP);
     ass_number(1);
-    ass_number(size * WORD_SIZE + 1); ass_action(O_STOREB);
-    ass_number(size * WORD_SIZE + 1); ass_action(O_LOADB); ass_number(1); ass_action(O_POP);
-    ass_number(size * WORD_SIZE + 8); ass_number(0); ass_action(O_PUSH); ass_action(O_STOREB);
+    ass_number(SIZE * WORD_SIZE + 1); ass_action(O_STOREB);
+    ass_number(SIZE * WORD_SIZE + 1); ass_action(O_LOADB); ass_number(1); ass_action(O_POP);
+    ass_number(SIZE * WORD_SIZE + 2 * WORD_SIZE); ass_number(0); ass_action(O_PUSH); ass_action(O_STOREB);
 
     for (size_t i = 0; i < sizeof(correct) / sizeof(correct[0]); i++) {
         show_data_stack();
-        printf("Correct stack: %s\n\n", correct[i]);
-        if (strcmp(correct[i], val_data_stack())) {
-            printf("Error in memory tests: PC = %"PRIu32"\n", PC);
+        char *correct_stack = xasprint_array(correct[i], ZERO);
+        printf("Correct stack: %s\n\n", correct_stack);
+        if (strcmp(correct_stack, val_data_stack())) {
+            printf("Error in memory tests: PC = %"PRI_UWORD"\n", PC);
             exit(1);
         }
+        free(correct_stack);
         single_step();
         printf("I = %s\n", disass(INSTRUCTION_ACTION, I));
     }

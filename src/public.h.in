@@ -18,19 +18,38 @@
 #include <stdio.h>      // for the FILE type
 #include <stdbool.h>
 #include <stdint.h>
+#include <inttypes.h>
 #include <limits.h>
 
 
+// Parameters
+#define WORD_SIZE @WORD_SIZE@
+#define ADDRESS_SIZE @ADDRESS_SIZE@
+#define NATIVE_POINTER_SIZE (sizeof(void *))
+
 // Basic types
 typedef uint8_t BYTE;
+#if WORD_SIZE == 4
 typedef int32_t WORD;
+#define WORD_MAX (UINT32_MAX)
+#define PRI_WORD PRId32
+#define PRI_UWORD PRIu32
+#define PRI_XWORD PRIx32
 typedef uint32_t UWORD;
-typedef uint64_t DUWORD;
+#elif WORD_SIZE == 8
+typedef int64_t WORD;
+#define WORD_MAX (UINT64_MAX)
+#define PRI_WORD PRId64
+#define PRI_UWORD PRIu64
+#define PRI_XWORD PRIx64
+typedef uint64_t UWORD;
+#else
+#error "WORD_SIZE is not 4 or 8!"
+#endif
 #define BYTE_BIT 8
 #define BYTE_MASK ((1 << BYTE_BIT) - 1)
 #undef WORD_BIT // FIXME: prefix this and other symbols
-#define WORD_BIT (sizeof(WORD_SIZE) * BYTE_BIT)
-#define WORD_MAX (UINT32_MAX)
+#define WORD_BIT (WORD_SIZE * BYTE_BIT)
 #define WORD_MASK WORD_MAX
 
 // VM registers
@@ -78,10 +97,6 @@ int load_object(FILE *file, UWORD address);
 // Additional implementation-specific routines, macros, types and quantities
 int init(WORD *c_array, size_t size);
 int register_args(int argc, char *argv[]);
-
-#define WORD_SIZE 4
-#define ADDRESS_SIZE 4
-#define NATIVE_POINTER_SIZE (sizeof(void *))
 
 // A union to allow storage of machine pointers in VM memory
 union _WORD_pointer {

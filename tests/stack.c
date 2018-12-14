@@ -21,11 +21,9 @@ int main(void)
 {
     int exception = 0;
 
-    init((WORD *)malloc(1024), 256);
+    init_alloc(256);
 
     PUSH(1); PUSH(2); PUSH(3);	// initialise the stack
-
-    start_ass(PC);
 
     // First part
     ass_number(0); ass_action(O_PUSH); ass_number(1); ass_action(O_POP);
@@ -43,7 +41,7 @@ int main(void)
         show_data_stack();
         printf("Correct stack: %s\n\n", correct[i]);
         if (strcmp(correct[i], val_data_stack())) {
-            printf("Error in stack tests: PC = %"PRIu32"\n", PC);
+            printf("Error in stack tests: PC = %"PRI_UWORD"\n", PC);
             exit(1);
         }
         single_step();
@@ -59,7 +57,7 @@ int main(void)
         show_data_stack();
         printf("Correct stack: %s\n\n", correct[i]);
         if (strcmp(correct[i], val_data_stack()) && i != first) {
-            printf("Error in stack tests: PC = %"PRIu32"\n", PC);
+            printf("Error in stack tests: PC = %"PRI_UWORD"\n", PC);
             exit(1);
         }
         single_step();

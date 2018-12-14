@@ -77,7 +77,7 @@ _GL_ATTRIBUTE_CONST const char *disass(enum instruction_type type, WORD opcode)
         {
             static char *number = NULL;
             free(number);
-            number = xasprintf("%"PRId32" (%#"PRIx32")", opcode, (UWORD)opcode);
+            number = xasprintf("%"PRI_WORD" (%#"PRI_XWORD")", opcode, (UWORD)opcode);
             return number;
         }
     case INSTRUCTION_ACTION:
@@ -115,11 +115,11 @@ static char *_val_data_stack(bool with_hex)
                 picture = ptr;
                 break;
             }
-            ptr = xasprintf("%s%"PRId32, picture, c);
+            ptr = xasprintf("%s%"PRI_WORD, picture, c);
             free(picture);
             picture = ptr;
             if (with_hex) {
-                ptr = xasprintf("%s (%#"PRIx32") ", picture, (UWORD)c);
+                ptr = xasprintf("%s (%#"PRI_XWORD") ", picture, (UWORD)c);
                 free(picture);
                 picture = ptr;
             }
@@ -164,7 +164,7 @@ void show_return_stack(void)
                 printf("invalid address!\n");
                 break;
             }
-            printf("%#"PRIx32" ", (UWORD)c);
+            printf("%#"PRI_XWORD" ", (UWORD)c);
         }
         putchar('\n');
     }

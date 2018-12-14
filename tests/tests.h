@@ -21,11 +21,18 @@
 #include <string.h>
 #include <inttypes.h>
 
+#include "verify.h"
+#include "xvasprintf.h"
+
 #include "public.h"
 #include "aux.h"
 #include "debug.h"
 #include "opcodes.h"
-#include "stringify.h"
+
+
+// Test utilities
+#define ZERO 42
+char *xasprint_array(const WORD *array, WORD zero);
 
 
 #endif

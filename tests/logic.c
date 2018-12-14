@@ -14,21 +14,30 @@
 #include "tests.h"
 
 
-const char *correct[] = {
-    "-16777216 8 255 8", "-16777216 8 65280", "-16777216 8", "16711680",
-    "16711680 65280","16776960",
-    "-16776961", "-16776961 1", "-16776961 1 -1", "-16776961 -2", "-16776962"};
+const WORD correct[][8] =
+    {
+     {(UWORD)0xff << (WORD_BIT - CHAR_BIT), CHAR_BIT, 0xff, CHAR_BIT},
+     {(UWORD)0xff << (WORD_BIT - CHAR_BIT), CHAR_BIT, 0xff << CHAR_BIT},
+     {(UWORD)0xff << (WORD_BIT - CHAR_BIT), CHAR_BIT},
+     {(UWORD)0xff << (WORD_BIT - CHAR_BIT) >> CHAR_BIT},
+     {(UWORD)0xff << (WORD_BIT - CHAR_BIT) >> CHAR_BIT, 0xff << CHAR_BIT},
+     {((UWORD)0xff << (WORD_BIT - CHAR_BIT) >> CHAR_BIT) | (0xff << CHAR_BIT)},
+     {~(((UWORD)0xff << (WORD_BIT - CHAR_BIT) >> CHAR_BIT) | (0xff << CHAR_BIT))},
+     {~(((UWORD)0xff << (WORD_BIT - CHAR_BIT) >> CHAR_BIT) | (0xff << CHAR_BIT)), 1},
+     {~(((UWORD)0xff << (WORD_BIT - CHAR_BIT) >> CHAR_BIT) | (0xff << CHAR_BIT)), 1, -1},
+     {~(((UWORD)0xff << (WORD_BIT - CHAR_BIT) >> CHAR_BIT) | (0xff << CHAR_BIT)), -2},
+     {~(((UWORD)0xff << (WORD_BIT - CHAR_BIT) >> CHAR_BIT) | (0xff << CHAR_BIT)) & -2},
+    };
 
 
 int main(void)
 {
     int exception = 0;
 
-    init((WORD *)malloc(1024), 256);
+    init_alloc(256);
 
-    PUSH(0xff000000); PUSH(8); PUSH(0xff); PUSH(8);
+    PUSH((UWORD)0xff << (WORD_BIT - CHAR_BIT)); PUSH(CHAR_BIT); PUSH(0xff); PUSH(CHAR_BIT);
 
-    start_ass(PC);
     ass_action(O_LSHIFT); ass_action(O_POP2R); ass_action(O_RSHIFT); ass_action(O_RPOP);
     ass_action(O_OR); ass_action(O_INVERT); ass_number(1);
     ass_number(-1);
@@ -36,11 +45,13 @@ int main(void)
 
     for (size_t i = 0; i < sizeof(correct) / sizeof(correct[0]); i++) {
         show_data_stack();
-        printf("Correct stack: %s\n\n", correct[i]);
-        if (strcmp(correct[i], val_data_stack())) {
-            printf("Error in logic tests: PC = %"PRIu32"\n", PC);
+        char *correct_stack = xasprint_array(correct[i], ZERO);
+        printf("Correct stack: %s\n\n", correct_stack);
+        if (strcmp(correct_stack, val_data_stack())) {
+            printf("Error in logic tests: PC = %"PRI_UWORD"\n", PC);
             exit(1);
         }
+        free(correct_stack);
         single_step();
         printf("I = %s\n", disass(INSTRUCTION_ACTION, I));
     }

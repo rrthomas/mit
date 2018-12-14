@@ -165,7 +165,7 @@ word.}
 \ifacec{@PACKAGE@\_WORD @PACKAGE@\_single\_step(void)}{The reason code returned by {\bf @PACKAGE@\_single\_step()}
 is a @PACKAGE_NAME@ word.}
 \ifacec{int @PACKAGE@\_load\_object(FILE *file, @PACKAGE@\_UWORD address)}{If a file system error
-occurs, the return code is -3. As an extension to the specification, if an object file starts with the bytes $35$, $33$ (\texttt{\#!}), then it is assumed to be the start of a UNIX-style “hash bang” line, and the file contents up to and including the first newline character ($10$) is ignored.}
+occurs, the return code is $-3$. If the word size of the object file is not {\tt WORD\_SIZE}, the return code is $-4$. As an extension to the specification, if an object file starts with the bytes $35$, $33$ (\texttt{\#!}), then it is assumed to be the start of a UNIX-style “hash bang” line, and the file contents up to and including the first newline character ($10$) is ignored.}
 \end{description}
 
 In addition to the required interface calls C @PACKAGE_NAME@ provides an initialisation routine {\bf @PACKAGE@\_init()} which, given a word array and its size, initialises @PACKAGE_NAME@:
@@ -215,13 +215,11 @@ disassembly, may also be useful; they are not documented here.
 
 \subsection{Other extras provided by C @PACKAGE_NAME@}
 
-C @PACKAGE_NAME@ provides the following extra quantities and macro in {\tt @PACKAGE@.h}
-which are useful for programming with @PACKAGE_NAME@:
+C @PACKAGE_NAME@ provides the following extra type in {\tt @PACKAGE@.h}
+which is useful for programming with @PACKAGE_NAME@:
 
 \begin{description}
-\item[{\tt @PACKAGE@\_WORD\_W}:] the number of bytes in a word.
-\item[{\tt @PACKAGE@\_POINTER\_W}:] the number of words in a machine pointer.
-\item[{\tt @PACKAGE@\_WORD\_pointer}:] a union with members {\tt @PACKAGE@\_WORD words[@PACKAGE@\_POINTER\_W]} and {\tt void (*pointer)(void)}, which allow a function pointer suitable for the {\tt CALL\_NATIVE} instruction to be easily stored and retrieved. It is assumed that the pointer is pushed on to the stack starting with {\tt words[0]} and ending with {\tt words[@PACKAGE@\_POINTER\_W~$-$~1]}.
+\item[{\tt @PACKAGE@\_WORD\_pointer}:] a union with members {\tt @PACKAGE@\_WORD words[@PACKAGE@\_NATIVE\_POINTER\_SIZE]} and {\tt void (*pointer)(void)}, which allow a function pointer suitable for the {\tt CALL\_NATIVE} instruction to be easily stored and retrieved. It is assumed that the pointer is pushed on to the stack starting with {\tt words[0]} and ending with {\tt words[@PACKAGE@\_NATIVE\_POINTER\_SIZE~$-$~1]}.
 \end{description}
 
 

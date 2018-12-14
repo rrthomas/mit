@@ -73,12 +73,23 @@ gl_INIT
 dnl Check features
 AC_C_BIGENDIAN
 
+dnl Set size of word and address
+AC_ARG_VAR([WORD_SIZE],
+  [value of WORD_SIZE register [default: sizeof(long)]])
+AC_CHECK_SIZEOF([long])
+: "${WORD_SIZE=SIZEOF_LONG}"
+AC_ARG_VAR([ADDRESS_SIZE],
+  [value of ADDRESS_SIZE register [default: sizeof(size_t)]])
+AC_CHECK_SIZEOF([size_t])
+: "${ADDRESS_SIZE=SIZEOF_SIZE_T}"
+
 dnl Generate output files
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_FILES([
         Makefile
         lib/Makefile
         src/Makefile
+        src/public.h
         src/smitei.1
         src/smite-dump.1
         tests/Makefile

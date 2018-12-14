@@ -24,8 +24,7 @@ int main(void)
 {
     int exception = 0;
 
-    size_t size = 4096;
-    init((WORD *)calloc(size, WORD_SIZE), size);
+    init_alloc(4096);
 
     start_ass(PC);
     ass_number(96); ass_action(O_BRANCH);
@@ -54,7 +53,7 @@ int main(void)
     start_ass(60);
     ass_number(200); ass_action(O_CALL);
     ass_number(64);
-    ass_number(20);
+    ass_number(24);
     ass_number(1); ass_action(O_SWAP); ass_number(1); ass_action(O_PUSH); ass_action(O_STORE); ass_action(O_LOAD);
     ass_action(O_CALL);
 
@@ -66,9 +65,9 @@ int main(void)
     ass_action(O_RET);
 
     for (size_t i = 0; i < sizeof(correct) / sizeof(correct[0]); i++) {
-        printf("Instruction %zu: PC = %u; should be %u\n\n", i, PC, correct[i]);
+        printf("Instruction %zu: PC = %"PRI_UWORD"; should be %u\n\n", i, PC, correct[i]);
         if (correct[i] != PC) {
-            printf("Error in branch tests: PC = %"PRIu32"\n", PC);
+            printf("Error in branch tests: PC = %"PRI_UWORD"\n", PC);
             exit(1);
         }
         single_step();

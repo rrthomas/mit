@@ -10,9 +10,12 @@
 
 AM_CPPFLAGS = -I$(top_srcdir)/src -I$(top_builddir)/lib -I$(top_srcdir)/lib $(WARN_CFLAGS)
 
+noinst_LTLIBRARIES = libtest.la
+libtest_la_SOURCES = test_util.c
+
 LOG_COMPILER = $(srcdir)/run-test
 
-LDADD = $(top_builddir)/src/lib@PACKAGE@.la
+LDADD = $(top_builddir)/src/lib@PACKAGE@.la libtest.la
 
 check_PROGRAMS = $(TESTS) load_object
 
@@ -32,6 +35,11 @@ do_load_object: load_object test-parser
 
 check-local: do_load_object test-parser
 
-EXTRA_DIST = run-test tests.h badobj1 badobj2 badobj3 badobj4 testobj1 testobj2 testobj3 hello.txt hello.correct
+EXTRA_DIST = run-test tests.h \
+	badobj1-4 badobj2-4 badobj3-4 badobj4-4 \
+	badobj1-8 badobj2-8 badobj3-8 badobj4-8 \
+	testobj1-4 testobj2-4 testobj3-4 \
+	testobj1-8 testobj2-8 testobj3-8 \
+	hello.txt hello.correct
 
 DISTCLEANFILES = hello.obj hello.output

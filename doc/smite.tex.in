@@ -531,6 +531,7 @@ These actions allow access to @PACKAGE_NAME@'s libraries, the operating system a
 
 
 \subsection{Instruction encoding}
+\label{encoding}
 
 Instructions are words encoded by one or more bytes, as follows: the significant bits of the number are split into groups of six bits, starting at the least significant end. The chunks are stored in consecutive bytes. All but the last byte have the seventh bit set and eighth bit clear. If the instruction is a number the final byte has the top two bits either both set or both clear, to match the number’s most significant bit; otherwise, the top bit is set and the second bit clear, to indicate an action.
 
@@ -581,11 +582,9 @@ and shared between systems.
 \subsection{Object module format}
 \label{object}
 
-The first seven bytes of an object module should be the ASCII codes of the letters
-``@PACKAGE@'' padded with ASCII NULs (0x00), then the one-byte contents of
-the {\tt ENDISM} register of the system which saved the module. The next word should contain the number of bytes the code occupies. The number must have
-the same endianness as that indicated in the previous byte. Then follows the
-code.
+The object module starts with the ASCII codes of the letters
+``@PACKAGE@'' padded to eight bytes by ASCII NULs (0x00), then values of
+the {\tt ENDISM} and {\tt WORD\_SIZE} registers of the system which saved the module, then the number of bytes the code occupies. These values are all encoded as in section~\ref{encoding}. Then follows the code.
 
 Object modules have a simple structure, as they are only intended for loading an
 initial memory image into @PACKAGE_NAME@.

@@ -21,28 +21,27 @@ int main(void)
     int argc = 3;
     char *argv[] = {strdup("foo"), strdup("bard"), strdup("basilisk")};
 
-    init((WORD *)malloc(4096), 1024);
+    init_alloc(1024);
     assert(register_args(argc, argv) == 0);
 
-    start_ass(PC);
     ass_number(OX_ARGC); ass_action(O_EXTRA);
     ass_number(1); ass_number(OX_ARG); ass_action(O_EXTRA);
 
     do {
         single_step();
     } while (I != O_EXTRA);
-    printf("argc is %"PRId32", and should be %d\n\n", LOAD_WORD(SP), argc);
+    printf("argc is %"PRI_WORD", and should be %d\n\n", LOAD_WORD(SP), argc);
     if (POP != argc) {
-       printf("Error in extra instructions tests: PC = %"PRIu32"\n", PC);
+       printf("Error in extra instructions tests: PC = %"PRI_UWORD"\n", PC);
         exit(1);
     }
 
     do {
         single_step();
     } while (I != O_EXTRA);
-    printf("arg 1's length is %"PRId32", and should be %zu\n", LOAD_WORD(SP), strlen(argv[1]));
+    printf("arg 1's length is %"PRI_WORD", and should be %zu\n", LOAD_WORD(SP), strlen(argv[1]));
     if ((UWORD)POP != strlen(argv[1])) {
-        printf("Error in extra instructions tests: PC = %"PRIu32"\n", PC);
+        printf("Error in extra instructions tests: PC = %"PRI_UWORD"\n", PC);
         exit(1);
     }
 

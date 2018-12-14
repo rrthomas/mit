@@ -11,13 +11,21 @@
 #include "tests.h"
 
 
-WORD correct[] = {
-  -257, 12345678, 4, 0x80000000,
-  0x40000000, 0xff000000
+const WORD correct[] = {
+  -257, 12345678, 4, (UWORD)1 << (WORD_BIT - 1),
+  (UWORD)1 << (WORD_BIT - 2), (UWORD)0xff << (WORD_BIT - CHAR_BIT)
 };
 const char *encodings[sizeof(correct) / sizeof(correct[0])] = {
-  "\x7f\xfb", "\x4e\x45\x46\x2f", "\x04", "\x40\x40\x40\x40\x40\xfe",
-  "\x40\x40\x40\x40\x40\x01", "\x40\x40\x40\x40\xff"
+  "\x7f\xfb", "\x4e\x45\x46\x2f", "\x04",
+#if WORD_SIZE == 4
+  "\x40\x40\x40\x40\x40\xfe",
+  "\x40\x40\x40\x40\x40\x01",
+  "\x40\x40\x40\x40\xff"
+#elif WORD_SIZE == 8
+  "\x40\x40\x40\x40\x40\x40\x40\x40\x40\x40\xf8",
+  "\x40\x40\x40\x40\x40\x40\x40\x40\x40\x40\x04",
+  "\x40\x40\x40\x40\x40\x40\x40\x40\x40\xfc"
+#endif
 };
 
 static void show_encoding(const char *encoding)
@@ -30,13 +38,13 @@ static void show_encoding(const char *encoding)
 static void ass_number_test(WORD n, const char *encoding)
 {
     UWORD start = ass_current();
-    printf("here = %"PRIu32"\n", start);
+    printf("here = %"PRI_UWORD"\n", start);
     ass_number(n);
     UWORD len = ass_current() - start;
     ass_number(1); ass_action(O_POP); // pop number so they don't build up on stack
 
     size_t bytes_ok = 0;
-    printf("%"PRId32" (%#"PRIx32") encoded as: ", n, (UWORD)n);
+    printf("%"PRI_WORD" (%#"PRI_XWORD") encoded as: ", n, (UWORD)n);
     for (UWORD i = 0; i < len; i++) {
         BYTE b;
         load_byte(start + i, &b);
@@ -59,14 +67,12 @@ int main(void)
     int exception = 0;
     BYTE b;
 
-    init((WORD *)calloc(1024, 1), 256);
-
-    start_ass(PC);
+    init_alloc(256);
 
     for (size_t i = 0; i < sizeof(correct) / sizeof(correct[0]); i++)
         ass_number_test(correct[i], encodings[i]);
 
-    printf("here = %"PRIu32"\n", ass_current());
+    printf("here = %"PRI_UWORD"\n", ass_current());
 
     load_byte(0, &b);
     printf("byte at 0 is %x\n", b);
@@ -75,11 +81,11 @@ int main(void)
     single_step(); // Load first number
     for (size_t i = 0; i < sizeof(correct) / sizeof(correct[0]); i++) {
         show_data_stack();
-        printf("Correct stack: %"PRId32" (%#"PRIx32")\n\n", correct[i], (UWORD)correct[i]);
+        printf("Correct stack: %"PRI_WORD" (%#"PRI_XWORD")\n\n", correct[i], (UWORD)correct[i]);
         ptrdiff_t actual;
         int items = sscanf(val_data_stack(), "%td", &actual);
         if (items != 1 || correct[i] != actual) {
-            printf("Error in numbers tests: PC = %"PRIu32"\n", PC);
+            printf("Error in numbers tests: PC = %"PRI_UWORD"\n", PC);
             exit(1);
         }
         single_step();

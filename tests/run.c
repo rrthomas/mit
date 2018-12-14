@@ -16,7 +16,7 @@ int main(void)
 {
     int exception = 0;
 
-    int i = init((WORD *)calloc(1024, 1), 256);
+    int i = init_alloc(256);
     if (i != 0) {
         printf("Error in run() tests: init with valid parameters failed\n");
         exit(1);
@@ -29,16 +29,16 @@ int main(void)
     WORD ret = run();
 
     const WORD return_value = 37;
-    printf("Return value should be %d and is %"PRId32"\n", return_value, ret);
+    printf("Return value should be %"PRI_WORD" and is %"PRI_WORD"\n", return_value, ret);
     if (ret != return_value) {
         printf("Error in run() tests: incorrect return value from run\n");
         exit(1);
     }
 
     const UWORD final_pc = 54;
-    printf("PC should now be %"PRIu32"\n", final_pc);
+    printf("PC should now be %"PRI_UWORD"\n", final_pc);
     if (PC != final_pc) {
-        printf("Error in run() tests: PC = %"PRIu32"\n", PC);
+        printf("Error in run() tests: PC = %"PRI_UWORD"\n", PC);
         exit(1);
     }
 

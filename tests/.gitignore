@@ -1,7 +1,9 @@
+*.lo
 *.log
 *.trs
 /.deps
 /.libs
+/libtest.la
 /hello.obj
 /hello.output
 /arithmetic

@@ -22,19 +22,18 @@ static void test(void)
 
 int main(void)
 {
-    init((WORD *)malloc(16384), 4096);
+    init_alloc(4096);
 
-    start_ass(PC);
     ass_native_pointer(test); ass_action(O_CALL_NATIVE); ass_number(0);
     ass_action(O_HALT);
 
     WORD res = run();
     if (res != 0) {
-        printf("Error in CALL_NATIVE tests: test aborted with return code %"PRId32"\n", res);
+        printf("Error in CALL_NATIVE tests: test aborted with return code %"PRI_WORD"\n", res);
         exit(1);
     }
 
-    printf("Top of stack is %d; should be %d\n", LOAD_WORD(SP), 37);
+    printf("Top of stack is %"PRI_WORD"; should be %d\n", LOAD_WORD(SP), 37);
     show_data_stack();
     if (LOAD_WORD(SP) != 37) {
         printf("Error in CALL_NATIVE tests: incorrect value on top of stack\n");

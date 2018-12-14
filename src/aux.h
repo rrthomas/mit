@@ -52,12 +52,19 @@ int reverse(UWORD start, UWORD length);
     (SP += WORD_SIZE * STACK_DIRECTION, STORE_WORD(SP, (v)))
 #define POP                                     \
     (SP -= WORD_SIZE * STACK_DIRECTION, LOAD_WORD(SP + WORD_SIZE * STACK_DIRECTION))
-#define PUSH_DOUBLE(ud)                         \
+#if WORD_SIZE == 4
+#define PUSH64(ud)                              \
     PUSH((UWORD)(ud & WORD_MASK));              \
     PUSH((UWORD)((ud >> WORD_BIT) & WORD_MASK))
-#define POP_DOUBLE                              \
+#define POP64                                   \
     (SP -= 2 * WORD_SIZE * STACK_DIRECTION, (UWORD)LOAD_WORD(SP + WORD_SIZE * STACK_DIRECTION), temp | \
-     ((DUWORD)(UWORD)_LOAD_WORD(SP + 2 * WORD_SIZE * STACK_DIRECTION, temp2) << WORD_BIT))
+     ((uint64_t)(UWORD)_LOAD_WORD(SP + 2 * WORD_SIZE * STACK_DIRECTION, temp2) << WORD_BIT))
+#elif WORD_SIZE == 8
+#define PUSH64 PUSH
+#define POP64  POP
+#else
+#error "WORD_SIZE is not 4 or 8!"
+#endif
 #define PUSH_RETURN(v)                          \
     (RP += WORD_SIZE * STACK_DIRECTION, STORE_WORD(RP, (v)))
 #define POP_RETURN                              \
@@ -75,9 +82,11 @@ uint8_t *native_address_range_in_one_area(UWORD start, UWORD length, bool writab
 
 // Portable arithmetic right shift (the behaviour of >> on signed
 // quantities is implementation-defined in C99)
-#define ARSHIFT(n, p) (((n) >> (p)) | (-((n) < 0) << (WORD_BIT - p)))
+#define ARSHIFT(n, p) (((n) >> (p)) | ((typeof(n))(-((n) < 0)) << (WORD_BIT - (p))))
 
-int encode_instruction(UWORD *addr, enum instruction_type type, WORD v);
+ptrdiff_t encode_instruction_native(BYTE *addr, enum instruction_type type, WORD v);
+ptrdiff_t encode_instruction(UWORD *addr, enum instruction_type type, WORD v);
+int decode_instruction_file(FILE *file, WORD *val);
 int decode_instruction(UWORD *addr, WORD *val);
 
 // Bit utilities
@@ -88,6 +97,10 @@ int byte_size(WORD v); // return number of significant bytes in a WORD quantity
 // Instructions
 #define INSTRUCTION_CHUNK_BIT 6
 #define INSTRUCTION_CHUNK_MASK ((1 << INSTRUCTION_CHUNK_BIT) - 1)
+#define INSTRUCTION_MAX_CHUNKS (((WORD_BIT + INSTRUCTION_CHUNK_BIT - 1) / INSTRUCTION_CHUNK_BIT))
+
+// Object files
+#define MAGIC_LENGTH 8
 
 
 #endif

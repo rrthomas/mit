@@ -108,7 +108,7 @@ CLOC = cloc --force-lang="C",h
 loc:
 	$(CLOC) $(lib@PACKAGE@_la_SOURCES) $(@PACKAGE@_SOURCES) instructions.py gen-names.py gen-actions.py
 
-EXTRA_DIST = @PACKAGE@i.in @PACKAGE@i.1 @PACKAGE@-dump.in @PACKAGE@-dump.1 completions.h tbl_opts.h.in step.c external-syms.txt external_syms.h gen-names.py gen-actions.py instructions.py
+EXTRA_DIST = @PACKAGE@i.in @PACKAGE@i.1 @PACKAGE@-dump.in @PACKAGE@-dump.1 completions.h public.h.in tbl_opts.h.in step.c external-syms.txt external_syms.h gen-names.py gen-actions.py instructions.py
 
 DISTCLEANFILES = @PACKAGE@i @PACKAGE@-dump @PACKAGE@.1 @PACKAGE@i.1 @PACKAGE-dump.1 completions tbl_opts.h $(include_HEADERS) external-defines.txt external-syms.txt
 # Ignore built files that are part of the distribution (specifically,

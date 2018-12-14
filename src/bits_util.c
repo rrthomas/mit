@@ -20,13 +20,19 @@
 
 
 // Find most-significant bit set in a WORD-sized quantity
-verify(sizeof(WORD) == sizeof(int)); // FIXME
 _GL_ATTRIBUTE_CONST int find_msbit(WORD v)
 {
     if (v < 0)
         v = -v;
 
-    return 31 - count_leading_zeros((unsigned int)v);
+      // FIXME: Determine correct function to use properly
+#if WORD_SIZE == 4
+verify(sizeof(WORD) == sizeof(int));
+    return WORD_BIT - 1 - count_leading_zeros((unsigned int)v);
+#elif WORD_SIZE == 8
+verify(sizeof(WORD) == sizeof(long int));
+    return WORD_BIT - 1 - count_leading_zeros_l((unsigned long int)v);
+#endif
 }
 
 // Return number of bytes required for a WORD-sized quantity

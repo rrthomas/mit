@@ -11,22 +11,40 @@
 
 #include "tests.h"
 
-#include "xvasprintf.h"
-
 
 #define SIZE 1024
 
-const char *correct[] = {
-    "", "1", "1 1", "",
-    "-33554432", "-33554432 1", "",
-    "16384", "16384 1", "",
-    "-16777216", "-16777216 1", "",
-    "16384", "16384 1", "",
-    "168", "",
-    "168", "168 1", "",
-    str(SIZE), str(SIZE) " 1", "",
-    "0", "0 0", "0 0 2", "",
-};
+const WORD correct[][8] =
+    {
+     {},
+     {1},
+     {1, 1},
+     {},
+     {(UWORD)DATA_STACK_SEGMENT},
+     {(UWORD)DATA_STACK_SEGMENT, 1},
+     {},
+     {16384},
+     {16384, 1},
+     {},
+     {(UWORD)RETURN_STACK_SEGMENT},
+     {(UWORD)RETURN_STACK_SEGMENT, 1},
+     {},
+     {(UWORD)DEFAULT_STACK_SIZE},
+     {(UWORD)DEFAULT_STACK_SIZE, 1},
+     {},
+     {42 * WORD_SIZE},
+     {},
+     {42 * WORD_SIZE},
+     {42 * WORD_SIZE, 1},
+     {},
+     {SIZE},
+     {SIZE, 1},
+     {},
+     {ZERO},
+     {ZERO, ZERO},
+     {ZERO, ZERO, 2},
+     {},
+    };
 
 
 int main(void)
@@ -50,11 +68,13 @@ int main(void)
 
     for (size_t i = 0; i < sizeof(correct) / sizeof(correct[0]); i++) {
         show_data_stack();
-        printf("Correct stack: %s\n\n", correct[i]);
-        if (strcmp(correct[i], val_data_stack())) {
-            printf("Error in registers tests: PC = %"PRIu32"\n", PC);
+        char *correct_stack = xasprint_array(correct[i], ZERO);
+        printf("Correct stack: %s\n\n", correct_stack);
+        if (strcmp(correct_stack, val_data_stack())) {
+            printf("Error in registers tests: PC = %"PRI_UWORD"\n", PC);
             exit(1);
         }
+        free(correct_stack);
         single_step();
         printf("I = %s\n", disass(INSTRUCTION_ACTION, I));
     }
@@ -64,7 +84,7 @@ int main(void)
     char *pointer_w = xasprintf("%u", (unsigned)NATIVE_POINTER_SIZE);
     printf("Correct stack: %s\n\n", pointer_w);
     if (strcmp(pointer_w, val_data_stack())) {
-        printf("Error in registers tests: PC = %"PRIu32"\n", PC);
+        printf("Error in registers tests: PC = %"PRI_UWORD"\n", PC);
         exit(1);
     }
     free(pointer_w);

@@ -110,7 +110,10 @@ int register_args(int argc, char *argv[])
 static void extra(void)
 {
     int exception = 0;
-    WORD temp = 0, temp2 = 0;
+    WORD temp = 0;
+#if WORD_SIZE == 4
+    WORD temp2 = 0;
+#endif
     switch (POP) {
     case OX_ARGC: // ( -- u )
         PUSH(main_argc);
@@ -197,14 +200,14 @@ static void extra(void)
         {
             int fd = POP;
             off_t res = lseek(fd, 0, SEEK_CUR);
-            PUSH_DOUBLE((DUWORD)res);
+            PUSH64((uint64_t)res);
             PUSH(res >= 0 ? 0 : -1);
         }
         break;
     case OX_REPOSITION_FILE:
         {
             int fd = POP;
-            DUWORD ud = POP_DOUBLE;
+            uint64_t ud = POP64;
             off_t res = lseek(fd, (off_t)ud, SEEK_SET);
             PUSH(res >= 0 ? 0 : -1);
         }
@@ -248,14 +251,14 @@ static void extra(void)
             struct stat st;
             int fd = POP;
             int res = fstat(fd, &st);
-            PUSH_DOUBLE(st.st_size);
+            PUSH64(st.st_size);
             PUSH(res);
         }
         break;
     case OX_RESIZE_FILE:
         {
             int fd = POP;
-            DUWORD ud = POP_DOUBLE;
+            uint64_t ud = POP64;
             int res = ftruncate(fd, (off_t)ud);
             PUSH(res);
         }

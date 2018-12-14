@@ -35,8 +35,8 @@
 #include "opcodes.h"
 
 
-#define DEFAULT_MEMORY 1048576 // Default size of VM memory in words (4Mb)
-#define MAX_MEMORY 536870912 // Maximum size of memory in words (2Gb)
+#define DEFAULT_MEMORY 1048576 // Default size of VM memory in words
+#define MAX_MEMORY 536870912 // Maximum size of memory in words (2Gb for 32-bit)
 static UWORD memory_size = DEFAULT_MEMORY; // Size of VM memory in words
 WORD *memory;
 
@@ -244,7 +244,7 @@ static void double_arg(char *s, long long *start, long long *end, bool default_a
 static void disassemble(UWORD start, UWORD end)
 {
     for (UWORD p = start; p < end; ) {
-        printf("%#08"PRIx32": ", p);
+        printf("%#08"PRI_XWORD": ", p);
 
         WORD val;
         int type = decode_instruction(&p, &val);
@@ -275,12 +275,28 @@ static int save_object(FILE *file, UWORD address, UWORD length)
     if (!IS_ALIGNED(address) || ptr == NULL)
         return -1;
 
-    if (fputs(PACKAGE_UPPER, file) == EOF ||
-        putc('\0', file) == EOF ||
-        putc('\0', file) == EOF ||
-        putc((char)ENDISM, file) == EOF ||
-        fwrite(&length, WORD_SIZE, 1, file) != 1 ||
-        fwrite(ptr, WORD_SIZE, length, file) != length)
+    if (fputs(PACKAGE_UPPER, file) == EOF)
+        return -3;
+
+    for (size_t i = strlen(PACKAGE_UPPER); i < MAGIC_LENGTH; i++)
+        if (putc('\0', file) == EOF)
+            return -3;
+
+    BYTE buf[INSTRUCTION_MAX_CHUNKS] = {};
+
+    ptrdiff_t len = encode_instruction_native(&buf[0], INSTRUCTION_NUMBER, ENDISM);
+    if (fwrite(&buf[0], 1, len, file) != (size_t)len)
+        return -3;
+
+    len = encode_instruction_native(&buf[0], INSTRUCTION_NUMBER, WORD_SIZE);
+    if (fwrite(&buf[0], 1, len, file) != (size_t)len)
+        return -3;
+
+    len = encode_instruction_native(&buf[0], INSTRUCTION_NUMBER, length);
+    if (fwrite(&buf[0], 1, len, file) != (size_t)len)
+        return -3;
+
+    if (fwrite(ptr, 1, length, file) != length)
         return -3;
 
     return 0;
@@ -355,37 +371,37 @@ static void do_display(size_t no, const char *format)
 
     switch (no) {
         case r_INVALID:
-            display = xasprintf("INVALID = %#"PRIx32" (%"PRIu32")", INVALID, INVALID);
+            display = xasprintf("INVALID = %#"PRI_XWORD" (%"PRI_UWORD")", INVALID, INVALID);
             break;
         case r_BADPC:
-            display = xasprintf("BADPC = %#"PRIx32" (%"PRIu32")", BADPC, BADPC);
+            display = xasprintf("BADPC = %#"PRI_XWORD" (%"PRI_UWORD")", BADPC, BADPC);
             break;
         case r_ENDISM:
             display = xasprintf("ENDISM = %d", ENDISM);
             break;
         case r_PC:
-            display = xasprintf("PC = %#"PRIx32" (%"PRIu32")", PC, PC);
+            display = xasprintf("PC = %#"PRI_XWORD" (%"PRI_UWORD")", PC, PC);
             break;
         case r_I:
-            display = xasprintf("I = %-10s (%#x)", disass(INSTRUCTION_ACTION, I), (UWORD)I);
+            display = xasprintf("I = %-10s (%#"PRI_XWORD")", disass(INSTRUCTION_ACTION, I), (UWORD)I);
             break;
         case r_MEMORY:
-            display = xasprintf("MEMORY = %#"PRIx32" (%"PRIu32")", MEMORY, MEMORY);
+            display = xasprintf("MEMORY = %#"PRI_XWORD" (%"PRI_UWORD")", MEMORY, MEMORY);
             break;
         case r_RP:
-            display = xasprintf("RP = %#"PRIx32" (%"PRIu32")", RP, RP);
+            display = xasprintf("RP = %#"PRI_XWORD" (%"PRI_UWORD")", RP, RP);
             break;
         case r_R0:
-            display = xasprintf("R0 = %#"PRIx32" (%"PRIu32")", R0, R0);
+            display = xasprintf("R0 = %#"PRI_XWORD" (%"PRI_UWORD")", R0, R0);
             break;
         case r_SP:
-            display = xasprintf("SP = %#"PRIx32" (%"PRIu32")", SP, SP);
+            display = xasprintf("SP = %#"PRI_XWORD" (%"PRI_UWORD")", SP, SP);
             break;
         case r_S0:
-            display = xasprintf("S0 = %#"PRIx32" (%"PRIu32")", S0, S0);
+            display = xasprintf("S0 = %#"PRI_XWORD" (%"PRI_UWORD")", S0, S0);
             break;
         case r_HANDLER:
-            display = xasprintf("HANDLER = %#"PRIx32" (%"PRIu32")", HANDLER, HANDLER);
+            display = xasprintf("HANDLER = %#"PRI_XWORD" (%"PRI_UWORD")", HANDLER, HANDLER);
             break;
         default:
             display = xasprintf("unknown register");
@@ -434,7 +450,7 @@ static void do_command(int no)
     case c_DFROM:
         {
             WORD value = POP;
-            printf("%"PRId32" (%#"PRIx32")\n", value, (UWORD)value);
+            printf("%"PRI_WORD" (%#"PRI_XWORD")\n", value, (UWORD)value);
         }
         break;
     case c_DATA:
@@ -507,7 +523,7 @@ static void do_command(int no)
     case c_RFROM:
         {
             WORD value = POP_RETURN;
-            printf("%#"PRIx32" (%"PRId32")\n", (UWORD)value, value);
+            printf("%#"PRI_XWORD" (%"PRI_WORD")\n", (UWORD)value, value);
         }
         break;
     c_ret:
@@ -515,7 +531,7 @@ static void do_command(int no)
         show_return_stack();
         break;
     case c_RUN:
-        printf("HALT code %"PRId32" was returned\n", run());
+        printf("HALT code %"PRI_WORD" was returned\n", run());
         break;
     case c_STEP:
     case c_TRACE:
@@ -525,7 +541,7 @@ static void do_command(int no)
 
             if (arg == NULL) {
                 if ((ret = single_step()))
-                    printf("HALT code %"PRId32" was returned\n", ret);
+                    printf("HALT code %"PRI_WORD" was returned\n", ret);
                 if (no == c_TRACE) do_registers();
             } else {
                 upper(arg);
@@ -537,7 +553,7 @@ static void do_command(int no)
                         if (no == c_TRACE) do_registers();
                     }
                     if (ret != 0)
-                        printf("HALT code %"PRId32" was returned at PC = %#x\n",
+                        printf("HALT code %"PRI_WORD" was returned at PC = %#"PRI_XWORD"\n",
                                ret, PC);
                 } else {
                     unsigned long long limit = single_arg(arg, NULL), i;
@@ -546,7 +562,7 @@ static void do_command(int no)
                         if (no == c_TRACE) do_registers();
                     }
                     if (ret != 0)
-                        printf("HALT code %"PRId32" was returned after %llu "
+                        printf("HALT code %"PRI_WORD" was returned after %llu "
                                "steps\n", ret, i);
                 }
             }
@@ -676,11 +692,11 @@ static void parse(char *input)
                 if (!IS_ALIGNED(adr)) {
                     BYTE b;
                     load_byte(adr, &b);
-                    display = xasprintf("%#"PRIx32": %#x (%d) (byte)", (UWORD)adr, b, b);
+                    display = xasprintf("%#"PRI_XWORD": %#x (%d) (byte)", (UWORD)adr, b, b);
                 } else {
                     WORD c;
                     load_word(adr, &c);
-                    display = xasprintf("%#"PRIx32": %#"PRIx32" (%"PRId32") (word)", (UWORD)adr,
+                    display = xasprintf("%#"PRI_XWORD": %#"PRI_XWORD" (%"PRI_WORD") (word)", (UWORD)adr,
                                         (UWORD)c, c);
                 }
                 printf("%s\n", display);
@@ -747,7 +763,7 @@ static WORD parse_memory_size(UWORD max)
     errno = 0;
     long size = (WORD)strtol(optarg, &endptr, 10);
     if (*optarg == '\0' || *endptr != '\0' || size <= 0 || (UWORD)size > max)
-        die("memory size must be a positive number up to %"PRIu32, max);
+        die("memory size must be a positive number up to %"PRI_UWORD, max);
     return size;
 }
 
@@ -782,9 +798,11 @@ int main(int argc, char *argv[])
                 memory_size = parse_memory_size((UWORD)MAX_MEMORY);
                 break;
             case 1:
+                // FIXME
                 HASHS = parse_memory_size((UWORD)MAX_STACK_SIZE);
                 break;
             case 2:
+                // FIXME
                 HASHR = parse_memory_size((UWORD)MAX_STACK_SIZE);
                 break;
             case 3:
@@ -807,7 +825,7 @@ int main(int argc, char *argv[])
     }
 
     if ((memory = (WORD *)calloc(memory_size, WORD_SIZE)) == NULL)
-        die("could not allocate %"PRIu32" words of memory", memory_size);
+        die("could not allocate %"PRI_UWORD" words of memory", memory_size);
     reinit();
 
     argc -= optind;

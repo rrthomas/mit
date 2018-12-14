@@ -232,8 +232,8 @@ _GL_ATTRIBUTE_CONST WORD reverse_word(WORD value)
         unsigned lopos = BYTE_BIT * i;
         unsigned hipos = BYTE_BIT * (WORD_SIZE - 1 - i);
         unsigned move = hipos - lopos;
-        res |= ((((UWORD)value) & (BYTE_MASK << hipos)) >> move)
-            | ((((UWORD)value) & (BYTE_MASK << lopos)) << move);
+        res |= ((((UWORD)value) & ((UWORD)BYTE_MASK << hipos)) >> move)
+            | ((((UWORD)value) & ((UWORD)BYTE_MASK << lopos)) << move);
     }
     return res;
 }

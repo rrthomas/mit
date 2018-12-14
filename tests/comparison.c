@@ -15,7 +15,7 @@
 int exception = 0;
 WORD temp;
 
-WORD correct[] = { 0, 1, 0, 1, 1, 0, 0, 1, 0, 0};
+const WORD correct[] = { 0, 1, 0, 1, 1, 0, 0, 1, 0, 0};
 
 
 static void stack1(void)
@@ -42,10 +42,10 @@ static void step(unsigned start, unsigned end)
         for (unsigned i = start; i < end; i++) {
             single_step();
             printf("I = %s\n", disass(INSTRUCTION_ACTION, I));
-            printf("Result: %d; correct result: %d\n\n", LOAD_WORD(SP),
+            printf("Result: %"PRI_WORD"; correct result: %"PRI_WORD"\n\n", LOAD_WORD(SP),
                    correct[i]);
             if (correct[i] != LOAD_WORD(SP)) {
-                printf("Error in comparison tests: PC = %"PRIu32"\n", PC);
+                printf("Error in comparison tests: PC = %"PRI_UWORD"\n", PC);
                 exit(1);
             }
             (void)POP;	// drop result of comparison
@@ -54,7 +54,7 @@ static void step(unsigned start, unsigned end)
 
 int main(void)
 {
-    init((WORD *)malloc(1024), 256);
+    init_alloc(256);
 
     start_ass(PC);
     ass_action(O_LT); ass_action(O_LT); ass_action(O_LT); ass_action(O_LT);
