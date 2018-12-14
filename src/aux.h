@@ -29,6 +29,9 @@
 #define DEFAULT_STACK_SIZE   16384
 #define MAX_STACK_SIZE       67108864
 
+// Initialisation helper
+#define init_alloc(n) (init((WORD *)calloc((n), WORD_SIZE), (n)))
+
 // Memory access
 
 // Return value is 0 if OK, or exception code for invalid or unaligned address
