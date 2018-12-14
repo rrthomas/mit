@@ -10,6 +10,8 @@
 
 #include "config.h"
 
+#include "minmax.h"
+
 #include "external_syms.h"
 
 #include "public.h"
@@ -45,7 +47,7 @@ int decode_instruction(UWORD *addr, WORD *val)
 
     // Continuation bytes
     for (exception = load_byte((*addr)++, &b); exception == 0 && (b & ~INSTRUCTION_CHUNK_MASK) == 0x40; exception = load_byte((*addr)++, &b)) {
-        n |= (b & INSTRUCTION_CHUNK_MASK) << bits;
+        n |= (WORD)(b & INSTRUCTION_CHUNK_MASK) << bits;
         bits += INSTRUCTION_CHUNK_BIT;
     }
     if (exception != 0)
@@ -58,8 +60,8 @@ int decode_instruction(UWORD *addr, WORD *val)
     }
 
     // Final (or only) byte
-    n |= b << bits;
-    bits += BYTE_BIT;
+    n |= (WORD)b << bits;
+    bits = MIN(bits + BYTE_BIT, WORD_BIT);
     if (type == INSTRUCTION_NUMBER && bits < WORD_BIT)
         n = ARSHIFT(n << (WORD_BIT - bits), WORD_BIT - bits);
     *val = n;
