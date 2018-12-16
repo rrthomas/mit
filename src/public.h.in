@@ -21,6 +21,8 @@
 #include <inttypes.h>
 #include <limits.h>
 
+#include "gl_list.h"
+
 
 // Parameters
 #define WORD_SIZE @WORD_SIZE@
@@ -62,46 +64,59 @@ typedef uint64_t UWORD;
 #define ENDISM ((BYTE)0)
 #endif
 
-extern UWORD PC;
-extern WORD I;
-extern UWORD MEMORY;
-extern UWORD SP, RP;
-extern UWORD S0, R0;
-extern UWORD HASHS, HASHR;
-extern UWORD HANDLER;
-extern UWORD BADPC;
-extern UWORD INVALID;
+struct _state {
+    UWORD PC;
+    WORD I;
+    UWORD MEMORY;
+    UWORD SP, RP;
+    UWORD S0, R0;
+    UWORD HASHS, HASHR;
+    UWORD HANDLER;
+    UWORD BADPC;
+    UWORD INVALID;
+    WORD *memory;
+    gl_list_t mem_areas;
+    WORD *d_stack;
+    WORD *r_stack;
+    UWORD _mem_here;
+    UWORD here;	// (FIXME: debug.c) where the next instruction will be stored
+    int main_argc;
+    UWORD *main_argv;
+    UWORD *main_argv_len;
+};
+typedef struct _state state;
 
 // Memory access
 
 // Return value is 0 if OK, or exception code for invalid or unaligned address
-int load_word(UWORD addr, WORD *value);
-int store_word(UWORD addr, WORD value);
-int load_byte(UWORD addr, BYTE *value);
-int store_byte(UWORD addr, BYTE value);
+int load_word(state *state, UWORD addr, WORD *value);
+int store_word(state *state, UWORD addr, WORD value);
+int load_byte(state *state, UWORD addr, BYTE *value);
+int store_byte(state *state, UWORD addr, BYTE value);
 
-int pre_dma(UWORD from, UWORD to, bool write);
-int post_dma(UWORD from, UWORD to);
+int pre_dma(state *state, UWORD from, UWORD to, bool write);
+int post_dma(state *state, UWORD from, UWORD to);
 
 // Memory mapping
-UWORD mem_here(void);
-UWORD mem_allot(void *p, size_t n, bool writable);
-UWORD mem_align(void);
+UWORD mem_here(state *state);
+UWORD mem_allot(state *state, void *p, size_t n, bool writable);
+UWORD mem_align(state *state);
 
 // Interface calls
-uint8_t *native_address(UWORD addr, bool writable);
-WORD run(void);
-WORD single_step(void);
-int load_object(FILE *file, UWORD address);
+uint8_t *native_address(state *state, UWORD addr, bool writable);
+WORD run(state *state);
+WORD single_step(state *state);
+int load_object(state *state, FILE *file, UWORD address);
 
 // Additional implementation-specific routines, macros, types and quantities
-int init(WORD *c_array, size_t size);
-int register_args(int argc, char *argv[]);
+state *init(WORD *c_array, size_t size);
+void destroy(state *state);
+int register_args(state *state, int argc, char *argv[]);
 
 // A union to allow storage of machine pointers in VM memory
 union _WORD_pointer {
     WORD words[NATIVE_POINTER_SIZE / WORD_SIZE];
-    void (*pointer)(void);
+    void (*pointer)(state *state);
 };
 typedef union _WORD_pointer WORD_pointer;
 

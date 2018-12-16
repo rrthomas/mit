@@ -6,7 +6,7 @@
 // The package is distributed under the GNU Public License version 3, or,
 // at your option, any later version.
 //
-// THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER‘S
+// THIS PROGRAM S->IS PROVIDED AS S->IS, WITH NO WARRANTY. USE S->IS AT THE USER‘S
 // RISK.
 
 #include "tests.h"
@@ -51,43 +51,45 @@ int main(void)
 {
     int exception = 0;
 
-    init((WORD *)malloc(SIZE), SIZE / WORD_SIZE);
+    state *S = init_alloc(SIZE / WORD_SIZE);
 
-    start_ass(PC);
-    ass_action(O_PUSH_PC); ass_number(1); ass_action(O_POP);
-    ass_action(O_PUSH_S0); ass_number(1); ass_action(O_POP);
-    ass_action(O_PUSH_SSIZE); ass_number(1); ass_action(O_POP);
-    ass_action(O_PUSH_R0); ass_number(1); ass_action(O_POP);
-    ass_action(O_PUSH_RSIZE); ass_number(1); ass_action(O_POP);
-    ass_number(42 * WORD_SIZE);
-    ass_action(O_STORE_HANDLER);
-    ass_action(O_PUSH_HANDLER); ass_number(1); ass_action(O_POP);
-    ass_action(O_PUSH_MEMORY); ass_number(1); ass_action(O_POP);
-    ass_action(O_PUSH_BADPC); ass_action(O_PUSH_INVALID); ass_number(2); ass_action(O_POP);
-    ass_action(O_PUSH_NATIVE_POINTER_SIZE);
+    ass_action(S, O_PUSH_PC); ass_number(S, 1); ass_action(S, O_POP);
+    ass_action(S, O_PUSH_S0); ass_number(S, 1); ass_action(S, O_POP);
+    ass_action(S, O_PUSH_SSIZE); ass_number(S, 1); ass_action(S, O_POP);
+    ass_action(S, O_PUSH_R0); ass_number(S, 1); ass_action(S, O_POP);
+    ass_action(S, O_PUSH_RSIZE); ass_number(S, 1); ass_action(S, O_POP);
+    ass_number(S, 42 * WORD_SIZE);
+    ass_action(S, O_STORE_HANDLER);
+    ass_action(S, O_PUSH_HANDLER); ass_number(S, 1); ass_action(S, O_POP);
+    ass_action(S, O_PUSH_MEMORY); ass_number(S, 1); ass_action(S, O_POP);
+    ass_action(S, O_PUSH_BADPC); ass_action(S, O_PUSH_INVALID); ass_number(S, 2); ass_action(S, O_POP);
+    ass_action(S, O_PUSH_NATIVE_POINTER_SIZE);
 
     for (size_t i = 0; i < sizeof(correct) / sizeof(correct[0]); i++) {
-        show_data_stack();
+        show_data_stack(S);
         char *correct_stack = xasprint_array(correct[i], ZERO);
         printf("Correct stack: %s\n\n", correct_stack);
-        if (strcmp(correct_stack, val_data_stack())) {
-            printf("Error in registers tests: PC = %"PRI_UWORD"\n", PC);
+        if (strcmp(correct_stack, val_data_stack(S))) {
+            printf("Error in registers tests: S->PC = %"PRI_UWORD"\n", S->PC);
             exit(1);
         }
         free(correct_stack);
-        single_step();
-        printf("I = %s\n", disass(INSTRUCTION_ACTION, I));
+        single_step(S);
+        printf("I = %s\n", disass(INSTRUCTION_ACTION, S->I));
     }
 
     // Cannot statically stringify NATIVE_POINTER_SIZE
-    show_data_stack();
+    show_data_stack(S);
     char *pointer_w = xasprintf("%u", (unsigned)NATIVE_POINTER_SIZE);
     printf("Correct stack: %s\n\n", pointer_w);
-    if (strcmp(pointer_w, val_data_stack())) {
-        printf("Error in registers tests: PC = %"PRI_UWORD"\n", PC);
+    if (strcmp(pointer_w, val_data_stack(S))) {
+        printf("Error in registers tests: S->PC = %"PRI_UWORD"\n", S->PC);
         exit(1);
     }
     free(pointer_w);
+
+    free(S->memory);
+    destroy(S);
 
     assert(exception == 0);
     printf("Registers tests ran OK\n");

@@ -34,7 +34,7 @@ verify(sizeof(int) <= sizeof(WORD));
 
 // Check whether a VM address points to a native word-aligned word
 #define WORD_IN_ONE_AREA(a)                             \
-    (native_address_range_in_one_area((a), WORD_SIZE, false) != NULL)
+    (native_address_range_in_one_area(S, (a), WORD_SIZE, false) != NULL)
 
 #define DIVZERO(x)                              \
     if (x == 0)                                 \
@@ -44,7 +44,7 @@ verify(sizeof(int) <= sizeof(WORD));
 // I/O support
 
 // Copy a string from VM to native memory
-static int getstr(UWORD adr, UWORD len, char **res)
+static int getstr(state *S, UWORD adr, UWORD len, char **res)
 {
     int exception = 0;
 
@@ -53,7 +53,7 @@ static int getstr(UWORD adr, UWORD len, char **res)
         exception = -511;
     else
         for (size_t i = 0; exception == 0 && i < len; i++, adr++) {
-            exception = load_byte(adr, (BYTE *)((*res) + i));
+            exception = load_byte(S, adr, (BYTE *)((*res) + i));
         }
 
     return exception;
@@ -87,27 +87,24 @@ static int getflags(UWORD perm, bool *binary)
 }
 
 // Register command-line args in VM memory
-static int main_argc = 0;
-static UWORD *main_argv;
-static UWORD *main_argv_len;
-int register_args(int argc, char *argv[])
+int register_args(state *S, int argc, char *argv[])
 {
-    main_argc = argc;
-    if ((main_argv = calloc(argc, sizeof(UWORD))) == NULL ||
-        (main_argv_len = calloc(argc, sizeof(UWORD))) == NULL)
+    S->main_argc = argc;
+    if ((S->main_argv = calloc(argc, sizeof(UWORD))) == NULL ||
+        (S->main_argv_len = calloc(argc, sizeof(UWORD))) == NULL)
         return -1;
 
     for (int i = 0; i < argc; i++) {
         size_t len = strlen(argv[i]);
-        main_argv[i] = mem_allot(argv[i], len, true);
-        if (main_argv[i] == 0)
+        S->main_argv[i] = mem_allot(S, argv[i], len, true);
+        if (S->main_argv[i] == 0)
             return -2;
-        main_argv_len[i] = len;
+        S->main_argv_len[i] = len;
     }
     return 0;
 }
 
-static void extra(void)
+static void extra(state *S)
 {
     int exception = 0;
     WORD temp = 0;
@@ -116,17 +113,17 @@ static void extra(void)
 #endif
     switch (POP) {
     case OX_ARGC: // ( -- u )
-        PUSH(main_argc);
+        PUSH(S->main_argc);
         break;
     case OX_ARG: // ( u1 -- c-addr u2 )
         {
             UWORD narg = POP;
-            if (narg >= (UWORD)main_argc) {
+            if (narg >= (UWORD)S->main_argc) {
                 PUSH(0);
                 PUSH(0);
             } else {
-                PUSH(main_argv[narg]);
-                PUSH(main_argv_len[narg]);
+                PUSH(S->main_argv[narg]);
+                PUSH(S->main_argv_len[narg]);
             }
         }
         break;
@@ -146,7 +143,7 @@ static void extra(void)
             UWORD len = POP;
             UWORD str = POP;
             char *file;
-            exception = getstr(str, len, &file);
+            exception = getstr(S, str, len, &file);
             int fd = exception == 0 ? open(file, perm, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH) : -1;
             free(file);
             PUSH((WORD)fd);
@@ -167,10 +164,10 @@ static void extra(void)
 
             ssize_t res = 0;
             if (exception == 0) {
-                exception = pre_dma(buf, buf + nbytes, true);
+                exception = pre_dma(S, buf, buf + nbytes, true);
                 if (exception == 0) {
-                    res = read(fd, native_address(buf, true), nbytes);
-                    exception = post_dma(buf, buf + nbytes);
+                    res = read(fd, native_address(S, buf, true), nbytes);
+                    exception = post_dma(S, buf, buf + nbytes);
                 }
             }
 
@@ -186,10 +183,10 @@ static void extra(void)
 
             ssize_t res = 0;
             if (exception == 0) {
-                exception = pre_dma(buf, buf + nbytes, false);
+                exception = pre_dma(S, buf, buf + nbytes, false);
                 if (exception == 0) {
-                    res = write(fd, native_address(buf, false), nbytes);
-                    exception = post_dma(buf, buf + nbytes);
+                    res = write(fd, native_address(S, buf, false), nbytes);
+                    exception = post_dma(S, buf, buf + nbytes);
                 }
             }
 
@@ -227,8 +224,8 @@ static void extra(void)
             UWORD str2 = POP;
             char *from;
             char *to = NULL;
-            exception = getstr(str2, len2, &from) ||
-                getstr(str1, len1, &to) ||
+            exception = getstr(S, str2, len2, &from) ||
+                getstr(S, str1, len1, &to) ||
                 rename(from, to);
             free(from);
             free(to);
@@ -240,7 +237,7 @@ static void extra(void)
             UWORD len = POP;
             UWORD str = POP;
             char *file;
-            exception = getstr(str, len, &file) ||
+            exception = getstr(S, str, len, &file) ||
                 remove(file);
             free(file);
             PUSH(exception);
@@ -277,19 +274,19 @@ static void extra(void)
 
 
 // Perform one pass of the execution cycle
-WORD single_step(void)
+WORD single_step(state *S)
 {
     int exception = 0;
     WORD temp = 0;
     BYTE byte = 0;
 
-    int type = decode_instruction(&PC, &I);
+    int type = decode_instruction(S, &S->PC, &S->I);
     switch (type) {
     case INSTRUCTION_NUMBER:
-        PUSH(I);
+        PUSH(S->I);
         break;
     case INSTRUCTION_ACTION:
-        switch (I) {
+        switch (S->I) {
 #include "instruction-actions.h"
 
         default: // Undefined instruction
@@ -307,13 +304,13 @@ WORD single_step(void)
         // Since we have already had an exception, and must return a different
         // code from usual if SP is now invalid, push the exception code
         // "manually".
-        SP += WORD_SIZE * STACK_DIRECTION;
-        if (!WORD_IN_ONE_AREA(SP) || !IS_ALIGNED(SP))
+        S->SP += WORD_SIZE * STACK_DIRECTION;
+        if (!WORD_IN_ONE_AREA(S->SP) || !IS_ALIGNED(S->SP))
             return -257;
-        int store_exception = store_word(SP, exception);
+        int store_exception = store_word(S, S->SP, exception);
         assert(store_exception == 0);
-        BADPC = PC - 1;
-        PC = HANDLER;
+        S->BADPC = S->PC - 1;
+        S->PC = S->HANDLER;
     }
     return -259; // terminated OK
 }

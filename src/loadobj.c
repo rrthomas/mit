@@ -20,7 +20,7 @@
 #include "aux.h"
 
 
-int load_object(FILE *file, UWORD address)
+int load_object(state *S, FILE *file, UWORD address)
 {
     if (!IS_ALIGNED(address))
         return -1;
@@ -64,7 +64,7 @@ int load_object(FILE *file, UWORD address)
     if (decode_instruction_file(file, (WORD *)&length) != INSTRUCTION_NUMBER)
         return -2;
 
-    uint8_t *ptr = native_address_range_in_one_area(address, length, true);
+    uint8_t *ptr = native_address_range_in_one_area(S, address, length, true);
     if (ptr == NULL)
         return -1;
 
@@ -72,7 +72,7 @@ int load_object(FILE *file, UWORD address)
         return -3;
 
     if (reversed)
-        reverse(address, length);
+        reverse(S, address, length);
 
     return 0;
 }

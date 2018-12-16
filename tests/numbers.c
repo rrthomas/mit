@@ -5,7 +5,7 @@
 // The package is distributed under the GNU Public License version 3, or,
 // at your option, any later version.
 //
-// THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER‘S
+// THIS PROGRAM S->IS PROVIDED AS S->IS, WITH NO WARRANTY. USE S->IS AT THE USER‘S
 // RISK.
 
 #include "tests.h"
@@ -35,19 +35,19 @@ static void show_encoding(const char *encoding)
         printf("%02x ", (BYTE)encoding[i]);
 }
 
-static void ass_number_test(WORD n, const char *encoding)
+static void ass_number_test(state *S, WORD n, const char *encoding)
 {
-    UWORD start = ass_current();
+    UWORD start = ass_current(S);
     printf("here = %"PRI_UWORD"\n", start);
-    ass_number(n);
-    UWORD len = ass_current() - start;
-    ass_number(1); ass_action(O_POP); // pop number so they don't build up on stack
+    ass_number(S, n);
+    UWORD len = ass_current(S) - start;
+    ass_number(S, 1); ass_action(S, O_POP); // pop number so they don't build up on stack
 
     size_t bytes_ok = 0;
     printf("%"PRI_WORD" (%#"PRI_XWORD") encoded as: ", n, (UWORD)n);
     for (UWORD i = 0; i < len; i++) {
         BYTE b;
-        load_byte(start + i, &b);
+        load_byte(S, start + i, &b);
         printf("%02x ", b);
         if ((BYTE)encoding[i] == b)
             bytes_ok++;
@@ -67,32 +67,35 @@ int main(void)
     int exception = 0;
     BYTE b;
 
-    init_alloc(256);
+    state *S = init_alloc(256);
 
     for (size_t i = 0; i < sizeof(correct) / sizeof(correct[0]); i++)
-        ass_number_test(correct[i], encodings[i]);
+        ass_number_test(S, correct[i], encodings[i]);
 
-    printf("here = %"PRI_UWORD"\n", ass_current());
+    printf("here = %"PRI_UWORD"\n", ass_current(S));
 
-    load_byte(0, &b);
+    load_byte(S, 0, &b);
     printf("byte at 0 is %x\n", b);
     printf("\n");
 
-    single_step(); // Load first number
+    single_step(S); // Load first number
     for (size_t i = 0; i < sizeof(correct) / sizeof(correct[0]); i++) {
-        show_data_stack();
+        show_data_stack(S);
         printf("Correct stack: %"PRI_WORD" (%#"PRI_XWORD")\n\n", correct[i], (UWORD)correct[i]);
         ptrdiff_t actual;
-        int items = sscanf(val_data_stack(), "%td", &actual);
+        int items = sscanf(val_data_stack(S), "%td", &actual);
         if (items != 1 || correct[i] != actual) {
-            printf("Error in numbers tests: PC = %"PRI_UWORD"\n", PC);
+            printf("Error in numbers tests: S->PC = %"PRI_UWORD"\n", S->PC);
             exit(1);
         }
-        single_step();
-        single_step(); // Execute 1 POP
-        single_step();
-        printf("I = %s\n", disass(INSTRUCTION_ACTION, I));
+        single_step(S);
+        single_step(S); // Execute 1 POP
+        single_step(S);
+        printf("I = %s\n", disass(INSTRUCTION_ACTION, S->I));
     }
+
+    free(S->memory);
+    destroy(S);
 
     assert(exception == 0);
     printf("Numbers tests ran OK\n");

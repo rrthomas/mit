@@ -525,7 +525,7 @@ These actions give access to @PACKAGE_NAME@'s exception mechanisms (see section~
 These actions allow access to @PACKAGE_NAME@'s libraries, the operating system and native machine code.
 
 \begin{description}
-\inst{CALL\_NATIVE}{i*x --}{Make a subroutine call to the routine at the address given (in the host machine's format, padded out to a number of words) on the data stack. The size and format of this address are machine-dependent.}
+\inst{CALL\_NATIVE}{i*x --}{Make a subroutine call to the routine at the address given (in the host machine's format, padded out to a number of words) on the data stack, passing the current state as an argument. The size and format of this address are machine-dependent.}
 \inst{EXTRA}{i*x -- j*x}{Perform implementation-dependent actions; for example, this can be used to implement system-dependent functionality such as I/O.}
 \end{description}
 

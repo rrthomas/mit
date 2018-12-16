@@ -8,7 +8,7 @@
 // The package is distributed under the GNU Public License version 3, or,
 // at your option, any later version.
 //
-// THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER‘S
+// THIS PROGRAM S->IS PROVIDED AS S->IS, WITH NO WARRANTY. USE S->IS AT THE USER‘S
 // RISK.
 
 #include "tests.h"
@@ -34,27 +34,30 @@ int main(void)
 {
     int exception = 0;
 
-    init_alloc(256);
+    state *S = init_alloc(256);
 
     PUSH((UWORD)0xff << (WORD_BIT - CHAR_BIT)); PUSH(CHAR_BIT); PUSH(0xff); PUSH(CHAR_BIT);
 
-    ass_action(O_LSHIFT); ass_action(O_POP2R); ass_action(O_RSHIFT); ass_action(O_RPOP);
-    ass_action(O_OR); ass_action(O_INVERT); ass_number(1);
-    ass_number(-1);
-    ass_action(O_XOR); ass_action(O_AND);
+    ass_action(S, O_LSHIFT); ass_action(S, O_POP2R); ass_action(S, O_RSHIFT); ass_action(S, O_RPOP);
+    ass_action(S, O_OR); ass_action(S, O_INVERT); ass_number(S, 1);
+    ass_number(S, -1);
+    ass_action(S, O_XOR); ass_action(S, O_AND);
 
     for (size_t i = 0; i < sizeof(correct) / sizeof(correct[0]); i++) {
-        show_data_stack();
+        show_data_stack(S);
         char *correct_stack = xasprint_array(correct[i], ZERO);
         printf("Correct stack: %s\n\n", correct_stack);
-        if (strcmp(correct_stack, val_data_stack())) {
-            printf("Error in logic tests: PC = %"PRI_UWORD"\n", PC);
+        if (strcmp(correct_stack, val_data_stack(S))) {
+            printf("Error in logic tests: S->PC = %"PRI_UWORD"\n", S->PC);
             exit(1);
         }
         free(correct_stack);
-        single_step();
-        printf("I = %s\n", disass(INSTRUCTION_ACTION, I));
+        single_step(S);
+        printf("I = %s\n", disass(INSTRUCTION_ACTION, S->I));
     }
+
+    free(S->memory);
+    destroy(S);
 
     assert(exception == 0);
     printf("Logic tests ran OK\n");

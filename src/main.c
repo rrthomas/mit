@@ -35,6 +35,7 @@
 #include "opcodes.h"
 
 
+static state *S;
 #define DEFAULT_MEMORY 1048576 // Default size of VM memory in words
 #define MAX_MEMORY 536870912 // Maximum size of memory in words (2Gb for 32-bit)
 static UWORD memory_size = DEFAULT_MEMORY; // Size of VM memory in words
@@ -141,7 +142,7 @@ static const char *globdirname(const char *file)
 
 static void check_valid(UWORD adr, const char *quantity)
 {
-    if (native_address(adr, false) == NULL)
+    if (native_address(S, adr, false) == NULL)
         fatal("%s is invalid", quantity);
 }
 
@@ -247,7 +248,7 @@ static void disassemble(UWORD start, UWORD end)
         printf("%#08"PRI_XWORD": ", p);
 
         WORD val;
-        int type = decode_instruction(&p, &val);
+        int type = decode_instruction(S, &p, &val);
         if (type < 0)
             printf("Error reading memory");
         else {
@@ -264,14 +265,16 @@ static void disassemble(UWORD start, UWORD end)
 
 static void reinit(void)
 {
-    init(memory, memory_size);
-    start_ass(PC);
+    S = init(memory, memory_size);
+    if (S == NULL)
+        die("could not allocate virtual machine state");
+    start_ass(S, S->PC);
 }
 
 
 static int save_object(FILE *file, UWORD address, UWORD length)
 {
-    uint8_t *ptr = native_address_range_in_one_area(address, length, false);
+    uint8_t *ptr = native_address_range_in_one_area(S, address, length, false);
     if (!IS_ALIGNED(address) || ptr == NULL)
         return -1;
 
@@ -319,36 +322,36 @@ static void do_assign(char *token)
     int no = search(token, regist, registers);
     switch (no) {
         case r_INVALID:
-            INVALID = value;
+            S->INVALID = value;
             break;
         case r_BADPC:
-            BADPC = value;
+            S->BADPC = value;
             break;
         case r_ENDISM:
         case r_MEMORY:
             fatal("cannot assign to %s", regist[no]);
             break;
         case r_PC:
-            PC = value;
-            start_ass(PC);
+            S->PC = value;
+            start_ass(S, S->PC);
             break;
         case r_I:
-            I = value;
+            S->I = value;
             break;
         case r_RP:
-            RP = value;
+            S->RP = value;
             break;
         case r_R0:
-            R0 = value;
+            S->R0 = value;
             break;
         case r_SP:
-            SP = value;
+            S->SP = value;
             break;
         case r_S0:
-            S0 = value;
+            S->S0 = value;
             break;
         case r_HANDLER:
-            HANDLER = value;
+            S->HANDLER = value;
             break;
         default:
             {
@@ -358,9 +361,9 @@ static void do_assign(char *token)
                 if (!IS_ALIGNED(adr) && bytes > 1)
                     fatal("only a byte can be assigned to an unaligned address");
                 if (bytes == 1)
-                    store_byte(adr, value);
+                    store_byte(S, adr, value);
                 else
-                    store_word(adr, value);
+                    store_word(S, adr, value);
             }
     }
 }
@@ -371,37 +374,37 @@ static void do_display(size_t no, const char *format)
 
     switch (no) {
         case r_INVALID:
-            display = xasprintf("INVALID = %#"PRI_XWORD" (%"PRI_UWORD")", INVALID, INVALID);
+            display = xasprintf("INVALID = %#"PRI_XWORD" (%"PRI_UWORD")", S->INVALID, S->INVALID);
             break;
         case r_BADPC:
-            display = xasprintf("BADPC = %#"PRI_XWORD" (%"PRI_UWORD")", BADPC, BADPC);
+            display = xasprintf("BADPC = %#"PRI_XWORD" (%"PRI_UWORD")", S->BADPC, S->BADPC);
             break;
         case r_ENDISM:
             display = xasprintf("ENDISM = %d", ENDISM);
             break;
         case r_PC:
-            display = xasprintf("PC = %#"PRI_XWORD" (%"PRI_UWORD")", PC, PC);
+            display = xasprintf("PC = %#"PRI_XWORD" (%"PRI_UWORD")", S->PC, S->PC);
             break;
         case r_I:
-            display = xasprintf("I = %-10s (%#"PRI_XWORD")", disass(INSTRUCTION_ACTION, I), (UWORD)I);
+            display = xasprintf("I = %-10s (%#"PRI_XWORD")", disass(INSTRUCTION_ACTION, S->I), (UWORD)S->I);
             break;
         case r_MEMORY:
-            display = xasprintf("MEMORY = %#"PRI_XWORD" (%"PRI_UWORD")", MEMORY, MEMORY);
+            display = xasprintf("MEMORY = %#"PRI_XWORD" (%"PRI_UWORD")", S->MEMORY, S->MEMORY);
             break;
         case r_RP:
-            display = xasprintf("RP = %#"PRI_XWORD" (%"PRI_UWORD")", RP, RP);
+            display = xasprintf("RP = %#"PRI_XWORD" (%"PRI_UWORD")", S->RP, S->RP);
             break;
         case r_R0:
-            display = xasprintf("R0 = %#"PRI_XWORD" (%"PRI_UWORD")", R0, R0);
+            display = xasprintf("R0 = %#"PRI_XWORD" (%"PRI_UWORD")", S->R0, S->R0);
             break;
         case r_SP:
-            display = xasprintf("SP = %#"PRI_XWORD" (%"PRI_UWORD")", SP, SP);
+            display = xasprintf("SP = %#"PRI_XWORD" (%"PRI_UWORD")", S->SP, S->SP);
             break;
         case r_S0:
-            display = xasprintf("S0 = %#"PRI_XWORD" (%"PRI_UWORD")", S0, S0);
+            display = xasprintf("S0 = %#"PRI_XWORD" (%"PRI_UWORD")", S->S0, S->S0);
             break;
         case r_HANDLER:
-            display = xasprintf("HANDLER = %#"PRI_XWORD" (%"PRI_UWORD")", HANDLER, HANDLER);
+            display = xasprintf("HANDLER = %#"PRI_XWORD" (%"PRI_UWORD")", S->HANDLER, S->HANDLER);
             break;
         default:
             display = xasprintf("unknown register");
@@ -441,7 +444,7 @@ static void do_command(int no)
         break;
     case c_DISASSEMBLE:
         {
-            long long start = (PC <= 16 ? 0 : PC - 16), end = 64;
+            long long start = (S->PC <= 16 ? 0 : S->PC - 16), end = 64;
             double_arg(strtok(NULL, ""), &start, &end, true);
             check_range(start, end, "Address");
             disassemble((UWORD)start, (UWORD)end);
@@ -455,13 +458,13 @@ static void do_command(int no)
         break;
     case c_DATA:
     case c_STACKS:
-        show_data_stack();
+        show_data_stack(S);
         if (no == c_STACKS)
             goto c_ret;
         break;
     case c_DUMP:
         {
-            long long start = (PC <= 64 ? 0 : PC - 64), end = 256;
+            long long start = (S->PC <= 64 ? 0 : S->PC - 64), end = 256;
             double_arg(strtok(NULL, ""), &start, &end, true);
             check_range(start, end, "Address");
             while (start < end) {
@@ -470,7 +473,7 @@ static void do_command(int no)
                 char ascii[chunk];
                 for (int i = 0; i < chunk && start < end; i++) {
                     BYTE byte;
-                    load_byte(start + i, &byte);
+                    load_byte(S, start + i, &byte);
                     if (i % 8 == 0)
                         putchar(' ');
                     printf("%02x ", byte);
@@ -497,7 +500,7 @@ static void do_command(int no)
             FILE *handle = fopen(globfile(file), "rb");
             if (handle == NULL)
                 fatal("cannot open file '%s'", file);
-            int ret = load_object(handle, adr);
+            int ret = load_object(S, handle, adr);
             fclose(handle);
 
             switch (ret) {
@@ -528,10 +531,10 @@ static void do_command(int no)
         break;
     c_ret:
     case c_RETURN:
-        show_return_stack();
+        show_return_stack(S);
         break;
     case c_RUN:
-        printf("HALT code %"PRI_WORD" was returned\n", run());
+        printf("HALT code %"PRI_WORD" was returned\n", run(S));
         break;
     case c_STEP:
     case c_TRACE:
@@ -540,7 +543,7 @@ static void do_command(int no)
             WORD ret = -259;
 
             if (arg == NULL) {
-                if ((ret = single_step()))
+                if ((ret = single_step(S)))
                     printf("HALT code %"PRI_WORD" was returned\n", ret);
                 if (no == c_TRACE) do_registers();
             } else {
@@ -548,17 +551,17 @@ static void do_command(int no)
                 if (strcmp(arg, "TO") == 0) {
                     unsigned long long limit = single_arg(strtok(NULL, " "), NULL);
                     check_valid(limit, "Address");
-                    while ((unsigned long)PC != limit && ret == -259) {
-                        ret = single_step();
+                    while ((unsigned long)S->PC != limit && ret == -259) {
+                        ret = single_step(S);
                         if (no == c_TRACE) do_registers();
                     }
                     if (ret != 0)
                         printf("HALT code %"PRI_WORD" was returned at PC = %#"PRI_XWORD"\n",
-                               ret, PC);
+                               ret, S->PC);
                 } else {
                     unsigned long long limit = single_arg(arg, NULL), i;
                     for (i = 0; i < limit && ret == -259; i++) {
-                        ret = single_step();
+                        ret = single_step(S);
                         if (no == c_TRACE) do_registers();
                     }
                     if (ret != 0)
@@ -603,15 +606,15 @@ static void do_command(int no)
             case c_BYTE:
                 if (bytes > 1)
                     fatal("the argument to BYTE must fit in a byte");
-                ass_byte((BYTE)value);
+                ass_byte(S, (BYTE)value);
                 break;
             case c_NUMBER:
                 if (bytes > WORD_SIZE)
                     fatal("the argument to NUMBER must fit in a word");
-                ass_number(value);
+                ass_number(S, value);
                 break;
             case c_POINTER:
-                ass_native_pointer((void *)value);
+                ass_native_pointer(S, (void *)value);
                 break;
             default: // This cannot happen
                 break;
@@ -676,7 +679,7 @@ static void parse(char *input)
         else {
             WORD opcode = parse_instruction(token);
             if (opcode != O_UNDEFINED) {
-                ass_action(opcode);
+                ass_action(S, opcode);
                 return;
             }
 
@@ -691,11 +694,11 @@ static void parse(char *input)
                 check_valid(adr, "Address");
                 if (!IS_ALIGNED(adr)) {
                     BYTE b;
-                    load_byte(adr, &b);
+                    load_byte(S, adr, &b);
                     display = xasprintf("%#"PRI_XWORD": %#x (%d) (byte)", (UWORD)adr, b, b);
                 } else {
                     WORD c;
-                    load_word(adr, &c);
+                    load_word(S, adr, &c);
                     display = xasprintf("%#"PRI_XWORD": %#"PRI_XWORD" (%"PRI_WORD") (word)", (UWORD)adr,
                                         (UWORD)c, c);
                 }
@@ -799,11 +802,11 @@ int main(int argc, char *argv[])
                 break;
             case 1:
                 // FIXME
-                HASHS = parse_memory_size((UWORD)MAX_STACK_SIZE);
+                S->HASHS = parse_memory_size((UWORD)MAX_STACK_SIZE);
                 break;
             case 2:
                 // FIXME
-                HASHR = parse_memory_size((UWORD)MAX_STACK_SIZE);
+                S->HASHR = parse_memory_size((UWORD)MAX_STACK_SIZE);
                 break;
             case 3:
                 debug_on_error = true;
@@ -830,17 +833,17 @@ int main(int argc, char *argv[])
 
     argc -= optind;
     if (argc >= 1) {
-        if (register_args(argc, argv + optind) != 0)
+        if (register_args(S, argc, argv + optind) != 0)
             die("could not map command-line arguments");
         FILE *handle = fopen(argv[optind], "rb");
         if (handle == NULL)
             die("cannot not open file %s", argv[optind]);
-        int ret = load_object(handle, 0);
+        int ret = load_object(S, handle, 0);
         fclose(handle);
         if (ret != 0)
             die("could not read file %s, or file is invalid", argv[optind]);
 
-        int res = run();
+        int res = run(S);
         if (!debug_on_error || res >= 0)
             return res;
         warn("exception %d raised", res);

@@ -59,26 +59,26 @@ actions[Opcodes.NOP] = '''
 
 actions[Opcodes.POP] = '''
 WORD depth = POP;
-SP -= depth * WORD_SIZE * STACK_DIRECTION;
+S->SP -= depth * WORD_SIZE * STACK_DIRECTION;
 '''
 
 actions[Opcodes.PUSH] = '''
 WORD depth = POP;
-WORD pickee = LOAD_WORD(SP - depth * WORD_SIZE * STACK_DIRECTION);
+WORD pickee = LOAD_WORD(S->SP - depth * WORD_SIZE * STACK_DIRECTION);
 PUSH(pickee);
 '''
 
 actions[Opcodes.SWAP] = '''
 WORD depth = POP;
-WORD swapee = LOAD_WORD(SP - depth * WORD_SIZE * STACK_DIRECTION);
+WORD swapee = LOAD_WORD(S->SP - depth * WORD_SIZE * STACK_DIRECTION);
 WORD top = POP;
 PUSH(swapee);
-STORE_WORD(SP - depth * WORD_SIZE * STACK_DIRECTION, top);
+STORE_WORD(S->SP - depth * WORD_SIZE * STACK_DIRECTION, top);
 '''
 
 actions[Opcodes.RPUSH] = '''
 WORD depth = POP;
-WORD pickee = LOAD_WORD(RP - depth * WORD_SIZE * STACK_DIRECTION);
+WORD pickee = LOAD_WORD(S->RP - depth * WORD_SIZE * STACK_DIRECTION);
 PUSH(pickee);
 '''
 
@@ -203,22 +203,22 @@ STORE_BYTE(addr, value);
 '''
 
 actions[Opcodes.BRANCH] = '''
-PC = POP;
+S->PC = POP;
 '''
 
 actions[Opcodes.BRANCHZ] = '''
 WORD addr = POP;
 if (POP == 0)
-    PC = addr;
+    S->PC = addr;
 '''
 
 actions[Opcodes.CALL] = '''
-PUSH_RETURN(PC);
-PC = POP;
+PUSH_RETURN(S->PC);
+S->PC = POP;
 '''
 
 actions[Opcodes.RET] = '''
-PC = POP_RETURN;
+S->PC = POP_RETURN;
 '''
 
 actions[Opcodes.THROW] = '''
@@ -233,11 +233,11 @@ actions[Opcodes.CALL_NATIVE] = '''
 WORD_pointer address;
 for (int i = (NATIVE_POINTER_SIZE / WORD_SIZE) - 1; i >= 0; i--)
     address.words[i] = POP;
-address.pointer();
+address.pointer(S);
 '''
 
 actions[Opcodes.EXTRA] = '''
-extra();
+extra(S);
 '''
 
 actions[Opcodes.PUSH_WORD_SIZE] = '''
@@ -253,7 +253,7 @@ PUSH(NATIVE_POINTER_SIZE);
 '''
 
 actions[Opcodes.PUSH_SP] = '''
-WORD value = SP;
+WORD value = S->SP;
 PUSH(value);
 '''
 
@@ -261,56 +261,56 @@ actions[Opcodes.STORE_SP] = '''
 WORD value = POP;
 CHECK_ALIGNED(value);
 if (exception == 0)
-    SP = value;
+    S->SP = value;
 '''
 
 actions[Opcodes.PUSH_RP] = '''
-PUSH(RP);
+PUSH(S->RP);
 '''
 
 actions[Opcodes.STORE_RP] = '''
 WORD value = POP;
 CHECK_ALIGNED(value);
 if (exception == 0)
-    RP = value;
+    S->RP = value;
 '''
 
 actions[Opcodes.PUSH_PC] = '''
-PUSH(PC);
+PUSH(S->PC);
 '''
 
 actions[Opcodes.PUSH_S0] = '''
-PUSH(S0);
+PUSH(S->S0);
 '''
 
 actions[Opcodes.PUSH_SSIZE] = '''
-PUSH(HASHS);
+PUSH(S->HASHS);
 '''
 
 actions[Opcodes.PUSH_R0] = '''
-PUSH(R0);
+PUSH(S->R0);
 '''
 
 actions[Opcodes.PUSH_RSIZE] = '''
-PUSH(HASHR);
+PUSH(S->HASHR);
 '''
 
 actions[Opcodes.PUSH_HANDLER] = '''
-PUSH(HANDLER);
+PUSH(S->HANDLER);
 '''
 
 actions[Opcodes.STORE_HANDLER] = '''
-HANDLER = POP;
+S->HANDLER = POP;
 '''
 
 actions[Opcodes.PUSH_MEMORY] = '''
-PUSH(MEMORY);
+PUSH(S->MEMORY);
 '''
 
 actions[Opcodes.PUSH_BADPC] = '''
-PUSH(BADPC);
+PUSH(S->BADPC);
 '''
 
 actions[Opcodes.PUSH_INVALID] = '''
-PUSH(INVALID);
+PUSH(S->INVALID);
 '''

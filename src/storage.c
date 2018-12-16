@@ -21,24 +21,7 @@
 #include "private.h"
 
 
-// VM registers
-
-UWORD PC;
-WORD I;
-UWORD SP, RP;
-UWORD HASHS = DEFAULT_STACK_SIZE;
-UWORD S0, R0;
-UWORD HASHR = DEFAULT_STACK_SIZE;
-UWORD HANDLER;
-UWORD MEMORY;
-UWORD BADPC;
-UWORD INVALID;
-
-
 // Memory allocation and mapping
-static gl_list_t mem_areas;
-static UWORD _mem_here;
-
 typedef struct {
     UWORD start;
     UWORD size;
@@ -66,46 +49,46 @@ static void free_mem_area(const void *a)
     free((void *)a);
 }
 
-_GL_ATTRIBUTE_PURE UWORD mem_here(void)
+_GL_ATTRIBUTE_PURE UWORD mem_here(state *S)
 {
-    return _mem_here;
+    return S->_mem_here;
 }
 
 // Given a range of addresses, return Mem_area corresponding to some address
 // in that range.
 // This is used a) to find the area for a particular word;
 //              b) to test whether part of a range has already been allocated
-static Mem_area *mem_range(UWORD start, UWORD length)
+static Mem_area *mem_range(state *S, UWORD start, UWORD length)
 {
     Mem_area a_addr = {start, length, NULL, true};
-    gl_list_node_t elt = gl_sortedlist_search(mem_areas, cmp_mem_area, &a_addr);
-    return elt ? (Mem_area *)gl_list_node_value(mem_areas, elt) : NULL;
+    gl_list_node_t elt = gl_sortedlist_search(S->mem_areas, cmp_mem_area, &a_addr);
+    return elt ? (Mem_area *)gl_list_node_value(S->mem_areas, elt) : NULL;
 }
 
 #define addr_in_area(a, addr) (a->ptr + ((addr) - a->start))
 
-_GL_ATTRIBUTE_PURE uint8_t *native_address(UWORD addr, bool write)
+_GL_ATTRIBUTE_PURE uint8_t *native_address(state *S, UWORD addr, bool write)
 {
-    Mem_area *a = mem_range(addr, 1);
+    Mem_area *a = mem_range(S, addr, 1);
     if (a == NULL || (write && !a->writable))
         return NULL;
     return addr_in_area(a, addr);
 }
 
 // Return address of a range iff it falls inside an area
-uint8_t *native_address_range_in_one_area(UWORD start, UWORD length, bool write)
+uint8_t *native_address_range_in_one_area(state *S, UWORD start, UWORD length, bool write)
 {
-    Mem_area *a = mem_range(start, 1);
+    Mem_area *a = mem_range(S, start, 1);
     if (a == NULL || (write && !a->writable) || a->size - (start - a->start) < length)
         return NULL;
     return addr_in_area(a, start);
 }
 
 // Map the given native block of memory to VM address addr
-static bool mem_map(UWORD addr, void *p, size_t n, bool writable)
+static bool mem_map(state *S, UWORD addr, void *p, size_t n, bool writable)
 {
     // Return false if area is too big, or covers already-allocated addresses
-    if ((addr > 0 && n > (WORD_MAX - addr + 1)) || mem_range(addr, n) != NULL)
+    if ((addr > 0 && n > (WORD_MAX - addr + 1)) || mem_range(S, addr, n) != NULL)
         return false;
 
     Mem_area *area = malloc(sizeof(Mem_area));
@@ -113,26 +96,26 @@ static bool mem_map(UWORD addr, void *p, size_t n, bool writable)
         return false;
     *area = (Mem_area){addr, n, p, writable};
 
-    gl_list_node_t elt = gl_sortedlist_nx_add(mem_areas, cmp_mem_area, area);
+    gl_list_node_t elt = gl_sortedlist_nx_add(S->mem_areas, cmp_mem_area, area);
     if (elt == NULL)
         return false;
 
     return true;
 }
 
-UWORD mem_allot(void *p, size_t n, bool writable)
+UWORD mem_allot(state *S, void *p, size_t n, bool writable)
 {
-    if (!mem_map(_mem_here, p, n, writable))
+    if (!mem_map(S, S->_mem_here, p, n, writable))
         return WORD_MASK;
 
-    size_t start = _mem_here;
-    _mem_here += n;
+    size_t start = S->_mem_here;
+    S->_mem_here += n;
     return start;
 }
 
-UWORD mem_align(void)
+UWORD mem_align(state *S)
 {
-    return _mem_here = ALIGN(_mem_here);
+    return S->_mem_here = ALIGN(S->_mem_here);
 }
 
 
@@ -145,15 +128,15 @@ UWORD mem_align(void)
 #define FLIP(addr) (addr)
 #endif
 
-int load_word(UWORD addr, WORD *value)
+int load_word(state *S, UWORD addr, WORD *value)
 {
     if (!IS_ALIGNED(addr)) {
-        INVALID = addr;
+        S->INVALID = addr;
         return -23;
     }
 
     // Aligned access to a single memory area
-    uint8_t *ptr = native_address_range_in_one_area(addr, WORD_SIZE, false);
+    uint8_t *ptr = native_address_range_in_one_area(S, addr, WORD_SIZE, false);
     if (ptr != NULL && IS_ALIGNED((size_t)ptr)) {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wcast-align"
@@ -165,9 +148,9 @@ int load_word(UWORD addr, WORD *value)
     // Awkward access
     *value = 0;
     for (unsigned i = 0; i < WORD_SIZE; i++, addr++) {
-        ptr = native_address(addr, false);
+        ptr = native_address(S, addr, false);
         if (ptr == NULL) {
-            INVALID = addr;
+            S->INVALID = addr;
             return -9;
         }
         ((BYTE *)value)[ENDISM ? WORD_SIZE - i : i] = *ptr;
@@ -175,26 +158,26 @@ int load_word(UWORD addr, WORD *value)
     return 0;
 }
 
-int load_byte(UWORD addr, BYTE *value)
+int load_byte(state *S, UWORD addr, BYTE *value)
 {
-    uint8_t *ptr = native_address(FLIP(addr), false);
+    uint8_t *ptr = native_address(S, FLIP(addr), false);
     if (ptr == NULL) {
-        INVALID = addr;
+        S->INVALID = addr;
         return -9;
     }
     *value = *ptr;
     return 0;
 }
 
-int store_word(UWORD addr, WORD value)
+int store_word(state *S, UWORD addr, WORD value)
 {
     if (!IS_ALIGNED(addr)) {
-        INVALID = addr;
+        S->INVALID = addr;
         return -23;
     }
 
     // Aligned access to a single memory allocation
-    uint8_t *ptr = native_address_range_in_one_area(addr, WORD_SIZE, true);
+    uint8_t *ptr = native_address_range_in_one_area(S, addr, WORD_SIZE, true);
     if (ptr != NULL && IS_ALIGNED((size_t)ptr)) {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wcast-align"
@@ -206,18 +189,18 @@ int store_word(UWORD addr, WORD value)
     // Awkward access
     int exception = 0;
     for (unsigned i = 0; exception == 0 && i < WORD_SIZE; i++)
-        exception = store_byte(addr + i, value >> ((ENDISM ? WORD_SIZE - i : i) * BYTE_BIT));
+        exception = store_byte(S, addr + i, value >> ((ENDISM ? WORD_SIZE - i : i) * BYTE_BIT));
     return exception;
 }
 
-int store_byte(UWORD addr, BYTE value)
+int store_byte(state *S, UWORD addr, BYTE value)
 {
-    Mem_area *a = mem_range(FLIP(addr), 1);
+    Mem_area *a = mem_range(S, FLIP(addr), 1);
     if (a == NULL) {
-        INVALID = addr;
+        S->INVALID = addr;
         return -9;
     } else if (!a->writable) {
-        INVALID = addr;
+        S->INVALID = addr;
         return -20;
     }
     *addr_in_area(a, FLIP(addr)) = value;
@@ -238,79 +221,96 @@ _GL_ATTRIBUTE_CONST WORD reverse_word(WORD value)
     return res;
 }
 
-int reverse(UWORD start, UWORD length)
+int reverse(state *S, UWORD start, UWORD length)
 {
     int ret = 0;
     for (UWORD i = 0; ret == 0 && i < length; i ++) {
         WORD c;
-        ret = load_word(start + i * WORD_SIZE, &c)
-            || store_word(start + i, reverse_word(c));
+        ret = load_word(S, start + i * WORD_SIZE, &c)
+            || store_word(S, start + i, reverse_word(c));
     }
     return ret;
 }
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wsuggest-attribute=const"
-int pre_dma(UWORD from, UWORD to, bool write)
+int pre_dma(state *S, UWORD from, UWORD to, bool write)
 {
     int exception = 0;
 
     from &= -WORD_SIZE;
     to = ALIGN(to);
-    if (to < from || native_address_range_in_one_area(from, to - from, write) == NULL)
+    if (to < from || native_address_range_in_one_area(S, from, to - from, write) == NULL)
         exception = -1;
     CHECK_ALIGNED(from);
     CHECK_ALIGNED(to);
     if (exception == 0 && ENDISM)
-        exception = reverse(from, to - from);
+        exception = reverse(S, from, to - from);
 
     return exception;
 }
 #pragma GCC diagnostic pop
 
-int post_dma(UWORD from, UWORD to)
+int post_dma(state *S, UWORD from, UWORD to)
 {
-    return pre_dma(from, to, false);
+    return pre_dma(S, from, to, false);
 }
 
 
 // Initialise registers that are not fixed
 
-int init(WORD *memory, size_t size)
+state *init(WORD *memory, size_t size)
 {
     if (memory == NULL)
-        return -1;
-    MEMORY = size * WORD_SIZE;
-    memset(memory, 0, MEMORY);
+        return NULL;
 
-    _mem_here = 0UL;
+    state *S = calloc(1, sizeof(state));
+    if (S == NULL)
+        return NULL;
 
-    if (mem_areas)
-        gl_list_free(mem_areas);
-    if ((mem_areas =
+    S->memory = memory;
+    S->MEMORY = size * WORD_SIZE;
+    memset(memory, 0, S->MEMORY);
+
+    S->_mem_here = 0UL;
+
+    if ((S->mem_areas =
          gl_list_nx_create_empty(GL_AVLTREE_LIST, eq_mem_area, NULL, free_mem_area, false))
-        == false)
-        return -2;
+        == NULL)
+        return NULL;
+    if (mem_allot(S, memory, S->MEMORY, true) == WORD_MASK)
+        return NULL;
 
-    if (mem_allot(memory, MEMORY, true) == WORD_MASK)
-        return -2;
+    S->HASHS = DEFAULT_STACK_SIZE;
+    S->d_stack = calloc(S->HASHS, WORD_SIZE);
+    S->HASHR = DEFAULT_STACK_SIZE;
+    S->r_stack = calloc(S->HASHR, WORD_SIZE);
+    if (S->d_stack == NULL || S->r_stack == NULL)
+        return NULL;
 
-    WORD *d_stack = calloc(HASHS, WORD_SIZE);
-    WORD *r_stack = calloc(HASHR, WORD_SIZE);
-    if (d_stack == NULL || r_stack == NULL)
-        return -2;
+    if (!mem_map(S, DATA_STACK_SEGMENT, S->d_stack, S->HASHS, true)
+        || !mem_map(S, RETURN_STACK_SEGMENT, S->r_stack, S->HASHR, true))
+        return NULL;
 
-    if (!mem_map(DATA_STACK_SEGMENT, d_stack, HASHS, true)
-        || !mem_map(RETURN_STACK_SEGMENT, r_stack, HASHR, true))
-        return -2;
+    S->PC = 0;
+    S->I = 0;
+    S->S0 = S->SP = DATA_STACK_SEGMENT;
+    S->R0 = S->RP = RETURN_STACK_SEGMENT;
+    S->HANDLER = 0;
+    S->BADPC = 0;
+    S->INVALID = 0;
 
-    PC = 0;
-    I = 0;
-    S0 = SP = DATA_STACK_SEGMENT;
-    R0 = RP = RETURN_STACK_SEGMENT;
-    HANDLER = 0;
-    BADPC = 0;
-    INVALID = 0;
+    return S;
+}
 
-    return 0;
+void destroy(state *S)
+{
+    if (S) {
+        gl_list_free(S->mem_areas);
+        free(S->d_stack);
+        free(S->r_stack);
+        free(S->main_argv);
+        free(S->main_argv_len);
+        free(S);
+    }
 }

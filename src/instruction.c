@@ -19,8 +19,7 @@
 #include "opcodes.h"
 
 
-#define ENCODE_INSTRUCTION(NAME, TYPE, HANDLE, STORE)                   \
-    ptrdiff_t NAME(TYPE HANDLE, enum instruction_type type, WORD v)     \
+#define _ENCODE_INSTRUCTION(NAME, TYPE, HANDLE, STORE)                  \
     {                                                                   \
         size_t len = 0;                                                 \
         int exception;                                                  \
@@ -45,11 +44,19 @@
         return len;                                                     \
     }
 
+#define ENCODE_INSTRUCTION(NAME, TYPE, HANDLE, STORE)                   \
+    ptrdiff_t NAME(TYPE HANDLE, enum instruction_type type, WORD v)     \
+    _ENCODE_INSTRUCTION(NAME, TYPE, HANDLE, STORE)
+
+#define STATEFUL_ENCODE_INSTRUCTION(NAME, TYPE, HANDLE, STORE)          \
+    ptrdiff_t NAME(state *S, TYPE HANDLE, enum instruction_type type, WORD v) \
+    _ENCODE_INSTRUCTION(NAME, TYPE, HANDLE, STORE)
+
 #define STORE_NATIVE(b) (*addr++ = (b), 0)
 ENCODE_INSTRUCTION(encode_instruction_native, BYTE *, addr, STORE_NATIVE)
 
-#define STORE_VIRTUAL(b) (store_byte((*addr)++, (b)))
-ENCODE_INSTRUCTION(encode_instruction, UWORD *, addr, STORE_VIRTUAL)
+#define STORE_VIRTUAL(b) (store_byte(S, (*addr)++, (b)))
+STATEFUL_ENCODE_INSTRUCTION(encode_instruction, UWORD *, addr, STORE_VIRTUAL)
 
 int decode_instruction_file(FILE *file, WORD *val)
 {
@@ -82,7 +89,7 @@ int decode_instruction_file(FILE *file, WORD *val)
 }
 
 // FIXME: use decode_instruction_native
-int decode_instruction(UWORD *addr, WORD *val)
+int decode_instruction(state *S, UWORD *addr, WORD *val)
 {
     unsigned bits = 0;
     WORD n = 0;
@@ -91,7 +98,7 @@ int decode_instruction(UWORD *addr, WORD *val)
     int type = INSTRUCTION_NUMBER;
 
     // Continuation bytes
-    for (exception = load_byte((*addr)++, &b); exception == 0 && (b & ~INSTRUCTION_CHUNK_MASK) == 0x40; exception = load_byte((*addr)++, &b)) {
+    for (exception = load_byte(S, (*addr)++, &b); exception == 0 && (b & ~INSTRUCTION_CHUNK_MASK) == 0x40; exception = load_byte(S, (*addr)++, &b)) {
         n |= (WORD)(b & INSTRUCTION_CHUNK_MASK) << bits;
         bits += INSTRUCTION_CHUNK_BIT;
     }

@@ -25,39 +25,36 @@
 #include "opcodes.h"
 
 
-static UWORD here;	// where the current instruction word will be stored
-
-
-void ass_action(WORD instr)
+void ass_action(state *S, WORD instr)
 {
-    encode_instruction(&here, INSTRUCTION_ACTION, instr);
+    encode_instruction(S, &S->here, INSTRUCTION_ACTION, instr);
 }
 
-void ass_number(WORD v)
+void ass_number(state *S, WORD v)
 {
-    encode_instruction(&here, INSTRUCTION_NUMBER, v);
+    encode_instruction(S, &S->here, INSTRUCTION_NUMBER, v);
 }
 
-void ass_native_pointer(void (*pointer)(void))
+void ass_native_pointer(state *S, void (*pointer)(state *))
 {
     WORD_pointer address = { .pointer = pointer };
     for (unsigned i = 0; i < NATIVE_POINTER_SIZE / WORD_SIZE; i++)
-        ass_number(address.words[i]);
+        ass_number(S, address.words[i]);
 }
 
-void ass_byte(BYTE byte)
+void ass_byte(state *S, BYTE byte)
 {
-    store_byte(here++, byte);
+    store_byte(S, S->here++, byte);
 }
 
-void start_ass(UWORD addr)
+void start_ass(state *S, UWORD addr)
 {
-    here = addr;
+    S->here = addr;
 }
 
-_GL_ATTRIBUTE_PURE UWORD ass_current(void)
+_GL_ATTRIBUTE_PURE UWORD ass_current(state *S)
 {
-    return here;
+    return S->here;
 }
 
 static const char *mnemonic[O_UNDEFINED] = {
@@ -97,18 +94,18 @@ _GL_ATTRIBUTE_PURE UWORD toass(const char *token)
     return O_UNDEFINED;
 }
 
-static char *_val_data_stack(bool with_hex)
+static char *_val_data_stack(state *S, bool with_hex)
 {
     static char *picture = NULL;
 
     free(picture);
     picture = xasprintf("%s", "");
-    if (!STACK_UNDERFLOW(SP, S0))
-        for (UWORD i = S0; i != SP;) {
+    if (!STACK_UNDERFLOW(S->SP, S->S0))
+        for (UWORD i = S->S0; i != S->SP;) {
             WORD c;
             char *ptr;
             i += WORD_SIZE * STACK_DIRECTION;
-            int exception = load_word(i, &c);
+            int exception = load_word(S, i, &c);
             if (exception != 0) {
                 ptr = xasprintf("%sinvalid address!", picture);
                 free(picture);
@@ -123,7 +120,7 @@ static char *_val_data_stack(bool with_hex)
                 free(picture);
                 picture = ptr;
             }
-            if (i != SP) {
+            if (i != S->SP) {
                 ptr = xasprintf("%s ", picture);
                 free(picture);
                 picture = ptr;
@@ -133,33 +130,33 @@ static char *_val_data_stack(bool with_hex)
     return picture;
 }
 
-char *val_data_stack(void)
+char *val_data_stack(state *S)
 {
-    return _val_data_stack(false);
+    return _val_data_stack(S, false);
 }
 
-void show_data_stack(void)
+void show_data_stack(state *S)
 {
-    if (SP == S0)
+    if (S->SP == S->S0)
         printf("Data stack empty\n");
-    else if (STACK_UNDERFLOW(SP, S0))
+    else if (STACK_UNDERFLOW(S->SP, S->S0))
         printf("Data stack underflow\n");
     else
-        printf("Data stack: %s\n", _val_data_stack(true));
+        printf("Data stack: %s\n", _val_data_stack(S, true));
 }
 
-void show_return_stack(void)
+void show_return_stack(state *S)
 {
-    if (RP == R0)
+    if (S->RP == S->R0)
         printf("Return stack empty\n");
-    else if (STACK_UNDERFLOW(RP, R0))
+    else if (STACK_UNDERFLOW(S->RP, S->R0))
         printf("Return stack underflow\n");
     else {
         printf("Return stack: ");
-        for (UWORD i = R0; i != RP;) {
+        for (UWORD i = S->R0; i != S->RP;) {
             WORD c;
             i += WORD_SIZE * STACK_DIRECTION;
-            int exception = load_word(i, &c);
+            int exception = load_word(S, i, &c);
             if (exception != 0) {
                 printf("invalid address!\n");
                 break;

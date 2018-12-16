@@ -9,7 +9,7 @@
 // The package is distributed under the GNU Public License version 3, or,
 // at your option, any later version.
 //
-// THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER‘S
+// THIS PROGRAM S->IS PROVIDED AS S->IS, WITH NO WARRANTY. USE S->IS AT THE USER‘S
 // RISK.
 
 #include "tests.h"
@@ -24,55 +24,58 @@ int main(void)
 {
     int exception = 0;
 
-    init_alloc(4096);
+    state *S = init_alloc(4096);
 
-    start_ass(PC);
-    ass_number(96); ass_action(O_BRANCH);
+    start_ass(S, 0);
+    ass_number(S, 96); ass_action(S, O_BRANCH);
 
-    start_ass(96);
-    ass_number(48); ass_action(O_BRANCH);
+    start_ass(S, 96);
+    ass_number(S, 48); ass_action(S, O_BRANCH);
 
-    start_ass(48);
-    ass_number(10000); ass_action(O_BRANCH);
+    start_ass(S, 48);
+    ass_number(S, 10000); ass_action(S, O_BRANCH);
 
-    start_ass(10000);
-    ass_number(1);
-    ass_number(10008); ass_action(O_BRANCHZ);
-    ass_number(1);
-    ass_number(0); ass_action(O_BRANCHZ); ass_number(0);
-    ass_number(11000); ass_action(O_BRANCHZ);
+    start_ass(S, 10000);
+    ass_number(S, 1);
+    ass_number(S, 10008); ass_action(S, O_BRANCHZ);
+    ass_number(S, 1);
+    ass_number(S, 0); ass_action(S, O_BRANCHZ); ass_number(S, 0);
+    ass_number(S, 11000); ass_action(S, O_BRANCHZ);
 
-    start_ass(11000);
-    ass_number(0);
-    ass_number(11016); ass_action(O_BRANCHZ);
+    start_ass(S, 11000);
+    ass_number(S, 0);
+    ass_number(S, 11016); ass_action(S, O_BRANCHZ);
 
-    start_ass(11016);
-    ass_number(60);
-    ass_action(O_CALL);
+    start_ass(S, 11016);
+    ass_number(S, 60);
+    ass_action(S, O_CALL);
 
-    start_ass(60);
-    ass_number(200); ass_action(O_CALL);
-    ass_number(64);
-    ass_number(24);
-    ass_number(1); ass_action(O_SWAP); ass_number(1); ass_action(O_PUSH); ass_action(O_STORE); ass_action(O_LOAD);
-    ass_action(O_CALL);
+    start_ass(S, 60);
+    ass_number(S, 200); ass_action(S, O_CALL);
+    ass_number(S, 64);
+    ass_number(S, 24);
+    ass_number(S, 1); ass_action(S, O_SWAP); ass_number(S, 1); ass_action(S, O_PUSH); ass_action(S, O_STORE); ass_action(S, O_LOAD);
+    ass_action(S, O_CALL);
 
-    start_ass(200);
-    ass_number(300); ass_action(O_CALL);
-    ass_action(O_RET);
+    start_ass(S, 200);
+    ass_number(S, 300); ass_action(S, O_CALL);
+    ass_action(S, O_RET);
 
-    start_ass(300);
-    ass_action(O_RET);
+    start_ass(S, 300);
+    ass_action(S, O_RET);
 
     for (size_t i = 0; i < sizeof(correct) / sizeof(correct[0]); i++) {
-        printf("Instruction %zu: PC = %"PRI_UWORD"; should be %u\n\n", i, PC, correct[i]);
-        if (correct[i] != PC) {
-            printf("Error in branch tests: PC = %"PRI_UWORD"\n", PC);
+        printf("Instruction %zu: S->PC = %"PRI_UWORD"; should be %u\n\n", i, S->PC, correct[i]);
+        if (correct[i] != S->PC) {
+            printf("Error in branch tests: S->PC = %"PRI_UWORD"\n", S->PC);
             exit(1);
         }
-        single_step();
-        printf("I = %s\n", disass(INSTRUCTION_ACTION, I));
+        single_step(S);
+        printf("I = %s\n", disass(INSTRUCTION_ACTION, S->I));
     }
+
+    free(S->memory);
+    destroy(S);
 
     assert(exception == 0);
     printf("Branch tests ran OK\n");

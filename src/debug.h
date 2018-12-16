@@ -13,18 +13,18 @@
 #define PACKAGE_UPPER_DEBUG
 
 
-void ass_action(WORD instr);	// assemble an action
-void ass_number(WORD n);	// assemble a number
-void ass_native_pointer(void (*pointer)(void));  // assemble a native function pointer
-void ass_byte(BYTE byte);	// assemble a literal byte
-void start_ass(UWORD addr);	// start assembly, initialising variables
-UWORD ass_current(void);	// return address of WORD currently being assembled to
+void ass_action(state *S, WORD instr);	// assemble an action
+void ass_number(state *S, WORD n);	// assemble a number
+void ass_native_pointer(state *S, void (*pointer)(state *));  // assemble a native function pointer
+void ass_byte(state *S, BYTE byte);	// assemble a literal byte
+void start_ass(state *S, UWORD addr);	// start assembly, initialising variables
+UWORD ass_current(state *S);	// return address of WORD currently being assembled to
 const char *disass(enum instruction_type type, WORD opcode);  // disassemble an instruction
 UWORD toass(const char *token);    // convert an action to its opcode
 
-char *val_data_stack(void); // return the current data stack as a string
-void show_data_stack(void); // show the current contents of the data stack
-void show_return_stack(void);	// show the current contents of the return stack
+char *val_data_stack(state *S); // return the current data stack as a string
+void show_data_stack(state *S); // show the current contents of the data stack
+void show_return_stack(state *S);	// show the current contents of the return stack
 
 
 #endif

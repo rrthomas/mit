@@ -153,57 +153,57 @@ To create a file, set both read and write bits to zero when calling {\tt OPEN-FI
 \subsection{Using the interface calls}
 \label{usingcalls}
 
-The operation of the specified interface calls is given in~\cite{@PACKAGE@}. Here, the C prototypes corresponding to the idealised prototypes used in~\cite{@PACKAGE@} are given. The names are prefixed with {\bf @PACKAGE@\_}.
+The operation of the specified interface calls is given in~\cite{@PACKAGE@}. Here, the C prototypes corresponding to the idealised prototypes used in~\cite{@PACKAGE@} are given. The names are prefixed with {\bf @PACKAGE@\_}. The first argument to most routines is a {\tt @PACKAGE\_state *}, as returned by {\tt @PACKAGE@\_init}.
 
 Files to be loaded and saved are passed as C file descriptors. Thus, the
 calling program must itself open and close the files.
 
 \begin{description}
-\ifacec{uint8\_t *native\_address(@PACKAGE@\_UWORD address, bool writable)}{Returns {\tt NULL} when the address is invalid, or the writable flag is true and the address is read-only.}
-\ifacec{@PACKAGE@\_WORD run(void)}{The reason code returned by {\bf @PACKAGE@\_run()} is a @PACKAGE_NAME@
+\ifacec{uint8\_t *native\_address(@PACKAGE@\_state *state, @PACKAGE@\_UWORD address, bool writable)}{Returns {\tt NULL} when the address is invalid, or the writable flag is true and the address is read-only.}
+\ifacec{@PACKAGE@\_state *state, @PACKAGE@\_WORD run(@PACKAGE@\_state *state)}{The reason code returned by {\bf @PACKAGE@\_run()} is a @PACKAGE_NAME@
 word.}
-\ifacec{@PACKAGE@\_WORD @PACKAGE@\_single\_step(void)}{The reason code returned by {\bf @PACKAGE@\_single\_step()}
+\ifacec{@PACKAGE@\_state *state, @PACKAGE@\_WORD @PACKAGE@\_single\_step(@PACKAGE@\_state *state)}{The reason code returned by {\bf @PACKAGE@\_single\_step()}
 is a @PACKAGE_NAME@ word.}
-\ifacec{int @PACKAGE@\_load\_object(FILE *file, @PACKAGE@\_UWORD address)}{If a file system error
+\ifacec{int @PACKAGE@\_load\_object(@PACKAGE@\_state *state, FILE *file, @PACKAGE@\_UWORD address)}{If a file system error
 occurs, the return code is $-3$. If the word size of the object file is not {\tt WORD\_SIZE}, the return code is $-4$. As an extension to the specification, if an object file starts with the bytes $35$, $33$ (\texttt{\#!}), then it is assumed to be the start of a UNIX-style “hash bang” line, and the file contents up to and including the first newline character ($10$) is ignored.}
 \end{description}
 
 In addition to the required interface calls C @PACKAGE_NAME@ provides an initialisation routine {\bf @PACKAGE@\_init()} which, given a word array and its size, initialises @PACKAGE_NAME@:
 
 \begin{description}
-\ifacec{int @PACKAGE@\_init(@PACKAGE@\_WORD *b\_array, size\_t size)}{{\tt size} is
-the size of {\tt b\_array} in {\em words} (not bytes). The return value is $-1$ if {\tt b\_array} is {\tt NULL}, and $0$ otherwise.
+\ifacec{@PACKAGE@\_state @PACKAGE@\_init(@PACKAGE@\_WORD *b\_array, size\_t size)}{{\tt size} is
+the size of {\tt b\_array} in {\em words} (not bytes). The return value is {\tt NULL} if {\tt b\_array} is {\tt NULL} or if memory cannot be allocated, and a pointer to a new state otherwise.
 All the registers are initialised as per~\cite{@PACKAGE@}.}
 \end{description}
 
 The following routines give easier access to @PACKAGE_NAME@’s address space at the byte and word level. On success, they return $0$, and on failure, the relevant exception code.
 
 \begin{description}
-\ifacec{int @PACKAGE@\_load\_word(@PACKAGE@\_UWORD address, @PACKAGE@\_WORD *value)}{Load the word at the given address into the given {\tt @PACKAGE@\_WORD *}.}
-\ifacec{int @PACKAGE@\_store\_word(@PACKAGE@\_UWORD address, @PACKAGE@\_WORD value)}{Store the given {\tt WORD} value at the given address.}
-\ifacec{int @PACKAGE@\_load\_byte(@PACKAGE@\_UWORD address, @PACKAGE@\_BYTE *value)}{Load the byte at the given address into the given {\tt @PACKAGE@\_BYTE *}.}
-\ifacec{int @PACKAGE@\_store\_byte(@PACKAGE@\_UWORD address, @PACKAGE@\_BYTE value)}{Store the given {\tt @PACKAGE@\_BYTE} value at the given address.}
+\ifacec{int @PACKAGE@\_load\_word(@PACKAGE@\_state *state, @PACKAGE@\_UWORD address, @PACKAGE@\_WORD *value)}{Load the word at the given address into the given {\tt @PACKAGE@\_WORD *}.}
+\ifacec{int @PACKAGE@\_store\_word(@PACKAGE@\_state *state, @PACKAGE@\_UWORD address, @PACKAGE@\_WORD value)}{Store the given {\tt WORD} value at the given address.}
+\ifacec{int @PACKAGE@\_load\_byte(@PACKAGE@\_state *state, @PACKAGE@\_UWORD address, @PACKAGE@\_BYTE *value)}{Load the byte at the given address into the given {\tt @PACKAGE@\_BYTE *}.}
+\ifacec{int @PACKAGE@\_store\_byte(@PACKAGE@\_state *state, @PACKAGE@\_UWORD address, @PACKAGE@\_BYTE value)}{Store the given {\tt @PACKAGE@\_BYTE} value at the given address.}
 \end{description}
 
 The following routines give easier access to contiguous areas of @PACKAGE_NAME@’s address space. On success, $0$ is returned; if {\tt to} if not less than {\tt from}, or the addresses are not contained in the same area, or not writable if desired, $-1$ is returned; if either address is unaligned, or some other error occurs, a memory exception code is returned.
 
 \begin{description}
-\ifacec{int @PACKAGE@\_pre\_dma(@PACKAGE@\_UWORD from, @PACKAGE@\_UWORD to, bool write)}{Convert the given range to native byte order, so that it can be read (or written) directly.}
-\ifacec{int @PACKAGE@\_post\_dma(@PACKAGE@\_UWORD from, @PACKAGE@\_UWORD to)}{Convert the given range to @PACKAGE_NAME@ byte order, so that it can be used by @PACKAGE_NAME@ after a direct access.}
+\ifacec{int @PACKAGE@\_pre\_dma(@PACKAGE@\_state *state, @PACKAGE@\_UWORD from, @PACKAGE@\_UWORD to, bool write)}{Convert the given range to native byte order, so that it can be read (or written) directly.}
+\ifacec{int @PACKAGE@\_post\_dma(@PACKAGE@\_state *state, @PACKAGE@\_UWORD from, @PACKAGE@\_UWORD to)}{Convert the given range to @PACKAGE_NAME@ byte order, so that it can be used by @PACKAGE_NAME@ after a direct access.}
 \end{description}
 
 The following routines are provided to map system memory to @PACKAGE_NAME@’s address space and vice versa:
 
 \begin{description}
-\ifacec{@PACKAGE@\_UWORD @PACKAGE@\_mem\_here()}{Returns the @PACKAGE_NAME@ address at which the next mapping will be made.}
-\ifacec{@PACKAGE@\_UWORD @PACKAGE@\_mem\_allot(void *p, size\_t n)}{Map {\tt n} bytes pointed to by {\tt p} into @PACKAGE_NAME@’s address space, and return the address mapped. Addresses are mapped sequentially.}
-\ifacec{@PACKAGE@\_UWORD @PACKAGE@\_mem\_align(void)}{Rounds up the address at which the next memory allocation will occur to the next word.}
+\ifacec{@PACKAGE@\_UWORD @PACKAGE@\_mem\_here(@PACKAGE@\_state *state)}{Returns the @PACKAGE_NAME@ address at which the next mapping will be made.}
+\ifacec{@PACKAGE@\_UWORD @PACKAGE@\_mem\_allot(@PACKAGE@\_state *state, void *p, size\_t n)}{Map {\tt n} bytes pointed to by {\tt p} into @PACKAGE_NAME@’s address space, and return the address mapped. Addresses are mapped sequentially.}
+\ifacec{@PACKAGE@\_UWORD @PACKAGE@\_mem\_align(@PACKAGE@\_state *state)}{Rounds up the address at which the next memory allocation will occur to the next word.}
 \end{description}
 
 The following routine allows the calling program to register command-line arguments that can be retrieved by the {\tt ARG} and {\tt ARGC} extra instructions.
 
 \begin{description}
-\ifacec{int @PACKAGE@\_register\_args(int argc, char *argv[])}{Maps the given arguments register, which has the same format as that supplied to {\bf main()}, into @PACKAGE_NAME@’s memory. Returns $0$ on success and $-1$ if memory could not be allocated, or $-2$ if an argument could not be mapped to @PACKAGE_NAME@’s address space.}
+\ifacec{int @PACKAGE@\_register\_args(@PACKAGE@\_state *state, int argc, char *argv[])}{Maps the given arguments register, which has the same format as that supplied to {\bf main()}, into @PACKAGE_NAME@’s memory. Returns $0$ on success and $-1$ if memory could not be allocated, or $-2$ if an argument could not be mapped to @PACKAGE_NAME@’s address space.}
 \end{description}
 
 Programs which use C @PACKAGE_NAME@'s interface must {\tt \#include} the header file

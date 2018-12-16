@@ -20,7 +20,7 @@
 // Address checking
 #define CHECK_ADDRESS(a, cond, code)            \
     if (!(cond)) {                              \
-        INVALID = a;                            \
+        S->INVALID = a;                     \
         exception = code;                       \
     }
 

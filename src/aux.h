@@ -36,29 +36,29 @@
 
 // Return value is 0 if OK, or exception code for invalid or unaligned address
 WORD reverse_word(WORD value);
-int reverse(UWORD start, UWORD length);
+int reverse(state *S, UWORD start, UWORD length);
 
 #define STACK_DIRECTION 1
 #define _LOAD_WORD(a, temp)                                             \
-    ((exception = exception ? exception : load_word((a), &temp)), temp)
+    ((exception = exception ? exception : load_word(S, (a), &temp)), temp)
 #define LOAD_WORD(a) _LOAD_WORD(a, temp)
 #define STORE_WORD(a, v)                                                \
-    (exception = exception ? exception : store_word((a), (v)))
+    (exception = exception ? exception : store_word(S, (a), (v)))
 #define LOAD_BYTE(a)                                                    \
-    ((exception = exception ? exception : load_byte((a), &byte)), byte)
+    ((exception = exception ? exception : load_byte(S, (a), &byte)), byte)
 #define STORE_BYTE(a, v)                                                \
-    (exception = exception ? exception : store_byte((a), (v)))
+    (exception = exception ? exception : store_byte(S, (a), (v)))
 #define PUSH(v)                                 \
-    (SP += WORD_SIZE * STACK_DIRECTION, STORE_WORD(SP, (v)))
+    (S->SP += WORD_SIZE * STACK_DIRECTION, STORE_WORD(S->SP, (v)))
 #define POP                                     \
-    (SP -= WORD_SIZE * STACK_DIRECTION, LOAD_WORD(SP + WORD_SIZE * STACK_DIRECTION))
+    (S->SP -= WORD_SIZE * STACK_DIRECTION, LOAD_WORD(S->SP + WORD_SIZE * STACK_DIRECTION))
 #if WORD_SIZE == 4
 #define PUSH64(ud)                              \
     PUSH((UWORD)(ud & WORD_MASK));              \
     PUSH((UWORD)((ud >> WORD_BIT) & WORD_MASK))
 #define POP64                                   \
-    (SP -= 2 * WORD_SIZE * STACK_DIRECTION, (UWORD)LOAD_WORD(SP + WORD_SIZE * STACK_DIRECTION), temp | \
-     ((uint64_t)(UWORD)_LOAD_WORD(SP + 2 * WORD_SIZE * STACK_DIRECTION, temp2) << WORD_BIT))
+    (S->SP -= 2 * WORD_SIZE * STACK_DIRECTION, (UWORD)LOAD_WORD(S->SP + WORD_SIZE * STACK_DIRECTION), temp | \
+     ((uint64_t)(UWORD)_LOAD_WORD(S->SP + 2 * WORD_SIZE * STACK_DIRECTION, temp2) << WORD_BIT))
 #elif WORD_SIZE == 8
 #define PUSH64 PUSH
 #define POP64  POP
@@ -66,13 +66,13 @@ int reverse(UWORD start, UWORD length);
 #error "WORD_SIZE is not 4 or 8!"
 #endif
 #define PUSH_RETURN(v)                          \
-    (RP += WORD_SIZE * STACK_DIRECTION, STORE_WORD(RP, (v)))
+    (S->RP += WORD_SIZE * STACK_DIRECTION, STORE_WORD(S->RP, (v)))
 #define POP_RETURN                              \
-    (RP -= WORD_SIZE * STACK_DIRECTION, LOAD_WORD(RP + WORD_SIZE * STACK_DIRECTION))
+    (S->RP -= WORD_SIZE * STACK_DIRECTION, LOAD_WORD(S->RP + WORD_SIZE * STACK_DIRECTION))
 #define STACK_UNDERFLOW(ptr, base)              \
     (ptr - base == 0 ? false : (STACK_DIRECTION > 0 ? ptr < base : ptr > base))
 
-uint8_t *native_address_range_in_one_area(UWORD start, UWORD length, bool writable);
+uint8_t *native_address_range_in_one_area(state *S, UWORD start, UWORD length, bool writable);
 
 // Align a VM address
 #define ALIGN(a) ((a + WORD_SIZE - 1) & (-WORD_SIZE))
@@ -85,9 +85,9 @@ uint8_t *native_address_range_in_one_area(UWORD start, UWORD length, bool writab
 #define ARSHIFT(n, p) (((n) >> (p)) | ((typeof(n))(-((n) < 0)) << (WORD_BIT - (p))))
 
 ptrdiff_t encode_instruction_native(BYTE *addr, enum instruction_type type, WORD v);
-ptrdiff_t encode_instruction(UWORD *addr, enum instruction_type type, WORD v);
+ptrdiff_t encode_instruction(state *S, UWORD *addr, enum instruction_type type, WORD v);
 int decode_instruction_file(FILE *file, WORD *val);
-int decode_instruction(UWORD *addr, WORD *val);
+int decode_instruction(state *S, UWORD *addr, WORD *val);
 
 // Bit utilities
 
