@@ -468,7 +468,7 @@ static void do_command(int no)
             double_arg(strtok(NULL, ""), &start, &end, true);
             check_range(start, end, "Address");
             while (start < end) {
-                printf("%#08lX ", (unsigned long)start);
+                printf("%#08lx ", (unsigned long)start);
                 const int chunk = 16;
                 char ascii[chunk];
                 for (int i = 0; i < chunk && start < end; i++) {
