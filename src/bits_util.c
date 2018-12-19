@@ -25,13 +25,14 @@ _GL_ATTRIBUTE_CONST int find_msbit(WORD v)
     if (v < 0)
         v = -v;
 
-      // FIXME: Determine correct function to use properly
-#if WORD_SIZE == 4
-verify(sizeof(WORD) == sizeof(int));
+#if WORD_SIZE == SIZEOF_INT
     return WORD_BIT - 1 - count_leading_zeros((unsigned int)v);
-#elif WORD_SIZE == 8
-verify(sizeof(WORD) == sizeof(long int));
+#elif WORD_SIZE == SIZEOF_LONG
     return WORD_BIT - 1 - count_leading_zeros_l((unsigned long int)v);
+#elif WORD_SIZE == SIZEOF_LONG_LONG
+    return WORD_BIT - 1 - count_leading_zeros_ll((unsigned long long int)v);
+#else
+#error "count-leading-zeroes lacks a function for WORD_SIZE!"
 #endif
 }
 
