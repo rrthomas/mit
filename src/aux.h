@@ -86,8 +86,8 @@ uint8_t *native_address_range_in_one_area(state *S, UWORD start, UWORD length, b
 
 ptrdiff_t encode_instruction_native(BYTE *addr, enum instruction_type type, WORD v);
 ptrdiff_t encode_instruction(state *S, UWORD *addr, enum instruction_type type, WORD v);
-int decode_instruction_file(FILE *file, WORD *val);
-int decode_instruction(state *S, UWORD *addr, WORD *val);
+ptrdiff_t decode_instruction_file(FILE *file, WORD *val);
+ptrdiff_t decode_instruction(state *S, UWORD *addr, WORD *val);
 
 // Bit utilities
 
