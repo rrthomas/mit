@@ -88,7 +88,7 @@ uint8_t *native_address_range_in_one_area(state *S, UWORD start, UWORD length, b
 static bool mem_map(state *S, UWORD addr, void *p, size_t n, bool writable)
 {
     // Return false if area is too big, or covers already-allocated addresses
-    if ((addr > 0 && n > (WORD_MAX - addr + 1)) || mem_range(S, addr, n) != NULL)
+    if ((addr > 0 && n > (UWORD_MAX - addr + 1)) || mem_range(S, addr, n) != NULL)
         return false;
 
     Mem_area *area = malloc(sizeof(Mem_area));

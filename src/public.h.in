@@ -33,14 +33,16 @@
 typedef uint8_t BYTE;
 #if WORD_SIZE == 4
 typedef int32_t WORD;
-#define WORD_MAX (UINT32_MAX)
+#define UWORD_MAX (UINT32_MAX)
+#define WORD_MIN (INT32_MIN)
 #define PRI_WORD PRId32
 #define PRI_UWORD PRIu32
 #define PRI_XWORD PRIx32
 typedef uint32_t UWORD;
 #elif WORD_SIZE == 8
 typedef int64_t WORD;
-#define WORD_MAX (UINT64_MAX)
+#define UWORD_MAX (UINT64_MAX)
+#define WORD_MIN (INT64_MIN)
 #define PRI_WORD PRId64
 #define PRI_UWORD PRIu64
 #define PRI_XWORD PRIx64
@@ -52,7 +54,7 @@ typedef uint64_t UWORD;
 #define BYTE_MASK ((1 << BYTE_BIT) - 1)
 #undef WORD_BIT // FIXME: prefix this and other symbols
 #define WORD_BIT (WORD_SIZE * BYTE_BIT)
-#define WORD_MASK WORD_MAX
+#define WORD_MASK UWORD_MAX
 
 // VM registers
 

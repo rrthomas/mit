@@ -22,7 +22,7 @@
 // Find most-significant bit set in a WORD-sized quantity
 _GL_ATTRIBUTE_CONST int find_msbit(WORD v)
 {
-    if (v < 0)
+    if (v < 0 && v > WORD_MIN)
         v = -v;
 
 #if WORD_SIZE == SIZEOF_INT
