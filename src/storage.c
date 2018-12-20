@@ -281,15 +281,15 @@ state *init(WORD *memory, size_t size, size_t data_stack_size, size_t return_sta
     if (mem_allot(S, memory, S->MEMORY, true) == WORD_MASK)
         return NULL;
 
-    S->HASHS = data_stack_size;
-    S->d_stack = calloc(S->HASHS, WORD_SIZE);
-    S->HASHR = return_stack_size;
-    S->r_stack = calloc(S->HASHR, WORD_SIZE);
+    S->SSIZE = data_stack_size;
+    S->d_stack = calloc(S->SSIZE, WORD_SIZE);
+    S->RSIZE = return_stack_size;
+    S->r_stack = calloc(S->RSIZE, WORD_SIZE);
     if (S->d_stack == NULL || S->r_stack == NULL)
         return NULL;
 
-    if (!mem_map(S, DATA_STACK_SEGMENT, S->d_stack, S->HASHS, true)
-        || !mem_map(S, RETURN_STACK_SEGMENT, S->r_stack, S->HASHR, true))
+    if (!mem_map(S, DATA_STACK_SEGMENT, S->d_stack, S->SSIZE, true)
+        || !mem_map(S, RETURN_STACK_SEGMENT, S->r_stack, S->RSIZE, true))
         return NULL;
 
     S->PC = 0;

@@ -69,7 +69,7 @@ struct _state {
     UWORD MEMORY;
     UWORD SP, RP;
     UWORD S0, R0;
-    UWORD HASHS, HASHR;
+    UWORD SSIZE, RSIZE;
     UWORD HANDLER;
     UWORD BADPC;
     UWORD INVALID;

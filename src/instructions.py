@@ -279,7 +279,7 @@ PUSH(S->S0);
 '''
 
 actions[Opcodes.PUSH_SSIZE] = '''
-PUSH(S->HASHS);
+PUSH(S->SSIZE);
 '''
 
 actions[Opcodes.PUSH_R0] = '''
@@ -287,7 +287,7 @@ PUSH(S->R0);
 '''
 
 actions[Opcodes.PUSH_RSIZE] = '''
-PUSH(S->HASHR);
+PUSH(S->RSIZE);
 '''
 
 actions[Opcodes.PUSH_HANDLER] = '''
