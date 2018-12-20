@@ -31,7 +31,8 @@ test-parser:
 	diff hello.output $(srcdir)/hello.correct
 
 do_load_object: load_object
-	$(TESTS_ENVIRONMENT) $(LOG_COMPILER) $(builddir)/load_object $(srcdir)
+	( $(TESTS_ENVIRONMENT) $(LOG_COMPILER) $(top_builddir)/src/@PACKAGE@$(EXEEXT) < $(srcdir)/numbers.txt ) && \
+	$(TESTS_ENVIRONMENT) $(LOG_COMPILER) $(builddir)/load_object $(srcdir) $(builddir)
 
 check-local: do_load_object test-parser
 
@@ -40,6 +41,7 @@ EXTRA_DIST = run-test tests.h \
 	badobj1-8 badobj2-8 badobj3-8 badobj4-8 \
 	testobj1-4 testobj2-4 testobj3-4 \
 	testobj1-8 testobj2-8 testobj3-8 \
-	hello.txt hello.correct
+	hello.txt hello.correct \
+	numbers.txt
 
-DISTCLEANFILES = hello.obj hello.output
+DISTCLEANFILES = hello.obj hello.output numbers.obj

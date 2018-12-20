@@ -6,6 +6,7 @@
 /libtest.la
 /hello.obj
 /hello.output
+/numbers.obj
 /arithmetic
 /branch
 /call_native

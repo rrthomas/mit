@@ -14,25 +14,36 @@
 static int try(state *S, char *file, UWORD address)
 {
     FILE *fp = fopen(file, "r");
-    int ret = load_object(S, fp, address);
+    int ret;
+    if (fp == NULL) {
+        printf("Could not open file %s\n", file);
+        ret = 1; // Expected error codes are all negative
+    } else {
+        ret = load_object(S, fp, address);
+        fclose(fp);
+    }
 
     printf("load_object(\"%s\", 0) returns %d", file, ret);
-    fclose(fp);
-
     return ret;
 }
 
 static char *obj_name(const char *prefix, const char *file, unsigned word_size)
 {
-    return xasprintf("%s/%s-%u", prefix, file, word_size);
+    char *suffix = NULL;
+    if (word_size != 0)
+        suffix = xasprintf("-%u", word_size);
+    char *name = xasprintf("%s/%s%s", prefix, file, suffix ? suffix : "");
+    free(suffix);
+    return name;
 }
 
 int main(int argc, char *argv[])
 {
-    char *prefix = argv[1];
+    char *src_dir = argv[1];
+    char *build_dir = argv[2];
 
-    if (argc != 2) {
-        printf("Usage: load_object DIRECTORY\n");
+    if (argc != 3) {
+        printf("Usage: load_object SOURCE-DIRECTORY BUILD-DIRECTORY\n");
         exit(1);
     }
 
@@ -44,7 +55,7 @@ int main(int argc, char *argv[])
         "badobj1", "badobj2", "badobj3", "badobj4" };
     static int error_code[] = { -2, -2, -1, -3 };
     for (size_t i = 0; i < sizeof(bad_files) / sizeof(bad_files[0]); i++) {
-        char *s = obj_name(prefix, bad_files[i], WORD_SIZE);
+        char *s = obj_name(src_dir, bad_files[i], WORD_SIZE);
         int res = try(S, s, 0);
         free(s);
         printf(" should be %d\n", error_code[i]);
@@ -57,7 +68,7 @@ int main(int argc, char *argv[])
     const char *good_files[] = {
         "testobj1", "testobj2", "testobj3" };
     for (size_t i = 0; i < sizeof(good_files) / sizeof(good_files[0]); i++) {
-        char *s = obj_name(prefix, good_files[i], WORD_SIZE);
+        char *s = obj_name(src_dir, good_files[i], WORD_SIZE);
         WORD c;
         int res = try(S, s, 0);
         free(s);
@@ -74,6 +85,38 @@ int main(int argc, char *argv[])
         memset(memory, 0, S->MEMORY); // Zero memory for next test
     }
 
+    const char *number_files[] = {
+        "numbers.obj",
+    };
+    // FIXME: Generate a single list of numbers for here, numbers.txt and numbers.c
+    const WORD correct[][8] =
+        {
+         {-257, 12345678},
+        };
+    for (size_t i = 0; i < sizeof(number_files) / sizeof(number_files[0]); i++) {
+        char *s = obj_name(build_dir, number_files[i], 0);
+        int res = try(S, s, 0);
+        free(s);
+        printf(" should be %d\n", 0);
+        if (res != 0) {
+            printf("Error in load_object() tests: file %s\n", number_files[i]);
+            exit(1);
+        }
+        if (run(S) != 42) {
+            printf("Error in load_object() tests: file %s\n", number_files[i]);
+            exit(1);
+        }
+        show_data_stack(S);
+        char *correct_stack = xasprint_array(correct[i], ZERO);
+        printf("Correct stack: %s\n", correct_stack);
+        if (strcmp(correct_stack, val_data_stack(S))) {
+            printf("Error in arithmetic tests: PC = %"PRI_UWORD"\n", S->PC);
+            exit(1);
+        }
+        free(correct_stack);
+        memset(memory, 0, S->MEMORY); // Zero memory for next test
+    }
+
     // Check we get an error trying to load an object file of the wrong
     // WORD_SIZE.
     {
@@ -84,7 +127,7 @@ int main(int argc, char *argv[])
 #else
 #error "WORD_SIZE is not 4 or 8!"
 #endif
-        char *s = obj_name(prefix, good_files[0], WRONG_WORD_SIZE);
+        char *s = obj_name(src_dir, good_files[0], WRONG_WORD_SIZE);
         int res = try(S, s, 0), incorrect_word_size_res = -4;
         free(s);
         printf(" should be %d\n", incorrect_word_size_res);
