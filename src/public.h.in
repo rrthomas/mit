@@ -26,7 +26,6 @@
 
 // Parameters
 #define WORD_SIZE @WORD_SIZE@
-#define ADDRESS_SIZE @ADDRESS_SIZE@
 #define NATIVE_POINTER_SIZE (sizeof(void *))
 
 // Basic types

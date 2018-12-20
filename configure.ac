@@ -73,17 +73,13 @@ gl_INIT
 dnl Check features
 AC_C_BIGENDIAN
 
-dnl Set size of word and address
+dnl Set size of word
 AC_CHECK_SIZEOF([int])
 AC_CHECK_SIZEOF([long])
 AC_CHECK_SIZEOF([long long])
-AC_CHECK_SIZEOF([size_t])
 AC_ARG_VAR([WORD_SIZE],
   [value of WORD_SIZE register [default: sizeof(long)]])
 : "${WORD_SIZE=SIZEOF_LONG}"
-AC_ARG_VAR([ADDRESS_SIZE],
-  [value of ADDRESS_SIZE register [default: sizeof(size_t)]])
-: "${ADDRESS_SIZE=SIZEOF_SIZE_T}"
 
 dnl Generate output files
 AC_CONFIG_HEADERS([config.h])

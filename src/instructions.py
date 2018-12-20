@@ -35,22 +35,21 @@ class Opcodes(enum.IntEnum):
     CALL_NATIVE = 0x1f
     EXTRA = 0x20
     PUSH_WORD_SIZE = 0x21
-    PUSH_ADDRESS_SIZE = 0x22
-    PUSH_NATIVE_POINTER_SIZE = 0x23
-    PUSH_SP = 0x24
-    STORE_SP = 0x25
-    PUSH_RP = 0x26
-    STORE_RP = 0x27
-    PUSH_PC = 0x28
-    PUSH_S0 = 0x29
-    PUSH_SSIZE = 0x2a
-    PUSH_R0 = 0x2b
-    PUSH_RSIZE = 0x2c
-    PUSH_HANDLER = 0x2d
-    STORE_HANDLER = 0x2e
-    PUSH_MEMORY = 0x2f
-    PUSH_BADPC = 0x30
-    PUSH_INVALID = 0x31
+    PUSH_NATIVE_POINTER_SIZE = 0x22
+    PUSH_SP = 0x23
+    STORE_SP = 0x24
+    PUSH_RP = 0x25
+    STORE_RP = 0x26
+    PUSH_PC = 0x27
+    PUSH_S0 = 0x28
+    PUSH_SSIZE = 0x29
+    PUSH_R0 = 0x2a
+    PUSH_RSIZE = 0x2b
+    PUSH_HANDLER = 0x2c
+    STORE_HANDLER = 0x2d
+    PUSH_MEMORY = 0x2e
+    PUSH_BADPC = 0x2f
+    PUSH_INVALID = 0x30
 
 actions = {}
 
@@ -242,10 +241,6 @@ extra(S);
 
 actions[Opcodes.PUSH_WORD_SIZE] = '''
 PUSH(WORD_SIZE);
-'''
-
-actions[Opcodes.PUSH_ADDRESS_SIZE] = '''
-PUSH(ADDRESS_SIZE);
 '''
 
 actions[Opcodes.PUSH_NATIVE_POINTER_SIZE] = '''
