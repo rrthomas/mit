@@ -44,6 +44,10 @@ const WORD correct[][8] =
      {ZERO, ZERO},
      {ZERO, ZERO, 2},
      {},
+     {WORD_SIZE},
+     {WORD_SIZE, NATIVE_POINTER_SIZE},
+     {WORD_SIZE, NATIVE_POINTER_SIZE, 2},
+     {},
     };
 
 
@@ -63,30 +67,20 @@ int main(void)
     ass_action(S, O_PUSH_HANDLER); ass_number(S, 1); ass_action(S, O_POP);
     ass_action(S, O_PUSH_MEMORY); ass_number(S, 1); ass_action(S, O_POP);
     ass_action(S, O_PUSH_BADPC); ass_action(S, O_PUSH_INVALID); ass_number(S, 2); ass_action(S, O_POP);
-    ass_action(S, O_PUSH_NATIVE_POINTER_SIZE);
+    ass_action(S, O_PUSH_WORD_SIZE); ass_action(S, O_PUSH_NATIVE_POINTER_SIZE); ass_number(S, 2); ass_action(S, O_POP);
 
     for (size_t i = 0; i < sizeof(correct) / sizeof(correct[0]); i++) {
         show_data_stack(S);
         char *correct_stack = xasprint_array(correct[i], ZERO);
         printf("Correct stack: %s\n\n", correct_stack);
         if (strcmp(correct_stack, val_data_stack(S))) {
-            printf("Error in registers tests: S->PC = %"PRI_UWORD"\n", S->PC);
+            printf("Error in registers tests: PC = %"PRI_UWORD"\n", S->PC);
             exit(1);
         }
         free(correct_stack);
         single_step(S);
         printf("I = %s\n", disass(INSTRUCTION_ACTION, S->I));
     }
-
-    // Cannot statically stringify NATIVE_POINTER_SIZE
-    show_data_stack(S);
-    char *pointer_w = xasprintf("%u", (unsigned)NATIVE_POINTER_SIZE);
-    printf("Correct stack: %s\n\n", pointer_w);
-    if (strcmp(pointer_w, val_data_stack(S))) {
-        printf("Error in registers tests: S->PC = %"PRI_UWORD"\n", S->PC);
-        exit(1);
-    }
-    free(pointer_w);
 
     free(S->memory);
     destroy(S);
