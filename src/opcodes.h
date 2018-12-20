@@ -19,8 +19,11 @@ enum instruction_type {
 };
 
 enum {
-#include "instruction-names.h"
+#undef INSTRUCTION
+#define INSTRUCTION(name, opcode) O_ ## name = opcode,
+#include "instruction-list.h"
     O_UNDEFINED, // Not part of the spec
+#undef INSTRUCTION
 };
 
 enum {

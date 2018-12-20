@@ -58,13 +58,10 @@ _GL_ATTRIBUTE_PURE UWORD ass_current(state *S)
 }
 
 static const char *mnemonic[O_UNDEFINED] = {
-    "NOP", "POP", "PUSH", "SWAP", "RPUSH", "POP2R", "RPOP", "LT",
-    "EQ", "ULT", "ADD", "MUL", "UDIVMOD", "DIVMOD", "NEGATE", "INVERT",
-    "AND", "OR", "XOR", "LSHIFT", "RSHIFT", "LOAD", "STORE", "LOADB",
-    "STOREB", "BRANCH", "BRANCHZ", "CALL", "RET", "THROW", "HALT", "CALL_NATIVE",
-    "EXTRA", "PUSH_WORD_SIZE", "PUSH_NATIVE_POINTER_SIZE", "PUSH_SP", "STORE_SP", "PUSH_RP", "STORE_RP",
-    "PUSH_PC", "PUSH_S0", "PUSH_SSIZE", "PUSH_R0", "PUSH_RSIZE", "PUSH_HANDLER", "STORE_HANDLER", "PUSH_MEMORY",
-    "PUSH_BADPC", "PUSH_INVALID",
+#undef INSTRUCTION
+#define INSTRUCTION(name, opcode) #name,
+#include "instruction-list.h"
+#undef INSTRUCTION
 };
 
 _GL_ATTRIBUTE_CONST const char *disass(enum instruction_type type, WORD opcode)
