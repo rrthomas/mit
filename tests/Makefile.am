@@ -20,7 +20,7 @@ LDADD = $(top_builddir)/src/lib@PACKAGE@.la libtest.la
 check_PROGRAMS = $(TESTS) load_object
 
 TESTS = arithmetic branch comparison init numbers logic memory \
-	registers stack single_step run exceptions call_native extra_instructions
+	registers stack single_step run exceptions call_native extra
 TESTS_ENVIRONMENT = \
 	if test -n "$(VALGRIND)"; then export VALGRIND='$(VALGRIND)'; fi; \
 	export LIBTOOL=$(top_builddir)/libtool;

@@ -1,4 +1,4 @@
-// Test extra instructions. Also uses previously-tested instructions.
+// Test EXTRA instruction. Also uses previously-tested instructions.
 // FIXME: test file routines.
 //
 // (c) Reuben Thomas 1994-2018

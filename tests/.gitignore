@@ -11,7 +11,7 @@
 /call_native
 /comparison
 /exceptions
-/extra_instructions
+/extra
 /init
 /load_object
 /logic
