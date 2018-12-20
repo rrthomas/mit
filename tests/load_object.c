@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
 
     size_t size = 256;
     WORD *memory = (WORD *)calloc(256, WORD_SIZE);
-    state *S = init(memory, size);
+    state *S = init(memory, size, DEFAULT_STACK_SIZE, DEFAULT_STACK_SIZE);
 
     const char *bad_files[] = {
         "badobj1", "badobj2", "badobj3", "badobj4" };

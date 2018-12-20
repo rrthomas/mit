@@ -39,6 +39,8 @@ static state *S;
 #define DEFAULT_MEMORY 1048576 // Default size of VM memory in words
 #define MAX_MEMORY 536870912 // Maximum size of memory in words (2Gb for 32-bit)
 static UWORD memory_size = DEFAULT_MEMORY; // Size of VM memory in words
+UWORD stack_size = DEFAULT_STACK_SIZE;
+UWORD return_stack_size = DEFAULT_STACK_SIZE;
 WORD *memory;
 
 static bool interactive;
@@ -265,9 +267,11 @@ static void disassemble(UWORD start, UWORD end)
 
 static void reinit(void)
 {
-    S = init(memory, memory_size);
+    destroy(S);
+    S = init(memory, memory_size, stack_size, return_stack_size);
     if (S == NULL)
         die("could not allocate virtual machine state");
+
     start_ass(S, S->PC);
 }
 
@@ -801,12 +805,10 @@ int main(int argc, char *argv[])
                 memory_size = parse_memory_size((UWORD)MAX_MEMORY);
                 break;
             case 1:
-                // FIXME
-                S->HASHS = parse_memory_size((UWORD)MAX_STACK_SIZE);
+                stack_size = parse_memory_size((UWORD)MAX_STACK_SIZE);
                 break;
             case 2:
-                // FIXME
-                S->HASHR = parse_memory_size((UWORD)MAX_STACK_SIZE);
+                return_stack_size = parse_memory_size((UWORD)MAX_STACK_SIZE);
                 break;
             case 3:
                 debug_on_error = true;

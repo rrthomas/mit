@@ -109,7 +109,7 @@ WORD single_step(state *state);
 int load_object(state *state, FILE *file, UWORD address);
 
 // Additional implementation-specific routines, macros, types and quantities
-state *init(WORD *c_array, size_t size);
+state *init(WORD *c_array, size_t size, size_t stack_size, size_t return_stack_size);
 void destroy(state *state);
 int register_args(state *state, int argc, char *argv[]);
 

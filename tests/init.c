@@ -14,7 +14,7 @@
 
 int main(void)
 {
-    state *S = init((WORD *)NULL, 4);
+    state *S = init((WORD *)NULL, 4, 1, 1);
     printf("init((WORD *)NULL, 4) should return NULL; returns: %p\n", S);
     if (S != NULL) {
         printf("Error in init() tests: init with invalid parameters "
@@ -26,7 +26,7 @@ int main(void)
     size_t size = 1024;
     WORD *ptr = (WORD *)malloc(size);
     assert(ptr);
-    S = init(ptr, size / WORD_SIZE);
+    S = init(ptr, size / WORD_SIZE, 1, 1);
     if (S == NULL) {
         printf("Error in init() tests: init with valid parameters failed\n");
         exit(1);

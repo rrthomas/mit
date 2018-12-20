@@ -30,7 +30,7 @@
 #define MAX_STACK_SIZE       67108864
 
 // Initialisation helper
-#define init_alloc(n) (init((WORD *)calloc((n), WORD_SIZE), (n)))
+#define init_alloc(n) (init((WORD *)calloc((n), WORD_SIZE), (n), DEFAULT_STACK_SIZE, DEFAULT_STACK_SIZE))
 
 // Memory access
 

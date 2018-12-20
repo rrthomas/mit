@@ -259,7 +259,7 @@ int post_dma(state *S, UWORD from, UWORD to)
 
 // Initialise registers that are not fixed
 
-state *init(WORD *memory, size_t size)
+state *init(WORD *memory, size_t size, size_t data_stack_size, size_t return_stack_size)
 {
     if (memory == NULL)
         return NULL;
@@ -281,9 +281,9 @@ state *init(WORD *memory, size_t size)
     if (mem_allot(S, memory, S->MEMORY, true) == WORD_MASK)
         return NULL;
 
-    S->HASHS = DEFAULT_STACK_SIZE;
+    S->HASHS = data_stack_size;
     S->d_stack = calloc(S->HASHS, WORD_SIZE);
-    S->HASHR = DEFAULT_STACK_SIZE;
+    S->HASHR = return_stack_size;
     S->r_stack = calloc(S->HASHR, WORD_SIZE);
     if (S->d_stack == NULL || S->r_stack == NULL)
         return NULL;
