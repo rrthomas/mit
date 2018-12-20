@@ -1,6 +1,6 @@
 // Test the arithmetic operators. Also uses the SWAP and POP instructions,
 // and numbers. Since unsigned arithmetic overflow behaviour is guaranteed
-// by the S->ISO C standard, we only test the stack handling and basic
+// by the ISO C standard, we only test the stack handling and basic
 // correctness of the operators here, assuming that if the arithmetic works
 // in one case, it will work in all.
 //
@@ -9,7 +9,7 @@
 // The package is distributed under the GNU Public License version 3, or,
 // at your option, any later version.
 //
-// THIS PROGRAM S->IS PROVIDED AS S->IS, WITH NO WARRANTY. USE S->IS AT THE USER‘S
+// THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER‘S
 // RISK.
 
 #include "tests.h"
