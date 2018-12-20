@@ -36,8 +36,6 @@
 
 
 static state *S;
-#define DEFAULT_MEMORY 1048576 // Default size of VM memory in words
-#define MAX_MEMORY 536870912 // Maximum size of memory in words (2Gb for 32-bit)
 static UWORD memory_size = DEFAULT_MEMORY; // Size of VM memory in words
 UWORD stack_size = DEFAULT_STACK_SIZE;
 UWORD return_stack_size = DEFAULT_STACK_SIZE;
@@ -744,16 +742,17 @@ struct option longopts[] = {
 
 static void usage(void)
 {
-    char *shortopt, *buf;
+    char *doc, *shortopt, *buf;
     printf ("Usage: %s [OPTION...] [OBJECT-FILE ARGUMENT...]\n"
             "\n"
             "Run " PACKAGE_NAME ".\n"
             "\n",
             program_name);
-#define OPT(longname, shortname, arg, argstring, docstring)               \
+#define OPT(longname, shortname, arg, argstring, ...)                   \
+    doc = xasprintf(__VA_ARGS__);                                       \
     shortopt = xasprintf(", -%c", shortname);                           \
     buf = xasprintf("--%s%s %s", longname, shortname ? shortopt : "", argstring); \
-    printf("  %-26s%s\n", buf, docstring);
+    printf("  %-26s%s\n", buf, doc);
 #define ARG(argstring, docstring)                 \
     printf("  %-26s%s\n", argstring, docstring);
 #define DOC(text)                                 \

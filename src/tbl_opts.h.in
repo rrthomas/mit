@@ -16,11 +16,9 @@
 // O(long name, short name ('\0' for none), argument, argument docstring, docstring)
 // A(argument, docstring)
 
-#include "stringify.h"
-
-#define MEMORY_MESSAGE(type, max, def) \
+#define MEMORY_MESSAGE(type, max, def)                                  \
   "set " type " size to the given NUMBER of words\n"                    \
-  "                            0 < NUMBER <= " str(max) " [default " str(def) "]"
+  "                            0 < NUMBER <= %#"PRI_XWORD" [default %#"PRI_XWORD"]", max, def
 OPT("memory", 'm', required_argument, "NUMBER", MEMORY_MESSAGE("memory", MAX_MEMORY, DEFAULT_MEMORY))
 OPT("stack", 's', required_argument, "NUMBER", MEMORY_MESSAGE("data stack", MAX_STACK_SIZE, DEFAULT_STACK_SIZE))
 OPT("return-stack", 'r', required_argument, "NUMBER", MEMORY_MESSAGE("return stack", MAX_STACK_SIZE, DEFAULT_STACK_SIZE))

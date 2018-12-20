@@ -12,7 +12,7 @@ AM_CPPFLAGS = -I$(top_builddir)/lib -I$(top_srcdir)/lib $(WARN_CFLAGS)
 
 lib_LTLIBRARIES = libsmite.la
 libsmite_la_SOURCES = bits_util.c storage.c instruction.c step.c run.c debug.c loadobj.c \
-	private.h stringify.h instruction-list.h instruction-actions.h
+	private.h instruction-list.h instruction-actions.h
 libsmite_la_LIBADD = $(top_builddir)/lib/libgnu.la
 
 bin_PROGRAMS = smite

@@ -21,11 +21,15 @@
 #include "opcodes.h"
 
 
+// Memory size
+#define DEFAULT_MEMORY ((UWORD)0x100000U) // Default size of VM memory in words
+#define MAX_MEMORY (((UWORD)1 << (WORD_BIT - 1)) / WORD_SIZE) // Maximum size of memory in words (half the address space)
+
 // Stacks location and size
-#define DATA_STACK_SEGMENT   0xfe000000
-#define RETURN_STACK_SEGMENT 0xff000000
-#define DEFAULT_STACK_SIZE   16384
-#define MAX_STACK_SIZE       67108864
+#define MAX_STACK_SIZE       ((((UWORD)1) << (WORD_BIT - 4)) / WORD_SIZE)
+#define DATA_STACK_SEGMENT   (((UWORD)0xfeU) << (WORD_BIT - 8))
+#define RETURN_STACK_SEGMENT (((UWORD)0xffU) << (WORD_BIT - 8))
+#define DEFAULT_STACK_SIZE   ((UWORD)16384U)
 
 // Initialisation helper
 #define init_alloc(n) (init((WORD *)calloc((n), WORD_SIZE), (n), DEFAULT_STACK_SIZE, DEFAULT_STACK_SIZE))
