@@ -12,9 +12,6 @@
 #define BEETLE_PRIVATE
 
 
-#include "config.h"
-
-
 // Memory access
 
 // Address checking

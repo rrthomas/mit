@@ -13,8 +13,6 @@
 #define PACKAGE_UPPER_AUX
 
 
-#include "config.h"
-
 #include <stdio.h>      // for the FILE type
 #include <stdbool.h>
 #include <stdint.h>
