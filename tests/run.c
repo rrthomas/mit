@@ -38,7 +38,7 @@ int main(void)
     const UWORD final_pc = 54;
     printf("PC should now be %"PRI_UWORD"\n", final_pc);
     if (S->PC != final_pc) {
-        printf("Error in run(S) tests: S->PC = %"PRI_UWORD"\n", S->PC);
+        printf("Error in run(S) tests: PC = %"PRI_UWORD"\n", S->PC);
         exit(1);
     }
 

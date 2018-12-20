@@ -26,7 +26,7 @@ int main(void)
     const UWORD final_pc = 10;
     printf("PC should now be %"PRI_UWORD"\n", final_pc);
     if (S->PC != final_pc) {
-        printf("Error in single_step(S) tests: S->PC = %"PRI_UWORD"\n", S->PC);
+        printf("Error in single_step(S) tests: PC = %"PRI_UWORD"\n", S->PC);
         exit(1);
     }
 

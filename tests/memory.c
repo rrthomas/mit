@@ -124,7 +124,7 @@ int main(void)
         char *correct_stack = xasprint_array(correct[i], ZERO);
         printf("Correct stack: %s\n\n", correct_stack);
         if (strcmp(correct_stack, val_data_stack(S))) {
-            printf("Error in memory tests: S->PC = %"PRI_UWORD"\n", S->PC);
+            printf("Error in memory tests: PC = %"PRI_UWORD"\n", S->PC);
             exit(1);
         }
         free(correct_stack);

@@ -65,9 +65,9 @@ int main(void)
     ass_action(S, O_RET);
 
     for (size_t i = 0; i < sizeof(correct) / sizeof(correct[0]); i++) {
-        printf("Instruction %zu: S->PC = %"PRI_UWORD"; should be %u\n\n", i, S->PC, correct[i]);
+        printf("Instruction %zu: PC = %"PRI_UWORD"; should be %u\n\n", i, S->PC, correct[i]);
         if (correct[i] != S->PC) {
-            printf("Error in branch tests: S->PC = %"PRI_UWORD"\n", S->PC);
+            printf("Error in branch tests: PC = %"PRI_UWORD"\n", S->PC);
             exit(1);
         }
         single_step(S);

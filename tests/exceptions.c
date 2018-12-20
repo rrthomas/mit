@@ -27,24 +27,24 @@ int main(void)
     state *S = init_alloc(SIZE);
 
     test[testno++] = ass_current(S);
-    printf("Test %d: S->PC = %"PRI_UWORD"\n", testno, ass_current(S));
+    printf("Test %d: PC = %"PRI_UWORD"\n", testno, ass_current(S));
     // test 1: push stack value into non-existent memory
     ass_number(S, 0xfffffff0);
     ass_action(S, O_STORE_SP); ass_number(S, 0);
 
     test[testno++] = ass_current(S);
-    printf("Test %d: S->PC = %"PRI_UWORD"\n", testno, ass_current(S));
+    printf("Test %d: PC = %"PRI_UWORD"\n", testno, ass_current(S));
     // test 2: set SP to MEMORY, then try to pop (>R) the stack
     ass_number(S, S->MEMORY);
     ass_action(S, O_STORE_SP); ass_action(S, O_POP2R);
 
     test[testno++] = ass_current(S);
-    printf("Test %d: S->PC = %"PRI_UWORD"\n", testno, ass_current(S));
+    printf("Test %d: PC = %"PRI_UWORD"\n", testno, ass_current(S));
     // test 3: test arbitrary throw code
     ass_number(S, 42); ass_action(S, O_HALT);
 
     test[testno++] = ass_current(S);
-    printf("Test %d: S->PC = %"PRI_UWORD"\n", testno, ass_current(S));
+    printf("Test %d: PC = %"PRI_UWORD"\n", testno, ass_current(S));
     // test 4: test SP can point to just after a memory area
     ass_number(S, S->MEMORY);
     ass_number(S, WORD_SIZE);
@@ -54,20 +54,20 @@ int main(void)
     test[testno] = ass_current(S);
     badpc[testno] = test[testno] + 1;
     testno++;
-    printf("Test %d: S->PC = %"PRI_UWORD"\n", testno, ass_current(S));
+    printf("Test %d: PC = %"PRI_UWORD"\n", testno, ass_current(S));
     // test 5
     ass_number(S, 5); ass_action(S, O_STORE_SP);
 
     test[testno] = ass_current(S);
     badpc[testno] = test[testno] + 2;
     testno++;
-    printf("Test %d: S->PC = %"PRI_UWORD"\n", testno, ass_current(S));
+    printf("Test %d: PC = %"PRI_UWORD"\n", testno, ass_current(S));
     // test 6
     ass_number(S, 1); ass_number(S, 0); ass_action(S, O_DIVMOD); ass_number(S, 1);
     ass_action(S, O_POP);
 
     test[testno++] = ass_current(S);
-    printf("Test %d: S->PC = %"PRI_UWORD"\n", testno, ass_current(S));
+    printf("Test %d: PC = %"PRI_UWORD"\n", testno, ass_current(S));
     // test 7: allow execution to run off the end of a memory area
     // (test 4 has set MEMORY - 1 to all zeroes)
     ass_number(S, S->MEMORY - 1);
@@ -76,21 +76,21 @@ int main(void)
     test[testno] = ass_current(S);
     badpc[testno] = test[testno] + 1;
     testno++;
-    printf("Test %d: S->PC = %"PRI_UWORD"\n", testno, ass_current(S));
+    printf("Test %d: PC = %"PRI_UWORD"\n", testno, ass_current(S));
     // test 8: fetch from an invalid address
     ass_number(S, -24); ass_action(S, O_LOAD);
 
     test[testno] = ass_current(S);
     badpc[testno] = test[testno] + 1;
     testno++;
-    printf("Test %d: S->PC = %"PRI_UWORD"\n", testno, ass_current(S));
+    printf("Test %d: PC = %"PRI_UWORD"\n", testno, ass_current(S));
     // test 9
     ass_number(S, 1); ass_action(S, O_LOAD);
 
     test[testno] = ass_current(S);
     badpc[testno] = test[testno];
     testno++;
-    printf("Test %d: S->PC = %"PRI_UWORD"\n", testno, ass_current(S));
+    printf("Test %d: PC = %"PRI_UWORD"\n", testno, ass_current(S));
     // test 10: test invalid opcode
     ass_action(S, O_UNDEFINED);
 

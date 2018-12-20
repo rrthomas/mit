@@ -32,7 +32,7 @@ int main(void)
     } while (S->I != O_EXTRA);
     printf("argc is %"PRI_WORD", and should be %d\n\n", LOAD_WORD(S->SP), argc);
     if (POP != argc) {
-       printf("Error in extra instructions tests: S->PC = %"PRI_UWORD"\n", S->PC);
+       printf("Error in extra instructions tests: PC = %"PRI_UWORD"\n", S->PC);
         exit(1);
     }
 
@@ -41,7 +41,7 @@ int main(void)
     } while (S->I != O_EXTRA);
     printf("arg 1's length is %"PRI_WORD", and should be %zu\n", LOAD_WORD(S->SP), strlen(argv[1]));
     if ((UWORD)POP != strlen(argv[1])) {
-        printf("Error in extra instructions tests: S->PC = %"PRI_UWORD"\n", S->PC);
+        printf("Error in extra instructions tests: PC = %"PRI_UWORD"\n", S->PC);
         exit(1);
     }
 

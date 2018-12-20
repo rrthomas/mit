@@ -41,7 +41,7 @@ int main(void)
         show_data_stack(S);
         printf("Correct stack: %s\n\n", correct[i]);
         if (strcmp(correct[i], val_data_stack(S))) {
-            printf("Error in stack tests: S->PC = %"PRI_UWORD"\n", S->PC);
+            printf("Error in stack tests: PC = %"PRI_UWORD"\n", S->PC);
             exit(1);
         }
         single_step(S);
@@ -57,7 +57,7 @@ int main(void)
         show_data_stack(S);
         printf("Correct stack: %s\n\n", correct[i]);
         if (strcmp(correct[i], val_data_stack(S)) && i != first) {
-            printf("Error in stack tests: S->PC = %"PRI_UWORD"\n", S->PC);
+            printf("Error in stack tests: PC = %"PRI_UWORD"\n", S->PC);
             exit(1);
         }
         single_step(S);

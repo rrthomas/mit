@@ -85,7 +85,7 @@ int main(void)
         ptrdiff_t actual;
         int items = sscanf(val_data_stack(S), "%td", &actual);
         if (items != 1 || correct[i] != actual) {
-            printf("Error in numbers tests: S->PC = %"PRI_UWORD"\n", S->PC);
+            printf("Error in numbers tests: PC = %"PRI_UWORD"\n", S->PC);
             exit(1);
         }
         single_step(S);

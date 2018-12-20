@@ -45,7 +45,7 @@ static void step(state *S, unsigned start, unsigned end)
             printf("Result: %"PRI_WORD"; correct result: %"PRI_WORD"\n\n", LOAD_WORD(S->SP),
                    correct[i]);
             if (correct[i] != LOAD_WORD(S->SP)) {
-                printf("Error in comparison tests: S->PC = %"PRI_UWORD"\n", S->PC);
+                printf("Error in comparison tests: PC = %"PRI_UWORD"\n", S->PC);
                 exit(1);
             }
             (void)POP;	// drop result of comparison
