@@ -41,7 +41,7 @@ static void step(state *S, unsigned start, unsigned end)
     if (end > start)
         for (unsigned i = start; i < end; i++) {
             single_step(S);
-            printf("I = %s\n", disass(INSTRUCTION_ACTION, S->I));
+            printf("I = %s\n", disass(S->ITYPE, S->I));
             printf("Result: %"PRI_WORD"; correct result: %"PRI_WORD"\n\n", LOAD_WORD(S->SP),
                    correct[i]);
             if (correct[i] != LOAD_WORD(S->SP)) {

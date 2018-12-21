@@ -280,8 +280,8 @@ WORD single_step(state *S)
     WORD temp = 0;
     BYTE byte = 0;
 
-    int type = decode_instruction(S, &S->PC, &S->I);
-    switch (type) {
+    S->ITYPE = decode_instruction(S, &S->PC, &S->I);
+    switch (S->ITYPE) {
     case INSTRUCTION_NUMBER:
         PUSH(S->I);
         break;
@@ -295,7 +295,7 @@ WORD single_step(state *S)
         }
         break;
     default: // Exception during instruction fetch
-        exception = type;
+        exception = S->ITYPE;
         break;
     }
 

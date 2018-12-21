@@ -388,7 +388,7 @@ static void do_display(size_t no, const char *format)
             display = xasprintf("PC = %#"PRI_XWORD" (%"PRI_UWORD")", S->PC, S->PC);
             break;
         case r_I:
-            display = xasprintf("I = %-10s (%#"PRI_XWORD")", disass(INSTRUCTION_ACTION, S->I), (UWORD)S->I);
+            display = xasprintf("I = %-10s (%#"PRI_XWORD")", disass(S->ITYPE, S->I), (UWORD)S->I);
             break;
         case r_MEMORY:
             display = xasprintf("MEMORY = %#"PRI_XWORD" (%"PRI_UWORD")", S->MEMORY, S->MEMORY);

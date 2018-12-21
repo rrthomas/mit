@@ -45,7 +45,7 @@ int main(void)
             exit(1);
         }
         single_step(S);
-        printf("I = %s\n", disass(INSTRUCTION_ACTION, S->I));
+        printf("I = %s\n", disass(S->ITYPE, S->I));
     }
 
     S->SP = S->S0;	// reset stack
@@ -61,7 +61,7 @@ int main(void)
             exit(1);
         }
         single_step(S);
-        printf("I = %s\n", disass(INSTRUCTION_ACTION, S->I));
+        printf("I = %s\n", disass(S->ITYPE, S->I));
     }
 
     free(S->memory);

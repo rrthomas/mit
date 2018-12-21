@@ -66,6 +66,7 @@ typedef uint64_t UWORD;
 struct _state {
     UWORD PC;
     WORD I;
+    WORD ITYPE;
     UWORD MEMORY;
     UWORD SP, RP;
     UWORD S0, R0;

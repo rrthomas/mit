@@ -116,6 +116,7 @@ The registers, each with its function, are set out in table~\ref{regtable}.
     \midrule
 {\tt PC} & The {\tt P}rogram {\tt C}ounter. Points to the next
     byte from which an instruction may be loaded. \\
+{\tt ITYPE} & The type of an instruction to be executed: $0$ for a number, and $1$ for an action. \\
 {\tt I} & The {\tt I}nstruction. Holds the opcode of an instruction
     to be executed. \\
 {\tt MEMORY} & The size in bytes of @PACKAGE_NAME@'s main memory,
