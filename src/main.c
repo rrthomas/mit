@@ -542,7 +542,7 @@ static void do_command(int no)
     case c_TRACE:
         {
             char *arg = strtok(NULL, " ");
-            WORD ret = -259;
+            WORD ret = -258;
 
             if (arg == NULL) {
                 if ((ret = single_step(S)))
@@ -553,7 +553,7 @@ static void do_command(int no)
                 if (strcmp(arg, "TO") == 0) {
                     unsigned long long limit = single_arg(strtok(NULL, " "), NULL);
                     check_valid(limit, "Address");
-                    while ((unsigned long)S->PC != limit && ret == -259) {
+                    while ((unsigned long)S->PC != limit && ret == -258) {
                         ret = single_step(S);
                         if (no == c_TRACE) do_registers();
                     }
@@ -562,7 +562,7 @@ static void do_command(int no)
                                ret, S->PC);
                 } else {
                     unsigned long long limit = single_arg(arg, NULL), i;
-                    for (i = 0; i < limit && ret == -259; i++) {
+                    for (i = 0; i < limit && ret == -258; i++) {
                         ret = single_step(S);
                         if (no == c_TRACE) do_registers();
                     }

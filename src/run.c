@@ -19,7 +19,7 @@ WORD run(state *S)
 {
     WORD ret;
 
-    while ((ret = single_step(S)) == -259)
+    while ((ret = single_step(S)) == -258)
         ;
 
     return ret;

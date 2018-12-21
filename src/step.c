@@ -312,5 +312,5 @@ WORD single_step(state *S)
         S->BADPC = S->PC - 1;
         S->PC = S->HANDLER;
     }
-    return -259; // terminated OK
+    return -258; // terminated OK
 }
