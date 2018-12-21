@@ -242,8 +242,6 @@ int pre_dma(state *S, UWORD from, UWORD to, bool write)
     to = ALIGN(to);
     if (to < from || native_address_range_in_one_area(S, from, to - from, write) == NULL)
         exception = -1;
-    CHECK_ALIGNED(from);
-    CHECK_ALIGNED(to);
     if (exception == 0 && ENDISM)
         exception = reverse(S, from, to - from);
 
