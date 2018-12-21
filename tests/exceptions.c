@@ -12,9 +12,9 @@
 
 
 #define SIZE 4096
-WORD result[] = { -257, -257, 42, 0, -23, -10, -9, -9, -23, -256 };
+WORD result[] = { -257, -257, 42, 0, -257, -10, -9, -9, -23, -256 };
 // Values written 000 are overwritten later
-UWORD badpc[] = { 0, 0, 0, 0, 000, 000, SIZE * WORD_SIZE, 000, 000, 000 };
+UWORD badpc[] = { 000, 0, 0, 0, 000, 000, SIZE * WORD_SIZE, 000, 000, 000 };
 UWORD address[] = { (UWORD)0xfffffff0 + WORD_SIZE, SIZE * WORD_SIZE, 0, 0, 5, 0, SIZE * WORD_SIZE, -24, 1, 0 };
 int testno = 0;
 UWORD test[sizeof(result) / sizeof(result[0])];
@@ -26,17 +26,23 @@ int main(void)
 
     state *S = init_alloc(SIZE);
 
-    test[testno++] = ass_current(S);
+    test[testno] = ass_current(S);
     printf("Test %d: PC = %"PRI_UWORD"\n", testno, ass_current(S));
     // test 1: push stack value into non-existent memory
     ass_number(S, 0xfffffff0);
-    ass_action(S, O_STORE_SP); ass_number(S, 0);
+    ass_action(S, O_STORE_SP);
+    badpc[testno] = ass_current(S);
+    ass_number(S, 0);
+    testno++;
 
-    test[testno++] = ass_current(S);
+    test[testno] = ass_current(S);
     printf("Test %d: PC = %"PRI_UWORD"\n", testno, ass_current(S));
     // test 2: set SP to MEMORY, then try to pop (>R) the stack
     ass_number(S, S->MEMORY);
-    ass_action(S, O_STORE_SP); ass_action(S, O_POP2R);
+    ass_action(S, O_STORE_SP);
+    badpc[testno] = ass_current(S);
+    ass_action(S, O_POP2R);
+    testno++;
 
     test[testno++] = ass_current(S);
     printf("Test %d: PC = %"PRI_UWORD"\n", testno, ass_current(S));
@@ -52,19 +58,21 @@ int main(void)
     ass_action(S, O_STORE_SP); ass_action(S, O_POP2R); ass_number(S, 0); ass_action(S, O_HALT);
 
     test[testno] = ass_current(S);
-    badpc[testno] = test[testno] + 1;
-    testno++;
     printf("Test %d: PC = %"PRI_UWORD"\n", testno, ass_current(S));
-    // test 5
+    // test 5: test unaligned SP is detected
     ass_number(S, 5); ass_action(S, O_STORE_SP);
+    badpc[testno] = ass_current(S);
+    ass_action(S, O_LOAD);
+    testno++;
 
     test[testno] = ass_current(S);
-    badpc[testno] = test[testno] + 2;
-    testno++;
     printf("Test %d: PC = %"PRI_UWORD"\n", testno, ass_current(S));
     // test 6
-    ass_number(S, 1); ass_number(S, 0); ass_action(S, O_DIVMOD); ass_number(S, 1);
+    ass_number(S, 1); ass_number(S, 0);
+    badpc[testno] = ass_current(S);
+    ass_action(S, O_DIVMOD); ass_number(S, 1);
     ass_action(S, O_POP);
+    testno++;
 
     test[testno++] = ass_current(S);
     printf("Test %d: PC = %"PRI_UWORD"\n", testno, ass_current(S));
@@ -74,25 +82,27 @@ int main(void)
     ass_action(S, O_BRANCH);
 
     test[testno] = ass_current(S);
-    badpc[testno] = test[testno] + 1;
-    testno++;
     printf("Test %d: PC = %"PRI_UWORD"\n", testno, ass_current(S));
     // test 8: fetch from an invalid address
-    ass_number(S, -24); ass_action(S, O_LOAD);
+    ass_number(S, -24);
+    badpc[testno] = ass_current(S);
+    ass_action(S, O_LOAD);
+    testno++;
 
     test[testno] = ass_current(S);
-    badpc[testno] = test[testno] + 1;
-    testno++;
     printf("Test %d: PC = %"PRI_UWORD"\n", testno, ass_current(S));
     // test 9
-    ass_number(S, 1); ass_action(S, O_LOAD);
+    ass_number(S, 1);
+    badpc[testno] = ass_current(S);
+    ass_action(S, O_LOAD);
+    testno++;
 
     test[testno] = ass_current(S);
-    badpc[testno] = test[testno];
-    testno++;
     printf("Test %d: PC = %"PRI_UWORD"\n", testno, ass_current(S));
     // test 10: test invalid opcode
+    badpc[testno] = ass_current(S);
     ass_action(S, O_UNDEFINED);
+    testno++;
 
     start_ass(S, 200);
     ass_action(S, O_HALT);
@@ -105,12 +115,13 @@ int main(void)
 
         printf("Test %zu\n", i + 1);
         S->PC = test[i];
+        S->BADPC = S->INVALID = 0;
         WORD res = run(S);
 
         if (result[i] != res || (result[i] != 0 && badpc[i] != S->BADPC) ||
             ((result[i] <= -257 || result[i] == -9 || result[i] == -23) &&
              address[i] != S->INVALID)) {
-             printf("Error in exceptions tests: test %zu failed; S->PC = %"PRI_UWORD"\n", i + 1, S->PC);
+             printf("Error in exceptions tests: test %zu failed; PC = %"PRI_UWORD"\n", i + 1, S->PC);
              printf("Return code is %"PRI_WORD"; should be %"PRI_WORD"\n", res, result[i]);
              if (result[i] != 0)
                  printf("BADPC = %"PRI_UWORD"; should be %"PRI_UWORD"\n", S->BADPC, badpc[i]);

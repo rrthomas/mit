@@ -253,10 +253,7 @@ PUSH(value);
 '''
 
 actions[Opcodes.STORE_SP] = '''
-WORD value = POP;
-CHECK_ALIGNED(value);
-if (exception == 0)
-    S->SP = value;
+S->SP = POP;
 '''
 
 actions[Opcodes.PUSH_RP] = '''
@@ -264,10 +261,7 @@ PUSH(S->RP);
 '''
 
 actions[Opcodes.STORE_RP] = '''
-WORD value = POP;
-CHECK_ALIGNED(value);
-if (exception == 0)
-    S->RP = value;
+S->RP = POP;
 '''
 
 actions[Opcodes.PUSH_PC] = '''

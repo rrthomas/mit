@@ -18,7 +18,6 @@
 
 #include "public.h"
 #include "aux.h"
-#include "private.h"
 
 
 // Memory allocation and mapping

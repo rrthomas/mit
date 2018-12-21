@@ -24,7 +24,6 @@
 
 #include "public.h"
 #include "aux.h"
-#include "private.h"
 #include "opcodes.h"
 
 
@@ -305,11 +304,11 @@ WORD single_step(state *S)
         // code from usual if SP is now invalid, push the exception code
         // "manually".
         S->SP += WORD_SIZE * STACK_DIRECTION;
+        S->BADPC = S->PC - 1;
         if (!WORD_IN_ONE_AREA(S->SP) || !IS_ALIGNED(S->SP))
             return -257;
         int store_exception = store_word(S, S->SP, exception);
         assert(store_exception == 0);
-        S->BADPC = S->PC - 1;
         S->PC = S->HANDLER;
     }
     return -258; // terminated OK
