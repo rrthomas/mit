@@ -515,6 +515,9 @@ static void do_command(int no)
             case -3:
                 fatal("error while loading module");
                 break;
+            case -4:
+                fatal("module has wrong WORD_SIZE");
+                break;
             default:
                 break;
             }
