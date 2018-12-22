@@ -217,24 +217,22 @@ The command
 \begin{center}{\tt LOAD} \angb{file} [\angb{address}]\end{center}
 
 \noindent initialises @PACKAGE_NAME@ as in section~\ref{uifaceinit}, then loads the object
-module in file \angb{file} into memory at address \angb{address} (or address~0 if the argument is omitted). The address
-must be word-aligned; if it is not, or if the module would not fit in memory
-at the address given, or there is some filing error, an error message is
+module in file \angb{file} into memory at address \angb{address} (or address~0 if the argument is omitted). If the module would not fit in memory
+at the address given, or there is an I/O error, an error message is
 displayed.
 
 The command {\tt SAVE} saves an object module. It has the two forms
 
 \begin{center}
 {\tt SAVE} \angb{file} \angb{address} {\tt +} \angb{number}\\
-{\tt SAVE} \angb{file} \angb{address_1} \angb{address_2}
+{\tt SAVE} \angb{file} [\angb{address_1} \angb{address_2}]
 \end{center}
 
 \noindent where the first saves \angb{number} bytes starting at address \angb{address},
 and the second saves from address \angb{address_1} up to, but not including,
-address \angb{address_2}. The addresses must be word-aligned, and the number
-of bytes must be a multiple of four. An error message is displayed if the
+address \angb{address_2} (defaulting to $0$ and the address at which the next instruction would be assembled). An error message is displayed if the
 start address is less than or equal to the end address, or if either the
-address or number of bytes is not aligned or out of range.
+address or number of bytes is out of range.
 
 The module is saved to the file \angb{file}. An error message is displayed if
 there is some filing error, but no warning is given if a file of that name

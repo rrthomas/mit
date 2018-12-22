@@ -33,4 +33,4 @@ BYTE 0x64
 BYTE 0x21
 BYTE 0x0a
 
-SAVE hello.obj 0 24
+SAVE hello.obj

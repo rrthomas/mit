@@ -579,8 +579,8 @@ static void do_command(int no)
     case c_SAVE:
         {
             const char *file = strtok(NULL, " ");
-            long long start, end;
-            double_arg(strtok(NULL, ""), &start, &end, false);
+            long long start = 0, end = ass_current(S);
+            double_arg(strtok(NULL, ""), &start, &end, true);
 
             FILE *handle;
             if ((handle = fopen(globdirname(file), "wb")) == NULL)

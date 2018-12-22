@@ -3,5 +3,4 @@ NUMBER 12345678
 NUMBER 42
 OHALT
 
-// N.B. Length depends on numbers above!
-SAVE numbers.obj 0 8
+SAVE numbers.obj
