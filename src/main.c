@@ -281,28 +281,28 @@ static int save_object(FILE *file, UWORD address, UWORD length)
         return -1;
 
     if (fputs(PACKAGE_UPPER, file) == EOF)
-        return -3;
+        return -2;
 
     for (size_t i = strlen(PACKAGE_UPPER); i < MAGIC_LENGTH; i++)
         if (putc('\0', file) == EOF)
-            return -3;
+            return -2;
 
     BYTE buf[INSTRUCTION_MAX_CHUNKS] = {};
 
     ptrdiff_t len = encode_instruction_native(&buf[0], INSTRUCTION_NUMBER, ENDISM);
     if (fwrite(&buf[0], 1, len, file) != (size_t)len)
-        return -3;
+        return -2;
 
     len = encode_instruction_native(&buf[0], INSTRUCTION_NUMBER, WORD_SIZE);
     if (fwrite(&buf[0], 1, len, file) != (size_t)len)
-        return -3;
+        return -2;
 
     len = encode_instruction_native(&buf[0], INSTRUCTION_NUMBER, length);
     if (fwrite(&buf[0], 1, len, file) != (size_t)len)
-        return -3;
+        return -2;
 
     if (fwrite(ptr, 1, length, file) != length)
-        return -3;
+        return -2;
 
     return 0;
 }
@@ -592,7 +592,7 @@ static void do_command(int no)
             case -1:
                 fatal("save area contains an invalid address");
                 break;
-            case -3:
+            case -2:
                 fatal("error while saving module");
                 break;
             default:
