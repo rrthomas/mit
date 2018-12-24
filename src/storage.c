@@ -120,13 +120,6 @@ UWORD mem_align(state *S)
 
 // General memory access
 
-// Macro for byte addressing
-#ifdef WORDS_BIGENDIAN
-#define FLIP(addr) ((addr) ^ (WORD_SIZE - 1))
-#else
-#define FLIP(addr) (addr)
-#endif
-
 int load_word(state *S, UWORD addr, WORD *value)
 {
     if (!IS_ALIGNED(addr)) {
@@ -159,7 +152,7 @@ int load_word(state *S, UWORD addr, WORD *value)
 
 int load_byte(state *S, UWORD addr, BYTE *value)
 {
-    uint8_t *ptr = native_address(S, FLIP(addr), false);
+    uint8_t *ptr = native_address(S, addr, false);
     if (ptr == NULL) {
         S->INVALID = addr;
         return -9;
@@ -194,7 +187,7 @@ int store_word(state *S, UWORD addr, WORD value)
 
 int store_byte(state *S, UWORD addr, BYTE value)
 {
-    Mem_area *a = mem_range(S, FLIP(addr), 1);
+    Mem_area *a = mem_range(S, addr, 1);
     if (a == NULL) {
         S->INVALID = addr;
         return -9;
@@ -202,34 +195,10 @@ int store_byte(state *S, UWORD addr, BYTE value)
         S->INVALID = addr;
         return -20;
     }
-    *addr_in_area(a, FLIP(addr)) = value;
+    *addr_in_area(a, addr) = value;
     return 0;
 }
 
-
-_GL_ATTRIBUTE_CONST WORD reverse_word(WORD value)
-{
-    WORD res = 0;
-    for (unsigned i = 0; i < WORD_SIZE / 2; i++) {
-        unsigned lopos = BYTE_BIT * i;
-        unsigned hipos = BYTE_BIT * (WORD_SIZE - 1 - i);
-        unsigned move = hipos - lopos;
-        res |= ((((UWORD)value) & ((UWORD)BYTE_MASK << hipos)) >> move)
-            | ((((UWORD)value) & ((UWORD)BYTE_MASK << lopos)) << move);
-    }
-    return res;
-}
-
-int reverse(state *S, UWORD start, UWORD length)
-{
-    int ret = 0;
-    for (UWORD i = 0; ret == 0 && i < length; i ++) {
-        WORD c;
-        ret = load_word(S, start + i * WORD_SIZE, &c)
-            || store_word(S, start + i, reverse_word(c));
-    }
-    return ret;
-}
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wsuggest-attribute=const"
@@ -241,8 +210,6 @@ int pre_dma(state *S, UWORD from, UWORD to, bool write)
     to = ALIGN(to);
     if (to < from || native_address_range_in_one_area(S, from, to - from, write) == NULL)
         exception = -1;
-    if (exception == 0 && ENDISM)
-        exception = reverse(S, from, to - from);
 
     return exception;
 }

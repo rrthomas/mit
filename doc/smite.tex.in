@@ -443,8 +443,8 @@ also an action to add a number to another stored in memory.
 \begin{description}
 \inst{LOAD}{a-addr -- x}{\spic{x} is the value stored at \spic{a-addr}.}
 \inst{STORE}{x a-addr --}{Store \spic{x} at \spic{a-addr}.}
-\inst{LOADB}{addr -- byte}{If {\tt ENDISM} is 1, exclusive-or \spic{addr} with 3. Fetch the byte stored at \spic{addr}. The unused high-order bits are all zeroes.}
-\inst{STOREB}{byte addr --}{If {\tt ENDISM} is 1, exclusive-or \spic{addr} with 3. Store \spic{byte} at \spic{addr}. Only one byte is transferred.}
+\inst{LOADB}{addr -- byte}{Fetch the byte stored at \spic{addr}. The unused high-order bits are all zeroes.}
+\inst{STOREB}{byte addr --}{Store \spic{byte} at \spic{addr}. Only one byte is transferred.}
 \end{description}
 
 

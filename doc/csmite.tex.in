@@ -222,7 +222,7 @@ word.}
 \ifacec{@PACKAGE@\_state *state, @PACKAGE@\_WORD @PACKAGE@\_single\_step(@PACKAGE@\_state *state)}{The reason code returned by {\bf @PACKAGE@\_single\_step()}
 is a @PACKAGE_NAME@ word.}
 \ifacec{int @PACKAGE@\_load\_object(@PACKAGE@\_state *state, FILE *file, @PACKAGE@\_UWORD address)}{If a file system error
-occurs, the return code is $-3$. If the word size of the object file is not {\tt WORD\_SIZE}, the return code is $-4$. As an extension to the specification, if an object file starts with the bytes $35$, $33$ (\texttt{\#!}), then it is assumed to be the start of a UNIX-style “hash bang” line, and the file contents up to and including the first newline character ($10$) is ignored.}
+occurs, the return code is $-3$. If the endism of the object file does not match {\tt ENDISM}, the return code is $-4$. If the word size of the object file is not {\tt WORD\_SIZE}, the return code is $-5$. As an extension to the specification, if an object file starts with the bytes $35$, $33$ (\texttt{\#!}), then it is assumed to be the start of a UNIX-style “hash bang” line, and the file contents up to and including the first newline character ($10$) is ignored.}
 \end{description}
 
 In addition to the required interface calls C @PACKAGE_NAME@ provides an initialisation routine {\bf @PACKAGE@\_init()} which, given a word array and its size, initialises @PACKAGE_NAME@:

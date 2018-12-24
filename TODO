@@ -1,6 +1,8 @@
-Reorganize C implementation documentation into user’s guide and programmer’s guide.
+Also see GitHub issues: https://github.com/rrthomas/smite/issues/
 
-Turn tests into debugger scripts.
+To support object files of the other endism, have a per-memory-area flag that indicates that word loads and stores must be reversed.
+
+Reorganize C implementation documentation into user’s guide and programmer’s guide.
 
 Auto-realloc stacks when they run out of space.
 

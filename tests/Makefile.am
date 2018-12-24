@@ -39,8 +39,10 @@ check-local: do_load_object test-parser
 EXTRA_DIST = run-test tests.h \
 	badobj1-4 badobj2-4 badobj3-4 badobj4-4 \
 	badobj1-8 badobj2-8 badobj3-8 badobj4-8 \
-	testobj1-4 testobj2-4 testobj3-4 \
-	testobj1-8 testobj2-8 testobj3-8 \
+	testobj1-be-4 testobj1-le-4 \
+	testobj1-be-8 testobj1-le-8 \
+	testobj2-be-4 testobj2-le-4 \
+	testobj2-be-8 testobj2-le-8 \
 	hello.txt hello.correct \
 	numbers.txt
 

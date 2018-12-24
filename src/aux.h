@@ -36,10 +36,6 @@
 
 // Memory access
 
-// Return value is 0 if OK, or exception code for invalid or unaligned address
-WORD reverse_word(WORD value);
-int reverse(state *S, UWORD start, UWORD length);
-
 #define STACK_DIRECTION 1
 #define _LOAD_WORD(a, temp)                                             \
     ((exception = exception ? exception : load_word(S, (a), &temp)), temp)

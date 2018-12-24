@@ -47,18 +47,18 @@ int load_object(state *S, FILE *file, UWORD address)
         if (magic[i] != '\0')
             return -2;
 
-    WORD endism;
-    if (decode_instruction_file(file, &endism) != INSTRUCTION_NUMBER)
+    UWORD endism;
+    if (decode_instruction_file(file, (WORD *)(&endism)) != INSTRUCTION_NUMBER ||
+        endism > 1)
         return -2;
-    if (endism != 0 && endism != 1)
-        return -2;
-    int reversed = endism ^ ENDISM;
+    if (endism != ENDISM)
+        return -4;
 
     WORD word_size;
     if (decode_instruction_file(file, &word_size) != INSTRUCTION_NUMBER)
         return -2;
     if (word_size != WORD_SIZE)
-        return -4;
+        return -5;
 
     UWORD length = 0;
     if (decode_instruction_file(file, (WORD *)&length) != INSTRUCTION_NUMBER)
@@ -70,9 +70,6 @@ int load_object(state *S, FILE *file, UWORD address)
 
     if (fread(ptr, 1, length, file) != length)
         return -3;
-
-    if (reversed)
-        reverse(S, address, length);
 
     return 0;
 }
