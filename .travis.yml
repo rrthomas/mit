@@ -22,6 +22,9 @@ matrix:
   include:
     - os: linux
     - os: osx
+    - env:
+        - WORD_SIZE=4
+        - WORD_SIZE=8
     - compiler: gcc
       env:
         - COMPILER=gcc-7
