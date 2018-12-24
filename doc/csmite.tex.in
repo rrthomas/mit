@@ -9,7 +9,15 @@
 \documentclass{article}
 \usepackage[british]{babel}
 \usepackage[utf8x]{inputenc}
-\usepackage{a4,newpxtext,booktabs,hyperref,siunitx}
+\usepackage{a4,newpxtext,booktabs,hyperref,siunitx,titlesec}
+
+
+% Add an extra level of sections
+\setcounter{secnumdepth}{4}
+\titleformat{\paragraph}
+{\normalfont\normalsize\bfseries}{\theparagraph}{1em}{}
+\titlespacing*{\paragraph}
+{0pt}{3.25ex plus 1ex minus .2ex}{1.5ex plus .2ex}
 
 
 % Macros
@@ -25,10 +33,16 @@
 \newfont{\spfont}{cmsltt10 scaled 1000}
 \newcommand{\spic}[1]{{\spfont\setlength{\baselineskip}{\normalbaselineskip}#1\/}}
 
+% Common stack items
+
+\newcommand{\U}[1]{\spic{u$_{#1}$}}
+\newcommand{\aaddr}[1]{\spic{a-addr$_{#1}$}}
+\newcommand{\naddr}[1]{\spic{n-addr$_{#1}$}}
+
 
 \title{An implementation of the @PACKAGE_NAME@ virtual machine\\for POSIX\\version @VERSION@}
 \author{Reuben Thomas}
-\date{27th May 2018}
+\date{23rd December 2018}
 
 \begin{document}
 \maketitle
@@ -84,9 +98,52 @@ C @PACKAGE_NAME@ provides the ability to map native memory blocks into @PACKAGE_
 
 \subsection{Extra instructions}
 
-C @PACKAGE_NAME@ provides the following extra instructions. They are accessed by executing {\tt CALL\_NATIVE} with address $0$, and the given code as the top-most argument (under the address).
+C @PACKAGE_NAME@ provides some libraries of {\tt EXTRA} instruction functions, which are called in general as:
 
-\subsubsection{Command-line arguments}
+\begin{center}
+\begin{tabular}{ll} \toprule
+\bf Stack effect & \bf Description \\ \midrule
+\spic{i*x u1 u2 -- j*x} & Call the \spic{u1}th function of library \spic{u2}, passing arguments {i*x}, with results \spic{j*x}. \\ \bottomrule
+\end{tabular}
+\end{center}
+
+Exception~$-259$ is raised if an invalid library is accessed, and $-260$ for an invalid function in a known library.
+
+
+\subsubsection{@PACKAGE_NAME@}
+
+@PACKAGE_NAME@ provides access to its own API as library~$-1$. This allows the current state to be controlled, or fresh states to be created and controlled.
+
+\begin{center}
+\begin{tabular}{S[table-format=2.0]lll} \toprule
+\bf Code & \bf Name & \bf Stack effect & \bf Description \\ \midrule
+0x0 & {\tt CURRENT\_STATE} & \spic{-- n-addr} & a pointer to the current {\tt state} \\
+0x1 & {\tt LOAD\_WORD} & \spic{n-addr a-addr -- x n} & \\
+0x2 & {\tt STORE\_WORD} & \spic{n-addr a-addr x -- n} & \\
+0x3 & {\tt LOAD\_BYTE} & \spic{n-addr addr x n} & \\
+0x4 & {\tt STORE\_BYTE} & \spic{n-addr addr x -- n} & \\
+0x5 & {\tt PRE\_DMA} & \spic{n-addr \aaddr1 \aaddr2 f -- n} & \\
+0x6 & {\tt POST\_DMA} & \spic{n-addr \aaddr1 \aaddr2 -- n} & \\
+0x7 & {\tt MEM\_HERE} & \spic{n-addr -- addr} & \\
+0x8 & {\tt MEM\_ALLOT} & \spic{\naddr1 \naddr2 u f -- addr} & \\
+0x9 & {\tt MEM\_ALIGN} & \spic{n-addr -- addr} & \\
+0xa & {\tt NATIVE\_ADDRESS} & \spic{\naddr1 addr f -- \naddr2} & \\
+0xb & {\tt RUN} & \spic{n-addr -- n} & \\
+0xc & {\tt SINGLE\_STEP} & \spic{n-addr -- n} & \\
+0xd & {\tt LOAD\_OBJECT} & \spic{n-addr fid addr -- n} & \\
+0xe & {\tt INIT} & \spic{a-addr \U1 \U2 \U3 -- n-addr} & \\
+0xf & {\tt DESTROY} & \spic{n-addr} & \\
+0x10 & {\tt REGISTER\_ARGS} & \spic{n-addr n-addr n -- n} & \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+
+\subsubsection{Standard library}
+
+Standard C runtime and library functionality is accessed via library~$0$.
+
+\paragraph{Command-line arguments}
 
 Two calls are provided to access command-line arguments passed to C @PACKAGE_NAME@ (excluding any that it interprets itself). They are copied from Gforth (\cite{gforth}).
 
@@ -98,7 +155,7 @@ Two calls are provided to access command-line arguments passed to C @PACKAGE_NAM
 \end{tabular}
 \end{center}
 
-\subsubsection{Standard I/O streams}
+\paragraph{Standard I/O streams}
 
 These extra instructions provide access to POSIX standard input, output and error. Each call returns a corresponding file identifier.
 
@@ -111,7 +168,7 @@ These extra instructions provide access to POSIX standard input, output and erro
 \end{tabular}
 \end{center}
 
-\subsubsection{File system}
+\paragraph{File system}
 
 The file system extra instructions correspond directly to ANS Forth words, as defined in~\cite{ANSIforth}.
 

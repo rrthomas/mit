@@ -12,7 +12,7 @@
 /call_native
 /comparison
 /exceptions
-/extra
+/extra_libc
 /init
 /load_object
 /logic

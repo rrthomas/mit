@@ -103,13 +103,188 @@ int register_args(state *S, int argc, char *argv[])
     return 0;
 }
 
-static void extra(state *S)
+static int extra_smite(state *S)
+{
+    int exception = 0;
+
+    WORD temp = 0;
+    switch (POP) {
+    case OX_SMITE_CURRENT_STATE:
+        PUSH_NATIVE_POINTER(S);
+        break;
+    case OX_SMITE_LOAD_WORD:
+        {
+            UWORD addr = POP;
+            state *inner_state;
+            POP_NATIVE_POINTER(inner_state);
+            WORD value;
+            int ret = load_word(inner_state, addr, &value);
+            PUSH(value);
+            PUSH(ret);
+        }
+        break;
+    case OX_SMITE_STORE_WORD:
+        {
+            WORD value = POP;
+            UWORD addr = POP;
+            state *inner_state;
+            POP_NATIVE_POINTER(inner_state);
+            int ret = store_word(inner_state, addr, value);
+            PUSH(ret);
+        }
+        break;
+    case OX_SMITE_LOAD_BYTE:
+        {
+            UWORD addr = POP;
+            state *inner_state;
+            POP_NATIVE_POINTER(inner_state);
+            BYTE value;
+            int ret = load_byte(inner_state, addr, &value);
+            PUSH(value);
+            PUSH(ret);
+        }
+        break;
+    case OX_SMITE_STORE_BYTE:
+        {
+            BYTE value = POP;
+            UWORD addr = POP;
+            state *inner_state;
+            POP_NATIVE_POINTER(inner_state);
+            int ret = store_byte(inner_state, addr, value);
+            PUSH(ret);
+        }
+        break;
+    case OX_SMITE_PRE_DMA:
+        {
+            bool write = POP;
+            UWORD to = POP;
+            UWORD from = POP;
+            state *inner_state;
+            POP_NATIVE_POINTER(inner_state);
+            int ret = pre_dma(inner_state, from, to, write);
+            PUSH(ret);
+        }
+        break;
+    case OX_SMITE_POST_DMA:
+        {
+            UWORD to = POP;
+            UWORD from = POP;
+            state *inner_state;
+            POP_NATIVE_POINTER(inner_state);
+            int ret = post_dma(inner_state, from, to);
+            PUSH(ret);
+        }
+        break;
+    case OX_SMITE_MEM_HERE:
+        {
+            state *inner_state;
+            POP_NATIVE_POINTER(inner_state);
+            UWORD addr = mem_here(inner_state);
+            PUSH(addr);
+        }
+        break;
+    case OX_SMITE_MEM_ALLOT:
+        {
+            bool writable = POP;
+            size_t n = POP;
+            void *p;
+            POP_NATIVE_POINTER(p);
+            state *inner_state;
+            POP_NATIVE_POINTER(inner_state);
+            UWORD addr = mem_allot(inner_state, p, n, writable);
+            PUSH(addr);
+        }
+        break;
+    case OX_SMITE_MEM_ALIGN:
+        {
+            state *inner_state;
+            POP_NATIVE_POINTER(inner_state);
+            UWORD addr = mem_align(inner_state);
+            PUSH(addr);
+        }
+        break;
+    case OX_SMITE_NATIVE_ADDRESS:
+        {
+            bool writable = POP;
+            UWORD addr = POP;
+            state *inner_state;
+            POP_NATIVE_POINTER(inner_state);
+            uint8_t *ptr = native_address(inner_state, addr, writable);
+            PUSH_NATIVE_POINTER(ptr);
+        }
+        break;
+    case OX_SMITE_RUN:
+        {
+            state *inner_state;
+            POP_NATIVE_POINTER(inner_state);
+            int ret = run(inner_state);
+            PUSH(ret);
+        }
+        break;
+    case OX_SMITE_SINGLE_STEP:
+        {
+            state *inner_state;
+            POP_NATIVE_POINTER(inner_state);
+            int ret = single_step(inner_state);
+            PUSH(ret);
+        }
+        break;
+    case OX_SMITE_LOAD_OBJECT:
+        {
+            UWORD address = POP;
+            int fd = POP;
+            FILE *file = fdopen(fd, "r"); // FIXME: use file descriptors
+            state *inner_state;
+            POP_NATIVE_POINTER(inner_state);
+            int ret = load_object(inner_state, file, address);
+            PUSH(ret);
+        }
+        break;
+    case OX_SMITE_INIT:
+        {
+            size_t return_stack_size = POP;
+            size_t stack_size = POP;
+            size_t memory_size = POP;
+            WORD addr = POP;
+            WORD *addrp = (WORD *)native_address(S, addr, false);
+            state *new_state = init(addrp, memory_size, stack_size, return_stack_size);
+            PUSH_NATIVE_POINTER(new_state);
+        }
+        break;
+    case OX_SMITE_DESTROY:
+        {
+            state *inner_state;
+            POP_NATIVE_POINTER(inner_state);
+            destroy(inner_state);
+        }
+        break;
+    case OX_SMITE_REGISTER_ARGS:
+        {
+            char **argv;
+            POP_NATIVE_POINTER(argv);
+            int argc = POP;
+            state *inner_state;
+            POP_NATIVE_POINTER(inner_state);
+            int ret = register_args(inner_state, argc, argv);
+            PUSH(ret);
+        }
+        break;
+    default:
+        exception = -260;
+        break;
+    }
+
+    return exception;
+}
+
+static int extra_libc(state *S)
 {
     int exception = 0;
     WORD temp = 0;
 #if WORD_SIZE == 4
     WORD temp2 = 0;
 #endif
+
     switch (POP) {
     case OX_ARGC: // ( -- u )
         PUSH(S->main_argc);
@@ -268,7 +443,32 @@ static void extra(state *S)
             PUSH(res);
         }
         break;
+    default:
+        exception = -260;
+        break;
     }
+
+    return exception;
+}
+
+static int extra(state *S)
+{
+    int exception = 0;
+    WORD temp = 0;
+
+    switch (POP) {
+    case OXLIB_SMITE:
+        exception = extra_smite(S);
+        break;
+    case OXLIB_LIBC:
+        exception = extra_libc(S);
+        break;
+    default:
+        exception = -259;
+        break;
+    }
+
+    return exception;
 }
 
 

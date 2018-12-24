@@ -229,14 +229,13 @@ return POP;
 '''
 
 actions[Opcodes.CALL_NATIVE] = '''
-WORD_pointer address;
-for (int i = (NATIVE_POINTER_SIZE / WORD_SIZE) - 1; i >= 0; i--)
-    address.words[i] = POP;
-address.pointer(S);
+void *address;
+POP_NATIVE_POINTER(address);
+((void (*)(state *))(address))(S);
 '''
 
 actions[Opcodes.EXTRA] = '''
-extra(S);
+exception = extra(S);
 '''
 
 actions[Opcodes.PUSH_WORD_SIZE] = '''

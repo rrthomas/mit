@@ -297,6 +297,7 @@ different types of stack item are shown in table~\ref{typetable}.
 \spic{x} & unspecified word \\
 \spic{addr} & address \\
 \spic{a-addr} & word-aligned address \\
+\spic{n-addr} & native address \\
 \bottomrule
 \end{tabular}
 \caption{\label{typetable}Types used in stack effects}
@@ -325,8 +326,8 @@ shows the subtype relationships. The subtype relation is transitive.
 \end{table}
 
 Numbers are represented in twos complement form. \spic{addr} consists of all
-valid addresses. Numeric constants can be included in
-stack pictures, and are of type \spic{n{\tt |}u}.
+valid virtual machine addresses. Numeric constants can be included in
+stack pictures, and are of type \spic{n{\tt |}u}. Native addresses may occupy more than one word, according to the values of {\tt WORD\_SIZE} and {\tt NATIVE\_POINTER\_SIZE}; the precise format of this address is implementation-dependent.
 
 Each type may be suffixed by a number in stack pictures; if the same combination
 of type and suffix appears more than once in a stack effect, it refers to
@@ -523,7 +524,7 @@ These actions give access to @PACKAGE_NAME@'s exception mechanisms (see section~
 These actions allow access to @PACKAGE_NAME@'s libraries, the operating system and native machine code.
 
 \begin{description}
-\inst{CALL\_NATIVE}{i*x --}{Make a subroutine call to the routine at the address given (in the host machine's format, padded out to a number of words) on the data stack, passing the current state as an argument. The size and format of this address are machine-dependent.}
+\inst{CALL\_NATIVE}{n-addr --}{Make a subroutine call to the routine at address \spic{n-addr}, passing the current state as an argument.}
 \inst{EXTRA}{i*x -- j*x}{Perform implementation-dependent actions; for example, this can be used to implement system-dependent functionality such as I/O.}
 \end{description}
 

@@ -116,7 +116,7 @@ int register_args(state *state, int argc, char *argv[]);
 // A union to allow storage of machine pointers in VM memory
 union _WORD_pointer {
     WORD words[NATIVE_POINTER_SIZE / WORD_SIZE];
-    void (*pointer)(state *state);
+    void *pointer;
 };
 typedef union _WORD_pointer WORD_pointer;
 

@@ -1,4 +1,4 @@
-// Test EXTRA instruction. Also uses previously-tested instructions.
+// Test libc EXTRA calls.
 // FIXME: test file routines.
 //
 // (c) Reuben Thomas 1994-2018
@@ -24,8 +24,8 @@ int main(void)
     state * S = init_alloc(1024);
     assert(register_args(S, argc, argv) == 0);
 
-    ass_number(S, OX_ARGC); ass_action(S, O_EXTRA);
-    ass_number(S, 1); ass_number(S, OX_ARG); ass_action(S, O_EXTRA);
+    ass_number(S, OX_ARGC); ass_number(S, OXLIB_LIBC); ass_action(S, O_EXTRA);
+    ass_number(S, 1); ass_number(S, OX_ARG); ass_number(S, OXLIB_LIBC); ass_action(S, O_EXTRA);
 
     do {
         single_step(S);

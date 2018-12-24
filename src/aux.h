@@ -74,6 +74,20 @@ int reverse(state *S, UWORD start, UWORD length);
 #define STACK_UNDERFLOW(ptr, base)              \
     (ptr - base == 0 ? false : (STACK_DIRECTION > 0 ? ptr < base : ptr > base))
 
+#define PUSH_NATIVE_POINTER(p)                                          \
+    {                                                                   \
+        WORD_pointer wp = { .pointer = p };                             \
+        for (unsigned i = 0; i < NATIVE_POINTER_SIZE / WORD_SIZE; i++)  \
+            PUSH(wp.words[i]);                                          \
+    }
+#define POP_NATIVE_POINTER(p)                                           \
+    {                                                                   \
+        WORD_pointer wp;                                                \
+        for (int i = (NATIVE_POINTER_SIZE / WORD_SIZE) - 1; i >= 0; i--) \
+            wp.words[i] = POP;                                          \
+        p = wp.pointer;                                                 \
+    }
+
 uint8_t *native_address_range_in_one_area(state *S, UWORD start, UWORD length, bool writable);
 
 // Align a VM address
