@@ -45,6 +45,7 @@ static bool interactive;
 static unsigned long lineno;
 static jmp_buf env;
 
+static bool core_dump = false;
 static bool debug_on_error = false;
 
 static _GL_ATTRIBUTE_FORMAT_PRINTF(1, 0) void verror(const char *format, va_list args)
@@ -776,6 +777,21 @@ static WORD parse_memory_size(UWORD max)
     return size;
 }
 
+static void dump_core(int exception)
+{
+    char *file = xasprintf("smite-core.%lu", (unsigned long)getpid());
+    FILE *handle;
+    // Ignore errors; best effort only, in the middle of an error exit
+    if ((handle = fopen(file, "wb")) != NULL) {
+        (void)save_object(handle, 0, S->MEMORY);
+        fclose(handle);
+    }
+
+    warn("exception %d raised at PC=%#"PRI_XWORD, exception, S->PC);
+    warn("core dumped to %s", file);
+    free(file);
+}
+
 int main(int argc, char *argv[])
 {
     set_program_name(argv[0]);
@@ -785,7 +801,7 @@ int main(int argc, char *argv[])
     // leading ':' so as to return ':' for a missing arg, not '?'
     for (;;) {
         int this_optind = optind ? optind : 1, longindex = -1;
-        int c = getopt_long(argc, argv, "+:dm:r:s:", longopts, &longindex);
+        int c = getopt_long(argc, argv, "+:cdm:r:s:", longopts, &longindex);
 
         if (c == -1)
             break;
@@ -793,8 +809,10 @@ int main(int argc, char *argv[])
             die("option '%s' requires an argument", argv[this_optind]);
         else if (c == '?')
             die("unrecognised option '%s'\nTry '%s --help' for more information.", argv[this_optind], program_name);
-        else if (c == 'd')
+        else if (c == 'c')
             longindex = 3;
+        else if (c == 'd')
+            longindex = 4;
         else if (c == 'm')
             longindex = 0;
         else if (c == 'r')
@@ -803,32 +821,35 @@ int main(int argc, char *argv[])
             longindex = 1;
 
         switch (longindex) {
-            case 0:
-                memory_size = parse_memory_size((UWORD)MAX_MEMORY);
-                break;
-            case 1:
-                stack_size = parse_memory_size((UWORD)MAX_STACK_SIZE);
-                break;
-            case 2:
-                return_stack_size = parse_memory_size((UWORD)MAX_STACK_SIZE);
-                break;
-            case 3:
-                debug_on_error = true;
-                break;
-            case 4:
-                usage();
-                exit(EXIT_SUCCESS);
-            case 5:
-                printf(PACKAGE_NAME " " VERSION "\n"
-                       COPYRIGHT_STRING "\n"
-                       PACKAGE_NAME " comes with ABSOLUTELY NO WARRANTY.\n"
-                       "You may redistribute copies of " PACKAGE_NAME "\n"
-                       "under the terms of the GNU General Public License.\n"
-                       "For more information about these matters, see the file named COPYING.\n");
-                exit(EXIT_SUCCESS);
-            default:
-                break;
-            }
+        case 0:
+            memory_size = parse_memory_size((UWORD)MAX_MEMORY);
+            break;
+        case 1:
+            stack_size = parse_memory_size((UWORD)MAX_STACK_SIZE);
+            break;
+        case 2:
+            return_stack_size = parse_memory_size((UWORD)MAX_STACK_SIZE);
+            break;
+        case 3:
+            core_dump = true;
+            break;
+        case 4:
+            debug_on_error = true;
+            break;
+        case 5:
+            usage();
+            exit(EXIT_SUCCESS);
+        case 6:
+            printf(PACKAGE_NAME " " VERSION "\n"
+                   COPYRIGHT_STRING "\n"
+                   PACKAGE_NAME " comes with ABSOLUTELY NO WARRANTY.\n"
+                   "You may redistribute copies of " PACKAGE_NAME "\n"
+                   "under the terms of the GNU General Public License.\n"
+                   "For more information about these matters, see the file named COPYING.\n");
+            exit(EXIT_SUCCESS);
+        default:
+            break;
+        }
     }
 
     if ((memory = (WORD *)calloc(memory_size, WORD_SIZE)) == NULL)
@@ -848,6 +869,8 @@ int main(int argc, char *argv[])
             die("could not read file %s, or file is invalid", argv[optind]);
 
         int res = run(S);
+        if (core_dump && (res == -23 || res == -9 || (res <= -256 && res >= -260)))
+            dump_core(res);
         if (!debug_on_error || res >= 0)
             return res;
         warn("exception %d raised", res);
