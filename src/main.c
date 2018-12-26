@@ -12,6 +12,7 @@
 
 #include "external_syms.h"
 
+#include <assert.h>
 #include <stdlib.h>
 #include <stdarg.h>
 #include <inttypes.h>
@@ -24,6 +25,8 @@
 #include <sys/wait.h>
 #include <libgen.h>
 #include <glob.h>
+#include <sys/types.h>
+#include <regex.h>
 
 #include "progname.h"
 #include "xalloc.h"
@@ -212,33 +215,18 @@ static long long single_arg(const char *s, int *bytes)
     return n;
 }
 
-static void double_arg(char *s, long long *start, long long *end, bool default_args)
+static void double_arg(char *arg1, bool plus, char *arg2, long long *start, long long *end)
 {
-    bool plus = default_args;
+    bool add = true;
 
-    char *token;
-    static char *copy = NULL;
-    free(copy);
-    if (s == NULL || (token = strtok((copy = xstrdup(s)), " +")) == NULL) {
-        if (!default_args)
-            fatal("too few arguments");
-    } else {
-        size_t i;
-        for (i = strlen(token); s[i] == ' ' && i < strlen(s); i++)
-            ;
-
-        plus = plus || (i < strlen(s) && s[i] == '+');
-
-        *start = single_arg(token, NULL);
-
-        if ((token = strtok(NULL, " +")) == NULL) {
-            if (!default_args)
-                fatal("too few arguments");
-        } else
-            *end = single_arg(token, NULL);
+    if (arg1 != NULL)
+        *start = single_arg(arg1, NULL);
+    if (arg2 != NULL) {
+        *end = single_arg(arg2, NULL);
+        add = plus;
     }
 
-    if (plus)
+    if (add)
         *end += *start;
 }
 
@@ -309,9 +297,8 @@ static int save_object(FILE *file, UWORD address, UWORD length)
 }
 
 
-static void do_assign(char *token)
+static void do_assign(char *token, char *number)
 {
-    char *number = strtok(NULL, " ");
     long long value;
     int bytes = 4;
 
@@ -427,7 +414,7 @@ static void do_registers(void)
     putchar('\n');
 }
 
-static void do_command(int no)
+static void do_command(int no, char *arg1, bool plus1, char *arg2, bool plus2, char *arg3)
 {
     int exception = 0;
     WORD temp = 0;
@@ -435,20 +422,20 @@ static void do_command(int no)
     switch (no) {
     case c_TOD:
         {
-            long long value = single_arg(strtok(NULL, " "), NULL);
+            long long value = single_arg(arg1, NULL);
             PUSH(value);
         }
         break;
     case c_TOR:
         {
-            long long value = single_arg(strtok(NULL, " "), NULL);
+            long long value = single_arg(arg1, NULL);
             PUSH_RETURN(value);
         }
         break;
     case c_DISASSEMBLE:
         {
             long long start = (S->PC <= 16 ? 0 : S->PC - 16), end = 64;
-            double_arg(strtok(NULL, ""), &start, &end, true);
+            double_arg(arg1, plus1, arg2, &start, &end);
             check_range(start, end, "Address");
             disassemble((UWORD)start, (UWORD)end);
         }
@@ -468,7 +455,7 @@ static void do_command(int no)
     case c_DUMP:
         {
             long long start = (S->PC <= 64 ? 0 : S->PC - 64), end = 256;
-            double_arg(strtok(NULL, ""), &start, &end, true);
+            double_arg(arg1, plus1, arg2, &start, &end);
             check_range(start, end, "Address");
             while (start < end) {
                 printf("%#08lx ", (unsigned long)start);
@@ -494,15 +481,13 @@ static void do_command(int no)
         {
             reinit();
 
-            const char *file = strtok(NULL, " ");
             UWORD adr = 0;
-            char *arg = strtok(NULL, " ");
-            if (arg != NULL)
-                adr = single_arg(arg, NULL);
+            if (arg2 != NULL)
+                adr = single_arg(arg2, NULL);
 
-            FILE *handle = fopen(globfile(file), "rb");
+            FILE *handle = fopen(globfile(arg1), "rb");
             if (handle == NULL)
-                fatal("cannot open file '%s'", file);
+                fatal("cannot open file '%s'", arg1);
             int ret = load_object(S, handle, adr);
             fclose(handle);
 
@@ -545,17 +530,16 @@ static void do_command(int no)
     case c_STEP:
     case c_TRACE:
         {
-            char *arg = strtok(NULL, " ");
             WORD ret = -258;
 
-            if (arg == NULL) {
+            if (arg1 == NULL) {
                 if ((ret = single_step(S)))
                     printf("HALT code %"PRI_WORD" was returned\n", ret);
                 if (no == c_TRACE) do_registers();
             } else {
-                upper(arg);
-                if (strcmp(arg, "TO") == 0) {
-                    unsigned long long limit = single_arg(strtok(NULL, " "), NULL);
+                upper(arg1);
+                if (strcmp(arg1, "TO") == 0) {
+                    unsigned long long limit = single_arg(arg2, NULL);
                     check_valid(limit, "Address");
                     while ((unsigned long)S->PC != limit && ret == -258) {
                         ret = single_step(S);
@@ -565,7 +549,7 @@ static void do_command(int no)
                         printf("HALT code %"PRI_WORD" was returned at PC = %#"PRI_XWORD"\n",
                                ret, S->PC);
                 } else {
-                    unsigned long long limit = single_arg(arg, NULL), i;
+                    unsigned long long limit = single_arg(arg1, NULL), i;
                     for (i = 0; i < limit && ret == -258; i++) {
                         ret = single_step(S);
                         if (no == c_TRACE) do_registers();
@@ -579,13 +563,12 @@ static void do_command(int no)
         break;
     case c_SAVE:
         {
-            const char *file = strtok(NULL, " ");
             long long start = 0, end = ass_current(S);
-            double_arg(strtok(NULL, ""), &start, &end, true);
+            double_arg(arg2, plus2, arg3, &start, &end);
 
             FILE *handle;
-            if ((handle = fopen(globdirname(file), "wb")) == NULL)
-                fatal("cannot open file %s", file);
+            if ((handle = fopen(globdirname(arg1), "wb")) == NULL)
+                fatal("cannot open file %s", arg1);
             int ret = save_object(handle, start, (UWORD)((end - start)));
             fclose(handle);
 
@@ -606,7 +589,7 @@ static void do_command(int no)
     case c_POINTER:
         {
             int bytes;
-            long long value = single_arg(strtok(NULL, " "), &bytes);
+            long long value = single_arg(arg1, &bytes);
 
             switch (no) {
             case c_BYTE:
@@ -644,6 +627,14 @@ static void do_command(int no)
 }
 
 
+static char *pmatch_token(char *input, regmatch_t pmatch)
+{
+    char *token = NULL;
+    if (pmatch.rm_so != -1)
+        token = strndup(input + pmatch.rm_so, pmatch.rm_eo - pmatch.rm_so);
+    return token;
+}
+
 static void parse(char *input)
 {
     // Handle shell command
@@ -661,28 +652,50 @@ static void parse(char *input)
     if (comment != NULL)
         *comment = '\0';
 
-    static char *copy = NULL;
-    free(copy);
-    copy = xstrdup(input);
-    char *token = strtok(copy, strchr(copy, '=') == NULL ? " " : "=");
-    if (token == NULL || strlen(token) == 0) return;
+    // Parse the rest of the line
+    regex_t preg;
+    assert(regcomp(&preg, "^[[:space:]]*([-[:alnum:]_]+)?[[:space:]]*(=)?[[:space:]]*([-[:alnum:]/._~-]+)?[[:space:]]*(\\+)?[[:space:]]*([[:alnum:]/._~-]+)?[[:space:]]*(\\+)?[[:space:]]*([[:alnum:]/._~-]+)?$", REG_EXTENDED) == 0);
+#define MATCHES 7
+    // Arguments are at position 1, 3, 5, 7
+    // Equals sign is at 2, plus signs at 4, 6
+    regmatch_t pmatch[MATCHES + 1];
+    int res = regexec(&preg, input, MATCHES + 1, &pmatch[0], 0);
+    regfree(&preg);
+    if (res == REG_NOMATCH)
+        fatal("syntax error");
+
+    static char *token = NULL;
+    free(token);
+    token = pmatch_token(input, pmatch[1]);
+    bool assign = pmatch[2].rm_so != -1;
+    static char *sym2 = NULL;
+    free(sym2);
+    sym2 = pmatch_token(input, pmatch[3]);
+    bool plus1 = pmatch[4].rm_so != -1;
+    static char *sym3 = NULL;
+    free(sym3);
+    sym3 = pmatch_token(input, pmatch[5]);
+    bool plus2 = pmatch[6].rm_so != -1;
+    static char *sym4 = NULL;
+    free(sym4);
+    sym4 = pmatch_token(input, pmatch[7]);
+
+    // If we have only whitespace silently exit
+    if (token == NULL && !assign && sym2 == NULL && !plus1)
+        return;
+
+    if (token == NULL)
+        fatal("syntax error");
     upper(token);
-
-    size_t i;
-    for (i = strlen(token); input[i] == ' ' && i < strlen(input); i++)
-        ;
-
-    bool assign = false;
-    if (i < strlen(input))
-        assign = input[i] == '=';
-
     size_t no = search(token, command, commands);
     if (no != SIZE_MAX)
-        do_command(no);
+        do_command(no, sym2, plus1, sym3, plus2, sym4);
     else {
-        if (assign)
-            do_assign(token);
-        else {
+        if (assign) {
+            if (plus1 || sym3 != NULL)
+                fatal("syntax error");
+            do_assign(token, sym2);
+        } else {
             WORD opcode = parse_instruction(token);
             if (opcode != O_UNDEFINED) {
                 ass_action(S, opcode);
