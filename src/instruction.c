@@ -10,6 +10,8 @@
 
 #include "config.h"
 
+#include <unistd.h>
+
 #include "minmax.h"
 
 #include "external_syms.h"
@@ -100,8 +102,8 @@ STATEFUL_ENCODE_INSTRUCTION(encode_instruction, UWORD *, addr, STORE_VIRTUAL)
     ptrdiff_t NAME(state *S, TYPE HANDLE, WORD *val)                    \
     _DECODE_INSTRUCTION(NAME, TYPE, HANDLE, LOAD)
 
-#define LOAD_FILE(b) (-((b = getc(file)) == EOF))
-DECODE_INSTRUCTION(decode_instruction_file, FILE *, file, LOAD_FILE)
+#define LOAD_FILE(b) (-(read(fd, &b, 1) != 1))
+DECODE_INSTRUCTION(decode_instruction_file, int, fd, LOAD_FILE)
 
 #define LOAD_VIRTUAL(b) (load_byte(S, (*addr)++, &(b)))
 STATEFUL_DECODE_INSTRUCTION(decode_instruction, UWORD *, addr, LOAD_VIRTUAL)

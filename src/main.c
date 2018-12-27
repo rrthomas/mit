@@ -21,10 +21,12 @@
 #include <string.h>
 #include <setjmp.h>
 #include <unistd.h>
+#include <fcntl.h>
 #include <getopt.h>
 #include <sys/wait.h>
 #include <libgen.h>
 #include <glob.h>
+#include <sys/stat.h>
 #include <sys/types.h>
 #include <regex.h>
 
@@ -108,6 +110,11 @@ enum registers {
 };
 static int registers = sizeof(regist) / sizeof(*regist);
 
+
+static int creat1(const char *file)
+{
+    return creat(file, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
+}
 
 static const char *globfile(const char *file)
 {
@@ -262,34 +269,35 @@ static void reinit(void)
 }
 
 
-static int save_object(FILE *file, UWORD address, UWORD length)
+static int save_object(int fd, UWORD address, UWORD length)
 {
     uint8_t *ptr = native_address_range_in_one_area(S, address, length, false);
     if (!IS_ALIGNED(address) || ptr == NULL)
         return -1;
 
-    if (fputs(PACKAGE_UPPER, file) == EOF)
+    if (write(fd, PACKAGE_UPPER, sizeof(PACKAGE_UPPER)) != sizeof(PACKAGE_UPPER))
         return -2;
 
-    for (size_t i = strlen(PACKAGE_UPPER); i < MAGIC_LENGTH; i++)
-        if (putc('\0', file) == EOF)
-            return -2;
+    ssize_t bytes_left = MAGIC_LENGTH - strlen(PACKAGE_UPPER) - 1;
 
     BYTE buf[INSTRUCTION_MAX_CHUNKS] = {};
 
-    ptrdiff_t len = encode_instruction_native(&buf[0], INSTRUCTION_NUMBER, ENDISM);
-    if (fwrite(&buf[0], 1, len, file) != (size_t)len)
+    if (write(fd, &buf[0], bytes_left) != bytes_left)
+        return -2;
+
+    ssize_t len = encode_instruction_native(&buf[0], INSTRUCTION_NUMBER, ENDISM);
+    if (write(fd, &buf[0], len) != len)
         return -2;
 
     len = encode_instruction_native(&buf[0], INSTRUCTION_NUMBER, WORD_SIZE);
-    if (fwrite(&buf[0], 1, len, file) != (size_t)len)
+    if (write(fd, &buf[0], len) != len)
         return -2;
 
     len = encode_instruction_native(&buf[0], INSTRUCTION_NUMBER, length);
-    if (fwrite(&buf[0], 1, len, file) != (size_t)len)
+    if (write(fd, &buf[0], len) != len)
         return -2;
 
-    if (fwrite(ptr, 1, length, file) != length)
+    if (write(fd, ptr, length) != length)
         return -2;
 
     return 0;
@@ -484,11 +492,11 @@ static void do_command(int no, char *arg1, bool plus1, char *arg2, bool plus2, c
             if (arg2 != NULL)
                 adr = single_arg(arg2, NULL);
 
-            FILE *handle = fopen(globfile(arg1), "rb");
-            if (handle == NULL)
-                fatal("cannot open file '%s'", arg1);
-            int ret = load_object(S, handle, adr);
-            fclose(handle);
+            int fd = open(globfile(arg1), O_RDONLY);
+            if (fd < 0)
+                fatal("cannot open file %s", arg1);
+            int ret = load_object(S, fd, adr);
+            close(fd);
 
             switch (ret) {
             case -1:
@@ -565,11 +573,11 @@ static void do_command(int no, char *arg1, bool plus1, char *arg2, bool plus2, c
             long long start = 0, end = ass_current(S);
             double_arg(arg2, plus2, arg3, &start, &end);
 
-            FILE *handle;
-            if ((handle = fopen(globdirname(arg1), "wb")) == NULL)
+            int fd;
+            if ((fd = creat1(globdirname(arg1))) < 0)
                 fatal("cannot open file %s", arg1);
-            int ret = save_object(handle, start, (UWORD)((end - start)));
-            fclose(handle);
+            int ret = save_object(fd, start, (UWORD)((end - start)));
+            close(fd);
 
             switch (ret) {
             case -1:
@@ -791,16 +799,17 @@ static WORD parse_memory_size(UWORD max)
 
 static void dump_core(int exception)
 {
-    char *file = xasprintf("smite-core.%lu", (unsigned long)getpid());
-    FILE *handle;
-    // Ignore errors; best effort only, in the middle of an error exit
-    if ((handle = fopen(file, "wb")) != NULL) {
-        (void)save_object(handle, 0, S->MEMORY);
-        fclose(handle);
-    }
-
     warn("exception %d raised at PC=%#"PRI_XWORD, exception, S->PC);
-    warn("core dumped to %s", file);
+
+    char *file = xasprintf("smite-core.%lu", (unsigned long)getpid());
+    int fd;
+    // Ignore errors; best effort only, in the middle of an error exit
+    if ((fd = creat1(file)) >= 0) {
+        (void)save_object(fd, 0, S->MEMORY);
+        close(fd);
+        warn("core dumped to %s", file);
+    } else
+        perror("open error");
     free(file);
 }
 
@@ -870,11 +879,11 @@ int main(int argc, char *argv[])
     if (argc >= 1) {
         if (register_args(S, argc, argv + optind) != 0)
             die("could not map command-line arguments");
-        FILE *handle = fopen(argv[optind], "rb");
-        if (handle == NULL)
+        int fd = open(argv[optind], O_RDONLY);
+        if (fd < 0)
             die("cannot not open file %s", argv[optind]);
-        int ret = load_object(S, handle, 0);
-        fclose(handle);
+        int ret = load_object(S, fd, 0);
+        close(fd);
         if (ret != 0)
             die("could not read file %s, or file is invalid", argv[optind]);
 

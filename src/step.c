@@ -233,10 +233,9 @@ static int extra_smite(state *S)
         {
             UWORD address = POP;
             int fd = POP;
-            FILE *file = fdopen(fd, "r"); // FIXME: use file descriptors
             state *inner_state;
             POP_NATIVE_POINTER(inner_state);
-            int ret = load_object(inner_state, file, address);
+            int ret = load_object(inner_state, fd, address);
             PUSH(ret);
         }
         break;

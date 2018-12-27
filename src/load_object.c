@@ -12,15 +12,15 @@
 
 #include "external_syms.h"
 
-#include <stdio.h>
-#include <string.h>
 #include <assert.h>
+#include <unistd.h>
+#include <string.h>
 
 #include "public.h"
 #include "aux.h"
 
 
-int load_object(state *S, FILE *file, UWORD address)
+int load_object(state *S, int fd, UWORD address)
 {
     if (!IS_ALIGNED(address))
         return -1;
@@ -30,16 +30,17 @@ int load_object(state *S, FILE *file, UWORD address)
     assert(len <= sizeof(magic));
 
     // Skip any #! header
-    if (fread(&magic[0], 1, 2, file) != 2)
+    if (read(fd, &magic[0], 2) != 2)
         return -3;
-    size_t read = 2;
+    size_t nread = 2;
     if (magic[0] == '#' && magic[1] == '!') {
-        while (getc(file) != '\n')
+        char eol[1];
+        while (read(fd, &eol[0], 1) == 1 && eol[0] != '\n')
             ;
-        read = 0;
+        nread = 0;
     }
 
-    if (fread(&magic[read], 1, sizeof(magic) - read, file) != sizeof(magic) - read)
+    if (read(fd, &magic[nread], sizeof(magic) - nread) != (ssize_t)(sizeof(magic) - nread))
         return -3;
     if (strncmp(magic, PACKAGE_UPPER, sizeof(magic)))
         return -2;
@@ -48,27 +49,27 @@ int load_object(state *S, FILE *file, UWORD address)
             return -2;
 
     UWORD endism;
-    if (decode_instruction_file(file, (WORD *)(&endism)) != INSTRUCTION_NUMBER ||
+    if (decode_instruction_file(fd, (WORD *)(&endism)) != INSTRUCTION_NUMBER ||
         endism > 1)
         return -2;
     if (endism != ENDISM)
         return -4;
 
     WORD word_size;
-    if (decode_instruction_file(file, &word_size) != INSTRUCTION_NUMBER)
+    if (decode_instruction_file(fd, &word_size) != INSTRUCTION_NUMBER)
         return -2;
     if (word_size != WORD_SIZE)
         return -5;
 
     UWORD length = 0;
-    if (decode_instruction_file(file, (WORD *)&length) != INSTRUCTION_NUMBER)
+    if (decode_instruction_file(fd, (WORD *)&length) != INSTRUCTION_NUMBER)
         return -2;
 
     uint8_t *ptr = native_address_range_in_one_area(S, address, length, true);
     if (ptr == NULL)
         return -1;
 
-    if (fread(ptr, 1, length, file) != length)
+    if (read(fd, ptr, length) != length)
         return -3;
 
     return 0;

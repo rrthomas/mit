@@ -13,14 +13,14 @@
 
 static int try(state *S, char *file, UWORD address)
 {
-    FILE *fp = fopen(file, "r");
+    int fd = open(file, O_RDONLY);
     int ret;
-    if (fp == NULL) {
+    if (fd == -1) {
         printf("Could not open file %s\n", file);
         ret = 1; // Expected error codes are all negative
     } else {
-        ret = load_object(S, fp, address);
-        fclose(fp);
+        ret = load_object(S, fd, address);
+        (void)close(fd); // FIXME: check return value
     }
 
     printf("load_object(\"%s\", 0) returns %d", file, ret);

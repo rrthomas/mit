@@ -13,7 +13,6 @@
 #define PACKAGE_UPPER_PACKAGE_UPPER
 
 
-#include <stdio.h>      // for the FILE type
 #include <stdbool.h>
 #include <stdint.h>
 #include <inttypes.h>
@@ -106,7 +105,7 @@ UWORD mem_align(state *state);
 uint8_t *native_address(state *state, UWORD addr, bool writable);
 WORD run(state *state);
 WORD single_step(state *state);
-int load_object(state *state, FILE *file, UWORD address);
+int load_object(state *state, int fd, UWORD address);
 
 // Additional implementation-specific routines, macros, types and quantities
 state *init(size_t size, size_t stack_size, size_t return_stack_size);
