@@ -42,7 +42,6 @@ static state *S;
 static UWORD memory_size = DEFAULT_MEMORY; // Size of VM memory in words
 UWORD stack_size = DEFAULT_STACK_SIZE;
 UWORD return_stack_size = DEFAULT_STACK_SIZE;
-WORD *memory;
 
 static bool interactive;
 static unsigned long lineno;
@@ -255,7 +254,7 @@ static void disassemble(UWORD start, UWORD end)
 static void reinit(void)
 {
     destroy(S);
-    S = init(memory, memory_size, stack_size, return_stack_size);
+    S = init(memory_size, stack_size, return_stack_size);
     if (S == NULL)
         die("could not allocate virtual machine state");
 
@@ -865,8 +864,6 @@ int main(int argc, char *argv[])
         }
     }
 
-    if ((memory = (WORD *)calloc(memory_size, WORD_SIZE)) == NULL)
-        die("could not allocate %"PRI_UWORD" words of memory", memory_size);
     reinit();
 
     argc -= optind;

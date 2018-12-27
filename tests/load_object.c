@@ -51,9 +51,7 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    size_t size = 256;
-    WORD *memory = (WORD *)calloc(256, WORD_SIZE);
-    state *S = init(memory, size, DEFAULT_STACK_SIZE, DEFAULT_STACK_SIZE);
+    state *S = init(256, DEFAULT_STACK_SIZE, DEFAULT_STACK_SIZE);
 
     const char *bad_files[] = {
         "badobj1", "badobj2", "badobj3", "badobj4" };
@@ -86,7 +84,7 @@ int main(int argc, char *argv[])
             printf("Error in load_object() tests: file %s\n", good_files[i]);
             exit(1);
         }
-        memset(memory, 0, S->MEMORY); // Zero memory for next test
+        memset(S->memory, 0, S->MEMORY); // Zero memory for next test
     }
 
     const char *number_files[] = {
@@ -118,7 +116,7 @@ int main(int argc, char *argv[])
             exit(1);
         }
         free(correct_stack);
-        memset(memory, 0, S->MEMORY); // Zero memory for next test
+        memset(S->memory, 0, S->MEMORY); // Zero memory for next test
     }
 
     // Check we get an error trying to load an object file of the wrong
@@ -141,7 +139,6 @@ int main(int argc, char *argv[])
         }
     }
 
-    free(memory);
     destroy(S);
 
     printf("load_object() tests ran OK\n");

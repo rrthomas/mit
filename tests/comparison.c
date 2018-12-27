@@ -54,7 +54,7 @@ static void step(state *S, unsigned start, unsigned end)
 
 int main(void)
 {
-    state *S = init_alloc(256);
+    state *S = init_default(256);
 
     ass_action(S, O_LT); ass_action(S, O_LT); ass_action(S, O_LT); ass_action(S, O_LT);
     ass_action(S, O_EQ); ass_action(S, O_EQ);
@@ -67,7 +67,6 @@ int main(void)
     stack1(S);      // set up the stack with four standard pairs to compare
     step(S, 6, 10); // do the U< tests
 
-    free(S->memory);
     destroy(S);
 
     assert(exception == 0);

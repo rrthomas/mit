@@ -245,9 +245,7 @@ static int extra_smite(state *S)
             size_t return_stack_size = POP;
             size_t stack_size = POP;
             size_t memory_size = POP;
-            WORD addr = POP;
-            WORD *addrp = (WORD *)native_address(S, addr, false);
-            state *new_state = init(addrp, memory_size, stack_size, return_stack_size);
+            state *new_state = init(memory_size, stack_size, return_stack_size);
             PUSH_NATIVE_POINTER(new_state);
         }
         break;

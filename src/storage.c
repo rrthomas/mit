@@ -221,10 +221,9 @@ int post_dma(state *S, UWORD from, UWORD to)
 }
 
 
-// Initialise registers that are not fixed
-
-state *init(WORD *memory, size_t size, size_t data_stack_size, size_t return_stack_size)
+state *init(size_t size, size_t data_stack_size, size_t return_stack_size)
 {
+    WORD *memory = calloc(WORD_SIZE, size);
     if (memory == NULL)
         return NULL;
 
@@ -271,6 +270,7 @@ void destroy(state *S)
 {
     if (S) {
         gl_list_free(S->mem_areas);
+        free(S->memory);
         free(S->d_stack);
         free(S->r_stack);
         free(S->main_argv);

@@ -32,7 +32,7 @@
 #define DEFAULT_STACK_SIZE   ((UWORD)16384U)
 
 // Initialisation helper
-#define init_alloc(n) (init((WORD *)calloc((n), WORD_SIZE), (n), DEFAULT_STACK_SIZE, DEFAULT_STACK_SIZE))
+#define init_default(n) (init((n), DEFAULT_STACK_SIZE, DEFAULT_STACK_SIZE))
 
 // Memory access
 

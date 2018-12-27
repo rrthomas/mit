@@ -67,7 +67,7 @@ int main(void)
     int exception = 0;
     BYTE b;
 
-    state *S = init_alloc(256);
+    state *S = init_default(256);
 
     for (size_t i = 0; i < sizeof(correct) / sizeof(correct[0]); i++)
         ass_number_test(S, correct[i], encodings[i]);
@@ -94,7 +94,6 @@ int main(void)
         printf("I = %s\n", disass(S->ITYPE, S->I));
     }
 
-    free(S->memory);
     destroy(S);
 
     assert(exception == 0);

@@ -16,7 +16,7 @@ int main(void)
 {
     int exception = 0;
 
-    state *S = init_alloc(256);
+    state *S = init_default(256);
 
     for (int i = 0; i < 10; i++) {
         printf("PC = %"PRI_UWORD"\n", S->PC);
@@ -30,7 +30,6 @@ int main(void)
         exit(1);
     }
 
-    free(S->memory);
     destroy(S);
 
     assert(exception == 0);

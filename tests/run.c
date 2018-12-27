@@ -16,7 +16,7 @@ int main(void)
 {
     int exception = 0;
 
-    state *S = init_alloc(256);
+    state *S = init_default(256);
     if (S == NULL) {
         printf("Error in run(S) tests: init with valid parameters failed\n");
         exit(1);
@@ -42,7 +42,6 @@ int main(void)
         exit(1);
     }
 
-    free(S->memory);
     destroy(S);
 
     assert(exception == 0);

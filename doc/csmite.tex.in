@@ -228,8 +228,8 @@ occurs, the return code is $-3$. If the endism of the object file does not match
 In addition to the required interface calls C @PACKAGE_NAME@ provides an initialisation routine {\bf @PACKAGE@\_init()} which, given a word array and its size, initialises @PACKAGE_NAME@:
 
 \begin{description}
-\ifacec{@PACKAGE@\_state @PACKAGE@\_init(@PACKAGE@\_WORD *b\_array, size\_t memory\_size, size\_t data\_stack\_size, size\_t return\_stack\_size)}{{\tt memory\_size} is
-the size of {\tt b\_array} in {\em words} (not bytes); similarly, {\tt data\_stack\_size} and {\tt return\_stack\_size} give the size of the stacks in words; these are allocated by {\tt @PACKAGE@\_init}. The return value is {\tt NULL} if {\tt b\_array} is {\tt NULL} or if memory cannot be allocated, and a pointer to a new state otherwise.
+\ifacec{@PACKAGE@\_state @PACKAGE@\_init(size\_t memory\_size, size\_t data\_stack\_size, size\_t return\_stack\_size)}{{\tt memory\_size} is
+the size of {\tt b\_array} in {\em words} (not bytes); similarly, {\tt data\_stack\_size} and {\tt return\_stack\_size} give the size of the stacks in words; these are allocated by {\tt @PACKAGE@\_init}. The return value is {\tt NULL} if memory cannot be allocated, and a pointer to a new state otherwise.
 All the registers are initialised as per~\cite{@PACKAGE@}.}
 \end{description}
 

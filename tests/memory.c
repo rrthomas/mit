@@ -92,7 +92,7 @@ int main(void)
     char *item[] = {count, strdup("\x01"), strdup("\x02\x03"), strdup("basilisk")};
     unsigned nitems = sizeof(item) / sizeof(item[0]);
 
-    state *S = init_alloc(SIZE);
+    state *S = init_default(SIZE);
     for (unsigned i = 0; i < nitems; i++) {
         UWORD addr = mem_allot(S, item[i], strlen(item[i]), i < 3);
         printf("Extra memory area %u allocated at address %"PRI_XWORD" (should be %x)\n",
@@ -132,7 +132,6 @@ int main(void)
         printf("I = %s\n", disass(S->ITYPE, S->I));
     }
 
-    free(S->memory);
     destroy(S);
     for (size_t i = 0; i < nitems; i++)
         free(item[i]);

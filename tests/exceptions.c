@@ -24,7 +24,7 @@ int main(void)
 {
     int exception = 0;
 
-    state *S = init_alloc(SIZE);
+    state *S = init_default(SIZE);
 
     test[testno] = ass_current(S);
     printf("Test %d: PC = %"PRI_UWORD"\n", testno, ass_current(S));
@@ -132,7 +132,6 @@ int main(void)
         putchar('\n');
     }
 
-    free(S->memory);
     destroy(S);
 
     assert(exception == 0);

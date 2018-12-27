@@ -21,7 +21,7 @@ int main(void)
 {
     int exception = 0;
 
-    state *S = init_alloc(256);
+    state *S = init_default(256);
 
     PUSH(1); PUSH(2); PUSH(3);	// initialise the stack
 
@@ -64,7 +64,6 @@ int main(void)
         printf("I = %s\n", disass(S->ITYPE, S->I));
     }
 
-    free(S->memory);
     destroy(S);
 
     assert(exception == 0);

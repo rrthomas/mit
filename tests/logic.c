@@ -34,7 +34,7 @@ int main(void)
 {
     int exception = 0;
 
-    state *S = init_alloc(256);
+    state *S = init_default(256);
 
     PUSH((UWORD)0xff << (WORD_BIT - CHAR_BIT)); PUSH(CHAR_BIT); PUSH(0xff); PUSH(CHAR_BIT);
 
@@ -56,7 +56,6 @@ int main(void)
         printf("I = %s\n", disass(S->ITYPE, S->I));
     }
 
-    free(S->memory);
     destroy(S);
 
     assert(exception == 0);
