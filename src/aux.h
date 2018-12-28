@@ -21,6 +21,24 @@
 #include "opcodes.h"
 
 
+// VM registers
+struct _state {
+#define R(reg, type) type reg;
+#define R_RO(reg, type) R(reg, type)
+#include "tbl_registers.h"
+#undef R
+#undef R_RO
+    WORD *memory;
+    gl_list_t mem_areas;
+    WORD *d_stack;
+    WORD *r_stack;
+    UWORD _mem_here;
+    UWORD here;	// (FIXME: debug.c) where the next instruction will be stored
+    int main_argc;
+    UWORD *main_argv;
+    UWORD *main_argv_len;
+};
+
 // Memory size
 #define DEFAULT_MEMORY ((UWORD)0x100000U) // Default size of VM memory in words
 #define MAX_MEMORY (((UWORD)1 << (WORD_BIT - 1)) / WORD_SIZE) // Maximum size of memory in words (half the address space)

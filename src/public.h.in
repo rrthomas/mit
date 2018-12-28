@@ -54,23 +54,17 @@ typedef uint64_t UWORD;
 
 // VM registers
 
-struct _state {
-#define R(reg, type) type reg;
-#define R_RO(reg, type) R(reg, type)
+typedef struct _state state;
+
+#define R_RO(reg, type)                         \
+    type get_ ## reg(state *state);
+#define R(reg, type)                            \
+    R_RO(reg, type)                             \
+    void set_ ## reg(state *state, type value);
 #include "tbl_registers.h"
 #undef R
 #undef R_RO
-    WORD *memory;
-    gl_list_t mem_areas;
-    WORD *d_stack;
-    WORD *r_stack;
-    UWORD _mem_here;
-    UWORD here;	// (FIXME: debug.c) where the next instruction will be stored
-    int main_argc;
-    UWORD *main_argv;
-    UWORD *main_argv_len;
-};
-typedef struct _state state;
+
 
 // Memory access
 

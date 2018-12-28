@@ -285,3 +285,16 @@ void destroy(state *S)
         free(S);
     }
 }
+
+#define R_RO(reg, type)                                 \
+    _GL_ATTRIBUTE_PURE type get_ ## reg(state *S) {     \
+        return S->reg;                                  \
+    }
+#define R(reg, type)                                \
+    R_RO(reg, type)                                 \
+    void set_ ## reg(state *S, type value) {        \
+        S->reg = value;                             \
+    }
+#include "tbl_registers.h"
+#undef R
+#undef R_RO
