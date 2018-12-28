@@ -145,7 +145,7 @@ int load_word(state *S, UWORD addr, WORD *value)
             S->INVALID = addr;
             return -9;
         }
-        ((BYTE *)value)[ENDISM ? WORD_SIZE - i : i] = *ptr;
+        ((BYTE *)value)[S->ENDISM ? WORD_SIZE - i : i] = *ptr;
     }
     return 0;
 }
@@ -181,7 +181,7 @@ int store_word(state *S, UWORD addr, WORD value)
     // Awkward access
     int exception = 0;
     for (unsigned i = 0; exception == 0 && i < WORD_SIZE; i++)
-        exception = store_byte(S, addr + i, value >> ((ENDISM ? WORD_SIZE - i : i) * BYTE_BIT));
+        exception = store_byte(S, addr + i, value >> ((S->ENDISM ? WORD_SIZE - i : i) * BYTE_BIT));
     return exception;
 }
 
@@ -255,6 +255,13 @@ state *init(size_t size, size_t data_stack_size, size_t return_stack_size)
         || !mem_map(S, RETURN_STACK_SEGMENT, S->r_stack, S->RSIZE, true))
         return NULL;
 
+    S->ENDISM =
+#ifdef WORDS_BIGENDIAN
+        1
+#else
+        0
+#endif
+        ;
     S->PC = 0;
     S->I = 0;
     S->S0 = S->SP = DATA_STACK_SEGMENT;

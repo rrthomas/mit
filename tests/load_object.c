@@ -27,12 +27,12 @@ static int try(state *S, char *file, UWORD address)
     return ret;
 }
 
-static char *obj_name(const char *prefix, const char *file, bool use_endism, unsigned word_size)
+static char *obj_name(state *S, const char *prefix, const char *file, bool use_endism, unsigned word_size)
 {
     char *suffix = NULL;
     char *endism = NULL;
     if (use_endism)
-        endism = xasprintf("-%s", ENDISM == 0 ? "le" : "be");
+        endism = xasprintf("-%s", S->ENDISM == 0 ? "le" : "be");
     if (word_size != 0)
         suffix = xasprintf("-%u", word_size);
     char *name = xasprintf("%s/%s%s%s", prefix, file, endism ? endism : "", suffix ? suffix : "");
@@ -57,7 +57,7 @@ int main(int argc, char *argv[])
         "badobj1", "badobj2", "badobj3", "badobj4" };
     static int error_code[] = { -2, -2, -1, -3 };
     for (size_t i = 0; i < sizeof(bad_files) / sizeof(bad_files[0]); i++) {
-        char *s = obj_name(src_dir, bad_files[i], false, WORD_SIZE);
+        char *s = obj_name(S, src_dir, bad_files[i], false, WORD_SIZE);
         int res = try(S, s, 0);
         free(s);
         printf(" should be %d\n", error_code[i]);
@@ -70,7 +70,7 @@ int main(int argc, char *argv[])
     const char *good_files[] = {
         "testobj1", "testobj2" };
     for (size_t i = 0; i < sizeof(good_files) / sizeof(good_files[0]); i++) {
-        char *s = obj_name(src_dir, good_files[i], true, WORD_SIZE);
+        char *s = obj_name(S, src_dir, good_files[i], true, WORD_SIZE);
         WORD c;
         int res = try(S, s, 0);
         free(s);
@@ -96,7 +96,7 @@ int main(int argc, char *argv[])
          {-257, 12345678},
         };
     for (size_t i = 0; i < sizeof(number_files) / sizeof(number_files[0]); i++) {
-        char *s = obj_name(build_dir, number_files[i], false, 0);
+        char *s = obj_name(S, build_dir, number_files[i], false, 0);
         int res = try(S, s, 0);
         free(s);
         printf(" should be %d\n", 0);
@@ -129,7 +129,7 @@ int main(int argc, char *argv[])
 #else
 #error "WORD_SIZE is not 4 or 8!"
 #endif
-        char *s = obj_name(src_dir, good_files[0], true, WRONG_WORD_SIZE);
+        char *s = obj_name(S, src_dir, good_files[0], true, WRONG_WORD_SIZE);
         int res = try(S, s, 0), incorrect_word_size_res = -5;
         free(s);
         printf(" should be %d\n", incorrect_word_size_res);

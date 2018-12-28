@@ -54,25 +54,12 @@ typedef uint64_t UWORD;
 
 // VM registers
 
-// ENDISM is fixed at compile-time, which seems reasonable, as
-// machines rarely change endianness while switched on!
-#ifdef WORDS_BIGENDIAN
-#define ENDISM ((BYTE)1)
-#else
-#define ENDISM ((BYTE)0)
-#endif
-
 struct _state {
-    UWORD PC;
-    WORD I;
-    WORD ITYPE;
-    UWORD MEMORY;
-    UWORD SP, RP;
-    UWORD S0, R0;
-    UWORD SSIZE, RSIZE;
-    UWORD HANDLER;
-    UWORD BADPC;
-    UWORD INVALID;
+#define R(reg, type) type reg;
+#define R_RO(reg, type) R(reg, type)
+#include "tbl_registers.h"
+#undef R
+#undef R_RO
     WORD *memory;
     gl_list_t mem_areas;
     WORD *d_stack;

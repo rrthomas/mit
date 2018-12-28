@@ -52,7 +52,7 @@ int load_object(state *S, int fd, UWORD address)
     if (decode_instruction_file(fd, (WORD *)(&endism)) != INSTRUCTION_NUMBER ||
         endism > 1)
         return -2;
-    if (endism != ENDISM)
+    if (endism != S->ENDISM)
         return -4;
 
     WORD word_size;

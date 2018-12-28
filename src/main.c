@@ -99,14 +99,18 @@ enum commands {
 static int commands = sizeof(command) / sizeof(*command);
 
 static const char *regist[] = {
-#define R(reg) #reg,
+#define R(reg, type) #reg,
+#define R_RO(reg, type) R(reg, type)
 #include "tbl_registers.h"
 #undef R
+#undef R_RO
 };
 enum registers {
-#define R(reg) r_##reg,
+#define R(reg, type) r_##reg,
+#define R_RO(reg, type) R(reg, type)
 #include "tbl_registers.h"
 #undef R
+#undef R_RO
 };
 static int registers = sizeof(regist) / sizeof(*regist);
 
@@ -285,7 +289,7 @@ static int save_object(int fd, UWORD address, UWORD length)
     if (write(fd, &buf[0], bytes_left) != bytes_left)
         return -2;
 
-    ssize_t len = encode_instruction_native(&buf[0], INSTRUCTION_NUMBER, ENDISM);
+    ssize_t len = encode_instruction_native(&buf[0], INSTRUCTION_NUMBER, S->ENDISM);
     if (write(fd, &buf[0], len) != len)
         return -2;
 
@@ -318,38 +322,17 @@ static void do_assign(char *token, char *number)
 
     int no = search(token, regist, registers);
     switch (no) {
-        case r_INVALID:
-            S->INVALID = value;
+#define R(reg, type)                            \
+        case r_##reg:                           \
+            S->reg = value;                     \
             break;
-        case r_BADPC:
-            S->BADPC = value;
+#define R_RO(reg, type)                                 \
+        case r_##reg:                                   \
+            fatal("cannot assign to %s", regist[no]);   \
             break;
-        case r_ENDISM:
-        case r_MEMORY:
-            fatal("cannot assign to %s", regist[no]);
-            break;
-        case r_PC:
-            S->PC = value;
-            start_ass(S, S->PC);
-            break;
-        case r_I:
-            S->I = value;
-            break;
-        case r_RP:
-            S->RP = value;
-            break;
-        case r_R0:
-            S->R0 = value;
-            break;
-        case r_SP:
-            S->SP = value;
-            break;
-        case r_S0:
-            S->S0 = value;
-            break;
-        case r_HANDLER:
-            S->HANDLER = value;
-            break;
+#include "tbl_registers.h"
+#undef R
+#undef R_RO
         default:
             {
                 WORD adr = (WORD)single_arg(token, NULL);
@@ -363,6 +346,8 @@ static void do_assign(char *token, char *number)
                     store_word(S, adr, value);
             }
     }
+    if (no == r_PC)
+        start_ass(S, S->PC);
 }
 
 static void do_display(size_t no, const char *format)
@@ -370,42 +355,29 @@ static void do_display(size_t no, const char *format)
     char *display;
 
     switch (no) {
-        case r_INVALID:
-            display = xasprintf("INVALID = %#"PRI_XWORD" (%"PRI_UWORD")", S->INVALID, S->INVALID);
-            break;
-        case r_BADPC:
-            display = xasprintf("BADPC = %#"PRI_XWORD" (%"PRI_UWORD")", S->BADPC, S->BADPC);
-            break;
-        case r_ENDISM:
-            display = xasprintf("ENDISM = %d", ENDISM);
-            break;
-        case r_PC:
-            display = xasprintf("PC = %#"PRI_XWORD" (%"PRI_UWORD")", S->PC, S->PC);
-            break;
-        case r_I:
-            display = xasprintf("I = %-10s (%#"PRI_XWORD")", disass(S->ITYPE, S->I), (UWORD)S->I);
-            break;
-        case r_MEMORY:
-            display = xasprintf("MEMORY = %#"PRI_XWORD" (%"PRI_UWORD")", S->MEMORY, S->MEMORY);
-            break;
-        case r_RP:
-            display = xasprintf("RP = %#"PRI_XWORD" (%"PRI_UWORD")", S->RP, S->RP);
-            break;
-        case r_R0:
-            display = xasprintf("R0 = %#"PRI_XWORD" (%"PRI_UWORD")", S->R0, S->R0);
-            break;
-        case r_SP:
-            display = xasprintf("SP = %#"PRI_XWORD" (%"PRI_UWORD")", S->SP, S->SP);
-            break;
-        case r_S0:
-            display = xasprintf("S0 = %#"PRI_XWORD" (%"PRI_UWORD")", S->S0, S->S0);
-            break;
-        case r_HANDLER:
-            display = xasprintf("HANDLER = %#"PRI_XWORD" (%"PRI_UWORD")", S->HANDLER, S->HANDLER);
-            break;
-        default:
-            display = xasprintf("unknown register");
-            break;
+#define R(reg, type)                                                \
+    case r_##reg:                                                   \
+        display = xasprintf(#reg" = %#"PRI_XWORD" (%"PRI_UWORD")", (UWORD)S->reg, (UWORD)S->reg); \
+        break;
+#define R_RO(reg, type) R(reg, type)
+#include "tbl_registers.h"
+#undef R
+    default:
+        display = xasprintf("unknown register");
+        break;
+    }
+    switch (no) {
+    case r_I:
+        {
+            char *new_display = xasprintf("%s (%-10s)", display, disass(S->ITYPE, S->I));
+            free(display);
+            display = new_display;
+        }
+        break;
+    case r_ITYPE:
+        break;
+    default:
+        break;
     }
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wformat-nonliteral"
