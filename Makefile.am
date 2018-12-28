@@ -8,7 +8,7 @@
 # THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER‘S
 # RISK.
 
-SUBDIRS = lib src tests doc
+SUBDIRS = lib src tests doc contrib
 
 ACLOCAL_AMFLAGS = -I m4
 

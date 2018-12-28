@@ -91,6 +91,7 @@ AC_CONFIG_FILES([
         src/smitei.1
         src/smite-dump.1
         tests/Makefile
+        contrib/Makefile
         doc/Makefile
         doc/smite.tex
         doc/csmite.tex
