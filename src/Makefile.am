@@ -63,17 +63,17 @@ tbl_opts.h: tbl_opts.h.in Makefile
 
 @PACKAGE@.h: public.h external-syms.txt external-defines.txt Makefile
 	$(do_subst) < $(srcdir)/public.h > $@.tmp
-	cat $(srcdir)/external-syms.txt external-defines.txt | $(top_srcdir)/build-aux/add-symbol-prefix $@.tmp > $@
+	cat external-syms.txt external-defines.txt | $(top_srcdir)/build-aux/add-symbol-prefix $@.tmp > $@
 	rm $@.tmp
 
 @PACKAGE@_aux.h: aux.h external-syms.txt external-defines.txt Makefile
 	$(do_subst) < $(srcdir)/aux.h > $@.tmp
-	cat $(srcdir)/external-syms.txt external-defines.txt | $(top_srcdir)/build-aux/add-symbol-prefix $@.tmp > $@
+	cat external-syms.txt external-defines.txt | $(top_srcdir)/build-aux/add-symbol-prefix $@.tmp > $@
 	rm $@.tmp
 
 @PACKAGE@_debug.h: debug.h external-syms.txt external-defines.txt Makefile
 	$(do_subst) < $(srcdir)/debug.h > $@.tmp
-	cat $(srcdir)/external-syms.txt external-defines.txt | $(top_srcdir)/build-aux/add-symbol-prefix $@.tmp > $@
+	cat external-syms.txt external-defines.txt | $(top_srcdir)/build-aux/add-symbol-prefix $@.tmp > $@
 	rm $@.tmp
 
 external-defines.txt: $(internal_HDRS)
@@ -88,9 +88,10 @@ instruction-actions.h: gen-actions.py instructions.py
 # Actually needs .o files, but since find-external-syms requires GNU tools,
 # don't force remaking external-syms.txt; instead, add it to EXTRA_DIST.
 # find-external-syms takes care of remaking the executable.
+# The target depends on $(internal_HDRS), but with .in files instead of .h
 # N.B. find-external-syms runs make! This can cause duplicate compilation.
-$(srcdir)/external-syms.txt: $(lib@PACKAGE@_la_sources)
-	$(top_srcdir)/build-aux/find-external-syms $(PACKAGE) > $@
+external-syms.txt: $(lib@PACKAGE@_la_sources) public.h.in aux.h debug.h opcodes.h
+	$(top_srcdir)/build-aux/find-external-syms $(PACKAGE) $(srcdir) > $@
 
 external_syms.h: external-syms.txt
 	sed -e 's/\(.*\)/#define \1 $(PACKAGE)_\1/' < $^ > $@
@@ -110,7 +111,7 @@ loc:
 
 EXTRA_DIST = @PACKAGE@i.in @PACKAGE@i.1 @PACKAGE@-dump.in @PACKAGE@-dump.1 completions.h public.h.in tbl_opts.h.in step.c external-syms.txt external_syms.h gen-list.py gen-actions.py instructions.py
 
-DISTCLEANFILES = @PACKAGE@i @PACKAGE@-dump @PACKAGE@.1 @PACKAGE@i.1 @PACKAGE-dump.1 completions tbl_opts.h $(include_HEADERS) external-defines.txt external-syms.txt
+DISTCLEANFILES = @PACKAGE@i @PACKAGE@-dump @PACKAGE@.1 @PACKAGE@i.1 @PACKAGE-dump.1 completions tbl_opts.h $(include_HEADERS) external-defines.txt external-syms.txt external_syms.h
 # Ignore built files that are part of the distribution (specifically,
 # @PACKAGE@.1)
 distcleancheck_listfiles = \

@@ -20,6 +20,9 @@
 #include "aux.h"
 
 
+unsigned word_size = WORD_SIZE;
+
+
 // Memory allocation and mapping
 typedef struct {
     UWORD start;

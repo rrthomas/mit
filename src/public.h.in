@@ -23,6 +23,7 @@
 
 // Parameters
 #define WORD_SIZE @WORD_SIZE@
+extern unsigned word_size;
 #define NATIVE_POINTER_SIZE (sizeof(void *))
 
 // Basic types

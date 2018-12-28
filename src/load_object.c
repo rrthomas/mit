@@ -55,10 +55,10 @@ int load_object(state *S, int fd, UWORD address)
     if (endism != S->ENDISM)
         return -4;
 
-    WORD word_size;
-    if (decode_instruction_file(fd, &word_size) != INSTRUCTION_NUMBER)
+    WORD _word_size;
+    if (decode_instruction_file(fd, &_word_size) != INSTRUCTION_NUMBER)
         return -2;
-    if (word_size != WORD_SIZE)
+    if (_word_size != WORD_SIZE)
         return -5;
 
     UWORD length = 0;

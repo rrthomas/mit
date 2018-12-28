@@ -27,14 +27,14 @@ static int try(state *S, char *file, UWORD address)
     return ret;
 }
 
-static char *obj_name(state *S, const char *prefix, const char *file, bool use_endism, unsigned word_size)
+static char *obj_name(state *S, const char *prefix, const char *file, bool use_endism, unsigned _word_size)
 {
     char *suffix = NULL;
     char *endism = NULL;
     if (use_endism)
         endism = xasprintf("-%s", S->ENDISM == 0 ? "le" : "be");
-    if (word_size != 0)
-        suffix = xasprintf("-%u", word_size);
+    if (_word_size != 0)
+        suffix = xasprintf("-%u", _word_size);
     char *name = xasprintf("%s/%s%s%s", prefix, file, endism ? endism : "", suffix ? suffix : "");
     free(endism);
     free(suffix);
