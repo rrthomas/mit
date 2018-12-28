@@ -16,7 +16,7 @@ int main(void)
 {
     int exception = 0;
 
-    state *S = init_default(256);
+    state *S = init_default_stacks(256);
 
     for (int i = 0; i < 10; i++) {
         printf("PC = %"PRI_UWORD"\n", S->PC);

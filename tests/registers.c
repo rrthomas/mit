@@ -55,7 +55,7 @@ int main(void)
 {
     int exception = 0;
 
-    state *S = init_default(SIZE / WORD_SIZE);
+    state *S = init_default_stacks(SIZE / WORD_SIZE);
 
     ass_action(S, O_PUSH_PC); ass_number(S, 1); ass_action(S, O_POP);
     ass_action(S, O_PUSH_S0); ass_number(S, 1); ass_action(S, O_POP);

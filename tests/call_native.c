@@ -22,7 +22,7 @@ static void test(state *S)
 
 int main(void)
 {
-    state *S = init_default(4096);
+    state *S = init_default_stacks(4096);
 
     ass_native_pointer(S, test); ass_action(S, O_CALL_NATIVE); ass_number(S, 0);
     ass_action(S, O_HALT);

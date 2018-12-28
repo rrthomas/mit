@@ -67,7 +67,7 @@ int main(void)
     int exception = 0;
     BYTE b;
 
-    state *S = init_default(256);
+    state *S = init_default_stacks(256);
 
     for (size_t i = 0; i < sizeof(correct) / sizeof(correct[0]); i++)
         ass_number_test(S, correct[i], encodings[i]);

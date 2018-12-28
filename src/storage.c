@@ -273,6 +273,11 @@ state *init(size_t size, size_t data_stack_size, size_t return_stack_size)
     return S;
 }
 
+state *init_default_stacks(size_t memory_size)
+{
+    return init(memory_size, DEFAULT_STACK_SIZE, DEFAULT_STACK_SIZE);
+}
+
 void destroy(state *S)
 {
     if (S) {

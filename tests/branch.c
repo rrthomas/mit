@@ -24,7 +24,7 @@ int main(void)
 {
     int exception = 0;
 
-    state *S = init_default(4096);
+    state *S = init_default_stacks(4096);
 
     start_ass(S, 0);
     ass_number(S, 96); ass_action(S, O_BRANCH);

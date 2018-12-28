@@ -21,7 +21,7 @@ int main(void)
     int argc = 3;
     char *argv[] = {strdup("foo"), strdup("bard"), strdup("basilisk")};
 
-    state * S = init_default(1024);
+    state * S = init_default_stacks(1024);
     assert(register_args(S, argc, argv) == 0);
 
     ass_number(S, OX_ARGC); ass_number(S, OXLIB_LIBC); ass_action(S, O_EXTRA);

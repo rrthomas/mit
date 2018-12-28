@@ -24,7 +24,7 @@ int main(void)
 {
     int exception = 0;
 
-    state *S = init_default(SIZE);
+    state *S = init_default_stacks(SIZE);
 
     test[testno] = ass_current(S);
     printf("Test %d: PC = %"PRI_UWORD"\n", testno, ass_current(S));

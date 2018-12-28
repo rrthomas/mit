@@ -61,7 +61,7 @@ int main(void)
 {
     int exception = 0;
 
-    state *S = init_default(256);
+    state *S = init_default_stacks(256);
 
     ass_number(S, 0);
     ass_number(S, 1);

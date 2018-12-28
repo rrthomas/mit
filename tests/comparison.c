@@ -54,7 +54,7 @@ static void step(state *S, unsigned start, unsigned end)
 
 int main(void)
 {
-    state *S = init_default(256);
+    state *S = init_default_stacks(256);
 
     ass_action(S, O_LT); ass_action(S, O_LT); ass_action(S, O_LT); ass_action(S, O_LT);
     ass_action(S, O_EQ); ass_action(S, O_EQ);

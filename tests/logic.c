@@ -34,7 +34,7 @@ int main(void)
 {
     int exception = 0;
 
-    state *S = init_default(256);
+    state *S = init_default_stacks(256);
 
     PUSH((UWORD)0xff << (WORD_BIT - CHAR_BIT)); PUSH(CHAR_BIT); PUSH(0xff); PUSH(CHAR_BIT);
 

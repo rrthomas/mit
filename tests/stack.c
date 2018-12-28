@@ -21,7 +21,7 @@ int main(void)
 {
     int exception = 0;
 
-    state *S = init_default(256);
+    state *S = init_default_stacks(256);
 
     PUSH(1); PUSH(2); PUSH(3);	// initialise the stack
 

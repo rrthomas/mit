@@ -16,7 +16,7 @@ int main(void)
 {
     int exception = 0;
 
-    state *S = init_default(256);
+    state *S = init_default_stacks(256);
     if (S == NULL) {
         printf("Error in run(S) tests: init with valid parameters failed\n");
         exit(1);

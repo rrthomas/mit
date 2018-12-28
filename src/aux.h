@@ -50,7 +50,7 @@ struct _state {
 #define DEFAULT_STACK_SIZE   ((UWORD)16384U)
 
 // Initialisation helper
-#define init_default(n) (init((n), DEFAULT_STACK_SIZE, DEFAULT_STACK_SIZE))
+state *init_default_stacks(size_t memory_size);
 
 // Memory access
 
