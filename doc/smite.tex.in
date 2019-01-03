@@ -123,7 +123,6 @@ The registers, each with its function, are set out in table~\ref{regtable}.
     which must be a whole number of words. \\
 {\tt SP} & The data {\tt S}tack {\tt P}ointer. \\
 {\tt RP} & The {\tt R}eturn stack {\tt P}ointer. \\
-{\tt R0} & The {\tt R}eturn stack base. \\
 {\tt SSIZE} & The number of words allocated for the data stack. \\
 {\tt RSIZE} & The number of words allocated for the return stack. \\
 {\tt HANDLER} & The address {\tt PC} is set to when an exception is raised. \\
@@ -460,7 +459,6 @@ RP} may only be accessed through special actions:
 \inst{STORE\_RP}{a-addr --}{Set {\tt RP} to \spic{a-addr}.}
 \inst{PUSH\_PC}{-- addr}{Push {\tt PC} on to the stack.}
 \inst{PUSH\_SSIZE}{-- u}{Push {\tt SSIZE} on to the stack.}
-\inst{PUSH\_R0}{-- a-addr}{Push {\tt R0} on to the stack.}
 \inst{PUSH\_RSIZE}{-- u}{Push {\tt RSIZE} on to the stack.}
 \inst{PUSH\_HANDLER}{-- addr}{Push {\tt HANDLER} on to the stack.}
 \inst{STORE\_HANDLER}{addr --}{Set {\tt HANDLER} to \spic{addr}.}
@@ -543,23 +541,22 @@ Table~\ref{opcodetable} lists the action opcodes in numerical order. Other actio
 \begin{tabular}{*{3}{cc}} \toprule
 \bf Opcode & \bf Action & \bf Opcode & \bf
     Action & \bf Opcode & \bf Action \\ \midrule
-\opcodetbl{00}{NOP}	{11}{OR}	{22}{PUSH\_NATIVE\_POINTER\_SIZE}
-\opcodetbl{01}{POP}	{12}{XOR}	{23}{PUSH\_SP}
-\opcodetbl{02}{PUSH}	{13}{LSHIFT}	{24}{STORE\_SP}
-\opcodetbl{03}{SWAP}	{14}{RSHIFT}	{25}{PUSH\_RP}
-\opcodetbl{04}{RPUSH}	{15}{LOAD}	{26}{STORE\_RP}
-\opcodetbl{05}{POP2R}	{16}{STORE}	{27}{PUSH\_PC}
-\opcodetbl{06}{RPOP}	{17}{LOADB}	{28}{undefined}
-\opcodetbl{07}{LT}	{18}{STOREB}	{29}{PUSH\_SSIZE}
-\opcodetbl{08}{EQ}	{19}{BRANCH}	{2a}{PUSH\_R0}
-\opcodetbl{09}{ULT}	{1a}{BRANCHZ}	{2b}{PUSH\_RSIZE}
-\opcodetbl{0a}{ADD}	{1b}{CALL}	{2c}{PUSH\_HANDLER}
-\opcodetbl{0b}{MUL}	{1c}{RET}	{2d}{STORE\_HANDLER}
-\opcodetbl{0c}{UDIVMOD}	{1d}{THROW}	{2e}{PUSH\_MEMORY}
-\opcodetbl{0d}{DIVMOD}	{1e}{HALT}	{2f}{PUSH\_BADPC}
-\opcodetbl{0e}{NEGATE}	{1f}{CALL\_NATIVE}	{30}{PUSH\_INVALID}
-\opcodetbltwo{0f}{INVERT}	{20}{EXTRA}
-\opcodetbltwo{10}{AND}	{21}{PUSH\_WORD\_SIZE}
+\opcodetbl{00}{NOP}	{10}{AND}	{20}{EXTRA}
+\opcodetbl{01}{POP}	{11}{OR}        {21}{PUSH\_WORD\_SIZE}
+\opcodetbl{02}{PUSH}	{12}{XOR}	{22}{PUSH\_NATIVE\_POINTER\_SIZE}
+\opcodetbl{03}{SWAP}	{13}{LSHIFT}	{23}{PUSH\_SP}
+\opcodetbl{04}{RPUSH}	{14}{RSHIFT}	{24}{STORE\_SP}
+\opcodetbl{05}{POP2R}	{15}{LOAD}	{25}{PUSH\_RP}
+\opcodetbl{06}{RPOP}	{16}{STORE}	{26}{STORE\_RP}
+\opcodetbl{07}{LT}	{17}{LOADB}	{27}{PUSH\_PC}
+\opcodetbl{08}{EQ}	{18}{STOREB}	{28}{PUSH\_SSIZE}
+\opcodetbl{09}{ULT}	{19}{BRANCH}	{29}{PUSH\_RSIZE}
+\opcodetbl{0a}{ADD}	{1a}{BRANCHZ}	{2a}{PUSH\_HANDLER}
+\opcodetbl{0b}{MUL}	{1b}{CALL}	{2b}{STORE\_HANDLER}
+\opcodetbl{0c}{UDIVMOD}	{1c}{RET}	{2c}{PUSH\_MEMORY}
+\opcodetbl{0d}{DIVMOD}	{1d}{THROW}	{2d}{PUSH\_BADPC}
+\opcodetbl{0e}{NEGATE}	{1e}{HALT}      {2e}{PUSH\_INVALID}
+\opcodetbltwo{0f}{INVERT}  {1f}{CALL\_NATIVE}
  \bottomrule
 \end{tabular}
 \caption{\label{opcodetable}@PACKAGE_NAME@'s opcodes}

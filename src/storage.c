@@ -254,9 +254,6 @@ state *init(size_t size, size_t data_stack_size, size_t return_stack_size)
     if (S->d_stack == NULL || S->r_stack == NULL)
         return NULL;
 
-    if (!mem_map(S, RETURN_STACK_SEGMENT, S->r_stack, S->RSIZE, true))
-        return NULL;
-
     S->ENDISM =
 #ifdef WORDS_BIGENDIAN
         1
@@ -267,7 +264,7 @@ state *init(size_t size, size_t data_stack_size, size_t return_stack_size)
     S->PC = 0;
     S->I = 0;
     S->S0 = S->SP = S->d_stack;
-    S->R0 = S->RP = RETURN_STACK_SEGMENT;
+    S->R0 = S->RP = S->r_stack;
     S->HANDLER = 0;
     S->BADPC = 0;
     S->INVALID = 0;

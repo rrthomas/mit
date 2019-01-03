@@ -41,14 +41,13 @@ class Opcodes(enum.IntEnum):
     PUSH_RP = 0x25
     STORE_RP = 0x26
     PUSH_PC = 0x27
-    PUSH_SSIZE = 0x29
-    PUSH_R0 = 0x2a
-    PUSH_RSIZE = 0x2b
-    PUSH_HANDLER = 0x2c
-    STORE_HANDLER = 0x2d
-    PUSH_MEMORY = 0x2e
-    PUSH_BADPC = 0x2f
-    PUSH_INVALID = 0x30
+    PUSH_SSIZE = 0x28
+    PUSH_RSIZE = 0x29
+    PUSH_HANDLER = 0x2a
+    STORE_HANDLER = 0x2b
+    PUSH_MEMORY = 0x2c
+    PUSH_BADPC = 0x2d
+    PUSH_INVALID = 0x2e
 
 actions = {}
 
@@ -76,17 +75,17 @@ STORE_STACK(S->SP, S->S0, S->SSIZE, depth, top);
 
 actions[Opcodes.RPUSH] = '''
 WORD depth = POP;
-WORD pickee = LOAD_WORD(S->RP - depth * STACK_DIRECTION);
+WORD pickee = LOAD_STACK(S->RP, S->R0, S->RSIZE, depth);
 PUSH(pickee);
 '''
 
 actions[Opcodes.POP2R] = '''
 WORD value = POP;
-PUSH_RETURN(value);
+PUSH_STACK(S->RP, S->R0, S->RSIZE, value);
 '''
 
 actions[Opcodes.RPOP] = '''
-WORD value = POP_RETURN;
+WORD value = POP_STACK(S->RP, S->R0, S->RSIZE);
 PUSH(value);
 '''
 
@@ -211,12 +210,12 @@ if (POP == 0)
 '''
 
 actions[Opcodes.CALL] = '''
-PUSH_RETURN(S->PC);
+PUSH_STACK(S->RP, S->R0, S->RSIZE, S->PC);
 S->PC = POP;
 '''
 
 actions[Opcodes.RET] = '''
-S->PC = POP_RETURN;
+S->PC = POP_STACK(S->RP, S->R0, S->RSIZE);
 '''
 
 actions[Opcodes.THROW] = '''
@@ -258,11 +257,11 @@ S->SP = S->S0 + value;
 '''
 
 actions[Opcodes.PUSH_RP] = '''
-PUSH(S->RP);
+PUSH(S->RP - S->R0);
 '''
 
 actions[Opcodes.STORE_RP] = '''
-S->RP = POP;
+S->RP = S->R0 + POP;
 '''
 
 actions[Opcodes.PUSH_PC] = '''
@@ -271,10 +270,6 @@ PUSH(S->PC);
 
 actions[Opcodes.PUSH_SSIZE] = '''
 PUSH(S->SSIZE);
-'''
-
-actions[Opcodes.PUSH_R0] = '''
-PUSH(S->R0);
 '''
 
 actions[Opcodes.PUSH_RSIZE] = '''

@@ -396,7 +396,6 @@ static void do_registers(void)
 static void do_command(int no, char *arg1, bool plus1, char *arg2, bool plus2, char *arg3)
 {
     int exception = 0;
-    WORD temp = 0;
 
     switch (no) {
     case c_TOD:
@@ -408,7 +407,7 @@ static void do_command(int no, char *arg1, bool plus1, char *arg2, bool plus2, c
     case c_TOR:
         {
             long long value = single_arg(arg1, NULL);
-            PUSH_RETURN(value);
+            PUSH_STACK(S->RP, S->R0, S->RSIZE, value);
         }
         break;
     case c_DISASSEMBLE:
@@ -495,7 +494,7 @@ static void do_command(int no, char *arg1, bool plus1, char *arg2, bool plus2, c
         break;
     case c_RFROM:
         {
-            WORD value = POP_RETURN;
+            WORD value = POP_STACK(S->RP, S->R0, S->RSIZE);
             printf("%#"PRI_XWORD" (%"PRI_WORD")\n", (UWORD)value, value);
         }
         break;

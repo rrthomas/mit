@@ -148,15 +148,13 @@ void show_return_stack(state *S)
         printf("Return stack underflow\n");
     else {
         printf("Return stack: ");
-        for (UWORD i = S->R0; i != S->RP;) {
-            WORD c;
-            i += WORD_SIZE * STACK_DIRECTION;
-            int exception = load_word(S, i, &c);
-            if (exception != 0) {
-                printf("invalid address!\n");
+        for (UWORD i = 0; i != S->RP - S->R0;) {
+            i += STACK_DIRECTION;
+            if (!STACK_VALID(S->R0 + i, S->R0, S->RSIZE)) {
+                printf("invalid address!");
                 break;
             }
-            printf("%#"PRI_XWORD" ", (UWORD)c);
+            printf("%#"PRI_XWORD" ", (UWORD)S->R0[i]);
         }
         putchar('\n');
     }

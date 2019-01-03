@@ -490,7 +490,7 @@ WORD single_step(state *S)
         S->BADPC = S->PC - 1;
         if (!STACK_VALID(S->SP, S->S0, S->SSIZE))
             return -257;
-        _PUSH(exception);
+        _PUSH_STACK(S->SP, S->S0, S->SSIZE, exception);
         exception = 0;
         S->PC = S->HANDLER;
     }

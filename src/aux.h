@@ -43,9 +43,8 @@ struct _state {
 #define DEFAULT_MEMORY ((UWORD)0x100000U) // Default size of VM memory in words
 #define MAX_MEMORY (((UWORD)1 << (WORD_BIT - 1)) / WORD_SIZE) // Maximum size of memory in words (half the address space)
 
-// Stacks location and size
+// Stack sizes
 #define MAX_STACK_SIZE       ((((UWORD)1) << (WORD_BIT - 4)) / WORD_SIZE)
-#define RETURN_STACK_SEGMENT (((UWORD)0xffU) << (WORD_BIT - 8))
 #define DEFAULT_STACK_SIZE   ((UWORD)16384U)
 
 // Initialisation helper
@@ -68,14 +67,16 @@ state *init_default_stacks(size_t memory_size);
 #define STORE_STACK(sp, base, size, n, v)                               \
     (STACK_VALID((sp) - n, (base), (size)) ? (sp)[-n * STACK_DIRECTION] = (v) :           \
        (exception = -9))
-#define _PUSH(v)                                                        \
-    S->SP += STACK_DIRECTION,                                           \
-     STORE_STACK(S->SP, S->S0, S->SSIZE, 0, v)
-#define PUSH(v)                                                         \
-    (exception == 0 ? _PUSH(v) : exception)
-#define POP                                                             \
-    (exception == 0 ? (S->SP -= STACK_DIRECTION,                        \
-     LOAD_STACK(S->SP, S->S0, S->SSIZE, -STACK_DIRECTION)) : exception)
+#define _PUSH_STACK(sp, base, size, v)                                  \
+    sp += STACK_DIRECTION,                                              \
+     STORE_STACK(sp, base, size, 0, v)
+#define PUSH_STACK(sp, base, size, v)                                   \
+    (exception == 0 ? _PUSH_STACK(sp, base, size, v) : exception)
+#define POP_STACK(sp, base, size)                                       \
+    (exception == 0 ? (sp -= STACK_DIRECTION,                           \
+     LOAD_STACK(sp, base, size, -STACK_DIRECTION)) : exception)
+#define PUSH(v) PUSH_STACK(S->SP, S->S0, S->SSIZE, v)
+#define POP     POP_STACK(S->SP, S->S0, S->SSIZE)
 #if WORD_SIZE == 4
 #define PUSH64(ud)                              \
     PUSH((UWORD)(ud & WORD_MASK));              \
@@ -89,10 +90,6 @@ state *init_default_stacks(size_t memory_size);
 #else
 #error "WORD_SIZE is not 4 or 8!"
 #endif
-#define PUSH_RETURN(v)                          \
-    (S->RP += WORD_SIZE * STACK_DIRECTION, STORE_WORD(S->RP, (v)))
-#define POP_RETURN                              \
-    (S->RP -= WORD_SIZE * STACK_DIRECTION, LOAD_WORD(S->RP + WORD_SIZE * STACK_DIRECTION))
 #define STACK_UNDERFLOW(ptr, base)              \
     (ptr == base ? false : (STACK_DIRECTION > 0 ? (ptr < base) : (ptr > base)))
 #define STACK_OVERFLOW(ptr, base, size)         \
