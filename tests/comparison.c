@@ -42,9 +42,9 @@ static void step(state *S, unsigned start, unsigned end)
         for (unsigned i = start; i < end; i++) {
             single_step(S);
             printf("I = %s\n", disass(S->ITYPE, S->I));
-            printf("Result: %"PRI_WORD"; correct result: %"PRI_WORD"\n\n", LOAD_WORD(S->SP),
+            printf("Result: %"PRI_WORD"; correct result: %"PRI_WORD"\n\n", *(S->SP),
                    correct[i]);
-            if (correct[i] != LOAD_WORD(S->SP)) {
+            if (correct[i] != *(S->SP)) {
                 printf("Error in comparison tests: PC = %"PRI_UWORD"\n", S->PC);
                 exit(1);
             }

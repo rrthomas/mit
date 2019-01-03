@@ -15,9 +15,11 @@ int exception = 0;
 WORD temp;
 
 
+#define CORRECT 37
+
 static void test(state *S)
 {
-    PUSH(37);
+    PUSH(CORRECT);
 }
 
 int main(void)
@@ -33,9 +35,10 @@ int main(void)
         exit(1);
     }
 
-    printf("Top of stack is %"PRI_WORD"; should be %d\n", LOAD_WORD(S->SP), 37);
+    WORD top_word = LOAD_STACK(S->SP, S->S0, S->SSIZE, 0);
+    printf("Top of stack is %"PRI_WORD"; should be %d\n", top_word, CORRECT);
     show_data_stack(S);
-    if (LOAD_WORD(S->SP) != 37) {
+    if (top_word != CORRECT) {
         printf("Error in CALL_NATIVE tests: incorrect value on top of stack\n");
         exit(1);
     }

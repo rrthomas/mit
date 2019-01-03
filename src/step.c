@@ -31,10 +31,6 @@
 verify(sizeof(int) <= sizeof(WORD));
 
 
-// Check whether a VM address points to a native word-aligned word
-#define WORD_IN_ONE_AREA(a)                             \
-    (native_address_range_in_one_area(S, (a), WORD_SIZE, false) != NULL)
-
 #define DIVZERO(x)                              \
     if (x == 0)                                 \
         exception = -10;
@@ -107,7 +103,6 @@ static int extra_smite(state *S)
 {
     int exception = 0;
 
-    WORD temp = 0;
     switch (POP) {
     case OX_SMITE_CURRENT_STATE:
         PUSH_NATIVE_POINTER(S);
@@ -277,10 +272,6 @@ static int extra_smite(state *S)
 static int extra_libc(state *S)
 {
     int exception = 0;
-    WORD temp = 0;
-#if WORD_SIZE == 4
-    WORD temp2 = 0;
-#endif
 
     switch (POP) {
     case OX_ARGC: // ( -- u )
@@ -451,7 +442,6 @@ static int extra_libc(state *S)
 static int extra(state *S)
 {
     int exception = 0;
-    WORD temp = 0;
 
     switch (POP) {
     case OXLIB_SMITE:
@@ -497,15 +487,11 @@ WORD single_step(state *S)
 
     if (exception != 0) {
         // Deal with address exceptions during execution cycle.
-        // Since we have already had an exception, and must return a different
-        // code from usual if SP is now invalid, push the exception code
-        // "manually".
-        S->SP += WORD_SIZE * STACK_DIRECTION;
         S->BADPC = S->PC - 1;
-        if (!WORD_IN_ONE_AREA(S->SP) || !IS_ALIGNED(S->SP))
+        if (!STACK_VALID(S->SP, S->S0, S->SSIZE))
             return -257;
-        int store_exception = store_word(S, S->SP, exception);
-        assert(store_exception == 0);
+        _PUSH(exception);
+        exception = 0;
         S->PC = S->HANDLER;
     }
     return -258; // terminated OK

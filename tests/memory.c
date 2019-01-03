@@ -41,7 +41,7 @@ const WORD correct[][8] =
      {((UWORD)0x02 << (WORD_BIT - CHAR_BIT)) | 0x0201},
      {((UWORD)0x02 << (WORD_BIT - CHAR_BIT)) | 0x0201, 1},
      {},
-     {(UWORD)DATA_STACK_SEGMENT},
+     {ZERO},
      {},
      {(UWORD)RETURN_STACK_SEGMENT},
      {(UWORD)RETURN_STACK_SEGMENT, 1},

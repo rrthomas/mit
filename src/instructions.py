@@ -41,7 +41,6 @@ class Opcodes(enum.IntEnum):
     PUSH_RP = 0x25
     STORE_RP = 0x26
     PUSH_PC = 0x27
-    PUSH_S0 = 0x28
     PUSH_SSIZE = 0x29
     PUSH_R0 = 0x2a
     PUSH_RSIZE = 0x2b
@@ -58,26 +57,26 @@ actions[Opcodes.NOP] = '''
 
 actions[Opcodes.POP] = '''
 WORD depth = POP;
-S->SP -= depth * WORD_SIZE * STACK_DIRECTION;
+S->SP -= depth * STACK_DIRECTION;
 '''
 
 actions[Opcodes.PUSH] = '''
 WORD depth = POP;
-WORD pickee = LOAD_WORD(S->SP - depth * WORD_SIZE * STACK_DIRECTION);
+WORD pickee = LOAD_STACK(S->SP, S->S0, S->SSIZE, depth);
 PUSH(pickee);
 '''
 
 actions[Opcodes.SWAP] = '''
 WORD depth = POP;
-WORD swapee = LOAD_WORD(S->SP - depth * WORD_SIZE * STACK_DIRECTION);
+WORD swapee = LOAD_STACK(S->SP, S->S0, S->SSIZE, depth);
 WORD top = POP;
 PUSH(swapee);
-STORE_WORD(S->SP - depth * WORD_SIZE * STACK_DIRECTION, top);
+STORE_STACK(S->SP, S->S0, S->SSIZE, depth, top);
 '''
 
 actions[Opcodes.RPUSH] = '''
 WORD depth = POP;
-WORD pickee = LOAD_WORD(S->RP - depth * WORD_SIZE * STACK_DIRECTION);
+WORD pickee = LOAD_WORD(S->RP - depth * STACK_DIRECTION);
 PUSH(pickee);
 '''
 
@@ -221,7 +220,9 @@ S->PC = POP_RETURN;
 '''
 
 actions[Opcodes.THROW] = '''
-exception = POP;
+// The POP macro may set exception
+WORD exception_code = POP;
+exception = exception_code;
 '''
 
 actions[Opcodes.HALT] = '''
@@ -247,12 +248,13 @@ PUSH(NATIVE_POINTER_SIZE);
 '''
 
 actions[Opcodes.PUSH_SP] = '''
-WORD value = S->SP;
+WORD value = S->SP - S->S0;
 PUSH(value);
 '''
 
 actions[Opcodes.STORE_SP] = '''
-S->SP = POP;
+WORD value = POP;
+S->SP = S->S0 + value;
 '''
 
 actions[Opcodes.PUSH_RP] = '''
@@ -265,10 +267,6 @@ S->RP = POP;
 
 actions[Opcodes.PUSH_PC] = '''
 PUSH(S->PC);
-'''
-
-actions[Opcodes.PUSH_S0] = '''
-PUSH(S->S0);
 '''
 
 actions[Opcodes.PUSH_SSIZE] = '''

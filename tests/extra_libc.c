@@ -15,7 +15,6 @@
 int main(void)
 {
     int exception = 0;
-    WORD temp = 0;
 
     // Data for ARGC/ARG tests
     int argc = 3;
@@ -30,7 +29,7 @@ int main(void)
     do {
         single_step(S);
     } while (S->I != O_EXTRA);
-    printf("argc is %"PRI_WORD", and should be %d\n\n", LOAD_WORD(S->SP), argc);
+    printf("argc is %"PRI_WORD", and should be %d\n\n", LOAD_STACK(S->SP, S->S0, S->SSIZE, 0), argc);
     if (POP != argc) {
        printf("Error in extra instructions tests: PC = %"PRI_UWORD"\n", S->PC);
         exit(1);
@@ -39,7 +38,7 @@ int main(void)
     do {
         single_step(S);
     } while (S->I != O_EXTRA);
-    printf("arg 1's length is %"PRI_WORD", and should be %zu\n", LOAD_WORD(S->SP), strlen(argv[1]));
+    printf("arg 1's length is %"PRI_WORD", and should be %zu\n", LOAD_STACK(S->SP, S->S0, S->SSIZE, 0), strlen(argv[1]));
     if ((UWORD)POP != strlen(argv[1])) {
         printf("Error in extra instructions tests: PC = %"PRI_UWORD"\n", S->PC);
         exit(1);

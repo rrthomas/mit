@@ -20,9 +20,6 @@ const WORD correct[][8] =
      {1},
      {1, 1},
      {},
-     {(UWORD)DATA_STACK_SEGMENT},
-     {(UWORD)DATA_STACK_SEGMENT, 1},
-     {},
      {16384},
      {16384, 1},
      {},
@@ -58,7 +55,6 @@ int main(void)
     state *S = init_default_stacks(SIZE / WORD_SIZE);
 
     ass_action(S, O_PUSH_PC); ass_number(S, 1); ass_action(S, O_POP);
-    ass_action(S, O_PUSH_S0); ass_number(S, 1); ass_action(S, O_POP);
     ass_action(S, O_PUSH_SSIZE); ass_number(S, 1); ass_action(S, O_POP);
     ass_action(S, O_PUSH_R0); ass_number(S, 1); ass_action(S, O_POP);
     ass_action(S, O_PUSH_RSIZE); ass_number(S, 1); ass_action(S, O_POP);

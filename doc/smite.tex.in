@@ -123,7 +123,6 @@ The registers, each with its function, are set out in table~\ref{regtable}.
     which must be a whole number of words. \\
 {\tt SP} & The data {\tt S}tack {\tt P}ointer. \\
 {\tt RP} & The {\tt R}eturn stack {\tt P}ointer. \\
-{\tt S0} & The data {\tt S}tack base. \\
 {\tt R0} & The {\tt R}eturn stack base. \\
 {\tt SSIZE} & The number of words allocated for the data stack. \\
 {\tt RSIZE} & The number of words allocated for the return stack. \\
@@ -455,12 +454,11 @@ As mentioned in section~\ref{registers}, the stack pointers {\tt SP} and {\tt
 RP} may only be accessed through special actions:
 
 \begin{description}
-\inst{PUSH\_SP}{-- a-addr}{\spic{a-addr} is the value of {\tt SP}.}
-\inst{STORE\_SP}{a-addr --}{Set {\tt SP} to \spic{a-addr}.}
+\inst{PUSH\_SP}{-- u}{\spic{u} is the value of {\tt SP}, the number of items on the stack.}
+\inst{STORE\_SP}{u --}{Set {\tt SP} to \spic{u}.}
 \inst{PUSH\_RP}{-- a-addr}{\spic{a-addr} is the value of {\tt RP}.}
 \inst{STORE\_RP}{a-addr --}{Set {\tt RP} to \spic{a-addr}.}
 \inst{PUSH\_PC}{-- addr}{Push {\tt PC} on to the stack.}
-\inst{PUSH\_S0}{-- a-addr}{Push {\tt S0} on to the stack.}
 \inst{PUSH\_SSIZE}{-- u}{Push {\tt SSIZE} on to the stack.}
 \inst{PUSH\_R0}{-- a-addr}{Push {\tt R0} on to the stack.}
 \inst{PUSH\_RSIZE}{-- u}{Push {\tt RSIZE} on to the stack.}
@@ -551,7 +549,7 @@ Table~\ref{opcodetable} lists the action opcodes in numerical order. Other actio
 \opcodetbl{03}{SWAP}	{14}{RSHIFT}	{25}{PUSH\_RP}
 \opcodetbl{04}{RPUSH}	{15}{LOAD}	{26}{STORE\_RP}
 \opcodetbl{05}{POP2R}	{16}{STORE}	{27}{PUSH\_PC}
-\opcodetbl{06}{RPOP}	{17}{LOADB}	{28}{PUSH\_S0}
+\opcodetbl{06}{RPOP}	{17}{LOADB}	{28}{undefined}
 \opcodetbl{07}{LT}	{18}{STOREB}	{29}{PUSH\_SSIZE}
 \opcodetbl{08}{EQ}	{19}{BRANCH}	{2a}{PUSH\_R0}
 \opcodetbl{09}{ULT}	{1a}{BRANCHZ}	{2b}{PUSH\_RSIZE}

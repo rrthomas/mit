@@ -254,8 +254,7 @@ state *init(size_t size, size_t data_stack_size, size_t return_stack_size)
     if (S->d_stack == NULL || S->r_stack == NULL)
         return NULL;
 
-    if (!mem_map(S, DATA_STACK_SEGMENT, S->d_stack, S->SSIZE, true)
-        || !mem_map(S, RETURN_STACK_SEGMENT, S->r_stack, S->RSIZE, true))
+    if (!mem_map(S, RETURN_STACK_SEGMENT, S->r_stack, S->RSIZE, true))
         return NULL;
 
     S->ENDISM =
@@ -267,7 +266,7 @@ state *init(size_t size, size_t data_stack_size, size_t return_stack_size)
         ;
     S->PC = 0;
     S->I = 0;
-    S->S0 = S->SP = DATA_STACK_SEGMENT;
+    S->S0 = S->SP = S->d_stack;
     S->R0 = S->RP = RETURN_STACK_SEGMENT;
     S->HANDLER = 0;
     S->BADPC = 0;
@@ -294,12 +293,12 @@ void destroy(state *S)
     }
 }
 
-#define R_RO(reg, type)                                 \
+#define R_RO(reg, type, utype)                          \
     _GL_ATTRIBUTE_PURE type get_ ## reg(state *S) {     \
         return S->reg;                                  \
     }
-#define R(reg, type)                                \
-    R_RO(reg, type)                                 \
+#define R(reg, type, utype)                         \
+    R_RO(reg, type, utype)                          \
     void set_ ## reg(state *S, type value) {        \
         S->reg = value;                             \
     }

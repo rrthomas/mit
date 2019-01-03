@@ -47,6 +47,12 @@ typedef uint64_t UWORD;
 #else
 #error "WORD_SIZE is not 4 or 8!"
 #endif
+typedef WORD * WORDP;
+#define PRI_XUWORD "#"PRI_XWORD
+#define PRI_Xsmite_UWORD "#"PRI_XWORD
+#define PRI_smite_UWORD PRI_UWORD
+#define PRI_XWORDP "p"
+#define PRI_WORDP "p"
 #define BYTE_BIT 8
 #define BYTE_MASK ((1 << BYTE_BIT) - 1)
 #undef WORD_BIT // FIXME: prefix this and other symbols
@@ -57,10 +63,10 @@ typedef uint64_t UWORD;
 
 typedef struct _state state;
 
-#define R_RO(reg, type)                         \
+#define R_RO(reg, type, utype)                  \
     type get_ ## reg(state *state);
-#define R(reg, type)                            \
-    R_RO(reg, type)                             \
+#define R(reg, type, utype)                     \
+    R_RO(reg, type, utype)                      \
     void set_ ## reg(state *state, type value);
 #include "tbl_registers.h"
 #undef R

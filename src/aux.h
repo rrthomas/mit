@@ -23,8 +23,8 @@
 
 // VM registers
 struct _state {
-#define R(reg, type) type reg;
-#define R_RO(reg, type) R(reg, type)
+#define R(reg, type, utype) type reg;
+#define R_RO(reg, type, utype) R(reg, type, utype)
 #include "tbl_registers.h"
 #undef R
 #undef R_RO
@@ -45,7 +45,6 @@ struct _state {
 
 // Stacks location and size
 #define MAX_STACK_SIZE       ((((UWORD)1) << (WORD_BIT - 4)) / WORD_SIZE)
-#define DATA_STACK_SEGMENT   (((UWORD)0xfeU) << (WORD_BIT - 8))
 #define RETURN_STACK_SEGMENT (((UWORD)0xffU) << (WORD_BIT - 8))
 #define DEFAULT_STACK_SIZE   ((UWORD)16384U)
 
@@ -64,17 +63,26 @@ state *init_default_stacks(size_t memory_size);
     ((exception = exception ? exception : load_byte(S, (a), &byte)), byte)
 #define STORE_BYTE(a, v)                                                \
     (exception = exception ? exception : store_byte(S, (a), (v)))
-#define PUSH(v)                                 \
-    (S->SP += WORD_SIZE * STACK_DIRECTION, STORE_WORD(S->SP, (v)))
-#define POP                                     \
-    (S->SP -= WORD_SIZE * STACK_DIRECTION, LOAD_WORD(S->SP + WORD_SIZE * STACK_DIRECTION))
+#define LOAD_STACK(sp, base, size, n)                                   \
+    (STACK_VALID((sp), (base), (size)) ? (sp)[-n * STACK_DIRECTION] : (exception = -9))
+#define STORE_STACK(sp, base, size, n, v)                               \
+    (STACK_VALID((sp) - n, (base), (size)) ? (sp)[-n * STACK_DIRECTION] = (v) :           \
+       (exception = -9))
+#define _PUSH(v)                                                        \
+    S->SP += STACK_DIRECTION,                                           \
+     STORE_STACK(S->SP, S->S0, S->SSIZE, 0, v)
+#define PUSH(v)                                                         \
+    (exception == 0 ? _PUSH(v) : exception)
+#define POP                                                             \
+    (exception == 0 ? (S->SP -= STACK_DIRECTION,                        \
+     LOAD_STACK(S->SP, S->S0, S->SSIZE, -STACK_DIRECTION)) : exception)
 #if WORD_SIZE == 4
 #define PUSH64(ud)                              \
     PUSH((UWORD)(ud & WORD_MASK));              \
     PUSH((UWORD)((ud >> WORD_BIT) & WORD_MASK))
 #define POP64                                   \
-    (S->SP -= 2 * WORD_SIZE * STACK_DIRECTION, (UWORD)LOAD_WORD(S->SP + WORD_SIZE * STACK_DIRECTION), temp | \
-     ((uint64_t)(UWORD)_LOAD_WORD(S->SP + 2 * WORD_SIZE * STACK_DIRECTION, temp2) << WORD_BIT))
+    (S->SP -= 2 * STACK_DIRECTION, (UWORD)*(S->SP + STACK_DIRECTION) | \
+     ((uint64_t)(UWORD)*(S->SP + 2 * STACK_DIRECTION) << WORD_BIT))
 #elif WORD_SIZE == 8
 #define PUSH64 PUSH
 #define POP64  POP
@@ -86,7 +94,11 @@ state *init_default_stacks(size_t memory_size);
 #define POP_RETURN                              \
     (S->RP -= WORD_SIZE * STACK_DIRECTION, LOAD_WORD(S->RP + WORD_SIZE * STACK_DIRECTION))
 #define STACK_UNDERFLOW(ptr, base)              \
-    (ptr - base == 0 ? false : (STACK_DIRECTION > 0 ? ptr < base : ptr > base))
+    (ptr == base ? false : (STACK_DIRECTION > 0 ? (ptr < base) : (ptr > base)))
+#define STACK_OVERFLOW(ptr, base, size)         \
+    (ptr == base ? false : ((STACK_DIRECTION > 0 ? (ptr - base) : (base - ptr)) > size))
+#define STACK_VALID(ptr, base, size)            \
+    (!STACK_UNDERFLOW((ptr), (base)) && !STACK_OVERFLOW((ptr), (base), (size)))
 
 #define PUSH_NATIVE_POINTER(p)                                          \
     {                                                                   \

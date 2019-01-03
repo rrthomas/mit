@@ -99,15 +99,15 @@ enum commands {
 static int commands = sizeof(command) / sizeof(*command);
 
 static const char *regist[] = {
-#define R(reg, type) #reg,
-#define R_RO(reg, type) R(reg, type)
+#define R(reg, type, utype) #reg,
+#define R_RO(reg, type, utype) R(reg, type, utype)
 #include "tbl_registers.h"
 #undef R
 #undef R_RO
 };
 enum registers {
-#define R(reg, type) r_##reg,
-#define R_RO(reg, type) R(reg, type)
+#define R(reg, type, utype) r_##reg,
+#define R_RO(reg, type, utype) R(reg, type, utype)
 #include "tbl_registers.h"
 #undef R
 #undef R_RO
@@ -322,11 +322,11 @@ static void do_assign(char *token, char *number)
 
     int no = search(token, regist, registers);
     switch (no) {
-#define R(reg, type)                            \
+#define R(reg, type, utype)                     \
         case r_##reg:                           \
-            S->reg = value;                     \
+            S->reg = (type)value;               \
             break;
-#define R_RO(reg, type)                                 \
+#define R_RO(reg, type, utype)                          \
         case r_##reg:                                   \
             fatal("cannot assign to %s", regist[no]);   \
             break;
@@ -355,11 +355,11 @@ static void do_display(size_t no, const char *format)
     char *display;
 
     switch (no) {
-#define R(reg, type)                                                \
+#define R(reg, type, utype)                                         \
     case r_##reg:                                                   \
-        display = xasprintf(#reg" = %#"PRI_XWORD" (%"PRI_UWORD")", (UWORD)S->reg, (UWORD)S->reg); \
+        display = xasprintf(#reg" = %"PRI_X##type" (%"PRI_##type")", (utype)S->reg, S->reg); \
         break;
-#define R_RO(reg, type) R(reg, type)
+#define R_RO(reg, type, utype) R(reg, type, utype)
 #include "tbl_registers.h"
 #undef R
     default:

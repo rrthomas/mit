@@ -7,7 +7,7 @@
 // RISK.
 
 #define C(cmd) cmd
-#define R(reg, type) reg
-#define R_RO(reg, type) reg
+#define R(reg, type, utype) reg
+#define R_RO(reg, type, utype) reg
 #include "tbl_commands.h"
 #include "tbl_registers.h"

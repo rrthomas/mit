@@ -98,26 +98,24 @@ static char *_val_data_stack(state *S, bool with_hex)
     free(picture);
     picture = xasprintf("%s", "");
     if (!STACK_UNDERFLOW(S->SP, S->S0))
-        for (UWORD i = S->S0; i != S->SP;) {
-            WORD c;
+        for (UWORD i = 0; i != S->SP - S->S0;) {
             char *ptr;
-            i += WORD_SIZE * STACK_DIRECTION;
-            int exception = load_word(S, i, &c);
-            if (exception != 0) {
+            i += STACK_DIRECTION;
+            if (!STACK_VALID(S->S0 + i, S->S0, S->SSIZE)) {
                 ptr = xasprintf("%sinvalid address!", picture);
                 free(picture);
                 picture = ptr;
                 break;
             }
-            ptr = xasprintf("%s%"PRI_WORD, picture, c);
+            ptr = xasprintf("%s%"PRI_WORD, picture, S->S0[i]);
             free(picture);
             picture = ptr;
             if (with_hex) {
-                ptr = xasprintf("%s (%#"PRI_XWORD") ", picture, (UWORD)c);
+                ptr = xasprintf("%s (%#"PRI_XWORD") ", picture, (UWORD)S->S0[i]);
                 free(picture);
                 picture = ptr;
             }
-            if (i != S->SP) {
+            if (i != S->SP - S->S0) {
                 ptr = xasprintf("%s ", picture);
                 free(picture);
                 picture = ptr;
