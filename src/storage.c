@@ -284,7 +284,6 @@ void destroy(state *S)
         free(S->memory);
         free(S->d_stack);
         free(S->r_stack);
-        free(S->main_argv);
         free(S->main_argv_len);
         free(S);
     }

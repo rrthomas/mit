@@ -21,6 +21,7 @@
 #include <string.h>
 #include "binary-io.h"
 #include "verify.h"
+#include "minmax.h"
 
 #include "public.h"
 #include "aux.h"
@@ -85,17 +86,13 @@ static int getflags(UWORD perm, bool *binary)
 int register_args(state *S, int argc, char *argv[])
 {
     S->main_argc = argc;
-    if ((S->main_argv = calloc(argc, sizeof(UWORD))) == NULL ||
-        (S->main_argv_len = calloc(argc, sizeof(UWORD))) == NULL)
-        return -1;
+    S->main_argv = argv;
 
-    for (int i = 0; i < argc; i++) {
-        size_t len = strlen(argv[i]);
-        S->main_argv[i] = mem_allot(S, argv[i], len, true);
-        if (S->main_argv[i] == 0)
-            return -2;
-        S->main_argv_len[i] = len;
-    }
+    if ((S->main_argv_len = calloc(argc, sizeof(UWORD))) == NULL)
+        return -1;
+    for (int i = 0; i < argc; i++)
+        S->main_argv_len[i] = strlen(argv[i]);
+
     return 0;
 }
 
@@ -277,16 +274,31 @@ static int extra_libc(state *S)
     case OX_ARGC: // ( -- u )
         PUSH(S->main_argc);
         break;
-    case OX_ARG: // ( u1 -- c-addr u2 )
+    case OX_ARG_LEN: // ( u1 -- u2 )
         {
             UWORD narg = POP;
-            if (narg >= (UWORD)S->main_argc) {
+            if (narg >= (UWORD)S->main_argc)
                 PUSH(0);
-                PUSH(0);
-            } else {
-                PUSH(S->main_argv[narg]);
+            else
                 PUSH(S->main_argv_len[narg]);
-            }
+        }
+        break;
+    case OX_ARG_COPY: // ( u1 c-addr u2 -- u3 )
+        {
+            UWORD len = POP;
+            UWORD buf = POP;
+            UWORD narg = POP;
+
+            if (exception == 0 && narg < (UWORD)S->main_argc) {
+                len = MIN(len, S->main_argv_len[narg]);
+                exception = pre_dma(S, buf, buf + len, true);
+                if (exception == 0) {
+                    memcpy(native_address(S, buf, true), S->main_argv[narg], len);
+                    exception = post_dma(S, buf, buf + len);
+                }
+                PUSH(len);
+            } else
+                PUSH(0);
         }
         break;
     case OX_STDIN:

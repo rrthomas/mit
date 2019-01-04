@@ -35,7 +35,7 @@ struct _state {
     UWORD _mem_here;
     UWORD here;	// (FIXME: debug.c) where the next instruction will be stored
     int main_argc;
-    UWORD *main_argv;
+    char **main_argv;
     UWORD *main_argv_len;
 };
 

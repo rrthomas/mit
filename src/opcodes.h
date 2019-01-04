@@ -33,7 +33,8 @@ enum {
 
 enum {
     OX_ARGC,
-    OX_ARG,
+    OX_ARG_LEN,
+    OX_ARG_COPY,
     OX_STDIN,
     OX_STDOUT,
     OX_STDERR,
