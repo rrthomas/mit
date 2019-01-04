@@ -424,8 +424,6 @@ static int extra(state *S)
 WORD single_step(state *S)
 {
     int exception = 0;
-    WORD temp = 0;
-    BYTE byte = 0;
 
     S->ITYPE = decode_instruction(S, &S->PC, &S->I);
     switch (S->ITYPE) {

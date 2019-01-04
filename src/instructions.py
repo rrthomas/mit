@@ -177,7 +177,8 @@ PUSH(shift < (WORD)WORD_BIT ? (WORD)((UWORD)value >> shift) : 0);
 
 actions[Opcodes.LOAD] = '''
 WORD addr = POP;
-WORD value = ((exception = exception ? exception : load_word(S, addr, &temp)), temp);
+WORD value;
+exception = exception ? exception : load_word(S, addr, &value);
 PUSH(value);
 '''
 
@@ -189,7 +190,8 @@ exception = exception ? exception : store_word(S, addr, value);
 
 actions[Opcodes.LOADB] = '''
 WORD addr = POP;
-BYTE value = ((exception = exception ? exception : load_byte(S, addr, &byte)), byte);
+BYTE value;
+exception = exception ? exception : load_byte(S, addr, &value);
 PUSH((WORD)value);
 '''
 
