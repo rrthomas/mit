@@ -65,7 +65,7 @@ int load_object(state *S, int fd, UWORD address)
     if (decode_instruction_file(fd, (WORD *)&length) != INSTRUCTION_NUMBER)
         return -2;
 
-    uint8_t *ptr = native_address_range_in_one_area(S, address, length, true);
+    uint8_t *ptr = native_address_of_range(S, address, length);
     if (ptr == NULL)
         return -1;
 

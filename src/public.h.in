@@ -13,12 +13,11 @@
 #define PACKAGE_UPPER_PACKAGE_UPPER
 
 
+#include <stddef.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <inttypes.h>
 #include <limits.h>
-
-#include "gl_list.h"
 
 
 // Parameters
@@ -81,16 +80,13 @@ int store_word(state *state, UWORD addr, WORD value);
 int load_byte(state *state, UWORD addr, BYTE *value);
 int store_byte(state *state, UWORD addr, BYTE value);
 
-int pre_dma(state *state, UWORD from, UWORD to, bool write);
-int post_dma(state *state, UWORD from, UWORD to);
-
 // Memory mapping
 UWORD mem_here(state *state);
-UWORD mem_allot(state *state, void *p, size_t n, bool writable);
 UWORD mem_align(state *state);
+int mem_realloc(state *state, UWORD size);
 
 // Interface calls
-uint8_t *native_address(state *state, UWORD addr, bool writable);
+uint8_t *native_address_of_range(state *S, UWORD addr, UWORD length);
 WORD run(state *state);
 WORD single_step(state *state);
 int load_object(state *state, int fd, UWORD address);

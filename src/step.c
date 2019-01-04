@@ -146,44 +146,11 @@ static int extra_smite(state *S)
             PUSH(ret);
         }
         break;
-    case OX_SMITE_PRE_DMA:
-        {
-            bool write = POP;
-            UWORD to = POP;
-            UWORD from = POP;
-            state *inner_state;
-            POP_NATIVE_POINTER(inner_state);
-            int ret = pre_dma(inner_state, from, to, write);
-            PUSH(ret);
-        }
-        break;
-    case OX_SMITE_POST_DMA:
-        {
-            UWORD to = POP;
-            UWORD from = POP;
-            state *inner_state;
-            POP_NATIVE_POINTER(inner_state);
-            int ret = post_dma(inner_state, from, to);
-            PUSH(ret);
-        }
-        break;
     case OX_SMITE_MEM_HERE:
         {
             state *inner_state;
             POP_NATIVE_POINTER(inner_state);
             UWORD addr = mem_here(inner_state);
-            PUSH(addr);
-        }
-        break;
-    case OX_SMITE_MEM_ALLOT:
-        {
-            bool writable = POP;
-            size_t n = POP;
-            void *p;
-            POP_NATIVE_POINTER(p);
-            state *inner_state;
-            POP_NATIVE_POINTER(inner_state);
-            UWORD addr = mem_allot(inner_state, p, n, writable);
             PUSH(addr);
         }
         break;
@@ -195,13 +162,22 @@ static int extra_smite(state *S)
             PUSH(addr);
         }
         break;
-    case OX_SMITE_NATIVE_ADDRESS:
+    case OX_SMITE_MEM_REALLOC:
         {
-            bool writable = POP;
+            size_t n = POP;
+            state *inner_state;
+            POP_NATIVE_POINTER(inner_state);
+            UWORD ret = mem_realloc(inner_state, n);
+            PUSH(ret);
+        }
+        break;
+    case OX_SMITE_NATIVE_ADDRESS_OF_RANGE:
+        {
+            UWORD len = POP;
             UWORD addr = POP;
             state *inner_state;
             POP_NATIVE_POINTER(inner_state);
-            uint8_t *ptr = native_address(inner_state, addr, writable);
+            uint8_t *ptr = native_address_of_range(inner_state, addr, len);
             PUSH_NATIVE_POINTER(ptr);
         }
         break;
@@ -291,12 +267,12 @@ static int extra_libc(state *S)
 
             if (exception == 0 && narg < (UWORD)S->main_argc) {
                 len = MIN(len, S->main_argv_len[narg]);
-                exception = pre_dma(S, buf, buf + len, true);
-                if (exception == 0) {
-                    memcpy(native_address(S, buf, true), S->main_argv[narg], len);
-                    exception = post_dma(S, buf, buf + len);
-                }
-                PUSH(len);
+                uint8_t *ptr = native_address_of_range(S, buf, len);
+                if (ptr) {
+                    memcpy(ptr, S->main_argv[narg], len);
+                    PUSH(len);
+                } else
+                    PUSH(0);
             } else
                 PUSH(0);
         }
@@ -336,17 +312,15 @@ static int extra_libc(state *S)
             UWORD nbytes = POP;
             UWORD buf = POP;
 
-            ssize_t res = 0;
+            ssize_t nread = 0;
             if (exception == 0) {
-                exception = pre_dma(S, buf, buf + nbytes, true);
-                if (exception == 0) {
-                    res = read(fd, native_address(S, buf, true), nbytes);
-                    exception = post_dma(S, buf, buf + nbytes);
-                }
+                uint8_t *ptr = native_address_of_range(S, buf, nbytes);
+                if (ptr)
+                    nread = read(fd, ptr, nbytes);
             }
 
-            PUSH(res);
-            PUSH((exception == 0 && res >= 0) ? 0 : -1);
+            PUSH(nread);
+            PUSH((exception == 0 && nread >= 0) ? 0 : -1);
         }
         break;
     case OX_WRITE_FILE:
@@ -355,16 +329,15 @@ static int extra_libc(state *S)
             UWORD nbytes = POP;
             UWORD buf = POP;
 
-            ssize_t res = 0;
+            ssize_t nwritten = 0;
             if (exception == 0) {
-                exception = pre_dma(S, buf, buf + nbytes, false);
-                if (exception == 0) {
-                    res = write(fd, native_address(S, buf, false), nbytes);
-                    exception = post_dma(S, buf, buf + nbytes);
-                }
+                uint8_t *ptr = native_address_of_range(S, buf, nbytes);
+                if (ptr)
+                    nwritten = write(fd, ptr, nbytes);
             }
 
-            PUSH((exception == 0 && res >= 0) ? 0 : -1);
+            // FIXME: push number of bytes written, symmetric with READ_FILE
+            PUSH((exception == 0 && nwritten >= 0) ? 0 : -1);
         }
         break;
     case OX_FILE_POSITION:

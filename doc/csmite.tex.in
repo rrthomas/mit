@@ -122,12 +122,10 @@ Exception~$-259$ is raised if an invalid library is accessed, and $-260$ for an 
 0x2 & {\tt STORE\_WORD} & \spic{n-addr a-addr x -- n} & \\
 0x3 & {\tt LOAD\_BYTE} & \spic{n-addr addr x n} & \\
 0x4 & {\tt STORE\_BYTE} & \spic{n-addr addr x -- n} & \\
-0x5 & {\tt PRE\_DMA} & \spic{n-addr \aaddr1 \aaddr2 f -- n} & \\
-0x6 & {\tt POST\_DMA} & \spic{n-addr \aaddr1 \aaddr2 -- n} & \\
-0x7 & {\tt MEM\_HERE} & \spic{n-addr -- addr} & \\
-0x8 & {\tt MEM\_ALLOT} & \spic{\naddr1 \naddr2 u f -- addr} & \\
-0x9 & {\tt MEM\_ALIGN} & \spic{n-addr -- addr} & \\
-0xa & {\tt NATIVE\_ADDRESS} & \spic{\naddr1 addr f -- \naddr2} & \\
+0x5 & {\tt MEM\_HERE} & \spic{n-addr -- addr} & \\
+0x6 & {\tt MEM\_ALIGN} & \spic{n-addr -- addr} & \\
+0x7 & {\tt MEM\_REALLOC} & \spic{\naddr1 \naddr2 u f -- addr} & \\
+0x8 & {\tt NATIVE\_ADDRESS} & \spic{\naddr1 addr f -- \naddr2} & \\
 0xb & {\tt RUN} & \spic{n-addr -- n} & \\
 0xc & {\tt SINGLE\_STEP} & \spic{n-addr -- n} & \\
 0xd & {\tt LOAD\_OBJECT} & \spic{n-addr fid addr -- n} & \\

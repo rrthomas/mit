@@ -119,7 +119,7 @@ The registers, each with its function, are set out in table~\ref{regtable}.
 {\tt ITYPE} & The type of an instruction to be executed: $0$ for a number, and $1$ for an action. \\
 {\tt I} & The {\tt I}nstruction. Holds the opcode of an instruction
     to be executed. \\
-{\tt MEMORY} & The size in bytes of @PACKAGE_NAME@'s main memory,
+{\tt MEMORY} & The size in bytes of @PACKAGE_NAME@'s memory,
     which must be a whole number of words. \\
 {\tt SP} & The data {\tt S}tack {\tt P}ointer. \\
 {\tt RP} & The {\tt R}eturn stack {\tt P}ointer. \\
@@ -146,7 +146,7 @@ by actions (see section~\ref{registeract}); not all registers are accessible, an
 
 \subsection{Memory}
 
-@PACKAGE_NAME@'s memory is a discontiguous sequence of bytes with addresses in the range $0$ to $2^{32}-1$. Some locations may be read-only. The memory is contiguous in the range $0$ to {\tt MEMORY}~$-$~1; this part is referred to as ``main memory''.
+@PACKAGE_NAME@'s memory is a contiguous sequence of bytes with addresses in the range $0$ to {\tt MEMORY}~$-$~1.
 
 \subsection{Stacks}
 
@@ -230,7 +230,6 @@ An exception can be raised explicitly by {\tt THROW} (see section~\ref{exceptact
 \bf Code & \bf Meaning \\ \midrule
 $-9$ & Invalid address (see below). \\
 $-10$ & Division by zero attempted (see section~\ref{arithmetic}). \\
-$-20$ & Attempt to write to a read-only memory location. \\
 $-23$ & Address alignment exception (see below). \\
 $-256$ & Invalid opcode (see section~\ref{opcodes}). \\ \bottomrule
 \end{tabular}

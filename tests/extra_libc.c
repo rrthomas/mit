@@ -60,8 +60,8 @@ int main(void)
         printf("Error in extra instructions tests: PC = %"PRI_UWORD"\n", S->PC);
         exit(1);
     }
-    printf("arg 1 is %s, and should be %s\n", native_address(S, BUFFER, true), argv[1]);
-    if (strncmp((char *)native_address(S, BUFFER, true), argv[1], strlen(argv[1])) != 0) {
+    printf("arg 1 is %s, and should be %s\n", native_address_of_range(S, BUFFER, 0), argv[1]);
+    if (strncmp((char *)native_address_of_range(S, BUFFER, 0), argv[1], strlen(argv[1])) != 0) {
         printf("Error in extra instructions tests: PC = %"PRI_UWORD"\n", S->PC);
         exit(1);
     }

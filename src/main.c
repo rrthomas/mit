@@ -156,7 +156,7 @@ static const char *globdirname(const char *file)
 
 static void check_valid(UWORD adr, const char *quantity)
 {
-    if (native_address(S, adr, false) == NULL)
+    if (native_address_of_range(S, adr, 0) == NULL)
         fatal("%s is invalid", quantity);
 }
 
@@ -275,7 +275,7 @@ static void reinit(void)
 
 static int save_object(int fd, UWORD address, UWORD length)
 {
-    uint8_t *ptr = native_address_range_in_one_area(S, address, length, false);
+    uint8_t *ptr = native_address_of_range(S, address, length);
     if (!IS_ALIGNED(address) || ptr == NULL)
         return -1;
 

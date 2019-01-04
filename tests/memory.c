@@ -51,33 +51,6 @@ const WORD correct[][8] =
      {ZERO},
      {ZERO, 1},
      {},
-     {SIZE * WORD_SIZE},
-     {(UWORD)0x0807060504030201},
-     {(UWORD)0x0807060504030201, 1},
-     {},
-     {SIZE * WORD_SIZE + WORD_SIZE + 1},
-     {2},
-     {2, 1},
-     {},
-     {1},
-     {1, SIZE * WORD_SIZE + 1},
-     {},
-     {SIZE * WORD_SIZE + 1},
-     {1},
-     {1, 1},
-     {},
-     {SIZE * WORD_SIZE + 2 * WORD_SIZE},
-     {SIZE * WORD_SIZE + 2 * WORD_SIZE, ZERO},
-     {SIZE * WORD_SIZE + 2 * WORD_SIZE, SIZE * WORD_SIZE + 2 * WORD_SIZE},
-     {-20},
-    };
-
-const unsigned area[] =
-    {
-     0x1000 * WORD_SIZE,
-     0x1000 * WORD_SIZE + WORD_SIZE,
-     0x1000 * WORD_SIZE + WORD_SIZE + 1,
-     0x1000 * WORD_SIZE + ((WORD_SIZE + 1 + 3 + (WORD_SIZE - 1)) / WORD_SIZE) * WORD_SIZE,
     };
 
 
@@ -85,25 +58,7 @@ int main(void)
 {
     int exception = 0;
 
-    // Data for extra memory area tests
-    verify(WORD_SIZE <= 8); // If not, a longer string is needed in the next line
-    char *count = strdup("\x01\x02\x03\x04\x05\x06\x07\x08"); // Hold on to this to prevent a memory leak
-    count[WORD_SIZE] = '\0'; // Truncate to WORD_SIZE
-    char *item[] = {count, strdup("\x01"), strdup("\x02\x03"), strdup("basilisk")};
-    unsigned nitems = sizeof(item) / sizeof(item[0]);
-
     state *S = init_default_stacks(SIZE);
-    for (unsigned i = 0; i < nitems; i++) {
-        UWORD addr = mem_allot(S, item[i], strlen(item[i]), i < 3);
-        printf("Extra memory area %u allocated at address %"PRI_XWORD" (should be %x)\n",
-               i, addr, area[i]);
-        if (addr != area[i]) {
-            printf("Error in memory tests: incorrect address for memory allocation\n");
-            exit(1);
-        }
-        if (i == 2)
-            mem_align(S);
-    }
 
     ass_action(S, O_PUSH_MEMORY); ass_number(S, WORD_SIZE); ass_action(S, O_NEGATE); ass_action(S, O_ADD);
     ass_number(S, 513); ass_number(S, 1); ass_action(S, O_PUSH); ass_action(S, O_STORE); ass_number(S, 0); ass_action(S, O_PUSH);
@@ -112,12 +67,6 @@ int main(void)
     ass_number(S, SIZE * WORD_SIZE - WORD_SIZE); ass_action(S, O_LOAD); ass_number(S, 1); ass_action(S, O_POP); ass_action(S, O_PUSH_SP);
     ass_action(S, O_STORE_SP); ass_action(S, O_PUSH_RP); ass_number(S, 1); ass_action(S, O_POP); ass_number(S, 0);
     ass_action(S, O_STORE_RP); ass_action(S, O_PUSH_RP); ass_number(S, 1); ass_action(S, O_POP);
-    ass_number(S, SIZE * WORD_SIZE); ass_action(S, O_LOAD); ass_number(S, 1); ass_action(S, O_POP);
-    ass_number(S, SIZE * WORD_SIZE + WORD_SIZE + 1); ass_action(S, O_LOADB); ass_number(S, 1); ass_action(S, O_POP);
-    ass_number(S, 1);
-    ass_number(S, SIZE * WORD_SIZE + 1); ass_action(S, O_STOREB);
-    ass_number(S, SIZE * WORD_SIZE + 1); ass_action(S, O_LOADB); ass_number(S, 1); ass_action(S, O_POP);
-    ass_number(S, SIZE * WORD_SIZE + 2 * WORD_SIZE); ass_number(S, 0); ass_action(S, O_PUSH); ass_action(S, O_STOREB);
 
     for (size_t i = 0; i < sizeof(correct) / sizeof(correct[0]); i++) {
         show_data_stack(S);
@@ -133,8 +82,6 @@ int main(void)
     }
 
     destroy(S);
-    for (size_t i = 0; i < nitems; i++)
-        free(item[i]);
 
     assert(exception == 0);
     printf("Memory tests ran OK\n");

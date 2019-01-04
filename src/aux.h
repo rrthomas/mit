@@ -29,7 +29,6 @@ struct _state {
 #undef R
 #undef R_RO
     WORD *memory;
-    gl_list_t mem_areas;
     WORD *d_stack;
     WORD *r_stack;
     UWORD _mem_here;
@@ -53,15 +52,6 @@ state *init_default_stacks(size_t memory_size);
 // Memory access
 
 #define STACK_DIRECTION 1
-#define _LOAD_WORD(a, temp)                                             \
-    ((exception = exception ? exception : load_word(S, (a), &temp)), temp)
-#define LOAD_WORD(a) _LOAD_WORD(a, temp)
-#define STORE_WORD(a, v)                                                \
-    (exception = exception ? exception : store_word(S, (a), (v)))
-#define LOAD_BYTE(a)                                                    \
-    ((exception = exception ? exception : load_byte(S, (a), &byte)), byte)
-#define STORE_BYTE(a, v)                                                \
-    (exception = exception ? exception : store_byte(S, (a), (v)))
 #define LOAD_STACK(sp, base, size, n)                                   \
     (STACK_VALID((sp), (base), (size)) ? (sp)[-n * STACK_DIRECTION] : (exception = -9))
 #define STORE_STACK(sp, base, size, n, v)                               \
@@ -110,8 +100,6 @@ state *init_default_stacks(size_t memory_size);
             wp.words[i] = POP;                                          \
         p = wp.pointer;                                                 \
     }
-
-uint8_t *native_address_range_in_one_area(state *S, UWORD start, UWORD length, bool writable);
 
 // Align a VM address
 #define ALIGN(a) ((a + WORD_SIZE - 1) & (-WORD_SIZE))
