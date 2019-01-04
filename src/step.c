@@ -39,22 +39,6 @@ verify(sizeof(int) <= sizeof(WORD));
 
 // I/O support
 
-// Copy a string from VM to native memory
-static int getstr(state *S, UWORD adr, UWORD len, char **res)
-{
-    int exception = 0;
-
-    *res = calloc(1, len + 1);
-    if (*res == NULL)
-        exception = -511;
-    else
-        for (size_t i = 0; exception == 0 && i < len; i++, adr++) {
-            exception = load_byte(S, adr, (BYTE *)((*res) + i));
-        }
-
-    return exception;
-}
-
 // Convert portable open(2) flags bits to system flags
 static int getflags(UWORD perm, bool *binary)
 {
@@ -82,7 +66,7 @@ static int getflags(UWORD perm, bool *binary)
     return flags;
 }
 
-// Register command-line args in VM memory
+// Register command-line args
 int register_args(state *S, int argc, char *argv[])
 {
     S->main_argc = argc;
@@ -292,10 +276,8 @@ static int extra_libc(state *S)
             int perm = getflags(POP, &binary);
             UWORD len = POP;
             UWORD str = POP;
-            char *file;
-            exception = getstr(S, str, len, &file);
-            int fd = exception == 0 ? open(file, perm, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH) : -1;
-            free(file);
+            char *s = (char *)native_address_of_range(S, str, len);
+            int fd = s ? open(s, perm, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH) : -1;
             PUSH((WORD)fd);
             PUSH(fd < 0 || (binary && set_binary_mode(fd, O_BINARY) < 0) ? -1 : 0);
         }
@@ -369,13 +351,9 @@ static int extra_libc(state *S)
             UWORD str1 = POP;
             UWORD len2 = POP;
             UWORD str2 = POP;
-            char *from;
-            char *to = NULL;
-            exception = getstr(S, str2, len2, &from) ||
-                getstr(S, str1, len1, &to) ||
-                rename(from, to);
-            free(from);
-            free(to);
+            char *s1 = (char *)native_address_of_range(S, str1, len1);
+            char *s2 = (char *)native_address_of_range(S, str2, len2);
+            exception = (s1 == NULL || s2 == NULL) ? -9 : rename(s2, s1);
             PUSH(exception);
         }
         break;
@@ -383,10 +361,8 @@ static int extra_libc(state *S)
         {
             UWORD len = POP;
             UWORD str = POP;
-            char *file;
-            exception = getstr(S, str, len, &file) ||
-                remove(file);
-            free(file);
+            char *s = (char *)native_address_of_range(S, str, len);
+            exception = s == NULL ? -9 : remove(s);
             PUSH(exception);
         }
         break;
