@@ -98,7 +98,7 @@ static char *_val_data_stack(state *S, bool with_hex)
     free(picture);
     picture = xasprintf("%s", "");
     if (!STACK_UNDERFLOW(S->SP, S->S0))
-        for (UWORD i = 0; i != S->SP - S->S0;) {
+        for (UWORD i = 0; i != (UWORD)(S->SP - S->S0);) {
             char *ptr;
             i += STACK_DIRECTION;
             if (!STACK_VALID(S->S0 + i, S->S0, S->SSIZE)) {
@@ -115,7 +115,7 @@ static char *_val_data_stack(state *S, bool with_hex)
                 free(picture);
                 picture = ptr;
             }
-            if (i != S->SP - S->S0) {
+            if (i != (UWORD)(S->SP - S->S0)) {
                 ptr = xasprintf("%s ", picture);
                 free(picture);
                 picture = ptr;
@@ -148,7 +148,7 @@ void show_return_stack(state *S)
         printf("Return stack underflow\n");
     else {
         printf("Return stack: ");
-        for (UWORD i = 0; i != S->RP - S->R0;) {
+        for (UWORD i = 0; i != (UWORD)(S->RP - S->R0);) {
             i += STACK_DIRECTION;
             if (!STACK_VALID(S->R0 + i, S->R0, S->RSIZE)) {
                 printf("invalid address!");

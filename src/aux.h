@@ -83,7 +83,7 @@ state *init_default_stacks(size_t memory_size);
 #define STACK_UNDERFLOW(ptr, base)              \
     (ptr == base ? false : (STACK_DIRECTION > 0 ? (ptr < base) : (ptr > base)))
 #define STACK_OVERFLOW(ptr, base, size)         \
-    (ptr == base ? false : ((STACK_DIRECTION > 0 ? (ptr - base) : (base - ptr)) > size))
+    (ptr == base ? false : ((UWORD)(STACK_DIRECTION > 0 ? (ptr - base) : (base - ptr)) > size))
 #define STACK_VALID(ptr, base, size)            \
     (!STACK_UNDERFLOW((ptr), (base)) && !STACK_OVERFLOW((ptr), (base), (size)))
 

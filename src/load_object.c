@@ -69,7 +69,7 @@ int load_object(state *S, int fd, UWORD address)
     if (ptr == NULL)
         return -1;
 
-    if (read(fd, ptr, length) != length)
+    if (read(fd, ptr, length) != (ssize_t)length)
         return -3;
 
     return 0;

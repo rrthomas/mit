@@ -301,7 +301,7 @@ static int save_object(int fd, UWORD address, UWORD length)
     if (write(fd, &buf[0], len) != len)
         return -2;
 
-    if (write(fd, ptr, length) != length)
+    if (write(fd, ptr, length) != (ssize_t)length)
         return -2;
 
     return 0;
