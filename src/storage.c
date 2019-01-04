@@ -22,16 +22,6 @@
 unsigned word_size = WORD_SIZE;
 
 
-_GL_ATTRIBUTE_PURE UWORD mem_here(state *S)
-{
-    return S->_mem_here;
-}
-
-UWORD mem_align(state *S)
-{
-    return S->_mem_here = ALIGN(S->_mem_here);
-}
-
 _GL_ATTRIBUTE_PURE uint8_t *native_address_of_range(state *S, UWORD addr, UWORD length)
 {
     if (addr >= S->MEMORY || length > S->MEMORY - addr)
@@ -119,8 +109,6 @@ state *init(size_t size, size_t data_stack_size, size_t return_stack_size)
 
     if (mem_realloc(S, size) != 0)
         return NULL;
-
-    S->_mem_here = 0UL;
 
     S->SSIZE = data_stack_size;
     S->d_stack = calloc(S->SSIZE, WORD_SIZE);

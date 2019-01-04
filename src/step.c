@@ -130,22 +130,6 @@ static int extra_smite(state *S)
             PUSH(ret);
         }
         break;
-    case OX_SMITE_MEM_HERE:
-        {
-            state *inner_state;
-            POP_NATIVE_POINTER(inner_state);
-            UWORD addr = mem_here(inner_state);
-            PUSH(addr);
-        }
-        break;
-    case OX_SMITE_MEM_ALIGN:
-        {
-            state *inner_state;
-            POP_NATIVE_POINTER(inner_state);
-            UWORD addr = mem_align(inner_state);
-            PUSH(addr);
-        }
-        break;
     case OX_SMITE_MEM_REALLOC:
         {
             size_t n = POP;

@@ -80,11 +80,6 @@ int store_word(state *state, UWORD addr, WORD value);
 int load_byte(state *state, UWORD addr, BYTE *value);
 int store_byte(state *state, UWORD addr, BYTE value);
 
-// Memory mapping
-UWORD mem_here(state *state);
-UWORD mem_align(state *state);
-int mem_realloc(state *state, UWORD size);
-
 // Interface calls
 uint8_t *native_address_of_range(state *S, UWORD addr, UWORD length);
 WORD run(state *state);
@@ -93,6 +88,7 @@ int load_object(state *state, int fd, UWORD address);
 
 // Additional implementation-specific routines, macros, types and quantities
 state *init(size_t size, size_t stack_size, size_t return_stack_size);
+int mem_realloc(state *state, UWORD size);
 void destroy(state *state);
 int register_args(state *state, int argc, char *argv[]);
 

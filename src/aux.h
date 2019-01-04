@@ -31,7 +31,6 @@ struct _state {
     WORD *memory;
     WORD *d_stack;
     WORD *r_stack;
-    UWORD _mem_here;
     UWORD here;	// (FIXME: debug.c) where the next instruction will be stored
     int main_argc;
     char **main_argv;
