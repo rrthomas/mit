@@ -122,16 +122,14 @@ Exception~$-259$ is raised if an invalid library is accessed, and $-260$ for an 
 0x2 & {\tt STORE\_WORD} & \spic{n-addr a-addr x -- n} & \\
 0x3 & {\tt LOAD\_BYTE} & \spic{n-addr addr x n} & \\
 0x4 & {\tt STORE\_BYTE} & \spic{n-addr addr x -- n} & \\
-0x5 & {\tt MEM\_HERE} & \spic{n-addr -- addr} & \\
-0x6 & {\tt MEM\_ALIGN} & \spic{n-addr -- addr} & \\
-0x7 & {\tt MEM\_REALLOC} & \spic{\naddr1 \naddr2 u f -- addr} & \\
-0x8 & {\tt NATIVE\_ADDRESS} & \spic{\naddr1 addr f -- \naddr2} & \\
-0xb & {\tt RUN} & \spic{n-addr -- n} & \\
-0xc & {\tt SINGLE\_STEP} & \spic{n-addr -- n} & \\
-0xd & {\tt LOAD\_OBJECT} & \spic{n-addr fid addr -- n} & \\
-0xe & {\tt INIT} & \spic{a-addr \U1 \U2 \U3 -- n-addr} & \\
-0xf & {\tt DESTROY} & \spic{n-addr} & \\
-0x10 & {\tt REGISTER\_ARGS} & \spic{n-addr n-addr n -- n} & \\
+0x5 & {\tt MEM\_REALLOC} & \spic{\naddr1 \naddr2 u f -- addr} & \\
+0x6 & {\tt NATIVE\_ADDRESS} & \spic{\naddr1 addr f -- \naddr2} & \\
+0x7 & {\tt RUN} & \spic{n-addr -- n} & \\
+0x8 & {\tt SINGLE\_STEP} & \spic{n-addr -- n} & \\
+0x9 & {\tt LOAD\_OBJECT} & \spic{n-addr fid addr -- n} & \\
+0xa & {\tt INIT} & \spic{a-addr \U1 \U2 \U3 -- n-addr} & \\
+0xb & {\tt DESTROY} & \spic{n-addr} & \\
+0xc & {\tt REGISTER\_ARGS} & \spic{n-addr n-addr n -- n} & \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -212,11 +210,8 @@ To create a file, set both read and write bits to zero when calling {\tt OPEN-FI
 
 The operation of the specified interface calls is given in~\cite{@PACKAGE@}. Here, the C prototypes corresponding to the idealised prototypes used in~\cite{@PACKAGE@} are given. The names are prefixed with {\bf @PACKAGE@\_}. The first argument to most routines is a {\tt @PACKAGE\_state *}, as returned by {\tt @PACKAGE@\_init}.
 
-Files to be loaded and saved are passed as C file descriptors. Thus, the
-calling program must itself open and close the files.
-
 \begin{description}
-\ifacec{uint8\_t *native\_address(@PACKAGE@\_state *state, @PACKAGE@\_UWORD address, bool writable)}{Returns {\tt NULL} when the address is invalid, or the writable flag is true and the address is read-only.}
+\ifacec{uint8\_t *native\_address\_of\_range(@PACKAGE@\_state *state, @PACKAGE@\_UWORD address, @PACKAGE@\_UWORD length)}{Returns {\tt NULL} when the address range is not entirely valid.}
 \ifacec{@PACKAGE@\_state *state, @PACKAGE@\_WORD run(@PACKAGE@\_state *state)}{The reason code returned by {\bf @PACKAGE@\_run()} is a @PACKAGE_NAME@
 word.}
 \ifacec{@PACKAGE@\_state *state, @PACKAGE@\_WORD @PACKAGE@\_single\_step(@PACKAGE@\_state *state)}{The reason code returned by {\bf @PACKAGE@\_single\_step()}
@@ -228,9 +223,10 @@ occurs, the return code is $-3$. If the endism of the object file does not match
 In addition to the required interface calls C @PACKAGE_NAME@ provides an initialisation routine {\bf @PACKAGE@\_init()} which, given a word array and its size, initialises @PACKAGE_NAME@:
 
 \begin{description}
-\ifacec{@PACKAGE@\_state @PACKAGE@\_init(size\_t memory\_size, size\_t data\_stack\_size, size\_t return\_stack\_size)}{{\tt memory\_size} is
+\ifacec{@PACKAGE@\_state *@PACKAGE@\_init(size\_t memory\_size, size\_t data\_stack\_size, size\_t return\_stack\_size)}{{\tt memory\_size} is
 the size of {\tt b\_array} in {\em words} (not bytes); similarly, {\tt data\_stack\_size} and {\tt return\_stack\_size} give the size of the stacks in words; these are allocated by {\tt @PACKAGE@\_init}. The return value is {\tt NULL} if memory cannot be allocated, and a pointer to a new state otherwise.
 All the registers are initialised as per~\cite{@PACKAGE@}.}
+\ifacec{int @PACKAGE@\_mem\_realloc(@PACKAGE@\_state *state, @PACKAGE@\_UWORD size)}{Resize the memory to the given {\tt size}. Any new memory is zeroed. Returns $0$ on success or $-1$ if the requested size of memory cannot be allocated.}
 \end{description}
 
 The following routines give easier access to @PACKAGE_NAME@’s address space at the byte and word level. On success, they return $0$, and on failure, the relevant exception code.
@@ -240,21 +236,6 @@ The following routines give easier access to @PACKAGE_NAME@’s address space at
 \ifacec{int @PACKAGE@\_store\_word(@PACKAGE@\_state *state, @PACKAGE@\_UWORD address, @PACKAGE@\_WORD value)}{Store the given {\tt WORD} value at the given address.}
 \ifacec{int @PACKAGE@\_load\_byte(@PACKAGE@\_state *state, @PACKAGE@\_UWORD address, @PACKAGE@\_BYTE *value)}{Load the byte at the given address into the given {\tt @PACKAGE@\_BYTE *}.}
 \ifacec{int @PACKAGE@\_store\_byte(@PACKAGE@\_state *state, @PACKAGE@\_UWORD address, @PACKAGE@\_BYTE value)}{Store the given {\tt @PACKAGE@\_BYTE} value at the given address.}
-\end{description}
-
-The following routines give easier access to contiguous areas of @PACKAGE_NAME@’s address space. On success, $0$ is returned; if {\tt to} if not less than {\tt from}, or the addresses are not contained in the same area, or not writable if desired, $-1$ is returned; if either address is unaligned, or some other error occurs, a memory exception code is returned.
-
-\begin{description}
-\ifacec{int @PACKAGE@\_pre\_dma(@PACKAGE@\_state *state, @PACKAGE@\_UWORD from, @PACKAGE@\_UWORD to, bool write)}{Convert the given range to native byte order, so that it can be read (or written) directly.}
-\ifacec{int @PACKAGE@\_post\_dma(@PACKAGE@\_state *state, @PACKAGE@\_UWORD from, @PACKAGE@\_UWORD to)}{Convert the given range to @PACKAGE_NAME@ byte order, so that it can be used by @PACKAGE_NAME@ after a direct access.}
-\end{description}
-
-The following routines are provided to map system memory to @PACKAGE_NAME@’s address space and vice versa:
-
-\begin{description}
-\ifacec{@PACKAGE@\_UWORD @PACKAGE@\_mem\_here(@PACKAGE@\_state *state)}{Returns the @PACKAGE_NAME@ address at which the next mapping will be made.}
-\ifacec{@PACKAGE@\_UWORD @PACKAGE@\_mem\_allot(@PACKAGE@\_state *state, void *p, size\_t n)}{Map {\tt n} bytes pointed to by {\tt p} into @PACKAGE_NAME@’s address space, and return the address mapped. Addresses are mapped sequentially.}
-\ifacec{@PACKAGE@\_UWORD @PACKAGE@\_mem\_align(@PACKAGE@\_state *state)}{Rounds up the address at which the next memory allocation will occur to the next word.}
 \end{description}
 
 The following routine allows the calling program to register command-line arguments that can be retrieved by the {\tt ARGC} and {\tt ARG\_COPY} extra instructions.
