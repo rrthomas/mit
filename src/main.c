@@ -202,8 +202,26 @@ static WORD parse_instruction(const char *token)
     return opcode;
 }
 
+struct {
+    const char *name;
+    WORD value;
+} constants[] =
+    {
+     {"WORD_SIZE", WORD_SIZE},
+    };
+
 static long long parse_number(const char *s, char **endp)
 {
+    const char *t = s + (s[0] == '-');
+    size_t tlen = strlen(t);
+    for (size_t i = 0; i < sizeof(constants) / sizeof(constants[0]); i++) {
+        size_t constlen = strlen(constants[i].name);
+        if (tlen == constlen && strcmp(t, constants[i].name) == 0) {
+            *endp = (char*)(s + strlen(s));
+            return (long long)(constants[i].value) * (s == t ? 1 : -1);
+        }
+    }
+
     return (s[0] == '0' && (s[1] == 'X' || s[1] == 'x')) ? strtoll(s + 2, endp, 16) :
         strtoll(s, endp, 10);
 }

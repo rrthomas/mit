@@ -61,7 +61,18 @@ accepted, and the extra characters ignored.
 
 Numbers are all integral, and may be given in either decimal or hexadecimal
 (which must be preceded by ``0x''), with an optional minus
-sign.
+sign. The following constants are also available:
+
+\begin{table}[htb]
+\begin{center}
+\begin{tabular}{{cc}} \toprule
+\bf Name & \bf Value \\ \midrule
+{\tt WORD\_SIZE} & the number of bytes in a word \\
+ \bottomrule
+\end{tabular}
+\caption{Constants}
+\end{center}
+\end{table}
 
 For some arguments an action may also be used, preceded by ``{\tt
 O}'', for opcode. The value of an action is its opcode.
