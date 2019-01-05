@@ -503,6 +503,9 @@ static void do_command(int no, char *arg1, bool plus1, char *arg2, bool plus2, c
                 fatal("error while loading module");
                 break;
             case -4:
+                fatal("module has wrong ENDISM");
+                break;
+            case -5:
                 fatal("module has wrong WORD_SIZE");
                 break;
             default:
