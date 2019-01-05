@@ -387,11 +387,8 @@ static void do_display(size_t no, const char *format)
     }
     switch (no) {
     case r_I:
-        {
-            char *new_display = xasprintf("%s (%-10s)", display, disass(S->ITYPE, S->I));
-            free(display);
-            display = new_display;
-        }
+        free(display);
+        display = xasprintf("I = %s", disass(S->ITYPE, S->I));
         break;
     case r_ITYPE:
         break;
@@ -407,8 +404,15 @@ static void do_display(size_t no, const char *format)
 
 static void do_registers(void)
 {
-    do_display(r_PC, "%-25s");
-    do_display(r_I, "%-22s");
+#if WORD_SIZE == 4
+#define HEX_AND_DEC_FORMAT "26"
+#elif WORD_SIZE == 8
+#define HEX_AND_DEC_FORMAT "44"
+#else
+#error "WORD_SIZE is not 4 or 8!"
+#endif
+    do_display(r_PC, "%-"HEX_AND_DEC_FORMAT"s");
+    do_display(r_I, "%s");
     putchar('\n');
 }
 
