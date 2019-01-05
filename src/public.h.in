@@ -33,7 +33,7 @@ typedef int32_t WORD;
 #define WORD_MIN (INT32_MIN)
 #define PRI_WORD PRId32
 #define PRI_UWORD PRIu32
-#define PRI_XWORD PRIx32
+#define PRI_XWORD "#"PRIx32
 typedef uint32_t UWORD;
 #elif WORD_SIZE == 8
 typedef int64_t WORD;
@@ -41,14 +41,14 @@ typedef int64_t WORD;
 #define WORD_MIN (INT64_MIN)
 #define PRI_WORD PRId64
 #define PRI_UWORD PRIu64
-#define PRI_XWORD PRIx64
+#define PRI_XWORD "#"PRIx64
 typedef uint64_t UWORD;
 #else
 #error "WORD_SIZE is not 4 or 8!"
 #endif
 typedef WORD * WORDP;
-#define PRI_XUWORD "#"PRI_XWORD
-#define PRI_Xsmite_UWORD "#"PRI_XWORD
+#define PRI_XUWORD PRI_XWORD
+#define PRI_Xsmite_UWORD PRI_XWORD
 #define PRI_smite_UWORD PRI_UWORD
 #define PRI_XWORDP "p"
 #define PRI_WORDP "p"

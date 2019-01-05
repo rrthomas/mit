@@ -44,7 +44,7 @@ static void ass_number_test(state *S, WORD n, const char *encoding)
     ass_number(S, 1); ass_action(S, O_POP); // pop number so they don't build up on stack
 
     size_t bytes_ok = 0;
-    printf("%"PRI_WORD" (%#"PRI_XWORD") encoded as: ", n, (UWORD)n);
+    printf("%"PRI_WORD" (%"PRI_XWORD") encoded as: ", n, (UWORD)n);
     for (UWORD i = 0; i < len; i++) {
         BYTE b;
         load_byte(S, start + i, &b);
@@ -81,7 +81,7 @@ int main(void)
     single_step(S); // Load first number
     for (size_t i = 0; i < sizeof(correct) / sizeof(correct[0]); i++) {
         show_data_stack(S);
-        printf("Correct stack: %"PRI_WORD" (%#"PRI_XWORD")\n\n", correct[i], (UWORD)correct[i]);
+        printf("Correct stack: %"PRI_WORD" (%"PRI_XWORD")\n\n", correct[i], (UWORD)correct[i]);
         ptrdiff_t actual;
         int items = sscanf(val_data_stack(S), "%td", &actual);
         if (items != 1 || correct[i] != actual) {

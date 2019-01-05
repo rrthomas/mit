@@ -262,7 +262,7 @@ static void double_arg(char *arg1, bool plus, char *arg2, long long *start, long
 static void disassemble(UWORD start, UWORD end)
 {
     for (UWORD p = start; p < end; ) {
-        printf("%#08"PRI_XWORD": ", p);
+        printf("%"PRI_XWORD": ", p);
 
         WORD val;
         int type = decode_instruction(S, &p, &val);
@@ -440,7 +440,7 @@ static void do_command(int no, char *arg1, bool plus1, char *arg2, bool plus2, c
     case c_DFROM:
         {
             WORD value = POP;
-            printf("%"PRI_WORD" (%#"PRI_XWORD")\n", value, (UWORD)value);
+            printf("%"PRI_WORD" (%"PRI_XWORD")\n", value, (UWORD)value);
         }
         break;
     case c_DATA:
@@ -514,7 +514,7 @@ static void do_command(int no, char *arg1, bool plus1, char *arg2, bool plus2, c
     case c_RFROM:
         {
             WORD value = POP_STACK(S->RP, S->R0, S->RSIZE);
-            printf("%#"PRI_XWORD" (%"PRI_WORD")\n", (UWORD)value, value);
+            printf("%"PRI_XWORD" (%"PRI_WORD")\n", (UWORD)value, value);
         }
         break;
     c_ret:
@@ -543,7 +543,7 @@ static void do_command(int no, char *arg1, bool plus1, char *arg2, bool plus2, c
                         if (no == c_TRACE) do_registers();
                     }
                     if (ret != 0)
-                        printf("HALT code %"PRI_WORD" was returned at PC = %#"PRI_XWORD"\n",
+                        printf("HALT code %"PRI_WORD" was returned at PC = %"PRI_XWORD"\n",
                                ret, S->PC);
                 } else {
                     unsigned long long limit = single_arg(arg1, NULL), i;
@@ -711,11 +711,11 @@ static void parse(char *input)
                 if (!IS_ALIGNED(adr)) {
                     BYTE b;
                     load_byte(S, adr, &b);
-                    display = xasprintf("%#"PRI_XWORD": %#x (%d) (byte)", (UWORD)adr, b, b);
+                    display = xasprintf("%"PRI_XWORD": %#x (%d) (byte)", (UWORD)adr, b, b);
                 } else {
                     WORD c;
                     load_word(S, adr, &c);
-                    display = xasprintf("%#"PRI_XWORD": %#"PRI_XWORD" (%"PRI_WORD") (word)", (UWORD)adr,
+                    display = xasprintf("%"PRI_XWORD": %"PRI_XWORD" (%"PRI_WORD") (word)", (UWORD)adr,
                                         (UWORD)c, c);
                 }
                 printf("%s\n", display);
@@ -789,7 +789,7 @@ static WORD parse_memory_size(UWORD max)
 
 static void dump_core(int exception)
 {
-    warn("exception %d raised at PC=%#"PRI_XWORD, exception, S->PC);
+    warn("exception %d raised at PC=%"PRI_XWORD, exception, S->PC);
 
     char *file = xasprintf("smite-core.%lu", (unsigned long)getpid());
     int fd;
