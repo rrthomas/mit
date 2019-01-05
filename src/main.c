@@ -493,6 +493,8 @@ static void do_command(int no, char *arg1, bool plus1, char *arg2, bool plus2, c
             close(fd);
 
             switch (ret) {
+            case 0:
+                break;
             case -1:
                 fatal("address out of range or unaligned, or module too large");
                 break;
@@ -509,6 +511,7 @@ static void do_command(int no, char *arg1, bool plus1, char *arg2, bool plus2, c
                 fatal("module has wrong WORD_SIZE");
                 break;
             default:
+                fatal("unknown error!");
                 break;
             }
         }
