@@ -142,13 +142,11 @@ state *init_default_stacks(size_t memory_size)
 
 void destroy(state *S)
 {
-    if (S) {
-        free(S->memory);
-        free(S->d_stack);
-        free(S->r_stack);
-        free(S->main_argv_len);
-        free(S);
-    }
+    free(S->memory);
+    free(S->d_stack);
+    free(S->r_stack);
+    free(S->main_argv_len);
+    free(S);
 }
 
 #define R_RO(reg, type, utype)                          \

@@ -264,7 +264,8 @@ static void disassemble(UWORD start, UWORD end)
 
 static void reinit(void)
 {
-    destroy(S);
+    if (S != NULL)
+        destroy(S);
     S = init(memory_size, stack_size, return_stack_size);
     if (S == NULL)
         die("could not allocate virtual machine state");
