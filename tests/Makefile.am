@@ -17,24 +17,24 @@ LOG_COMPILER = $(srcdir)/run-test
 
 LDADD = $(top_builddir)/src/lib@PACKAGE@.la libtest.la
 
-check_PROGRAMS = $(TESTS) load_object
-
-TESTS = arithmetic branch comparison init numbers logic memory \
+noinst_PROGRAMS = load_object
+check_PROGRAMS = arithmetic branch comparison init numbers logic memory \
 	registers stack single_step run exceptions call_native extra_libc
+check_SCRIPTS = hello.test
+
+TESTS = $(check_PROGRAMS) $(check_SCRIPTS)
 TESTS_ENVIRONMENT = \
 	if test -n "$(VALGRIND)"; then export VALGRIND='$(VALGRIND)'; fi; \
-	export LIBTOOL=$(top_builddir)/libtool;
-
-test-parser:
-	( $(TESTS_ENVIRONMENT) $(LOG_COMPILER) $(top_builddir)/src/@PACKAGE@$(EXEEXT) < $(srcdir)/hello.txt ) && \
-	( $(TESTS_ENVIRONMENT) $(LOG_COMPILER) $(top_builddir)/src/@PACKAGE@$(EXEEXT) ./hello.obj > hello.output ) && \
-	diff hello.output $(srcdir)/hello.correct
+	export LIBTOOL=$(top_builddir)/libtool; \
+	export TEST_RUNNER=$(top_srcdir)/build-aux/test-runner; \
+	export EXECUTOR=$(top_builddir)/src/@PACKAGE@$(EXEEXT);
 
 do_load_object: load_object
-	( $(TESTS_ENVIRONMENT) $(LOG_COMPILER) $(top_builddir)/src/@PACKAGE@$(EXEEXT) < $(srcdir)/numbers.txt ) && \
-	$(TESTS_ENVIRONMENT) $(LOG_COMPILER) $(builddir)/load_object $(srcdir) $(builddir)
+	( $(TESTS_ENVIRONMENT) $(LOG_COMPILER) $(top_builddir)/src/@PACKAGE@$(EXEEXT) < $(srcdir)/numbers.asm ) && \
+	$(TESTS_ENVIRONMENT) $(LOG_COMPILER) $(builddir)/load_object $(srcdir) $(builddir) && \
+	rm numbers.obj
 
-check-local: do_load_object test-parser
+check-local: do_load_object
 
 EXTRA_DIST = run-test tests.h \
 	badobj1-4 badobj2-4 badobj3-4 badobj4-4 \
@@ -43,7 +43,6 @@ EXTRA_DIST = run-test tests.h \
 	testobj1-be-8 testobj1-le-8 \
 	testobj2-be-4 testobj2-le-4 \
 	testobj2-be-8 testobj2-le-8 \
-	hello.txt hello.correct \
-	numbers.txt
-
-DISTCLEANFILES = hello.obj hello.output numbers.obj
+	TEST.test \
+	hello.test hello.asm hello.correct \
+	numbers.asm

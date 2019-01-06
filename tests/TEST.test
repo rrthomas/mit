@@ -1,0 +1,5 @@
+#!/bin/sh
+# Usage:
+# Environment variable TEST_RUNNER should be set
+# $0: name-of-test.test
+$TEST_RUNNER $0

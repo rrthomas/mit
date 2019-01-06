@@ -12,7 +12,12 @@ SUBDIRS = lib src tests doc contrib
 
 ACLOCAL_AMFLAGS = -I m4
 
-EXTRA_DIST = m4/gnulib-cache.m4 build-aux/add-symbol-prefix build-aux/find-external-defines build-aux/find-external-syms README.md
+EXTRA_DIST = README.md \
+	m4/gnulib-cache.m4 \
+	build-aux/add-symbol-prefix \
+	build-aux/find-external-defines \
+	build-aux/find-external-syms \
+	build-aux/test-runner
 
 release: distcheck
 	git diff --exit-code && \
