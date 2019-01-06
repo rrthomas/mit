@@ -19,6 +19,7 @@
 #include <errno.h>
 #include <ctype.h>
 #include <string.h>
+#include <strings.h>
 #include <setjmp.h>
 #include <unistd.h>
 #include <fcntl.h>
@@ -168,14 +169,6 @@ static void check_range(UWORD start, UWORD end, const char *quantity)
         fatal("start address must be less than end address");
 }
 
-static void upper(char *s)
-{
-    size_t len = strlen(s);
-
-    for (size_t i = 0; i < len; i++, s++)
-        *s = toupper(*s);
-}
-
 static size_t search(const char *token, const char *list[], size_t entries)
 {
     size_t len = strlen(token);
@@ -184,7 +177,7 @@ static size_t search(const char *token, const char *list[], size_t entries)
         size_t entry_len = strlen(list[i]);
         if (entry_len > 1 && len == 1)
             continue;
-        if (strncmp(token, list[i], len) == 0)
+        if (strncasecmp(token, list[i], len) == 0)
             return i;
     }
 
@@ -194,7 +187,7 @@ static size_t search(const char *token, const char *list[], size_t entries)
 static WORD parse_instruction(const char *token)
 {
     WORD opcode = O_UNDEFINED;
-    if (token[0] == 'O') {
+    if (token[0] == 'O' || token[0] == 'o') {
         opcode = toass(token + 1);
         if (opcode == O_UNDEFINED)
             fatal("invalid opcode");
@@ -216,7 +209,7 @@ static long long parse_number(const char *s, char **endp)
     size_t tlen = strlen(t);
     for (size_t i = 0; i < sizeof(constants) / sizeof(constants[0]); i++) {
         size_t constlen = strlen(constants[i].name);
-        if (tlen == constlen && strcmp(t, constants[i].name) == 0) {
+        if (tlen == constlen && strcasecmp(t, constants[i].name) == 0) {
             *endp = (char*)(s + strlen(s));
             return (long long)(constants[i].value) * (s == t ? 1 : -1);
         }
@@ -332,7 +325,6 @@ static void do_assign(char *token, char *number)
     long long value;
     int bytes = 4;
 
-    upper(number);
     value = parse_instruction(number);
     if (value != O_UNDEFINED)
         bytes = 1;
@@ -544,8 +536,7 @@ static void do_command(int no, char *arg1, bool plus1, char *arg2, bool plus2, c
                     printf("HALT code %"PRI_WORD" was returned\n", ret);
                 if (no == c_TRACE) do_registers();
             } else {
-                upper(arg1);
-                if (strcmp(arg1, "TO") == 0) {
+                if (strcasecmp(arg1, "TO") == 0) {
                     unsigned long long limit = single_arg(arg2, NULL);
                     check_valid(limit, "Address");
                     while ((unsigned long)S->PC != limit && ret == -258) {
@@ -693,7 +684,6 @@ static void parse(char *input)
 
     if (token == NULL)
         fatal("syntax error");
-    upper(token);
     size_t no = search(token, command, commands);
     if (no != SIZE_MAX)
         do_command(no, sym2, plus1, sym3, plus2, sym4);

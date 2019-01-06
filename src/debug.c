@@ -15,6 +15,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 #include <inttypes.h>
 
 #include "xvasprintf.h"
@@ -86,7 +87,7 @@ _GL_ATTRIBUTE_CONST const char *disass(enum instruction_type type, WORD opcode)
 _GL_ATTRIBUTE_PURE UWORD toass(const char *token)
 {
     for (size_t i = 0; i < sizeof(mnemonic) / sizeof(mnemonic[0]); i++)
-        if (mnemonic[i] && strcmp(token, mnemonic[i]) == 0) return i;
+        if (mnemonic[i] && strcasecmp(token, mnemonic[i]) == 0) return i;
 
     return O_UNDEFINED;
 }
