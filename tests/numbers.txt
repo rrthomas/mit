@@ -1,6 +1,6 @@
-NUMBER -257
-NUMBER 12345678
-NUMBER 42
-OHALT
+number -257
+number 12345678
+number 42
+ohalt
 
-SAVE numbers.obj
+save numbers.obj
