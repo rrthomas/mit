@@ -394,7 +394,7 @@ static void do_display(size_t no, const char *format)
     free(display);
 }
 
-static void do_registers(void)
+static void show_registers(void)
 {
 #if WORD_SIZE == 4
 #define HEX_AND_DEC_FORMAT "26"
@@ -406,6 +406,14 @@ static void do_registers(void)
     do_display(r_PC, "%-"HEX_AND_DEC_FORMAT"s");
     do_display(r_I, "%s");
     putchar('\n');
+}
+
+static int do_step(bool trace)
+{
+    int ret = single_step(S);
+    if (trace)
+        show_registers();
+    return ret;
 }
 
 static void do_command(int no, char *arg1, bool plus1, char *arg2, bool plus2, char *arg3)
@@ -511,7 +519,7 @@ static void do_command(int no, char *arg1, bool plus1, char *arg2, bool plus2, c
     case c_QUIT:
         exit(0);
     case c_REGISTERS:
-        do_registers();
+        show_registers();
         break;
     case c_RFROM:
         {
@@ -532,26 +540,21 @@ static void do_command(int no, char *arg1, bool plus1, char *arg2, bool plus2, c
             WORD ret = -258;
 
             if (arg1 == NULL) {
-                if ((ret = single_step(S)))
-                    printf("HALT code %"PRI_WORD" was returned\n", ret);
-                if (no == c_TRACE) do_registers();
+                ret = do_step(no == c_TRACE);
+                printf("HALT code %"PRI_WORD" was returned\n", ret);
             } else {
                 if (strcasecmp(arg1, "TO") == 0) {
                     unsigned long long limit = single_arg(arg2, NULL);
                     check_valid(limit, "Address");
-                    while ((unsigned long)S->PC != limit && ret == -258) {
-                        ret = single_step(S);
-                        if (no == c_TRACE) do_registers();
-                    }
+                    while ((unsigned long)S->PC != limit && ret == -258)
+                        ret = do_step(no == c_TRACE);
                     if (ret != 0)
                         printf("HALT code %"PRI_WORD" was returned at PC = %"PRI_XWORD"\n",
                                ret, S->PC);
                 } else {
                     unsigned long long limit = single_arg(arg1, NULL), i;
-                    for (i = 0; i < limit && ret == -258; i++) {
-                        ret = single_step(S);
-                        if (no == c_TRACE) do_registers();
-                    }
+                    for (i = 0; i < limit && ret == -258; i++)
+                        ret = do_step(no == c_TRACE);
                     if (ret != 0)
                         printf("HALT code %"PRI_WORD" was returned after %llu "
                                "steps\n", ret, i);
