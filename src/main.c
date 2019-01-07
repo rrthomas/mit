@@ -411,8 +411,12 @@ static void show_registers(void)
 static int do_step(bool trace)
 {
     int ret = single_step(S);
-    if (trace)
+    if (trace) {
         show_registers();
+        show_data_stack(S);
+        show_return_stack(S);
+        putchar('\n');
+    }
     return ret;
 }
 

@@ -198,8 +198,7 @@ STEP} executes \angb{number} instructions. {\tt STEP TO} executes
 instructions until {\tt PC} is equal to \angb{address}.
 
 The command {\tt TRACE}, has the same syntax as {\tt STEP}, and performs the
-same function; in addition, it performs the action of the {\tt REGISTERS}
-command after each instruction is executed.
+same function; in addition, it performs the action of the {\tt REGISTERS} and {\tt STACKS} commands after each instruction is executed.
 
 The command {\tt RUN} allows @PACKAGE_NAME@ to execute until it reaches a {\tt HALT}
 instruction, if ever. The code passed to {\tt HALT} is then displayed. The
