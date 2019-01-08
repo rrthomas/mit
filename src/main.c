@@ -769,8 +769,8 @@ static void usage(void)
             "Run " PACKAGE_NAME ".\n"
             "\n",
             program_name);
-#define OPT(longname, shortname, arg, argstring, ...)                   \
-    doc = xasprintf(__VA_ARGS__);                                       \
+#define OPT(longname, shortname, arg, argstring, docstring)             \
+    doc = xasprintf(docstring);                                         \
     shortopt = xasprintf(", -%c", shortname);                           \
     buf = xasprintf("--%s%s %s", longname, shortname ? shortopt : "", argstring); \
     printf("  %-26s%s\n", buf, doc);
