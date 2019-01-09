@@ -28,12 +28,12 @@
 
 void ass_action(state *S, WORD instr)
 {
-    encode_instruction(S, &S->here, INSTRUCTION_ACTION, instr);
+    S->here += encode_instruction(S, S->here, INSTRUCTION_ACTION, instr);
 }
 
 void ass_number(state *S, WORD v)
 {
-    encode_instruction(S, &S->here, INSTRUCTION_NUMBER, v);
+    S->here += encode_instruction(S, S->here, INSTRUCTION_NUMBER, v);
 }
 
 void ass_native_pointer(state *S, void (*pointer)(state *))

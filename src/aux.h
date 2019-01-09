@@ -111,7 +111,7 @@ state *init_default_stacks(size_t memory_size);
 #define ARSHIFT(n, p) (((n) >> (p)) | ((typeof(n))(-((n) < 0)) << (WORD_BIT - (p))))
 
 ptrdiff_t encode_instruction_native(BYTE *addr, enum instruction_type type, WORD v);
-ptrdiff_t encode_instruction(state *S, UWORD *addr, enum instruction_type type, WORD v);
+ptrdiff_t encode_instruction(state *S, UWORD addr, enum instruction_type type, WORD v);
 ptrdiff_t decode_instruction_file(int fd, WORD *val);
 ptrdiff_t decode_instruction(state *S, UWORD *addr, WORD *val);
 

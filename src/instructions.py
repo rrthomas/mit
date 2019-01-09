@@ -1,6 +1,10 @@
-import enum
+from enum import IntEnum
 
-class Opcodes(enum.IntEnum):
+class Types(IntEnum):
+    NUMBER = 0x0
+    ACTION = 0x1
+
+class Opcodes(IntEnum):
     NOP = 0x00
     POP = 0x01
     PUSH = 0x02

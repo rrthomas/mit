@@ -57,8 +57,8 @@
 #define STORE_NATIVE(b) (*addr++ = (b), 0)
 ENCODE_INSTRUCTION(encode_instruction_native, BYTE *, addr, STORE_NATIVE)
 
-#define STORE_VIRTUAL(b) (store_byte(S, (*addr)++, (b)))
-STATEFUL_ENCODE_INSTRUCTION(encode_instruction, UWORD *, addr, STORE_VIRTUAL)
+#define STORE_VIRTUAL(b) (store_byte(S, addr++, (b)))
+STATEFUL_ENCODE_INSTRUCTION(encode_instruction, UWORD, addr, STORE_VIRTUAL)
 
 #define _DECODE_INSTRUCTION(NAME, TYPE, HANDLE, LOAD)                   \
     {                                                                   \

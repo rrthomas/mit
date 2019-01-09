@@ -19,5 +19,6 @@
 /external-defines.txt
 /external-syms.txt
 /external_syms.h
-/instruction-list.h
 /instruction-actions.h
+/instruction-list.h
+/instruction-type-list.h

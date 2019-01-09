@@ -12,7 +12,7 @@ AM_CPPFLAGS = -I$(top_builddir)/lib -I$(top_srcdir)/lib $(WARN_CFLAGS)
 
 lib_LTLIBRARIES = libsmite.la
 libsmite_la_SOURCES = bits_util.c storage.c instruction.c step.c run.c debug.c load_object.c \
-	instruction-list.h instruction-actions.h
+	instruction-list.h instruction-type-list.h instruction-actions.h
 libsmite_la_LIBADD = $(top_builddir)/lib/libgnu.la
 
 bin_PROGRAMS = smite
@@ -32,7 +32,7 @@ completions: tbl_registers.h tbl_commands.h
 
 bits_util.lo debug.lo instruction.lo load_object.lo run.lo step.lo storage.lo main.o: external_syms.h
 step.lo: instruction-actions.h
-bits_util.lo debug.lo instruction.lo load_object.lo step.lo storage.lo main.o: instruction-list.h
+bits_util.lo debug.lo instruction.lo load_object.lo step.lo storage.lo main.o: instruction-list.h instruction-type-list.h
 main.o: tbl_opts.h
 
 # Depend on @PACKAGE@$(EXEEXT) rather than explicitly make-ing it, as otherwise
@@ -79,11 +79,14 @@ tbl_opts.h: tbl_opts.h.in Makefile
 external-defines.txt: $(internal_HDRS)
 	$(top_srcdir)/build-aux/find-external-defines $(srcdir) > $@
 
-instruction-list.h: gen-list.py instructions.py
-	$(PYTHON) $(srcdir)/gen-list.py > instruction-list.h
+instruction-list.h: gen-instruction-list instructions.py
+	$(PYTHON) $(srcdir)/gen-instruction-list > instruction-list.h
 
-instruction-actions.h: gen-actions.py instructions.py
-	$(PYTHON) $(srcdir)/gen-actions.py > instruction-actions.h
+instruction-type-list.h: gen-instruction-type-list instructions.py
+	$(PYTHON) $(srcdir)/gen-instruction-type-list > instruction-type-list.h
+
+instruction-actions.h: gen-actions instructions.py
+	$(PYTHON) $(srcdir)/gen-actions > instruction-actions.h
 
 # Actually needs .o files, but since find-external-syms requires GNU tools,
 # don't force remaking external-syms.txt; instead, add it to EXTRA_DIST.
@@ -107,9 +110,15 @@ external_syms.h: external-syms.txt
 CLOC = cloc --force-lang="C",h
 
 loc:
-	$(CLOC) $(lib@PACKAGE@_la_SOURCES) $(@PACKAGE@_SOURCES) instructions.py gen-list.py gen-actions.py
+	$(CLOC) $(lib@PACKAGE@_la_SOURCES) $(@PACKAGE@_SOURCES) \
+	instructions.py gen-instruction-list gen-instruction-type-list gen-actions
 
-EXTRA_DIST = @PACKAGE@i.in @PACKAGE@i.1 @PACKAGE@-dump.in @PACKAGE@-dump.1 completions.h public.h.in tbl_opts.h.in step.c external-syms.txt external_syms.h gen-list.py gen-actions.py instructions.py
+EXTRA_DIST = \
+	@PACKAGE@i.in @PACKAGE@i.1 @PACKAGE@-dump.in @PACKAGE@-dump.1 \
+	completions.h public.h.in tbl_opts.h.in \
+	external-syms.txt external_syms.h \
+	instructions.py \
+	gen-instruction-list gen-instruction-type-list gen-actions
 
 DISTCLEANFILES = @PACKAGE@i @PACKAGE@-dump @PACKAGE@.1 @PACKAGE@i.1 @PACKAGE-dump.1 completions tbl_opts.h $(include_HEADERS) external-defines.txt external-syms.txt external_syms.h
 # Ignore built files that are part of the distribution (specifically,

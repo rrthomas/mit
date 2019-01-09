@@ -14,8 +14,9 @@
 
 // Instruction encoding
 enum instruction_type {
-      INSTRUCTION_NUMBER,
-      INSTRUCTION_ACTION,
+#define TYPE(name, opcode) INSTRUCTION_ ## name = opcode,
+#include "instruction-type-list.h"
+#undef TYPE
 };
 
 enum {
