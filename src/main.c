@@ -252,6 +252,37 @@ static void double_arg(char *arg1, bool plus, char *arg2, long long *start, long
 }
 
 
+static void load_object_error(int ret, char *name, void (*errfunc)(const char *, ...))
+{
+    const char *err = NULL;
+    switch (ret) {
+    case 0:
+        break;
+    case -1:
+        err = "address out of range or unaligned, or module too large";
+        break;
+    case -2:
+        err = "module header invalid";
+        break;
+    case -3:
+        err = "error while loading module";
+        break;
+    case -4:
+        err = "module has wrong ENDISM";
+        break;
+    case -5:
+        err = "module has wrong WORD_SIZE";
+        break;
+    default:
+        err = "unknown error!";
+        break;
+    }
+
+    if (err != NULL)
+        errfunc("%s: %s", name, err);
+}
+
+
 static void disassemble(UWORD start, UWORD end)
 {
     for (UWORD p = start; p < end; ) {
@@ -495,29 +526,10 @@ static void do_command(int no, char *arg1, bool plus1, char *arg2, bool plus2, c
                 fatal("cannot open file %s", arg1);
             int ret = load_object(S, fd, adr);
             close(fd);
-
-            switch (ret) {
-            case 0:
-                break;
-            case -1:
-                fatal("address out of range or unaligned, or module too large");
-                break;
-            case -2:
-                fatal("module header invalid");
-                break;
-            case -3:
-                fatal("error while loading module");
-                break;
-            case -4:
-                fatal("module has wrong ENDISM");
-                break;
-            case -5:
-                fatal("module has wrong WORD_SIZE");
-                break;
-            default:
-                fatal("unknown error!");
-                break;
-            }
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wsuggest-attribute=format"
+            load_object_error(ret, arg1, fatal);
+#pragma GCC diagnostic pop
         }
         break;
     case c_QUIT:
@@ -882,8 +894,10 @@ int main(int argc, char *argv[])
             die("cannot not open file %s", argv[optind]);
         int ret = load_object(S, fd, 0);
         close(fd);
-        if (ret != 0)
-            die("could not read file %s, or file is invalid", argv[optind]);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wsuggest-attribute=format"
+        load_object_error(ret, argv[optind], die);
+#pragma GCC diagnostic pop
 
         int res = run(S);
         if (core_dump && (res == -23 || res == -9 || (res <= -256 && res >= -260)))
