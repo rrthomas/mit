@@ -253,12 +253,7 @@ disassembly, may also be useful; they are not documented here.
 
 \subsection{Other extras provided by C @PACKAGE_NAME@}
 
-C @PACKAGE_NAME@ provides the following extra type in {\tt @PACKAGE@.h}
-which is useful for programming with @PACKAGE_NAME@:
-
-\begin{description}
-\item[{\tt @PACKAGE@\_WORD\_pointer}:] a union with members {\tt @PACKAGE@\_WORD words[@PACKAGE@\_NATIVE\_POINTER\_SIZE]} and {\tt void (*pointer)(void)}, which allow a function pointer suitable for the {\tt CALL\_NATIVE} instruction to be easily stored and retrieved. It is assumed that the pointer is pushed on to the stack starting with {\tt words[0]} and ending with {\tt words[@PACKAGE@\_NATIVE\_POINTER\_SIZE~$-$~1]}.
-\end{description}
+C @PACKAGE_NAME@ provides various useful extras in {\tt @PACKAGE@\_aux.h}. These are used internally, and are thought to be useful, but may change at any time, so their stability should not be relied on.
 
 
 \bibliographystyle{plain}

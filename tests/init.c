@@ -15,7 +15,7 @@
 int main(void)
 {
     size_t size = 1024;
-    state *S = init(size / WORD_SIZE, 1, 1);
+    state *S = init(size / word_size, 1, 1);
     if (S == NULL) {
         printf("Error in init() tests: init with valid parameters failed\n");
         exit(1);

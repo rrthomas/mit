@@ -11,20 +11,19 @@
 #include "tests.h"
 
 
-#define SIZE 4096
-WORD result[] = { 42, -10, -9, -9, -23, -256 };
-// Values written 000 are overwritten later
-UWORD badpc[] = { 0, 000, SIZE * WORD_SIZE, 000, 000, 000 };
-UWORD address[] = { 0, 0, SIZE * WORD_SIZE, -24, 1, 0 };
-int testno = 0;
-UWORD test[sizeof(result) / sizeof(result[0])];
-
-
 int main(void)
 {
+    unsigned size = 4096;
+    WORD result[] = { 42, -10, -9, -9, -23, -256 };
+    // Values written 000 are overwritten later
+    UWORD badpc[] = { 0, 000, size * word_size, 000, 000, 000 };
+    UWORD address[] = { 0, 0, size * word_size, -24, 1, 0 };
+    int testno = 0;
+    UWORD test[sizeof(result) / sizeof(result[0])];
+
     int exception = 0;
 
-    state *S = init_default_stacks(SIZE);
+    state *S = init_default_stacks(size);
 
     test[testno++] = ass_current(S);
     printf("Test %d: PC = %"PRI_UWORD"\n", testno, ass_current(S));

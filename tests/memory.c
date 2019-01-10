@@ -12,59 +12,58 @@
 #include "tests.h"
 
 
-#define SIZE 4096
-
-const WORD correct[][8] =
-    {
-     {},
-     {SIZE * WORD_SIZE},
-     {SIZE * WORD_SIZE, WORD_SIZE},
-     {SIZE * WORD_SIZE, -WORD_SIZE},
-     {SIZE * WORD_SIZE - WORD_SIZE},
-     {SIZE * WORD_SIZE - WORD_SIZE, 513},
-     {SIZE * WORD_SIZE - WORD_SIZE, 513, 1},
-     {SIZE * WORD_SIZE - WORD_SIZE, 513, SIZE * WORD_SIZE - WORD_SIZE},
-     {SIZE * WORD_SIZE - WORD_SIZE},
-     {SIZE * WORD_SIZE - WORD_SIZE, ZERO},
-     {SIZE * WORD_SIZE - WORD_SIZE, SIZE * WORD_SIZE - WORD_SIZE},
-     {SIZE * WORD_SIZE - WORD_SIZE, 513},
-     {SIZE * WORD_SIZE - WORD_SIZE, 513, 1},
-     {SIZE * WORD_SIZE - WORD_SIZE},
-     {SIZE * WORD_SIZE - WORD_SIZE, ZERO},
-     {SIZE * WORD_SIZE - WORD_SIZE, SIZE * WORD_SIZE - WORD_SIZE},
-     {SIZE * WORD_SIZE - WORD_SIZE, 1},
-     {SIZE * WORD_SIZE - WORD_SIZE + 1},
-     {2},
-     {2, SIZE * WORD_SIZE - 1},
-     {},
-     {SIZE * WORD_SIZE - WORD_SIZE},
-     {((UWORD)0x02 << (WORD_BIT - CHAR_BIT)) | 0x0201},
-     {((UWORD)0x02 << (WORD_BIT - CHAR_BIT)) | 0x0201, 1},
-     {},
-     {ZERO},
-     {},
-     {ZERO},
-     {ZERO, 1},
-     {},
-     {ZERO},
-     {},
-     {ZERO},
-     {ZERO, 1},
-     {},
-    };
-
-
 int main(void)
 {
+    unsigned size = 4096;
+
+    const WORD correct[][8] =
+        {
+         {},
+         {size * word_size},
+         {size * word_size, word_size},
+         {size * word_size, -word_size},
+         {size * word_size - word_size},
+         {size * word_size - word_size, 513},
+         {size * word_size - word_size, 513, 1},
+         {size * word_size - word_size, 513, size * word_size - word_size},
+         {size * word_size - word_size},
+         {size * word_size - word_size, ZERO},
+         {size * word_size - word_size, size * word_size - word_size},
+         {size * word_size - word_size, 513},
+         {size * word_size - word_size, 513, 1},
+         {size * word_size - word_size},
+         {size * word_size - word_size, ZERO},
+         {size * word_size - word_size, size * word_size - word_size},
+         {size * word_size - word_size, 1},
+         {size * word_size - word_size + 1},
+         {2},
+         {2, size * word_size - 1},
+         {},
+         {size * word_size - word_size},
+         {((UWORD)0x02 << (word_bit - CHAR_BIT)) | 0x0201},
+         {((UWORD)0x02 << (word_bit - CHAR_BIT)) | 0x0201, 1},
+         {},
+         {ZERO},
+         {},
+         {ZERO},
+         {ZERO, 1},
+         {},
+         {ZERO},
+         {},
+         {ZERO},
+         {ZERO, 1},
+         {},
+        };
+
     int exception = 0;
 
-    state *S = init_default_stacks(SIZE);
+    state *S = init_default_stacks(size);
 
-    ass_action(S, O_PUSH_MEMORY); ass_number(S, WORD_SIZE); ass_action(S, O_NEGATE); ass_action(S, O_ADD);
+    ass_action(S, O_PUSH_MEMORY); ass_number(S, word_size); ass_action(S, O_NEGATE); ass_action(S, O_ADD);
     ass_number(S, 513); ass_number(S, 1); ass_action(S, O_PUSH); ass_action(S, O_STORE); ass_number(S, 0); ass_action(S, O_PUSH);
     ass_action(S, O_LOAD); ass_number(S, 1); ass_action(S, O_POP); ass_number(S, 0); ass_action(S, O_PUSH); ass_action(S, O_LOADB);
-    ass_action(S, O_ADD); ass_action(S, O_LOADB); ass_number(S, SIZE * WORD_SIZE - 1); ass_action(S, O_STOREB);
-    ass_number(S, SIZE * WORD_SIZE - WORD_SIZE); ass_action(S, O_LOAD); ass_number(S, 1); ass_action(S, O_POP); ass_action(S, O_PUSH_SP);
+    ass_action(S, O_ADD); ass_action(S, O_LOADB); ass_number(S, size * word_size - 1); ass_action(S, O_STOREB);
+    ass_number(S, size * word_size - word_size); ass_action(S, O_LOAD); ass_number(S, 1); ass_action(S, O_POP); ass_action(S, O_PUSH_SP);
     ass_action(S, O_STORE_SP); ass_action(S, O_PUSH_RP); ass_number(S, 1); ass_action(S, O_POP); ass_number(S, 0);
     ass_action(S, O_STORE_RP); ass_action(S, O_PUSH_RP); ass_number(S, 1); ass_action(S, O_POP);
 

@@ -57,7 +57,7 @@ int main(int argc, char *argv[])
         "badobj1", "badobj2", "badobj3", "badobj4" };
     static int error_code[] = { -2, -2, -1, -3 };
     for (size_t i = 0; i < sizeof(bad_files) / sizeof(bad_files[0]); i++) {
-        char *s = obj_name(S, src_dir, bad_files[i], false, WORD_SIZE);
+        char *s = obj_name(S, src_dir, bad_files[i], false, word_size);
         int res = try(S, s, 0);
         free(s);
         printf(" should be %d\n", error_code[i]);
@@ -70,7 +70,7 @@ int main(int argc, char *argv[])
     const char *good_files[] = {
         "testobj1", "testobj2" };
     for (size_t i = 0; i < sizeof(good_files) / sizeof(good_files[0]); i++) {
-        char *s = obj_name(S, src_dir, good_files[i], true, WORD_SIZE);
+        char *s = obj_name(S, src_dir, good_files[i], true, word_size);
         WORD c;
         int res = try(S, s, 0);
         free(s);
@@ -122,14 +122,9 @@ int main(int argc, char *argv[])
     // Check we get an error trying to load an object file of the wrong
     // WORD_SIZE.
     {
-#if WORD_SIZE == 4
-#define WRONG_WORD_SIZE 8
-#elif WORD_SIZE == 8
-#define WRONG_WORD_SIZE 4
-#else
-#error "WORD_SIZE is not 4 or 8!"
-#endif
-        char *s = obj_name(S, src_dir, good_files[0], true, WRONG_WORD_SIZE);
+        assert(word_size == 4 || word_size == 8);
+        unsigned wrong_word_size = word_size == 4 ? 8 : 4;
+        char *s = obj_name(S, src_dir, good_files[0], true, wrong_word_size);
         int res = try(S, s, 0), incorrect_word_size_res = -5;
         free(s);
         printf(" should be %d\n", incorrect_word_size_res);

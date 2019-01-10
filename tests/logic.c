@@ -14,29 +14,28 @@
 #include "tests.h"
 
 
-const WORD correct[][8] =
-    {
-     {(UWORD)0xff << (WORD_BIT - CHAR_BIT), CHAR_BIT, 0xff, CHAR_BIT},
-     {(UWORD)0xff << (WORD_BIT - CHAR_BIT), CHAR_BIT, 0xff << CHAR_BIT},
-     {(UWORD)0xff << (WORD_BIT - CHAR_BIT), CHAR_BIT},
-     {(UWORD)0xff << (WORD_BIT - CHAR_BIT) >> CHAR_BIT},
-     {(UWORD)0xff << (WORD_BIT - CHAR_BIT) >> CHAR_BIT, 0xff << CHAR_BIT},
-     {((UWORD)0xff << (WORD_BIT - CHAR_BIT) >> CHAR_BIT) | (0xff << CHAR_BIT)},
-     {~(((UWORD)0xff << (WORD_BIT - CHAR_BIT) >> CHAR_BIT) | (0xff << CHAR_BIT))},
-     {~(((UWORD)0xff << (WORD_BIT - CHAR_BIT) >> CHAR_BIT) | (0xff << CHAR_BIT)), 1},
-     {~(((UWORD)0xff << (WORD_BIT - CHAR_BIT) >> CHAR_BIT) | (0xff << CHAR_BIT)), 1, -1},
-     {~(((UWORD)0xff << (WORD_BIT - CHAR_BIT) >> CHAR_BIT) | (0xff << CHAR_BIT)), -2},
-     {~(((UWORD)0xff << (WORD_BIT - CHAR_BIT) >> CHAR_BIT) | (0xff << CHAR_BIT)) & -2},
-    };
-
-
 int main(void)
 {
+    const WORD correct[][8] =
+        {
+         {(UWORD)0xff << (word_bit - CHAR_BIT), CHAR_BIT, 0xff, CHAR_BIT},
+         {(UWORD)0xff << (word_bit - CHAR_BIT), CHAR_BIT, 0xff << CHAR_BIT},
+         {(UWORD)0xff << (word_bit - CHAR_BIT), CHAR_BIT},
+         {(UWORD)0xff << (word_bit - CHAR_BIT) >> CHAR_BIT},
+         {(UWORD)0xff << (word_bit - CHAR_BIT) >> CHAR_BIT, 0xff << CHAR_BIT},
+         {((UWORD)0xff << (word_bit - CHAR_BIT) >> CHAR_BIT) | (0xff << CHAR_BIT)},
+         {~(((UWORD)0xff << (word_bit - CHAR_BIT) >> CHAR_BIT) | (0xff << CHAR_BIT))},
+         {~(((UWORD)0xff << (word_bit - CHAR_BIT) >> CHAR_BIT) | (0xff << CHAR_BIT)), 1},
+         {~(((UWORD)0xff << (word_bit - CHAR_BIT) >> CHAR_BIT) | (0xff << CHAR_BIT)), 1, -1},
+         {~(((UWORD)0xff << (word_bit - CHAR_BIT) >> CHAR_BIT) | (0xff << CHAR_BIT)), -2},
+         {~(((UWORD)0xff << (word_bit - CHAR_BIT) >> CHAR_BIT) | (0xff << CHAR_BIT)) & -2},
+        };
+
     int exception = 0;
 
     state *S = init_default_stacks(256);
 
-    PUSH((UWORD)0xff << (WORD_BIT - CHAR_BIT)); PUSH(CHAR_BIT); PUSH(0xff); PUSH(CHAR_BIT);
+    PUSH((UWORD)0xff << (word_bit - CHAR_BIT)); PUSH(CHAR_BIT); PUSH(0xff); PUSH(CHAR_BIT);
 
     ass_action(S, O_LSHIFT); ass_action(S, O_POP2R); ass_action(S, O_RSHIFT); ass_action(S, O_RPOP);
     ass_action(S, O_OR); ass_action(S, O_INVERT); ass_number(S, 1);

@@ -11,22 +11,6 @@
 #include "tests.h"
 
 
-const WORD correct[] = {
-  -257, 12345678, 4, (UWORD)1 << (WORD_BIT - 1),
-  (UWORD)1 << (WORD_BIT - 2), (UWORD)0xff << (WORD_BIT - CHAR_BIT)
-};
-const char *encodings[sizeof(correct) / sizeof(correct[0])] = {
-  "\x7f\xfb", "\x4e\x45\x46\x2f", "\x04",
-#if WORD_SIZE == 4
-  "\x40\x40\x40\x40\x40\xfe",
-  "\x40\x40\x40\x40\x40\x01",
-  "\x40\x40\x40\x40\xff"
-#elif WORD_SIZE == 8
-  "\x40\x40\x40\x40\x40\x40\x40\x40\x40\x40\xf8",
-  "\x40\x40\x40\x40\x40\x40\x40\x40\x40\x40\x04",
-  "\x40\x40\x40\x40\x40\x40\x40\x40\x40\xfc"
-#endif
-};
 
 static void show_encoding(const char *encoding)
 {
@@ -64,6 +48,23 @@ static void ass_number_test(state *S, WORD n, const char *encoding)
 
 int main(void)
 {
+    const WORD correct[] = {
+                            -257, 12345678, 4, (UWORD)1 << (word_bit - 1),
+                            (UWORD)1 << (word_bit - 2), (UWORD)0xff << (word_bit - CHAR_BIT)
+    };
+    const char *encodings[sizeof(correct) / sizeof(correct[0])] = {
+      "\x7f\xfb", "\x4e\x45\x46\x2f", "\x04",
+    #if WORD_SIZE == 4
+      "\x40\x40\x40\x40\x40\xfe",
+      "\x40\x40\x40\x40\x40\x01",
+      "\x40\x40\x40\x40\xff"
+    #elif WORD_SIZE == 8
+      "\x40\x40\x40\x40\x40\x40\x40\x40\x40\x40\xf8",
+      "\x40\x40\x40\x40\x40\x40\x40\x40\x40\x40\x04",
+      "\x40\x40\x40\x40\x40\x40\x40\x40\x40\xfc"
+    #endif
+    };
+
     int exception = 0;
     BYTE b;
 

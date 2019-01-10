@@ -288,15 +288,14 @@ static void reinit(void)
 static int save_object(int fd, UWORD address, UWORD length)
 {
     uint8_t *ptr = native_address_of_range(S, address, length);
-    if (!IS_ALIGNED(address) || ptr == NULL)
+    if (!is_aligned(address) || ptr == NULL)
         return -1;
 
     if (write(fd, PACKAGE_UPPER, sizeof(PACKAGE_UPPER)) != sizeof(PACKAGE_UPPER))
         return -2;
 
     ssize_t bytes_left = MAGIC_LENGTH - strlen(PACKAGE_UPPER) - 1;
-
-    BYTE buf[INSTRUCTION_MAX_CHUNKS] = {};
+    BYTE buf[16] = {}; // 16 is a constant > INSTRUCTION_MAX_CHUNKS
 
     if (write(fd, &buf[0], bytes_left) != bytes_left)
         return -2;
@@ -305,7 +304,7 @@ static int save_object(int fd, UWORD address, UWORD length)
     if (write(fd, &buf[0], len) != len)
         return -2;
 
-    len = encode_instruction_native(&buf[0], INSTRUCTION_NUMBER, WORD_SIZE);
+    len = encode_instruction_native(&buf[0], INSTRUCTION_NUMBER, word_size);
     if (write(fd, &buf[0], len) != len)
         return -2;
 
@@ -349,7 +348,7 @@ static void do_assign(char *token, char *number)
                 WORD adr = (WORD)single_arg(token, NULL);
 
                 check_valid(adr, "Address");
-                if (!IS_ALIGNED(adr) && bytes > 1)
+                if (!is_aligned(adr) && bytes > 1)
                     fatal("only a byte can be assigned to an unaligned address");
                 if (bytes == 1)
                     store_byte(S, adr, value);
@@ -434,7 +433,7 @@ static void do_command(int no, char *arg1, bool plus1, char *arg2, bool plus2, c
     case c_TOR:
         {
             long long value = single_arg(arg1, NULL);
-            PUSH_STACK(S->RP, S->R0, S->RSIZE, value);
+            push_stack(&(S->RP), S->R0, S->RSIZE, value);
         }
         break;
     case c_DISASSEMBLE:
@@ -447,7 +446,8 @@ static void do_command(int no, char *arg1, bool plus1, char *arg2, bool plus2, c
         break;
     case c_DFROM:
         {
-            WORD value = POP;
+            WORD value;
+            POP(&value);
             printf("%"PRI_WORD" (%"PRI_XWORD")\n", value, (UWORD)value);
         }
         break;
@@ -527,7 +527,8 @@ static void do_command(int no, char *arg1, bool plus1, char *arg2, bool plus2, c
         break;
     case c_RFROM:
         {
-            WORD value = POP_STACK(S->RP, S->R0, S->RSIZE);
+            WORD value;
+            pop_stack(&(S->RP), S->R0, S->RSIZE, &value);
             printf("%"PRI_XWORD" (%"PRI_WORD")\n", (UWORD)value, value);
         }
         break;
@@ -603,7 +604,7 @@ static void do_command(int no, char *arg1, bool plus1, char *arg2, bool plus2, c
                 ass_byte(S, (BYTE)value);
                 break;
             case c_NUMBER:
-                if (bytes > WORD_SIZE)
+                if ((unsigned)bytes > word_size)
                     fatal("the argument to NUMBER must fit in a word");
                 ass_number(S, value);
                 break;
@@ -715,7 +716,7 @@ static void parse(char *input)
                     fatal("unknown command or register '%s'", token);
 
                 check_valid(adr, "Address");
-                if (!IS_ALIGNED(adr)) {
+                if (!is_aligned(adr)) {
                     BYTE b;
                     load_byte(S, adr, &b);
                     display = xasprintf("%"PRI_XWORD": %#x (%d) (byte)", (UWORD)adr, b, b);

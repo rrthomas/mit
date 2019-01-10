@@ -84,15 +84,18 @@ static int extra_smite(state *S)
 {
     int exception = 0;
 
-    switch (POP) {
+    UWORD routine;
+    POP((WORD *)&routine);
+    switch (routine) {
     case OX_SMITE_CURRENT_STATE:
-        PUSH_NATIVE_POINTER(S);
+        PUSH_NATIVE_TYPE(state *, S);
         break;
     case OX_SMITE_LOAD_WORD:
         {
-            UWORD addr = POP;
+            UWORD addr;
+            POP((WORD *)&addr);
             state *inner_state;
-            POP_NATIVE_POINTER(inner_state);
+            POP_NATIVE_TYPE(state *, &inner_state);
             WORD value;
             int ret = load_word(inner_state, addr, &value);
             PUSH(value);
@@ -101,19 +104,22 @@ static int extra_smite(state *S)
         break;
     case OX_SMITE_STORE_WORD:
         {
-            WORD value = POP;
-            UWORD addr = POP;
+            WORD value;
+            POP(&value);
+            UWORD addr;
+            POP((WORD *)&addr);
             state *inner_state;
-            POP_NATIVE_POINTER(inner_state);
+            POP_NATIVE_TYPE(state *, &inner_state);
             int ret = store_word(inner_state, addr, value);
             PUSH(ret);
         }
         break;
     case OX_SMITE_LOAD_BYTE:
         {
-            UWORD addr = POP;
+            UWORD addr;
+            POP((WORD *)&addr);
             state *inner_state;
-            POP_NATIVE_POINTER(inner_state);
+            POP_NATIVE_TYPE(state *, &inner_state);
             BYTE value;
             int ret = load_byte(inner_state, addr, &value);
             PUSH(value);
@@ -122,37 +128,42 @@ static int extra_smite(state *S)
         break;
     case OX_SMITE_STORE_BYTE:
         {
-            BYTE value = POP;
-            UWORD addr = POP;
+            WORD value;
+            POP(&value);
+            UWORD addr;
+            POP((WORD *)&addr);
             state *inner_state;
-            POP_NATIVE_POINTER(inner_state);
-            int ret = store_byte(inner_state, addr, value);
+            POP_NATIVE_TYPE(state *, &inner_state);
+            int ret = store_byte(inner_state, addr, (BYTE)value);
             PUSH(ret);
         }
         break;
     case OX_SMITE_MEM_REALLOC:
         {
-            size_t n = POP;
+            UWORD n;
+            POP((WORD *)&n);
             state *inner_state;
-            POP_NATIVE_POINTER(inner_state);
-            UWORD ret = mem_realloc(inner_state, n);
+            POP_NATIVE_TYPE(state *, &inner_state);
+            UWORD ret = mem_realloc(inner_state, (size_t)n);
             PUSH(ret);
         }
         break;
     case OX_SMITE_NATIVE_ADDRESS_OF_RANGE:
         {
-            UWORD len = POP;
-            UWORD addr = POP;
+            UWORD len;
+            POP((WORD *)&len);
+            UWORD addr;
+            POP((WORD *)&addr);
             state *inner_state;
-            POP_NATIVE_POINTER(inner_state);
+            POP_NATIVE_TYPE(state *, &inner_state);
             uint8_t *ptr = native_address_of_range(inner_state, addr, len);
-            PUSH_NATIVE_POINTER(ptr);
+            PUSH_NATIVE_TYPE(uint8_t *, ptr);
         }
         break;
     case OX_SMITE_RUN:
         {
             state *inner_state;
-            POP_NATIVE_POINTER(inner_state);
+            POP_NATIVE_TYPE(state *, &inner_state);
             int ret = run(inner_state);
             PUSH(ret);
         }
@@ -160,45 +171,51 @@ static int extra_smite(state *S)
     case OX_SMITE_SINGLE_STEP:
         {
             state *inner_state;
-            POP_NATIVE_POINTER(inner_state);
+            POP_NATIVE_TYPE(state *, &inner_state);
             int ret = single_step(inner_state);
             PUSH(ret);
         }
         break;
     case OX_SMITE_LOAD_OBJECT:
         {
-            UWORD address = POP;
-            int fd = POP;
+            UWORD address;
+            POP((WORD *)&address);
+            WORD fd;
+            POP(&fd);
             state *inner_state;
-            POP_NATIVE_POINTER(inner_state);
-            int ret = load_object(inner_state, fd, address);
+            POP_NATIVE_TYPE(state *, &inner_state);
+            int ret = load_object(inner_state, (int)fd, address);
             PUSH(ret);
         }
         break;
     case OX_SMITE_INIT:
         {
-            size_t return_stack_size = POP;
-            size_t stack_size = POP;
-            size_t memory_size = POP;
-            state *new_state = init(memory_size, stack_size, return_stack_size);
-            PUSH_NATIVE_POINTER(new_state);
+            UWORD return_stack_size;
+            POP((WORD *)&return_stack_size);
+            UWORD stack_size;
+            POP((WORD *)&stack_size);
+            UWORD memory_size;
+            POP((WORD *)&memory_size);
+            state *new_state = init((size_t)memory_size, (size_t)stack_size, (size_t)return_stack_size);
+            PUSH_NATIVE_TYPE(state *, new_state);
         }
         break;
     case OX_SMITE_DESTROY:
         {
             state *inner_state;
-            POP_NATIVE_POINTER(inner_state);
+            POP_NATIVE_TYPE(state *, &inner_state);
             destroy(inner_state);
         }
         break;
     case OX_SMITE_REGISTER_ARGS:
         {
             char **argv;
-            POP_NATIVE_POINTER(argv);
-            int argc = POP;
+            POP_NATIVE_TYPE(char **, &argv);
+            WORD argc;
+            POP(&argc);
             state *inner_state;
-            POP_NATIVE_POINTER(inner_state);
-            int ret = register_args(inner_state, argc, argv);
+            POP_NATIVE_TYPE(state *, &inner_state);
+            int ret = register_args(inner_state, (int)argc, argv);
             PUSH(ret);
         }
         break;
@@ -214,13 +231,16 @@ static int extra_libc(state *S)
 {
     int exception = 0;
 
-    switch (POP) {
+    UWORD routine;
+    POP((WORD *)&routine);
+    switch (routine) {
     case OX_ARGC: // ( -- u )
         PUSH(S->main_argc);
         break;
     case OX_ARG_LEN: // ( u1 -- u2 )
         {
-            UWORD narg = POP;
+            UWORD narg;
+            POP((WORD *)&narg);
             if (narg >= (UWORD)S->main_argc)
                 PUSH(0);
             else
@@ -229,9 +249,12 @@ static int extra_libc(state *S)
         break;
     case OX_ARG_COPY: // ( u1 c-addr u2 -- u3 )
         {
-            UWORD len = POP;
-            UWORD buf = POP;
-            UWORD narg = POP;
+            UWORD len;
+            POP((WORD *)&len);
+            UWORD buf;
+            POP((WORD *)&buf);
+            UWORD narg;
+            POP((WORD *)&narg);
 
             if (exception == 0 && narg < (UWORD)S->main_argc) {
                 len = MIN(len, S->main_argv_len[narg]);
@@ -257,9 +280,13 @@ static int extra_libc(state *S)
     case OX_OPEN_FILE:
         {
             bool binary = false;
-            int perm = getflags(POP, &binary);
-            UWORD len = POP;
-            UWORD str = POP;
+            WORD perm_;
+            POP(&perm_);
+            int perm = getflags(perm_, &binary);
+            UWORD len;
+            POP((WORD *)&len);
+            UWORD str;
+            POP((WORD *)&str);
             char *s = (char *)native_address_of_range(S, str, len);
             int fd = s ? open(s, perm, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH) : -1;
             PUSH((WORD)fd);
@@ -268,21 +295,25 @@ static int extra_libc(state *S)
         break;
     case OX_CLOSE_FILE:
         {
-            int fd = POP;
+            WORD fd;
+            POP(&fd);
             PUSH((WORD)close(fd));
         }
         break;
     case OX_READ_FILE:
         {
-            int fd = POP;
-            UWORD nbytes = POP;
-            UWORD buf = POP;
+            WORD fd;
+            POP(&fd);
+            UWORD nbytes;
+            POP((WORD *)&nbytes);
+            UWORD buf;
+            POP((WORD *)&buf);
 
             ssize_t nread = 0;
             if (exception == 0) {
                 uint8_t *ptr = native_address_of_range(S, buf, nbytes);
                 if (ptr)
-                    nread = read(fd, ptr, nbytes);
+                    nread = read((int)fd, ptr, nbytes);
             }
 
             PUSH(nread);
@@ -291,15 +322,18 @@ static int extra_libc(state *S)
         break;
     case OX_WRITE_FILE:
         {
-            int fd = POP;
-            UWORD nbytes = POP;
-            UWORD buf = POP;
+            WORD fd;
+            POP(&fd);
+            UWORD nbytes;
+            POP((WORD *)&nbytes);
+            UWORD buf;
+            POP((WORD *)&buf);
 
             ssize_t nwritten = 0;
             if (exception == 0) {
                 uint8_t *ptr = native_address_of_range(S, buf, nbytes);
                 if (ptr)
-                    nwritten = write(fd, ptr, nbytes);
+                    nwritten = write((int)fd, ptr, nbytes);
             }
 
             // FIXME: push number of bytes written, symmetric with READ_FILE
@@ -308,33 +342,41 @@ static int extra_libc(state *S)
         break;
     case OX_FILE_POSITION:
         {
-            int fd = POP;
-            off_t res = lseek(fd, 0, SEEK_CUR);
-            PUSH64((uint64_t)res);
+            WORD fd;
+            POP(&fd);
+            off_t res = lseek((int)fd, 0, SEEK_CUR);
+            PUSH_NATIVE_TYPE(off_t, res);
             PUSH(res >= 0 ? 0 : -1);
         }
         break;
     case OX_REPOSITION_FILE:
         {
-            int fd = POP;
-            uint64_t ud = POP64;
-            off_t res = lseek(fd, (off_t)ud, SEEK_SET);
+            WORD fd;
+            POP(&fd);
+            off_t off;
+            POP_NATIVE_TYPE(off_t, &off);
+            off_t res = lseek((int)fd, off, SEEK_SET);
             PUSH(res >= 0 ? 0 : -1);
         }
         break;
     case OX_FLUSH_FILE:
         {
-            int fd = POP;
-            int res = fdatasync(fd);
+            WORD fd;
+            POP(&fd);
+            int res = fdatasync((int)fd);
             PUSH(res);
         }
         break;
     case OX_RENAME_FILE:
         {
-            UWORD len1 = POP;
-            UWORD str1 = POP;
-            UWORD len2 = POP;
-            UWORD str2 = POP;
+            UWORD len1;
+            POP((WORD *)&len1);
+            UWORD str1;
+            POP((WORD *)&str1);
+            UWORD len2;
+            POP((WORD *)&len2);
+            UWORD str2;
+            POP((WORD *)&str2);
             char *s1 = (char *)native_address_of_range(S, str1, len1);
             char *s2 = (char *)native_address_of_range(S, str2, len2);
             exception = (s1 == NULL || s2 == NULL) ? -9 : rename(s2, s1);
@@ -343,8 +385,10 @@ static int extra_libc(state *S)
         break;
     case OX_DELETE_FILE:
         {
-            UWORD len = POP;
-            UWORD str = POP;
+            UWORD len;
+            POP((WORD *)&len);
+            UWORD str;
+            POP((WORD *)&str);
             char *s = (char *)native_address_of_range(S, str, len);
             exception = s == NULL ? -9 : remove(s);
             PUSH(exception);
@@ -353,25 +397,29 @@ static int extra_libc(state *S)
     case OX_FILE_SIZE:
         {
             struct stat st;
-            int fd = POP;
-            int res = fstat(fd, &st);
-            PUSH64(st.st_size);
+            WORD fd;
+            POP(&fd);
+            int res = fstat((int)fd, &st);
+            PUSH_NATIVE_TYPE(off_t, st.st_size);
             PUSH(res);
         }
         break;
     case OX_RESIZE_FILE:
         {
-            int fd = POP;
-            uint64_t ud = POP64;
-            int res = ftruncate(fd, (off_t)ud);
+            WORD fd;
+            POP(&fd);
+            off_t off;
+            POP_NATIVE_TYPE(off_t, &off);
+            int res = ftruncate((int)fd, off);
             PUSH(res);
         }
         break;
     case OX_FILE_STATUS:
         {
             struct stat st;
-            int fd = POP;
-            int res = fstat(fd, &st);
+            WORD fd;
+            POP(&fd);
+            int res = fstat((int)fd, &st);
             PUSH(st.st_mode);
             PUSH(res);
         }
@@ -388,7 +436,9 @@ static int extra(state *S)
 {
     int exception = 0;
 
-    switch (POP) {
+    UWORD lib;
+    POP((WORD *)&lib);
+    switch (lib) {
     case OXLIB_SMITE:
         exception = extra_smite(S);
         break;
@@ -431,9 +481,9 @@ WORD single_step(state *S)
     if (exception != 0) {
         // Deal with address exceptions during execution cycle.
         S->BADPC = S->PC - 1;
-        if (!STACK_VALID(S->SP, S->S0, S->SSIZE))
+        if (!stack_valid(S->SP, S->S0, S->SSIZE))
             return -257;
-        _PUSH_STACK(S->SP, S->S0, S->SSIZE, exception);
+        push_stack(&(S->SP), S->S0, S->SSIZE, exception);
         exception = 0;
         S->PC = S->HANDLER;
     }

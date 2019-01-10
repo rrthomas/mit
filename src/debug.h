@@ -15,7 +15,7 @@
 
 void ass_action(state *S, WORD instr);	// assemble an action
 void ass_number(state *S, WORD n);	// assemble a number
-void ass_native_pointer(state *S, void (*pointer)(state *));  // assemble a native function pointer
+void ass_native_pointer(state *S, void *ptr);  // assemble a native pointer
 void ass_byte(state *S, BYTE byte);	// assemble a literal byte
 void start_ass(state *S, UWORD addr);	// start assembly, initialising variables
 UWORD ass_current(state *S);	// return address of WORD currently being assembled to

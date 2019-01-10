@@ -15,29 +15,21 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <stdbool.h>
 #include <inttypes.h>
-#include <limits.h>
 
-
-// Parameters
-#define WORD_SIZE @WORD_SIZE@
-extern unsigned word_size;
-#define NATIVE_POINTER_SIZE (sizeof(void *))
 
 // Basic types
+#define WORD_SIZE @WORD_SIZE@
 typedef uint8_t BYTE;
 #if WORD_SIZE == 4
 typedef int32_t WORD;
-#define UWORD_MAX (UINT32_MAX)
-#define WORD_MIN (INT32_MIN)
 #define PRI_WORD PRId32
 #define PRI_UWORD PRIu32
 #define PRI_XWORD "#"PRIx32
 typedef uint32_t UWORD;
 #elif WORD_SIZE == 8
 typedef int64_t WORD;
-#define UWORD_MAX (UINT64_MAX)
-#define WORD_MIN (INT64_MIN)
 #define PRI_WORD PRId64
 #define PRI_UWORD PRIu64
 #define PRI_XWORD "#"PRIx64
@@ -51,14 +43,19 @@ typedef WORD * WORDP;
 #define PRI_smite_UWORD PRI_UWORD
 #define PRI_XWORDP "p"
 #define PRI_WORDP "p"
+
+// Parameters
+extern const UWORD word_size;
+extern const UWORD native_pointer_size;
 #define BYTE_BIT 8
-#define BYTE_MASK ((1 << BYTE_BIT) - 1)
-#undef WORD_BIT // FIXME: prefix this and other symbols
-#define WORD_BIT (WORD_SIZE * BYTE_BIT)
-#define WORD_MASK UWORD_MAX
+extern const UWORD byte_bit;
+extern const UWORD byte_mask;
+extern const UWORD word_bit;
+extern const UWORD word_mask;
+extern const UWORD uword_max;
+extern const WORD word_min;
 
 // VM registers
-
 typedef struct _state state;
 
 #define R_RO(reg, type, utype)                  \
@@ -70,14 +67,19 @@ typedef struct _state state;
 #undef R
 #undef R_RO
 
-
 // Memory access
-
 // Return value is 0 if OK, or exception code for invalid or unaligned address
 int load_word(state *state, UWORD addr, WORD *value);
 int store_word(state *state, UWORD addr, WORD value);
 int load_byte(state *state, UWORD addr, BYTE *value);
 int store_byte(state *state, UWORD addr, BYTE value);
+bool stack_underflow(WORD *sp, WORD *base);
+bool stack_overflow(WORD *sp, WORD *base, UWORD size);
+bool stack_valid(WORD *sp, WORD *base, UWORD size);
+int load_stack(WORD *sp, WORD *base, UWORD size, UWORD pos, WORD *v);
+int store_stack(WORD *sp, WORD *base, UWORD size, UWORD pos, WORD v);
+int push_stack(WORD **sp, WORD *base, UWORD size, WORD v);
+int pop_stack(WORD **sp, WORD *base, UWORD size, WORD *v);
 
 // Interface calls
 uint8_t *native_address_of_range(state *S, UWORD addr, UWORD length);
@@ -91,11 +93,5 @@ int mem_realloc(state *state, UWORD size);
 void destroy(state *state);
 int register_args(state *state, int argc, char *argv[]);
 
-// A union to allow storage of machine pointers in VM memory
-union _WORD_pointer {
-    WORD words[NATIVE_POINTER_SIZE / WORD_SIZE];
-    void *pointer;
-};
-typedef union _WORD_pointer WORD_pointer;
 
 #endif

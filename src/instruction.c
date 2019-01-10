@@ -87,9 +87,9 @@ STATEFUL_ENCODE_INSTRUCTION(encode_instruction, UWORD, addr, STORE_VIRTUAL)
         /* Final (or only) byte */                                      \
         len++;                                                          \
         n |= (WORD)b << bits;                                           \
-        bits = MIN(bits + BYTE_BIT, WORD_BIT);                          \
-        if (type == INSTRUCTION_NUMBER && bits < WORD_BIT)              \
-            n = ARSHIFT(n << (WORD_BIT - bits), WORD_BIT - bits);       \
+        bits = MIN(bits + byte_bit, word_bit);                          \
+        if (type == INSTRUCTION_NUMBER && bits < word_bit)              \
+            n = ARSHIFT(n << (word_bit - bits), word_bit - bits);       \
         *val = n;                                                       \
         return type;                                                    \
     }

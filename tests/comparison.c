@@ -48,7 +48,7 @@ static void step(state *S, unsigned start, unsigned end)
                 printf("Error in comparison tests: PC = %"PRI_UWORD"\n", S->PC);
                 exit(1);
             }
-            (void)POP;	// drop result of comparison
+            (void)POP(&temp);	// drop result of comparison
         }
 }
 

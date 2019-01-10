@@ -14,47 +14,46 @@
 
 #define SIZE 1024
 
-const WORD correct[][8] =
-    {
-     {},
-     {1},
-     {1, 1},
-     {},
-     {16384},
-     {16384, 1},
-     {},
-     {(UWORD)DEFAULT_STACK_SIZE},
-     {(UWORD)DEFAULT_STACK_SIZE, 1},
-     {},
-     {42 * WORD_SIZE},
-     {},
-     {42 * WORD_SIZE},
-     {42 * WORD_SIZE, 1},
-     {},
-     {SIZE},
-     {SIZE, 1},
-     {},
-     {ZERO},
-     {ZERO, ZERO},
-     {ZERO, ZERO, 2},
-     {},
-     {WORD_SIZE},
-     {WORD_SIZE, NATIVE_POINTER_SIZE},
-     {WORD_SIZE, NATIVE_POINTER_SIZE, 2},
-     {},
-    };
-
-
 int main(void)
 {
+   const WORD correct[][8] =
+       {
+        {},
+        {1},
+        {1, 1},
+        {},
+        {16384},
+        {16384, 1},
+        {},
+        {(UWORD)DEFAULT_STACK_SIZE},
+        {(UWORD)DEFAULT_STACK_SIZE, 1},
+        {},
+        {42 * word_size},
+        {},
+        {42 * word_size},
+        {42 * word_size, 1},
+        {},
+        {SIZE},
+        {SIZE, 1},
+        {},
+        {ZERO},
+        {ZERO, ZERO},
+        {ZERO, ZERO, 2},
+        {},
+        {word_size},
+        {word_size, native_pointer_size},
+        {word_size, native_pointer_size, 2},
+        {},
+       };
+
     int exception = 0;
 
-    state *S = init_default_stacks(SIZE / WORD_SIZE);
+    state *S = init_default_stacks(SIZE / word_size);
 
     ass_action(S, O_PUSH_PC); ass_number(S, 1); ass_action(S, O_POP);
     ass_action(S, O_PUSH_SSIZE); ass_number(S, 1); ass_action(S, O_POP);
     ass_action(S, O_PUSH_RSIZE); ass_number(S, 1); ass_action(S, O_POP);
-    ass_number(S, 42 * WORD_SIZE);
+    ass_number(S, 42 * word_size);
     ass_action(S, O_STORE_HANDLER);
     ass_action(S, O_PUSH_HANDLER); ass_number(S, 1); ass_action(S, O_POP);
     ass_action(S, O_PUSH_MEMORY); ass_number(S, 1); ass_action(S, O_POP);

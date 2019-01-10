@@ -59,184 +59,232 @@ actions[Opcodes.NOP] = '''
 '''
 
 actions[Opcodes.POP] = '''
-WORD depth = POP;
-S->SP -= depth * STACK_DIRECTION;
+WORD depth;
+POP(&depth);
+S->SP -= depth * stack_direction;
 '''
 
 actions[Opcodes.PUSH] = '''
-WORD depth = POP;
-WORD pickee = LOAD_STACK(S->SP, S->S0, S->SSIZE, depth);
+WORD depth;
+POP(&depth);
+WORD pickee;
+exception = load_stack(S->SP, S->S0, S->SSIZE, depth, &pickee);
 PUSH(pickee);
 '''
 
 actions[Opcodes.SWAP] = '''
-WORD depth = POP;
-WORD swapee = LOAD_STACK(S->SP, S->S0, S->SSIZE, depth);
-WORD top = POP;
+WORD depth;
+POP(&depth);
+WORD swapee;
+exception = load_stack(S->SP, S->S0, S->SSIZE, depth, &swapee);
+WORD top;
+POP(&top);
 PUSH(swapee);
-STORE_STACK(S->SP, S->S0, S->SSIZE, depth, top);
+exception = store_stack(S->SP, S->S0, S->SSIZE, depth, top);
 '''
 
 actions[Opcodes.RPUSH] = '''
-WORD depth = POP;
-WORD pickee = LOAD_STACK(S->RP, S->R0, S->RSIZE, depth);
+WORD depth;
+POP(&depth);
+WORD pickee;
+exception = load_stack(S->RP, S->R0, S->RSIZE, depth, &pickee);
 PUSH(pickee);
 '''
 
 actions[Opcodes.POP2R] = '''
-WORD value = POP;
-PUSH_STACK(S->RP, S->R0, S->RSIZE, value);
+WORD value;
+POP(&value);
+exception = exception == 0 ? push_stack(&(S->RP), S->R0, S->RSIZE, value) : exception;
 '''
 
 actions[Opcodes.RPOP] = '''
-WORD value = POP_STACK(S->RP, S->R0, S->RSIZE);
+WORD value;
+exception = pop_stack(&(S->RP), S->R0, S->RSIZE, &value);
 PUSH(value);
 '''
 
 actions[Opcodes.LT] = '''
-WORD a = POP;
-WORD b = POP;
+WORD a;
+POP(&a);
+WORD b;
+POP(&b);
 PUSH(b < a);
 '''
 
 actions[Opcodes.EQ] = '''
-WORD a = POP;
-WORD b = POP;
+WORD a;
+POP(&a);
+WORD b;
+POP(&b);
 PUSH(a == b);
 '''
 
 actions[Opcodes.ULT] = '''
-UWORD a = POP;
-UWORD b = POP;
+UWORD a;
+POP((WORD *)&a);
+UWORD b;
+POP((WORD *)&b);
 PUSH(b < a);
 '''
 
 actions[Opcodes.ADD] = '''
-WORD a = POP;
-WORD b = POP;
+WORD a;
+POP(&a);
+WORD b;
+POP(&b);
 PUSH(b + a);
 '''
 
 actions[Opcodes.MUL] = '''
-WORD multiplier = POP;
-WORD multiplicand = POP;
+WORD multiplier;
+POP(&multiplier);
+WORD multiplicand;
+POP(&multiplicand);
 PUSH(multiplier * multiplicand);
 '''
 
 actions[Opcodes.UDIVMOD] = '''
-UWORD divisor = POP;
-UWORD dividend = POP;
+UWORD divisor;
+POP((WORD *)&divisor);
+UWORD dividend;
+POP((WORD *)&dividend);
 DIVZERO(divisor);
 PUSH(dividend / divisor);
 PUSH(dividend % divisor);
 '''
 
 actions[Opcodes.DIVMOD] = '''
-WORD divisor = POP;
-WORD dividend = POP;
+WORD divisor;
+POP(&divisor);
+WORD dividend;
+POP(&dividend);
 DIVZERO(divisor);
 PUSH(dividend / divisor);
 PUSH(dividend % divisor);
 '''
 
 actions[Opcodes.NEGATE] = '''
-WORD a = POP;
+WORD a;
+POP(&a);
 PUSH(-a);
 '''
 
 actions[Opcodes.INVERT] = '''
-WORD a = POP;
+WORD a;
+POP(&a);
 PUSH(~a);
 '''
 
 actions[Opcodes.AND] = '''
-WORD a = POP;
-WORD b = POP;
+WORD a;
+POP(&a);
+WORD b;
+POP(&b);
 PUSH(a & b);
 '''
 
 actions[Opcodes.OR] = '''
-WORD a = POP;
-WORD b = POP;
+WORD a;
+POP(&a);
+WORD b;
+POP(&b);
 PUSH(a | b);
 '''
 
 actions[Opcodes.XOR] = '''
-WORD a = POP;
-WORD b = POP;
+WORD a;
+POP(&a);
+WORD b;
+POP(&b);
 PUSH(a ^ b);
 '''
 
 actions[Opcodes.LSHIFT] = '''
-WORD shift = POP;
-WORD value = POP;
-PUSH(shift < (WORD)WORD_BIT ? value << shift : 0);
+WORD shift;
+POP(&shift);
+WORD value;
+POP(&value);
+PUSH(shift < (WORD)word_bit ? value << shift : 0);
 '''
 
 actions[Opcodes.RSHIFT] = '''
-WORD shift = POP;
-WORD value = POP;
-PUSH(shift < (WORD)WORD_BIT ? (WORD)((UWORD)value >> shift) : 0);
+WORD shift;
+POP(&shift);
+WORD value;
+POP(&value);
+PUSH(shift < (WORD)word_bit ? (WORD)((UWORD)value >> shift) : 0);
 '''
 
 actions[Opcodes.LOAD] = '''
-WORD addr = POP;
+WORD addr;
+POP(&addr);
 WORD value;
 exception = exception ? exception : load_word(S, addr, &value);
 PUSH(value);
 '''
 
 actions[Opcodes.STORE] = '''
-WORD addr = POP;
-WORD value = POP;
+WORD addr;
+POP(&addr);
+WORD value;
+POP(&value);
 exception = exception ? exception : store_word(S, addr, value);
 '''
 
 actions[Opcodes.LOADB] = '''
-WORD addr = POP;
+WORD addr;
+POP(&addr);
 BYTE value;
 exception = exception ? exception : load_byte(S, addr, &value);
 PUSH((WORD)value);
 '''
 
 actions[Opcodes.STOREB] = '''
-WORD addr = POP;
-BYTE value = (BYTE)POP;
-exception = exception ? exception : store_byte(S, addr, value);
+WORD addr;
+POP(&addr);
+WORD value;
+POP(&value);
+exception = exception ? exception : store_byte(S, addr, (BYTE)value);
 '''
 
 actions[Opcodes.BRANCH] = '''
-S->PC = POP;
+POP((WORD *)&(S->PC));
 '''
 
 actions[Opcodes.BRANCHZ] = '''
-WORD addr = POP;
-if (POP == 0)
+WORD addr;
+POP(&addr);
+WORD cond;
+POP(&cond);
+if (cond == 0)
     S->PC = addr;
 '''
 
 actions[Opcodes.CALL] = '''
-PUSH_STACK(S->RP, S->R0, S->RSIZE, S->PC);
-S->PC = POP;
+exception = push_stack(&(S->RP), S->R0, S->RSIZE, S->PC);
+POP((WORD *)&(S->PC));
 '''
 
 actions[Opcodes.RET] = '''
-S->PC = POP_STACK(S->RP, S->R0, S->RSIZE);
+exception = pop_stack(&(S->RP), S->R0, S->RSIZE, (WORD *)&(S->PC));
 '''
 
 actions[Opcodes.THROW] = '''
 // The POP macro may set exception
-WORD exception_code = POP;
+WORD exception_code;
+POP(&exception_code);
 exception = exception_code;
 '''
 
 actions[Opcodes.HALT] = '''
-return POP;
+WORD ret;
+POP(&ret);
+return ret;
 '''
 
 actions[Opcodes.CALL_NATIVE] = '''
 void *address;
-POP_NATIVE_POINTER(address);
+POP_NATIVE_TYPE(void *, &address);
 ((void (*)(state *))(address))(S);
 '''
 
@@ -245,11 +293,11 @@ exception = extra(S);
 '''
 
 actions[Opcodes.PUSH_WORD_SIZE] = '''
-PUSH(WORD_SIZE);
+PUSH(word_size);
 '''
 
 actions[Opcodes.PUSH_NATIVE_POINTER_SIZE] = '''
-PUSH(NATIVE_POINTER_SIZE);
+PUSH(native_pointer_size);
 '''
 
 actions[Opcodes.PUSH_SP] = '''
@@ -258,7 +306,8 @@ PUSH(value);
 '''
 
 actions[Opcodes.STORE_SP] = '''
-WORD value = POP;
+WORD value;
+POP(&value);
 S->SP = S->S0 + value;
 '''
 
@@ -267,7 +316,9 @@ PUSH(S->RP - S->R0);
 '''
 
 actions[Opcodes.STORE_RP] = '''
-S->RP = S->R0 + POP;
+WORD addr;
+POP(&addr);
+S->RP = S->R0 + addr;
 '''
 
 actions[Opcodes.PUSH_PC] = '''
@@ -287,7 +338,9 @@ PUSH(S->HANDLER);
 '''
 
 actions[Opcodes.STORE_HANDLER] = '''
-S->HANDLER = POP;
+WORD addr;
+POP(&addr);
+S->HANDLER = addr;
 '''
 
 actions[Opcodes.PUSH_MEMORY] = '''

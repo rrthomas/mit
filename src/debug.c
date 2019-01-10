@@ -36,11 +36,12 @@ void ass_number(state *S, WORD v)
     S->here += encode_instruction(S, S->here, INSTRUCTION_NUMBER, v);
 }
 
-void ass_native_pointer(state *S, void (*pointer)(state *))
+void ass_native_pointer(state *S, void *ptr)
 {
-    WORD_pointer address = { .pointer = pointer };
-    for (unsigned i = 0; i < NATIVE_POINTER_SIZE / WORD_SIZE; i++)
-        ass_number(S, address.words[i]);
+    for (unsigned i = 0; i < align(sizeof(void *)) / word_size; i++) {
+        ass_number(S, (UWORD)((size_t)ptr & word_mask));
+        ptr = (void *)((size_t)ptr >> word_bit);
+    }
 }
 
 void ass_byte(state *S, BYTE byte)
@@ -98,11 +99,11 @@ static char *_val_data_stack(state *S, bool with_hex)
 
     free(picture);
     picture = xasprintf("%s", "");
-    if (!STACK_UNDERFLOW(S->SP, S->S0))
+    if (!stack_underflow(S->SP, S->S0))
         for (UWORD i = 0; i != (UWORD)(S->SP - S->S0);) {
             char *ptr;
-            i += STACK_DIRECTION;
-            if (!STACK_VALID(S->S0 + i, S->S0, S->SSIZE)) {
+            i += stack_direction;
+            if (!stack_valid(S->S0 + i, S->S0, S->SSIZE)) {
                 ptr = xasprintf("%sinvalid address!", picture);
                 free(picture);
                 picture = ptr;
@@ -135,7 +136,7 @@ void show_data_stack(state *S)
 {
     if (S->SP == S->S0)
         printf("Data stack empty\n");
-    else if (STACK_UNDERFLOW(S->SP, S->S0))
+    else if (stack_underflow(S->SP, S->S0))
         printf("Data stack underflow\n");
     else
         printf("Data stack: %s\n", _val_data_stack(S, true));
@@ -145,13 +146,13 @@ void show_return_stack(state *S)
 {
     if (S->RP == S->R0)
         printf("Return stack empty\n");
-    else if (STACK_UNDERFLOW(S->RP, S->R0))
+    else if (stack_underflow(S->RP, S->R0))
         printf("Return stack underflow\n");
     else {
         printf("Return stack: ");
         for (UWORD i = 0; i != (UWORD)(S->RP - S->R0);) {
-            i += STACK_DIRECTION;
-            if (!STACK_VALID(S->R0 + i, S->R0, S->RSIZE)) {
+            i += stack_direction;
+            if (!stack_valid(S->R0 + i, S->R0, S->RSIZE)) {
                 printf("invalid address!");
                 break;
             }

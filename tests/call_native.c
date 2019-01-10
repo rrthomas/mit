@@ -35,7 +35,8 @@ int main(void)
         exit(1);
     }
 
-    WORD top_word = LOAD_STACK(S->SP, S->S0, S->SSIZE, 0);
+    WORD top_word;
+    load_stack(S->SP, S->S0, S->SSIZE, 0, &top_word);
     printf("Top of stack is %"PRI_WORD"; should be %d\n", top_word, CORRECT);
     show_data_stack(S);
     if (top_word != CORRECT) {

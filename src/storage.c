@@ -14,13 +14,47 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <limits.h>
 
 #include "public.h"
 #include "aux.h"
 
 
-unsigned word_size = WORD_SIZE;
+// Constants
+const UWORD word_size = WORD_SIZE;
+const UWORD native_pointer_size = sizeof(void *);
+const UWORD byte_bit = 8;
+const UWORD byte_mask = (1 << BYTE_BIT) - 1;
+const UWORD word_bit = WORD_SIZE * BYTE_BIT;
+#if WORD_SIZE == 4
+const UWORD word_mask = UINT32_MAX;
+const UWORD uword_max = UINT32_MAX;
+const WORD word_min = INT32_MIN;
+// FIXME: add uword_min, word_max
+#elif WORD_SIZE == 8
+const UWORD word_mask = UINT64_MAX;
+const UWORD uword_max = UINT64_MAX;
+const WORD word_min = INT64_MIN;
+// FIXME: add uword_min, word_max
+#else
+#error "WORD_SIZE is not 4 or 8!"
+#endif
+const int stack_direction = 1;
 
+
+// Utility functions
+
+_GL_ATTRIBUTE_CONST UWORD align(UWORD addr)
+{
+    return (addr + word_size - 1) & -word_size;
+}
+
+_GL_ATTRIBUTE_CONST bool is_aligned(UWORD addr)
+{
+    return (addr & (word_size - 1)) == 0;
+}
+
+// General memory access
 
 _GL_ATTRIBUTE_PURE uint8_t *native_address_of_range(state *S, UWORD addr, UWORD length)
 {
@@ -29,37 +63,18 @@ _GL_ATTRIBUTE_PURE uint8_t *native_address_of_range(state *S, UWORD addr, UWORD 
     return ((uint8_t *)(S->memory)) + addr;
 }
 
-int mem_realloc(state *S, UWORD size)
-{
-    if (size > UWORD_MAX / WORD_SIZE)
-        return -1;
-
-    S->memory = realloc(S->memory, size * WORD_SIZE);
-    if (S->memory == NULL)
-        return -1;
-
-    if (S->MEMORY < size)
-        memset(S->memory + S->MEMORY, 0, (size - S->MEMORY) * WORD_SIZE);
-    S->MEMORY = size * WORD_SIZE;
-
-    return 0;
-}
-
-
-// General memory access
-
 int load_word(state *S, UWORD addr, WORD *value)
 {
     if (addr >= S->MEMORY) {
         S->INVALID = addr;
         return -9;
     }
-    if (!IS_ALIGNED(addr)) {
+    if (!is_aligned(addr)) {
         S->INVALID = addr;
         return -23;
     }
 
-    *value = S->memory[addr / WORD_SIZE];
+    *value = S->memory[addr / word_size];
     return 0;
 }
 
@@ -80,12 +95,12 @@ int store_word(state *S, UWORD addr, WORD value)
         S->INVALID = addr;
         return -9;
     }
-    if (!IS_ALIGNED(addr)) {
+    if (!is_aligned(addr)) {
         S->INVALID = addr;
         return -23;
     }
 
-    S->memory[addr / WORD_SIZE] = value;
+    S->memory[addr / word_size] = value;
     return 0;
 }
 
@@ -101,6 +116,74 @@ int store_byte(state *S, UWORD addr, BYTE value)
 }
 
 
+// Stacks
+
+_GL_ATTRIBUTE_CONST bool stack_underflow(WORD *sp, WORD *base)
+{
+    return stack_direction > 0 ? (sp < base) : (sp > base);
+}
+
+_GL_ATTRIBUTE_CONST bool stack_overflow(WORD *sp, WORD *base, UWORD size)
+{
+    return ((UWORD)(stack_direction > 0 ? (sp - base) : (base - sp)) > size);
+}
+
+_GL_ATTRIBUTE_CONST bool stack_valid(WORD *sp, WORD *base, UWORD size)
+{
+    return !stack_underflow(sp, base) && !stack_overflow(sp, base, size);
+}
+
+int load_stack(WORD *sp, WORD *base, UWORD size, UWORD pos, WORD *v)
+{
+    if (!stack_valid(sp - pos, base, size))
+        return -9;
+
+    *v = *(sp - pos * stack_direction);
+    return 0;
+}
+
+int store_stack(WORD *sp, WORD *base, UWORD size, UWORD pos, WORD v)
+{
+    if (!stack_valid(sp - pos, base, size))
+        return -9;
+
+    *(sp - pos * stack_direction) = v;
+    return 0;
+}
+
+int push_stack(WORD **sp, WORD *base, UWORD size, WORD v)
+{
+    *sp += stack_direction;
+    return store_stack(*sp, base, size, 0, v);
+}
+
+int pop_stack(WORD **sp, WORD *base, UWORD size, WORD *v)
+{
+    int ret = load_stack(*sp, base, size, 0, v);
+    *sp -= stack_direction;
+    return ret;
+}
+
+
+// Initialisation and memory management
+
+int mem_realloc(state *S, UWORD size)
+{
+    if (size > uword_max / word_size)
+        return -1;
+
+    S->memory = realloc(S->memory, size * word_size);
+    if (S->memory == NULL)
+        return -1;
+
+    if (S->MEMORY < size)
+        memset(S->memory + S->MEMORY, 0, (size - S->MEMORY) * word_size);
+    S->MEMORY = size * word_size;
+
+    return 0;
+}
+
+
 state *init(size_t size, size_t data_stack_size, size_t return_stack_size)
 {
     state *S = calloc(1, sizeof(state));
@@ -111,9 +194,9 @@ state *init(size_t size, size_t data_stack_size, size_t return_stack_size)
         return NULL;
 
     S->SSIZE = data_stack_size;
-    S->d_stack = calloc(S->SSIZE, WORD_SIZE);
+    S->d_stack = calloc(S->SSIZE, word_size);
     S->RSIZE = return_stack_size;
-    S->r_stack = calloc(S->RSIZE, WORD_SIZE);
+    S->r_stack = calloc(S->RSIZE, word_size);
     if (S->d_stack == NULL || S->r_stack == NULL)
         return NULL;
 

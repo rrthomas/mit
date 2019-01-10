@@ -22,7 +22,7 @@
 
 int load_object(state *S, int fd, UWORD address)
 {
-    if (!IS_ALIGNED(address))
+    if (!is_aligned(address))
         return -1;
 
     size_t len = strlen(PACKAGE_UPPER);
@@ -55,10 +55,10 @@ int load_object(state *S, int fd, UWORD address)
     if (endism != S->ENDISM)
         return -4;
 
-    WORD _word_size;
-    if (decode_instruction_file(fd, &_word_size) != INSTRUCTION_NUMBER)
+    UWORD _word_size;
+    if (decode_instruction_file(fd, (WORD *)&_word_size) != INSTRUCTION_NUMBER)
         return -2;
-    if (_word_size != WORD_SIZE)
+    if (_word_size != word_size)
         return -5;
 
     UWORD length = 0;
