@@ -10,7 +10,7 @@
 
 #include "config.h"
 
-#include "external_syms.h"
+#include "external-syms.h"
 
 #include "count-leading-zeros.h"
 #include "verify.h"

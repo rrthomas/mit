@@ -14,7 +14,7 @@
 
 #include "minmax.h"
 
-#include "external_syms.h"
+#include "external-syms.h"
 
 #include "public.h"
 #include "aux.h"

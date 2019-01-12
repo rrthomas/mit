@@ -30,7 +30,7 @@ include_HEADERS = @PACKAGE@.h @PACKAGE@_aux.h @PACKAGE@_debug.h @PACKAGE@_opcode
 completions: register-list.h tbl_commands.h
 	$(CPP) -I$(srcdir) $(srcdir)/completions.h | grep -v "^#" > $@
 
-bits_util.lo debug.lo instruction.lo load_object.lo run.lo step.lo storage.lo main.o: external_syms.h
+bits_util.lo debug.lo instruction.lo load_object.lo run.lo step.lo storage.lo main.o: external-syms.h
 step.lo: instruction-actions.h
 bits_util.lo debug.lo instruction.lo load_object.lo step.lo storage.lo main.o: register-list.h instruction-list.h instruction-type-list.h
 main.o: tbl_opts.h register-list.h
@@ -99,7 +99,7 @@ instruction-actions.h: gen-actions vm_data.py
 external-syms.txt: $(lib@PACKAGE@_la_sources) public.h.in aux.h debug.h opcodes.h
 	$(top_srcdir)/build-aux/find-external-syms $(PACKAGE) $(srcdir) > $@
 
-external_syms.h: external-syms.txt
+external-syms.h: external-syms.txt
 	sed -e 's/\(.*\)/#define \1 $(PACKAGE)_\1/' < $^ > $@
 
 @PACKAGE@i: @PACKAGE@i.in Makefile
@@ -119,11 +119,11 @@ loc:
 EXTRA_DIST = \
 	@PACKAGE@i.in @PACKAGE@i.1 @PACKAGE@-dump.in @PACKAGE@-dump.1 \
 	completions.h public.h.in tbl_opts.h.in \
-	external-syms.txt external_syms.h \
+	external-syms.txt external-syms.h \
 	vm_data.py \
 	gen-register-list gen-instruction-list gen-instruction-type-list gen-actions
 
-DISTCLEANFILES = @PACKAGE@i @PACKAGE@-dump @PACKAGE@.1 @PACKAGE@i.1 @PACKAGE-dump.1 completions tbl_opts.h $(include_HEADERS) external-defines.txt external-syms.txt external_syms.h
+DISTCLEANFILES = @PACKAGE@i @PACKAGE@-dump @PACKAGE@.1 @PACKAGE@i.1 @PACKAGE-dump.1 completions tbl_opts.h $(include_HEADERS) external-defines.txt external-syms.txt external-syms.h
 # Ignore built files that are part of the distribution (specifically,
 # @PACKAGE@.1)
 distcleancheck_listfiles = \
