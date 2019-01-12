@@ -102,14 +102,14 @@ static int commands = sizeof(command) / sizeof(*command);
 static const char *regist[] = {
 #define R(reg, type, utype) #reg,
 #define R_RO(reg, type, utype) R(reg, type, utype)
-#include "tbl_registers.h"
+#include "register-list.h"
 #undef R
 #undef R_RO
 };
 enum registers {
 #define R(reg, type, utype) r_##reg,
 #define R_RO(reg, type, utype) R(reg, type, utype)
-#include "tbl_registers.h"
+#include "register-list.h"
 #undef R
 #undef R_RO
 };
@@ -371,7 +371,7 @@ static void do_assign(char *token, char *number)
         case r_##reg:                                   \
             fatal("cannot assign to %s", regist[no]);   \
             break;
-#include "tbl_registers.h"
+#include "register-list.h"
 #undef R
 #undef R_RO
         default:
@@ -401,7 +401,7 @@ static void do_display(size_t no, const char *format)
         display = xasprintf(#reg" = %"PRI_X##type" (%"PRI_##type")", (utype)S->reg, S->reg); \
         break;
 #define R_RO(reg, type, utype) R(reg, type, utype)
-#include "tbl_registers.h"
+#include "register-list.h"
 #undef R
     default:
         display = xasprintf("unknown register");

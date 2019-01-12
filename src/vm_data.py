@@ -1,10 +1,47 @@
+# VM definition
+#
+# (c) Reuben Thomas 1994-2018
+#
+# The package is distributed under the GNU Public License version 3, or,
+# at your option, any later version.
+#
+# THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER‘S
+# RISK.
+
 from enum import IntEnum
 
+class Register:
+    '''VM register descriptor.'''
+    def __init__(self, name, ty=None, uty=None, read_only=False):
+        self.name = name
+        self.ty = ty or "UWORD"
+        self.uty = uty or self.ty
+        self.read_only = read_only
+
+registers = [
+    Register("PC"),
+    Register("ITYPE", ty="WORD", uty="UWORD"),
+    Register("I", ty="WORD", uty="UWORD"),
+    Register("MEMORY", read_only=True),
+    Register("SP", "WORDP"),
+    Register("S0", "WORDP"),
+    Register("SSIZE", read_only=True),
+    Register("RP", "WORDP"),
+    Register("R0", "WORDP"),
+    Register("RSIZE", read_only=True),
+    Register("ENDISM", read_only=True),
+    Register("HANDLER"),
+    Register("BADPC"),
+    Register("INVALID"),
+]
+
 class Types(IntEnum):
+    '''Instruction type opcode.'''
     NUMBER = 0x0
     ACTION = 0x1
 
 class Opcodes(IntEnum):
+    '''Action opcode.'''
     NOP = 0x00
     POP = 0x01
     PUSH = 0x02

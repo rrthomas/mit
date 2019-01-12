@@ -63,7 +63,7 @@ typedef struct _state state;
 #define R(reg, type, utype)                     \
     R_RO(reg, type, utype)                      \
     void set_ ## reg(state *state, type value);
-#include "tbl_registers.h"
+#include "register-list.h"
 #undef R
 #undef R_RO
 

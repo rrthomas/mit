@@ -10,4 +10,4 @@
 #define R(reg, type, utype) reg
 #define R_RO(reg, type, utype) reg
 #include "tbl_commands.h"
-#include "tbl_registers.h"
+#include "register-list.h"

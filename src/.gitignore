@@ -22,3 +22,4 @@
 /instruction-actions.h
 /instruction-list.h
 /instruction-type-list.h
+/register-list.h

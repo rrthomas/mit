@@ -241,6 +241,6 @@ void destroy(state *S)
     void set_ ## reg(state *S, type value) {        \
         S->reg = value;                             \
     }
-#include "tbl_registers.h"
+#include "register-list.h"
 #undef R
 #undef R_RO

@@ -25,7 +25,7 @@
 struct _state {
 #define R(reg, type, utype) type reg;
 #define R_RO(reg, type, utype) R(reg, type, utype)
-#include "tbl_registers.h"
+#include "register-list.h"
 #undef R
 #undef R_RO
     WORD *memory;
