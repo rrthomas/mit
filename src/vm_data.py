@@ -105,7 +105,7 @@ actions[Opcodes.PUSH] = '''
 WORD depth;
 POP(&depth);
 WORD pickee;
-exception = load_stack(S->S0, S->SDEPTH, depth, &pickee);
+exception = load_stack(S, depth, &pickee);
 PUSH(pickee);
 '''
 
@@ -113,30 +113,30 @@ actions[Opcodes.SWAP] = '''
 WORD depth;
 POP(&depth);
 WORD swapee;
-exception = load_stack(S->S0, S->SDEPTH, depth, &swapee);
+exception = load_stack(S, depth, &swapee);
 WORD top;
 POP(&top);
 PUSH(swapee);
-exception = store_stack(S->S0, S->SDEPTH, depth, top);
+exception = store_stack(S, depth, top);
 '''
 
 actions[Opcodes.RPUSH] = '''
 WORD depth;
 POP(&depth);
 WORD pickee;
-exception = load_stack(S->R0, S->RDEPTH, depth, &pickee);
+exception = load_return_stack(S, depth, &pickee);
 PUSH(pickee);
 '''
 
 actions[Opcodes.POP2R] = '''
 WORD value;
 POP(&value);
-exception = exception == 0 ? push_stack(S->R0, S->RSIZE, &(S->RDEPTH), value) : exception;
+exception = exception == 0 ? push_return_stack(S, value) : exception;
 '''
 
 actions[Opcodes.RPOP] = '''
 WORD value;
-exception = pop_stack(S->R0, &(S->RDEPTH), &value);
+exception = pop_return_stack(S, &value);
 PUSH(value);
 '''
 
@@ -298,12 +298,12 @@ if (cond == 0)
 '''
 
 actions[Opcodes.CALL] = '''
-exception = push_stack(S->R0, S->RSIZE, &(S->RDEPTH), S->PC);
+exception = push_return_stack(S, S->PC);
 POP((WORD *)&(S->PC));
 '''
 
 actions[Opcodes.RET] = '''
-exception = pop_stack(S->R0, &(S->RDEPTH), (WORD *)&(S->PC));
+exception = pop_return_stack(S, (WORD *)&(S->PC));
 '''
 
 actions[Opcodes.THROW] = '''

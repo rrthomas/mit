@@ -118,38 +118,79 @@ int store_byte(state *S, UWORD addr, BYTE value)
 
 // Stacks
 
-int load_stack(WORD *base, UWORD depth, UWORD pos, WORD *v)
+int load_stack(state *S, UWORD pos, WORD *v)
 {
-    if (pos >= depth)
+    if (pos >= S->SDEPTH)
         return -9;
 
-    *v = *(base + (depth - pos - 1) * stack_direction);
+    *v = *(S->S0 + (S->SDEPTH - pos - 1) * stack_direction);
     return 0;
 }
 
-int store_stack(WORD *base, UWORD depth, UWORD pos, WORD v)
+int store_stack(state *S, UWORD pos, WORD v)
 {
-    if (pos >= depth)
+    if (pos >= S->SDEPTH)
         return -9;
 
-    *(base + (depth - pos - 1) * stack_direction) = v;
+    *(S->S0 + (S->SDEPTH - pos - 1) * stack_direction) = v;
     return 0;
 }
 
-int pop_stack(WORD *base, UWORD *depth, WORD *v)
+int pop_stack(state *S, WORD *v)
 {
-    if (*depth == 0)
+    if (S->SDEPTH == 0)
         return -9;
 
-    return load_stack(base, (*depth)--, 0, v);
+    int ret = load_stack(S, 0, v);
+    S->SDEPTH--;
+    return ret;
 }
 
-int push_stack(WORD *base, UWORD size, UWORD *depth, WORD v)
+int push_stack(state *S, WORD v)
 {
-    if (*depth == size)
+    if (S->SDEPTH == S->SSIZE)
         return -9;
 
-    return store_stack(base, ++(*depth), 0, v);
+    (S->SDEPTH)++;
+    return store_stack(S, 0, v);
+}
+
+
+int load_return_stack(state *S, UWORD pos, WORD *v)
+{
+    if (pos >= S->RDEPTH)
+        return -9;
+
+    *v = *(S->R0 + (S->RDEPTH - pos - 1) * stack_direction);
+    return 0;
+}
+
+int store_return_stack(state *S, UWORD pos, WORD v)
+{
+    if (pos >= S->RDEPTH)
+        return -9;
+
+    *(S->R0 + (S->RDEPTH - pos - 1) * stack_direction) = v;
+    return 0;
+}
+
+int pop_return_stack(state *S, WORD *v)
+{
+    if (S->RDEPTH == 0)
+        return -9;
+
+    int ret = load_return_stack(S, 0, v);
+    (S->RDEPTH)--;
+    return ret;
+}
+
+int push_return_stack(state *S, WORD v)
+{
+    if (S->RDEPTH == S->RSIZE)
+        return -9;
+
+    (S->RDEPTH)++;
+    return store_return_stack(S, 0, v);
 }
 
 

@@ -43,7 +43,7 @@ static void step(state *S, unsigned start, unsigned end)
             single_step(S);
             printf("I = %s\n", disass(S->ITYPE, S->I));
             WORD v;
-            assert(load_stack(S->S0, S->SDEPTH, 0, &v) == 0);
+            assert(load_stack(S, 0, &v) == 0);
             printf("Result: %"PRI_WORD"; correct result: %"PRI_WORD"\n\n", v,
                    correct[i]);
             if (correct[i] != v) {

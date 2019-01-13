@@ -245,10 +245,14 @@ The following routines give easier access to @PACKAGE_NAME@’s address space at
 The following routines give access to @PACKAGE_NAME@’s stacks. On success, they return $0$, and on failure, the relevant exception code.
 
 \begin{description}
-\ifacec{int @PACKAGE@\_load\_stack(@PACKAGE@\_WORD *base, @PACKAGE@\_UWORD depth, @PACKAGE@\_UWORD pos, @PACKAGE@\_WORD *value)}{Load the word at the given position of the given stack into the given {\tt @PACKAGE@\_WORD *}.}
-\ifacec{int @PACKAGE@\_store\_stack(@PACKAGE@\_WORD *base, @PACKAGE@\_UWORD depth, @PACKAGE@\_UWORD pos, @PACKAGE@\_WORD value)}{Store the given {\tt WORD} value at the given position in the given stack.}
-\ifacec{int @PACKAGE@\_pop\_stack(@PACKAGE@\_WORD *base, @PACKAGE@\_UWORD *depth, @PACKAGE@\_WORD *value)}{Pop the top word off the given stack, decrementing its depth, into the given {\tt @PACKAGE@\_WORD *}.}
-\ifacec{int @PACKAGE@\_push\_stack(@PACKAGE@\_WORD *base, @PACKAGE@\_UWORD size, @PACKAGE@\_UWORD *depth, @PACKAGE@\_WORD value)}{Push the given {\tt @PACKAGE@\_WORD} value on to the given stack of the given size, incrementing its depth.}
+\ifacec{int @PACKAGE@\_load\_stack(@PACKAGE@\_state *state, @PACKAGE@\_UWORD pos, @PACKAGE@\_WORD *value)}{Load the word at the given position of the data stack into the given {\tt @PACKAGE@\_WORD *}.}
+\ifacec{int @PACKAGE@\_store\_stack(@PACKAGE@\_state *state, @PACKAGE@\_UWORD pos, @PACKAGE@\_WORD value)}{Store the given {\tt WORD} value at the given position in the data stack.}
+\ifacec{int @PACKAGE@\_pop\_stack(@PACKAGE@\_state *state, @PACKAGE@\_WORD *value)}{Pop the top word off the data stack, decrementing its depth, into the given {\tt @PACKAGE@\_WORD *}.}
+\ifacec{int @PACKAGE@\_push\_stack(@PACKAGE@\_state *state, @PACKAGE@\_WORD value)}{Push the given {\tt @PACKAGE@\_WORD} value on to the data stack of the given size, incrementing its depth.}
+\ifacec{int @PACKAGE@\_load\_return\_stack(@PACKAGE@\_state *state, @PACKAGE@\_UWORD pos, @PACKAGE@\_WORD *value)}{Load the word at the given position of the return stack into the given {\tt @PACKAGE@\_WORD *}.}
+\ifacec{int @PACKAGE@\_store\_return\_stack(@PACKAGE@\_state *state, @PACKAGE@\_UWORD pos, @PACKAGE@\_WORD value)}{Store the given {\tt WORD} value at the given position in the return stack.}
+\ifacec{int @PACKAGE@\_pop\_return\_stack(@PACKAGE@\_state *state, @PACKAGE@\_WORD *value)}{Pop the top word off the return stack, decrementing its depth, into the given {\tt @PACKAGE@\_WORD *}.}
+\ifacec{int @PACKAGE@\_push\_return\_stack(@PACKAGE@\_state *state, @PACKAGE@\_WORD value)}{Push the given {\tt @PACKAGE@\_WORD} value on to the return stack of the given size, incrementing its depth.}
 \end{description}
 
 The following routine allows the calling program to register command-line arguments that can be retrieved by the {\tt ARGC} and {\tt ARG\_COPY} extra instructions.

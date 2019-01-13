@@ -44,9 +44,9 @@ extern const int stack_direction;
 #define DEFAULT_STACK_SIZE   ((UWORD)16384U)
 
 #define POP(v)                                                          \
-    (exception == 0 ? pop_stack(S->S0, &(S->SDEPTH), v) : exception)
+    (exception == 0 ? pop_stack(S, v) : exception)
 #define PUSH(v)                                                         \
-    (exception == 0 ? push_stack(S->S0, S->SSIZE, &(S->SDEPTH), v) : exception)
+    (exception == 0 ? push_stack(S, v) : exception)
 
 #define PUSH_NATIVE_TYPE(ty, v)                                         \
     for (unsigned i = 0; i < align(sizeof(ty)) / word_size; i++) {      \

@@ -104,7 +104,7 @@ static char *_val_data_stack(state *S, bool with_hex)
     if (S->SDEPTH <= S->SSIZE)
         for (UWORD i = 0; i < S->SDEPTH; i++) {
             WORD v;
-            assert(load_stack(S->S0, S->SDEPTH, S->SDEPTH - i - 1, &v) == 0);
+            assert(load_stack(S, S->SDEPTH - i - 1, &v) == 0);
             char *ptr = xasprintf("%s%"PRI_WORD, picture, v);
             free(picture);
             picture = ptr;
@@ -148,7 +148,7 @@ void show_return_stack(state *S)
         printf("Return stack: ");
         for (UWORD i = 0; i < S->RDEPTH; i++) {
             WORD v;
-            assert(load_stack(S->R0, S->RDEPTH, S->RDEPTH - i - 1, &v) == 0);
+            assert(load_return_stack(S, S->RDEPTH - i - 1, &v) == 0);
             printf("%"PRI_XWORD" ", (UWORD)v);
         }
         putchar('\n');
