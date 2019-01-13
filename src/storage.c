@@ -182,10 +182,10 @@ state *init(size_t size, size_t data_stack_size, size_t return_stack_size)
         return NULL;
 
     S->SSIZE = data_stack_size;
-    S->d_stack = calloc(S->SSIZE, word_size);
+    S->S0 = calloc(S->SSIZE, word_size);
     S->RSIZE = return_stack_size;
-    S->r_stack = calloc(S->RSIZE, word_size);
-    if (S->d_stack == NULL || S->r_stack == NULL)
+    S->R0 = calloc(S->RSIZE, word_size);
+    if (S->S0 == NULL || S->R0 == NULL)
         return NULL;
 
     S->ENDISM =
@@ -197,9 +197,7 @@ state *init(size_t size, size_t data_stack_size, size_t return_stack_size)
         ;
     S->PC = 0;
     S->I = 0;
-    S->S0 = S->d_stack;
     S->SDEPTH = 0;
-    S->R0 = S->r_stack;
     S->RDEPTH = 0;
     S->HANDLER = 0;
     S->BADPC = 0;
@@ -216,8 +214,8 @@ state *init_default_stacks(size_t memory_size)
 void destroy(state *S)
 {
     free(S->memory);
-    free(S->d_stack);
-    free(S->r_stack);
+    free(S->S0);
+    free(S->R0);
     free(S->main_argv_len);
     free(S);
 }
