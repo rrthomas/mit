@@ -14,7 +14,6 @@
 
 
 #include <stdio.h>      // for the FILE type
-#include <stdbool.h>
 #include <stdint.h>
 #include <limits.h>
 
@@ -68,7 +67,7 @@ extern const int stack_direction;
 UWORD align(UWORD addr);
 
 // Check whether a VM address is aligned
-bool is_aligned(UWORD addr);
+int is_aligned(UWORD addr);
 
 // Portable arithmetic right shift (the behaviour of >> on signed
 // quantities is implementation-defined in C99)

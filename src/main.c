@@ -14,6 +14,7 @@
 
 #include <assert.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <stdarg.h>
 #include <inttypes.h>
 #include <errno.h>

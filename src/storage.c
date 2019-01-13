@@ -49,7 +49,7 @@ _GL_ATTRIBUTE_CONST UWORD align(UWORD addr)
     return (addr + word_size - 1) & -word_size;
 }
 
-_GL_ATTRIBUTE_CONST bool is_aligned(UWORD addr)
+_GL_ATTRIBUTE_CONST int is_aligned(UWORD addr)
 {
     return (addr & (word_size - 1)) == 0;
 }
