@@ -20,7 +20,7 @@ const WORD correct[] = { 0, 1, 0, 1, 1, 0, 0, 1, 0, 0};
 
 static void stack1(state *S)
 {
-    S->SP = S->S0;	// empty the stack
+    S->SDEPTH = 0;	// empty the stack
 
     PUSH(-4); PUSH(3);
     PUSH(2); PUSH(2);
@@ -30,7 +30,7 @@ static void stack1(state *S)
 
 static void stack2(state *S)
 {
-    S->SP = S->S0;	// empty the stack
+    S->SDEPTH = 0;	// empty the stack
 
     PUSH(1); PUSH(-1);
     PUSH(237); PUSH(237);
@@ -42,9 +42,11 @@ static void step(state *S, unsigned start, unsigned end)
         for (unsigned i = start; i < end; i++) {
             single_step(S);
             printf("I = %s\n", disass(S->ITYPE, S->I));
-            printf("Result: %"PRI_WORD"; correct result: %"PRI_WORD"\n\n", *(S->SP),
+            WORD v;
+            assert(load_stack(S->S0, S->SDEPTH, 0, &v) == 0);
+            printf("Result: %"PRI_WORD"; correct result: %"PRI_WORD"\n\n", v,
                    correct[i]);
-            if (correct[i] != *(S->SP)) {
+            if (correct[i] != v) {
                 printf("Error in comparison tests: PC = %"PRI_UWORD"\n", S->PC);
                 exit(1);
             }

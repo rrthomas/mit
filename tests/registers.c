@@ -1,5 +1,5 @@
-// Test the register instructions, except for those operating on RP and SP
-// (see memory.c).
+// Test the register instructions, except for those operating on RDEPTH and
+// SDEPTH (see memory.c).
 //
 // (c) Reuben Thomas 1994-2018
 //

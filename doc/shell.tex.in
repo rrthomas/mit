@@ -25,7 +25,7 @@
 
 \title{A simple shell for the\\@PACKAGE_NAME@ virtual machine\\version @VERSION@}
 \author{Reuben Thomas}
-\date{30th July 2018}
+\date{12th January 2019}
 
 \begin{document}
 \maketitle
@@ -98,15 +98,8 @@ registers may also (where appropriate) be assigned to using the syntax
 
 \noindent where \angb{value} is in the form given in section~\ref{commands}. An error
 message is displayed if an attempt is made to assign to a register such as
-{\tt ENDISM}, which cannot be assigned to, or to assign an unaligned or out
-of range address to a register which must hold an aligned address, such as
-{\tt SP}.
-
-Two additional pseudo-registers are provided by the shell: they are
-called {\tt S0} and {\tt R0}, and are the address of the base of the data and
-return stacks respectively. They are set to the initial values of {\tt RP}
-and {\tt SP}, and are provided so that they can be changed if the stacks are
-moved, so the stack display commands will still work correctly.
+{\tt ENDISM}, which cannot be assigned to, or to assign an out
+of range address to a register such as {\tt PC}.
 
 The command {\tt REGISTERS} displays the contents of {\tt PC} and {\tt I}, useful when following the execution of a program.
 

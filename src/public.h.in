@@ -73,13 +73,11 @@ int load_word(state *state, UWORD addr, WORD *value);
 int store_word(state *state, UWORD addr, WORD value);
 int load_byte(state *state, UWORD addr, BYTE *value);
 int store_byte(state *state, UWORD addr, BYTE value);
-bool stack_underflow(WORD *sp, WORD *base);
-bool stack_overflow(WORD *sp, WORD *base, UWORD size);
-bool stack_valid(WORD *sp, WORD *base, UWORD size);
-int load_stack(WORD *sp, WORD *base, UWORD size, UWORD pos, WORD *v);
-int store_stack(WORD *sp, WORD *base, UWORD size, UWORD pos, WORD v);
-int push_stack(WORD **sp, WORD *base, UWORD size, WORD v);
-int pop_stack(WORD **sp, WORD *base, UWORD size, WORD *v);
+int stack_overflow(WORD pos, UWORD size);
+int load_stack(WORD *base, UWORD depth, UWORD pos, WORD *v);
+int store_stack(WORD *base, UWORD depth, UWORD pos, WORD v);
+int pop_stack(WORD *base, UWORD *depth, WORD *v);
+int push_stack(WORD *base, UWORD size, UWORD *depth, WORD v);
 
 // Interface calls
 uint8_t *native_address_of_range(state *S, UWORD addr, UWORD length);

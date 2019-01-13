@@ -76,7 +76,7 @@ int main(void)
 
     UWORD error = 0;
     for (size_t i = 0; i < sizeof(test) / sizeof(test[0]); i++) {
-        S->SP = S->S0;    // reset stack pointer
+        S->SDEPTH = 0;    // reset stack pointer
 
         printf("Test %zu\n", i + 1);
         S->PC = test[i];

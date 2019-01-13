@@ -12,6 +12,7 @@
 
 #include "external-syms.h"
 
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -99,25 +100,19 @@ static char *_val_data_stack(state *S, bool with_hex)
 
     free(picture);
     picture = xasprintf("%s", "");
-    if (!stack_underflow(S->SP, S->S0))
-        for (UWORD i = 0; i != (UWORD)(S->SP - S->S0);) {
-            char *ptr;
-            i += stack_direction;
-            if (!stack_valid(S->S0 + i, S->S0, S->SSIZE)) {
-                ptr = xasprintf("%sinvalid address!", picture);
-                free(picture);
-                picture = ptr;
-                break;
-            }
-            ptr = xasprintf("%s%"PRI_WORD, picture, S->S0[i]);
+    if (S->SDEPTH <= S->SSIZE)
+        for (UWORD i = 0; i < S->SDEPTH; i++) {
+            WORD v;
+            assert(load_stack(S->S0, S->SDEPTH, S->SDEPTH - i - 1, &v) == 0);
+            char *ptr = xasprintf("%s%"PRI_WORD, picture, v);
             free(picture);
             picture = ptr;
             if (with_hex) {
-                ptr = xasprintf("%s (%"PRI_XWORD") ", picture, (UWORD)S->S0[i]);
+                ptr = xasprintf("%s (%"PRI_XWORD") ", picture, (UWORD)v);
                 free(picture);
                 picture = ptr;
             }
-            if (i != (UWORD)(S->SP - S->S0)) {
+            if (i != S->SDEPTH - 1) {
                 ptr = xasprintf("%s ", picture);
                 free(picture);
                 picture = ptr;
@@ -134,29 +129,26 @@ char *val_data_stack(state *S)
 
 void show_data_stack(state *S)
 {
-    if (S->SP == S->S0)
+    if (S->SDEPTH == 0)
         printf("Data stack empty\n");
-    else if (stack_underflow(S->SP, S->S0))
-        printf("Data stack underflow\n");
+    else if (S->SDEPTH > S->SSIZE)
+        printf("Data stack overflow\n");
     else
         printf("Data stack: %s\n", _val_data_stack(S, true));
 }
 
 void show_return_stack(state *S)
 {
-    if (S->RP == S->R0)
+    if (S->RDEPTH == 0)
         printf("Return stack empty\n");
-    else if (stack_underflow(S->RP, S->R0))
-        printf("Return stack underflow\n");
+    else if (S->RDEPTH > S->RSIZE)
+        printf("Return stack overflow\n");
     else {
         printf("Return stack: ");
-        for (UWORD i = 0; i != (UWORD)(S->RP - S->R0);) {
-            i += stack_direction;
-            if (!stack_valid(S->R0 + i, S->R0, S->RSIZE)) {
-                printf("invalid address!");
-                break;
-            }
-            printf("%"PRI_XWORD" ", (UWORD)S->R0[i]);
+        for (UWORD i = 0; i < S->RDEPTH; i++) {
+            WORD v;
+            assert(load_stack(S->R0, S->RDEPTH, S->RDEPTH - i - 1, &v) == 0);
+            printf("%"PRI_XWORD" ", (UWORD)v);
         }
         putchar('\n');
     }

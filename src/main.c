@@ -464,7 +464,7 @@ static void do_command(int no, char *arg1, bool plus1, char *arg2, bool plus2, c
     case c_TOR:
         {
             long long value = single_arg(arg1, NULL);
-            push_stack(&(S->RP), S->R0, S->RSIZE, value);
+            push_stack(S->R0, S->RSIZE, &(S->RDEPTH), value);
         }
         break;
     case c_DISASSEMBLE:
@@ -540,7 +540,7 @@ static void do_command(int no, char *arg1, bool plus1, char *arg2, bool plus2, c
     case c_RFROM:
         {
             WORD value;
-            pop_stack(&(S->RP), S->R0, S->RSIZE, &value);
+            pop_stack(S->R0, &(S->RDEPTH), &value);
             printf("%"PRI_XWORD" (%"PRI_WORD")\n", (UWORD)value, value);
         }
         break;

@@ -46,10 +46,10 @@ extern const int stack_direction;
 #define MAX_STACK_SIZE       ((((UWORD)1) << (word_bit - 4)) / word_size)
 #define DEFAULT_STACK_SIZE   ((UWORD)16384U)
 
-#define PUSH(v)                                                         \
-    (exception == 0 ? push_stack(&(S->SP), S->S0, S->SSIZE, v) : exception)
 #define POP(v)                                                          \
-    (exception == 0 ? pop_stack(&(S->SP), S->S0, S->SSIZE, v) : exception)
+    (exception == 0 ? pop_stack(S->S0, &(S->SDEPTH), v) : exception)
+#define PUSH(v)                                                         \
+    (exception == 0 ? push_stack(S->S0, S->SSIZE, &(S->SDEPTH), v) : exception)
 
 #define PUSH_NATIVE_TYPE(ty, v)                                         \
     for (unsigned i = 0; i < align(sizeof(ty)) / word_size; i++) {      \

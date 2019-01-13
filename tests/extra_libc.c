@@ -36,7 +36,7 @@ int main(void)
         single_step(S);
     } while (S->I != O_EXTRA);
     WORD argc_;
-    load_stack(S->SP, S->S0, S->SSIZE, 0, &argc_);
+    load_stack(S->S0, S->SDEPTH, 0, &argc_);
     printf("argc is %"PRI_WORD", and should be %d\n", argc_, argc);
     WORD temp;
     POP(&temp);
@@ -50,7 +50,7 @@ int main(void)
         single_step(S);
     } while (S->I != O_EXTRA);
     UWORD arg1len;
-    load_stack(S->SP, S->S0, S->SSIZE, 0, (WORD *)&arg1len);
+    load_stack(S->S0, S->SDEPTH, 0, (WORD *)&arg1len);
     printf("arg 1's length is %"PRI_UWORD", and should be %zu\n", arg1len, strlen(argv[1]));
     if (arg1len != strlen(argv[1])) {
         printf("Error in extra instructions tests: PC = %"PRI_UWORD"\n", S->PC);

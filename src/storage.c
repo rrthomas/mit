@@ -118,50 +118,38 @@ int store_byte(state *S, UWORD addr, BYTE value)
 
 // Stacks
 
-_GL_ATTRIBUTE_CONST bool stack_underflow(WORD *sp, WORD *base)
+int load_stack(WORD *base, UWORD depth, UWORD pos, WORD *v)
 {
-    return stack_direction > 0 ? (sp < base) : (sp > base);
-}
-
-_GL_ATTRIBUTE_CONST bool stack_overflow(WORD *sp, WORD *base, UWORD size)
-{
-    return ((UWORD)(stack_direction > 0 ? (sp - base) : (base - sp)) > size);
-}
-
-_GL_ATTRIBUTE_CONST bool stack_valid(WORD *sp, WORD *base, UWORD size)
-{
-    return !stack_underflow(sp, base) && !stack_overflow(sp, base, size);
-}
-
-int load_stack(WORD *sp, WORD *base, UWORD size, UWORD pos, WORD *v)
-{
-    if (!stack_valid(sp - pos, base, size))
+    if (pos >= depth)
         return -9;
 
-    *v = *(sp - pos * stack_direction);
+    *v = *(base + (depth - pos - 1) * stack_direction);
     return 0;
 }
 
-int store_stack(WORD *sp, WORD *base, UWORD size, UWORD pos, WORD v)
+int store_stack(WORD *base, UWORD depth, UWORD pos, WORD v)
 {
-    if (!stack_valid(sp - pos, base, size))
+    if (pos >= depth)
         return -9;
 
-    *(sp - pos * stack_direction) = v;
+    *(base + (depth - pos - 1) * stack_direction) = v;
     return 0;
 }
 
-int push_stack(WORD **sp, WORD *base, UWORD size, WORD v)
+int pop_stack(WORD *base, UWORD *depth, WORD *v)
 {
-    *sp += stack_direction;
-    return store_stack(*sp, base, size, 0, v);
+    if (*depth == 0)
+        return -9;
+
+    return load_stack(base, (*depth)--, 0, v);
 }
 
-int pop_stack(WORD **sp, WORD *base, UWORD size, WORD *v)
+int push_stack(WORD *base, UWORD size, UWORD *depth, WORD v)
 {
-    int ret = load_stack(*sp, base, size, 0, v);
-    *sp -= stack_direction;
-    return ret;
+    if (*depth == size)
+        return -9;
+
+    return store_stack(base, ++(*depth), 0, v);
 }
 
 
@@ -209,8 +197,10 @@ state *init(size_t size, size_t data_stack_size, size_t return_stack_size)
         ;
     S->PC = 0;
     S->I = 0;
-    S->S0 = S->SP = S->d_stack;
-    S->R0 = S->RP = S->r_stack;
+    S->S0 = S->d_stack;
+    S->SDEPTH = 0;
+    S->R0 = S->r_stack;
+    S->RDEPTH = 0;
     S->HANDLER = 0;
     S->BADPC = 0;
     S->INVALID = 0;

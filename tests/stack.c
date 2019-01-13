@@ -48,7 +48,7 @@ int main(void)
         printf("I = %s\n", disass(S->ITYPE, S->I));
     }
 
-    S->SP = S->S0;	// reset stack
+    S->SDEPTH = 0;	// reset stack
     PUSH(2); PUSH(1); PUSH(0);	// initialise the stack
     printf("Next stack is wrong!\n");
 

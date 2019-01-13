@@ -42,7 +42,7 @@
 
 \title{An implementation of the @PACKAGE_NAME@ virtual machine\\for POSIX\\version @VERSION@}
 \author{Reuben Thomas}
-\date{23rd December 2018}
+\date{12th January 2019}
 
 \begin{document}
 \maketitle
@@ -88,12 +88,16 @@ memory for @PACKAGE_NAME@, nor does it initialise any of the registers. C @PACKA
 provides the interface call {\bf @PACKAGE@\_init()} to do this (see
 section~\ref{usingcalls}).
 
-The variables {\tt EP}, {\tt I}, {\tt A}, {\tt MEMORY}, {\tt SP}, {\tt RP}, {\tt HANDLER}, {\tt BADPC} and {\tt INVALID}
+The variables {\tt EP}, {\tt I}, {\tt A}, {\tt MEMORY}, {\tt SDEPTH}, {\tt RDEPTH}, {\tt HANDLER}, {\tt BADPC} and {\tt INVALID}
 correspond exactly with the @PACKAGE_NAME@ registers they represent, and may be read
 and assigned to accordingly, bearing in mind the restrictions on their use
 given in~\cite{@PACKAGE@}. {\tt HANDLER}, {\tt BADPC} and {\tt INVALID} are mapped into @PACKAGE_NAME@'s memory, so they are automatically updated when the corresponding memory locations are written to, and vice versa.
 
 C @PACKAGE_NAME@ provides the ability to map native memory blocks into @PACKAGE_NAME@’s address space; see below.
+
+Two additional pseudo-registers are provided by C @PACKAGE_NAME@: they are
+called {\tt S0} and {\tt R0}, and are the address of the base of the data and
+return stacks respectively.
 
 
 \subsection{Extra instructions}
@@ -236,6 +240,15 @@ The following routines give easier access to @PACKAGE_NAME@’s address space at
 \ifacec{int @PACKAGE@\_store\_word(@PACKAGE@\_state *state, @PACKAGE@\_UWORD address, @PACKAGE@\_WORD value)}{Store the given {\tt WORD} value at the given address.}
 \ifacec{int @PACKAGE@\_load\_byte(@PACKAGE@\_state *state, @PACKAGE@\_UWORD address, @PACKAGE@\_BYTE *value)}{Load the byte at the given address into the given {\tt @PACKAGE@\_BYTE *}.}
 \ifacec{int @PACKAGE@\_store\_byte(@PACKAGE@\_state *state, @PACKAGE@\_UWORD address, @PACKAGE@\_BYTE value)}{Store the given {\tt @PACKAGE@\_BYTE} value at the given address.}
+\end{description}
+
+The following routines give access to @PACKAGE_NAME@’s stacks. On success, they return $0$, and on failure, the relevant exception code.
+
+\begin{description}
+\ifacec{int @PACKAGE@\_load\_stack(@PACKAGE@\_WORD *base, @PACKAGE@\_UWORD depth, @PACKAGE@\_UWORD pos, @PACKAGE@\_WORD *value)}{Load the word at the given position of the given stack into the given {\tt @PACKAGE@\_WORD *}.}
+\ifacec{int @PACKAGE@\_store\_stack(@PACKAGE@\_WORD *base, @PACKAGE@\_UWORD depth, @PACKAGE@\_UWORD pos, @PACKAGE@\_WORD value)}{Store the given {\tt WORD} value at the given position in the given stack.}
+\ifacec{int @PACKAGE@\_pop\_stack(@PACKAGE@\_WORD *base, @PACKAGE@\_UWORD *depth, @PACKAGE@\_WORD *value)}{Pop the top word off the given stack, decrementing its depth, into the given {\tt @PACKAGE@\_WORD *}.}
+\ifacec{int @PACKAGE@\_push\_stack(@PACKAGE@\_WORD *base, @PACKAGE@\_UWORD size, @PACKAGE@\_UWORD *depth, @PACKAGE@\_WORD value)}{Push the given {\tt @PACKAGE@\_WORD} value on to the given stack of the given size, incrementing its depth.}
 \end{description}
 
 The following routine allows the calling program to register command-line arguments that can be retrieved by the {\tt ARGC} and {\tt ARG\_COPY} extra instructions.

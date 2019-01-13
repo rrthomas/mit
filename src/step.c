@@ -481,9 +481,8 @@ WORD single_step(state *S)
     if (exception != 0) {
         // Deal with address exceptions during execution cycle.
         S->BADPC = S->PC - 1;
-        if (!stack_valid(S->SP, S->S0, S->SSIZE))
+        if (push_stack(S->S0, S->SSIZE, &(S->SDEPTH), exception) != 0)
             return -257;
-        push_stack(&(S->SP), S->S0, S->SSIZE, exception);
         exception = 0;
         S->PC = S->HANDLER;
     }

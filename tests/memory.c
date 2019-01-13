@@ -63,9 +63,9 @@ int main(void)
     ass_number(S, 513); ass_number(S, 1); ass_action(S, O_PUSH); ass_action(S, O_STORE); ass_number(S, 0); ass_action(S, O_PUSH);
     ass_action(S, O_LOAD); ass_number(S, 1); ass_action(S, O_POP); ass_number(S, 0); ass_action(S, O_PUSH); ass_action(S, O_LOADB);
     ass_action(S, O_ADD); ass_action(S, O_LOADB); ass_number(S, size * word_size - 1); ass_action(S, O_STOREB);
-    ass_number(S, size * word_size - word_size); ass_action(S, O_LOAD); ass_number(S, 1); ass_action(S, O_POP); ass_action(S, O_PUSH_SP);
-    ass_action(S, O_STORE_SP); ass_action(S, O_PUSH_RP); ass_number(S, 1); ass_action(S, O_POP); ass_number(S, 0);
-    ass_action(S, O_STORE_RP); ass_action(S, O_PUSH_RP); ass_number(S, 1); ass_action(S, O_POP);
+    ass_number(S, size * word_size - word_size); ass_action(S, O_LOAD); ass_number(S, 1); ass_action(S, O_POP); ass_action(S, O_PUSH_SDEPTH);
+    ass_action(S, O_STORE_SDEPTH); ass_action(S, O_PUSH_RDEPTH); ass_number(S, 1); ass_action(S, O_POP); ass_number(S, 0);
+    ass_action(S, O_STORE_RDEPTH); ass_action(S, O_PUSH_RDEPTH); ass_number(S, 1); ass_action(S, O_POP);
 
     for (size_t i = 0; i < sizeof(correct) / sizeof(correct[0]); i++) {
         show_data_stack(S);

@@ -23,10 +23,10 @@ registers = [
     Register("ITYPE", ty="WORD", uty="UWORD"),
     Register("I", ty="WORD", uty="UWORD"),
     Register("MEMORY", read_only=True),
-    Register("SP", "WORDP"),
+    Register("SDEPTH"),
     Register("S0", "WORDP"),
     Register("SSIZE", read_only=True),
-    Register("RP", "WORDP"),
+    Register("RDEPTH"),
     Register("R0", "WORDP"),
     Register("RSIZE", read_only=True),
     Register("ENDISM", read_only=True),
@@ -77,10 +77,10 @@ class Opcodes(IntEnum):
     EXTRA = 0x20
     PUSH_WORD_SIZE = 0x21
     PUSH_NATIVE_POINTER_SIZE = 0x22
-    PUSH_SP = 0x23
-    STORE_SP = 0x24
-    PUSH_RP = 0x25
-    STORE_RP = 0x26
+    PUSH_SDEPTH = 0x23
+    STORE_SDEPTH = 0x24
+    PUSH_RDEPTH = 0x25
+    STORE_RDEPTH = 0x26
     PUSH_PC = 0x27
     PUSH_SSIZE = 0x28
     PUSH_RSIZE = 0x29
@@ -98,14 +98,14 @@ actions[Opcodes.NOP] = '''
 actions[Opcodes.POP] = '''
 WORD depth;
 POP(&depth);
-S->SP -= depth * stack_direction;
+S->SDEPTH -= depth;
 '''
 
 actions[Opcodes.PUSH] = '''
 WORD depth;
 POP(&depth);
 WORD pickee;
-exception = load_stack(S->SP, S->S0, S->SSIZE, depth, &pickee);
+exception = load_stack(S->S0, S->SDEPTH, depth, &pickee);
 PUSH(pickee);
 '''
 
@@ -113,30 +113,30 @@ actions[Opcodes.SWAP] = '''
 WORD depth;
 POP(&depth);
 WORD swapee;
-exception = load_stack(S->SP, S->S0, S->SSIZE, depth, &swapee);
+exception = load_stack(S->S0, S->SDEPTH, depth, &swapee);
 WORD top;
 POP(&top);
 PUSH(swapee);
-exception = store_stack(S->SP, S->S0, S->SSIZE, depth, top);
+exception = store_stack(S->S0, S->SDEPTH, depth, top);
 '''
 
 actions[Opcodes.RPUSH] = '''
 WORD depth;
 POP(&depth);
 WORD pickee;
-exception = load_stack(S->RP, S->R0, S->RSIZE, depth, &pickee);
+exception = load_stack(S->R0, S->RDEPTH, depth, &pickee);
 PUSH(pickee);
 '''
 
 actions[Opcodes.POP2R] = '''
 WORD value;
 POP(&value);
-exception = exception == 0 ? push_stack(&(S->RP), S->R0, S->RSIZE, value) : exception;
+exception = exception == 0 ? push_stack(S->R0, S->RSIZE, &(S->RDEPTH), value) : exception;
 '''
 
 actions[Opcodes.RPOP] = '''
 WORD value;
-exception = pop_stack(&(S->RP), S->R0, S->RSIZE, &value);
+exception = pop_stack(S->R0, &(S->RDEPTH), &value);
 PUSH(value);
 '''
 
@@ -298,12 +298,12 @@ if (cond == 0)
 '''
 
 actions[Opcodes.CALL] = '''
-exception = push_stack(&(S->RP), S->R0, S->RSIZE, S->PC);
+exception = push_stack(S->R0, S->RSIZE, &(S->RDEPTH), S->PC);
 POP((WORD *)&(S->PC));
 '''
 
 actions[Opcodes.RET] = '''
-exception = pop_stack(&(S->RP), S->R0, S->RSIZE, (WORD *)&(S->PC));
+exception = pop_stack(S->R0, &(S->RDEPTH), (WORD *)&(S->PC));
 '''
 
 actions[Opcodes.THROW] = '''
@@ -337,25 +337,25 @@ actions[Opcodes.PUSH_NATIVE_POINTER_SIZE] = '''
 PUSH(native_pointer_size);
 '''
 
-actions[Opcodes.PUSH_SP] = '''
-WORD value = S->SP - S->S0;
+actions[Opcodes.PUSH_SDEPTH] = '''
+WORD value = S->SDEPTH;
 PUSH(value);
 '''
 
-actions[Opcodes.STORE_SP] = '''
+actions[Opcodes.STORE_SDEPTH] = '''
 WORD value;
 POP(&value);
-S->SP = S->S0 + value;
+S->SDEPTH = value;
 '''
 
-actions[Opcodes.PUSH_RP] = '''
-PUSH(S->RP - S->R0);
+actions[Opcodes.PUSH_RDEPTH] = '''
+PUSH(S->RDEPTH);
 '''
 
-actions[Opcodes.STORE_RP] = '''
-WORD addr;
-POP(&addr);
-S->RP = S->R0 + addr;
+actions[Opcodes.STORE_RDEPTH] = '''
+WORD value;
+POP(&value);
+S->RDEPTH = value;
 '''
 
 actions[Opcodes.PUSH_PC] = '''
