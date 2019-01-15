@@ -284,11 +284,9 @@ static int extra_libc(state *S)
             WORD perm_;
             POP(&perm_);
             int perm = getflags(perm_, &binary);
-            UWORD len;
-            POP((WORD *)&len);
             UWORD str;
             POP((WORD *)&str);
-            char *s = (char *)native_address_of_range(S, str, len);
+            char *s = (char *)native_address_of_range(S, str, 0);
             int fd = s ? open(s, perm, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH) : -1;
             PUSH((WORD)fd);
             PUSH(fd < 0 || (binary && set_binary_mode(fd, O_BINARY) < 0) ? -1 : 0);
@@ -370,27 +368,21 @@ static int extra_libc(state *S)
         break;
     case OX_RENAME_FILE:
         {
-            UWORD len1;
-            POP((WORD *)&len1);
             UWORD str1;
             POP((WORD *)&str1);
-            UWORD len2;
-            POP((WORD *)&len2);
             UWORD str2;
             POP((WORD *)&str2);
-            char *s1 = (char *)native_address_of_range(S, str1, len1);
-            char *s2 = (char *)native_address_of_range(S, str2, len2);
+            char *s1 = (char *)native_address_of_range(S, str1, 0);
+            char *s2 = (char *)native_address_of_range(S, str2, 0);
             exception = (s1 == NULL || s2 == NULL) ? -9 : rename(s2, s1);
             PUSH(exception);
         }
         break;
     case OX_DELETE_FILE:
         {
-            UWORD len;
-            POP((WORD *)&len);
             UWORD str;
             POP((WORD *)&str);
-            char *s = (char *)native_address_of_range(S, str, len);
+            char *s = (char *)native_address_of_range(S, str, 0);
             exception = s == NULL ? -9 : remove(s);
             PUSH(exception);
         }
