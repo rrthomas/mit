@@ -374,8 +374,9 @@ static int extra_libc(state *S)
             POP((WORD *)&str2);
             char *s1 = (char *)native_address_of_range(S, str1, 0);
             char *s2 = (char *)native_address_of_range(S, str2, 0);
-            exception = (s1 == NULL || s2 == NULL) ? -9 : rename(s2, s1);
-            PUSH(exception);
+            if (s1 == NULL || s2 == NULL)
+                exception = -9;
+            PUSH(exception == 0 ? rename(s2, s1) : exception);
         }
         break;
     case OX_DELETE_FILE:
@@ -383,8 +384,9 @@ static int extra_libc(state *S)
             UWORD str;
             POP((WORD *)&str);
             char *s = (char *)native_address_of_range(S, str, 0);
-            exception = s == NULL ? -9 : remove(s);
-            PUSH(exception);
+            if (s == NULL)
+                exception = -9;
+            PUSH(exception == 0 ? remove(s) : exception);
         }
         break;
     case OX_FILE_SIZE:
