@@ -17,5 +17,6 @@
 /numbers
 /registers
 /run
+/save_object
 /single_step
 /stack

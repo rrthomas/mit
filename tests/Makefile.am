@@ -19,7 +19,7 @@ LDADD = $(top_builddir)/src/lib@PACKAGE@.la libtest.la
 
 noinst_PROGRAMS = load_object
 check_PROGRAMS = arithmetic branch comparison init numbers logic memory \
-	registers stack single_step run exceptions call_native extra_libc
+	registers stack single_step run save_object exceptions call_native extra_libc
 check_SCRIPTS = hello.test
 
 TESTS = $(check_PROGRAMS) $(check_SCRIPTS)

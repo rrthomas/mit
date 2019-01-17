@@ -1,6 +1,6 @@
 // Test load_object().
 //
-// (c) Reuben Thomas 1995-2018
+// (c) Reuben Thomas 1995-2019
 //
 // The package is distributed under the GNU Public License version 3, or,
 // at your option, any later version.
@@ -19,7 +19,7 @@ static int try(state *S, char *file, UWORD address)
         printf("Could not open file %s\n", file);
         ret = 1; // Expected error codes are all negative
     } else {
-        ret = load_object(S, fd, address);
+        ret = load_object(S, address, fd);
         (void)close(fd); // FIXME: check return value
     }
 
@@ -51,7 +51,7 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    state *S = init(256, DEFAULT_STACK_SIZE, DEFAULT_STACK_SIZE);
+    state *S = init_default_stacks(256);
 
     const char *bad_files[] = {
         "badobj1", "badobj2", "badobj3", "badobj4" };

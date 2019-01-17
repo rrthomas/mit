@@ -1,6 +1,6 @@
 // The interface call load_object(file, address) : integer.
 //
-// (c) Reuben Thomas 1995-2018
+// (c) Reuben Thomas 1995-2019
 //
 // The package is distributed under the GNU Public License version 3, or,
 // at your option, any later version.
@@ -20,7 +20,7 @@
 #include "aux.h"
 
 
-int load_object(state *S, int fd, UWORD address)
+int load_object(state *S, UWORD address, int fd)
 {
     if (!is_aligned(address))
         return -1;
@@ -71,6 +71,26 @@ int load_object(state *S, int fd, UWORD address)
 
     if (read(fd, ptr, length) != (ssize_t)length)
         return -3;
+
+    return 0;
+}
+
+int save_object(state *S, UWORD address, UWORD length, int fd)
+{
+    uint8_t *ptr = native_address_of_range(S, address, length);
+    if (!is_aligned(address) || ptr == NULL)
+        return -1;
+
+    char hashbang[] = "#!/usr/bin/env smite\n";
+    BYTE buf[MAGIC_LENGTH] = PACKAGE_UPPER;
+
+    if (write(fd, hashbang, sizeof(hashbang) - 1) != sizeof(hashbang) - 1 ||
+        write(fd, &buf[0], MAGIC_LENGTH) != MAGIC_LENGTH ||
+        encode_instruction_file(fd, INSTRUCTION_NUMBER, S->ENDISM) < 0 ||
+        encode_instruction_file(fd, INSTRUCTION_NUMBER, word_size) < 0 ||
+        encode_instruction_file(fd, INSTRUCTION_NUMBER, length) < 0 ||
+        write(fd, ptr, length) != (ssize_t)length)
+        return -2;
 
     return 0;
 }

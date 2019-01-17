@@ -317,40 +317,6 @@ static void reinit(void)
 }
 
 
-static int save_object(int fd, UWORD address, UWORD length)
-{
-    uint8_t *ptr = native_address_of_range(S, address, length);
-    if (!is_aligned(address) || ptr == NULL)
-        return -1;
-
-    if (write(fd, PACKAGE_UPPER, sizeof(PACKAGE_UPPER)) != sizeof(PACKAGE_UPPER))
-        return -2;
-
-    ssize_t bytes_left = MAGIC_LENGTH - strlen(PACKAGE_UPPER) - 1;
-    BYTE buf[16] = {}; // 16 is a constant > INSTRUCTION_MAX_CHUNKS
-
-    if (write(fd, &buf[0], bytes_left) != bytes_left)
-        return -2;
-
-    ssize_t len = encode_instruction_native(&buf[0], INSTRUCTION_NUMBER, S->ENDISM);
-    if (write(fd, &buf[0], len) != len)
-        return -2;
-
-    len = encode_instruction_native(&buf[0], INSTRUCTION_NUMBER, word_size);
-    if (write(fd, &buf[0], len) != len)
-        return -2;
-
-    len = encode_instruction_native(&buf[0], INSTRUCTION_NUMBER, length);
-    if (write(fd, &buf[0], len) != len)
-        return -2;
-
-    if (write(fd, ptr, length) != (ssize_t)length)
-        return -2;
-
-    return 0;
-}
-
-
 static void do_assign(char *token, char *number)
 {
     long long value;
@@ -525,7 +491,7 @@ static void do_command(int no, char *arg1, bool plus1, char *arg2, bool plus2, c
             int fd = open(globfile(arg1), O_RDONLY);
             if (fd < 0)
                 fatal("cannot open file %s", arg1);
-            int ret = load_object(S, fd, adr);
+            int ret = load_object(S, adr, fd);
             close(fd);
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wsuggest-attribute=format"
@@ -588,7 +554,7 @@ static void do_command(int no, char *arg1, bool plus1, char *arg2, bool plus2, c
             int fd;
             if ((fd = creat1(globdirname(arg1))) < 0)
                 fatal("cannot open file %s", arg1);
-            int ret = save_object(fd, start, (UWORD)((end - start)));
+            int ret = save_object(S, start, (UWORD)((end - start)), fd);
             close(fd);
 
             switch (ret) {
@@ -816,7 +782,7 @@ static void dump_core(int exception)
     int fd;
     // Ignore errors; best effort only, in the middle of an error exit
     if ((fd = creat1(file)) >= 0) {
-        (void)save_object(fd, 0, S->MEMORY);
+        (void)save_object(S, 0, S->MEMORY, fd);
         close(fd);
         warn("core dumped to %s", file);
     } else
@@ -893,7 +859,7 @@ int main(int argc, char *argv[])
         int fd = open(argv[optind], O_RDONLY);
         if (fd < 0)
             die("cannot not open file %s", argv[optind]);
-        int ret = load_object(S, fd, 0);
+        int ret = load_object(S, 0, fd);
         close(fd);
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wsuggest-attribute=format"

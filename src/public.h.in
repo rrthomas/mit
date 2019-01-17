@@ -1,7 +1,7 @@
 // Public data structures and interface calls specified in the VM definition.
 // This is the header file to include in programs using an embedded VM.
 //
-// (c) Reuben Thomas 1994-2018
+// (c) Reuben Thomas 1994-2019
 //
 // The package is distributed under the GNU Public License version 3, or,
 // at your option, any later version.
@@ -89,7 +89,8 @@ int push_return_stack(state *S, WORD v);
 uint8_t *native_address_of_range(state *S, UWORD addr, UWORD length);
 WORD run(state *state);
 WORD single_step(state *state);
-int load_object(state *state, int fd, UWORD address);
+int load_object(state *state, UWORD address, int fd);
+int save_object(state *S, UWORD address, UWORD length, int fd);
 
 // Additional implementation-specific routines, macros, types and quantities
 state *init(size_t size, size_t stack_size, size_t return_stack_size);

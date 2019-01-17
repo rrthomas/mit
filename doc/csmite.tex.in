@@ -220,7 +220,7 @@ The operation of the specified interface calls is given in~\cite{@PACKAGE@}. Her
 word.}
 \ifacec{@PACKAGE@\_state *state, @PACKAGE@\_WORD @PACKAGE@\_single\_step(@PACKAGE@\_state *state)}{The reason code returned by {\bf @PACKAGE@\_single\_step()}
 is a @PACKAGE_NAME@ word.}
-\ifacec{int @PACKAGE@\_load\_object(@PACKAGE@\_state *state, int fd, @PACKAGE@\_UWORD address)}{If a file system error
+\ifacec{int @PACKAGE@\_load\_object(@PACKAGE@\_state *state, @PACKAGE@\_UWORD address, int fd)}{If a file system error
 occurs, the return code is $-3$. If the endism of the object file does not match {\tt ENDISM}, the return code is $-4$. If the word size of the object file is not {\tt WORD\_SIZE}, the return code is $-5$. As an extension to the specification, if an object file starts with the bytes $35$, $33$ (\texttt{\#!}), then it is assumed to be the start of a UNIX-style “hash bang” line, and the file contents up to and including the first newline character ($10$) is ignored.}
 \end{description}
 
@@ -259,6 +259,12 @@ The following routine allows the calling program to register command-line argume
 
 \begin{description}
 \ifacec{int @PACKAGE@\_register\_args(@PACKAGE@\_state *state, int argc, char *argv[])}{Maps the given arguments register, which has the same format as that supplied to {\bf main()}, into @PACKAGE_NAME@’s memory. Returns $0$ on success and $-1$ if memory could not be allocated, or $-2$ if an argument could not be mapped to @PACKAGE_NAME@’s address space.}
+\end{description}
+
+The following routine allows object files to be saved:
+
+\begin{description}
+\ifacec{int @PACKAGE@\_save\_object(@PACKAGE@\_state, *state@PACKAGE@\_UWORD address, @PACKAGE@\_UWORD length, int fd)}{On success, $0$ is returned. If the address or length are invalid, the return code is $-1$. If a file system error occurs, the return code is $-2$.}
 \end{description}
 
 Programs which use C @PACKAGE_NAME@'s interface must {\tt \#include} the header file

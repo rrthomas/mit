@@ -82,7 +82,7 @@ state *init_default_stacks(size_t memory_size);
 #define INSTRUCTION_CHUNK_BIT 6
 #define INSTRUCTION_CHUNK_MASK ((1 << INSTRUCTION_CHUNK_BIT) - 1)
 #define INSTRUCTION_MAX_CHUNKS (((word_bit + INSTRUCTION_CHUNK_BIT - 1) / INSTRUCTION_CHUNK_BIT))
-ptrdiff_t encode_instruction_native(BYTE *addr, enum instruction_type type, WORD v);
+ptrdiff_t encode_instruction_file(int fd, enum instruction_type type, WORD v);
 ptrdiff_t encode_instruction(state *S, UWORD addr, enum instruction_type type, WORD v);
 ptrdiff_t decode_instruction_file(int fd, WORD *val);
 ptrdiff_t decode_instruction(state *S, UWORD *addr, WORD *val);
