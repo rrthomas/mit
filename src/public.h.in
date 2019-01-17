@@ -44,12 +44,12 @@ typedef WORD * WORDP;
 #define PRI_WORDP "p"
 
 // Parameters
-extern const UWORD word_size;
-extern const UWORD native_pointer_size;
+extern const unsigned word_size;
+extern const unsigned native_pointer_size;
 #define BYTE_BIT 8
-extern const UWORD byte_bit;
-extern const UWORD byte_mask;
-extern const UWORD word_bit;
+extern const unsigned byte_bit;
+extern const unsigned byte_mask;
+extern const unsigned word_bit;
 extern const UWORD word_mask;
 extern const UWORD uword_max;
 extern const WORD word_min;

@@ -21,11 +21,11 @@
 
 
 // Constants
-const UWORD word_size = WORD_SIZE;
-const UWORD native_pointer_size = sizeof(void *);
-const UWORD byte_bit = 8;
-const UWORD byte_mask = (1 << BYTE_BIT) - 1;
-const UWORD word_bit = WORD_SIZE * BYTE_BIT;
+const unsigned word_size = WORD_SIZE;
+const unsigned native_pointer_size = (unsigned)sizeof(void *);
+const unsigned byte_bit = 8;
+const unsigned byte_mask = (1 << BYTE_BIT) - 1;
+const unsigned word_bit = WORD_SIZE * BYTE_BIT;
 #if WORD_SIZE == 4
 const UWORD word_mask = UINT32_MAX;
 const UWORD uword_max = UINT32_MAX;

@@ -21,7 +21,7 @@ int main(void)
          {},
          {size * word_size},
          {size * word_size, word_size},
-         {size * word_size, -word_size},
+         {size * word_size, -(int)word_size},
          {size * word_size - word_size},
          {size * word_size - word_size, 513},
          {size * word_size - word_size, 513, 1},

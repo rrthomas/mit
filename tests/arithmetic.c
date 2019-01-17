@@ -23,9 +23,9 @@ int main(void)
          {ZERO},
          {ZERO, 1},
          {ZERO, 1, word_size},
-         {ZERO, 1, word_size, -word_size},
-         {ZERO, 1, word_size, -word_size, -1},
-         {ZERO, 1, word_size, -word_size - 1},
+         {ZERO, 1, word_size, -(int)word_size},
+         {ZERO, 1, word_size, -(int)word_size, -1},
+         {ZERO, 1, word_size, -(int)word_size - 1},
          {ZERO, 1, -1},
          {ZERO, 1, 1},
          {ZERO, 2},
@@ -33,10 +33,10 @@ int main(void)
          {2, ZERO},
          {2, ZERO, -1},
          {2, ZERO, -1, word_size},
-         {2, ZERO, -word_size},
-         {2, ZERO, -word_size, 1},
-         {2, -word_size, ZERO},
-         {2, -word_size, ZERO, 2},
+         {2, ZERO, -(int)word_size},
+         {2, ZERO, -(int)word_size, 1},
+         {2, -(int)word_size, ZERO},
+         {2, -(int)word_size, ZERO, 2},
          {2},
          {-2},
          {-2, -1},
@@ -46,11 +46,11 @@ int main(void)
          {ZERO, 2, 2},
          {},
          {word_size},
-         {-word_size},
-         {-word_size, 1},
+         {-(int)word_size},
+         {-(int)word_size, 1},
          {},
-         {-word_size},
-         {-word_size, word_size - 1},
+         {-(int)word_size},
+         {-(int)word_size, word_size - 1},
          {-1, -1},
          {-1, -1, 1},
          {-1},
@@ -65,7 +65,7 @@ int main(void)
     ass_number(S, 0);
     ass_number(S, 1);
     ass_number(S, word_size);
-    ass_number(S, -word_size);
+    ass_number(S, -(int)word_size);
     ass_number(S, -1);
     ass_action(S, O_ADD); ass_action(S, O_ADD); ass_action(S, O_NEGATE);
     ass_action(S, O_ADD); ass_number(S, 1); ass_action(S, O_SWAP); ass_number(S, -1);
@@ -74,7 +74,7 @@ int main(void)
     ass_action(S, O_NEGATE); ass_number(S, -1);
     ass_action(S, O_DIVMOD); ass_number(S, 1); ass_action(S, O_SWAP); ass_number(S, 2); ass_action(S, O_POP);
     ass_number(S, word_size); ass_action(S, O_NEGATE); ass_number(S, 1); ass_action(S, O_POP);
-    ass_number(S, -word_size);
+    ass_number(S, -(int)word_size);
     ass_number(S, word_size - 1);
     ass_action(S, O_DIVMOD); ass_number(S, 1); ass_action(S, O_POP); ass_number(S, -2);
     ass_action(S, O_UDIVMOD);
