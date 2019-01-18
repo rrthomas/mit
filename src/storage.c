@@ -40,6 +40,10 @@ const WORD word_min = INT64_MIN;
 #error "WORD_SIZE is not 4 or 8!"
 #endif
 const int stack_direction = 1;
+UWORD default_memory_size = 0x100000U; // Default size of VM memory in words
+UWORD max_memory_size = ((UWORD)1 << (WORD_SIZE * BYTE_BIT - 1)) / WORD_SIZE; // Maximum size of memory in words (half the address space)
+UWORD max_stack_size = (((UWORD)1) << (WORD_SIZE * BYTE_BIT - 4)) / WORD_SIZE;
+UWORD default_stack_size = 16384U;
 
 
 // Utility functions
@@ -249,7 +253,7 @@ state *init(size_t size, size_t data_stack_size, size_t return_stack_size)
 
 state *init_default_stacks(size_t memory_size)
 {
-    return init(memory_size, DEFAULT_STACK_SIZE, DEFAULT_STACK_SIZE);
+    return init(memory_size, default_stack_size, default_stack_size);
 }
 
 void destroy(state *S)

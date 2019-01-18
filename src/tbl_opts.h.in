@@ -19,9 +19,9 @@
 #define MEMORY_MESSAGE(type, max, def)                                  \
   "set " type " size to the given NUMBER of words\n"                    \
   "                            0 < NUMBER <= %"PRI_XWORD" [default %"PRI_XWORD"]", max, def
-OPT("memory", 'm', required_argument, "NUMBER", MEMORY_MESSAGE("memory", MAX_MEMORY, DEFAULT_MEMORY))
-OPT("stack", 's', required_argument, "NUMBER", MEMORY_MESSAGE("data stack", MAX_STACK_SIZE, DEFAULT_STACK_SIZE))
-OPT("return-stack", 'r', required_argument, "NUMBER", MEMORY_MESSAGE("return stack", MAX_STACK_SIZE, DEFAULT_STACK_SIZE))
+OPT("memory", 'm', required_argument, "NUMBER", MEMORY_MESSAGE("memory", max_memory_size, default_memory_size))
+OPT("stack", 's', required_argument, "NUMBER", MEMORY_MESSAGE("data stack", max_stack_size, default_stack_size))
+OPT("return-stack", 'r', required_argument, "NUMBER", MEMORY_MESSAGE("return stack", max_stack_size, default_stack_size))
 OPT("core-dump", 'c', no_argument, "", "dump core on memory exception")
 OPT("debug", 'd', no_argument, "", "enter debugger on exception")
 OPT("help", '\0', no_argument, "", "display this help message and exit")

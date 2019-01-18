@@ -43,9 +43,9 @@
 
 
 static state *S;
-static UWORD memory_size = DEFAULT_MEMORY; // Size of VM memory in words
-UWORD stack_size = DEFAULT_STACK_SIZE;
-UWORD return_stack_size = DEFAULT_STACK_SIZE;
+static UWORD memory_size;
+static UWORD stack_size;
+static UWORD return_stack_size;
 
 static bool interactive;
 static unsigned long lineno;
@@ -795,6 +795,9 @@ int main(int argc, char *argv[])
     set_program_name(argv[0]);
     interactive = isatty(fileno(stdin));
 
+    memory_size = default_memory_size;
+    stack_size = return_stack_size = default_stack_size;
+
     // Options string starts with '+' to stop option processing at first non-option, then
     // leading ':' so as to return ':' for a missing arg, not '?'
     for (;;) {
@@ -820,13 +823,13 @@ int main(int argc, char *argv[])
 
         switch (longindex) {
         case 0:
-            memory_size = parse_memory_size((UWORD)MAX_MEMORY);
+            memory_size = parse_memory_size(max_memory_size);
             break;
         case 1:
-            stack_size = parse_memory_size((UWORD)MAX_STACK_SIZE);
+            stack_size = parse_memory_size(max_stack_size);
             break;
         case 2:
-            return_stack_size = parse_memory_size((UWORD)MAX_STACK_SIZE);
+            return_stack_size = parse_memory_size(max_stack_size);
             break;
         case 3:
             core_dump = true;

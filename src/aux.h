@@ -35,13 +35,13 @@ struct _state {
 };
 
 // Memory size
-#define DEFAULT_MEMORY ((UWORD)0x100000U) // Default size of VM memory in words
-#define MAX_MEMORY (((UWORD)1 << (word_bit - 1)) / word_size) // Maximum size of memory in words (half the address space)
+extern UWORD default_memory_size;
+extern UWORD max_memory_size;
 
 // Stacks
 extern const int stack_direction;
-#define MAX_STACK_SIZE       ((((UWORD)1) << (word_bit - 4)) / word_size)
-#define DEFAULT_STACK_SIZE   ((UWORD)16384U)
+extern UWORD default_stack_size;
+extern UWORD max_stack_size;
 
 #define POP(v)                                                          \
     (exception == 0 ? pop_stack(S, v) : exception)
