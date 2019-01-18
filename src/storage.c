@@ -219,6 +219,10 @@ int mem_realloc(state *S, UWORD size)
 
 state *init(size_t size, size_t data_stack_size, size_t return_stack_size)
 {
+    if (size > max_memory_size || data_stack_size > max_stack_size ||
+        return_stack_size > max_stack_size)
+        return NULL;
+
     state *S = calloc(1, sizeof(state));
     if (S == NULL)
         return NULL;
