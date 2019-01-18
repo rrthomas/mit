@@ -1,9 +1,0 @@
-#!/bin/sh
-# Run a VM test and check the results
-
-SCRIPT="${1%.test}.asm"
-
-OUTPUT=`basename ${SCRIPT%.*}`.output
-CORRECT=${SCRIPT%.*}.correct
-
-$EXECUTOR < $SCRIPT > $OUTPUT && diff $OUTPUT $CORRECT && rm $OUTPUT

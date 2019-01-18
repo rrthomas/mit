@@ -9,5 +9,4 @@
 # RISK.
 
 EXTRA_DIST = \
-	python-setup.py \
 	smite-trace

@@ -5,7 +5,7 @@
 PACKAGE=$1
 SRCDIR=$2
 
-if [ ! -f smitei.1 ]; then
+if [ ! -f smite-dump.1 ]; then
     echo Run this script in src!
     exit 1
 fi

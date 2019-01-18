@@ -16,8 +16,7 @@ EXTRA_DIST = README.md \
 	m4/gnulib-cache.m4 \
 	build-aux/add-symbol-prefix \
 	build-aux/find-external-defines \
-	build-aux/find-external-syms \
-	build-aux/test-runner
+	build-aux/find-external-syms
 
 release: distcheck
 	git diff --exit-code && \

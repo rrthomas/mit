@@ -2,6 +2,7 @@
 /.deps
 /.libs
 *.lo
+*.o
 /libsmite.la
 /smite
 /smitei
@@ -24,3 +25,4 @@
 /instruction-type-list.h
 /opcodes-extra.h
 /register-list.h
+/shell.py

@@ -6,11 +6,11 @@ https://github.com/rrthomas/smite
 SMite is a simple virtual machine designed for study and experiment. It uses
 a byte-stream code designed for efficient execution which is binary portable
 between implementations. It has been implemented in C for POSIX systems.
-SMite is designed to be embedded in other programs; a simple
-shell has been written to demonstrate this ability. In the C implementation,
-all memory references are bounds checked. An I/O library is implemented;
-access to native code routines is also possible, allowing SMite and C
-programs to call each other.
+SMite is designed to be embedded in other programs; a simple Python shell
+has been written to demonstrate this ability. In the C implementation, all
+memory references are bounds checked. An I/O library is implemented; access
+to native code routines is also possible, allowing SMite and C programs to
+call each other.
 
 This package comprises the definition of the SMite virtual machine and an
 implementation in ISO C99 using POSIX APIs. Detailed documentation is in the
@@ -66,20 +66,8 @@ PDFs are supplied in release archives.
 
 ## Use
 
-Run `smite` (see `smite --help` and `shell.pdf` for documentation). If
-you have `rlwrap`, you can run `smitei` instead to get readline support.
-
-
-### Demo: Hello, world!
-
-In `tests/hello.txt` is a command file for the shell that demonstrates its
-use as a crude assembler. Run the following commands to see it in action:
-
-```
-cd tests
-smite < ./hello.txt
-smite hello.obj
-```
+Run `smite OBJECT-FILE` (see `smite --help` for documentation). To run the
+shell, see `src/shell.py`.
 
 
 ## Documentation

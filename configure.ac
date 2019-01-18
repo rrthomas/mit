@@ -20,10 +20,6 @@ dnl help2man
 dnl Set a value even if not found, so that an invocation via build-aux/missing works
 AC_PATH_PROG([HELP2MAN], [help2man], [help2man])
 
-dnl Readline wrapper
-AC_PATH_PROG(RLWRAP, rlwrap)
-AM_CONDITIONAL([HAVE_RLWRAP], [test -n "$ac_cv_path_RLWRAP"])
-
 dnl Extra warnings with GCC
 AC_ARG_ENABLE([gcc-warnings],
   [AS_HELP_STRING([--disable-gcc-warnings],
@@ -70,6 +66,9 @@ dnl Check for header files
 AC_HEADER_STDC
 gl_INIT
 
+dnl Accessing in-tree shared libraries
+AC_SUBST([objdir])
+
 dnl Check features
 AC_C_BIGENDIAN
 
@@ -88,7 +87,6 @@ AC_CONFIG_FILES([
         lib/Makefile
         src/Makefile
         src/public.h
-        src/smitei.1
         src/smite-dump.1
         tests/Makefile
         contrib/Makefile

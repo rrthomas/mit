@@ -1,4 +1,3 @@
-*.o
 *~
 /.gitmodules
 /smite*.tar.gz

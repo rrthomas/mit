@@ -1,5 +1,0 @@
-#!/bin/sh
-# Run @PACKAGE_NAME@ with command-line completion and history
-# (c) Reuben Thomas 2018
-
-@RLWRAP@ --break-chars "(){}[],'+=&^%$#@\";|\\" --complete-filenames --case-insensitive --file @pkgdatadir@/completions --history-filename $HOME/.@PACKAGE@_history @PACKAGE@ "$@"

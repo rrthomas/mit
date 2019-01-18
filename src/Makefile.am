@@ -17,13 +17,12 @@ libsmite_la_LIBADD = $(top_builddir)/lib/libgnu.la
 
 bin_PROGRAMS = smite
 bin_SCRIPTS = @PACKAGE@-dump
-if HAVE_RLWRAP
-bin_SCRIPTS += @PACKAGE@i
-endif
-man_MANS = @PACKAGE@.1 @PACKAGE@i.1 @PACKAGE@-dump.1
+# FIXME: install as smite-shell; add man page
+noinst_SCRIPTS = @PACKAGE@.py
+man_MANS = @PACKAGE@.1 @PACKAGE@-dump.1
 pkgdata_DATA = completions
 smite_LDADD = lib@PACKAGE@.la $(top_builddir)/lib/libgnu.la
-smite_SOURCES = main.c tbl_opts.h tbl_commands.h register-list.h $(internal_HDRS)
+smite_SOURCES = main.c tbl_opts.h register-list.h $(internal_HDRS)
 internal_HDRS = public.h aux.h debug.h opcodes.h opcodes-extra.h
 include_HEADERS = @PACKAGE@.h @PACKAGE@_aux.h @PACKAGE@_debug.h @PACKAGE@_opcodes.h
 
@@ -49,14 +48,9 @@ main.o: tbl_opts.h register-list.h
 # N.B. PACKAGE_UPPER is not enclosed in @, so it can be used in C
 # identifiers.
 do_subst = sed -e 's,[@]pkgdatadir[@],$(pkgdatadir),g' \
-	-e 's,[@]docdir[@],$(docdir),g' \
 	-e 's,[@]PACKAGE[@],$(PACKAGE),g' \
 	-e 's,[@]PACKAGE_NAME[@],$(PACKAGE_NAME),g' \
-	-e 's,PACKAGE_UPPER,$(PACKAGE_UPPER),g' \
-	-e 's,[@]RLWRAP[@],$(RLWRAP),g'
-
-tbl_opts.h: tbl_opts.h.in Makefile
-	$(do_subst) < $(srcdir)/tbl_opts.h.in > tbl_opts.h
+	-e 's,PACKAGE_UPPER,$(PACKAGE_UPPER),g'
 
 @PACKAGE@_opcodes.h: opcodes.h Makefile
 	$(do_subst) < $(srcdir)/opcodes.h > $@
@@ -105,10 +99,6 @@ external-syms.txt: $(lib@PACKAGE@_la_sources) public.h.in aux.h debug.h opcodes.
 external-syms.h: external-syms.txt
 	sed -e 's/\(.*\)/#define \1 $(PACKAGE)_\1/' < $^ > $@
 
-@PACKAGE@i: @PACKAGE@i.in Makefile
-	$(do_subst) < $(srcdir)/@PACKAGE@i.in > $@
-	chmod +x $@
-
 @PACKAGE@-dump: @PACKAGE@-dump.in Makefile
 	$(do_subst) < $(srcdir)/@PACKAGE@-dump.in > $@
 	chmod +x $@
@@ -117,16 +107,17 @@ CLOC = cloc --force-lang="C",h
 
 loc:
 	$(CLOC) $(lib@PACKAGE@_la_SOURCES) $(@PACKAGE@_SOURCES) \
-	vm_data.py opcodes_extra.py gen-register-list gen-instruction-list gen-instruction-type-list gen-opcodes-extra gen-actions
+	vm_data.py opcodes_extra.py gen-register-list gen-instruction-list gen-instruction-type-list gen-opcodes-extra gen-actions @PACKAGE@.py
 
 EXTRA_DIST = \
-	@PACKAGE@i.in @PACKAGE@i.1 @PACKAGE@-dump.in @PACKAGE@-dump.1 \
-	completions.h public.h.in tbl_opts.h.in \
+	@PACKAGE@-dump.in @PACKAGE@-dump.1 \
+	completions.h public.h.in \
 	external-syms.txt external-syms.h \
 	vm_data.py opcodes_extra.py \
+	@PACKAGE@.py \
 	gen-register-list gen-instruction-list gen-instruction-type-list gen-actions gen-opcodes-extra
 
-DISTCLEANFILES = @PACKAGE@i @PACKAGE@-dump @PACKAGE@.1 @PACKAGE@i.1 @PACKAGE-dump.1 completions tbl_opts.h $(include_HEADERS) external-defines.txt external-syms.txt external-syms.h
+DISTCLEANFILES = @PACKAGE@-dump @PACKAGE@.1 @PACKAGE-dump.1 completions $(include_HEADERS) external-defines.txt external-syms.txt external-syms.h
 # Ignore built files that are part of the distribution (specifically,
 # @PACKAGE@.1)
 distcleancheck_listfiles = \

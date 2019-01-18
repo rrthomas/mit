@@ -8,41 +8,47 @@
 # THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER‘S
 # RISK.
 
-AM_CPPFLAGS = -I$(top_srcdir)/src -I$(top_builddir)/lib -I$(top_srcdir)/lib $(WARN_CFLAGS)
+TEST_EXTENSIONS = .py
+# FIXME: run Python under Valgrind with run-test (but not libtool)
+#LOG_COMPILER = $(srcdir)/run-test
+PY_LOG_COMPILER = $(PYTHON)
 
-noinst_LTLIBRARIES = libtest.la
-libtest_la_SOURCES = test_util.c
+check_SCRIPTS =		\
+	arithmetic.py	\
+	branch.py	\
+	call_native.py	\
+	comparison.py	\
+	extra_libc.py	\
+	exceptions.py	\
+	hello.py	\
+	init.py		\
+	load_object.py	\
+	logic.py	\
+	memory.py	\
+	numbers.py	\
+	registers.py	\
+	run.py		\
+	save_object.py	\
+	single_step.py	\
+	stack.py
 
-LOG_COMPILER = $(srcdir)/run-test
-
-LDADD = $(top_builddir)/src/lib@PACKAGE@.la libtest.la
-
-noinst_PROGRAMS = load_object
-check_PROGRAMS = arithmetic branch comparison init numbers logic memory \
-	registers stack single_step run save_object exceptions call_native extra_libc
-check_SCRIPTS = hello.test
-
-TESTS = $(check_PROGRAMS) $(check_SCRIPTS)
+TESTS = $(check_SCRIPTS) $(check_PROGRAMS)
 TESTS_ENVIRONMENT = \
-	if test -n "$(VALGRIND)"; then export VALGRIND='$(VALGRIND)'; fi; \
-	export LIBTOOL=$(top_builddir)/libtool; \
-	export TEST_RUNNER=$(top_srcdir)/build-aux/test-runner; \
-	export EXECUTOR=$(top_builddir)/src/@PACKAGE@$(EXEEXT);
+	if test -n "$(VALGRIND)"; then export VALGRIND='$(VALGRIND) --suppressions=$(srcdir)/valgrind-python.supp'; fi; \
+	export LD_LIBRARY_PATH=$(top_builddir)/src/@objdir@; \
+	export PYTHON=$(PYTHON); \
+	export PYTHONPATH=$(top_srcdir)/src:$(srcdir); \
+	export srcdir=$(srcdir); \
+	export builddir=$(builddir);
 
-do_load_object: load_object
-	( $(TESTS_ENVIRONMENT) $(LOG_COMPILER) $(top_builddir)/src/@PACKAGE@$(EXEEXT) < $(srcdir)/numbers.asm ) && \
-	$(TESTS_ENVIRONMENT) $(LOG_COMPILER) $(builddir)/load_object $(srcdir) $(builddir) && \
-	rm numbers.obj
-
-check-local: do_load_object
-
-EXTRA_DIST = run-test tests.h \
+EXTRA_DIST = run-test \
+	$(check_SCRIPTS) \
+	redirect_stdout.py \
+	valgrind-python.supp \
 	badobj1-4 badobj2-4 badobj3-4 badobj4-4 \
 	badobj1-8 badobj2-8 badobj3-8 badobj4-8 \
 	testobj1-be-4 testobj1-le-4 \
 	testobj1-be-8 testobj1-le-8 \
 	testobj2-be-4 testobj2-le-4 \
 	testobj2-be-8 testobj2-le-8 \
-	TEST.test \
-	hello.test hello.asm hello.correct \
-	numbers.asm
+	hello.py hello.correct

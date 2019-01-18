@@ -11,12 +11,12 @@
 from enum import IntEnum, unique
 
 @unique
-class EXTRALibraries(IntEnum):
+class EXTRALibs(IntEnum):
     SMITE = -1
     LIBC = 0
 
 @unique
-class LibcLibrary(IntEnum):
+class LibcLib(IntEnum):
     ARGC = 0x0
     ARG_LEN = 0x1
     ARG_COPY = 0x2
@@ -37,7 +37,7 @@ class LibcLibrary(IntEnum):
     FILE_STATUS = 0x11
 
 @unique
-class SMiteLibrary(IntEnum):
+class SMiteLib(IntEnum):
     CURRENT_STATE = 0x0
     LOAD_WORD = 0x1
     STORE_WORD = 0x2

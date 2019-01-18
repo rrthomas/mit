@@ -85,10 +85,6 @@ There are three types of numeric meta-parameter: \angb{number}, which is any
 number; \angb{address}, which is a valid address (see~\cite[section~\ref{exceptions}]{@PACKAGE@});
 and \angb{value}, which is a number or an action opcode.
 
-\subsection{Comments}
-
-The string {\tt //} starts a comment, which runs to the end of the input line, and is ignored.
-
 \subsection{Registers}
 
 @PACKAGE_NAME@'s registers may be displayed by typing their name. The
@@ -240,10 +236,6 @@ address or number of bytes is out of range.
 The module is saved to the file \angb{file}. An error message is displayed if
 there is some filing error, but no warning is given if a file of that name
 already exists; it is overwritten.
-
-\subsection{Exiting}
-
-The command {\tt QUIT} exits @PACKAGE_NAME@. No warning is given.
 
 
 \bibliographystyle{plain}
