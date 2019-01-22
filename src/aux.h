@@ -58,7 +58,7 @@ extern UWORD max_stack_size;
     for (unsigned i = 0; i < align(sizeof(ty)) / word_size; i++) {      \
         WORD w;                                                         \
         POP(&w);                                                        \
-        *v = (ty)(((size_t)(*v) << word_bit) | w);                      \
+        *v = (ty)(((size_t)(*v) << word_bit) | (UWORD)w);               \
     }
 
 // Align a VM address
