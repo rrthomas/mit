@@ -22,4 +22,5 @@
 /instruction-actions.h
 /instruction-list.h
 /instruction-type-list.h
+/opcodes-extra.h
 /register-list.h

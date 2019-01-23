@@ -24,7 +24,7 @@ man_MANS = @PACKAGE@.1 @PACKAGE@i.1 @PACKAGE@-dump.1
 pkgdata_DATA = completions
 smite_LDADD = lib@PACKAGE@.la $(top_builddir)/lib/libgnu.la
 smite_SOURCES = main.c tbl_opts.h tbl_commands.h register-list.h $(internal_HDRS)
-internal_HDRS = public.h aux.h debug.h opcodes.h
+internal_HDRS = public.h aux.h debug.h opcodes.h opcodes-extra.h
 include_HEADERS = @PACKAGE@.h @PACKAGE@_aux.h @PACKAGE@_debug.h @PACKAGE@_opcodes.h
 
 completions: register-list.h tbl_commands.h
@@ -82,6 +82,9 @@ external-defines.txt: $(internal_HDRS)
 register-list.h: gen-register-list vm_data.py
 	$(PYTHON) $(srcdir)/gen-register-list > register-list.h
 
+opcodes-extra.h: gen-opcodes-extra opcodes_extra.py
+	$(PYTHON) $(srcdir)/gen-opcodes-extra > opcodes-extra.h
+
 instruction-list.h: gen-instruction-list vm_data.py
 	$(PYTHON) $(srcdir)/gen-instruction-list > instruction-list.h
 
@@ -114,14 +117,14 @@ CLOC = cloc --force-lang="C",h
 
 loc:
 	$(CLOC) $(lib@PACKAGE@_la_SOURCES) $(@PACKAGE@_SOURCES) \
-	vm_data.py gen-register-list gen-instruction-list gen-instruction-type-list gen-actions
+	vm_data.py opcodes_extra.py gen-register-list gen-instruction-list gen-instruction-type-list gen-opcodes-extra gen-actions
 
 EXTRA_DIST = \
 	@PACKAGE@i.in @PACKAGE@i.1 @PACKAGE@-dump.in @PACKAGE@-dump.1 \
 	completions.h public.h.in tbl_opts.h.in \
 	external-syms.txt external-syms.h \
-	vm_data.py \
-	gen-register-list gen-instruction-list gen-instruction-type-list gen-actions
+	vm_data.py opcodes_extra.py \
+	gen-register-list gen-instruction-list gen-instruction-type-list gen-actions gen-opcodes-extra
 
 DISTCLEANFILES = @PACKAGE@i @PACKAGE@-dump @PACKAGE@.1 @PACKAGE@i.1 @PACKAGE-dump.1 completions tbl_opts.h $(include_HEADERS) external-defines.txt external-syms.txt external-syms.h
 # Ignore built files that are part of the distribution (specifically,

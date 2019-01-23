@@ -26,12 +26,12 @@ int main(void)
     state * S = init_default_stacks(1024);
     assert(register_args(S, argc, argv) == 0);
 
-    ass_number(S, OX_ARGC); ass_number(S, OXLIB_LIBC); ass_action(S, O_EXTRA);
-    ass_number(S, 1); ass_number(S, OX_ARG_LEN); ass_number(S, OXLIB_LIBC); ass_action(S, O_EXTRA);
+    ass_number(S, LIBC_ARGC); ass_number(S, LIB_LIBC); ass_action(S, O_EXTRA);
+    ass_number(S, 1); ass_number(S, LIBC_ARG_LEN); ass_number(S, LIB_LIBC); ass_action(S, O_EXTRA);
     ass_number(S, 1); ass_number(S, BUFFER); ass_number(S, 16);
-    ass_number(S, OX_ARG_COPY); ass_number(S, OXLIB_LIBC); ass_action(S, O_EXTRA);
+    ass_number(S, LIBC_ARG_COPY); ass_number(S, LIB_LIBC); ass_action(S, O_EXTRA);
 
-    // Test 1: OX_ARGC
+    // Test 1: LIBC_ARGC
     do {
         single_step(S);
     } while (S->I != O_EXTRA);
@@ -45,7 +45,7 @@ int main(void)
         exit(1);
     }
 
-    // Test 2: OX_ARG_LEN
+    // Test 2: LIBC_ARG_LEN
     do {
         single_step(S);
     } while (S->I != O_EXTRA);
@@ -57,7 +57,7 @@ int main(void)
         exit(1);
     }
 
-    // Tests 3 & 4: OX_ARG_COPY
+    // Tests 3 & 4: LIBC_ARG_COPY
     do {
         single_step(S);
     } while (S->I != O_EXTRA);

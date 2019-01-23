@@ -88,10 +88,10 @@ static int extra_smite(state *S)
     UWORD routine;
     POP((WORD *)&routine);
     switch (routine) {
-    case OX_SMITE_CURRENT_STATE:
+    case SMITE_CURRENT_STATE:
         PUSH_NATIVE_TYPE(state *, S);
         break;
-    case OX_SMITE_LOAD_WORD:
+    case SMITE_LOAD_WORD:
         {
             UWORD addr;
             POP((WORD *)&addr);
@@ -103,7 +103,7 @@ static int extra_smite(state *S)
             PUSH(ret);
         }
         break;
-    case OX_SMITE_STORE_WORD:
+    case SMITE_STORE_WORD:
         {
             WORD value;
             POP(&value);
@@ -115,7 +115,7 @@ static int extra_smite(state *S)
             PUSH(ret);
         }
         break;
-    case OX_SMITE_LOAD_BYTE:
+    case SMITE_LOAD_BYTE:
         {
             UWORD addr;
             POP((WORD *)&addr);
@@ -127,7 +127,7 @@ static int extra_smite(state *S)
             PUSH(ret);
         }
         break;
-    case OX_SMITE_STORE_BYTE:
+    case SMITE_STORE_BYTE:
         {
             WORD value;
             POP(&value);
@@ -139,7 +139,7 @@ static int extra_smite(state *S)
             PUSH(ret);
         }
         break;
-    case OX_SMITE_MEM_REALLOC:
+    case SMITE_MEM_REALLOC:
         {
             UWORD n;
             POP((WORD *)&n);
@@ -149,7 +149,7 @@ static int extra_smite(state *S)
             PUSH(ret);
         }
         break;
-    case OX_SMITE_NATIVE_ADDRESS_OF_RANGE:
+    case SMITE_NATIVE_ADDRESS_OF_RANGE:
         {
             UWORD len;
             POP((WORD *)&len);
@@ -161,7 +161,7 @@ static int extra_smite(state *S)
             PUSH_NATIVE_TYPE(uint8_t *, ptr);
         }
         break;
-    case OX_SMITE_RUN:
+    case SMITE_RUN:
         {
             state *inner_state;
             POP_NATIVE_TYPE(state *, &inner_state);
@@ -169,7 +169,7 @@ static int extra_smite(state *S)
             PUSH(ret);
         }
         break;
-    case OX_SMITE_SINGLE_STEP:
+    case SMITE_SINGLE_STEP:
         {
             state *inner_state;
             POP_NATIVE_TYPE(state *, &inner_state);
@@ -177,7 +177,7 @@ static int extra_smite(state *S)
             PUSH(ret);
         }
         break;
-    case OX_SMITE_LOAD_OBJECT:
+    case SMITE_LOAD_OBJECT:
         {
             UWORD address;
             POP((WORD *)&address);
@@ -189,7 +189,7 @@ static int extra_smite(state *S)
             PUSH(ret);
         }
         break;
-    case OX_SMITE_INIT:
+    case SMITE_INIT:
         {
             UWORD return_stack_size;
             POP((WORD *)&return_stack_size);
@@ -201,14 +201,14 @@ static int extra_smite(state *S)
             PUSH_NATIVE_TYPE(state *, new_state);
         }
         break;
-    case OX_SMITE_DESTROY:
+    case SMITE_DESTROY:
         {
             state *inner_state;
             POP_NATIVE_TYPE(state *, &inner_state);
             destroy(inner_state);
         }
         break;
-    case OX_SMITE_REGISTER_ARGS:
+    case SMITE_REGISTER_ARGS:
         {
             char **argv;
             POP_NATIVE_TYPE(char **, &argv);
@@ -235,10 +235,10 @@ static int extra_libc(state *S)
     UWORD routine;
     POP((WORD *)&routine);
     switch (routine) {
-    case OX_ARGC: // ( -- u )
+    case LIBC_ARGC: // ( -- u )
         PUSH(S->main_argc);
         break;
-    case OX_ARG_LEN: // ( u1 -- u2 )
+    case LIBC_ARG_LEN: // ( u1 -- u2 )
         {
             UWORD narg;
             POP((WORD *)&narg);
@@ -248,7 +248,7 @@ static int extra_libc(state *S)
                 PUSH(S->main_argv_len[narg]);
         }
         break;
-    case OX_ARG_COPY: // ( u1 c-addr u2 -- u3 )
+    case LIBC_ARG_COPY: // ( u1 c-addr u2 -- u3 )
         {
             UWORD len;
             POP((WORD *)&len);
@@ -269,16 +269,16 @@ static int extra_libc(state *S)
                 PUSH(0);
         }
         break;
-    case OX_STDIN:
+    case LIBC_STDIN:
         PUSH((WORD)(STDIN_FILENO));
         break;
-    case OX_STDOUT:
+    case LIBC_STDOUT:
         PUSH((WORD)(STDOUT_FILENO));
         break;
-    case OX_STDERR:
+    case LIBC_STDERR:
         PUSH((WORD)(STDERR_FILENO));
         break;
-    case OX_OPEN_FILE:
+    case LIBC_OPEN_FILE:
         {
             bool binary = false;
             WORD perm_;
@@ -292,14 +292,14 @@ static int extra_libc(state *S)
             PUSH(fd < 0 || (binary && set_binary_mode(fd, O_BINARY) < 0) ? -1 : 0);
         }
         break;
-    case OX_CLOSE_FILE:
+    case LIBC_CLOSE_FILE:
         {
             WORD fd;
             POP(&fd);
             PUSH((WORD)close(fd));
         }
         break;
-    case OX_READ_FILE:
+    case LIBC_READ_FILE:
         {
             WORD fd;
             POP(&fd);
@@ -319,7 +319,7 @@ static int extra_libc(state *S)
             PUSH((exception == 0 && nread >= 0) ? 0 : -1);
         }
         break;
-    case OX_WRITE_FILE:
+    case LIBC_WRITE_FILE:
         {
             WORD fd;
             POP(&fd);
@@ -339,7 +339,7 @@ static int extra_libc(state *S)
             PUSH((exception == 0 && nwritten >= 0) ? 0 : -1);
         }
         break;
-    case OX_FILE_POSITION:
+    case LIBC_FILE_POSITION:
         {
             WORD fd;
             POP(&fd);
@@ -348,7 +348,7 @@ static int extra_libc(state *S)
             PUSH(res >= 0 ? 0 : -1);
         }
         break;
-    case OX_REPOSITION_FILE:
+    case LIBC_REPOSITION_FILE:
         {
             WORD fd;
             POP(&fd);
@@ -358,7 +358,7 @@ static int extra_libc(state *S)
             PUSH(res >= 0 ? 0 : -1);
         }
         break;
-    case OX_FLUSH_FILE:
+    case LIBC_FLUSH_FILE:
         {
             WORD fd;
             POP(&fd);
@@ -366,7 +366,7 @@ static int extra_libc(state *S)
             PUSH(res);
         }
         break;
-    case OX_RENAME_FILE:
+    case LIBC_RENAME_FILE:
         {
             UWORD str1;
             POP((WORD *)&str1);
@@ -379,7 +379,7 @@ static int extra_libc(state *S)
             PUSH(exception == 0 ? rename(s2, s1) : exception);
         }
         break;
-    case OX_DELETE_FILE:
+    case LIBC_DELETE_FILE:
         {
             UWORD str;
             POP((WORD *)&str);
@@ -389,7 +389,7 @@ static int extra_libc(state *S)
             PUSH(exception == 0 ? remove(s) : exception);
         }
         break;
-    case OX_FILE_SIZE:
+    case LIBC_FILE_SIZE:
         {
             struct stat st;
             WORD fd;
@@ -399,7 +399,7 @@ static int extra_libc(state *S)
             PUSH(res);
         }
         break;
-    case OX_RESIZE_FILE:
+    case LIBC_RESIZE_FILE:
         {
             WORD fd;
             POP(&fd);
@@ -409,7 +409,7 @@ static int extra_libc(state *S)
             PUSH(res);
         }
         break;
-    case OX_FILE_STATUS:
+    case LIBC_FILE_STATUS:
         {
             struct stat st;
             WORD fd;
@@ -434,10 +434,10 @@ static int extra(state *S)
     UWORD lib;
     POP((WORD *)&lib);
     switch (lib) {
-    case OXLIB_SMITE:
+    case LIB_SMITE:
         exception = extra_smite(S);
         break;
-    case OXLIB_LIBC:
+    case LIB_LIBC:
         exception = extra_libc(S);
         break;
     default:
