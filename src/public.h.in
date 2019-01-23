@@ -18,7 +18,7 @@
 #include <inttypes.h>
 
 
-// Basic types
+// Types
 #define WORD_SIZE @WORD_SIZE@
 typedef uint8_t BYTE;
 #if WORD_SIZE == 4
@@ -42,6 +42,7 @@ typedef WORD * WORDP;
 #define PRI_smite_UWORD PRI_UWORD
 #define PRI_XWORDP "p"
 #define PRI_WORDP "p"
+typedef void (*callback_t)(void *);
 
 // Parameters
 extern const unsigned word_size;
