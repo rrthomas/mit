@@ -28,7 +28,6 @@ struct _state {
 #undef R
 #undef R_RO
     WORD *memory;
-    UWORD here;	// (FIXME: debug.c) where the next instruction will be stored
     int main_argc;
     char **main_argv;
     UWORD *main_argv_len;

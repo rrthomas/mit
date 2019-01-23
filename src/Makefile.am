@@ -11,7 +11,7 @@
 AM_CPPFLAGS = -I$(top_builddir)/lib -I$(top_srcdir)/lib $(WARN_CFLAGS)
 
 lib_LTLIBRARIES = libsmite.la
-libsmite_la_SOURCES = bits_util.c storage.c instruction.c step.c run.c debug.c object.c \
+libsmite_la_SOURCES = bits_util.c storage.c instruction.c step.c run.c object.c \
 	register-list.h instruction-list.h instruction-type-list.h instruction-actions.h
 libsmite_la_LIBADD = $(top_builddir)/lib/libgnu.la
 
@@ -23,15 +23,15 @@ man_MANS = @PACKAGE@.1 @PACKAGE@-dump.1
 pkgdata_DATA = completions
 smite_LDADD = lib@PACKAGE@.la $(top_builddir)/lib/libgnu.la
 smite_SOURCES = main.c tbl_opts.h register-list.h $(internal_HDRS)
-internal_HDRS = public.h aux.h debug.h opcodes.h opcodes-extra.h
-include_HEADERS = @PACKAGE@.h @PACKAGE@_aux.h @PACKAGE@_debug.h @PACKAGE@_opcodes.h
+internal_HDRS = public.h aux.h opcodes.h opcodes-extra.h
+include_HEADERS = @PACKAGE@.h @PACKAGE@_aux.h @PACKAGE@_opcodes.h
 
 completions: register-list.h tbl_commands.h
 	$(CPP) -I$(srcdir) $(srcdir)/completions.h | grep -v "^#" > $@
 
-bits_util.lo debug.lo instruction.lo object.lo run.lo step.lo storage.lo main.o: external-syms.h
+bits_util.lo instruction.lo object.lo run.lo step.lo storage.lo main.o: external-syms.h
 step.lo: instruction-actions.h
-bits_util.lo debug.lo instruction.lo object.lo step.lo storage.lo main.o: register-list.h instruction-list.h instruction-type-list.h
+bits_util.lo instruction.lo object.lo step.lo storage.lo main.o: register-list.h instruction-list.h instruction-type-list.h
 main.o: tbl_opts.h register-list.h
 
 # Depend on @PACKAGE@$(EXEEXT) rather than explicitly make-ing it, as otherwise
@@ -65,11 +65,6 @@ do_subst = sed -e 's,[@]pkgdatadir[@],$(pkgdatadir),g' \
 	cat external-syms.txt external-defines.txt | $(top_srcdir)/build-aux/add-symbol-prefix $@.tmp > $@
 	rm $@.tmp
 
-@PACKAGE@_debug.h: debug.h external-syms.txt external-defines.txt Makefile
-	$(do_subst) < $(srcdir)/debug.h > $@.tmp
-	cat external-syms.txt external-defines.txt | $(top_srcdir)/build-aux/add-symbol-prefix $@.tmp > $@
-	rm $@.tmp
-
 external-defines.txt: $(internal_HDRS)
 	$(top_srcdir)/build-aux/find-external-defines $(srcdir) > $@
 
@@ -93,7 +88,7 @@ instruction-actions.h: gen-actions vm_data.py
 # find-external-syms takes care of remaking the executable.
 # The target depends on $(internal_HDRS), but with .in files instead of .h
 # N.B. find-external-syms runs make! This can cause duplicate compilation.
-external-syms.txt: $(lib@PACKAGE@_la_sources) public.h.in aux.h debug.h opcodes.h
+external-syms.txt: $(lib@PACKAGE@_la_sources) public.h.in aux.h opcodes.h
 	$(top_srcdir)/build-aux/find-external-syms $(PACKAGE) $(srcdir) > $@
 
 external-syms.h: external-syms.txt
