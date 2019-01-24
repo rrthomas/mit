@@ -151,7 +151,7 @@ int main(int argc, char *argv[])
             break;
         case 5:
             printf(PACKAGE_NAME " " VERSION "\n"
-                   "(c) Reuben Thomas 1995-2018\n"
+                   "(c) Reuben Thomas 1994-2019\n"
                    PACKAGE_NAME " comes with ABSOLUTELY NO WARRANTY.\n"
                    "You may redistribute copies of " PACKAGE_NAME "\n"
                    "under the terms of the GNU General Public License.\n"
