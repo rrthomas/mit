@@ -73,25 +73,24 @@ int load_word(state *state, UWORD addr, WORD *value);
 int store_word(state *state, UWORD addr, WORD value);
 int load_byte(state *state, UWORD addr, BYTE *value);
 int store_byte(state *state, UWORD addr, BYTE value);
-int stack_overflow(WORD pos, UWORD size);
 
 // Stack access
-int load_stack(state *S, UWORD pos, WORD *v);
-int store_stack(state *S, UWORD pos, WORD v);
-int pop_stack(state *S, WORD *v);
-int push_stack(state *S, WORD v);
+int load_stack(state *state, UWORD pos, WORD *v);
+int store_stack(state *state, UWORD pos, WORD v);
+int pop_stack(state *state, WORD *v);
+int push_stack(state *state, WORD v);
 
-int load_return_stack(state *S, UWORD pos, WORD *v);
-int store_return_stack(state *S, UWORD pos, WORD v);
-int pop_return_stack(state *S, WORD *v);
-int push_return_stack(state *S, WORD v);
+int load_return_stack(state *state, UWORD pos, WORD *v);
+int store_return_stack(state *state, UWORD pos, WORD v);
+int pop_return_stack(state *state, WORD *v);
+int push_return_stack(state *state, WORD v);
 
 // Interface calls
-uint8_t *native_address_of_range(state *S, UWORD addr, UWORD length);
+uint8_t *native_address_of_range(state *state, UWORD addr, UWORD length);
 WORD run(state *state);
 WORD single_step(state *state);
 int load_object(state *state, UWORD address, int fd);
-int save_object(state *S, UWORD address, UWORD length, int fd);
+int save_object(state *state, UWORD address, UWORD length, int fd);
 
 // Additional implementation-specific routines, macros, types and quantities
 state *init(size_t size, size_t stack_size, size_t return_stack_size);
