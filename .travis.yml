@@ -1,3 +1,4 @@
+dist: xenial
 language: c
 sudo: true
 
@@ -26,18 +27,21 @@ matrix:
     - env: WORD_SIZE=8
     - compiler: gcc
       env:
-        - COMPILER=gcc-7
-        - CFLAGS="-g3 -fsanitize=address -fsanitize=undefined"
-        - LDFLAGS="-fsanitize=address -fsanitize=undefined"
-        - PYTHONMALLOC=malloc
-        - PY_LOG_ENV="LD_PRELOAD=/usr/lib/gcc/x86_64-linux-gnu/7/libasan.so"
+        - MATRIX_EVAL="CC=gcc-8"
+        # - CFLAGS="-g3 -fsanitize=address -fsanitize=undefined"
+        # - LDFLAGS="-fsanitize=address -fsanitize=undefined"
+        # - PYTHONMALLOC=malloc
+        # - PY_LOG_ENV="LD_PRELOAD=/usr/lib/gcc/x86_64-linux-gnu/7/libasan.so"
       addons:
         apt:
           sources:
             - ubuntu-toolchain-r-test
           packages:
             - *default_deps
-            - [gcc-7]
+            - [gcc-8]
+
+before_install:
+  - eval "${MATRIX_EVAL}"
 
 # Run make install so that Python's ctypes.util.find_library works on Python < 3.6
 script:
