@@ -76,6 +76,33 @@ static WORD parse_memory_size(UWORD max)
     return size;
 }
 
+static void usage(void)
+{
+    char *doc, *shortopt, *buf;
+    printf ("Usage: %s [OPTION...] [OBJECT-FILE ARGUMENT...]\n"
+            "\n"
+            "Run " PACKAGE_NAME ".\n"
+            "\n",
+            program_name);
+#define OPT(longname, shortname, arg, argstring, docstring)             \
+    doc = xasprintf(docstring);                                         \
+    shortopt = xasprintf(", -%c", shortname);                           \
+    buf = xasprintf("--%s%s %s", longname, shortname ? shortopt : "", argstring); \
+    printf("  %-26s%s\n", buf, doc);                                    \
+    free(doc);                                                          \
+    free(shortopt);                                                     \
+    free(buf);
+#define ARG(argstring, docstring)                       \
+    printf("  %-26s%s\n", argstring, docstring);
+#define DOC(text)                               \
+    printf(text "\n");
+#include "tbl_opts.h"
+#undef OPT
+#undef ARG
+#undef DOC
+    exit(EXIT_SUCCESS);
+}
+
 int main(int argc, char *argv[])
 {
     set_program_name(argv[0]);
@@ -120,32 +147,8 @@ int main(int argc, char *argv[])
             core_dump = true;
             break;
         case 4:
-            {
-                char *doc, *shortopt, *buf;
-                printf ("Usage: %s [OPTION...] [OBJECT-FILE ARGUMENT...]\n"
-                        "\n"
-                        "Run " PACKAGE_NAME ".\n"
-                        "\n",
-                        program_name);
-#define OPT(longname, shortname, arg, argstring, docstring)             \
-                doc = xasprintf(docstring);                             \
-                shortopt = xasprintf(", -%c", shortname);               \
-                buf = xasprintf("--%s%s %s", longname, shortname ? shortopt : "", argstring); \
-                printf("  %-26s%s\n", buf, doc);                        \
-                free(doc);                                              \
-                free(shortopt);                                         \
-                free(buf);
-#define ARG(argstring, docstring)                               \
-                printf("  %-26s%s\n", argstring, docstring);
-#define DOC(text)                               \
-                printf(text "\n");
-#include "tbl_opts.h"
-#undef OPT
-#undef ARG
-#undef DOC
-
-                exit(EXIT_SUCCESS);
-            }
+            usage();
+            break;
         case 5:
             printf(PACKAGE_NAME " " VERSION "\n"
                    "(c) Reuben Thomas 1995-2018\n"
@@ -160,65 +163,66 @@ int main(int argc, char *argv[])
     }
 
     argc -= optind;
-    if (argc >= 1) {
-        state *S = init(memory_size, stack_size, return_stack_size);
-        if (S == NULL)
-            die("could not allocate virtual machine state");
+    if (argc < 1)
+        usage();
 
-        if (register_args(S, argc, argv + optind) != 0)
-            die("could not map command-line arguments");
+    state *S = init(memory_size, stack_size, return_stack_size);
+    if (S == NULL)
+        die("could not allocate virtual machine state");
 
-        // Load object file and report any error
-        int fd = open(argv[optind], O_RDONLY);
-        if (fd < 0)
-            die("cannot not open file %s", argv[optind]);
-        int ret = load_object(S, 0, fd);
-        close(fd);
-        const char *err = NULL;
-        if (ret < 0)
-            switch (ret) {
-            case -1:
-                err = "address out of range or unaligned, or module too large";
-                break;
-            case -2:
-                err = "module header invalid";
-                break;
-            case -3:
-                err = "error while loading module";
-                break;
-            case -4:
-                err = "module has wrong ENDISM";
-                break;
-            case -5:
-                err = "module has wrong WORD_SIZE";
-                break;
-            default:
-                err = "unknown error!";
-                break;
-            }
-        if (err != NULL)
-            die("%s: %s", argv[optind], err);
+    if (register_args(S, argc, argv + optind) != 0)
+        die("could not map command-line arguments");
 
-        // Run code
-        int res = run(S);
-
-        // Core dump on error
-        if (core_dump && (res == -23 || res == -9 || (res <= -256 && res >= -260))) {
-            warn("exception %d raised at PC=%"PRI_XWORD, res, S->PC);
-
-            char *file = xasprintf("smite-core.%lu", (unsigned long)getpid());
-            // Ignore errors; best effort only, in the middle of an error exit
-            if ((fd = creat(file, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH)) >= 0) {
-                (void)save_object(S, 0, S->MEMORY, fd);
-                close(fd);
-                warn("core dumped to %s", file);
-            } else
-                perror("open error");
-            free(file);
+    // Load object file and report any error
+    int fd = open(argv[optind], O_RDONLY);
+    if (fd < 0)
+        die("cannot not open file %s", argv[optind]);
+    int ret = load_object(S, 0, fd);
+    close(fd);
+    const char *err = NULL;
+    if (ret < 0)
+        switch (ret) {
+        case -1:
+            err = "address out of range or unaligned, or module too large";
+            break;
+        case -2:
+            err = "module header invalid";
+            break;
+        case -3:
+            err = "error while loading module";
+            break;
+        case -4:
+            err = "module has wrong ENDISM";
+            break;
+        case -5:
+            err = "module has wrong WORD_SIZE";
+            break;
+        default:
+            err = "unknown error!";
+            break;
         }
+    if (err != NULL)
+        die("%s: %s", argv[optind], err);
 
-        destroy(S);
+    // Run code
+    int res = run(S);
 
-        return res;
+    // Core dump on error
+    if (core_dump && (res == -23 || res == -9 || (res <= -256 && res >= -260))) {
+        warn("exception %d raised at PC=%"PRI_XWORD, res, S->PC);
+
+        char *file = xasprintf("smite-core.%lu", (unsigned long)getpid());
+        // Ignore errors; best effort only, in the middle of an error exit
+        if ((fd = creat(file, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH)) >= 0) {
+            (void)save_object(S, 0, S->MEMORY, fd);
+            close(fd);
+            warn("core dumped to %s", file);
+        } else
+            perror("open error");
+        free(file);
     }
+
+    destroy(S);
+
+    return res;
 }
