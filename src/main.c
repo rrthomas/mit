@@ -175,28 +175,27 @@ int main(int argc, char *argv[])
         int ret = load_object(S, 0, fd);
         close(fd);
         const char *err = NULL;
-        switch (ret) {
-        case 0:
-            break;
-        case -1:
-            err = "address out of range or unaligned, or module too large";
-            break;
-        case -2:
-            err = "module header invalid";
-            break;
-        case -3:
-            err = "error while loading module";
-            break;
-        case -4:
-            err = "module has wrong ENDISM";
-            break;
-        case -5:
-            err = "module has wrong WORD_SIZE";
-            break;
-        default:
-            err = "unknown error!";
-            break;
-        }
+        if (ret < 0)
+            switch (ret) {
+            case -1:
+                err = "address out of range or unaligned, or module too large";
+                break;
+            case -2:
+                err = "module header invalid";
+                break;
+            case -3:
+                err = "error while loading module";
+                break;
+            case -4:
+                err = "module has wrong ENDISM";
+                break;
+            case -5:
+                err = "module has wrong WORD_SIZE";
+                break;
+            default:
+                err = "unknown error!";
+                break;
+            }
         if (err != NULL)
             die("%s: %s", argv[optind], err);
 

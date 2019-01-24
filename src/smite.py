@@ -122,6 +122,7 @@ libsmite.smite_run.argtypes = [c_void_p]
 libsmite.smite_single_step.restype = c_word
 libsmite.smite_single_step.argtypes = [c_void_p]
 
+libsmite.smite_load_object.restype = c_ptrdiff_t
 libsmite.smite_load_object.argtypes = [c_void_p, c_uword, c_int]
 
 libsmite.smite_save_object.argtypes = [c_void_p, c_uword, c_uword, c_int]
@@ -248,14 +249,15 @@ class State:
         pass
 
     def load(self, file, addr=0):
-        '''Load an object file at the given address.'''
+        '''Load an object file at the given address.
+        Returns the length.'''
 
         fd = os.open(globdirname(file), os.O_RDONLY)
         if fd < 0:
             raise Error("cannot open file {}".format(file))
         ret = libsmite.smite_load_object(self.state, addr, fd)
         os.close(fd)
-        if ret != 0:
+        if ret < 0:
             try:
                 err = {
                     -1: "address out of range or unaligned, or module too large",
@@ -267,6 +269,7 @@ class State:
             except:
                 err = "unknown error!"
             raise self.LoadError(err, ret)
+        return ret
 
     def save(self, file, address=0, length=None):
         '''Save an object file from the given address and length.

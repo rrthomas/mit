@@ -607,7 +607,7 @@ following calls:
     return $-2$. If the code will not fit into memory at the address given, or
     the address is out of range or unaligned, return $-1$. Otherwise load the code into
     memory, converting it if the endianness value is different from the current
-    value of {\tt ENDISM}. The result is 0 if successful, and some other
+    value of {\tt ENDISM}. The result is the length of the code in bytes if successful, and some other
     implementation-defined value if there is a filing system or other error.}
 \end{description}
 

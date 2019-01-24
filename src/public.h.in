@@ -89,7 +89,7 @@ int push_return_stack(state *state, WORD v);
 uint8_t *native_address_of_range(state *state, UWORD addr, UWORD length);
 WORD run(state *state);
 WORD single_step(state *state);
-int load_object(state *state, UWORD address, int fd);
+ptrdiff_t load_object(state *state, UWORD address, int fd);
 int save_object(state *state, UWORD address, UWORD length, int fd);
 
 // Additional implementation-specific routines, macros, types and quantities

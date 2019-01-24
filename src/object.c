@@ -20,7 +20,7 @@
 #include "aux.h"
 
 
-int load_object(state *S, UWORD address, int fd)
+ptrdiff_t load_object(state *S, UWORD address, int fd)
 {
     if (!is_aligned(address))
         return -1;
@@ -72,7 +72,7 @@ int load_object(state *S, UWORD address, int fd)
     if (read(fd, ptr, length) != (ssize_t)length)
         return -3;
 
-    return 0;
+    return (ssize_t)length;
 }
 
 int save_object(state *S, UWORD address, UWORD length, int fd)
