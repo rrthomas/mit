@@ -12,6 +12,7 @@
 
 #include "external-syms.h"
 
+#include <stddef.h>
 #include <unistd.h>
 
 #include "public.h"
@@ -70,10 +71,15 @@ STATEFUL_ENCODE_INSTRUCTION(encode_instruction, UWORD, addr, STORE_VIRTUAL)
         int type = INSTRUCTION_NUMBER;                                  \
                                                                         \
         /* Continuation bytes */                                        \
-        for (exception = LOAD(b); exception == 0 && (b & ~INSTRUCTION_CHUNK_MASK) == 0x40; exception = LOAD(b)) { \
+        for (exception = LOAD(b);                                       \
+             exception == 0 && bits + INSTRUCTION_CHUNK_BIT <= word_bit && \
+                 (b & ~INSTRUCTION_CHUNK_MASK) == 0x40;                 \
+             exception = LOAD(b)) {                                     \
             n |= (WORD)(b & INSTRUCTION_CHUNK_MASK) << bits;            \
             bits += INSTRUCTION_CHUNK_BIT;                              \
         }                                                               \
+        if (bits > word_bit)                                            \
+            return -1;                                                  \
         if (exception != 0)                                             \
             return exception;                                           \
                                                                         \
