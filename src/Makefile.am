@@ -77,10 +77,9 @@ instruction-actions.h: gen-actions vm_data.py
 
 # Actually needs .o files, but since find-external-syms requires GNU tools,
 # don't force remaking external-syms.txt; instead, add it to EXTRA_DIST.
-# find-external-syms takes care of remaking the executable.
 # The target depends on $(internal_HDRS), but with .in files instead of .h
-# N.B. find-external-syms runs make! This can cause duplicate compilation.
 external-syms.txt: $(lib@PACKAGE@_la_sources) public.h.in aux.h opcodes.h
+	$(MAKE) libsmite.la
 	$(top_srcdir)/build-aux/find-external-syms $(PACKAGE) $(srcdir) > $@
 
 external-syms.h: external-syms.txt

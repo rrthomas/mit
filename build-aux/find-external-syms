@@ -5,8 +5,6 @@
 PACKAGE=$1
 SRCDIR=$2
 
-make >&2
-
 (
     # Find exported symbols
     nm --defined-only .libs/*.o | cut -d " " -f 2-3 | grep ^[A-Zuvw] | cut -d " " -f 2 | grep -v "\\." | sed -e "s/^${PACKAGE}_//"
