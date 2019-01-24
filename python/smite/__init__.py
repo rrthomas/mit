@@ -1,12 +1,7 @@
-# Set up an interactive Python session for use with libsmite
-# Usage:
-#     PYTHONPATH=src ipython3 -i --autocall 2 -m smite
-# or: PYTHONPATH=src python3 -i -m smite
+'''SMite
 
-'''SMite shell
-
-This module offers a convenient set of functions and variables to interact
-with an SMite instance in a Python REPL.
+This module provides SMite bindings for Python 3, and offers a convenient
+set of functions and variables to interact with SMite in a Python REPL.
 
 When run as a script, the module provides a global SMite instance in VM,
 with the following attributes and methods available as globals, as well as
@@ -20,6 +15,10 @@ Controlling and observing execution: run, step, trace
 Examining memory: dump, disassemble
 Assembly: action, number, byte, pointer. Assembly is at address 'here',
 which defaults to 0.
+
+For extra convenience, use IPython:
+
+    PYTHONPATH=src ipython3 -i --autocall 2 -m smite
 '''
 
 import os
@@ -30,8 +29,8 @@ from ctypes import *
 from ctypes.util import find_library
 from curses.ascii import isprint
 
-from vm_data import *
-from opcodes_extra import *
+from smite.vm_data import *
+from smite.opcodes_extra import *
 
 libsmite = CDLL(find_library("smite"))
 
@@ -324,7 +323,7 @@ class State:
         else:
             return "invalid type!"
 
-    def disassemble(self, start=None, length=None, end=None):
+    def disassemble(self, start=None, length=None, end=None, file=sys.stdout):
         '''Disassemble from start to start+length or from start to end.
     Defaults to 64 bytes from 16 bytes before PC.'''
         if start == None:
@@ -336,23 +335,23 @@ class State:
 
         p = start
         while p < end:
-            print("{:#x}: ".format(p), end='')
+            print("{:#x}: ".format(p), end='', file=file)
 
-            ptr = c_word(p)
+            ptr = c_uword(p)
             val = c_word()
             ty = libsmite.smite_decode_instruction(self.state, byref(ptr), byref(val))
             p = ptr.value
 
             if ty < 0:
-                print("Error reading memory")
+                print("Error reading memory", file=file)
             else:
                 s = self.disassemble_instruction(ty, val.value)
                 if s == "undefined":
-                    print("Undefined instruction")
+                    print("Undefined instruction", file=file)
                 else:
-                    print(s)
+                    print(s, file=file)
 
-    def dump(self, start=None, length=None, end=None):
+    def dump(self, start=None, length=None, end=None, file=sys.stdout):
         '''Dump memory from start to start+length or from start to end.
     Defaults to 256 bytes from start - 64.'''
         if start == None:
@@ -364,19 +363,19 @@ class State:
 
         p = start
         while p < end:
-            print("{:#08x} ".format(p), end='')
+            print("{:#08x} ".format(p), end='', file=file)
             chunk = 16
             ascii = ""
             i = 0
             while i < chunk and p < end:
                 if i % 8 == 0:
-                    print(" ", end='')
-                byte = M[p + i]
-                print("{:02x} ".format(byte), end='')
+                    print(" ", end='', file=file)
+                byte = self.M[p + i]
+                print("{:02x} ".format(byte), end='', file=file)
                 i += 1
                 ascii += chr(byte) if isprint(byte) else '.'
             p += chunk
-            print(" |{0:.{1}}|".format(ascii, chunk))
+            print(" |{0:.{1}}|".format(ascii, chunk), file=file)
 
 
 # Registers
@@ -506,10 +505,3 @@ class WordMemory(AbstractMemory):
 
     def store(self, index, value):
         libsmite.smite_store_word(self.VM.state, index, c_word(value))
-
-
-# Make some handy globals for interactive use
-if __name__ == "__main__":
-    global VM
-    VM = State()
-    VM.globalize()

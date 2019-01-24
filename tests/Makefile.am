@@ -34,12 +34,12 @@ TESTS =	\
 TESTS_ENVIRONMENT = \
 	export LD_LIBRARY_PATH=$(top_builddir)/src/@objdir@; \
 	export PYTHON=$(PYTHON); \
-	export PYTHONPATH=$(top_srcdir)/src:$(srcdir); \
+	export PYTHONPATH=$(top_srcdir)/python; \
 	export srcdir=$(srcdir); \
 	export builddir=$(builddir);
 
 EXTRA_DIST = \
-	$(check_SCRIPTS) \
+	$(TESTS) \
 	redirect_stdout.py \
 	hello.correct \
 	badobj1-4 badobj2-4 badobj3-4 badobj4-4 \

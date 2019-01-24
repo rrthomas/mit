@@ -8,7 +8,7 @@
 # THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER‘S
 # RISK.
 
-SUBDIRS = lib src tests doc contrib
+SUBDIRS = lib src python tests doc
 
 ACLOCAL_AMFLAGS = -I m4
 
@@ -17,6 +17,10 @@ EXTRA_DIST = README.md \
 	build-aux/add-symbol-prefix \
 	build-aux/find-external-defines \
 	build-aux/find-external-syms
+
+loc:
+	cd python && $(MAKE) loc
+	cd src && $(MAKE) loc
 
 release: distcheck
 	git diff --exit-code && \

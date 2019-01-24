@@ -1,20 +1,16 @@
-/__pycache__
 /.deps
 /.libs
 *.lo
 *.o
 /libsmite.la
 /smite
-/smite-dump
 /smite.1
-/smite-dump.1
 /public.h
 /tbl_opts.h
 /smite.h
 /smite_aux.h
 /smite_debug.h
 /smite_opcodes.h
-/completions
 /external-defines.txt
 /external-syms.txt
 /external-syms.h
@@ -23,4 +19,3 @@
 /instruction-type-list.h
 /opcodes-extra.h
 /register-list.h
-/shell.py

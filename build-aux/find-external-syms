@@ -5,11 +5,6 @@
 PACKAGE=$1
 SRCDIR=$2
 
-if [ ! -f smite-dump.1 ]; then
-    echo Run this script in src!
-    exit 1
-fi
-
 make >&2
 
 (

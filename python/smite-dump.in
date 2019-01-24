@@ -1,0 +1,22 @@
+#!/usr/bin/env python3
+# Dump @PACKAGE_NAME@ object file as hex and disassembly
+# (c) Reuben Thomas 2018-2019
+
+import sys
+import os.path
+
+import smite
+
+if len(sys.argv) != 2:
+    print("Usage: @PACKAGE@-dump OBJECT-FILE")
+    sys.exit(1)
+file = sys.argv[1]
+base, ext = os.path.splitext(file)
+
+VM = smite.State()
+length = VM.load(file)
+
+with open("{}.asm".format(file), "w") as h:
+    VM.disassemble(0, length, file=h)
+with open("{}.hex".format(file), "w") as h:
+    VM.dump(0, length, file=h)

@@ -14,6 +14,8 @@ AM_PROG_AR
 LT_INIT
 AM_PATH_PYTHON([3.4])
 AC_PATH_PROG(LATEXMK, latexmk, true)
+AC_PATH_PROG(CLOC, cloc, true)
+AC_SUBST([CLOC_OPTS], [--force-lang="C",h])
 AM_CONDITIONAL([HAVE_LATEXMK], [test "$ac_cv_path_LATEXMK" != "true"])
 gl_INIT
 
@@ -79,13 +81,14 @@ AC_CONFIG_FILES([
         lib/Makefile
         src/Makefile
         src/public.h
-        src/smite-dump.1
         tests/Makefile
-        contrib/Makefile
+        python/Makefile
+        python/smite-dump.1
         doc/Makefile
         doc/smite.tex
         doc/csmite.tex
         doc/shell.tex
 ])
 AC_CONFIG_FILES([build-aux/add-symbol-prefix], [chmod +x build-aux/add-symbol-prefix])
+AC_CONFIG_FILES([python/smite-dump], [chmod +x python/smite-dump])
 AC_OUTPUT
