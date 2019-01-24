@@ -68,7 +68,7 @@ int is_aligned(UWORD addr);
 
 // Portable arithmetic right shift (the behaviour of >> on signed
 // quantities is implementation-defined in C99)
-#define ARSHIFT(n, p) (((n) >> (p)) | ((typeof(n))(-((n) < 0)) << (word_bit - (p))))
+#define ARSHIFT(n, p) (((n) >> (p)) | ((UWORD)(-((WORD)(n) < 0)) << (word_bit - (p))))
 
 // Bit utilities
 _GL_ATTRIBUTE_CONST int find_msbit(WORD v); // return msbit of a WORD

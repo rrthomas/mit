@@ -10,11 +10,9 @@
 
 #include "config.h"
 
-#include <unistd.h>
-
-#include "minmax.h"
-
 #include "external-syms.h"
+
+#include <unistd.h>
 
 #include "public.h"
 #include "aux.h"
@@ -65,7 +63,6 @@ STATEFUL_ENCODE_INSTRUCTION(encode_instruction, UWORD, addr, STORE_VIRTUAL)
 
 #define _DECODE_INSTRUCTION(NAME, TYPE, HANDLE, LOAD)                   \
     {                                                                   \
-        size_t len = 0;                                                 \
         unsigned bits = 0;                                              \
         WORD n = 0;                                                     \
         BYTE b;                                                         \
@@ -74,7 +71,6 @@ STATEFUL_ENCODE_INSTRUCTION(encode_instruction, UWORD, addr, STORE_VIRTUAL)
                                                                         \
         /* Continuation bytes */                                        \
         for (exception = LOAD(b); exception == 0 && (b & ~INSTRUCTION_CHUNK_MASK) == 0x40; exception = LOAD(b)) { \
-            len++;                                                      \
             n |= (WORD)(b & INSTRUCTION_CHUNK_MASK) << bits;            \
             bits += INSTRUCTION_CHUNK_BIT;                              \
         }                                                               \
@@ -82,17 +78,18 @@ STATEFUL_ENCODE_INSTRUCTION(encode_instruction, UWORD, addr, STORE_VIRTUAL)
             return exception;                                           \
                                                                         \
         /* Check for action opcode */                                   \
+        /* FIXME: Test for instruction should be macro */               \
         if ((b & ~INSTRUCTION_CHUNK_MASK) == 0x80) {                    \
             type = INSTRUCTION_ACTION;                                  \
             b &= INSTRUCTION_CHUNK_MASK;                                \
-        }                                                               \
+        }  else if (word_bit - bits < byte_bit)                         \
+            b &= (1 << (word_bit - bits)) - 1;                          \
                                                                         \
         /* Final (or only) byte */                                      \
-        len++;                                                          \
-        n |= (WORD)b << bits;                                           \
-        bits = MIN(bits + byte_bit, word_bit);                          \
+        n |= (UWORD)b << bits;                                          \
+        bits += byte_bit;                                               \
         if (type == INSTRUCTION_NUMBER && bits < word_bit)              \
-            n = ARSHIFT(n << (word_bit - bits), word_bit - bits);       \
+            n = ARSHIFT((UWORD)n << (word_bit - bits), word_bit - bits); \
         *val = n;                                                       \
         return type;                                                    \
     }
