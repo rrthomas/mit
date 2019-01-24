@@ -217,6 +217,9 @@ int main(int argc, char *argv[])
                 perror("open error");
             free(file);
         }
+
+        destroy(S);
+
         return res;
     }
 }
