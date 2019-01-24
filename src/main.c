@@ -131,7 +131,10 @@ int main(int argc, char *argv[])
                 doc = xasprintf(docstring);                             \
                 shortopt = xasprintf(", -%c", shortname);               \
                 buf = xasprintf("--%s%s %s", longname, shortname ? shortopt : "", argstring); \
-                printf("  %-26s%s\n", buf, doc);
+                printf("  %-26s%s\n", buf, doc);                        \
+                free(doc);                                              \
+                free(shortopt);                                         \
+                free(buf);
 #define ARG(argstring, docstring)                               \
                 printf("  %-26s%s\n", argstring, docstring);
 #define DOC(text)                               \
