@@ -95,11 +95,11 @@ STATEFUL_ENCODE_INSTRUCTION(encode_instruction, UWORD, addr, STORE_VIRTUAL)
     }
 
 #define DECODE_INSTRUCTION(NAME, TYPE, HANDLE, LOAD)                    \
-    ptrdiff_t NAME(TYPE HANDLE, WORD *val)                              \
+    int NAME(TYPE HANDLE, WORD *val)                                    \
     _DECODE_INSTRUCTION(NAME, TYPE, HANDLE, LOAD)
 
 #define STATEFUL_DECODE_INSTRUCTION(NAME, TYPE, HANDLE, LOAD)           \
-    ptrdiff_t NAME(state *S, TYPE HANDLE, WORD *val)                    \
+    int NAME(state *S, TYPE HANDLE, WORD *val)                          \
     _DECODE_INSTRUCTION(NAME, TYPE, HANDLE, LOAD)
 
 #define LOAD_FILE(b) (-(read(fd, &b, 1) != 1))
