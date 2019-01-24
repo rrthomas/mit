@@ -1,17 +1,18 @@
-.TH @PACKAGE@-dump "1" "July 2018" "@PACKAGE_NAME@" "User Commands"
+.TH @PACKAGE@-trace "1" "January 2019" "@PACKAGE_NAME@" "User Commands"
 .SH NAME
-@PACKAGE@-dump \- Dump @PACKAGE_NAME@ object files as hex and disassembly
+@PACKAGE@-trace \- Write a trace of @PACKAGE_NAME@ execution
 .SH SYNOPSIS
-.B @PACKAGE@-dump
+.B @PACKAGE@-trace
 OBJECT\-FILE
+TRACE\-FILE
 .SH DESCRIPTION
-Dump the given file, typically \fIfoo.obj\fR, as hex (\fIfoo.hex\fR) and disassembly (\fIfoo.asm\fR).
+Trace the execution of the given object file.
 .SH "SEE ALSO"
 .BR @PACKAGE@ (1)
 .SH "REPORTING BUGS"
 Report bugs to rrt@sc3d.org.
 .PP
-\(co Reuben Thomas 1995\-2019
+\(co Reuben Thomas 2019
 .br
 @PACKAGE_NAME@ comes with ABSOLUTELY NO WARRANTY.
 .br

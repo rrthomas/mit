@@ -5,7 +5,7 @@
 import sys
 import os.path
 
-import smite
+import @PACKAGE@
 
 if len(sys.argv) != 2:
     print("Usage: @PACKAGE@-dump OBJECT-FILE")
@@ -13,7 +13,7 @@ if len(sys.argv) != 2:
 file = sys.argv[1]
 base, ext = os.path.splitext(file)
 
-VM = smite.State()
+VM = @PACKAGE@.State()
 length = VM.load(file)
 
 with open("{}.asm".format(file), "w") as h:

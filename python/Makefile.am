@@ -8,20 +8,20 @@
 # THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER‘S
 # RISK.
 
-bin_SCRIPTS = smite-trace @PACKAGE@-dump
-# FIXME: add man page for smite-trace
-man_MANS = @PACKAGE@-dump.1
+bin_SCRIPTS = @PACKAGE@-trace @PACKAGE@-dump
+man_MANS = @PACKAGE@-dump.1 @PACKAGE@-trace.1
 # FIXME: install as smite-shell; add man page
 pkgpython_PYTHON = \
-	smite/__init__.py \
-	smite/__main__.py \
-	smite/vm_data.py \
-	smite/opcodes_extra.py
+	@PACKAGE@/__init__.py \
+	@PACKAGE@/__main__.py \
+	@PACKAGE@/vm_data.py \
+	@PACKAGE@/opcodes_extra.py
 
 loc:
 	$(CLOC) $(CLOC_OPTS) $(bin_SCRIPTS) $(pkgpython_PYTHON)
 
 EXTRA_DIST = \
 	@PACKAGE@-dump.in @PACKAGE@-dump.1
+	@PACKAGE@-trace.in @PACKAGE@-trace.1
 
-DISTCLEANFILES = @PACKAGE@-dump @PACKAGE-dump.1
+DISTCLEANFILES = @PACKAGE@-dump @PACKAGE@-dump.1 @PACKAGE@-trace @PACKAGE@-trace.1

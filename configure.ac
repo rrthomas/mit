@@ -84,6 +84,7 @@ AC_CONFIG_FILES([
         tests/Makefile
         python/Makefile
         python/smite-dump.1
+        python/smite-trace.1
         doc/Makefile
         doc/smite.tex
         doc/csmite.tex
@@ -91,4 +92,5 @@ AC_CONFIG_FILES([
 ])
 AC_CONFIG_FILES([build-aux/add-symbol-prefix], [chmod +x build-aux/add-symbol-prefix])
 AC_CONFIG_FILES([python/smite-dump], [chmod +x python/smite-dump])
+AC_CONFIG_FILES([python/smite-trace], [chmod +x python/smite-trace])
 AC_OUTPUT
