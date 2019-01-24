@@ -15,6 +15,7 @@ LT_INIT
 AM_PATH_PYTHON([3.4])
 AC_PATH_PROG(LATEXMK, latexmk, true)
 AM_CONDITIONAL([HAVE_LATEXMK], [test "$ac_cv_path_LATEXMK" != "true"])
+gl_INIT
 
 dnl help2man
 dnl Set a value even if not found, so that an invocation via build-aux/missing works
@@ -56,10 +57,6 @@ else
 fi
 AC_SUBST([ISYSTEM])
 AC_SUBST([PY_LOG_ENV])
-
-dnl Check for header files
-AC_HEADER_STDC
-gl_INIT
 
 dnl Accessing in-tree shared libraries
 AC_SUBST([objdir])
