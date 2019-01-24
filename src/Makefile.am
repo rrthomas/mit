@@ -60,20 +60,20 @@ do_subst = sed -e 's,[@]PACKAGE[@],$(PACKAGE),g' \
 external-defines.txt: $(internal_HDRS)
 	$(top_srcdir)/build-aux/find-external-defines $(srcdir) > $@
 
-register-list.h: gen-register-list $(top_srcdir)/python/@PACKAGE@/vm_data.py
-	PYTHONPATH=$(top_srcdir)/python/@PACKAGE@ $(PYTHON) $(srcdir)/gen-register-list > register-list.h
+register-list.h: gen-register-list vm_data.py
+	$(PYTHON) $(srcdir)/gen-register-list > register-list.h
 
-opcodes-extra.h: gen-opcodes-extra $(top_srcdir)/python/@PACKAGE@/opcodes_extra.py
-	PYTHONPATH=$(top_srcdir)/python/@PACKAGE@ $(PYTHON) $(srcdir)/gen-opcodes-extra > opcodes-extra.h
+opcodes-extra.h: gen-opcodes-extra opcodes_extra.py
+	$(PYTHON) $(srcdir)/gen-opcodes-extra > opcodes-extra.h
 
-instruction-list.h: gen-instruction-list $(top_srcdir)/python/@PACKAGE@/vm_data.py
-	PYTHONPATH=$(top_srcdir)/python/@PACKAGE@ $(PYTHON) $(srcdir)/gen-instruction-list > instruction-list.h
+instruction-list.h: gen-instruction-list vm_data.py
+	$(PYTHON) $(srcdir)/gen-instruction-list > instruction-list.h
 
-instruction-type-list.h: gen-instruction-type-list $(top_srcdir)/python/@PACKAGE@/vm_data.py
-	PYTHONPATH=$(top_srcdir)/python/@PACKAGE@ $(PYTHON) $(srcdir)/gen-instruction-type-list > instruction-type-list.h
+instruction-type-list.h: gen-instruction-type-list vm_data.py
+	$(PYTHON) $(srcdir)/gen-instruction-type-list > instruction-type-list.h
 
-instruction-actions.h: gen-actions $(top_srcdir)/python/@PACKAGE@/vm_data.py
-	PYTHONPATH=$(top_srcdir)/python/@PACKAGE@ $(PYTHON) $(srcdir)/gen-actions > instruction-actions.h
+instruction-actions.h: gen-actions vm_data.py
+	$(PYTHON) $(srcdir)/gen-actions > instruction-actions.h
 
 # Actually needs .o files, but since find-external-syms requires GNU tools,
 # don't force remaking external-syms.txt; instead, add it to EXTRA_DIST.
@@ -87,12 +87,15 @@ external-syms.h: external-syms.txt
 	sed -e 's/\(.*\)/#define \1 $(PACKAGE)_\1/' < $^ > $@
 
 loc:
-	$(CLOC) $(CLOC_OPTS) $(lib@PACKAGE@_la_SOURCES) $(@PACKAGE@_SOURCES) \
-	gen-register-list gen-instruction-list gen-instruction-type-list gen-opcodes-extra gen-actions
+	$(CLOC) $(CLOC_OPTS) \
+		$(lib@PACKAGE@_la_SOURCES) \
+		$(@PACKAGE@_SOURCES) \
+		gen-register-list gen-instruction-list gen-instruction-type-list gen-opcodes-extra gen-actions
 
 EXTRA_DIST = \
 	public.h.in \
 	external-syms.txt external-syms.h \
+	vm_data.py opcodes_extra.py \
 	gen-register-list gen-instruction-list gen-instruction-type-list gen-actions gen-opcodes-extra
 
 DISTCLEANFILES = @PACKAGE@.1 $(include_HEADERS) external-defines.txt external-syms.txt external-syms.h
