@@ -14,7 +14,7 @@ make >&2
 
 (
     # Find exported symbols
-    nm --defined-only .libs/*.o | cut -d " " -f 2-3 | grep ^[A-Zuvw] | cut -d " " -f 2 | sed -e "s/^${PACKAGE}_//"
+    nm --defined-only .libs/*.o | cut -d " " -f 2-3 | grep ^[A-Zuvw] | cut -d " " -f 2 | grep -v "\\." | sed -e "s/^${PACKAGE}_//"
 
     # Get internal headers that correspond to public headers
     HEADERS=`grep "^internal_HDRS = " "$SRCDIR/Makefile.am" | cut -d " " -f 3-`

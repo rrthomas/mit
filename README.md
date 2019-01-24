@@ -14,7 +14,8 @@ call each other.
 
 This package comprises the definition of the SMite virtual machine and an
 implementation in ISO C99 using POSIX APIs. Detailed documentation is in the
-`doc` directory; installation instructions follow.
+`doc` directory; installation instructions follow. Maintainers should read
+`HACKING.md`.
 
 The package is distributed under the GNU Public License version 3, or,
 at your option, any later version.
@@ -23,7 +24,7 @@ THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER‘S
 RISK.
 
 
-## Installation and compatibility
+## Compatibility
 
 SMite should work on any POSIX-1.2001-compatible system. SMite has been
 tested on x86_64 GNU/Linux with GNU C.

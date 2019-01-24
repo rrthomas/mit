@@ -1,6 +1,6 @@
 # Tests Makefile.am
 #
-# (c) Reuben Thomas 2011-2018
+# (c) Reuben Thomas 2011-2019
 #
 # The package is distributed under the GNU Public License version 3, or,
 # at your option, any later version.
@@ -9,11 +9,10 @@
 # RISK.
 
 TEST_EXTENSIONS = .py
-# FIXME: run Python under Valgrind with run-test (but not libtool)
-#LOG_COMPILER = $(srcdir)/run-test
-PY_LOG_COMPILER = $(PYTHON)
+# Use PY_LOG_ENV to set LD_PRELOAD for ASAN
+PY_LOG_COMPILER = env $(PY_LOG_ENV) $(PYTHON)
 
-check_SCRIPTS =		\
+TESTS =	\
 	arithmetic.py	\
 	branch.py	\
 	call_native.py	\
@@ -32,23 +31,20 @@ check_SCRIPTS =		\
 	single_step.py	\
 	stack.py
 
-TESTS = $(check_SCRIPTS) $(check_PROGRAMS)
 TESTS_ENVIRONMENT = \
-	if test -n "$(VALGRIND)"; then export VALGRIND='$(VALGRIND) --suppressions=$(srcdir)/valgrind-python.supp'; fi; \
 	export LD_LIBRARY_PATH=$(top_builddir)/src/@objdir@; \
 	export PYTHON=$(PYTHON); \
 	export PYTHONPATH=$(top_srcdir)/src:$(srcdir); \
 	export srcdir=$(srcdir); \
 	export builddir=$(builddir);
 
-EXTRA_DIST = run-test \
+EXTRA_DIST = \
 	$(check_SCRIPTS) \
 	redirect_stdout.py \
-	valgrind-python.supp \
+	hello.correct \
 	badobj1-4 badobj2-4 badobj3-4 badobj4-4 \
 	badobj1-8 badobj2-8 badobj3-8 badobj4-8 \
 	testobj1-be-4 testobj1-le-4 \
 	testobj1-be-8 testobj1-le-8 \
 	testobj2-be-4 testobj2-le-4 \
-	testobj2-be-8 testobj2-le-8 \
-	hello.py hello.correct
+	testobj2-be-8 testobj2-le-8
