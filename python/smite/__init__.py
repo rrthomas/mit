@@ -423,7 +423,7 @@ class Stack:
     def __str__(self):
         l = []
         for i in range(self.depth.get(), 0, -1):
-            v = c_int()
+            v = c_word()
             libsmite.smite_load_stack(self.state, i - 1, byref(v))
             l.append(v.value)
         return str(l)
