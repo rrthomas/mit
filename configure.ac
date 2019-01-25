@@ -82,6 +82,7 @@ AC_CONFIG_FILES([
         lib/Makefile
         src/Makefile
         src/smite.h
+        src/smite-include.man
         tests/Makefile
         python/Makefile
         python/smite-dump.1

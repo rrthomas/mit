@@ -28,11 +28,12 @@ main.o: tbl_opts.h register-list.h
 # Depend on @PACKAGE@$(EXEEXT) rather than explicitly make-ing it, as otherwise
 # we break parallel builds, as lib@PACKAGE@.la can be built twice in parallel,
 # which can fail. Set distcleancheck_listfiles below to fix distcheck.
-@PACKAGE@.1: @PACKAGE@$(EXEEXT)
+@PACKAGE@.1: @PACKAGE@$(EXEEXT) @PACKAGE@-include.man
 ## Exit gracefully if @PACKAGE@.1 is not writeable, such as during distcheck!
 	$(AM_V_GEN)if ( touch $@.w && rm -f $@.w; ) >/dev/null 2>&1; then \
 	  $(top_srcdir)/build-aux/missing --run $(HELP2MAN) --no-info \
 		--name="Virtual machine" \
+		--include=@PACKAGE@-include.man \
 		--output=$@ ./@PACKAGE@$(EXEEXT); \
 	fi
 
