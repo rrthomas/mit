@@ -79,6 +79,8 @@ smite_state *smite_init_default_stacks(size_t memory_size);
 
 // Instructions
 #define INSTRUCTION_CHUNK_BIT 6
+#define INSTRUCTION_CONTINUATION_BIT (1 << INSTRUCTION_CHUNK_BIT)
+#define INSTRUCTION_ACTION_BIT (1 << (INSTRUCTION_CHUNK_BIT + 1))
 #define INSTRUCTION_CHUNK_MASK ((1 << INSTRUCTION_CHUNK_BIT) - 1)
 #define INSTRUCTION_MAX_CHUNKS (((smite_word_bit + INSTRUCTION_CHUNK_BIT - 1) / INSTRUCTION_CHUNK_BIT))
 ptrdiff_t smite_encode_instruction_file(int fd, enum instruction_type type, smite_WORD v);

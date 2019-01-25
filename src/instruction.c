@@ -26,7 +26,7 @@
                                                                         \
         /* Continuation bytes */                                        \
         for (int bits = smite_find_msbit(v) + 1; bits > INSTRUCTION_CHUNK_BIT; bits -= INSTRUCTION_CHUNK_BIT) { \
-            b = (smite_BYTE)(v & INSTRUCTION_CHUNK_MASK) | 0x40;              \
+            b = (smite_BYTE)(v & INSTRUCTION_CHUNK_MASK) | INSTRUCTION_CONTINUATION_BIT; \
             if ((exception = STORE(b)) != 0)                            \
                 return (ptrdiff_t)exception;                            \
             len++;                                                      \
@@ -35,7 +35,7 @@
                                                                         \
         /* Set action bit if needed */                                  \
         if (type == INSTRUCTION_ACTION)                                 \
-            v |= 0x80;                                                  \
+            v |= INSTRUCTION_ACTION_BIT;                                \
                                                                         \
         /* Last (or only) byte */                                       \
         b = (smite_BYTE)v;                                                    \
@@ -71,7 +71,7 @@ STATEFUL_ENCODE_INSTRUCTION(smite_encode_instruction, smite_UWORD, addr, STORE_V
         /* Continuation bytes */                                        \
         for (exception = LOAD(b);                                       \
              exception == 0 && bits + INSTRUCTION_CHUNK_BIT <= smite_word_bit && \
-                 (b & ~INSTRUCTION_CHUNK_MASK) == 0x40;                 \
+                 (b & ~INSTRUCTION_CHUNK_MASK) == INSTRUCTION_CONTINUATION_BIT; \
              exception = LOAD(b)) {                                     \
             n |= (smite_WORD)(b & INSTRUCTION_CHUNK_MASK) << bits;            \
             bits += INSTRUCTION_CHUNK_BIT;                              \
@@ -82,8 +82,7 @@ STATEFUL_ENCODE_INSTRUCTION(smite_encode_instruction, smite_UWORD, addr, STORE_V
             return exception;                                           \
                                                                         \
         /* Check for action opcode */                                   \
-        /* FIXME: Test for instruction should be macro */               \
-        if ((b & ~INSTRUCTION_CHUNK_MASK) == 0x80) {                    \
+        if ((b & ~INSTRUCTION_CHUNK_MASK) == INSTRUCTION_ACTION_BIT) {  \
             type = INSTRUCTION_ACTION;                                  \
             b &= INSTRUCTION_CHUNK_MASK;                                \
         }  else if (smite_word_bit - bits < smite_byte_bit)                         \
