@@ -39,10 +39,10 @@ class LibcLib(IntEnum):
 @unique
 class SMiteLib(IntEnum):
     CURRENT_STATE = 0x0
-    LOAD_WORD = 0x1
-    STORE_WORD = 0x2
-    LOAD_BYTE = 0x3
-    STORE_BYTE = 0x4
+    LOAD_smite_WORD = 0x1
+    STORE_smite_WORD = 0x2
+    LOAD_smite_BYTE = 0x3
+    STORE_smite_BYTE = 0x4
     MEM_REALLOC = 0x5
     NATIVE_ADDRESS_OF_RANGE = 0x6
     RUN = 0x7

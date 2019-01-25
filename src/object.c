@@ -10,19 +10,17 @@
 
 #include "config.h"
 
-#include "external-syms.h"
-
 #include <assert.h>
 #include <unistd.h>
 #include <string.h>
 
-#include "public.h"
+#include "smite.h"
 #include "aux.h"
 
 
-ptrdiff_t load_object(state *S, UWORD address, int fd)
+ptrdiff_t smite_load_object(smite_state *S, smite_UWORD address, int fd)
 {
-    if (!is_aligned(address))
+    if (!smite_is_aligned(address))
         return -1;
 
     size_t len = strlen(PACKAGE_UPPER);
@@ -48,24 +46,24 @@ ptrdiff_t load_object(state *S, UWORD address, int fd)
         if (magic[i] != '\0')
             return -2;
 
-    UWORD endism;
-    if (decode_instruction_file(fd, (WORD *)(&endism)) != INSTRUCTION_NUMBER ||
+    smite_UWORD endism;
+    if (smite_decode_instruction_file(fd, (smite_WORD *)(&endism)) != INSTRUCTION_NUMBER ||
         endism > 1)
         return -2;
     if (endism != S->ENDISM)
         return -4;
 
-    UWORD _word_size;
-    if (decode_instruction_file(fd, (WORD *)&_word_size) != INSTRUCTION_NUMBER)
+    smite_UWORD _smite_word_size;
+    if (smite_decode_instruction_file(fd, (smite_WORD *)&_smite_word_size) != INSTRUCTION_NUMBER)
         return -2;
-    if (_word_size != word_size)
+    if (_smite_word_size != smite_word_size)
         return -5;
 
-    UWORD length = 0;
-    if (decode_instruction_file(fd, (WORD *)&length) != INSTRUCTION_NUMBER)
+    smite_UWORD length = 0;
+    if (smite_decode_instruction_file(fd, (smite_WORD *)&length) != INSTRUCTION_NUMBER)
         return -2;
 
-    uint8_t *ptr = native_address_of_range(S, address, length);
+    uint8_t *ptr = smite_native_address_of_range(S, address, length);
     if (ptr == NULL)
         return -1;
 
@@ -75,20 +73,20 @@ ptrdiff_t load_object(state *S, UWORD address, int fd)
     return (ssize_t)length;
 }
 
-int save_object(state *S, UWORD address, UWORD length, int fd)
+int smite_save_object(smite_state *S, smite_UWORD address, smite_UWORD length, int fd)
 {
-    uint8_t *ptr = native_address_of_range(S, address, length);
-    if (!is_aligned(address) || ptr == NULL)
+    uint8_t *ptr = smite_native_address_of_range(S, address, length);
+    if (!smite_is_aligned(address) || ptr == NULL)
         return -1;
 
     char hashbang[] = "#!/usr/bin/env smite\n";
-    BYTE buf[MAGIC_LENGTH] = PACKAGE_UPPER;
+    smite_BYTE buf[MAGIC_LENGTH] = PACKAGE_UPPER;
 
     if (write(fd, hashbang, sizeof(hashbang) - 1) != sizeof(hashbang) - 1 ||
         write(fd, &buf[0], MAGIC_LENGTH) != MAGIC_LENGTH ||
-        encode_instruction_file(fd, INSTRUCTION_NUMBER, S->ENDISM) < 0 ||
-        encode_instruction_file(fd, INSTRUCTION_NUMBER, word_size) < 0 ||
-        encode_instruction_file(fd, INSTRUCTION_NUMBER, length) < 0 ||
+        smite_encode_instruction_file(fd, INSTRUCTION_NUMBER, S->ENDISM) < 0 ||
+        smite_encode_instruction_file(fd, INSTRUCTION_NUMBER, smite_word_size) < 0 ||
+        smite_encode_instruction_file(fd, INSTRUCTION_NUMBER, length) < 0 ||
         write(fd, ptr, length) != (ssize_t)length)
         return -2;
 

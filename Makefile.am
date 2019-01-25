@@ -13,10 +13,7 @@ SUBDIRS = lib src python tests doc
 ACLOCAL_AMFLAGS = -I m4
 
 EXTRA_DIST = README.md \
-	m4/gnulib-cache.m4 \
-	build-aux/add-symbol-prefix \
-	build-aux/find-external-defines \
-	build-aux/find-external-syms
+	m4/gnulib-cache.m4
 
 loc:
 	cd python && $(MAKE) loc

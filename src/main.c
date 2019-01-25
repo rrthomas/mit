@@ -10,8 +10,6 @@
 
 #include "config.h"
 
-#include "external-syms.h"
-
 #include <stdlib.h>
 #include <stdbool.h>
 #include <stdarg.h>
@@ -24,7 +22,7 @@
 #include "progname.h"
 #include "xvasprintf.h"
 
-#include "public.h"
+#include "smite.h"
 #include "aux.h"
 
 
@@ -66,12 +64,12 @@ struct option longopts[] = {
   {0, 0, 0, 0}
 };
 
-static WORD parse_memory_size(UWORD max)
+static smite_WORD parse_memory_size(smite_UWORD max)
 {
     char *endptr;
     errno = 0;
-    long size = (WORD)strtol(optarg, &endptr, 10);
-    if (*optarg == '\0' || *endptr != '\0' || size <= 0 || (UWORD)size > max)
+    long size = (smite_WORD)strtol(optarg, &endptr, 10);
+    if (*optarg == '\0' || *endptr != '\0' || size <= 0 || (smite_UWORD)size > max)
         die("memory size must be a positive number up to %"PRI_UWORD, max);
     return size;
 }
@@ -108,9 +106,9 @@ int main(int argc, char *argv[])
     set_program_name(argv[0]);
 
     bool core_dump = false;
-    UWORD memory_size = default_memory_size;
-    UWORD stack_size = default_stack_size;
-    UWORD return_stack_size = default_stack_size;
+    smite_UWORD memory_size = smite_default_memory_size;
+    smite_UWORD stack_size = smite_default_stack_size;
+    smite_UWORD return_stack_size = smite_default_stack_size;
 
     // Options string starts with '+' to stop option processing at first non-option, then
     // leading ':' so as to return ':' for a missing arg, not '?'
@@ -135,13 +133,13 @@ int main(int argc, char *argv[])
 
         switch (longindex) {
         case 0:
-            memory_size = parse_memory_size(max_memory_size);
+            memory_size = parse_memory_size(smite_max_memory_size);
             break;
         case 1:
-            stack_size = parse_memory_size(max_stack_size);
+            stack_size = parse_memory_size(smite_max_stack_size);
             break;
         case 2:
-            return_stack_size = parse_memory_size(max_stack_size);
+            return_stack_size = parse_memory_size(smite_max_stack_size);
             break;
         case 3:
             core_dump = true;
@@ -166,18 +164,18 @@ int main(int argc, char *argv[])
     if (argc < 1)
         usage();
 
-    state *S = init(memory_size, stack_size, return_stack_size);
+    smite_state *S = smite_init(memory_size, stack_size, return_stack_size);
     if (S == NULL)
-        die("could not allocate virtual machine state");
+        die("could not allocate virtual machine smite_state");
 
-    if (register_args(S, argc, argv + optind) != 0)
+    if (smite_register_args(S, argc, argv + optind) != 0)
         die("could not map command-line arguments");
 
     // Load object file and report any error
     int fd = open(argv[optind], O_RDONLY);
     if (fd < 0)
         die("cannot not open file %s", argv[optind]);
-    int ret = load_object(S, 0, fd);
+    int ret = smite_load_object(S, 0, fd);
     close(fd);
     const char *err = NULL;
     if (ret < 0)
@@ -205,7 +203,7 @@ int main(int argc, char *argv[])
         die("%s: %s", argv[optind], err);
 
     // Run code
-    int res = run(S);
+    int res = smite_run(S);
 
     // Core dump on error
     if (core_dump && (res == -23 || res == -9 || (res <= -256 && res >= -260))) {
@@ -214,7 +212,7 @@ int main(int argc, char *argv[])
         char *file = xasprintf("smite-core.%lu", (unsigned long)getpid());
         // Ignore errors; best effort only, in the middle of an error exit
         if ((fd = creat(file, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH)) >= 0) {
-            (void)save_object(S, 0, S->MEMORY, fd);
+            (void)smite_save_object(S, 0, S->MEMORY, fd);
             close(fd);
             warn("core dumped to %s", file);
         } else
@@ -222,7 +220,7 @@ int main(int argc, char *argv[])
         free(file);
     }
 
-    destroy(S);
+    smite_destroy(S);
 
     return res;
 }

@@ -6,15 +6,8 @@
 /libsmite.la
 /smite
 /smite.1
-/public.h
-/tbl_opts.h
 /smite.h
-/smite_aux.h
-/smite_debug.h
-/smite_opcodes.h
-/external-defines.txt
-/external-syms.txt
-/external-syms.h
+/tbl_opts.h
 /instruction-actions.h
 /instruction-list.h
 /instruction-type-list.h

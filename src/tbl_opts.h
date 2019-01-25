@@ -19,9 +19,9 @@
 #define MEMORY_MESSAGE(type, max, def)                                  \
   "set " type " size to the given NUMBER of words\n"                    \
   "                            0 < NUMBER <= %"PRI_XWORD" [default %"PRI_XWORD"]", max, def
-OPT("memory", 'm', required_argument, "NUMBER", MEMORY_MESSAGE("memory", max_memory_size, default_memory_size))
-OPT("stack", 's', required_argument, "NUMBER", MEMORY_MESSAGE("data stack", max_stack_size, default_stack_size))
-OPT("return-stack", 'r', required_argument, "NUMBER", MEMORY_MESSAGE("return stack", max_stack_size, default_stack_size))
+OPT("memory", 'm', required_argument, "NUMBER", MEMORY_MESSAGE("memory", smite_max_memory_size, smite_default_memory_size))
+OPT("stack", 's', required_argument, "NUMBER", MEMORY_MESSAGE("data stack", smite_max_stack_size, smite_default_stack_size))
+OPT("return-stack", 'r', required_argument, "NUMBER", MEMORY_MESSAGE("return stack", smite_max_stack_size, smite_default_stack_size))
 OPT("core-dump", 'c', no_argument, "", "dump core on memory exception")
 OPT("help", '\0', no_argument, "", "display this help message and exit")
 OPT("version", '\0', no_argument, "", "display version information and exit")

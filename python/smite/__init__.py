@@ -95,7 +95,7 @@ for (c, cty) in [
 # Functions
 c_ptrdiff_t = c_ssize_t
 
-# public.h
+# smite.h
 libsmite.smite_load_word.argtypes = [c_void_p, c_uword, POINTER(c_word)]
 libsmite.smite_store_word.argtypes = [c_void_p, c_uword, c_word]
 # N.B. load/store_byte in Python use UBYTE, not BYTE
@@ -378,9 +378,9 @@ class State:
 
 # Registers
 type_equivalents = {
-    "WORD": c_word,
-    "UWORD": c_uword,
-    "WORDP": POINTER(c_word),
+    "smite_WORD": c_word,
+    "smite_UWORD": c_uword,
+    "smite_WORDP": POINTER(c_word),
 }
 class ActiveRegister:
     '''A VM register.'''

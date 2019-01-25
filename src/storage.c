@@ -10,79 +10,77 @@
 
 #include "config.h"
 
-#include "external-syms.h"
-
 #include <stdlib.h>
 #include <string.h>
 #include <limits.h>
 
-#include "public.h"
+#include "smite.h"
 #include "aux.h"
 
 
 // Constants
-const unsigned word_size = WORD_SIZE;
-const unsigned native_pointer_size = (unsigned)sizeof(void *);
-const unsigned byte_bit = 8;
-const unsigned byte_mask = (1 << BYTE_BIT) - 1;
-const unsigned word_bit = WORD_SIZE * BYTE_BIT;
+const unsigned smite_word_size = WORD_SIZE;
+const unsigned smite_native_pointer_size = (unsigned)sizeof(void *);
+const unsigned smite_byte_bit = 8;
+const unsigned smite_byte_mask = (1 << smite_BYTE_BIT) - 1;
+const unsigned smite_word_bit = WORD_SIZE * smite_BYTE_BIT;
 #if WORD_SIZE == 4
-const UWORD word_mask = UINT32_MAX;
-const UWORD uword_max = UINT32_MAX;
-const WORD word_min = INT32_MIN;
+const smite_UWORD smite_word_mask = UINT32_MAX;
+const smite_UWORD smite_uword_max = UINT32_MAX;
+const smite_WORD smite_word_min = INT32_MIN;
 // FIXME: add uword_min, word_max
 #elif WORD_SIZE == 8
-const UWORD word_mask = UINT64_MAX;
-const UWORD uword_max = UINT64_MAX;
-const WORD word_min = INT64_MIN;
+const smite_UWORD smite_word_mask = UINT64_MAX;
+const smite_UWORD smite_uword_max = UINT64_MAX;
+const smite_WORD smite_word_min = INT64_MIN;
 // FIXME: add uword_min, word_max
 #else
 #error "WORD_SIZE is not 4 or 8!"
 #endif
-const int stack_direction = 1;
-UWORD default_memory_size = 0x100000U; // Default size of VM memory in words
-UWORD max_memory_size = ((UWORD)1 << (WORD_SIZE * BYTE_BIT - 1)) / WORD_SIZE; // Maximum size of memory in words (half the address space)
-UWORD max_stack_size = (((UWORD)1) << (WORD_SIZE * BYTE_BIT - 4)) / WORD_SIZE;
-UWORD default_stack_size = 16384U;
+const int smite_stack_direction = 1;
+smite_UWORD smite_default_memory_size = 0x100000U; // Default size of VM memory in words
+smite_UWORD smite_max_memory_size = ((smite_UWORD)1 << (WORD_SIZE * smite_BYTE_BIT - 1)) / WORD_SIZE; // Maximum size of memory in words (half the address space)
+smite_UWORD smite_max_stack_size = (((smite_UWORD)1) << (WORD_SIZE * smite_BYTE_BIT - 4)) / WORD_SIZE;
+smite_UWORD smite_default_stack_size = 16384U;
 
 
 // Utility functions
 
-_GL_ATTRIBUTE_CONST UWORD align(UWORD addr)
+_GL_ATTRIBUTE_CONST smite_UWORD smite_align(smite_UWORD addr)
 {
-    return (addr + word_size - 1) & -word_size;
+    return (addr + smite_word_size - 1) & -smite_word_size;
 }
 
-_GL_ATTRIBUTE_CONST int is_aligned(UWORD addr)
+_GL_ATTRIBUTE_CONST int smite_is_aligned(smite_UWORD addr)
 {
-    return (addr & (word_size - 1)) == 0;
+    return (addr & (smite_word_size - 1)) == 0;
 }
 
 // General memory access
 
-_GL_ATTRIBUTE_PURE uint8_t *native_address_of_range(state *S, UWORD addr, UWORD length)
+_GL_ATTRIBUTE_PURE uint8_t *smite_native_address_of_range(smite_state *S, smite_UWORD addr, smite_UWORD length)
 {
     if (addr >= S->MEMORY || length > S->MEMORY - addr)
         return NULL;
     return ((uint8_t *)(S->memory)) + addr;
 }
 
-int load_word(state *S, UWORD addr, WORD *value)
+int smite_load_word(smite_state *S, smite_UWORD addr, smite_WORD *value)
 {
     if (addr >= S->MEMORY) {
         S->INVALID = addr;
         return -9;
     }
-    if (!is_aligned(addr)) {
+    if (!smite_is_aligned(addr)) {
         S->INVALID = addr;
         return -23;
     }
 
-    *value = S->memory[addr / word_size];
+    *value = S->memory[addr / smite_word_size];
     return 0;
 }
 
-int load_byte(state *S, UWORD addr, BYTE *value)
+int smite_load_byte(smite_state *S, smite_UWORD addr, smite_BYTE *value)
 {
     if (addr >= S->MEMORY) {
         S->INVALID = addr;
@@ -93,22 +91,22 @@ int load_byte(state *S, UWORD addr, BYTE *value)
     return 0;
 }
 
-int store_word(state *S, UWORD addr, WORD value)
+int smite_store_word(smite_state *S, smite_UWORD addr, smite_WORD value)
 {
     if (addr >= S->MEMORY) {
         S->INVALID = addr;
         return -9;
     }
-    if (!is_aligned(addr)) {
+    if (!smite_is_aligned(addr)) {
         S->INVALID = addr;
         return -23;
     }
 
-    S->memory[addr / word_size] = value;
+    S->memory[addr / smite_word_size] = value;
     return 0;
 }
 
-int store_byte(state *S, UWORD addr, BYTE value)
+int smite_store_byte(smite_state *S, smite_UWORD addr, smite_BYTE value)
 {
     if (addr >= S->MEMORY) {
         S->INVALID = addr;
@@ -122,123 +120,123 @@ int store_byte(state *S, UWORD addr, BYTE value)
 
 // Stacks
 
-int load_stack(state *S, UWORD pos, WORD *v)
+int smite_load_stack(smite_state *S, smite_UWORD pos, smite_WORD *v)
 {
     if (pos >= S->SDEPTH)
         return -9;
 
-    *v = *(S->S0 + (S->SDEPTH - pos - 1) * stack_direction);
+    *v = *(S->S0 + (S->SDEPTH - pos - 1) * smite_stack_direction);
     return 0;
 }
 
-int store_stack(state *S, UWORD pos, WORD v)
+int smite_store_stack(smite_state *S, smite_UWORD pos, smite_WORD v)
 {
     if (pos >= S->SDEPTH)
         return -9;
 
-    *(S->S0 + (S->SDEPTH - pos - 1) * stack_direction) = v;
+    *(S->S0 + (S->SDEPTH - pos - 1) * smite_stack_direction) = v;
     return 0;
 }
 
-int pop_stack(state *S, WORD *v)
+int smite_pop_stack(smite_state *S, smite_WORD *v)
 {
     if (S->SDEPTH == 0)
         return -9;
 
-    int ret = load_stack(S, 0, v);
+    int ret = smite_load_stack(S, 0, v);
     S->SDEPTH--;
     return ret;
 }
 
-int push_stack(state *S, WORD v)
+int smite_push_stack(smite_state *S, smite_WORD v)
 {
     if (S->SDEPTH == S->SSIZE)
         return -9;
 
     (S->SDEPTH)++;
-    return store_stack(S, 0, v);
+    return smite_store_stack(S, 0, v);
 }
 
 
-int load_return_stack(state *S, UWORD pos, WORD *v)
+int smite_load_return_stack(smite_state *S, smite_UWORD pos, smite_WORD *v)
 {
     if (pos >= S->RDEPTH)
         return -9;
 
-    *v = *(S->R0 + (S->RDEPTH - pos - 1) * stack_direction);
+    *v = *(S->R0 + (S->RDEPTH - pos - 1) * smite_stack_direction);
     return 0;
 }
 
-int store_return_stack(state *S, UWORD pos, WORD v)
+int smite_store_return_stack(smite_state *S, smite_UWORD pos, smite_WORD v)
 {
     if (pos >= S->RDEPTH)
         return -9;
 
-    *(S->R0 + (S->RDEPTH - pos - 1) * stack_direction) = v;
+    *(S->R0 + (S->RDEPTH - pos - 1) * smite_stack_direction) = v;
     return 0;
 }
 
-int pop_return_stack(state *S, WORD *v)
+int smite_pop_return_stack(smite_state *S, smite_WORD *v)
 {
     if (S->RDEPTH == 0)
         return -9;
 
-    int ret = load_return_stack(S, 0, v);
+    int ret = smite_load_return_stack(S, 0, v);
     (S->RDEPTH)--;
     return ret;
 }
 
-int push_return_stack(state *S, WORD v)
+int smite_push_return_stack(smite_state *S, smite_WORD v)
 {
     if (S->RDEPTH == S->RSIZE)
         return -9;
 
     (S->RDEPTH)++;
-    return store_return_stack(S, 0, v);
+    return smite_store_return_stack(S, 0, v);
 }
 
 
 // Initialisation and memory management
 
-int mem_realloc(state *S, UWORD size)
+int smite_mem_realloc(smite_state *S, smite_UWORD size)
 {
-    if (size > uword_max / word_size)
+    if (size > smite_uword_max / smite_word_size)
         return -1;
 
-    S->memory = realloc(S->memory, size * word_size);
+    S->memory = realloc(S->memory, size * smite_word_size);
     if (S->memory == NULL)
         return -1;
 
     if (S->MEMORY < size)
-        memset(S->memory + S->MEMORY, 0, (size - S->MEMORY) * word_size);
-    S->MEMORY = size * word_size;
+        memset(S->memory + S->MEMORY, 0, (size - S->MEMORY) * smite_word_size);
+    S->MEMORY = size * smite_word_size;
 
     return 0;
 }
 
 
-state *init(size_t size, size_t data_stack_size, size_t return_stack_size)
+smite_state *smite_init(size_t size, size_t data_stack_size, size_t return_stack_size)
 {
-    if (size > max_memory_size || data_stack_size > max_stack_size ||
-        return_stack_size > max_stack_size)
+    if (size > smite_max_memory_size || data_stack_size > smite_max_stack_size ||
+        return_stack_size > smite_max_stack_size)
         return NULL;
 
-    state *S = calloc(1, sizeof(state));
+    smite_state *S = calloc(1, sizeof(smite_state));
     if (S == NULL)
         return NULL;
 
-    if (mem_realloc(S, size) != 0)
+    if (smite_mem_realloc(S, size) != 0)
         return NULL;
 
     S->SSIZE = data_stack_size;
-    S->S0 = calloc(S->SSIZE, word_size);
+    S->S0 = calloc(S->SSIZE, smite_word_size);
     S->RSIZE = return_stack_size;
-    S->R0 = calloc(S->RSIZE, word_size);
+    S->R0 = calloc(S->RSIZE, smite_word_size);
     if (S->S0 == NULL || S->R0 == NULL)
         return NULL;
 
     S->ENDISM =
-#ifdef WORDS_BIGENDIAN
+#ifdef smite_WORDS_BIGENDIAN
         1
 #else
         0
@@ -255,12 +253,12 @@ state *init(size_t size, size_t data_stack_size, size_t return_stack_size)
     return S;
 }
 
-state *init_default_stacks(size_t memory_size)
+smite_state *smite_init_default_stacks(size_t memory_size)
 {
-    return init(memory_size, default_stack_size, default_stack_size);
+    return smite_init(memory_size, smite_default_stack_size, smite_default_stack_size);
 }
 
-void destroy(state *S)
+void smite_destroy(smite_state *S)
 {
     free(S->memory);
     free(S->S0);
@@ -270,12 +268,12 @@ void destroy(state *S)
 }
 
 #define R_RO(reg, type, utype)                          \
-    _GL_ATTRIBUTE_PURE type get_ ## reg(state *S) {     \
+    _GL_ATTRIBUTE_PURE type smite_get_ ## reg(smite_state *S) {     \
         return S->reg;                                  \
     }
 #define R(reg, type, utype)                         \
     R_RO(reg, type, utype)                          \
-    void set_ ## reg(state *S, type value) {        \
+    void smite_set_ ## reg(smite_state *S, type value) {        \
         S->reg = value;                             \
     }
 #include "register-list.h"

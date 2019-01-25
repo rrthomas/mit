@@ -9,8 +9,8 @@
 // THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER‘S
 // RISK.
 
-#ifndef PACKAGE_UPPER_AUX
-#define PACKAGE_UPPER_AUX
+#ifndef SMITE_AUX
+#define SMITE_AUX
 
 
 #include <stdio.h>      // for the FILE type
@@ -21,70 +21,70 @@
 
 
 // VM registers
-struct _state {
+struct _smite_state {
 #define R(reg, type, utype) type reg;
 #define R_RO(reg, type, utype) R(reg, type, utype)
 #include "register-list.h"
 #undef R
 #undef R_RO
-    WORD *memory;
+    smite_WORD *memory;
     int main_argc;
     char **main_argv;
-    UWORD *main_argv_len;
+    smite_UWORD *main_argv_len;
 };
 
 // Memory size
-extern UWORD default_memory_size;
-extern UWORD max_memory_size;
+extern smite_UWORD smite_default_memory_size;
+extern smite_UWORD smite_max_memory_size;
 
 // Stacks
-extern const int stack_direction;
-extern UWORD default_stack_size;
-extern UWORD max_stack_size;
+extern const int smite_stack_direction;
+extern smite_UWORD smite_default_stack_size;
+extern smite_UWORD smite_max_stack_size;
 
 #define POP(v)                                                          \
-    (exception == 0 ? pop_stack(S, v) : exception)
+    (exception == 0 ? smite_pop_stack(S, v) : exception)
 #define PUSH(v)                                                         \
-    (exception == 0 ? push_stack(S, v) : exception)
+    (exception == 0 ? smite_push_stack(S, v) : exception)
 
 #define PUSH_NATIVE_TYPE(ty, v)                                         \
-    for (unsigned i = 0; i < align(sizeof(ty)) / word_size; i++) {      \
-        PUSH((UWORD)((size_t)v & word_mask));                           \
-        v = (ty)((size_t)v >> word_bit);                                \
+    for (unsigned i = 0; i < smite_align(sizeof(ty)) / smite_word_size; i++) { \
+        PUSH((smite_UWORD)((size_t)v & smite_word_mask));               \
+        v = (ty)((size_t)v >> smite_word_bit);                          \
     }
 #define POP_NATIVE_TYPE(ty, v)                                          \
     *v = 0;                                                             \
-    for (unsigned i = 0; i < align(sizeof(ty)) / word_size; i++) {      \
-        WORD w;                                                         \
+    for (unsigned i = 0; i < smite_align(sizeof(ty)) / smite_word_size; i++) { \
+        smite_WORD w;                                                   \
         POP(&w);                                                        \
-        *v = (ty)(((size_t)(*v) << word_bit) | (UWORD)w);               \
+        *v = (ty)(((size_t)(*v) << smite_word_bit) | (smite_UWORD)w);   \
     }
 
 // Align a VM address
-UWORD align(UWORD addr);
+smite_UWORD smite_align(smite_UWORD addr);
 
 // Check whether a VM address is aligned
-int is_aligned(UWORD addr);
+int smite_is_aligned(smite_UWORD addr);
 
 // Portable arithmetic right shift (the behaviour of >> on signed
 // quantities is implementation-defined in C99)
-#define ARSHIFT(n, p) (((n) >> (p)) | ((UWORD)(-((WORD)(n) < 0)) << (word_bit - (p))))
+#define ARSHIFT(n, p) (((n) >> (p)) | ((smite_UWORD)(-((smite_WORD)(n) < 0)) << (smite_word_bit - (p))))
 
 // Bit utilities
-_GL_ATTRIBUTE_CONST int find_msbit(WORD v); // return msbit of a WORD
-int byte_size(WORD v); // return number of significant bytes in a WORD quantity
+_GL_ATTRIBUTE_CONST int smite_find_msbit(smite_WORD v); // return msbit of a smite_WORD
+int smite_byte_size(smite_WORD v); // return number of significant bytes in a smite_WORD quantity
 
 // Initialisation helper
-state *init_default_stacks(size_t memory_size);
+smite_state *smite_init_default_stacks(size_t memory_size);
 
 // Instructions
 #define INSTRUCTION_CHUNK_BIT 6
 #define INSTRUCTION_CHUNK_MASK ((1 << INSTRUCTION_CHUNK_BIT) - 1)
-#define INSTRUCTION_MAX_CHUNKS (((word_bit + INSTRUCTION_CHUNK_BIT - 1) / INSTRUCTION_CHUNK_BIT))
-ptrdiff_t encode_instruction_file(int fd, enum instruction_type type, WORD v);
-ptrdiff_t encode_instruction(state *S, UWORD addr, enum instruction_type type, WORD v);
-int decode_instruction_file(int fd, WORD *val);
-int decode_instruction(state *S, UWORD *addr, WORD *val);
+#define INSTRUCTION_MAX_CHUNKS (((smite_word_bit + INSTRUCTION_CHUNK_BIT - 1) / INSTRUCTION_CHUNK_BIT))
+ptrdiff_t smite_encode_instruction_file(int fd, enum instruction_type type, smite_WORD v);
+ptrdiff_t smite_encode_instruction(smite_state *S, smite_UWORD addr, enum instruction_type type, smite_WORD v);
+int smite_decode_instruction_file(int fd, smite_WORD *val);
+int smite_decode_instruction(smite_state *S, smite_UWORD *addr, smite_WORD *val);
 
 // Object files
 #define MAGIC_LENGTH 8

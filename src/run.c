@@ -10,16 +10,14 @@
 
 #include "config.h"
 
-#include "external-syms.h"
-
-#include "public.h"
+#include "smite.h"
 
 
-WORD run(state *S)
+smite_WORD smite_run(smite_state *S)
 {
-    WORD ret;
+    smite_WORD ret;
 
-    while ((ret = single_step(S)) == -258)
+    while ((ret = smite_single_step(S)) == -258)
         ;
 
     return ret;
