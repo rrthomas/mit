@@ -60,34 +60,30 @@ for good_file in good_files:
 
 
 # Generate test object file
-number(-257)
-number(12345678)
+correct = [-257, 12345678]
+for n in correct:
+    number(n)
 magic_number = 42
 number(magic_number)
 action(HALT)
 save("numbers.obj")
 
-number_files = ["numbers.obj"]
-# FIXME: Generate a single list of numbers for here, numbers.txt and numbers.c
-correct = [
-    [-257, 12345678],
-]
-for i in range(len(number_files)):
-    s = obj_name(build_dir, number_files[i], False)
-    res = try_load(s)
-    print(" should be {}".format(0))
-    if res != 0:
-        print("Error in load_object() tests: file {}".format(number_files[i]))
-        sys.exit(1)
-    if run() != magic_number:
-        print("Error in load_object() tests: file {}".format(number_files[i]))
-        sys.exit(1)
-    print("Correct stack: {}".format(correct[i]))
-    if str(correct[i]) != str(S):
-        print("Error in arithmetic tests: PC = {}".format(PC))
-        sys.exit(1)
+number_file = "numbers.obj"
+s = obj_name(build_dir, number_file, False)
+res = try_load(s)
+print(" should be {}".format(0))
+if res != 0:
+    print("Error in load_object() tests: file {}".format(number_file))
+    sys.exit(1)
+if run() != magic_number:
+    print("Error in load_object() tests: file {}".format(number_file))
+    sys.exit(1)
+print("Correct stack: {}".format(correct))
+if str(correct) != str(S):
+    print("Error in arithmetic tests: PC = {}".format(PC))
+    sys.exit(1)
 
-os.remove("numbers.obj")
+os.remove(number_file)
 
 
 # Check we get an error trying to load an object file of the wrong
