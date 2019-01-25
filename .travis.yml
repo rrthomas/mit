@@ -1,4 +1,5 @@
 language: c
+sudo: true
 
 addons:
   apt:
@@ -38,7 +39,9 @@ matrix:
             - *default_deps
             - [gcc-7]
 
+# Run make install so that Python's ctypes.util.find_library works on Python < 3.6
 script:
   - ./bootstrap && ./configure --enable-silent-rules
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install help2man ; fi
+  - make && sudo make install
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then make check ; else make distcheck ; fi
