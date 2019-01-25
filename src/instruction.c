@@ -70,7 +70,7 @@ STATEFUL_ENCODE_INSTRUCTION(smite_encode_instruction, smite_UWORD, addr, STORE_V
                                                                         \
         /* Continuation bytes */                                        \
         for (exception = LOAD(b);                                       \
-             exception == 0 && bits + INSTRUCTION_CHUNK_BIT <= smite_word_bit && \
+             exception == 0 && bits <= smite_word_bit - INSTRUCTION_CHUNK_BIT && \
                  (b & ~INSTRUCTION_CHUNK_MASK) == INSTRUCTION_CONTINUATION_BIT; \
              exception = LOAD(b)) {                                     \
             n |= (smite_WORD)(b & INSTRUCTION_CHUNK_MASK) << bits;            \
