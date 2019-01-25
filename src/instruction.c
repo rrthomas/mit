@@ -63,8 +63,8 @@ STATEFUL_ENCODE_INSTRUCTION(smite_encode_instruction, smite_UWORD, addr, STORE_V
 #define _DECODE_INSTRUCTION(NAME, TYPE, HANDLE, LOAD)                   \
     {                                                                   \
         unsigned bits = 0;                                              \
-        smite_WORD n = 0;                                                     \
-        smite_BYTE b;                                                         \
+        smite_WORD n = 0;                                               \
+        smite_BYTE b;                                                   \
         int exception;                                                  \
         int type = INSTRUCTION_NUMBER;                                  \
                                                                         \
@@ -73,10 +73,10 @@ STATEFUL_ENCODE_INSTRUCTION(smite_encode_instruction, smite_UWORD, addr, STORE_V
              exception == 0 && bits <= smite_word_bit - INSTRUCTION_CHUNK_BIT && \
                  (b & ~INSTRUCTION_CHUNK_MASK) == INSTRUCTION_CONTINUATION_BIT; \
              exception = LOAD(b)) {                                     \
-            n |= (smite_WORD)(b & INSTRUCTION_CHUNK_MASK) << bits;            \
+            n |= (smite_WORD)(b & INSTRUCTION_CHUNK_MASK) << bits;      \
             bits += INSTRUCTION_CHUNK_BIT;                              \
         }                                                               \
-        if (bits > smite_word_bit)                                            \
+        if (bits > smite_word_bit)                                      \
             return -1;                                                  \
         if (exception != 0)                                             \
             return exception;                                           \
@@ -85,24 +85,24 @@ STATEFUL_ENCODE_INSTRUCTION(smite_encode_instruction, smite_UWORD, addr, STORE_V
         if ((b & ~INSTRUCTION_CHUNK_MASK) == INSTRUCTION_ACTION_BIT) {  \
             type = INSTRUCTION_ACTION;                                  \
             b &= INSTRUCTION_CHUNK_MASK;                                \
-        }  else if (smite_word_bit - bits < smite_byte_bit)                         \
-            b &= (1 << (smite_word_bit - bits)) - 1;                          \
+        }  else if (smite_word_bit - bits < smite_byte_bit)             \
+            b &= (1 << (smite_word_bit - bits)) - 1;                    \
                                                                         \
         /* Final (or only) byte */                                      \
-        n |= (smite_UWORD)b << bits;                                          \
-        bits += smite_byte_bit;                                               \
-        if (type == INSTRUCTION_NUMBER && bits < smite_word_bit)              \
+        n |= (smite_UWORD)b << bits;                                    \
+        bits += smite_byte_bit;                                         \
+        if (type == INSTRUCTION_NUMBER && bits < smite_word_bit)        \
             n = ARSHIFT((smite_UWORD)n << (smite_word_bit - bits), smite_word_bit - bits); \
         *val = n;                                                       \
         return type;                                                    \
     }
 
 #define DECODE_INSTRUCTION(NAME, TYPE, HANDLE, LOAD)                    \
-    int NAME(TYPE HANDLE, smite_WORD *val)                                    \
+    int NAME(TYPE HANDLE, smite_WORD *val)                              \
     _DECODE_INSTRUCTION(NAME, TYPE, HANDLE, LOAD)
 
 #define STATEFUL_DECODE_INSTRUCTION(NAME, TYPE, HANDLE, LOAD)           \
-    int NAME(smite_state *S, TYPE HANDLE, smite_WORD *val)                          \
+    int NAME(smite_state *S, TYPE HANDLE, smite_WORD *val)              \
     _DECODE_INSTRUCTION(NAME, TYPE, HANDLE, LOAD)
 
 #define LOAD_FILE(b) (-(read(fd, &b, 1) != 1))
