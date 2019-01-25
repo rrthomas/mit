@@ -30,6 +30,7 @@ from smite.vm_data import *
 from smite.opcodes_extra import *
 
 libsmite = CDLL(find_library("smite"))
+assert(libsmite != None)
 
 
 # Utility functions
