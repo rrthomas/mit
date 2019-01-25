@@ -13,6 +13,7 @@ gl_EARLY
 AM_PROG_AR
 LT_INIT
 AM_PATH_PYTHON([3.4])
+AC_PATH_PROG(IPYTHON3, ipython3, [$PYTHON])
 AC_PATH_PROG(LATEXMK, latexmk, true)
 AC_PATH_PROG(CLOC, cloc, true)
 AC_SUBST([CLOC_OPTS], [--force-lang="C",h])
@@ -84,11 +85,13 @@ AC_CONFIG_FILES([
         tests/Makefile
         python/Makefile
         python/smite-dump.1
+        python/smite-shell.1
         python/smite-trace.1
         doc/Makefile
         doc/smite.tex
         doc/csmite.tex
 ])
 AC_CONFIG_FILES([python/smite-dump], [chmod +x python/smite-dump])
+AC_CONFIG_FILES([python/smite-shell], [chmod +x python/smite-shell])
 AC_CONFIG_FILES([python/smite-trace], [chmod +x python/smite-trace])
 AC_OUTPUT

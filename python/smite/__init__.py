@@ -3,9 +3,9 @@
 This module provides SMite bindings for Python 3, and offers a convenient
 set of functions and variables to interact with SMite in a Python REPL.
 
-When run as a script, the module provides a global SMite instance in VM,
-with the following attributes and methods available as globals, as well as
-the action opcode enumeration:
+When run as a script (SMite provides 'smite-shell' to do this), the module
+provides a global SMite instance in VM, with the following attributes and
+methods available as globals, as well as the action opcode enumeration:
 
 Registers: a variable for each register; also a list, 'registers'
 Memory: M, M_word
@@ -16,9 +16,6 @@ Examining memory: dump, disassemble
 Assembly: action, number, byte, pointer. Assembly is at address 'here',
 which defaults to 0.
 
-For extra convenience, use IPython:
-
-    PYTHONPATH=src ipython3 -i --autocall 2 -m smite
 '''
 
 import os
