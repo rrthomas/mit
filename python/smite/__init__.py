@@ -81,6 +81,7 @@ for (c, cty) in [
         ("word_mask", c_word),
         ("uword_max", c_uword),
         ("word_min", c_word),
+        ("word_max", c_word),
         ("default_memory_size", c_uword),
         ("max_memory_size", c_uword),
         ("default_stack_size", c_uword),

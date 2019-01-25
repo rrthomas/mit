@@ -28,12 +28,12 @@ const unsigned smite_word_bit = WORD_SIZE * smite_BYTE_BIT;
 const smite_UWORD smite_word_mask = UINT32_MAX;
 const smite_UWORD smite_uword_max = UINT32_MAX;
 const smite_WORD smite_word_min = INT32_MIN;
-// FIXME: add uword_min, word_max
+const smite_WORD smite_word_max = INT32_MAX;
 #elif WORD_SIZE == 8
 const smite_UWORD smite_word_mask = UINT64_MAX;
 const smite_UWORD smite_uword_max = UINT64_MAX;
 const smite_WORD smite_word_min = INT64_MIN;
-// FIXME: add uword_min, word_max
+const smite_WORD smite_word_max = INT64_MAX;
 #else
 #error "WORD_SIZE is not 4 or 8!"
 #endif
