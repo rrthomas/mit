@@ -73,7 +73,7 @@ shell, `python3 -i -m smite`.
 
 ## Documentation
 
-The canonical documentation consists of:
+The documentation consists of:
 
 * _[The SMite Virtual Machine](doc/smite.pdf)_  
 The design of the SMite virtual machine is described. Essential reading
@@ -81,8 +81,6 @@ for those programming or implementing the VM.
 * _[An implementation of the SMite virtual machine for POSIX](doc/csmite.pdf)_  
 A portable implementation of SMite is described, with instructions for
 porting, compiling and running it.
-* _[A simple shell for the SMite virtual machine](doc/shell.pdf)_  
-The user guide for SMite’s shell.
 
 SMite is based on [Beetle](https://github.com/rrthomas/beetle), which I
 developed for my BA dissertation project.

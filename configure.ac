@@ -88,7 +88,6 @@ AC_CONFIG_FILES([
         doc/Makefile
         doc/smite.tex
         doc/csmite.tex
-        doc/shell.tex
 ])
 AC_CONFIG_FILES([python/smite-dump], [chmod +x python/smite-dump])
 AC_CONFIG_FILES([python/smite-trace], [chmod +x python/smite-trace])
