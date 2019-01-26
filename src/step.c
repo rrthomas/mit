@@ -333,7 +333,7 @@ static int extra_libc(smite_state *S)
                     nwritten = write((int)fd, ptr, nbytes);
             }
 
-            // FIXME: push number of bytes written, symmetric with READ_FILE
+            PUSH(nwritten);
             PUSH((exception == 0 && nwritten >= 0) ? 0 : -1);
         }
         break;
