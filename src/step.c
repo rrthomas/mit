@@ -31,9 +31,14 @@
 verify(sizeof(int) <= sizeof(smite_WORD));
 
 
+#ifndef RAISE
+#define RAISE(code)                             \
+        exception = (code);
+#endif
+
 #define DIVZERO(x)                              \
     if (x == 0)                                 \
-        exception = -10;
+        RAISE(-10);
 
 
 // I/O support

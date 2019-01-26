@@ -283,7 +283,9 @@ class Actions(Enum):
     ''')
 
     EXTRA = Action(0x20, '''
-    exception = extra(S);
+    smite_WORD ret;
+    if ((ret = extra(S)) != 0)
+        RAISE(ret);
     ''')
 
     PUSH_WORD_SIZE = Action(0x21, '''
