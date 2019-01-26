@@ -23,6 +23,7 @@ OPT("memory", 'm', required_argument, "NUMBER", MEMORY_MESSAGE("memory", smite_m
 OPT("stack", 's', required_argument, "NUMBER", MEMORY_MESSAGE("data stack", smite_max_stack_size, smite_default_stack_size))
 OPT("return-stack", 'r', required_argument, "NUMBER", MEMORY_MESSAGE("return stack", smite_max_stack_size, smite_default_stack_size))
 OPT("core-dump", 'c', no_argument, "", "dump core on memory exception")
+OPT("trace", '\0', required_argument, "FILE", "write dynamic instruction trace to FILE")
 OPT("help", '\0', no_argument, "", "display this help message and exit")
 OPT("version", '\0', no_argument, "", "display version information and exit")
 ARG("OBJECT-FILE", "load and run object OBJECT-FILE")
