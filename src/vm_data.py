@@ -285,7 +285,7 @@ class Actions(Enum):
 
     EXTRA = Action(0x20, '''
     smite_WORD ret;
-    if ((ret = extra(S)) != 0)
+    if ((ret = smite_extra(S)) != 0)
         RAISE(ret);
     ''')
 
