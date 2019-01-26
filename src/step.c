@@ -27,11 +27,17 @@ verify(sizeof(int) <= sizeof(smite_WORD));
     if (x == 0)                                 \
         RAISE(-10);
 
-
-#include "instruction-actions.h"
 // Defines two macros/functions:
 //   void STEP(smite_state *S): runs a single step of the given state.
 //   void RAISE(smite_WORD e): raise error e; do nothing if e == 0.
+
+FILE *trace_fp = NULL; // FILE * of trace file, if used
+static void trace(int type, smite_WORD opcode) {
+    if (trace_fp)
+        fprintf(trace_fp, "%d %08x\n", type, (smite_UWORD)opcode);
+}
+
+#include "instruction-actions.h"
 
 // Perform one pass of the execution cycle
 smite_WORD smite_single_step(smite_state *S)

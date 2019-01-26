@@ -61,6 +61,8 @@ extern smite_UWORD smite_max_stack_size;
         *v = (ty)(((size_t)(*v) << smite_word_bit) | (smite_UWORD)w);   \
     }
 
+extern FILE *trace_fp; // FILE * of trace file, if used
+
 // Align a VM address
 smite_UWORD smite_align(smite_UWORD addr);
 

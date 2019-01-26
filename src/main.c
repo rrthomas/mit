@@ -145,9 +145,15 @@ int main(int argc, char *argv[])
             core_dump = true;
             break;
         case 4:
-            usage();
+            trace_fp = fopen(optarg, "wb");
+            if (trace_fp == NULL)
+                die("cannot not open file %s", optarg);
+            warn("trace will be written to %s\n", optarg);
             break;
         case 5:
+            usage();
+            break;
+        case 6:
             printf(PACKAGE_NAME " " VERSION "\n"
                    "(c) Reuben Thomas 1994-2019\n"
                    PACKAGE_NAME " comes with ABSOLUTELY NO WARRANTY.\n"

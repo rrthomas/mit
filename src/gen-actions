@@ -13,6 +13,7 @@ static int STEP(smite_state *S) {
     int error = 0;
 
     S->ITYPE = smite_decode_instruction(S, &S->PC, &S->I);
+    trace(S->ITYPE, S->I);
 
     switch (S->ITYPE) {
     case INSTRUCTION_NUMBER:
