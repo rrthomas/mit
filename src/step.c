@@ -28,13 +28,13 @@ verify(sizeof(int) <= sizeof(smite_WORD));
         RAISE(-10);
 
 
-#include "instruction-actions.h"
-
 FILE *trace_fp = NULL; // FILE * of trace file, if used
 static void trace(int type, smite_WORD opcode) {
     if (trace_fp)
         fprintf(trace_fp, "%d %08x\n", type, (smite_UWORD)opcode);
 }
+
+#include "instruction-actions.h"
 
 // Perform one pass of the execution cycle
 smite_WORD smite_single_step(smite_state *S)
