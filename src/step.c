@@ -452,10 +452,15 @@ static int extra(smite_state *S)
 }
 
 
+static int halt_code;
+
+// Only defined during single_step().
+static int exception;
+
 // Perform one pass of the execution cycle
 smite_WORD smite_single_step(smite_state *S)
 {
-    int exception = 0;
+    exception = 0;
 
     S->ITYPE = smite_decode_instruction(S, &S->PC, &S->I);
     switch (S->ITYPE) {
@@ -478,6 +483,8 @@ smite_WORD smite_single_step(smite_state *S)
 
     if (exception != 0) {
         // Deal with address exceptions during execution cycle.
+        if (exception == -255)
+            return halt_code;
         S->BADPC = S->PC - 1;
         if (smite_push_stack(S, exception) != 0)
             return -257;

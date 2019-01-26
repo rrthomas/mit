@@ -273,7 +273,8 @@ class Actions(Enum):
     HALT = Action(0x1e, '''
     smite_WORD ret;
     POP(&ret);
-    return ret;
+    halt_code = ret;
+    RAISE(-255);
     ''')
 
     CALL_NATIVE = Action(0x1f, '''
