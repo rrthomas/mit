@@ -1,13 +1,9 @@
 # From https://eli.thegreenplace.net/2015/redirecting-all-kinds-of-stdout-in-python/
 from contextlib import contextmanager
-import ctypes
 import io
 import os
 import sys
 import tempfile
-
-libc = ctypes.CDLL(None)
-c_stdout = ctypes.c_void_p.in_dll(libc, 'stdout')
 
 @contextmanager
 def stdout_redirector(stream):
@@ -16,8 +12,8 @@ def stdout_redirector(stream):
 
     def _redirect_stdout(to_fd):
         """Redirect stdout to the given file descriptor."""
-        # Flush the C-level buffer stdout
-        libc.fflush(c_stdout)
+        # Flush stdout
+        sys.stdout.flush()
         # Flush and close sys.stdout - also closes the file descriptor (fd)
         sys.stdout.close()
         # Make original_stdout_fd point to the same file as to_fd
