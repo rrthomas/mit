@@ -202,9 +202,9 @@ class State:
             globals.update([(name, self.__getattribute__(name))])
 
         # Opcodes
-        for opcode in Opcodes:
-            globals.update([(opcode.name, opcode)])
-        globals.update([("UNDEFINED", max(list(map(int, Opcodes))) + 1)])
+        for action in Actions:
+            globals.update([(action.name, action.value.opcode)])
+        globals.update([("UNDEFINED", max([action.value.opcode for action in Actions]) + 1)])
 
     def run(self, trace=False):
         '''Run (or trace if trace is True) until HALT or exception.'''
@@ -305,16 +305,14 @@ class State:
 
 
     # Disassembly
-    mnemonic = {}
-    for opcode in Opcodes:
-        mnemonic[opcode] = opcode
+    mnemonic = {action.value.opcode:action.name for action in Actions}
 
     def disassemble_instruction(self, ty, opcode):
         if ty == Types.NUMBER:
             return "{} ({:#x})".format(opcode, opcode)
         elif ty == Types.ACTION:
             try:
-                return self.mnemonic[opcode].name
+                return self.mnemonic[opcode]
             except KeyError:
                 return "undefined"
         else:

@@ -19,6 +19,7 @@ class Register:
 
 @unique
 class Registers(Enum):
+    '''VM registers.'''
     PC = Register()
     ITYPE = Register(ty="smite_WORD", uty="smite_UWORD")
     I = Register(ty="smite_WORD", uty="smite_UWORD")
@@ -40,76 +41,32 @@ class Types(IntEnum):
     NUMBER = 0x0
     ACTION = 0x1
 
-# FIXME: Make a single Actions enumeration
+class Action:
+    '''VM action instruction descriptor.'''
+    def __init__(self, opcode, code):
+        self.opcode = opcode
+        self.code = code
+
 @unique
-class Opcodes(IntEnum):
-    '''Action opcode.'''
-    NOP = 0x00
-    POP = 0x01
-    PUSH = 0x02
-    SWAP = 0x03
-    RPUSH = 0x04
-    POP2R = 0x05
-    RPOP = 0x06
-    LT = 0x07
-    EQ = 0x08
-    ULT = 0x09
-    ADD = 0x0a
-    MUL = 0x0b
-    UDIVMOD = 0x0c
-    DIVMOD = 0x0d
-    NEGATE = 0x0e
-    INVERT = 0x0f
-    AND = 0x10
-    OR = 0x11
-    XOR = 0x12
-    LSHIFT = 0x13
-    RSHIFT = 0x14
-    LOAD = 0x15
-    STORE = 0x16
-    LOADB = 0x17
-    STOREB = 0x18
-    BRANCH = 0x19
-    BRANCHZ = 0x1a
-    CALL = 0x1b
-    RET = 0x1c
-    THROW = 0x1d
-    HALT = 0x1e
-    CALL_NATIVE = 0x1f
-    EXTRA = 0x20
-    PUSH_WORD_SIZE = 0x21
-    PUSH_NATIVE_POINTER_SIZE = 0x22
-    PUSH_SDEPTH = 0x23
-    STORE_SDEPTH = 0x24
-    PUSH_RDEPTH = 0x25
-    STORE_RDEPTH = 0x26
-    PUSH_PC = 0x27
-    PUSH_SSIZE = 0x28
-    PUSH_RSIZE = 0x29
-    PUSH_HANDLER = 0x2a
-    STORE_HANDLER = 0x2b
-    PUSH_MEMORY = 0x2c
-    PUSH_BADPC = 0x2d
-    PUSH_INVALID = 0x2e
+class Actions(Enum):
+    '''VM action instructions.'''
+    NOP = Action(0x00, '')
 
-Actions = {
-    Opcodes.NOP: '''''',
-
-    Opcodes.POP: '''
+    POP = Action(0x01, '''
     smite_WORD depth;
     POP(&depth);
     S->SDEPTH -= depth;
-    ''',
+    ''')
 
-    Opcodes.PUSH: '''
+    PUSH = Action(0x02, '''
     smite_WORD depth;
     POP(&depth);
     smite_WORD pickee;
     exception = smite_load_stack(S, depth, &pickee);
     PUSH(pickee);
-    ''',
+    ''')
 
-    Opcodes.SWAP: '''
+    SWAP = Action(0x03, '''
     smite_WORD depth;
     POP(&depth);
     smite_WORD swapee;
@@ -118,69 +75,69 @@ Actions = {
     POP(&top);
     PUSH(swapee);
     exception = smite_store_stack(S, depth, top);
-    ''',
+    ''')
 
-    Opcodes.RPUSH: '''
+    RPUSH = Action(0x04, '''
     smite_WORD depth;
     POP(&depth);
     smite_WORD pickee;
     exception = smite_load_return_stack(S, depth, &pickee);
     PUSH(pickee);
-    ''',
+    ''')
 
-    Opcodes.POP2R: '''
+    POP2R = Action(0x05, '''
     smite_WORD value;
     POP(&value);
     exception = exception == 0 ? smite_push_return_stack(S, value) : exception;
-    ''',
+    ''')
 
-    Opcodes.RPOP: '''
+    RPOP = Action(0x06, '''
     smite_WORD value;
     exception = smite_pop_return_stack(S, &value);
     PUSH(value);
-    ''',
+    ''')
 
-    Opcodes.LT: '''
+    LT = Action(0x07, '''
     smite_WORD a;
     POP(&a);
     smite_WORD b;
     POP(&b);
     PUSH(b < a);
-    ''',
+    ''')
 
-    Opcodes.EQ: '''
+    EQ = Action(0x08, '''
     smite_WORD a;
     POP(&a);
     smite_WORD b;
     POP(&b);
     PUSH(a == b);
-    ''',
+    ''')
 
-    Opcodes.ULT: '''
+    ULT = Action(0x09, '''
     smite_UWORD a;
     POP((smite_WORD *)&a);
     smite_UWORD b;
     POP((smite_WORD *)&b);
     PUSH(b < a);
-    ''',
+    ''')
 
-    Opcodes.ADD: '''
+    ADD = Action(0x0a, '''
     smite_WORD a;
     POP(&a);
     smite_WORD b;
     POP(&b);
     PUSH(b + a);
-    ''',
+    ''')
 
-    Opcodes.MUL: '''
+    MUL = Action(0x0b, '''
     smite_WORD multiplier;
     POP(&multiplier);
     smite_WORD multiplicand;
     POP(&multiplicand);
     PUSH(multiplier * multiplicand);
-    ''',
+    ''')
 
-    Opcodes.UDIVMOD: '''
+    UDIVMOD = Action(0x0c, '''
     smite_UWORD divisor;
     POP((smite_WORD *)&divisor);
     smite_UWORD dividend;
@@ -188,9 +145,9 @@ Actions = {
     DIVZERO(divisor);
     PUSH(dividend / divisor);
     PUSH(dividend % divisor);
-    ''',
+    ''')
 
-    Opcodes.DIVMOD: '''
+    DIVMOD = Action(0x0d, '''
     smite_WORD divisor;
     POP(&divisor);
     smite_WORD dividend;
@@ -198,197 +155,196 @@ Actions = {
     DIVZERO(divisor);
     PUSH(dividend / divisor);
     PUSH(dividend % divisor);
-    ''',
+    ''')
 
-    Opcodes.NEGATE: '''
+    NEGATE = Action(0x0e, '''
     smite_WORD a;
     POP(&a);
     PUSH(-a);
-    ''',
+    ''')
 
-    Opcodes.INVERT: '''
+    INVERT = Action(0x0f, '''
     smite_WORD a;
     POP(&a);
     PUSH(~a);
-    ''',
+    ''')
 
-    Opcodes.AND: '''
+    AND = Action(0x10, '''
     smite_WORD a;
     POP(&a);
     smite_WORD b;
     POP(&b);
     PUSH(a & b);
-    ''',
+    ''')
 
-    Opcodes.OR: '''
+    OR = Action(0x11, '''
     smite_WORD a;
     POP(&a);
     smite_WORD b;
     POP(&b);
     PUSH(a | b);
-    ''',
+    ''')
 
-    Opcodes.XOR: '''
+    XOR = Action(0x12, '''
     smite_WORD a;
     POP(&a);
     smite_WORD b;
     POP(&b);
     PUSH(a ^ b);
-    ''',
+    ''')
 
-    Opcodes.LSHIFT: '''
+    LSHIFT = Action(0x13, '''
     smite_WORD shift;
     POP(&shift);
     smite_WORD value;
     POP(&value);
     PUSH(shift < (smite_WORD)smite_word_bit ? value << shift : 0);
-    ''',
+    ''')
 
-    Opcodes.RSHIFT: '''
+    RSHIFT = Action(0x14, '''
     smite_WORD shift;
     POP(&shift);
     smite_WORD value;
     POP(&value);
     PUSH(shift < (smite_WORD)smite_word_bit ? (smite_WORD)((smite_UWORD)value >> shift) : 0);
-    ''',
+    ''')
 
-    Opcodes.LOAD: '''
+    LOAD = Action(0x15, '''
     smite_WORD addr;
     POP(&addr);
     smite_WORD value;
     exception = exception ? exception : smite_load_word(S, addr, &value);
     PUSH(value);
-    ''',
+    ''')
 
-    Opcodes.STORE: '''
+    STORE = Action(0x16, '''
     smite_WORD addr;
     POP(&addr);
     smite_WORD value;
     POP(&value);
     exception = exception ? exception : smite_store_word(S, addr, value);
-    ''',
+    ''')
 
-    Opcodes.LOADB: '''
+    LOADB = Action(0x17, '''
     smite_WORD addr;
     POP(&addr);
     smite_BYTE value;
     exception = exception ? exception : smite_load_byte(S, addr, &value);
     PUSH((smite_WORD)value);
-    ''',
+    ''')
 
-    Opcodes.STOREB: '''
+    STOREB = Action(0x18, '''
     smite_WORD addr;
     POP(&addr);
     smite_WORD value;
     POP(&value);
     exception = exception ? exception : smite_store_byte(S, addr, (smite_BYTE)value);
-    ''',
+    ''')
 
-    Opcodes.BRANCH: '''
+    BRANCH = Action(0x19, '''
     POP((smite_WORD *)&(S->PC));
-    ''',
+    ''')
 
-    Opcodes.BRANCHZ: '''
+    BRANCHZ = Action(0x1a, '''
     smite_WORD addr;
     POP(&addr);
     smite_WORD cond;
     POP(&cond);
     if (cond == 0)
         S->PC = addr;
-    ''',
+    ''')
 
-    Opcodes.CALL: '''
+    CALL = Action(0x1b, '''
     exception = smite_push_return_stack(S, S->PC);
     POP((smite_WORD *)&(S->PC));
-    ''',
+    ''')
 
-    Opcodes.RET: '''
+    RET = Action(0x1c, '''
     exception = smite_pop_return_stack(S, (smite_WORD *)&(S->PC));
-    ''',
+    ''')
 
-    Opcodes.THROW: '''
+    THROW = Action(0x1d, '''
     // The POP macro may set exception
     smite_WORD exception_code;
     POP(&exception_code);
     exception = exception_code;
-    ''',
+    ''')
 
-    Opcodes.HALT: '''
+    HALT = Action(0x1e, '''
     smite_WORD ret;
     POP(&ret);
     return ret;
-    ''',
+    ''')
 
-    Opcodes.CALL_NATIVE: '''
+    CALL_NATIVE = Action(0x1f, '''
     void *address;
     POP_NATIVE_TYPE(void *, &address);
     ((void (*)(smite_state *))(address))(S);
-    ''',
+    ''')
 
-    Opcodes.EXTRA: '''
+    EXTRA = Action(0x20, '''
     exception = extra(S);
-    ''',
+    ''')
 
-    Opcodes.PUSH_WORD_SIZE: '''
+    PUSH_WORD_SIZE = Action(0x21, '''
     PUSH(smite_word_size);
-    ''',
+    ''')
 
-    Opcodes.PUSH_NATIVE_POINTER_SIZE: '''
+    PUSH_NATIVE_POINTER_SIZE = Action(0x22, '''
     PUSH(smite_native_pointer_size);
-    ''',
+    ''')
 
-    Opcodes.PUSH_SDEPTH: '''
+    PUSH_SDEPTH = Action(0x23, '''
     smite_WORD value = S->SDEPTH;
     PUSH(value);
-    ''',
+    ''')
 
-    Opcodes.STORE_SDEPTH: '''
+    STORE_SDEPTH = Action(0x24, '''
     smite_WORD value;
     POP(&value);
     S->SDEPTH = value;
-    ''',
+    ''')
 
-    Opcodes.PUSH_RDEPTH: '''
+    PUSH_RDEPTH = Action(0x25, '''
     PUSH(S->RDEPTH);
-    ''',
+    ''')
 
-    Opcodes.STORE_RDEPTH: '''
+    STORE_RDEPTH = Action(0x26, '''
     smite_WORD value;
     POP(&value);
     S->RDEPTH = value;
-    ''',
+    ''')
 
-    Opcodes.PUSH_PC: '''
+    PUSH_PC = Action(0x27, '''
     PUSH(S->PC);
-    ''',
+    ''')
 
-    Opcodes.PUSH_SSIZE: '''
+    PUSH_SSIZE = Action(0x28, '''
     PUSH(S->SSIZE);
-    ''',
+    ''')
 
-    Opcodes.PUSH_RSIZE: '''
+    PUSH_RSIZE = Action(0x29, '''
     PUSH(S->RSIZE);
-    ''',
+    ''')
 
-    Opcodes.PUSH_HANDLER: '''
+    PUSH_HANDLER = Action(0x2a, '''
     PUSH(S->HANDLER);
-    ''',
+    ''')
 
-    Opcodes.STORE_HANDLER: '''
+    STORE_HANDLER = Action(0x2b, '''
     smite_WORD addr;
     POP(&addr);
     S->HANDLER = addr;
-    ''',
+    ''')
 
-    Opcodes.PUSH_MEMORY: '''
+    PUSH_MEMORY = Action(0x2c, '''
     PUSH(S->MEMORY);
-    ''',
+    ''')
 
-    Opcodes.PUSH_BADPC: '''
+    PUSH_BADPC = Action(0x2d, '''
     PUSH(S->BADPC);
-    ''',
+    ''')
 
-    Opcodes.PUSH_INVALID: '''
+    PUSH_INVALID = Action(0x2e, '''
     PUSH(S->INVALID);
-    ''',
-}
+    ''')
