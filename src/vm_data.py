@@ -264,7 +264,7 @@ class Actions(Enum):
     ''')
 
     THROW = Action(0x1d, '''
-    // The POP macro may set exception
+    /* The POP macro may set exception */
     smite_WORD exception_code;
     POP(&exception_code);
     exception = exception_code;
