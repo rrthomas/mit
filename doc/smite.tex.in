@@ -168,7 +168,7 @@ always mentioned explicitly.
 
 Before @PACKAGE_NAME@ is started, {\tt ENDISM} should be set to $0$ or $1$ according to the implementation, and {\tt WORD\_SIZE} and {\tt NATIVE\_POINTER\_SIZE} to the appropriate values. The other registers should be initialised to~$0$.
 
-{\tt MEMORY}, {\tt ENDISM}, {\tt WORD\_SIZE} and {\tt NATIVE\_POINTER\_SIZE} must not change while @PACKAGE_NAME@ is executing.
+{\tt ENDISM}, {\tt WORD\_SIZE} and {\tt NATIVE\_POINTER\_SIZE} must not change while @PACKAGE_NAME@ is executing.
 
 @PACKAGE_NAME@ is started by a call to the interface calls {\bf run()} or {\bf
 single\_step()} (see section~\ref{calls}). In the former case, the execution
