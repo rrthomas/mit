@@ -429,13 +429,12 @@ Branches:
 \inst{BRANCHZ}{flag addr —}{If \spic{flag} is false then set {\tt PC} to \spic{addr}.}
 \end{description}
 
-Subroutine call and return:
+Subroutine call (return is {\tt BRANCH}):
 
 \nopagebreak
 
 \begin{description}
 \inst{CALL}{\aaddr1 — \aaddr2}{Exchange {\tt PC} with the top stack value.}
-\inst{RET}{addr —}{Pop \spic{addr} into {\tt PC}.}
 \end{description}
 
 
@@ -476,22 +475,18 @@ Table~\ref{opcodetable} lists the action opcodes in numerical order. Other actio
 \begin{tabular}{*{3}{cc}} \toprule
 \bf Opcode & \bf Action & \bf Opcode & \bf
     Action & \bf Opcode & \bf Action \\ \midrule
-\opcodetbl{00}{NOP}	{10}{LSHIFT}	{20}{STORE\_STACK\_DEPTH}
-\opcodetbl{01}{POP}	{11}{RSHIFT}	{21}{PUSH\_PC}
-\opcodetbl{02}{DUP}	{12}{LOAD}	{22}{PUSH\_STACK\_SIZE}
-\opcodetbl{03}{SWAP}	{13}{STORE}	{23}{PUSH\_MEMORY}
-\opcodetbltwo{04}{LT}	{14}{LOADB}
-\opcodetbltwo{05}{EQ}	{15}{STOREB}
-\opcodetbltwo{06}{ULT}	{16}{BRANCH}
-\opcodetbltwo{07}{ADD}	{17}{BRANCHZ}
-\opcodetbltwo{08}{MUL}	{18}{CALL}
-\opcodetbltwo{09}{UDIVMOD}	{19}{RET}
-\opcodetbltwo{0a}{DIVMOD}	{1a}{HALT}
-\opcodetbltwo{0b}{NEGATE}	{1b}{CALL\_NATIVE}
-\opcodetbltwo{0c}{INVERT}	{1c}{EXTRA}
-\opcodetbltwo{0d}{AND}	{1d}{PUSH\_WORD\_SIZE}
-\opcodetbltwo{0e}{OR}	{1e}{PUSH\_NATIVE\_POINTER\_SIZE}
-\opcodetbltwo{0f}{XOR}	{1f}{PUSH\_STACK\_DEPTH}
+\opcodetbl{00}{NOP}	{0c}{INVERT}	{18}{CALL}
+\opcodetbl{01}{POP}	{0d}{AND}	{19}{HALT}
+\opcodetbl{02}{DUP}	{0e}{OR}	{1a}{CALL\_NATIVE}
+\opcodetbl{03}{SWAP}	{0f}{XOR}	{1b}{EXTRA}
+\opcodetbl{04}{LT}	{10}{LSHIFT}	{1c}{PUSH\_WORD\_SIZE}
+\opcodetbl{05}{EQ}	{11}{RSHIFT}	{1d}{PUSH\_NATIVE\_POINTER\_SIZE}
+\opcodetbl{06}{ULT}	{12}{LOAD}	{1e}{PUSH\_STACK\_DEPTH}
+\opcodetbl{07}{ADD}	{13}{STORE}	{1f}{STORE\_STACK\_DEPTH}
+\opcodetbl{08}{MUL}	{14}{LOADB}	{20}{PUSH\_PC}
+\opcodetbl{09}{UDIVMOD}	{15}{STOREB}	{21}{PUSH\_STACK\_SIZE}
+\opcodetbl{0a}{DIVMOD}	{16}{BRANCH}	{22}{PUSH\_MEMORY}
+\opcodetbltwo{0b}{NEGATE}	{17}{BRANCHZ}
  \bottomrule
 \end{tabular}
 \caption{\label{opcodetable}Action opcodes}
