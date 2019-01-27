@@ -242,10 +242,6 @@ class Actions(Enum):
         S->PC = addr;
     ''')
 
-    RET = Action(0x19, '''\
-        RAISE(smite_pop_stack(S, (smite_WORD *)&(S->PC)));
-    ''')
-
     HALT = Action(0x1a, '''\
         smite_WORD ret;
         POP(&ret);

@@ -72,10 +72,10 @@ action(CALL)
 VM.here = 200
 number(300)
 action(CALL)
-action(RET)
+action(BRANCH)
 
 VM.here = 300
-action(RET)
+action(BRANCH)
 
 # Test
 for i in range(len(correct)):
