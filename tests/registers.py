@@ -27,17 +27,8 @@ correct = [
     [default_stack_size],
     [default_stack_size, 1],
     [],
-    [42 * word_size],
-    [],
-    [42 * word_size],
-    [42 * word_size, 1],
-    [],
     [size * word_size],
     [size * word_size, 1],
-    [],
-    [0],
-    [0, 0],
-    [0, 0, 2],
     [],
     [word_size],
     [word_size, native_pointer_size],
@@ -55,17 +46,8 @@ action(POP)
 action(PUSH_RSIZE)
 number(1)
 action(POP)
-number(42 * word_size)
-action(STORE_HANDLER)
-action(PUSH_HANDLER)
-number(1)
-action(POP)
 action(PUSH_MEMORY)
 number(1)
-action(POP)
-action(PUSH_BADPC)
-action(PUSH_INVALID)
-number(2)
 action(POP)
 action(PUSH_WORD_SIZE)
 action(PUSH_NATIVE_POINTER_SIZE)

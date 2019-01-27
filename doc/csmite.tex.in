@@ -87,10 +87,10 @@ memory for @PACKAGE_NAME@, nor does it initialise any of the registers. C @PACKA
 provides the interface call {\bf @PACKAGE@\_init()} to do this (see
 section~\ref{usingcalls}).
 
-The variables {\tt EP}, {\tt I}, {\tt A}, {\tt MEMORY}, {\tt SDEPTH}, {\tt RDEPTH}, {\tt HANDLER}, {\tt BADPC} and {\tt INVALID}
+The variables {\tt EP}, {\tt I}, {\tt A}, {\tt MEMORY}, {\tt SDEPTH} and {\tt RDEPTH}
 correspond exactly with the @PACKAGE_NAME@ registers they represent, and may be read
 and assigned to accordingly, bearing in mind the restrictions on their use
-given in~\cite{@PACKAGE@}. {\tt HANDLER}, {\tt BADPC} and {\tt INVALID} are mapped into @PACKAGE_NAME@'s memory, so they are automatically updated when the corresponding memory locations are written to, and vice versa.
+given in~\cite{@PACKAGE@}.
 
 C @PACKAGE_NAME@ provides the ability to map native memory blocks into @PACKAGE_NAME@’s address space; see below.
 
@@ -110,7 +110,7 @@ C @PACKAGE_NAME@ provides some libraries of {\tt EXTRA} instruction functions, w
 \end{tabular}
 \end{center}
 
-Exception~$-259$ is raised if an invalid library is accessed, and $-260$ for an invalid function in a known library.
+Error~$-259$ is raised if an invalid library is accessed, and $-260$ for an invalid function in a known library.
 
 
 \subsubsection{@PACKAGE_NAME@}
@@ -232,7 +232,7 @@ All the registers are initialised as per~\cite{@PACKAGE@}.}
 \ifacec{int @PACKAGE@\_mem\_realloc(@PACKAGE@\_state *state, @PACKAGE@\_UWORD size)}{Resize the memory to the given {\tt size}. Any new memory is zeroed. Returns $0$ on success or $-1$ if the requested size of memory cannot be allocated.}
 \end{description}
 
-The following routines give easier access to @PACKAGE_NAME@’s address space at the byte and word level. On success, they return $0$, and on failure, the relevant exception code.
+The following routines give easier access to @PACKAGE_NAME@’s address space at the byte and word level. On success, they return $0$, and on failure, the relevant error code.
 
 \begin{description}
 \ifacec{int @PACKAGE@\_load\_word(@PACKAGE@\_state *state, @PACKAGE@\_UWORD address, @PACKAGE@\_WORD *value)}{Load the word at the given address into the given {\tt @PACKAGE@\_WORD *}.}
@@ -241,7 +241,7 @@ The following routines give easier access to @PACKAGE_NAME@’s address space at
 \ifacec{int @PACKAGE@\_store\_byte(@PACKAGE@\_state *state, @PACKAGE@\_UWORD address, @PACKAGE@\_BYTE value)}{Store the given {\tt @PACKAGE@\_BYTE} value at the given address.}
 \end{description}
 
-The following routines give access to @PACKAGE_NAME@’s stacks. On success, they return $0$, and on failure, the relevant exception code.
+The following routines give access to @PACKAGE_NAME@’s stacks. On success, they return $0$, and on failure, the relevant error code.
 
 \begin{description}
 \ifacec{int @PACKAGE@\_load\_stack(@PACKAGE@\_state *state, @PACKAGE@\_UWORD pos, @PACKAGE@\_WORD *value)}{Load the word at the given position of the data stack into the given {\tt @PACKAGE@\_WORD *}.}

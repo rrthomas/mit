@@ -67,14 +67,10 @@ _GL_ATTRIBUTE_PURE uint8_t *smite_native_address_of_range(smite_state *S, smite_
 
 int smite_load_word(smite_state *S, smite_UWORD addr, smite_WORD *value)
 {
-    if (addr >= S->MEMORY) {
-        S->INVALID = addr;
+    if (addr >= S->MEMORY)
         return -9;
-    }
-    if (!smite_is_aligned(addr)) {
-        S->INVALID = addr;
+    if (!smite_is_aligned(addr))
         return -23;
-    }
 
     *value = S->memory[addr / smite_word_size];
     return 0;
@@ -82,10 +78,8 @@ int smite_load_word(smite_state *S, smite_UWORD addr, smite_WORD *value)
 
 int smite_load_byte(smite_state *S, smite_UWORD addr, smite_BYTE *value)
 {
-    if (addr >= S->MEMORY) {
-        S->INVALID = addr;
+    if (addr >= S->MEMORY)
         return -9;
-    }
 
     *value = ((uint8_t *)(S->memory))[addr];
     return 0;
@@ -93,14 +87,10 @@ int smite_load_byte(smite_state *S, smite_UWORD addr, smite_BYTE *value)
 
 int smite_store_word(smite_state *S, smite_UWORD addr, smite_WORD value)
 {
-    if (addr >= S->MEMORY) {
-        S->INVALID = addr;
+    if (addr >= S->MEMORY)
         return -9;
-    }
-    if (!smite_is_aligned(addr)) {
-        S->INVALID = addr;
+    if (!smite_is_aligned(addr))
         return -23;
-    }
 
     S->memory[addr / smite_word_size] = value;
     return 0;
@@ -108,10 +98,8 @@ int smite_store_word(smite_state *S, smite_UWORD addr, smite_WORD value)
 
 int smite_store_byte(smite_state *S, smite_UWORD addr, smite_BYTE value)
 {
-    if (addr >= S->MEMORY) {
-        S->INVALID = addr;
+    if (addr >= S->MEMORY)
         return -9;
-    }
 
     ((uint8_t *)(S->memory))[addr] = value;
     return 0;
@@ -246,9 +234,6 @@ smite_state *smite_init(size_t size, size_t data_stack_size, size_t return_stack
     S->I = 0;
     S->SDEPTH = 0;
     S->RDEPTH = 0;
-    S->HANDLER = 0;
-    S->BADPC = 0;
-    S->INVALID = 0;
 
     return S;
 }

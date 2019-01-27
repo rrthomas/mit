@@ -41,11 +41,7 @@ smite_WORD smite_single_step(smite_state *S)
         // Deal with address exceptions during execution cycle.
         if (S->exception == -255)
             return S->halt_code;
-        S->BADPC = S->PC - 1;
-        if (smite_push_stack(S, S->exception) != 0)
-            return -257;
-        S->exception = 0;
-        S->PC = S->HANDLER;
+        return S->exception;
     }
     return -258; // terminated OK
 }
