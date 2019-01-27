@@ -1,5 +1,5 @@
-# Test the register instructions, except for those operating on RDEPTH and
-# SDEPTH (see memory.py).
+# Test the register instructions, except for those operating on STACK_DEPTH (see
+# memory.py).
 #
 # (c) Reuben Thomas 1994-2018
 #
@@ -21,9 +21,6 @@ correct = [
     [1],
     [1, 1],
     [],
-    [16384],
-    [16384, 1],
-    [],
     [default_stack_size],
     [default_stack_size, 1],
     [],
@@ -40,10 +37,7 @@ correct = [
 action(PUSH_PC)
 number(1)
 action(POP)
-action(PUSH_SSIZE)
-number(1)
-action(POP)
-action(PUSH_RSIZE)
+action(PUSH_STACK_SIZE)
 number(1)
 action(POP)
 action(PUSH_MEMORY)

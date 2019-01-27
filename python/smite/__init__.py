@@ -91,11 +91,6 @@ libsmite.smite_store_stack.argtypes = [c_void_p, c_uword, c_word]
 libsmite.smite_pop_stack.argtypes = [c_void_p, POINTER(c_word)]
 libsmite.smite_push_stack.argtypes = [c_void_p, c_word]
 
-libsmite.smite_load_return_stack.argtypes = [c_void_p]
-libsmite.smite_store_return_stack.argtypes = [c_void_p]
-libsmite.smite_pop_return_stack.argtypes = [c_void_p]
-libsmite.smite_push_return_stack.argtypes = [c_void_p]
-
 libsmite.smite_native_address_of_range.restype = POINTER(c_ubyte)
 libsmite.smite_native_address_of_range.argtypes = [c_void_p, c_uword, c_uword]
 
@@ -111,7 +106,7 @@ libsmite.smite_load_object.argtypes = [c_void_p, c_uword, c_int]
 libsmite.smite_save_object.argtypes = [c_void_p, c_uword, c_uword, c_int]
 
 libsmite.smite_init.restype = c_void_p
-libsmite.smite_init.argtypes = [c_size_t, c_size_t, c_size_t]
+libsmite.smite_init.argtypes = [c_size_t, c_size_t]
 
 libsmite.smite_mem_realloc.argtypes = [c_void_p, c_int, c_void_p]
 
@@ -149,18 +144,16 @@ class State:
     '''A VM state.'''
 
     def __init__(self, memory_size=default_memory_size,
-                 data_stack_size=default_stack_size,
-                 return_stack_size=default_stack_size):
+                 data_stack_size=default_stack_size):
         '''Initialise the VM state.'''
-        self.state = libsmite.smite_init(memory_size, data_stack_size, return_stack_size)
+        self.state = libsmite.smite_init(memory_size, data_stack_size)
         if self.state == None:
             raise Exception("error creating virtual machine state")
 
         self.registers = {name : ActiveRegister(self.state, name, register.value) for (name, register) in Registers.__members__.items()}
         self.M = Memory(self)
         self.M_word = WordMemory(self)
-        self.S = Stack(self.state, self.registers["S0"], self.registers["SSIZE"], self.registers["SDEPTH"])
-        self.R = Stack(self.state, self.registers["R0"], self.registers["RSIZE"], self.registers["RDEPTH"])
+        self.S = Stack(self.state, self.registers["S0"], self.registers["STACK_SIZE"], self.registers["STACK_DEPTH"])
         self.here = 0
 
     def __del__(self):
@@ -179,7 +172,7 @@ class State:
 
         globals_dict.update([(name, register) for name, register in self.registers.items()])
         globals_dict.update([(name, self.__getattribute__(name)) for
-                             name in ["M", "M_word", "S", "R", "registers",
+                             name in ["M", "M_word", "S", "registers",
                                       "load", "save",
                                       "run", "step", "trace", "dump", "disassemble",
                                       "disassemble_instruction",

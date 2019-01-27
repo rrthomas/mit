@@ -108,13 +108,12 @@ int main(int argc, char *argv[])
     bool core_dump = false;
     smite_UWORD memory_size = smite_default_memory_size;
     smite_UWORD stack_size = smite_default_stack_size;
-    smite_UWORD return_stack_size = smite_default_stack_size;
 
     // Options string starts with '+' to stop option processing at first non-option, then
     // leading ':' so as to return ':' for a missing arg, not '?'
     for (;;) {
         int this_optind = optind ? optind : 1, longindex = -1;
-        int c = getopt_long(argc, argv, "+:cm:r:s:", longopts, &longindex);
+        int c = getopt_long(argc, argv, "+:cm:s:", longopts, &longindex);
 
         if (c == -1)
             break;
@@ -123,11 +122,9 @@ int main(int argc, char *argv[])
         else if (c == '?')
             die("unrecognised option '%s'\nTry '%s --help' for more information.", argv[this_optind], program_name);
         else if (c == 'c')
-            longindex = 3;
+            longindex = 2;
         else if (c == 'm')
             longindex = 0;
-        else if (c == 'r')
-            longindex = 2;
         else if (c == 's')
             longindex = 1;
 
@@ -139,21 +136,18 @@ int main(int argc, char *argv[])
             stack_size = parse_memory_size(smite_max_stack_size);
             break;
         case 2:
-            return_stack_size = parse_memory_size(smite_max_stack_size);
-            break;
-        case 3:
             core_dump = true;
             break;
-        case 4:
+        case 3:
             trace_fp = fopen(optarg, "wb");
             if (trace_fp == NULL)
                 die("cannot not open file %s", optarg);
             warn("trace will be written to %s\n", optarg);
             break;
-        case 5:
+        case 4:
             usage();
             break;
-        case 6:
+        case 5:
             printf(PACKAGE_NAME " " VERSION "\n"
                    "(c) Reuben Thomas 1994-2019\n"
                    PACKAGE_NAME " comes with ABSOLUTELY NO WARRANTY.\n"
@@ -170,7 +164,7 @@ int main(int argc, char *argv[])
     if (argc < 1)
         usage();
 
-    smite_state *S = smite_init(memory_size, stack_size, return_stack_size);
+    smite_state *S = smite_init(memory_size, stack_size);
     if (S == NULL)
         die("could not allocate virtual machine smite_state");
 

@@ -31,7 +31,7 @@ action(ULT)
 
 # Test
 def stack1():
-    SDEPTH.set(0)	# empty the stack
+    STACK_DEPTH.set(0)	# empty the stack
     S.push(-4)
     S.push(3)
     S.push(2)
@@ -42,7 +42,7 @@ def stack1():
     S.push(1)
 
 def stack2():
-    SDEPTH.set(0)	# empty the stack
+    STACK_DEPTH.set(0)	# empty the stack
     S.push(1)
     S.push(-1)
     S.push(237)

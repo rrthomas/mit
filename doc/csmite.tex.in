@@ -87,16 +87,14 @@ memory for @PACKAGE_NAME@, nor does it initialise any of the registers. C @PACKA
 provides the interface call {\bf @PACKAGE@\_init()} to do this (see
 section~\ref{usingcalls}).
 
-The variables {\tt EP}, {\tt I}, {\tt A}, {\tt MEMORY}, {\tt SDEPTH} and {\tt RDEPTH}
+The variables {\tt EP}, {\tt I}, {\tt A}, {\tt MEMORY} and {\tt STACK\_DEPTH}
 correspond exactly with the @PACKAGE_NAME@ registers they represent, and may be read
 and assigned to accordingly, bearing in mind the restrictions on their use
 given in~\cite{@PACKAGE@}.
 
 C @PACKAGE_NAME@ provides the ability to map native memory blocks into @PACKAGE_NAME@’s address space; see below.
 
-Two additional pseudo-registers are provided by C @PACKAGE_NAME@: they are
-called {\tt S0} and {\tt R0}, and are the address of the base of the data and
-return stacks respectively.
+An additional pseudo-register is provided by C @PACKAGE_NAME@: {\tt S0}, the address of the base of the stack.
 
 
 \subsection{Extra instructions}
@@ -226,8 +224,8 @@ occurs, the return code is $-3$. If the endism of the object file does not match
 In addition to the required interface calls C @PACKAGE_NAME@ provides an initialisation routine {\bf @PACKAGE@\_init()} which, given a word array and its size, initialises @PACKAGE_NAME@:
 
 \begin{description}
-\ifacec{@PACKAGE@\_state *@PACKAGE@\_init(size\_t memory\_size, size\_t data\_stack\_size, size\_t return\_stack\_size)}{{\tt memory\_size} is
-the size of {\tt b\_array} in {\em words} (not bytes); similarly, {\tt data\_stack\_size} and {\tt return\_stack\_size} give the size of the stacks in words; these are allocated by {\tt @PACKAGE@\_init}. The return value is {\tt NULL} if memory cannot be allocated, or if any requested size is too large, and a pointer to a new state otherwise.
+\ifacec{@PACKAGE@\_state *@PACKAGE@\_init(size\_t memory\_size, size\_t stack\_size)}{{\tt memory\_size} is
+the size of {\tt b\_array} in {\em words} (not bytes); similarly, {\tt stack\_size} gives the size of the stack in words; these are allocated by {\tt @PACKAGE@\_init}. The return value is {\tt NULL} if memory cannot be allocated, or if any requested size is too large, and a pointer to a new state otherwise.
 All the registers are initialised as per~\cite{@PACKAGE@}.}
 \ifacec{int @PACKAGE@\_mem\_realloc(@PACKAGE@\_state *state, @PACKAGE@\_UWORD size)}{Resize the memory to the given {\tt size}. Any new memory is zeroed. Returns $0$ on success or $-1$ if the requested size of memory cannot be allocated.}
 \end{description}
@@ -248,10 +246,6 @@ The following routines give access to @PACKAGE_NAME@’s stacks. On success, the
 \ifacec{int @PACKAGE@\_store\_stack(@PACKAGE@\_state *state, @PACKAGE@\_UWORD pos, @PACKAGE@\_WORD value)}{Store the given {\tt WORD} value at the given position in the data stack.}
 \ifacec{int @PACKAGE@\_pop\_stack(@PACKAGE@\_state *state, @PACKAGE@\_WORD *value)}{Pop the top word off the data stack, decrementing its depth, into the given {\tt @PACKAGE@\_WORD *}.}
 \ifacec{int @PACKAGE@\_push\_stack(@PACKAGE@\_state *state, @PACKAGE@\_WORD value)}{Push the given {\tt @PACKAGE@\_WORD} value on to the data stack of the given size, incrementing its depth.}
-\ifacec{int @PACKAGE@\_load\_return\_stack(@PACKAGE@\_state *state, @PACKAGE@\_UWORD pos, @PACKAGE@\_WORD *value)}{Load the word at the given position of the return stack into the given {\tt @PACKAGE@\_WORD *}.}
-\ifacec{int @PACKAGE@\_store\_return\_stack(@PACKAGE@\_state *state, @PACKAGE@\_UWORD pos, @PACKAGE@\_WORD value)}{Store the given {\tt WORD} value at the given position in the return stack.}
-\ifacec{int @PACKAGE@\_pop\_return\_stack(@PACKAGE@\_state *state, @PACKAGE@\_WORD *value)}{Pop the top word off the return stack, decrementing its depth, into the given {\tt @PACKAGE@\_WORD *}.}
-\ifacec{int @PACKAGE@\_push\_return\_stack(@PACKAGE@\_state *state, @PACKAGE@\_WORD value)}{Push the given {\tt @PACKAGE@\_WORD} value on to the return stack of the given size, incrementing its depth.}
 \end{description}
 
 The following routine allows the calling program to register command-line arguments that can be retrieved by the {\tt ARGC} and {\tt ARG\_COPY} extra instructions.
