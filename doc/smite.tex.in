@@ -68,10 +68,10 @@
 
 \subsection*{Typographical conventions}
 
-Actions and @PACKAGE_NAME@'s registers are shown in {\tt Typewriter} font;
+Actions and registers are shown in {\tt Typewriter} font;
 interface calls are shown in {\bf Bold} type, and followed by empty parentheses.
 
-Addresses are given in bytes and refer to @PACKAGE_NAME@'s address space except where
+Addresses are given in bytes and refer to the VM address space except where
 stated. Addresses are written in hexadecimal; hex numbers are prefixed with
 “0x”.
 
@@ -97,8 +97,7 @@ A small interface is provided for other programs to control @PACKAGE_NAME@.
 @PACKAGE_NAME@'s address unit is the byte, which is eight bits.
 Words are {\tt WORD\_SIZE} bytes. The word is the size of the numbers
 and addresses on which @PACKAGE_NAME@ operates, and of the items placed on the stacks.
-The size of the byte and range of word sizes allowed have been chosen with a view to making efficient implementation of
-@PACKAGE_NAME@ possible on the vast majority of current machine architectures.
+The size of the byte and range of word sizes allowed have been chosen with a view to making efficient implementation possible on the vast majority of current machine architectures.
 
 Words may have the bytes stored in big-endian or little-endian order. The
 address of a word is that of the byte in it with the lowest address.
@@ -134,7 +133,7 @@ The registers, each with its function, are set out in table~\ref{regtable}.
 {\tt WORD\_SIZE} & The number of bytes in a word. Must be a power of $2$, and in the range $2$ to $32$ inclusive. \\
 {\tt NATIVE\_POINTER\_SIZE} & The number of bytes in a host machine pointer (for {\tt CALL\_NATIVE}; see section~\ref{accessact}). \\
 \end{tabular}
-\caption{\label{regtable}@PACKAGE_NAME@'s registers}
+\caption{\label{regtable}Registers}
 \end{center}
 \end{table}
 
@@ -551,7 +550,7 @@ Table~\ref{opcodetable} lists the action opcodes in numerical order. Other actio
 \opcodetbltwo{0f}{INVERT}  {1f}{CALL\_NATIVE}
  \bottomrule
 \end{tabular}
-\caption{\label{opcodetable}@PACKAGE_NAME@'s opcodes}
+\caption{\label{opcodetable}Action opcodes}
 \end{center}
 \end{table}
 
@@ -585,12 +584,12 @@ basic types are used, and the semantics are simple, it is expected that
 implementations in different language producing the same result will be easy to
 program. A Modula-like syntax is used to give the definitions here.
 Implementation-defined error codes must be documented, but are optional. All
-addresses passed as parameters must be word-aligned. A @PACKAGE_NAME@ must provide the
+addresses passed as parameters must be word-aligned. An implementation of @PACKAGE_NAME@ must provide the
 following calls:
 
 \begin{description}
 \iface{native\_address}{integer, boolean}{pointer}{Return a native pointer corresponding
-    to the given @PACKAGE_NAME@ address. If the @PACKAGE_NAME@ address is invalid, or the Boolean flag is true and the address is read-only, then a distinguished invalid pointer is returned.}
+    to the given VM address. If the address is invalid, or the Boolean flag is true and the address is read-only, then a distinguished invalid pointer is returned.}
 \iface{run}{}{integer}{Start @PACKAGE_NAME@ by entering the execution cycle as
     described in section~\ref{operation}. If @PACKAGE_NAME@ ever executes a {\tt
     HALT} action (see section~\ref{exceptact}), the reason code is
@@ -601,7 +600,7 @@ following calls:
     passed to it is returned.}
 \iface{load\_object}{file, address}{integer}{Load the object module
     specified by \textit{file}, which may be a filename or some other
-    specifier, to the @PACKAGE_NAME@ address \textit{address}. First the module's
+    specifier, to the VM address \textit{address}. First the module's
     header is checked; if the first seven bytes are not as specified above
     in section~\ref{object}, or the endianness value is not 0 or 1, then
     return $-2$. If the code will not fit into memory at the address given, or
