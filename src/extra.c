@@ -185,13 +185,11 @@ static int extra_smite(smite_state *S)
         break;
     case SMITE_INIT:
         {
-            smite_UWORD return_stack_size;
-            POP((smite_WORD *)&return_stack_size);
             smite_UWORD stack_size;
             POP((smite_WORD *)&stack_size);
             smite_UWORD memory_size;
             POP((smite_WORD *)&memory_size);
-            smite_state *new_smite_state = smite_init((size_t)memory_size, (size_t)stack_size, (size_t)return_stack_size);
+            smite_state *new_smite_state = smite_init((size_t)memory_size, (size_t)stack_size);
             PUSH_NATIVE_TYPE(smite_state *, new_smite_state);
         }
         break;
