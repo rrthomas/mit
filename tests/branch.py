@@ -81,7 +81,7 @@ action(RET)
 for i in range(len(correct)):
     print("Instruction {}: PC = {} should be {}\n".format(i, PC.get(), correct[i]))
     if correct[i] != PC.get():
-        print("Error in branch tests: PC = {}".format(PC.get()))
+        print("Error in branch tests: PC = {:#x}".format(PC.get()))
         sys.exit(1)
     step()
     print("I = {}".format(disassemble_instruction(ITYPE.get(), I.get())))

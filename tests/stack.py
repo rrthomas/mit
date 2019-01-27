@@ -82,7 +82,7 @@ for i in range(first_len):
     print("Data stack: {}".format(S))
     print("Correct stack: {}\n".format(correct[i]))
     if str(correct[i]) != str(S):
-        print("Error in stack tests: PC = {}".format(PC))
+        print("Error in stack tests: PC = {:#x}".format(PC.get()))
         sys.exit(1)
     step()
     print("I = {}".format(disassemble_instruction(ITYPE.get(), I.get())))
@@ -98,7 +98,7 @@ for i in range(first_len, len(correct)):
         print("Data stack: {}".format(S))
         print("Correct stack: {}\n".format(correct[i]))
         if str(correct[i]) != str(S):
-            print("Error in stack tests: PC = {}".format(PC))
+            print("Error in stack tests: PC = {:#x}".format(PC.get()))
             sys.exit(1)
     step()
     print("I = {}".format(disassemble_instruction(ITYPE.get(), I.get())))

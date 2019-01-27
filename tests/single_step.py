@@ -15,13 +15,13 @@ VM.globalize(globals())
 
 
 for i in range(10):
-    print("PC = {}".format(PC))
+    print("PC = {:#x}".format(PC.get()))
     step()
 
 final_pc = 10
 print("PC should now be {}".format(final_pc))
 if PC.get() != final_pc:
-    print("Error in single_step(S) tests: PC = {}".format(PC.get()))
+    print("Error in single_step() tests: PC = {:#x}".format(PC.get()))
     sys.exit(1)
 
 print("single_step() tests ran OK")

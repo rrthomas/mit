@@ -95,7 +95,7 @@ for i in range(len(correct)):
     print("Data stack: {}".format(S))
     print("Correct stack: {}\n".format(correct[i]))
     if str(correct[i]) != str(S):
-        print("Error in memory tests: PC = {}".format(PC))
+        print("Error in memory tests: PC = {:#x}".format(PC.get()))
         sys.exit(1)
     step()
     print("I = {}".format(disassemble_instruction(ITYPE.get(), I.get())))

@@ -80,7 +80,7 @@ if run() != magic_number:
     sys.exit(1)
 print("Correct stack: {}".format(correct))
 if str(correct) != str(S):
-    print("Error in arithmetic tests: PC = {}".format(PC))
+    print("Error in arithmetic tests: PC = {:#x}".format(PC.get()))
     sys.exit(1)
 
 os.remove(number_file)

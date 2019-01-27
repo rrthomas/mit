@@ -44,7 +44,7 @@ while True:
 argc_ = S.pop()
 print("argc is {}, and should be {}".format(argc_, argc))
 if argc_ != argc:
-    print("Error in extra instructions tests: PC = {}".format(PC))
+    print("Error in extra instructions tests: PC = {:#x}".format(PC.get()))
     sys.exit(1)
 
 # Test 2: LibcLib.ARG_LEN
@@ -55,7 +55,7 @@ while True:
 arg1len = S.pop()
 print("arg 1's length is {}, and should be {}".format(arg1len, len(argv[1])))
 if arg1len != len(argv[1]):
-    print("Error in extra instructions tests: PC = {}".format(PC))
+    print("Error in extra instructions tests: PC = {:#x}".format(PC.get()))
     sys.exit(1)
 S.push(arg1len) # push length back for next test
 
@@ -67,12 +67,12 @@ while True:
 arg1len = S.pop()
 print("arg 1's length is {}, and should be {}".format(arg1len, len(argv[1])))
 if arg1len != len(argv[1]):
-    print("Error in extra instructions tests: PC = {}".format(PC))
+    print("Error in extra instructions tests: PC = {:#x}".format(PC.get()))
     sys.exit(1)
 c_str = string_at(libsmite.smite_native_address_of_range(VM.state, buffer, 0))
 print("arg 1 is {}, and should be {}".format(c_str, argv[1]))
 if c_str != argv[1]:
-    print("Error in extra instructions tests: PC = {}".format(PC))
+    print("Error in extra instructions tests: PC = {:#x}".format(PC.get()))
     sys.exit(1)
 
 print("Extra instructions tests ran OK")

@@ -56,7 +56,7 @@ def step(start, end):
             v = S.pop()
             print("Result: {}; correct result: {}\n".format(v, correct[i]))
             if correct[i] != v:
-                print("Error in comparison tests: PC = {}".format(PC))
+                print("Error in comparison tests: PC = {:#x}".format(PC.get()))
                 sys.exit(1)
 
 stack1()      # set up the stack with four standard pairs to compare

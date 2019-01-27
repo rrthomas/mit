@@ -66,7 +66,7 @@ for i in range(len(correct)):
     print("Data stack: {}".format(S))
     print("Correct stack: {} ({:#x})\n".format(correct[i], correct[i]))
     if S.depth.get() != 1 or correct[i] != S.pop():
-        print("Error in numbers tests: PC = {}".format(PC))
+        print("Error in numbers tests: PC = {:#x}".format(PC.get()))
         sys.exit(1)
     step()
     print("I = {}".format(disassemble_instruction(ITYPE.get(), I.get())))

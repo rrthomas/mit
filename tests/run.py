@@ -34,7 +34,7 @@ if ret != return_value:
 final_pc = 54
 print("PC should now be {}".format(final_pc))
 if PC.get() != final_pc:
-    print("Error in run() tests: PC = {}".format(PC))
+    print("Error in run() tests: PC = {:#x}".format(PC.get()))
     sys.exit(1)
 
 print("run() tests ran OK")
