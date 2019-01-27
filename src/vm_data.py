@@ -129,7 +129,13 @@ class Actions(Enum):
     PUSH(b + a);
     ''')
 
-    MUL = Action(0x0b, '''
+    NEGATE = Action(0x0b, '''
+    smite_WORD a;
+    POP(&a);
+    PUSH(-a);
+    ''')
+
+    MUL = Action(0x0c, '''
     smite_WORD multiplier;
     POP(&multiplier);
     smite_WORD multiplicand;
@@ -137,7 +143,7 @@ class Actions(Enum):
     PUSH(multiplier * multiplicand);
     ''')
 
-    UDIVMOD = Action(0x0c, '''
+    UDIVMOD = Action(0x0d, '''
     smite_UWORD divisor;
     POP((smite_WORD *)&divisor);
     smite_UWORD dividend;
@@ -147,7 +153,7 @@ class Actions(Enum):
     PUSH(dividend % divisor);
     ''')
 
-    DIVMOD = Action(0x0d, '''
+    DIVMOD = Action(0x0e, '''
     smite_WORD divisor;
     POP(&divisor);
     smite_WORD dividend;
@@ -155,12 +161,6 @@ class Actions(Enum):
     DIVZERO(divisor);
     PUSH(dividend / divisor);
     PUSH(dividend % divisor);
-    ''')
-
-    NEGATE = Action(0x0e, '''
-    smite_WORD a;
-    POP(&a);
-    PUSH(-a);
     ''')
 
     INVERT = Action(0x0f, '''

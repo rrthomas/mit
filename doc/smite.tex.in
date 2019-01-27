@@ -374,12 +374,13 @@ These actions consist of monadic and dyadic operators.
 All calculations are made without bounds or overflow checking, except
 as detailed for certain actions.
 
-Addition:
+Addition and negation:
 
 \nopagebreak
 
 \begin{description}
 \inst{ADD}{\noru1 \noru2 -- \noru3}{Add \noru2 to \noru1, giving the sum \noru3.}
+\inst{NEGATE}{\n1 -- \n2}{Negate \n1, giving its arithmetic inverse \n2.}
 \end{description}
 
 Multiplication and division (note that all division actions raise exception
@@ -391,14 +392,6 @@ $-10$ if division by zero is attempted):
 \inst{MUL}{\noru1 \noru2 -- \noru3}{Multiply \noru1 by \noru2 giving the product \noru3.}
 \inst{UDIVMOD}{\U1 \U2 -- \U3 \U4}{Divide \U1 by \U2, giving the single-word quotient \U3 and the single-word remainder \U4.}
 \inst{DIVMOD}{\n1 \n2 -- \n3 \n4}{Divide \n1 by \n2 using symmetric division, giving the single-word quotient \n3 and the single-word remainder \n4. The quotient is rounded towards zero.}
-\end{description}
-
-Sign function:
-
-\nopagebreak
-
-\begin{description}
-\inst{NEGATE}{\n1 -- \n2}{Negate \n1, giving its arithmetic inverse \n2.}
 \end{description}
 
 
@@ -422,8 +415,8 @@ Shifts:
 \nopagebreak
 
 \begin{description}
-\inst{LSHIFT}{\x1 u -- \x2}{Perform a logical left shift of \spic{u} bit-places on \x1, giving \x2. Put zero into the least significant bits vacated by the shift. If \spic{u} is greater than or equal to 32, \x2 is zero.}
-\inst{RSHIFT}{\x1 u -- \x2}{Perform a logical right shift of \spic{u} bit-places on \x1, giving \x2. Put zero into the most significant bits vacated by the shift. If \spic{u} is greater than or equal to 32, \x2 is zero.}
+\inst{LSHIFT}{\x1 u -- \x2}{Perform a logical left shift of \spic{u} bit-places on \x1, giving \x2. Put zero into the least significant bits vacated by the shift. If \spic{u} is greater than or equal to the number of bits in a word, \x2 is zero.}
+\inst{RSHIFT}{\x1 u -- \x2}{Perform a logical right shift of \spic{u} bit-places on \x1, giving \x2. Put zero into the most significant bits vacated by the shift. If \spic{u} is greater than or equal to the number of bits in a word, \x2 is zero.}
 \end{description}
 
 
@@ -543,10 +536,10 @@ Table~\ref{opcodetable} lists the action opcodes in numerical order. Other actio
 \opcodetbl{08}{EQ}	{18}{STOREB}	{28}{PUSH\_SSIZE}
 \opcodetbl{09}{ULT}	{19}{BRANCH}	{29}{PUSH\_RSIZE}
 \opcodetbl{0a}{ADD}	{1a}{BRANCHZ}	{2a}{PUSH\_HANDLER}
-\opcodetbl{0b}{MUL}	{1b}{CALL}	{2b}{STORE\_HANDLER}
-\opcodetbl{0c}{UDIVMOD}	{1c}{RET}	{2c}{PUSH\_MEMORY}
-\opcodetbl{0d}{DIVMOD}	{1d}{THROW}	{2d}{PUSH\_BADPC}
-\opcodetbl{0e}{NEGATE}	{1e}{HALT}      {2e}{PUSH\_INVALID}
+\opcodetbl{0b}{NEGATE}	{1b}{CALL}	{2b}{STORE\_HANDLER}
+\opcodetbl{0c}{MUL}	{1c}{RET}	{2c}{PUSH\_MEMORY}
+\opcodetbl{0d}{UDIVMOD}	{1d}{THROW}	{2d}{PUSH\_BADPC}
+\opcodetbl{0e}{DIVMOD}	{1e}{HALT}      {2e}{PUSH\_INVALID}
 \opcodetbltwo{0f}{INVERT}  {1f}{CALL\_NATIVE}
  \bottomrule
 \end{tabular}
