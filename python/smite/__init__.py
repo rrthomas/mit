@@ -20,7 +20,6 @@ which defaults to 0.
 
 import os
 import sys
-import glob
 import collections.abc
 from ctypes import *
 from ctypes.util import find_library
@@ -31,22 +30,6 @@ from smite.opcodes_extra import *
 
 libsmite = CDLL(find_library("smite"))
 assert(libsmite != None)
-
-
-# Utility functions
-def globfile(file):
-    file = os.path.expanduser(file)
-    files = glob.glob(file)
-    if len(files) == 0:
-        raise Error("cannot find file '{}'".format(file))
-    elif len(files) > 1:
-        raise Error("'{}' matches more than one file".format(file))
-    return files[0]
-
-def globdirname(file):
-    if file.find('/') == -1:
-        return file
-    return globfile("{}/{}".format(os.path.dirname(file), os.path.basename(file)))
 
 
 # Errors
@@ -248,7 +231,7 @@ class State:
         '''Load an object file at the given address.
         Returns the length.'''
 
-        fd = os.open(globdirname(file), os.O_RDONLY)
+        fd = os.open(file, os.O_RDONLY)
         if fd < 0:
             raise Error("cannot open file {}".format(file))
         ret = libsmite.smite_load_object(self.state, addr, fd)
@@ -276,7 +259,7 @@ class State:
         if not libsmite.smite_is_aligned(address) or ptr == None:
             return -1
 
-        fd = os.open(globdirname(file), os.O_CREAT | os.O_RDWR)
+        fd = os.open(file, os.O_CREAT | os.O_RDWR)
         if fd < 0:
             fatal("cannot open file {}".format(file))
         ret = libsmite.smite_save_object(self.state, address, length, fd)
