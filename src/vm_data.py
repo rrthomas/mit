@@ -62,7 +62,7 @@ class Actions(Enum):
     smite_WORD depth;
     POP(&depth);
     smite_WORD pickee;
-    exception = smite_load_stack(S, depth, &pickee);
+    S->exception = smite_load_stack(S, depth, &pickee);
     PUSH(pickee);
     ''')
 
@@ -70,30 +70,30 @@ class Actions(Enum):
     smite_WORD depth;
     POP(&depth);
     smite_WORD swapee;
-    exception = smite_load_stack(S, depth, &swapee);
+    S->exception = smite_load_stack(S, depth, &swapee);
     smite_WORD top;
     POP(&top);
     PUSH(swapee);
-    exception = smite_store_stack(S, depth, top);
+    S->exception = smite_store_stack(S, depth, top);
     ''')
 
     RPUSH = Action(0x04, '''
     smite_WORD depth;
     POP(&depth);
     smite_WORD pickee;
-    exception = smite_load_return_stack(S, depth, &pickee);
+    S->exception = smite_load_return_stack(S, depth, &pickee);
     PUSH(pickee);
     ''')
 
     POP2R = Action(0x05, '''
     smite_WORD value;
     POP(&value);
-    exception = exception == 0 ? smite_push_return_stack(S, value) : exception;
+    S->exception = S->exception == 0 ? smite_push_return_stack(S, value) : S->exception;
     ''')
 
     RPOP = Action(0x06, '''
     smite_WORD value;
-    exception = smite_pop_return_stack(S, &value);
+    S->exception = smite_pop_return_stack(S, &value);
     PUSH(value);
     ''')
 
@@ -213,7 +213,7 @@ class Actions(Enum):
     smite_WORD addr;
     POP(&addr);
     smite_WORD value;
-    exception = exception ? exception : smite_load_word(S, addr, &value);
+    S->exception = S->exception ? S->exception : smite_load_word(S, addr, &value);
     PUSH(value);
     ''')
 
@@ -222,14 +222,14 @@ class Actions(Enum):
     POP(&addr);
     smite_WORD value;
     POP(&value);
-    exception = exception ? exception : smite_store_word(S, addr, value);
+    S->exception = S->exception ? S->exception : smite_store_word(S, addr, value);
     ''')
 
     LOADB = Action(0x17, '''
     smite_WORD addr;
     POP(&addr);
     smite_BYTE value;
-    exception = exception ? exception : smite_load_byte(S, addr, &value);
+    S->exception = S->exception ? S->exception : smite_load_byte(S, addr, &value);
     PUSH((smite_WORD)value);
     ''')
 
@@ -238,7 +238,7 @@ class Actions(Enum):
     POP(&addr);
     smite_WORD value;
     POP(&value);
-    exception = exception ? exception : smite_store_byte(S, addr, (smite_BYTE)value);
+    S->exception = S->exception ? S->exception : smite_store_byte(S, addr, (smite_BYTE)value);
     ''')
 
     BRANCH = Action(0x19, '''
@@ -255,25 +255,25 @@ class Actions(Enum):
     ''')
 
     CALL = Action(0x1b, '''
-    exception = smite_push_return_stack(S, S->PC);
+    S->exception = smite_push_return_stack(S, S->PC);
     POP((smite_WORD *)&(S->PC));
     ''')
 
     RET = Action(0x1c, '''
-    exception = smite_pop_return_stack(S, (smite_WORD *)&(S->PC));
+    S->exception = smite_pop_return_stack(S, (smite_WORD *)&(S->PC));
     ''')
 
     THROW = Action(0x1d, '''
     /* The POP macro may set exception */
     smite_WORD exception_code;
     POP(&exception_code);
-    exception = exception_code;
+    S->exception = exception_code;
     ''')
 
     HALT = Action(0x1e, '''
     smite_WORD ret;
     POP(&ret);
-    halt_code = ret;
+    S->halt_code = ret;
     RAISE(-255);
     ''')
 
