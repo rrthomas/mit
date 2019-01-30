@@ -58,7 +58,7 @@ class Actions(Enum):
     S->SDEPTH -= depth;
     ''')
 
-    PUSH = Action(0x02, '''
+    DUP = Action(0x02, '''
     smite_WORD depth;
     POP(&depth);
     smite_WORD pickee;

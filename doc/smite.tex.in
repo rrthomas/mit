@@ -348,7 +348,7 @@ These actions manage the data stack and move values between stacks.
 
 \begin{description}
 \inst{POP}{\x{u}\dots\x1 u --}{Remove \spic{u} items from the stack.}
-\inst{PUSH}{\x{u}\dots\x0 u -- \x{u}\dots\x0 \x{u}}{Remove \spic{u}. Copy \x{u} to the top of the stack.}
+\inst{DUP}{\x{u}\dots\x0 u -- \x{u}\dots\x0 \x{u}}{Remove \spic{u}. Copy \x{u} to the top of the stack.}
 \inst{SWAP}{\x{u}\dots\x0 u -- \x0\x{u-1}\dots\x1 \x{u}}{Exchange the top stack item with the \spic{u}th. If \spic{u} is zero, do nothing.}
 \instr{POP2R}{x --}{-- x}{Move \spic{x} to the return stack.}
 \instr{RPOP}{-- x}{x --}{Move \spic{x} from the return stack to the data stack.}
@@ -527,7 +527,7 @@ Table~\ref{opcodetable} lists the action opcodes in numerical order. Other actio
     Action & \bf Opcode & \bf Action \\ \midrule
 \opcodetbl{00}{NOP}	{10}{AND}	{20}{EXTRA}
 \opcodetbl{01}{POP}	{11}{OR}        {21}{PUSH\_WORD\_SIZE}
-\opcodetbl{02}{PUSH}	{12}{XOR}	{22}{PUSH\_NATIVE\_POINTER\_SIZE}
+\opcodetbl{02}{DUP}	{12}{XOR}	{22}{PUSH\_NATIVE\_POINTER\_SIZE}
 \opcodetbl{03}{SWAP}	{13}{LSHIFT}	{23}{PUSH\_SDEPTH}
 \opcodetbl{04}{RPUSH}	{14}{RSHIFT}	{24}{STORE\_SDEPTH}
 \opcodetbl{05}{POP2R}	{15}{LOAD}	{25}{PUSH\_RP}
