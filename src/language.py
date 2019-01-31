@@ -33,7 +33,7 @@ def is_repeating(path):
 # Total visit count of each state.
 # [int]
 state_counts = [
-    sum(count for _, count in transitions)
+    sum(count for _, count in transitions.values())
     for transitions in predictor
 ]
 
@@ -45,22 +45,23 @@ state_probabilities = [
             new_state,
             float(count + 1) / float(state_counts[state] + 64),
         )
-        for event, (new_state, count) in transitions
+        for event, (new_state, count) in transitions.items()
     }
-    for transitions in predictor
+    for state, transitions in enumerate(predictor)
 ]
 
-paths = [] # [(tuple of events (bytes), estimated_count (int))]
+# TODO: This should be a dict, because the paths are distinct.
+language = [] # [(tuple of events (bytes), estimated_count (int))]
 
 def walk(path, distribution):
     '''
      - path - list of event (bytes).
      - distribution - list of estimated frequency (float).
     '''
-    estimated_count = sum(distribution.values)
+    estimated_count = sum(distribution)
     if estimated_count < 10000. or is_repeating(path):
         return
-    paths.append((tuple(path), estimated_count))
+    language.append((tuple(path), estimated_count))
     successors = {} # event (bytes) -> distribution
 
     def accumulate(event, new_state, additional_count):
@@ -72,20 +73,21 @@ def walk(path, distribution):
 
     for state, estimated_count in enumerate(distribution):
         if estimated_count > 1.:
-            for event, (new_state, probability) in state_probabilities[state]:
+            probabilities = state_probabilities[state]
+            for event, (new_state, probability) in probabilities.items():
                 accumulate(event, new_state, estimated_count * probability)
     for event, new_distribution in successors.items():
         new_path = path + [event]
         walk(new_path, new_distribution)
 
-walk([], [float(x) for x in total_counts])
+walk([], [float(x) for x in state_counts])
 
 # TODO: Make sure we have the singleton string for each event.
 
 # Dump to a file.
 
-out_filename = '/tmp/language'
+out_filename = '/tmp/language.pickle'
 with open(out_filename, 'wb') as f:
     # [((bytes, ...), float)]
-    pickle.dump(paths, file=f)
+    pickle.dump(language, file=f)
 print('Wrote {}'.format(out_filename))
