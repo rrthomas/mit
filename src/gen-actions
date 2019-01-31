@@ -2,20 +2,18 @@
 
 import sys, pickle
 
-from vm_data import Actions
-
+from events import Event, ALL_EVENTS, EVENT_NAMES
 
 # Load language.
 if len(sys.argv) != 2:
     print("Usage: gen-actions LANGUAGE-FILE")
     sys.exit(1)
 with open(sys.argv[1], "rb") as h:
-    # [((bytes, ...), float)]
+    # [((str, ...), float)]
     language = pickle.load(h)
 
-# TODO: Use an independent source of data.
-# TODO: Assert that the result is the same.
-ALL_EVENTS = [path[0] for path, _ in language if len(path) == 1]
+all_singletons = set(path[0] for path, _ in language if len(path) == 1)
+# FIXME: assert all_singletons == set(event.name for event in ALL_EVENTS)
 
 # path (tuple of event (bytes)) -> count (float).
 count_index = {
@@ -27,20 +25,23 @@ class Path:
     '''
     Represents one of the plausible sequences of events in the language.
 
-     - path - tuple of event (bytes).
+     - path - tuple of event (str).
      - count - estimated occurences of `path`.
-     - guesses - possible next events in decreasing order of probability.
+     - guesses - possible next Events in decreasing order of probability.
     '''
 
     def __init__(self, path):
         self.path = path
         self.count = count_index[path]
-        guesses = [
-            (count_index[path + (event,)], event)
-            for event in ALL_EVENTS
-            if path + (event,) in count_index
-        ]
-        self.guesses = [guess for _, guess in reversed(sorted(guesses))]
+        self.guesses = sorted(
+            [
+                event
+                for event in ALL_EVENTS
+                if path + (event.name,) in count_index
+            ],
+            key=lambda event: count_index[path + (event.name,)],
+            reverse=True,
+        )
 
 language_index = {path: Path(path) for path, _ in language}
 
@@ -59,7 +60,7 @@ class Label:
      - name - str - the C identifier of this Label.
     '''
 
-    def __init__(self, index)
+    def __init__(self, index):
         '''
          - index - int - used to construct `self.name`.
         '''
@@ -72,7 +73,7 @@ class Label:
          - label_map - list of State - branch target map.
         '''
         print('''\
-static action F_{}(smite_state *S)
+static action {}(smite_state *S)
 {{
     assert(exception == 0);'''.format(
             self.name)
@@ -85,6 +86,7 @@ static action F_{}(smite_state *S)
     def generate_body(self):
         raise NotImplementedError
 
+    @staticmethod
     def goto(label):
         '''Returns a C statement that jumps to `label`.'''
         if label is None:
@@ -95,26 +97,33 @@ static action F_{}(smite_state *S)
 class Guess(Label):
     '''
     A Label at which we will guess the next event.
-     - guess - event.
+     - guess - Event.
      - if_correct - int - the label to go to if the guess is correct.
      - if_wrong - int - the label to go to if the guess is wrong.
     '''
-    def __init__(self, name, guess, if_correct, if_wrong):
-        super().__init__(name)
+    def __init__(self, index, guess, if_correct, if_wrong):
+        '''
+         - index - passed to superclass.
+        '''
+        super().__init__(index)
+        assert isinstance(guess, Event)
         self.guess = guess
         self.if_correct = if_correct
-        self.if_wrong = if_Wrong
+        self.if_wrong = if_wrong
 
     def generate_body(self, label_map):
         print('''\
-    if (S->I == guess_I) {{
-        // TODO: Execute guess_I
+    if ({}) {{
+{}
+        RAISE(smite_load_byte(S, S->PC, &next_byte));
         {}
     }} else
         {}'''.format(
+            self.guess.guess_code,
+            self.guess.exec_code,
             self.goto(label_map[self.if_correct]),
             self.goto(label_map[self.if_wrong]),
-        )
+        ))
 
 class Goto(Label):
     '''
@@ -122,15 +131,18 @@ class Goto(Label):
 
      - goto - int - the Label to go to.
     '''
-    def __init__(self, name, goto):
-        super().__init__(name)
+    def __init__(self, index, goto):
+        '''
+         - index - passed to superclass.
+        '''
+        super().__init__(index)
         self.goto = goto
 
     def generate_body(self, label_map):
         print('''\
     return F_{};'''.format(
             label_map[self.goto].name,
-        )
+        ))
 
 # Generate state space of (path × rejects) with flood fill.
 # Decide what to do in each state.
@@ -146,23 +158,23 @@ def enqueue(path, rejects):
     if key not in state_index:
         state_index[key] = len(state_index)
         states.append((path, rejects))
-    return state_index[state]
+    return state_index[key]
 
-for event in ALL_EVENTS:
+for event in all_singletons:
     enqueue((event,), set())
 
 labels = [] # [Label]
 while len(labels) < len(state_index):
     index = len(labels)
-    path = language_index[paths[index]]
-    rejects = rejectss[index]
-    for guess in path.guesses:
-        if guess not in rejects:
+    path, rejects = states[index]
+    for guess in language_index[path].guesses:
+        if guess.name not in rejects:
             # We have a guess.
             labels.append(Guess(
                 index,
-                enqueue(path + (guess,), set()),
-                enqueue(path, rejects.union({guess})),
+                guess,
+                enqueue(path + (guess.name,), set()),
+                enqueue(path, rejects.union({guess.name})),
             ))
             break
     else:
@@ -202,8 +214,8 @@ typedef struct action {
 print('''\
 #define RAISE(code)                             \\
     do {                                        \\
-        exception = (code);                     \\
-        return (action){NULL};                  \\
+        if (exception != 0 || (exception = (code)) != 0) \\
+            return (action){NULL};              \\
     } while (0);
 ''')
 
@@ -238,6 +250,7 @@ print('''\
                                                 \\
     while (next_action.call != NULL) {          \\
         assert(exception == 0);                 \\
+        // FIXME: `next_byte` cannot exist.     \\
         next_action = next_action.call(S);      \\
     }                                           \\
 ''')

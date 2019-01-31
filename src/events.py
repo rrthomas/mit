@@ -39,6 +39,7 @@ class Event:
 # the implementation of `smite_decode_instruction()`, and will break if the
 # instruction encoding changes. This seems unavoidable without calling
 # `smite_decode_instruction()` after every instruction.
+# FIXME: `next_byte` cannot exist.
 ALL_EVENTS = []
 for i, a in enumerate(vm_data.Actions):
     ALL_EVENTS.append(Event(b'1 %08x' % a.value.opcode, a.name, a.value.code,

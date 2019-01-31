@@ -51,7 +51,7 @@ state_probabilities = [
 ]
 
 # TODO: This should be a dict, because the paths are distinct.
-language = [] # [(tuple of events (bytes), estimated_count (int))]
+language = [] # [(tuple of events (str), estimated_count (int))]
 
 def walk(path, distribution):
     '''
@@ -62,7 +62,7 @@ def walk(path, distribution):
     if estimated_count < 10000. or is_repeating(path):
         return
     language.append((tuple(path), estimated_count))
-    successors = {} # event (bytes) -> distribution
+    successors = {} # event (str) -> distribution
 
     def accumulate(event, new_state, additional_count):
         if additional_count < 1.:
@@ -88,6 +88,6 @@ walk([], [float(x) for x in state_counts])
 
 out_filename = '/tmp/language.pickle'
 with open(out_filename, 'wb') as f:
-    # [((bytes, ...), float)]
+    # [((str, ...), float)]
     pickle.dump(language, file=f)
 print('Wrote {}'.format(out_filename))

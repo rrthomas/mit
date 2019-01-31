@@ -21,7 +21,7 @@
 #define _ENCODE_INSTRUCTION(NAME, TYPE, HANDLE, STORE)                  \
     {                                                                   \
         size_t len = 0;                                                 \
-        smite_BYTE b;                                                         \
+        smite_BYTE b;                                                   \
         int exception;                                                  \
                                                                         \
         /* Continuation bytes */                                        \
@@ -38,7 +38,7 @@
             v |= INSTRUCTION_ACTION_BIT;                                \
                                                                         \
         /* Last (or only) byte */                                       \
-        b = (smite_BYTE)v;                                                    \
+        b = (smite_BYTE)v;                                              \
         if ((exception = STORE(b)))                                     \
             return (ptrdiff_t)exception;                                \
         len++;                                                          \
@@ -47,7 +47,7 @@
     }
 
 #define ENCODE_INSTRUCTION(NAME, TYPE, HANDLE, STORE)                   \
-    ptrdiff_t NAME(TYPE HANDLE, enum instruction_type type, smite_WORD v)     \
+    ptrdiff_t NAME(TYPE HANDLE, enum instruction_type type, smite_WORD v) \
     _ENCODE_INSTRUCTION(NAME, TYPE, HANDLE, STORE)
 
 #define STATEFUL_ENCODE_INSTRUCTION(NAME, TYPE, HANDLE, STORE)          \
