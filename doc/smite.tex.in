@@ -327,7 +327,7 @@ identical stack items. Alternative \spic{after} pictures are separated by ``{\tt
 |}'', and the circumstances under which each occurs are detailed in the
 instruction description.
 
-The symbols \spic{i*x}, \spic{j*x} and \spic{k*x} are used to denote different
+The symbols \spic{i*x} and \spic{j*x} are used to denote different
 collections of zero or more words of any data type. Ellipsis is used for
 indeterminate numbers of specified types of word.
 
