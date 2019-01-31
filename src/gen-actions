@@ -10,10 +10,181 @@ if len(sys.argv) != 2:
     print("Usage: gen-actions LANGUAGE-FILE")
     sys.exit(1)
 with open(sys.argv[1], "rb") as h:
+    # [((bytes, ...), float)]
     language = pickle.load(h)
 
+# TODO: Use an independent source of data.
+# TODO: Assert that the result is the same.
+ALL_EVENTS = [path[0] for path, _ in language if len(path) == 1]
+
+# path (tuple of event (bytes)) -> count (float).
+count_index = {
+    path: count
+    for path, count in language
+}
+
+class Path:
+    '''
+    Represents one of the plausible sequences of events in the language.
+
+     - path - tuple of event (bytes).
+     - count - estimated occurences of `path`.
+     - guesses - possible next events in decreasing order of probability.
+    '''
+
+    def __init__(self, path):
+        self.path = path
+        self.count = count_index[path]
+        guesses = [
+            (count_index[path + (event,)], event)
+            for event in ALL_EVENTS
+            if path + (event,) in count_index
+        ]
+        self.guesses = [guess for _, guess in reversed(sorted(guesses))]
+
+language_index = {path: Path(path) for path, _ in language}
+
 # TODO: Assert that language is prefix- and suffix-closed.
-# TODO: Assert that the singletons == the list of Actions + non-Action instruction types.
+
+# Control-flow states, and what to do in them.
+
+class Label:
+    '''
+    Represents a control-flow state of the interpreter. Successor Labels are
+    represented as integers; these are mapped to Labels by the
+    `label_map` argument of `generate_code()`.
+
+    `None`, used as a Label, represents the initial state.
+
+     - name - str - the C identifier of this Label.
+    '''
+
+    def __init__(self, index)
+        '''
+         - index - int - used to construct `self.name`.
+        '''
+        self.name = 'F_{}'.format(index);
+
+    def generate_code(self, label_map):
+        '''
+        Prints C source code for this Label. Calls `generate_body()`.
+
+         - label_map - list of State - branch target map.
+        '''
+        print('''\
+static action F_{}(smite_state *S)
+{{
+    assert(exception == 0);'''.format(
+            self.name)
+        )
+        self.generate_body(label_map)
+        print('''\
+}}
+''')
+
+    def generate_body(self):
+        raise NotImplementedError
+
+    def goto(label):
+        '''Returns a C statement that jumps to `label`.'''
+        if label is None:
+            return '''return (action){{NULL}};'''
+        else:
+            return '''return {};'''.format(label.name)
+
+class Guess(Label):
+    '''
+    A Label at which we will guess the next event.
+     - guess - event.
+     - if_correct - int - the label to go to if the guess is correct.
+     - if_wrong - int - the label to go to if the guess is wrong.
+    '''
+    def __init__(self, name, guess, if_correct, if_wrong):
+        super().__init__(name)
+        self.guess = guess
+        self.if_correct = if_correct
+        self.if_wrong = if_Wrong
+
+    def generate_body(self, label_map):
+        print('''\
+    if (S->I == guess_I) {{
+        // TODO: Execute guess_I
+        {}
+    }} else
+        {}'''.format(
+            self.goto(label_map[self.if_correct]),
+            self.goto(label_map[self.if_wrong]),
+        )
+
+class Goto(Label):
+    '''
+    A Label in which we will unconditionally go to another Label.
+
+     - goto - int - the Label to go to.
+    '''
+    def __init__(self, name, goto):
+        super().__init__(name)
+        self.goto = goto
+
+    def generate_body(self, label_map):
+        print('''\
+    return F_{};'''.format(
+            label_map[self.goto].name,
+        )
+
+# Generate state space of (path × rejects) with flood fill.
+# Decide what to do in each state.
+
+states = [] # List of (path, rejects)
+state_index = {} # {(path, rejects): int}
+def enqueue(path, rejects):
+    '''
+     - path - tuple of event.
+     - rejects - set of event.
+    '''
+    key = (path, tuple(sorted(rejects)))
+    if key not in state_index:
+        state_index[key] = len(state_index)
+        states.append((path, rejects))
+    return state_index[state]
+
+for event in ALL_EVENTS:
+    enqueue((event,), set())
+
+labels = [] # [Label]
+while len(labels) < len(state_index):
+    index = len(labels)
+    path = language_index[paths[index]]
+    rejects = rejectss[index]
+    for guess in path.guesses:
+        if guess not in rejects:
+            # We have a guess.
+            labels.append(Guess(
+                index,
+                enqueue(path + (guess,), set()),
+                enqueue(path, rejects.union({guess})),
+            ))
+            break
+    else:
+        # There is no good guess.
+        new_path = path[1:]
+        if new_path:
+            labels.append(Goto(
+                index,
+                enqueue(new_path, rejects),
+            ))
+        else:
+            labels.append(None)
+
+# Short-circuit all the Gotos.
+
+def short_circuit(index):
+    '''Follows Gotos to find a non-Goto Label.'''
+    while isinstance(labels[index], Goto):
+        index = labels[index].goto
+    return labels[index]
+
+label_map = [short_circuit(i) for i in range(len(labels))]
 
 # Output actions code.
 print('// Auto-generated by gen-actions - DO NOT EDIT.\n')
@@ -36,60 +207,9 @@ print('''\
     } while (0);
 ''')
 
-# TODO. Generate state space of (window × reject_set) with flood fill.
-work_queue = []
-work_done = {}
-def enqueue(trace, reject_set):
-    state = (trace, tuple(sorted(reject_set)))
-    if state not in work_done:
-        work_queue.append(state)
-        work_done[state] = len(work_done)
-    return work_done[state]
-
-ALL_EVENTS = [trace[0] for trace in language.keys() if len(trace) == 1]
-for event in ALL_EVENTS:
-    enqueue((event,), set())
-    
-while work_queue:
-    (trace, rejects) = work_queue.pop()
-    reject_set = set(rejects)
-    name = work_done[(trace, rejects)]
-    guess = None
-    guess_count = 0.
-    for event in ALL_EVENTS:
-        if event not in reject_set:
-            new_trace = trace + (event,)
-            count = language.get(new_trace, None)
-            if count and count > guess_count:
-                guess = event
-                guess_count = count
-            
-    print('''\
-static action F_{}(smite_state *S)
-{{
-    assert(exception == 0);'''.format(name))
-
-    if guess:
-        print('''\
-    if (S->I == guess_I) {{
-        // TODO: Execute guess_I
-        return F_{};
-    }} else
-        return F_{};'''.format(
-            enqueue(trace + (guess,), set()),          # Correct state
-            enqueue(trace, reject_set.union({guess})), # Wrong state
-        ))
-    else:
-        new_trace = trace[1:]
-        if new_trace:
-            print('''\
-    return F_{};'''.format(enqueue(new_trace, reject_set)))
-        else:
-            print('''\
-    return (action){{NULL}};''')
-    print('''\
-}}
-''')
+for label in labels:
+    if isinstance(label, Guess):
+        label.generate_code(label_map)
 
 print('action instruction_table[] = {')
 for name in Actions.__members__.keys():
