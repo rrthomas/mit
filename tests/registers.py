@@ -32,8 +32,8 @@ correct = [
     [42 * word_size],
     [42 * word_size, 1],
     [],
-    [size],
-    [size, 1],
+    [size * word_size],
+    [size * word_size, 1],
     [],
     [0],
     [0, 0],
@@ -76,7 +76,7 @@ action(POP)
 for i in range(len(correct)):
     print("Data stack: {}".format(S))
     print("Correct stack: {}\n".format(correct[i]))
-    if str(S) == correct[i]:
+    if str(S) != str(correct[i]):
         print("Error in registers tests: PC = {:#x}".format(PC.get()))
         sys.exit(1)
     step()
