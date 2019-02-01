@@ -3,10 +3,11 @@
 import sys, pickle
 
 from events import Event, ALL_EVENTS, EVENT_NAMES
+import vm_data
 
 # Load language.
 if len(sys.argv) != 2:
-    print("Usage: gen-actions LANGUAGE-FILE")
+    print("Usage: gen-actions LANGUAGE-FILE", file=sys.stderr)
     sys.exit(1)
 with open(sys.argv[1], "rb") as h:
     # [((str, ...), float)]
@@ -53,7 +54,7 @@ class Label:
     '''
     Represents a control-flow state of the interpreter. Successor Labels are
     represented as integers; these are mapped to Labels by the
-    `label_map` argument of `generate_code()`.
+    `label_map` argument of `generate_body()`.
 
     `None`, used as a Label, represents the initial state.
 
@@ -66,33 +67,16 @@ class Label:
         '''
         self.name = 'F_{}'.format(index);
 
-    def generate_code(self, label_map):
-        '''
-        Prints C source code for this Label. Calls `generate_body()`.
-
-         - label_map - list of State - branch target map.
-        '''
-        print('''\
-static action {}(smite_state *S)
-{{
-    assert(exception == 0);'''.format(
-            self.name)
-        )
-        self.generate_body(label_map)
-        print('''\
-}
-''')
-
-    def generate_body(self):
+    def generate_body(self, label_map):
         raise NotImplementedError
 
     @staticmethod
     def goto(label):
         '''Returns a C statement that jumps to `label`.'''
         if label is None:
-            return '''return (action){NULL};'''
+            return '''return EXIT(S);'''
         else:
-            return '''return {};'''.format(label.name)
+            return '''return (action){{{}}};'''.format(label.name)
 
 class Guess(Label):
     '''
@@ -116,8 +100,7 @@ class Guess(Label):
     if ({}) {{
         // {}
 {}
-        RAISE(smite_load_byte(S, S->PC, &S->I));
-        S->PC++;
+        FETCH
         {}
     }} else
         {}'''.format(
@@ -143,7 +126,7 @@ class Goto(Label):
 
     def generate_body(self, label_map):
         print('''\
-    return F_{};'''.format(
+    return {{F_{}}};'''.format(
             label_map[self.goto].name,
         ))
 
@@ -163,8 +146,7 @@ def enqueue(path, rejects):
         states.append((path, rejects))
     return state_index[key]
 
-for event in all_singletons:
-    enqueue((event,), set())
+assert enqueue((), set()) == 0 # Root state.
 
 labels = [] # [Label]
 while len(labels) < len(state_index):
@@ -220,41 +202,58 @@ print('''\
         if (exception != 0 || (exception = (code)) != 0) \\
             return (action){NULL};              \\
     } while (0);
+
+#define FETCH                                   \\
+    do {                                        \\
+        smite_BYTE z;                           \\
+        RAISE(smite_load_byte(S, S->PC, &z));   \\
+        S->I = z;                               \\
+        S->PC++;                                \\
+    } while (0);
+
+static action ENTER(smite_state *S);
+
+static action EXIT(smite_state *S);
 ''')
 
 for label in labels:
     if isinstance(label, Guess):
-        label.generate_code(label_map)
+        print('''\
+static action {}(smite_state *S);
+'''.format(label.name))
 
-print('action instruction_table[] = {')
-for name in Actions.__members__.keys():
-    print("    {{F_{}}},".format(name))
-print('};\n')
+print('''\
+static action ENTER(smite_state *S)
+{
+    FETCH
+    return (action){F_0};
+}
+
+static action EXIT(smite_state *S)
+{
+    if (S->I >= O_UNDEFINED)
+        exception = -256;
+    return (action){NULL};
+}
+''')
+
+for label in labels:
+    if isinstance(label, Guess):
+        print('''\
+static action {}(smite_state *S)
+{{'''.format(label.name))
+        label.generate_body(label_map)
+        print('''\
+}
+''')
+
+
 
 print('''\
 #define STEP(S)                                 \\
-    action next_action = {NULL};                \\
-    switch (S->ITYPE) {                         \\
-    case INSTRUCTION_NUMBER:                    \\
-        PUSH(S->I);                             \\
-        break;                                  \\
-    case INSTRUCTION_ACTION:                    \\
-        if (S->I < O_UNDEFINED)                 \\
-            next_action = instruction_table[S->I]; \\
-        else { /* Undefined instruction */      \\
-            exception = -256;                   \\
-            next_action = (action){NULL};       \\
-        }                                       \\
-        break;                                  \\
-    default: /* Exception during instruction fetch */ \\
-        exception = S->ITYPE;                   \\
-        break;                                  \\
-    }                                           \\
-                                                \\
+    action next_action = ENTER(S);             \\
     while (next_action.call != NULL) {          \\
         assert(exception == 0);                 \\
-        RAISE(smite_load_byte(S, S->PC, &S->I)); \\
-        S->PC++;                                \\
         next_action = next_action.call(S);      \\
-    }                                           \\
-''')
+    }'''
+)

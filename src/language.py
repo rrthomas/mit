@@ -12,7 +12,7 @@ When finished, the program will compute the control-flow structure of an interpr
 import sys, pickle
 
 if len(sys.argv) != 2:
-    print("Usage: language.py <predictor-filename>")
+    print("Usage: language.py <predictor-filename>", file=sys.stderr)
     sys.exit(1)
 predictor_filename = sys.argv[1]
 

@@ -49,7 +49,7 @@ class Event:
 ALL_EVENTS = []
 for i, a in enumerate(vm_data.Actions):
     ALL_EVENTS.append(Event(b'1 %08x' % a.value.opcode, a.name,
-        'S->I == INSTRUCTION_ACTION_BIT | {}'.format(a.value.opcode),
+        'S->I == (INSTRUCTION_ACTION_BIT | {})'.format(a.value.opcode),
         '''\
         S->ITYPE = INSTRUCTION_ACTION;
         S->I = {};

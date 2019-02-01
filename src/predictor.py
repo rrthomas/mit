@@ -14,7 +14,7 @@ import sys, pickle
 from events import ALL_EVENTS, EVENT_TRACE_NAMES, EVENT_NAMES
 
 if len(sys.argv) != 2:
-    print("Usage: predictor.py TRACE-FILE")
+    print("Usage: predictor.py TRACE-FILE", file=sys.stderr)
     sys.exit(1)
 trace_filename = sys.argv[1]
 
