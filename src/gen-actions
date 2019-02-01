@@ -90,7 +90,7 @@ static action {}(smite_state *S)
     def goto(label):
         '''Returns a C statement that jumps to `label`.'''
         if label is None:
-            return '''return (action){{NULL}};'''
+            return '''return (action){NULL};'''
         else:
             return '''return {};'''.format(label.name)
 
@@ -116,7 +116,8 @@ class Guess(Label):
     if ({}) {{
         // {}
 {}
-        RAISE(smite_load_byte(S, S->PC, &next_byte));
+        RAISE(smite_load_byte(S, S->PC, &S->I));
+        S->PC++;
         {}
     }} else
         {}'''.format(
@@ -252,7 +253,8 @@ print('''\
                                                 \\
     while (next_action.call != NULL) {          \\
         assert(exception == 0);                 \\
-        // FIXME: `next_byte` cannot exist.     \\
+        RAISE(smite_load_byte(S, S->PC, &S->I)); \\
+        S->PC++;                                \\
         next_action = next_action.call(S);      \\
     }                                           \\
 ''')

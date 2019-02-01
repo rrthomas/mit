@@ -10,24 +10,30 @@ class Event:
 
      - trace_name - bytes - the text that appears in a trace.
      - name - str - the human-readable name of the event.
+     - guess_code - str - C expression to test if this is the next event.
      - exec_code - str - C statements to execute when the event happens.
-     - guess_code - str - C if statement to test if this is the next event.
      - hash0 - a random-looking 63-bit mask.
      - hash1 - a random-looking 63-bit mask.
 
-    On entry to `exec_code`, S->PC will be one byte beyond the beginning of
-    the instruction. On exit, S->PC must point to the next instruction.
+    On entry to `exec_code`:
+     - S->PC is one byte beyond the beginning of the instruction,
+     - S->ITYPE is undefined and S->I holds the first byte of the instruction.
+    On exit:
+     - S->PC must point to the next instruction,
+     - S_>ITYPE and S->I must have their correct values, as per the spec.
+    Exceptions can be thrown using the RAISE() macro, passing a non-zero code;
+    RAISE(0) succeeds (does nothing).
 
     `guess_code` must be side-effect-free; in particular it must not access
-    memory. On evaluation, `next_byte` will be the first byte of the
+    memory. On evaluation, `S->I` will be the first byte of the
     instruction.
     '''
 
-    def __init__(self, trace_name, name, exec_code, guess_code):
+    def __init__(self, trace_name, name, guess_code, exec_code):
         self.trace_name = trace_name
         self.name = name
-        self.exec_code = exec_code
         self.guess_code = guess_code
+        self.exec_code = exec_code
         # Compute hashes.
         h = hashlib.md5()
         h.update(trace_name)
@@ -42,19 +48,27 @@ class Event:
 # FIXME: `next_byte` cannot exist.
 ALL_EVENTS = []
 for i, a in enumerate(vm_data.Actions):
-    ALL_EVENTS.append(Event(b'1 %08x' % a.value.opcode, a.name, a.value.code,
-        'next_byte == INSTRUCTION_ACTION_BIT | {}'.format(a.value.opcode),
+    ALL_EVENTS.append(Event(b'1 %08x' % a.value.opcode, a.name,
+        'S->I == INSTRUCTION_ACTION_BIT | {}'.format(a.value.opcode),
+        '''\
+        S->ITYPE = INSTRUCTION_ACTION;
+        S->I = {};
+{}'''.format(a.value.opcode, a.value.code),
     ))
 for n in [0, 1]:
-    ALL_EVENTS.append(Event(b'0 %08x' % n, 'LIT{}'.format(n), '''\
-        PUSH({});'''.format(n),
-        'next_byte == {}'.format(n),
+    ALL_EVENTS.append(Event(b'0 %08x' % n, 'LIT{}'.format(n),
+        'S->I == {}'.format(n),
+        '''\
+        S->ITYPE = INSTRUCTION_NUMBER;
+        S->I = {};
+        PUSH(S->I);'''.format(n),
     ))
-ALL_EVENTS.append(Event(b'0 n', 'LITn', '''\
+ALL_EVENTS.append(Event(b'0 n', 'LITn',
+        '(S->I & INSTRUCTION_ACTION_BIT) == 0 && S->I > 1',
+        '''\
         S->PC--;
         RAISE(smite_decode_instruction(S, &S->PC, &S->I));
-        PUSH(S->I)''',
-        '(next_byte & INSTRUCTION_ACTION_BIT) == 0 && next_byte > 1',
+        PUSH(S->I);''',
 ))
 
 # Indices for finding Events.
