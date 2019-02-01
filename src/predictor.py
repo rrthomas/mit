@@ -92,9 +92,14 @@ def open_trace(trace_filename):
 
 predictor = Predictor()
 history = 0
+progress = 0
 for event in open_trace(trace_filename):
     predictor.record_event(history, event)
     history = step(history, event)
+    progress += 1
+    if progress >= 1000000:
+        progress = 0
+        print('.', end='', flush=True)
 
 # Dump to a file, abstracting history, and removing rare states.
 
