@@ -47,14 +47,14 @@ for i, a in enumerate(vm_data.Actions):
     ))
 for n in [0, 1]:
     ALL_EVENTS.append(Event(b'0 %08x' % n, 'LIT{}'.format(n), '''\
-    PUSH({});'''.format(n),
+        PUSH({});'''.format(n),
         'next_byte == {}'.format(n),
     ))
 ALL_EVENTS.append(Event(b'0 n', 'LITn', '''\
-    S->PC--;
-    RAISE(smite_decode_instruction(S, &S->PC, &S->I));
-    PUSH(S->I)''',
-    '(next_byte & INSTRUCTION_ACTION_BIT) == 0 && next_byte > 1',
+        S->PC--;
+        RAISE(smite_decode_instruction(S, &S->PC, &S->I));
+        PUSH(S->I)''',
+        '(next_byte & INSTRUCTION_ACTION_BIT) == 0 && next_byte > 1',
 ))
 
 # Indices for finding Events.
