@@ -80,7 +80,7 @@ static action {}(smite_state *S)
         )
         self.generate_body(label_map)
         print('''\
-}}
+}
 ''')
 
     def generate_body(self):
@@ -114,12 +114,14 @@ class Guess(Label):
     def generate_body(self, label_map):
         print('''\
     if ({}) {{
+        // {}
 {}
         RAISE(smite_load_byte(S, S->PC, &next_byte));
         {}
     }} else
         {}'''.format(
             self.guess.guess_code,
+            self.guess.name,
             self.guess.exec_code,
             self.goto(label_map[self.if_correct]),
             self.goto(label_map[self.if_wrong]),
