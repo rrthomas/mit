@@ -154,10 +154,12 @@ while len(transitions) < len(states):
             break
     else:
         # There is no good guess.
-        new_path = path[1:]
-        if new_path:
+        if path:
+            new_path = path[1:]
             transitions.append(enqueue(new_path, rejects))
         else:
+            # We have eliminated all possible events.
+            # It's an illegal instruction.
             transitions.append(None)
 
 assert len(states) == len(state_index) == len(transitions)

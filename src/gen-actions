@@ -83,7 +83,7 @@ static action {}(smite_state *S) {{
     if ({}) {{
         // {}
 {}
-        return (action){{NULL}}; // Implement single-stepping then delete this.
+//        return (action){{NULL}}; // Implement single-stepping then delete this.
         FETCH
         {}
     }}
