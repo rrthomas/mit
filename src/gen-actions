@@ -17,8 +17,8 @@ typedef struct action {
 print('''\
 #define RAISE(code)                             \\
     do {                                        \\
-        exception = (code);                     \\
-        return (action){NULL};                  \\
+        if (exception != 0 || (exception = (code)) != 0) \\
+            return (action){NULL};              \\
     } while (0);
 ''')
 
@@ -32,7 +32,7 @@ static action F_{}(smite_state *S)
     }} while (0);
     return (action){{NULL}};
 }}
-'''.format(instruction, action.value.code[:-1].replace('\n', '\\\n     ')[1:-9]))
+'''.format(instruction, action.value.code))
 
 print('action instruction_table[] = {')
 for name in Actions.__members__.keys():
@@ -40,27 +40,27 @@ for name in Actions.__members__.keys():
 print('};\n')
 
 print('''\
-#define STEP(S)                                 \\
-    action next_action = {NULL};                \\
-    switch (S->ITYPE) {                         \\
-    case INSTRUCTION_NUMBER:                    \\
-        PUSH(S->I);                             \\
-        break;                                  \\
-    case INSTRUCTION_ACTION:                    \\
-        if (S->I < O_UNDEFINED)                 \\
-            next_action = instruction_table[S->I]; \\
-        else { /* Undefined instruction */      \\
-            exception = -256;                   \\
-            next_action = (action){NULL};       \\
-        }                                       \\
-        break;                                  \\
-    default: /* Exception during instruction fetch */ \\
-        exception = S->ITYPE;                   \\
-        break;                                  \\
-    }                                           \\
-                                                \\
-    while (next_action.call != NULL) {          \\
-        assert(exception == 0);                 \\
-        next_action = next_action.call(S);      \\
-    }                                           \\
-''')
+static void STEP(smite_state *S) {
+    S->ITYPE = smite_decode_instruction(S, &S->PC, &S->I);
+    trace(S->ITYPE, S->I);
+
+    switch (S->ITYPE) {
+    case INSTRUCTION_NUMBER:
+        PUSH(S->I);
+        return;
+    case INSTRUCTION_ACTION:
+        if (S->I >= O_UNDEFINED) {
+            exception = -256;
+            return;
+        }
+        action next_action = instruction_table[S->I];
+        while (next_action.call != NULL) {
+            assert(exception == 0);
+            next_action = next_action.call(S);
+        }
+        return;
+    default: /* Exception during instruction fetch */
+        exception = S->ITYPE;
+        return;
+    }
+}''')

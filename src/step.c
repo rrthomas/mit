@@ -22,11 +22,15 @@
 // Assumption for file functions
 verify(sizeof(int) <= sizeof(smite_WORD));
 
+FILE *trace_fp = NULL; // FILE * of trace file, if used
+static void trace(int type, smite_WORD opcode) {
+    if (trace_fp)
+        fprintf(trace_fp, "%d %08x\n", type, (smite_UWORD)opcode);
+}
 
 #define DIVZERO(x)                              \
     if (x == 0)                                 \
         RAISE(-10);
-
 
 static int halt_code;
 
@@ -35,19 +39,10 @@ static int exception;
 
 #include "instruction-actions.h"
 
-FILE *trace_fp = NULL; // FILE * of trace file, if used
-static void trace(int type, smite_WORD opcode) {
-    if (trace_fp)
-        fprintf(trace_fp, "%d %08x\n", type, (smite_UWORD)opcode);
-}
-
 // Perform one pass of the execution cycle
 smite_WORD smite_single_step(smite_state *S)
 {
     exception = 0;
-
-    S->ITYPE = smite_decode_instruction(S, &S->PC, &S->I);
-    trace(S->ITYPE, S->I);
 
     STEP(S);
 
