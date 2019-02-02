@@ -14,7 +14,7 @@ with open(sys.argv[1], "rb") as h:
     language = pickle.load(h)
 
 all_singletons = set(path[0] for path, _ in language if len(path) == 1)
-# FIXME: assert all_singletons == set(event.name for event in ALL_EVENTS)
+assert all_singletons == set(event.name for event in ALL_EVENTS)
 
 # path (tuple of event (bytes)) -> count (float).
 count_index = {
