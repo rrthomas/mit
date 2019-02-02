@@ -6,10 +6,10 @@
 % Started 1/12/94-8/5/95
 %
 
-\documentclass{article}
+\documentclass[a4paper]{article}
 \usepackage[british]{babel}
 \usepackage[utf8x]{inputenc}
-\usepackage{a4,newpxtext,booktabs,hyperref,siunitx,titlesec}
+\usepackage{newpxtext,booktabs,hyperref,siunitx,titlesec}
 
 
 % Add an extra level of sections

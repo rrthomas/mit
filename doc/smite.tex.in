@@ -6,10 +6,10 @@
 % Started 1/6-29/10/93
 %
 
-\documentclass{article}
+\documentclass[a4paper]{article}
 \usepackage[british]{babel}
 \usepackage[utf8x]{inputenc}
-\usepackage{a4,newpxtext,booktabs,hyperref}
+\usepackage{newpxtext,booktabs,hyperref}
 
 
 % Macros for this document
