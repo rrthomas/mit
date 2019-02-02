@@ -44,9 +44,8 @@ print('''\
 #define FETCH                                   \\
     do {                                        \\
         smite_BYTE z;                           \\
-        RAISE(smite_load_byte(S, S->PC, &z));   \\
+        RAISE(smite_load_byte(S, S->PC++, &z)); \\
         S->I = z;                               \\
-        S->PC++;                                \\
     } while (0);
 
 static action ENTER(smite_state *S);
@@ -68,9 +67,12 @@ static action ENTER(smite_state *S)
 
 static action EXIT(smite_state *S)
 {
-    if (S->I >= O_UNDEFINED)
-        exception = -256;
-    return (action){NULL};
+    // Pretend we fetched the instruction the formal way.
+    S->PC--;
+    S->ITYPE = smite_decode_instruction(S, &S->PC, &S->I);
+    assert(S->ITYPE == INSTRUCTION_ACTION);
+    assert(S->I >= O_UNDEFINED);
+    RAISE(-256);
 }
 ''')
 
@@ -81,6 +83,7 @@ static action {}(smite_state *S) {{
     if ({}) {{
         // {}
 {}
+        return (action){{NULL}}; // Implement single-stepping then delete this.
         FETCH
         {}
     }}
