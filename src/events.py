@@ -64,8 +64,9 @@ for n in [0, 1]:
         PUSH(S->I);'''.format(n),
     ))
 ALL_EVENTS.append(Event(b'0 n', 'LITn',
-        '(S->I & INSTRUCTION_ACTION_BIT) == 0 && S->I > 1',
+        '(S->I & ~INSTRUCTION_CHUNK_MASK) != INSTRUCTION_ACTION_BIT && S->I > 1',
         '''\
+        S->ITYPE = INSTRUCTION_NUMBER;
         S->PC--;
         RAISE(smite_decode_instruction(S, &S->PC, &S->I));
         PUSH(S->I);''',
