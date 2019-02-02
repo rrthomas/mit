@@ -32,7 +32,6 @@ static void trace(int type, smite_WORD opcode) {
     if (x == 0)                                 \
         RAISE(-10);
 
-
 static int halt_code;
 
 // Only defined during single_step().
@@ -44,9 +43,6 @@ static int exception;
 smite_WORD smite_single_step(smite_state *S)
 {
     exception = 0;
-
-    S->ITYPE = smite_decode_instruction(S, &S->PC, &S->I);
-    trace(S->ITYPE, S->I);
 
     STEP(S);
 

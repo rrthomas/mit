@@ -290,7 +290,6 @@ class Actions(Enum):
     )
 
     EXTRA = Action(0x20, '''\
-        smite_WORD ret;
         RAISE(smite_extra(S));'''
     )
 
