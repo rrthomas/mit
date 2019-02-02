@@ -15,8 +15,8 @@ VM.globalize(globals())
 
 
 # Test results and data
-result = [42, -10, -9, -9, -23, -256]
-# Values written 000 are overwritten later
+answer = 42
+result = [answer, -10, -9, -9, -23, -256]
 invalid_address = size * word_size + 1000
 address = [0, 0, size * word_size, invalid_address, 1, 0]
 test = []
@@ -26,7 +26,7 @@ print("Test 1: PC = {}".format(VM.here))
 # Test arbitrary throw code
 test.append(VM.here)
 badpc.append(0)
-number(42)
+number(answer)
 action(HALT)
 
 print("Test 2: PC = {}".format(VM.here))
