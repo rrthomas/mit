@@ -8,33 +8,32 @@ print('''\
 #define RAISE(code)                             \\
         S->exception = (code);
 
-#define STEP(S)                                 \\
-    S->ITYPE = smite_decode_instruction(S, &S->PC, &S->I); \\
-    switch (S->ITYPE) {                         \\
-    case INSTRUCTION_NUMBER:                    \\
-        PUSH(S->I);                             \\
-        break;                                  \\
-    case INSTRUCTION_ACTION:                    \\
-        switch (S->I) {                         \\
-                                                \\''')
+static void STEP(smite_state *S) {
+    S->ITYPE = smite_decode_instruction(S, &S->PC, &S->I);
+
+    switch (S->ITYPE) {
+    case INSTRUCTION_NUMBER:
+        PUSH(S->I);
+        return;
+    case INSTRUCTION_ACTION:
+        switch (S->I) {''')
 for (instruction, action) in Actions.__members__.items():
     print('''\
-        case O_{}:\\
-            {{                                   \\
-\\{}
-            }}                                   \\
-            break;                              \\
-                                                \\'''.format(instruction, action.value.code[:-1].replace('\n', '\\\n         ')[1:-13]))
+        case O_{}:
+            {{
+{}
+            }}
+            return;'''.format(
+        instruction,
+        action.value.code[:-1]
+    ))
 print('''\
-                                                \\
-        default: /* Undefined instruction */    \\
-            S->exception = -256;                \\
-            break;                              \\
-        }                                       \\
-        break;                                  \\
-                                                \\
-    default: /* Exception during instruction fetch */ \\
-        S->exception = S->ITYPE;                \\
-        break;                                  \\
-    }                                           \\
-''')
+        default: /* Undefined instruction */
+            S->exception = -256;
+            return;
+        }
+    default: /* Exception during instruction fetch */
+        S->exception = S->ITYPE;
+        return;
+    }
+}''')
