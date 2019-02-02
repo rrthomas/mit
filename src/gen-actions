@@ -25,7 +25,7 @@ for (instruction, action) in Actions.__members__.items():
             }}
             return;'''.format(
         instruction,
-        action.value.code
+        action.value.code.replace('        ', '                '),
     ))
 print('''\
         default: /* Undefined instruction */
