@@ -11,6 +11,8 @@ When finished, the program will compute the control-flow structure of an interpr
 
 import sys, pickle
 
+from events import Event, ALL_EVENTS, EVENT_NAMES
+
 if len(sys.argv) != 2:
     print("Usage: language.py <predictor-filename>", file=sys.stderr)
     sys.exit(1)
@@ -23,12 +25,6 @@ with open(predictor_filename, 'rb') as f:
 # Find all paths through the predictor.
 
 print("Finding paths")
-
-def is_repeating(path):
-    for n in range(1, len(path)//2):
-        if path[-n:]==path[-2*n:-n]:
-            return True
-    return False
 
 # Total visit count of each state.
 # [int]
@@ -58,31 +54,29 @@ def walk(path, distribution):
      - path - list of event (bytes).
      - distribution - list of estimated frequency (float).
     '''
+    # Check for repetition.
+    for n in range(1, len(path)//2):
+        if path[-n:]==path[-2*n:-n]: return
+    # Check for statistical irrelevance (but keep singleton paths).
     estimated_count = sum(distribution)
-    if estimated_count < 10000. or is_repeating(path):
-        return
+    if len(path) > 1 and estimated_count < 10000.: return
+    # Okay, we'll keep it.
     language.append((tuple(path), estimated_count))
-    successors = {} # event (str) -> distribution
-
-    def accumulate(event, new_state, additional_count):
-        if additional_count < 1.:
-            return
-        if event not in successors:
-            successors[event] = [0] * len(predictor)
-        successors[event][new_state] += additional_count
-
+    # For all (state, action) pairs, propagate count to the successor state.
+    successors = {event.name: [0.] * len(predictor) for event in ALL_EVENTS}
     for state, estimated_count in enumerate(distribution):
         if estimated_count > 1.:
             probabilities = state_probabilities[state]
             for event, (new_state, probability) in probabilities.items():
-                accumulate(event, new_state, estimated_count * probability)
+                additional_count = estimated_count * probability
+                if additional_count >= 1.:
+                    successors[event][new_state] += additional_count
+    # Recurse down the tree.
     for event, new_distribution in successors.items():
         new_path = path + [event]
         walk(new_path, new_distribution)
 
 walk([], [float(x) for x in state_counts])
-
-# TODO: Make sure we have the singleton string for each event.
 
 # Dump to a file.
 
