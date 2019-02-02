@@ -14,6 +14,8 @@
 #include <string.h>
 #include <limits.h>
 
+#include "minmax.h"
+
 #include "smite.h"
 #include "aux.h"
 
@@ -38,6 +40,7 @@ const smite_WORD smite_word_max = INT64_MAX;
 #error "WORD_SIZE is not 4 or 8!"
 #endif
 const int smite_stack_direction = 1;
+const smite_UWORD smite_frame_info_words = 2;
 smite_UWORD smite_default_memory_size = 0x100000U; // Default size of VM memory in words
 smite_UWORD smite_max_memory_size = ((smite_UWORD)1 << (WORD_SIZE * smite_BYTE_BIT - 1)) / WORD_SIZE; // Maximum size of memory in words (half the address space)
 smite_UWORD smite_max_stack_size = (((smite_UWORD)1) << (WORD_SIZE * smite_BYTE_BIT - 4)) / WORD_SIZE;
@@ -106,8 +109,55 @@ int smite_store_byte(smite_state *S, smite_UWORD addr, smite_BYTE value)
 }
 
 
-// Stacks
+// Stack
 
+// FIXME: Replace the following with load/store_frame
+int smite_load_stack_address(smite_state *S, smite_UWORD addr, smite_WORD *v)
+{
+    if (addr >= S->STACK_DEPTH)
+        return -9;
+
+    *v = *(S->S0 + addr * smite_stack_direction);
+    return 0;
+}
+
+int smite_store_stack_address(smite_state *S, smite_UWORD addr, smite_WORD v)
+{
+    if (addr >= S->STACK_DEPTH)
+        return -9;
+
+    *(S->S0 + addr * smite_stack_direction) = v;
+    return 0;
+}
+
+int smite_copy_stack_address(smite_state *S, smite_UWORD from, smite_UWORD to, smite_UWORD depth)
+{
+    if (from > S->STACK_DEPTH || to > S->STACK_DEPTH ||
+        depth > S->STACK_DEPTH - MAX(from, to))
+        return -9;
+
+    if (from > to) {
+        for (smite_UWORD i = 0; i < depth; i++) {
+            smite_WORD v;
+            int ret = smite_load_stack_address(S, from + i, &v);
+            ret = ret ? ret : smite_store_stack_address(S, to + i, v);
+            if (ret)
+                return ret;
+        }
+    } else if (from < to) {
+        for (smite_UWORD i = 0; i < depth; i++) {
+            smite_WORD v;
+            int ret = smite_load_stack_address(S, from + depth - i - 1, &v);
+            ret = ret ? ret : smite_store_stack_address(S, to + depth - i - 1, v);
+            if (ret)
+                return ret;
+        }
+    }
+
+    return 0;
+}
+
+// FIXME: Replace the following with load/store/push/pop_frame
 int smite_load_stack(smite_state *S, smite_UWORD pos, smite_WORD *v)
 {
     if (pos >= S->STACK_DEPTH)
@@ -191,6 +241,7 @@ smite_state *smite_init(size_t size, size_t data_stack_size)
         ;
     S->PC = 0;
     S->I = 0;
+    S->F0 = 0;
     S->STACK_DEPTH = 0;
 
     return S;

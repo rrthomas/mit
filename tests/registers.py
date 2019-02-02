@@ -1,5 +1,5 @@
 # Test the register instructions, except for those operating on STACK_DEPTH (see
-# memory.py).
+# memory.py) and frames (see frame.py).
 #
 # (c) Reuben Thomas 1994-2018
 #

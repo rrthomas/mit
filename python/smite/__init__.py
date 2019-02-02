@@ -42,7 +42,7 @@ class Error(Exception):
 # Constants (all of type unsigned)
 vars().update([(c, c_uint.in_dll(libsmite, "smite_{}".format(c)).value)
                for c in ["word_size", "native_pointer_size", "byte_bit", "byte_mask",
-                         "word_bit", "stack_direction"]])
+                         "word_bit", "stack_direction", "frame_info_words"]])
 vars()["byte_bit"] = 8
 
 

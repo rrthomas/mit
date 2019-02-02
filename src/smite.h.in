@@ -50,6 +50,7 @@ extern const unsigned smite_word_bit;
 extern const smite_UWORD smite_word_mask;
 extern const smite_UWORD smite_uword_max;
 extern const smite_WORD smite_word_min;
+extern const smite_UWORD smite_frame_info_words;
 
 // VM registers
 typedef struct _smite_state smite_state;
@@ -65,6 +66,8 @@ typedef struct _smite_state smite_state;
 
 // Memory access
 // Return value is 0 if OK, or error code for invalid or unaligned address
+int smite_load_stack_address(smite_state *S, smite_UWORD addr, smite_WORD *v);
+int smite_store_stack_address(smite_state *S, smite_UWORD addr, smite_WORD v);
 int smite_load_word(smite_state *S, smite_UWORD addr, smite_WORD *value);
 int smite_store_word(smite_state *S, smite_UWORD addr, smite_WORD value);
 int smite_load_byte(smite_state *S, smite_UWORD addr, smite_BYTE *value);
@@ -73,6 +76,7 @@ int smite_store_byte(smite_state *S, smite_UWORD addr, smite_BYTE value);
 // Stack access
 int smite_load_stack(smite_state *S, smite_UWORD pos, smite_WORD *v);
 int smite_store_stack(smite_state *S, smite_UWORD pos, smite_WORD v);
+int smite_copy_stack_address(smite_state *S, smite_UWORD from, smite_UWORD to, smite_UWORD depth);
 int smite_pop_stack(smite_state *S, smite_WORD *v);
 int smite_push_stack(smite_state *S, smite_WORD v);
 
