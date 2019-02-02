@@ -96,6 +96,7 @@ class Guess(Label):
         self.if_wrong = if_wrong
 
     def generate_body(self, label_map):
+        # TODO: trace().
         print('''\
     if ({}) {{
         // {}
@@ -247,11 +248,11 @@ static action {}(smite_state *S)
 }
 ''')
 
-
-
+# FIXME: The caller has already done `smite_decode_instruction()`, and has
+# modified S->PC. Do not repeat the work.
 print('''\
 #define STEP(S)                                 \\
-    action next_action = ENTER(S);             \\
+    action next_action = ENTER(S);              \\
     while (next_action.call != NULL) {          \\
         assert(exception == 0);                 \\
         next_action = next_action.call(S);      \\
