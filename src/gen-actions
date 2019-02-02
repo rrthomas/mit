@@ -9,6 +9,7 @@ print('''\
         exception = (code);
 
 #define STEP(S)                                 \\
+    S->ITYPE = smite_decode_instruction(S, &S->PC, &S->I); \\
     switch (S->ITYPE) {                         \\
     case INSTRUCTION_NUMBER:                    \\
         PUSH(S->I);                             \\

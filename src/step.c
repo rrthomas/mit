@@ -40,8 +40,6 @@ smite_WORD smite_single_step(smite_state *S)
 {
     exception = 0;
 
-    S->ITYPE = smite_decode_instruction(S, &S->PC, &S->I);
-
     STEP(S);
 
     if (exception != 0) {
