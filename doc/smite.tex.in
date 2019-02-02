@@ -16,8 +16,7 @@
 
 % Font for stack pictures; macro \spic includes italic correction
 
-\newfont{\spfont}{cmsltt10 scaled 1000}
-\newcommand{\spic}[1]{{\spfont\setlength{\baselineskip}{\normalbaselineskip}#1\/}}
+\newcommand{\spic}[1]{\texttt{#1\/}}
 
 % Common stack items
 
@@ -253,7 +252,7 @@ with the instructions grouped according to function. The
 instructions are given in the following format:
 
 \begin{description}
-\instr{NAME}{before -- after}{before -- after}{Description.}
+\instr{NAME}{before — after}{before — after}{Description.}
 \end{description}
 
 The first line consists of the name of the instruction. On the right are the
@@ -262,7 +261,7 @@ Underneath is the description.
 
 {\bf Stack effects} are written
 
-\centerline{\tt ( \spic{before -- after} )}
+\centerline{\tt ( \spic{before — after} )}
 
 \noindent where \spic{before} and \spic{after} are stack pictures showing the items on top
 of a stack before and after the instruction is executed.
@@ -339,7 +338,7 @@ picture is omitted.
 \label{numbers}
 
 \begin{description}
-\inst{number}{-- n}{The number is pushed on to the stack.}
+\inst{number}{— n}{The number is pushed on to the stack.}
 \end{description}
 
 \subsection{Stack manipulation}
@@ -347,12 +346,12 @@ picture is omitted.
 These actions manage the data stack and move values between stacks.
 
 \begin{description}
-\inst{POP}{\x{u}\dots\x1 u --}{Remove \spic{u} items from the stack.}
-\inst{DUP}{\x{u}\dots\x0 u -- \x{u}\dots\x0 \x{u}}{Remove \spic{u}. Copy \x{u} to the top of the stack.}
-\inst{SWAP}{\x{u}\dots\x0 u -- \x0\x{u-1}\dots\x1 \x{u}}{Exchange the top stack item with the \spic{u}th. If \spic{u} is zero, do nothing.}
-\instr{POP2R}{x --}{-- x}{Move \spic{x} to the return stack.}
-\instr{RPOP}{-- x}{x --}{Move \spic{x} from the return stack to the data stack.}
-\instr{RPUSH}{u -- \x{u}}{\x{u} \x{u-1}\dots\x{0} -- \x{u} \x{u-1}\dots\x{0}}{Remove \spic{u}. Copy \x{u} to the top of the data stack.}
+\inst{POP}{\x{u}\dots\x1 u —}{Remove \spic{u} items from the stack.}
+\inst{DUP}{\x{u}\dots\x0 u — \x{u}\dots\x0 \x{u}}{Remove \spic{u}. Copy \x{u} to the top of the stack.}
+\inst{SWAP}{\x{u}\dots\x0 u — \x0\x{u-1}\dots\x1 \x{u}}{Exchange the top stack item with the \spic{u}th. If \spic{u} is zero, do nothing.}
+\instr{POP2R}{x —}{— x}{Move \spic{x} to the return stack.}
+\instr{RPOP}{— x}{x —}{Move \spic{x} from the return stack to the data stack.}
+\instr{RPUSH}{u — \x{u}}{\x{u} \x{u-1}\dots\x{0} — \x{u} \x{u-1}\dots\x{0}}{Remove \spic{u}. Copy \x{u} to the top of the data stack.}
 \end{description}
 
 \subsection{Comparison}
@@ -361,9 +360,9 @@ These words compare two numbers (or, for equality tests, any two words) on the
 stack, returning a flag.
 
 \begin{description}
-\inst{LT}{\n1 \n2 -- flag}{\spic{flag} is true if and only if \n1 is less than \n2.}
-\inst{EQ}{\x1 \x2 -- flag}{\spic{flag} is true if and only if \x1 is bit-for-bit the same as \x2.}
-\inst{ULT}{\U1 \U2 -- flag}{\spic{flag} is true if and only if \U1 is less than \U2.}
+\inst{LT}{\n1 \n2 — flag}{\spic{flag} is true if and only if \n1 is less than \n2.}
+\inst{EQ}{\x1 \x2 — flag}{\spic{flag} is true if and only if \x1 is bit-for-bit the same as \x2.}
+\inst{ULT}{\U1 \U2 — flag}{\spic{flag} is true if and only if \U1 is less than \U2.}
 \end{description}
 
 
@@ -379,8 +378,8 @@ Addition and negation:
 \nopagebreak
 
 \begin{description}
-\inst{ADD}{\noru1 \noru2 -- \noru3}{Add \noru2 to \noru1, giving the sum \noru3.}
-\inst{NEGATE}{\n1 -- \n2}{Negate \n1, giving its arithmetic inverse \n2.}
+\inst{ADD}{\noru1 \noru2 — \noru3}{Add \noru2 to \noru1, giving the sum \noru3.}
+\inst{NEGATE}{\n1 — \n2}{Negate \n1, giving its arithmetic inverse \n2.}
 \end{description}
 
 Multiplication and division (note that all division actions raise exception
@@ -389,9 +388,9 @@ $-10$ if division by zero is attempted):
 \nopagebreak
 
 \begin{description}
-\inst{MUL}{\noru1 \noru2 -- \noru3}{Multiply \noru1 by \noru2 giving the product \noru3.}
-\inst{UDIVMOD}{\U1 \U2 -- \U3 \U4}{Divide \U1 by \U2, giving the single-word quotient \U3 and the single-word remainder \U4.}
-\inst{DIVMOD}{\n1 \n2 -- \n3 \n4}{Divide \n1 by \n2 using symmetric division, giving the single-word quotient \n3 and the single-word remainder \n4. The quotient is rounded towards zero.}
+\inst{MUL}{\noru1 \noru2 — \noru3}{Multiply \noru1 by \noru2 giving the product \noru3.}
+\inst{UDIVMOD}{\U1 \U2 — \U3 \U4}{Divide \U1 by \U2, giving the single-word quotient \U3 and the single-word remainder \U4.}
+\inst{DIVMOD}{\n1 \n2 — \n3 \n4}{Divide \n1 by \n2 using symmetric division, giving the single-word quotient \n3 and the single-word remainder \n4. The quotient is rounded towards zero.}
 \end{description}
 
 
@@ -404,10 +403,10 @@ Logic functions:
 \nopagebreak
 
 \begin{description}
-\inst{INVERT}{\x1 -- \x2}{Invert all bits of \x1, giving its logical inverse \x2.}
-\inst{AND}{\x1 \x2 -- \x3}{\x3 is the bit-by-bit logical ``and'' of \x1 with \x2.}
-\inst{OR}{\x1 \x2 -- \x3}{\x3 is the bit-by-bit inclusive-or of \x1 with \x2.}
-\inst{XOR}{\x1 \x2 -- \x3}{\x3 is the bit-by-bit exclusive-or of \x1 with \x2.}
+\inst{INVERT}{\x1 — \x2}{Invert all bits of \x1, giving its logical inverse \x2.}
+\inst{AND}{\x1 \x2 — \x3}{\x3 is the bit-by-bit logical ``and'' of \x1 with \x2.}
+\inst{OR}{\x1 \x2 — \x3}{\x3 is the bit-by-bit inclusive-or of \x1 with \x2.}
+\inst{XOR}{\x1 \x2 — \x3}{\x3 is the bit-by-bit exclusive-or of \x1 with \x2.}
 \end{description}
 
 Shifts:
@@ -415,8 +414,8 @@ Shifts:
 \nopagebreak
 
 \begin{description}
-\inst{LSHIFT}{\x1 u -- \x2}{Perform a logical left shift of \spic{u} bit-places on \x1, giving \x2. Put zero into the least significant bits vacated by the shift. If \spic{u} is greater than or equal to the number of bits in a word, \x2 is zero.}
-\inst{RSHIFT}{\x1 u -- \x2}{Perform a logical right shift of \spic{u} bit-places on \x1, giving \x2. Put zero into the most significant bits vacated by the shift. If \spic{u} is greater than or equal to the number of bits in a word, \x2 is zero.}
+\inst{LSHIFT}{\x1 u — \x2}{Perform a logical left shift of \spic{u} bit-places on \x1, giving \x2. Put zero into the least significant bits vacated by the shift. If \spic{u} is greater than or equal to the number of bits in a word, \x2 is zero.}
+\inst{RSHIFT}{\x1 u — \x2}{Perform a logical right shift of \spic{u} bit-places on \x1, giving \x2. Put zero into the most significant bits vacated by the shift. If \spic{u} is greater than or equal to the number of bits in a word, \x2 is zero.}
 \end{description}
 
 
@@ -426,10 +425,10 @@ These actions fetch and store words and bytes to and from memory; there is
 also an action to add a number to another stored in memory.
 
 \begin{description}
-\inst{LOAD}{a-addr -- x}{\spic{x} is the value stored at \spic{a-addr}.}
-\inst{STORE}{x a-addr --}{Store \spic{x} at \spic{a-addr}.}
-\inst{LOADB}{addr -- byte}{Fetch the byte stored at \spic{addr}. The unused high-order bits are all zeroes.}
-\inst{STOREB}{byte addr --}{Store \spic{byte} at \spic{addr}. Only one byte is transferred.}
+\inst{LOAD}{a-addr — x}{\spic{x} is the value stored at \spic{a-addr}.}
+\inst{STORE}{x a-addr —}{Store \spic{x} at \spic{a-addr}.}
+\inst{LOADB}{addr — byte}{Fetch the byte stored at \spic{addr}. The unused high-order bits are all zeroes.}
+\inst{STOREB}{byte addr —}{Store \spic{byte} at \spic{addr}. Only one byte is transferred.}
 \end{description}
 
 
@@ -437,20 +436,20 @@ also an action to add a number to another stored in memory.
 \label{registeract}
 
 \begin{description}
-\inst{PUSH\_SDEPTH}{-- u}{\spic{u} is the value of {\tt SDEPTH}, the number of items on the stack.}
-\inst{STORE\_SDEPTH}{u --}{Set {\tt SDEPTH} to \spic{u}.}
-\inst{PUSH\_RP}{-- a-addr}{\spic{a-addr} is the value of {\tt RP}.}
-\inst{STORE\_RP}{a-addr --}{Set {\tt RP} to \spic{a-addr}.}
-\inst{PUSH\_PC}{-- addr}{Push {\tt PC} on to the stack.}
-\inst{PUSH\_SSIZE}{-- u}{Push {\tt SSIZE} on to the stack.}
-\inst{PUSH\_RSIZE}{-- u}{Push {\tt RSIZE} on to the stack.}
-\inst{PUSH\_HANDLER}{-- addr}{Push {\tt HANDLER} on to the stack.}
-\inst{STORE\_HANDLER}{addr --}{Set {\tt HANDLER} to \spic{addr}.}
-\inst{PUSH\_MEMORY}{-- a-addr}{Push {\tt MEMORY} on to the stack.}
-\inst{PUSH\_BADPC}{-- addr}{Push {\tt BADPC} on to the stack.}
-\inst{PUSH\_INVALID}{-- addr}{Push {\tt INVALID} on to the stack.}
-\inst{PUSH\_WORD\_SIZE}{-- u}{\spic{u} is the value of {\tt WORD\_SIZE}.}
-\inst{PUSH\_NATIVE\_POINTER\_SIZE}{-- u}{\spic{u} is the value of {\tt NATIVE\_POINTER\_SIZE}.}
+\inst{PUSH\_SDEPTH}{— u}{\spic{u} is the value of {\tt SDEPTH}, the number of items on the stack.}
+\inst{STORE\_SDEPTH}{u —}{Set {\tt SDEPTH} to \spic{u}.}
+\inst{PUSH\_RP}{— a-addr}{\spic{a-addr} is the value of {\tt RP}.}
+\inst{STORE\_RP}{a-addr —}{Set {\tt RP} to \spic{a-addr}.}
+\inst{PUSH\_PC}{— addr}{Push {\tt PC} on to the stack.}
+\inst{PUSH\_SSIZE}{— u}{Push {\tt SSIZE} on to the stack.}
+\inst{PUSH\_RSIZE}{— u}{Push {\tt RSIZE} on to the stack.}
+\inst{PUSH\_HANDLER}{— addr}{Push {\tt HANDLER} on to the stack.}
+\inst{STORE\_HANDLER}{addr —}{Set {\tt HANDLER} to \spic{addr}.}
+\inst{PUSH\_MEMORY}{— a-addr}{Push {\tt MEMORY} on to the stack.}
+\inst{PUSH\_BADPC}{— addr}{Push {\tt BADPC} on to the stack.}
+\inst{PUSH\_INVALID}{— addr}{Push {\tt INVALID} on to the stack.}
+\inst{PUSH\_WORD\_SIZE}{— u}{\spic{u} is the value of {\tt WORD\_SIZE}.}
+\inst{PUSH\_NATIVE\_POINTER\_SIZE}{— u}{\spic{u} is the value of {\tt NATIVE\_POINTER\_SIZE}.}
 \end{description}
 
 
@@ -465,7 +464,7 @@ No-op:
 \nopagebreak
 
 \begin{description}
-\inst{NOP}{--}{Do nothing.}
+\inst{NOP}{—}{Do nothing.}
 \end{description}
 
 Branches:
@@ -473,8 +472,8 @@ Branches:
 \nopagebreak
 
 \begin{description}
-\inst{BRANCH}{addr --}{Set {\tt PC} to \spic{addr}.}
-\inst{BRANCHZ}{flag addr --}{If \spic{flag} is false then set {\tt PC} to \spic{addr}.}
+\inst{BRANCH}{addr —}{Set {\tt PC} to \spic{addr}.}
+\inst{BRANCHZ}{flag addr —}{If \spic{flag} is false then set {\tt PC} to \spic{addr}.}
 \end{description}
 
 Subroutine call and return:
@@ -482,8 +481,8 @@ Subroutine call and return:
 \nopagebreak
 
 \begin{description}
-\instr{CALL}{\aaddr1 --}{ -- \aaddr2}{Push {\tt PC} on to the return stack, put \spic{\aaddr1} into {\tt PC}.}
-\instr{RET}{--}{addr --}{Put \spic{addr} into {\tt PC}.}
+\instr{CALL}{\aaddr1 —}{ — \aaddr2}{Push {\tt PC} on to the return stack, put \spic{\aaddr1} into {\tt PC}.}
+\instr{RET}{—}{addr —}{Put \spic{addr} into {\tt PC}.}
 \end{description}
 
 
@@ -493,8 +492,8 @@ Subroutine call and return:
 These actions give access to @PACKAGE_NAME@'s exception mechanisms (see section~\ref{exceptions}).
 
 \begin{description}
-\inst{THROW}{n --}{Raise exception \spic{n}.}
-\inst{HALT}{x --}{Stop @PACKAGE_NAME@, returning reason code \spic{x} to the calling program (see section~\ref{calls}). If {\tt SDEPTH} is greater than {\tt SSIZE}, $-257$ is returned as the reason code.}
+\inst{THROW}{n —}{Raise exception \spic{n}.}
+\inst{HALT}{x —}{Stop @PACKAGE_NAME@, returning reason code \spic{x} to the calling program (see section~\ref{calls}). If {\tt SDEPTH} is greater than {\tt SSIZE}, $-257$ is returned as the reason code.}
 \end{description}
 
 
@@ -504,8 +503,8 @@ These actions give access to @PACKAGE_NAME@'s exception mechanisms (see section~
 These actions allow access to @PACKAGE_NAME@'s libraries, the operating system and native machine code.
 
 \begin{description}
-\inst{CALL\_NATIVE}{n-addr --}{Make a subroutine call to the routine at address \spic{n-addr}, passing the current state as an argument.}
-\inst{EXTRA}{i*x -- j*x}{Perform implementation-dependent actions; for example, this can be used to implement system-dependent functionality such as I/O.}
+\inst{CALL\_NATIVE}{n-addr —}{Make a subroutine call to the routine at address \spic{n-addr}, passing the current state as an argument.}
+\inst{EXTRA}{i*x — j*x}{Perform implementation-dependent actions; for example, this can be used to implement system-dependent functionality such as I/O.}
 \end{description}
 
 

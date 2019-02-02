@@ -30,8 +30,7 @@
 
 % Font for stack pictures; macro \spic includes italic correction
 
-\newfont{\spfont}{cmsltt10 scaled 1000}
-\newcommand{\spic}[1]{{\spfont\setlength{\baselineskip}{\normalbaselineskip}#1\/}}
+\newcommand{\spic}[1]{\texttt{#1\/}}
 
 % Common stack items
 
@@ -107,7 +106,7 @@ C @PACKAGE_NAME@ provides some libraries of {\tt EXTRA} instruction functions, w
 \begin{center}
 \begin{tabular}{ll} \toprule
 \bf Stack effect & \bf Description \\ \midrule
-\spic{i*x u1 u2 -- j*x} & Call the \spic{u1}th function of library \spic{u2}, passing arguments {i*x}, with results \spic{j*x}. \\ \bottomrule
+\spic{i*x u1 u2 — j*x} & Call the \spic{u1}th function of library \spic{u2}, passing arguments {i*x}, with results \spic{j*x}. \\ \bottomrule
 \end{tabular}
 \end{center}
 
@@ -121,19 +120,19 @@ Exception~$-259$ is raised if an invalid library is accessed, and $-260$ for an 
 \begin{center}
 \begin{tabular}{S[table-format=2.0]lll} \toprule
 \bf Code & \bf Name & \bf Stack effect & \bf Description \\ \midrule
-0x0 & {\tt CURRENT\_STATE} & \spic{-- n-addr} & a pointer to the current {\tt state} \\
-0x1 & {\tt LOAD\_WORD} & \spic{n-addr a-addr -- x n} & \\
-0x2 & {\tt STORE\_WORD} & \spic{n-addr a-addr x -- n} & \\
+0x0 & {\tt CURRENT\_STATE} & \spic{— n-addr} & a pointer to the current {\tt state} \\
+0x1 & {\tt LOAD\_WORD} & \spic{n-addr a-addr — x n} & \\
+0x2 & {\tt STORE\_WORD} & \spic{n-addr a-addr x — n} & \\
 0x3 & {\tt LOAD\_BYTE} & \spic{n-addr addr x n} & \\
-0x4 & {\tt STORE\_BYTE} & \spic{n-addr addr x -- n} & \\
-0x5 & {\tt MEM\_REALLOC} & \spic{\naddr1 \naddr2 u f -- addr} & \\
-0x6 & {\tt NATIVE\_ADDRESS} & \spic{\naddr1 addr f -- \naddr2} & \\
-0x7 & {\tt RUN} & \spic{n-addr -- n} & \\
-0x8 & {\tt SINGLE\_STEP} & \spic{n-addr -- n} & \\
-0x9 & {\tt LOAD\_OBJECT} & \spic{n-addr fid addr -- n} & \\
-0xa & {\tt INIT} & \spic{a-addr \U1 \U2 \U3 -- n-addr} & \\
+0x4 & {\tt STORE\_BYTE} & \spic{n-addr addr x — n} & \\
+0x5 & {\tt MEM\_REALLOC} & \spic{\naddr1 \naddr2 u f — addr} & \\
+0x6 & {\tt NATIVE\_ADDRESS} & \spic{\naddr1 addr f — \naddr2} & \\
+0x7 & {\tt RUN} & \spic{n-addr — n} & \\
+0x8 & {\tt SINGLE\_STEP} & \spic{n-addr — n} & \\
+0x9 & {\tt LOAD\_OBJECT} & \spic{n-addr fid addr — n} & \\
+0xa & {\tt INIT} & \spic{a-addr \U1 \U2 \U3 — n-addr} & \\
 0xb & {\tt DESTROY} & \spic{n-addr} & \\
-0xc & {\tt REGISTER\_ARGS} & \spic{n-addr n-addr n -- n} & \\
+0xc & {\tt REGISTER\_ARGS} & \spic{n-addr n-addr n — n} & \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -150,9 +149,9 @@ Two calls are provided to access command-line arguments passed to C @PACKAGE_NAM
 \begin{center}
 \begin{tabular}{S[table-format=2.0]lll} \toprule
 \bf Code & \bf Name & \bf Stack effect & \bf Description \\ \midrule
-0x0 & {\tt ARGC} & \spic{-- u} & the number of arguments \\
-0x1 & {\tt ARG\_LEN} & \spic{u1 -- u2} & the length of the \spic{u1}th argument \\
-0x2 & {\tt ARG\_COPY} & \spic{\U1 c-addr \U2 -- \U3} & copy argument \U1 to the buffer of length \U2 at \spic{c-addr}, leaving the number of characters actually copied as \U3 \\
+0x0 & {\tt ARGC} & \spic{— u} & the number of arguments \\
+0x1 & {\tt ARG\_LEN} & \spic{u1 — u2} & the length of the \spic{u1}th argument \\
+0x2 & {\tt ARG\_COPY} & \spic{\U1 c-addr \U2 — \U3} & copy argument \U1 to the buffer of length \U2 at \spic{c-addr}, leaving the number of characters actually copied as \U3 \\
  \bottomrule
 \end{tabular}
 \end{center}
