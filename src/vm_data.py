@@ -60,7 +60,8 @@ class Actions(Enum):
     POP = Action(0x01, '''\
         smite_WORD depth;
         POP(&depth);
-        S->SDEPTH -= depth;'''
+        if (exception == 0)
+            S->SDEPTH -= depth;'''
     )
 
     PUSH = Action(0x02, '''\
@@ -255,7 +256,7 @@ class Actions(Enum):
         POP(&addr);
         smite_WORD cond;
         POP(&cond);
-        if (cond == 0)
+        if (exception == 0 && cond == 0)
             S->PC = addr;'''
     )
 
