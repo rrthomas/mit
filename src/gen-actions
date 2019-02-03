@@ -26,7 +26,7 @@ print('''\
 #define RAISE(code)                             \\
     do {                                        \\
         if (exception != 0 || (exception = (code)) != 0) \\
-            return exception;                             \\
+            goto RET;                           \\
     } while (0);
 
 #define FETCH                                   \\
@@ -37,7 +37,8 @@ print('''\
 
 print('''\
 static int STEP(smite_state *S) {
-    int exception = 0;
+    int exception = 0; // In a local so the compiler knows it's zero.
+    smite_WORD ITYPE; // In a local so the compiler knows it's dead.
     smite_BYTE NEXT;
     FETCH
     goto A_0;
@@ -48,18 +49,17 @@ static int STEP(smite_state *S) {
     // expectations. Ultimately, we fall back to `A_ILLEGAL` which reports an
     // illegal instruction (the most unexpected case).
     //
-    // The convention at each A_XXX label is as follows:
-    //  - On entry, exception is 0, NEXT is the first byte of the next
-    //    instruction, S->PC has been incremented, and S->ITYPE and S->I are
-    //    undefined.
+    // The calling convention at each A_XXX label is as follows:
+    //  - On entry, `exception` is 0, `NEXT` is the first byte of the next
+    //    instruction, `S->PC` has been incremented, and `ITYPE` and `S->I`
+    //    are undefined.
     //  - Wrap `RAISE(code)` around any `code` that might throw an exception.
     //    If exception is zero, it evaluates `code` and sets `exception` to
-    //    the result. Then, if `exception` is non-zero, it returns.
-    //  - Return at any time after executing at least one instruction, or
-    //    never.
-    //  - On exit, whether by RAISE or otherwise, S->ITYPE, S->I, S->PC and
-    //    all other registers must be set according to the SMite spec.
-
+    //    the result. Then, if `exception` is non-zero, it does "goto RET".
+    //  - "goto RET" (but do not "return") at any time after executing at
+    //    least one instruction, or never.
+    //  - On exit, whether by `RAISE` or otherwise, `ITYPE` and all SMite
+    //    registers must be set according to the SMite spec.
 ''')
 
 for label, (name, if_correct, if_wrong) in enumerate(labels):
@@ -87,10 +87,16 @@ for label, (name, if_correct, if_wrong) in enumerate(labels):
 
 print('''\
 A_ILLEGAL:
-    // Pretend we fetched the instruction the formal way.
-    S->PC--;
-    S->ITYPE = smite_decode_instruction(S, &S->PC, &S->I);
-    assert(S->ITYPE == INSTRUCTION_ACTION);
-    assert(S->I >= O_UNDEFINED);
-    RAISE(-256);
+    {
+        // Pretend we fetched the instruction the formal way.
+        S->PC--;
+        ITYPE = smite_decode_instruction(S, &S->PC, &S->I);
+        assert(ITYPE == INSTRUCTION_ACTION);
+        assert(S->I >= O_UNDEFINED);
+        RAISE(-256);
+    }
+
+RET:
+    S->ITYPE = ITYPE;
+    return exception;
 }''')

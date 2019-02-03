@@ -20,13 +20,21 @@ class Event:
     instruction.
 
     On entry to `exec_code`:
-     - S->PC is one byte beyond the beginning of the instruction,
-     - S->ITYPE and S->I are undefined.
+     - `S->PC` is one byte beyond the beginning of the instruction,
+     - `ITYPE` is undefined.
+     - `S->I` is undefined.
+     - (Deprecated) `exception` is 0.
     On exit:
-     - S->PC must point to the next instruction,
-     - S_>ITYPE and S->I must have their correct values, as per the spec.
+     - `S->PC` must point to the next instruction,
+     - `ITYPE` is set to the value that `S->ITYPE` should hold.
+     - `S->I` is set correctly.
     Exceptions can be thrown using the RAISE() macro, passing a non-zero code;
-    RAISE(0) succeeds (does nothing).
+    RAISE(0) succeeds (does nothing). (Deprecated) Setting `exception` to a
+    non-zero value on exit also works.
+    Note that `exec_code` uses the local variable `ITYPE` to cache the value
+    of the corresponding SMite register. This values is kept in a local
+    variable because it is usually dead. Its value is only written to the
+    SMite register if required.
     '''
 
     def __init__(self, trace_name, name, guess_code, exec_code):
@@ -51,7 +59,7 @@ for i, a in enumerate(vm_data.Actions):
     ALL_EVENTS.append(Event(b'1 %08x' % a.value.opcode, a.name,
         'NEXT == (INSTRUCTION_ACTION_BIT | {})'.format(a.value.opcode),
         '''\
-        S->ITYPE = INSTRUCTION_ACTION;
+        ITYPE = INSTRUCTION_ACTION;
         S->I = {};
 {}'''.format(a.value.opcode, a.value.code),
     ))
@@ -59,14 +67,14 @@ for n in [0, 1]:
     ALL_EVENTS.append(Event(b'0 %08x' % n, 'LIT{}'.format(n),
         'NEXT == {}'.format(n),
         '''\
-        S->ITYPE = INSTRUCTION_NUMBER;
+        ITYPE = INSTRUCTION_NUMBER;
         S->I = {};
         PUSH(S->I);'''.format(n),
     ))
 ALL_EVENTS.append(Event(b'0 n', 'LITn',
         '(NEXT & ~INSTRUCTION_CHUNK_MASK) != INSTRUCTION_ACTION_BIT && NEXT > 1',
         '''\
-        S->ITYPE = INSTRUCTION_NUMBER;
+        ITYPE = INSTRUCTION_NUMBER;
         S->PC--;
         RAISE(smite_decode_instruction(S, &S->PC, &S->I));
         PUSH(S->I);''',
