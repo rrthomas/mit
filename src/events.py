@@ -15,18 +15,18 @@ class Event:
      - hash0 - a random-looking 63-bit mask.
      - hash1 - a random-looking 63-bit mask.
 
+    `guess_code` must be side-effect-free; in particular it must not access
+    memory. On evaluation, `NEXT` will be the first byte of the
+    instruction.
+
     On entry to `exec_code`:
      - S->PC is one byte beyond the beginning of the instruction,
-     - S->ITYPE is undefined and S->I holds the first byte of the instruction.
+     - S->ITYPE and S->I are undefined.
     On exit:
      - S->PC must point to the next instruction,
      - S_>ITYPE and S->I must have their correct values, as per the spec.
     Exceptions can be thrown using the RAISE() macro, passing a non-zero code;
     RAISE(0) succeeds (does nothing).
-
-    `guess_code` must be side-effect-free; in particular it must not access
-    memory. On evaluation, `S->I` will be the first byte of the
-    instruction.
     '''
 
     def __init__(self, trace_name, name, guess_code, exec_code):
@@ -49,7 +49,7 @@ class Event:
 ALL_EVENTS = []
 for i, a in enumerate(vm_data.Actions):
     ALL_EVENTS.append(Event(b'1 %08x' % a.value.opcode, a.name,
-        'S->I == (INSTRUCTION_ACTION_BIT | {})'.format(a.value.opcode),
+        'NEXT == (INSTRUCTION_ACTION_BIT | {})'.format(a.value.opcode),
         '''\
         S->ITYPE = INSTRUCTION_ACTION;
         S->I = {};
@@ -57,14 +57,14 @@ for i, a in enumerate(vm_data.Actions):
     ))
 for n in [0, 1]:
     ALL_EVENTS.append(Event(b'0 %08x' % n, 'LIT{}'.format(n),
-        'S->I == {}'.format(n),
+        'NEXT == {}'.format(n),
         '''\
         S->ITYPE = INSTRUCTION_NUMBER;
         S->I = {};
         PUSH(S->I);'''.format(n),
     ))
 ALL_EVENTS.append(Event(b'0 n', 'LITn',
-        '(S->I & ~INSTRUCTION_CHUNK_MASK) != INSTRUCTION_ACTION_BIT && S->I > 1',
+        '(NEXT & ~INSTRUCTION_CHUNK_MASK) != INSTRUCTION_ACTION_BIT && NEXT > 1',
         '''\
         S->ITYPE = INSTRUCTION_NUMBER;
         S->PC--;

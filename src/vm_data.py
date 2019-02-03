@@ -55,7 +55,9 @@ class Action:
 @unique
 class Actions(Enum):
     '''VM action instructions.'''
-    NOP = Action(0x00, '')
+    NOP = Action(0x00, '''\
+        // I'm in ur code doing ur nothing.'''
+    )
 
     POP = Action(0x01, '''\
         smite_WORD depth;

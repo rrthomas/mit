@@ -51,16 +51,16 @@ language = {}
 
 def walk(path, distribution):
     '''
-     - path - list of event (bytes).
+     - path - tuple of event (str).
      - distribution - list of estimated frequency (float).
     '''
     # Check for statistical irrelevance (but keep singleton paths).
     estimated_count = sum(distribution)
-    if len(path) > 1 and estimated_count < 10000.: return
+    if len(path) > 1 and estimated_count < 300000.: return
     # Okay, we'll keep it.
-    language[tuple(path)] = estimated_count
+    language[path] = estimated_count
     # Check for repetition.
-    for n in range(1, len(path)//2):
+    for n in range(1, len(path)//2+1):
         if path[-n:]==path[-2*n:-n]: return
     # For all (state, action) pairs, propagate count to the successor state.
     successors = {event.name: [0.] * len(predictor) for event in ALL_EVENTS}
@@ -73,10 +73,10 @@ def walk(path, distribution):
                     successors[event][new_state] += additional_count
     # Recurse down the tree.
     for event, new_distribution in successors.items():
-        new_path = path + [event]
+        new_path = path + (event,)
         walk(new_path, new_distribution)
 
-walk([], [float(x) for x in state_counts])
+walk((), [float(x) for x in state_counts])
 
 # Sanity checks.
 
