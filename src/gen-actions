@@ -26,7 +26,7 @@ print('''\
 #define RAISE(code)                             \\
     do {                                        \\
         if (exception != 0 || (exception = (code)) != 0) \\
-            return;                             \\
+            return exception;                             \\
     } while (0);
 
 #define FETCH                                   \\
@@ -36,7 +36,8 @@ print('''\
 ''')
 
 print('''\
-static void STEP(smite_state *S) {
+static int STEP(smite_state *S) {
+    int exception = 0;
     smite_BYTE NEXT;
     FETCH
     goto A_0;
@@ -65,6 +66,7 @@ for label, (name, if_correct, if_wrong) in enumerate(labels):
     event = EVENT_NAMES[name]
     print('''\
 {}:
+    exception = 0;
     if ({}) {{
         // {}
 {}

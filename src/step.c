@@ -34,17 +34,12 @@ static void trace(int type, smite_WORD opcode) {
 
 static int halt_code;
 
-// Only defined during single_step().
-static int exception;
-
 #include "instruction-actions.h"
 
 // Perform one pass of the execution cycle
 smite_WORD smite_single_step(smite_state *S)
 {
-    exception = 0;
-
-    STEP(S);
+    int exception = STEP(S);
 
     if (exception != 0) {
         // Deal with address exceptions during execution cycle.
