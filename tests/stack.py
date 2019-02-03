@@ -79,7 +79,7 @@ for i in range(first_len):
     step()
     print("I = {}".format(disassemble_instruction(ITYPE.get(), I.get())))
 
-STACK_DEPTH.set(0)	# reset stack
+FRAME_DEPTH.set(0)	# reset stack
 S.push(2)
 S.push(1)
 S.push(0)		# initialise the stack

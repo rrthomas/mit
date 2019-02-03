@@ -9,7 +9,7 @@ methods available as globals, as well as the action opcode enumeration:
 
 Registers: a variable for each register; also a list, 'registers'
 Memory: M, M_word
-Stacks: S, R
+Stack: S
 Managing the VM state: load, save, initialise
 Controlling and observing execution: run, step, trace
 Examining memory: dump, disassemble
@@ -86,10 +86,14 @@ libsmite.smite_store_word.argtypes = [c_void_p, c_uword, c_word]
 libsmite.smite_load_byte.argtypes = [c_void_p, c_uword, POINTER(c_ubyte)]
 libsmite.smite_store_byte.argtypes = [c_void_p, c_uword, c_ubyte]
 
-libsmite.smite_load_stack.argtypes = [c_void_p, c_uword, POINTER(c_word)]
-libsmite.smite_store_stack.argtypes = [c_void_p, c_uword, c_word]
-libsmite.smite_pop_stack.argtypes = [c_void_p, POINTER(c_word)]
-libsmite.smite_push_stack.argtypes = [c_void_p, c_word]
+libsmite.smite_load_stack_address.argtypes = [c_void_p, c_uword, POINTER(c_word)]
+libsmite.smite_store_stack_address.argtypes = [c_void_p, c_uword, c_word]
+libsmite.smite_copy_stack_address.argtypes = [c_void_p, c_uword, c_uword, c_uword]
+
+libsmite.smite_load_frame.argtypes = [c_void_p, c_uword, POINTER(c_word)]
+libsmite.smite_store_frame.argtypes = [c_void_p, c_uword, c_word]
+libsmite.smite_pop_frame.argtypes = [c_void_p, POINTER(c_word)]
+libsmite.smite_push_frame.argtypes = [c_void_p, c_word]
 
 libsmite.smite_native_address_of_range.restype = POINTER(c_ubyte)
 libsmite.smite_native_address_of_range.argtypes = [c_void_p, c_uword, c_uword]
@@ -125,9 +129,6 @@ libsmite.smite_find_msbit.argtypes = [c_word]
 
 libsmite.smite_byte_size.argtypes = [c_word]
 
-libsmite.smite_init_default_stacks.restype = c_void_p
-libsmite.smite_init_default_stacks.argtypes = [c_size_t]
-
 libsmite.smite_encode_instruction_file.restype = c_ptrdiff_t
 libsmite.smite_encode_instruction_file.argtypes = [c_int, c_int, c_word]
 
@@ -153,7 +154,7 @@ class State:
         self.registers = {name : ActiveRegister(self.state, name, register.value) for (name, register) in Registers.__members__.items()}
         self.M = Memory(self)
         self.M_word = WordMemory(self)
-        self.S = Stack(self.state, self.registers["S0"], self.registers["STACK_SIZE"], self.registers["STACK_DEPTH"])
+        self.S = Stack(self.state, self.registers["F0"], self.registers["FRAME_DEPTH"])
         self.here = 0
 
     def __del__(self):
@@ -391,31 +392,29 @@ class Stack:
         pass
 
     '''VM stack.'''
-    def __init__(self, state, base, size, depth):
+    def __init__(self, state, frame_pointer, frame_depth):
         self.state = state
-        self.base = base
-        self.size = size
-        self.depth = depth
+        self.frame_pointer = frame_pointer
+        self.frame_depth = frame_depth
 
-    # After https://github.com/ipython/ipython/blob/master/IPython/lib/pretty.py
     def __str__(self):
         l = []
-        for i in range(self.depth.get(), 0, -1):
+        for i in range(self.frame_pointer.get() + self.frame_depth.get()):
             v = c_word()
-            libsmite.smite_load_stack(self.state, i - 1, byref(v))
+            libsmite.smite_load_stack_address(self.state, i, byref(v))
             l.append(v.value)
         return str(l)
 
     def push(self, v):
         '''Push a word on to the stack.'''
-        ret = libsmite.smite_push_stack(self.state, v)
+        ret = libsmite.smite_push_frame(self.state, v)
         if ret < 0:
             raise self.StackError("error pushing to stack")
 
     def pop(self):
         '''Pop a word off the stack.'''
         v = c_word()
-        ret = libsmite.smite_pop_stack(self.state, byref(v))
+        ret = libsmite.smite_pop_frame(self.state, byref(v))
         if ret < 0:
             raise self.StackError("error popping from stack")
         return v.value

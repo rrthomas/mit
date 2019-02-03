@@ -111,10 +111,9 @@ int smite_store_byte(smite_state *S, smite_UWORD addr, smite_BYTE value)
 
 // Stack
 
-// FIXME: Replace the following with load/store_frame
 int smite_load_stack_address(smite_state *S, smite_UWORD addr, smite_WORD *v)
 {
-    if (addr >= S->STACK_DEPTH)
+    if (addr >= S->F0 + S->FRAME_DEPTH)
         return -9;
 
     *v = *(S->S0 + addr * smite_stack_direction);
@@ -123,7 +122,7 @@ int smite_load_stack_address(smite_state *S, smite_UWORD addr, smite_WORD *v)
 
 int smite_store_stack_address(smite_state *S, smite_UWORD addr, smite_WORD v)
 {
-    if (addr >= S->STACK_DEPTH)
+    if (addr >= S->F0 + S->FRAME_DEPTH)
         return -9;
 
     *(S->S0 + addr * smite_stack_direction) = v;
@@ -132,8 +131,8 @@ int smite_store_stack_address(smite_state *S, smite_UWORD addr, smite_WORD v)
 
 int smite_copy_stack_address(smite_state *S, smite_UWORD from, smite_UWORD to, smite_UWORD depth)
 {
-    if (from > S->STACK_DEPTH || to > S->STACK_DEPTH ||
-        depth > S->STACK_DEPTH - MAX(from, to))
+    if (from > S->F0 + S->FRAME_DEPTH || to > S->F0 + S->FRAME_DEPTH ||
+        depth > S->F0 + S->FRAME_DEPTH - MAX(from, to))
         return -9;
 
     if (from > to) {
@@ -157,42 +156,35 @@ int smite_copy_stack_address(smite_state *S, smite_UWORD from, smite_UWORD to, s
     return 0;
 }
 
-// FIXME: Replace the following with load/store/push/pop_frame
-int smite_load_stack(smite_state *S, smite_UWORD pos, smite_WORD *v)
+int smite_load_frame(smite_state *S, smite_UWORD pos, smite_WORD *v)
 {
-    if (pos >= S->STACK_DEPTH)
+    if (pos >= S->FRAME_DEPTH)
         return -9;
 
-    *v = *(S->S0 + (S->STACK_DEPTH - pos - 1) * smite_stack_direction);
+    *v = *(S->S0 + S->F0 + (S->FRAME_DEPTH - pos - 1) * smite_stack_direction);
     return 0;
 }
 
-int smite_store_stack(smite_state *S, smite_UWORD pos, smite_WORD v)
+int smite_store_frame(smite_state *S, smite_UWORD pos, smite_WORD v)
 {
-    if (pos >= S->STACK_DEPTH)
+    if (pos >= S->FRAME_DEPTH)
         return -9;
 
-    *(S->S0 + (S->STACK_DEPTH - pos - 1) * smite_stack_direction) = v;
+    *(S->S0 + S->F0 + (S->FRAME_DEPTH - pos - 1) * smite_stack_direction) = v;
     return 0;
 }
 
-int smite_pop_stack(smite_state *S, smite_WORD *v)
+int smite_pop_frame(smite_state *S, smite_WORD *v)
 {
-    if (S->STACK_DEPTH == 0)
-        return -9;
-
-    int ret = smite_load_stack(S, 0, v);
-    S->STACK_DEPTH--;
+    int ret = smite_load_frame(S, 0, v);
+    S->FRAME_DEPTH--;
     return ret;
 }
 
-int smite_push_stack(smite_state *S, smite_WORD v)
+int smite_push_frame(smite_state *S, smite_WORD v)
 {
-    if (S->STACK_DEPTH == S->STACK_SIZE)
-        return -9;
-
-    (S->STACK_DEPTH)++;
-    return smite_store_stack(S, 0, v);
+    S->FRAME_DEPTH++;
+    return smite_store_frame(S, 0, v);
 }
 
 
@@ -215,9 +207,9 @@ int smite_mem_realloc(smite_state *S, smite_UWORD size)
 }
 
 
-smite_state *smite_init(size_t size, size_t data_stack_size)
+smite_state *smite_init(size_t size, size_t stack_size)
 {
-    if (size > smite_max_memory_size || data_stack_size > smite_max_stack_size)
+    if (size > smite_max_memory_size || stack_size > smite_max_stack_size)
         return NULL;
 
     smite_state *S = calloc(1, sizeof(smite_state));
@@ -227,8 +219,8 @@ smite_state *smite_init(size_t size, size_t data_stack_size)
     if (smite_mem_realloc(S, size) != 0)
         return NULL;
 
-    S->STACK_SIZE = data_stack_size;
-    S->S0 = calloc(S->STACK_SIZE, smite_word_size);
+    S->stack_size = stack_size;
+    S->S0 = calloc(S->stack_size, smite_word_size);
     if (S->S0 == NULL)
         return NULL;
 
@@ -242,14 +234,9 @@ smite_state *smite_init(size_t size, size_t data_stack_size)
     S->PC = 0;
     S->I = 0;
     S->F0 = 0;
-    S->STACK_DEPTH = 0;
+    S->FRAME_DEPTH = 0;
 
     return S;
-}
-
-smite_state *smite_init_default_stacks(size_t memory_size)
-{
-    return smite_init(memory_size, smite_default_stack_size);
 }
 
 void smite_destroy(smite_state *S)

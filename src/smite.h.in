@@ -74,11 +74,13 @@ int smite_load_byte(smite_state *S, smite_UWORD addr, smite_BYTE *value);
 int smite_store_byte(smite_state *S, smite_UWORD addr, smite_BYTE value);
 
 // Stack access
-int smite_load_stack(smite_state *S, smite_UWORD pos, smite_WORD *v);
-int smite_store_stack(smite_state *S, smite_UWORD pos, smite_WORD v);
+int smite_load_stack_address(smite_state *S, smite_UWORD addr, smite_WORD *v);
+int smite_store_stack_address(smite_state *S, smite_UWORD addr, smite_WORD v);
 int smite_copy_stack_address(smite_state *S, smite_UWORD from, smite_UWORD to, smite_UWORD depth);
-int smite_pop_stack(smite_state *S, smite_WORD *v);
-int smite_push_stack(smite_state *S, smite_WORD v);
+int smite_load_frame(smite_state *S, smite_UWORD pos, smite_WORD *v);
+int smite_store_frame(smite_state *S, smite_UWORD pos, smite_WORD v);
+int smite_pop_frame(smite_state *S, smite_WORD *v);
+int smite_push_frame(smite_state *S, smite_WORD v);
 
 // Interface calls
 uint8_t *smite_native_address_of_range(smite_state *S, smite_UWORD addr, smite_UWORD length);

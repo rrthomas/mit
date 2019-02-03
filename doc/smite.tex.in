@@ -112,8 +112,7 @@ The registers, each with its function, are set out in table~\ref{regtable}.
     to be executed. \\
 {\tt MEMORY\_SIZE} & The size in bytes of @PACKAGE_NAME@'s memory,
     which must be a whole number of words. \\
-{\tt STACK\_DEPTH} & The stack {\tt DEPTH} (number of items on the stack). \\
-{\tt STACK\_SIZE} & The number of words allocated for the stack. \\
+{\tt FRAME\_DEPTH} & The frame {\tt DEPTH} (number of items in the current frame). \\
 {\tt ENDISM} & The endianness of @PACKAGE_NAME@: 0 = Little-endian,
     1 = Big-endian. \\
 {\tt WORD\_SIZE} & The number of bytes in a word. Must be a power of $2$, and in the range $2$ to $32$ inclusive. \\
@@ -417,10 +416,9 @@ also an action to add a number to another stored in memory.
 \label{registeract}
 
 \begin{description}
-\inst{PUSH\_STACK\_DEPTH}{— u}{\spic{u} is the value of {\tt STACK\_DEPTH}, the number of items on the stack.}
-\inst{STORE\_STACK\_DEPTH}{u —}{Set {\tt STACK\_DEPTH} to \spic{u}.}
+\inst{PUSH\_FRAME\_DEPTH}{— u}{\spic{u} is the value of {\tt FRAME\_DEPTH}.}
+\inst{STORE\_FRAME\_DEPTH}{u —}{Set {\tt FRAME\_DEPTH} to \spic{u}.}
 \inst{PUSH\_PC}{— addr}{Push {\tt PC} on to the stack.}
-\inst{PUSH\_STACK\_SIZE}{— u}{Push {\tt STACK\_SIZE} on to the stack.}
 \inst{PUSH\_F0}{— f-addr}{Push the current frame address on to the stack.}
 \inst{STORE\_F0}{f-addr —}{Set {\tt F0} to the given frame address.}
 \inst{PUSH\_MEMORY}{— a-addr}{Push {\tt MEMORY} on to the stack.}
@@ -467,7 +465,7 @@ Subroutine call (return is {\tt BRANCH}):
 This action gives access to @PACKAGE_NAME@'s error mechanism (see section~\ref{errors}).
 
 \begin{description}
-\inst{HALT}{x —}{Stop @PACKAGE_NAME@, returning reason code \spic{x} to the calling program (see section~\ref{calls}). If {\tt STACK\_DEPTH} is greater than {\tt STACK\_SIZE}, $-257$ is returned as the reason code.}
+\inst{HALT}{x —}{Stop @PACKAGE_NAME@, returning reason code \spic{x} to the calling program (see section~\ref{calls}). If {\tt FRAME\_DEPTH} is $0$, $-257$ is returned as the reason code.}
 \end{description}
 
 
@@ -498,18 +496,21 @@ Table~\ref{opcodetable} lists the action opcodes in numerical order. Other actio
 \begin{tabular}{*{3}{cc}} \toprule
 \bf Opcode & \bf Action & \bf Opcode & \bf
     Action & \bf Opcode & \bf Action \\ \midrule
-\opcodetbl{00}{NOP}	{0c}{INVERT}	{18}{CALL}
-\opcodetbl{01}{POP}	{0d}{AND}	{19}{HALT}
-\opcodetbl{02}{DUP}	{0e}{OR}	{1a}{CALL\_NATIVE}
-\opcodetbl{03}{SWAP}	{0f}{XOR}	{1b}{EXTRA}
-\opcodetbl{04}{LT}	{10}{LSHIFT}	{1c}{PUSH\_WORD\_SIZE}
-\opcodetbl{05}{EQ}	{11}{RSHIFT}	{1d}{PUSH\_NATIVE\_POINTER\_SIZE}
-\opcodetbl{06}{ULT}	{12}{LOAD}	{1e}{PUSH\_STACK\_DEPTH}
-\opcodetbl{07}{ADD}	{13}{STORE}	{1f}{STORE\_STACK\_DEPTH}
-\opcodetbl{08}{MUL}	{14}{LOADB}	{20}{PUSH\_PC}
-\opcodetbl{09}{UDIVMOD}	{15}{STOREB}	{21}{PUSH\_STACK\_SIZE}
-\opcodetbl{0a}{DIVMOD}	{16}{BRANCH}	{22}{PUSH\_MEMORY}
-\opcodetbltwo{0b}{NEGATE}	{17}{BRANCHZ}
+\opcodetbl{00}{NOP}	{0f}{XOR}	{1e}{PUSH\_FRAME\_DEPTH}
+\opcodetbl{01}{POP}	{10}{LSHIFT}	{1f}{STORE\_FRAME\_DEPTH}
+\opcodetbl{02}{DUP}	{11}{RSHIFT}	{20}{PUSH\_PC}
+\opcodetbl{03}{SWAP}	{12}{LOAD}	{21}{PUSH\_MEMORY}
+\opcodetbl{04}{LT}	{13}{STORE}	{22}{PUSH\_F0}
+\opcodetbl{05}{EQ}	{14}{LOADB}	{23}{STORE\_F0}
+\opcodetbl{06}{ULT}	{15}{STOREB}	{24}{PUSH\_FRAME}
+\opcodetbl{07}{ADD}	{16}{BRANCH}	{25}{POP\_FRAME}
+\opcodetbl{08}{NEGATE}	{17}{BRANCHZ}	{26}{LOAD\_FRAME\_VALUE}
+\opcodetbl{09}{MUL}	{18}{CALL}	{27}{LOAD\_OUTER\_F0}
+\opcodetbl{0a}{UDIVMOD}	{19}{HALT}	{28}{LOAD\_OUTER\_DEPTH}
+\opcodetbl{0b}{DIVMOD}	{1a}{CALL\_NATIVE}	{29}{FRAME\_DUP}
+\opcodetbl{0c}{INVERT}	{1b}{EXTRA}	{2a}{FRAME\_SWAP}
+\opcodetbl{0d}{AND}	{1c}{PUSH\_WORD\_SIZE}	{2b}{CALL\_FRAME}
+\opcodetbltwo{0e}{OR}	{1d}{PUSH\_NATIVE\_POINTER\_SIZE}
  \bottomrule
 \end{tabular}
 \caption{\label{opcodetable}Action opcodes}

@@ -1,5 +1,5 @@
-# Test the register instructions, except for those operating on STACK_DEPTH (see
-# memory.py) and frames (see frame.py).
+# Test the register instructions, except for those operating on frames (see
+# memory.py and frame.py).
 #
 # (c) Reuben Thomas 1994-2018
 #
@@ -21,9 +21,6 @@ correct = [
     [1],
     [1, 1],
     [],
-    [default_stack_size],
-    [default_stack_size, 1],
-    [],
     [size * word_size],
     [size * word_size, 1],
     [],
@@ -35,9 +32,6 @@ correct = [
 
 # Test code
 action(PUSH_PC)
-number(1)
-action(POP)
-action(PUSH_STACK_SIZE)
 number(1)
 action(POP)
 action(PUSH_MEMORY)

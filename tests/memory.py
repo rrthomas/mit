@@ -71,8 +71,8 @@ number(size * word_size - word_size)
 action(LOAD)
 number(1)
 action(POP)
-action(PUSH_STACK_DEPTH)
-action(STORE_STACK_DEPTH)
+action(PUSH_FRAME_DEPTH)
+action(STORE_FRAME_DEPTH)
 
 # Test
 for i in range(len(correct)):

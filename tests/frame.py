@@ -16,32 +16,7 @@ VM.globalize(globals())
 # Test code and results
 answer = 42
 initial_F0 = 0
-correct = []
-
-# Test PUSH_F0 and STORE_F0
-correct += [
-    [],
-    [0],
-    [0, 1],
-    [],
-    [answer],
-    [],
-    [answer],
-    [answer, 1],
-    [],
-    [0],
-    [],
-]
-action(PUSH_F0)
-number(1)
-action(POP)
-number(answer)
-action(STORE_F0)
-action(PUSH_F0)
-number(1)
-action(POP)
-number(initial_F0)
-action(STORE_F0)
+correct = [ [] ]
 
 # Test PUSH_FRAME and POP_FRAME
 correct += [
@@ -62,7 +37,7 @@ number(1)
 number(2)
 number(3)
 action(POP_FRAME)
-action(PUSH_STACK_DEPTH)
+action(PUSH_FRAME_DEPTH)
 action(POP)
 
 # Test LOAD_OUTER_F0, LOAD_FRAME_VALUE, LOAD_OUTER_DEPTH
@@ -104,7 +79,7 @@ number(3)
 action(PUSH_F0)
 action(LOAD_OUTER_DEPTH)
 action(POP_FRAME)
-action(PUSH_STACK_DEPTH)
+action(PUSH_FRAME_DEPTH)
 action(POP)
 
 # Test FRAME_DUP, FRAME_SWAP on current frame
@@ -170,8 +145,28 @@ correct += [
     [1, 1, 2, 2, 3, VM.here],
     [1, 1, 2, 2, 3],
     [1, 1, 2, 2, 3, answer],
+    [1, 1, 2, 2, 3, answer, 6],
+    [],
 ]
 number(answer)
+action(PUSH_FRAME_DEPTH)
+action(POP)
+
+# Test PUSH_F0 and STORE_F0
+# (At the end so that executing STORE_FO does not mess things up!)
+correct += [
+    [0],
+    [0, 1],
+    [],
+    [answer],
+    [42, 1, 2, 2, 3, 42, 6, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+]
+action(PUSH_F0)
+number(1)
+action(POP)
+number(answer)
+action(STORE_F0)
+action(PUSH_F0)
 
 VM.here = subroutine
 number(3)

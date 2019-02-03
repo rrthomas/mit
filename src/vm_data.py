@@ -24,10 +24,9 @@ class Registers(Enum):
     ITYPE = Register(ty="smite_WORD", uty="smite_UWORD")
     I = Register(ty="smite_WORD", uty="smite_UWORD")
     MEMORY = Register(read_only=True)
-    STACK_DEPTH = Register()
     S0 = Register("smite_WORDP")
     F0 = Register()
-    STACK_SIZE = Register(read_only=True)
+    FRAME_DEPTH = Register()
     ENDISM = Register(read_only=True)
 
 @unique
@@ -57,14 +56,14 @@ class Actions(Enum):
     POP = Action(0x01, '''\
         smite_WORD depth;
         POP(&depth);
-        S->STACK_DEPTH -= depth;
+        S->FRAME_DEPTH -= depth;
     ''')
 
     DUP = Action(0x02, '''\
         smite_WORD depth;
         POP(&depth);
         smite_WORD dupee;
-        RAISE(smite_load_stack(S, depth, &dupee));
+        RAISE(smite_load_frame(S, depth, &dupee));
         PUSH(dupee);
     ''')
 
@@ -72,11 +71,11 @@ class Actions(Enum):
         smite_WORD depth;
         POP(&depth);
         smite_WORD swapee;
-        RAISE(smite_load_stack(S, depth, &swapee));
+        RAISE(smite_load_frame(S, depth, &swapee));
         smite_WORD top;
         POP(&top);
         PUSH(swapee);
-        RAISE(smite_store_stack(S, depth, top));
+        RAISE(smite_store_frame(S, depth, top));
     ''')
 
     LT = Action(0x04, '''\
@@ -239,7 +238,7 @@ class Actions(Enum):
     CALL = Action(0x18, '''\
         smite_WORD addr;
         POP(&addr);
-        RAISE(smite_push_stack(S, S->PC));
+        PUSH(S->PC);
         S->PC = addr;
     ''')
 
@@ -268,65 +267,61 @@ class Actions(Enum):
         PUSH(smite_native_pointer_size);
     ''')
 
-    PUSH_STACK_DEPTH = Action(0x1e, '''\
-        smite_WORD value = S->STACK_DEPTH;
+    PUSH_FRAME_DEPTH = Action(0x1e, '''\
+        smite_WORD value = S->FRAME_DEPTH;
         PUSH(value);
     ''')
 
-    STORE_STACK_DEPTH = Action(0x1f, '''\
+    STORE_FRAME_DEPTH = Action(0x1f, '''\
         smite_WORD value;
         POP(&value);
-        S->STACK_DEPTH = value;
+        S->FRAME_DEPTH = value;
     ''')
 
     PUSH_PC = Action(0x20, '''\
         PUSH(S->PC);
     ''')
 
-    PUSH_STACK_SIZE = Action(0x21, '''\
-        PUSH(S->STACK_SIZE);
-    ''')
-
-    PUSH_MEMORY = Action(0x22, '''\
+    PUSH_MEMORY = Action(0x21, '''\
         PUSH(S->MEMORY);
     ''')
 
-    PUSH_F0 = Action(0x23, '''\
+    PUSH_F0 = Action(0x22, '''\
         PUSH(S->F0);
     ''')
 
-    STORE_F0 = Action(0x24, '''\
+    STORE_F0 = Action(0x23, '''\
         smite_WORD addr;
         POP(&addr);
         S->F0 = addr;
     ''')
 
-    PUSH_FRAME = Action(0x25, '''\
+    PUSH_FRAME = Action(0x24, '''\
         smite_WORD addr;
         POP(&addr);
         smite_WORD items;
         POP(&items);
-        smite_UWORD new_F0 = S->STACK_DEPTH - items + smite_frame_info_words;
-        smite_UWORD old_STACK_DEPTH = S->STACK_DEPTH;
-        S->STACK_DEPTH += smite_frame_info_words;
-        RAISE(smite_copy_stack_address(S, old_STACK_DEPTH - items, new_F0, items));
-        RAISE(smite_store_stack_address(S, new_F0 - 2, addr));
-        RAISE(smite_store_stack_address(S, new_F0 - 1, S->F0));
-        S->F0 = new_F0;
+        smite_UWORD old_F0 = S->F0;
+        smite_UWORD old_FRAME_DEPTH = S->FRAME_DEPTH;
+        S->F0 = old_F0 + old_FRAME_DEPTH - items + smite_frame_info_words;
+        S->FRAME_DEPTH = items;
+        RAISE(smite_copy_stack_address(S, old_F0 + old_FRAME_DEPTH - items, S->F0, items));
+        RAISE(smite_store_stack_address(S, S->F0 - 2, addr));
+        RAISE(smite_store_stack_address(S, S->F0 - 1, old_F0));
     ''')
 
-    POP_FRAME = Action(0x26, '''\
+    POP_FRAME = Action(0x25, '''\
         smite_WORD outer_F0;
         RAISE(smite_load_stack_address(S, S->F0 - 1, &outer_F0));
         smite_WORD outer_value;
         RAISE(smite_load_stack_address(S, S->F0 - 2, &outer_value));
-        RAISE(smite_copy_stack_address(S, S->F0, S->F0 - smite_frame_info_words, S->STACK_DEPTH - S->F0));
-        S->STACK_DEPTH -= smite_frame_info_words;
+        RAISE(smite_copy_stack_address(S, S->F0, S->F0 - smite_frame_info_words, S->FRAME_DEPTH));
+        S->FRAME_DEPTH = S->F0 + S->FRAME_DEPTH - (smite_UWORD)outer_F0 - smite_frame_info_words;
         S->F0 = (smite_UWORD)outer_F0;
         PUSH(outer_value);
     ''')
 
-    LOAD_FRAME_VALUE = Action(0x27, '''\
+    LOAD_FRAME_VALUE = Action(0x26, '''\
         smite_WORD frame;
         POP(&frame);
         smite_WORD outer_value;
@@ -334,7 +329,7 @@ class Actions(Enum):
         PUSH(outer_value);
     ''')
 
-    LOAD_OUTER_F0 = Action(0x28, '''\
+    LOAD_OUTER_F0 = Action(0x27, '''\
         smite_WORD frame;
         POP(&frame);
         smite_WORD outer_F0;
@@ -342,15 +337,15 @@ class Actions(Enum):
         PUSH(outer_F0);
     ''')
 
-    LOAD_OUTER_DEPTH = Action(0x29, '''\
+    LOAD_OUTER_DEPTH = Action(0x28, '''\
         smite_WORD frame;
         POP(&frame);
         smite_WORD outer_F0;
         RAISE(smite_load_stack_address(S, frame - 1, &outer_F0));
-        PUSH(frame - outer_F0 - 2);
+        PUSH(frame - outer_F0 - smite_frame_info_words);
     ''')
 
-    FRAME_DUP = Action(0x2a, '''\
+    FRAME_DUP = Action(0x29, '''\
         smite_WORD frame;
         POP(&frame);
         smite_WORD depth;
@@ -360,7 +355,7 @@ class Actions(Enum):
         PUSH(dupee);
     ''')
 
-    FRAME_SWAP = Action(0x2b, '''\
+    FRAME_SWAP = Action(0x2a, '''\
         smite_WORD frame;
         POP(&frame);
         smite_WORD depth;
@@ -373,7 +368,7 @@ class Actions(Enum):
         RAISE(smite_store_stack_address(S, frame + depth, top));
     ''')
 
-    CALL_FRAME = Action(0x2c, '''\
+    CALL_FRAME = Action(0x2b, '''\
         /* FIXME: have a way to concatenate actions */
         /* CALL */
         {
@@ -388,12 +383,12 @@ class Actions(Enum):
             POP(&addr);
             smite_WORD items;
             POP(&items);
-            smite_UWORD new_F0 = S->STACK_DEPTH - items + smite_frame_info_words;
-            smite_UWORD old_STACK_DEPTH = S->STACK_DEPTH;
-            S->STACK_DEPTH += smite_frame_info_words;
-            RAISE(smite_copy_stack_address(S, old_STACK_DEPTH - items, new_F0, items));
-            RAISE(smite_store_stack_address(S, new_F0 - 2, addr));
-            RAISE(smite_store_stack_address(S, new_F0 - 1, S->F0));
-            S->F0 = new_F0;
+            smite_UWORD old_F0 = S->F0;
+            smite_UWORD old_FRAME_DEPTH = S->FRAME_DEPTH;
+            S->F0 = old_F0 + old_FRAME_DEPTH - items + smite_frame_info_words;
+            S->FRAME_DEPTH = items;
+            RAISE(smite_copy_stack_address(S, old_F0 + old_FRAME_DEPTH - items, S->F0, items));
+            RAISE(smite_store_stack_address(S, S->F0 - 2, addr));
+            RAISE(smite_store_stack_address(S, S->F0 - 1, old_F0));
         }
     ''')

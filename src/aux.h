@@ -28,6 +28,7 @@ struct _smite_state {
 #undef R
 #undef R_RO
     smite_WORD *memory;
+    smite_UWORD stack_size;
     int halt_code;
     int main_argc;
     char **main_argv;
@@ -47,9 +48,9 @@ extern smite_UWORD smite_max_stack_size;
 // It must somehow exit if `code` is non-zero, e.g. return `code` to caller.
 
 #define POP(v)                                                          \
-    RAISE(smite_pop_stack(S, v))
+    RAISE(smite_pop_frame(S, v))
 #define PUSH(v)                                                         \
-    RAISE(smite_push_stack(S, v))
+    RAISE(smite_push_frame(S, v))
 
 #define PUSH_NATIVE_TYPE(ty, v)                                         \
     for (unsigned i = 0; i < smite_align(sizeof(ty)) / smite_word_size; i++) { \
@@ -79,9 +80,6 @@ int smite_is_aligned(smite_UWORD addr);
 // Bit utilities
 _GL_ATTRIBUTE_CONST int smite_find_msbit(smite_WORD v); // return msbit of a smite_WORD
 int smite_byte_size(smite_WORD v); // return number of significant bytes in a smite_WORD quantity
-
-// Initialisation helper
-smite_state *smite_init_default_stacks(size_t memory_size);
 
 // Instructions
 #define INSTRUCTION_CHUNK_BIT 6
