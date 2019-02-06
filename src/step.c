@@ -29,6 +29,9 @@ verify(sizeof(int) <= sizeof(smite_WORD));
 
 
 #include "instruction-actions.h"
+// Defines two macros/functions:
+//   void STEP(smite_state *S): runs a single step of the given state.
+//   void RAISE(smite_WORD e): raise error e; do nothing if e == 0.
 
 // Perform one pass of the execution cycle
 smite_WORD smite_single_step(smite_state *S)

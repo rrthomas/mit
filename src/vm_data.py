@@ -52,14 +52,15 @@ class Actions(Enum):
     POP = Action(0x01, '''
     smite_WORD depth;
     POP(&depth);
-    S->SDEPTH -= depth;
+    if (S->exception == 0)
+        S->SDEPTH -= depth;
     ''')
 
     DUP = Action(0x02, '''
     smite_WORD depth;
     POP(&depth);
     smite_WORD pickee;
-    S->exception = smite_load_stack(S, depth, &pickee);
+    RAISE(smite_load_stack(S, depth, &pickee));
     PUSH(pickee);
     ''')
 
@@ -67,30 +68,30 @@ class Actions(Enum):
     smite_WORD depth;
     POP(&depth);
     smite_WORD swapee;
-    S->exception = smite_load_stack(S, depth, &swapee);
+    RAISE(smite_load_stack(S, depth, &swapee));
     smite_WORD top;
     POP(&top);
     PUSH(swapee);
-    S->exception = smite_store_stack(S, depth, top);
+    RAISE(smite_store_stack(S, depth, top));
     ''')
 
     RPUSH = Action(0x04, '''
     smite_WORD depth;
     POP(&depth);
     smite_WORD pickee;
-    S->exception = smite_load_return_stack(S, depth, &pickee);
+    RAISE(smite_load_return_stack(S, depth, &pickee));
     PUSH(pickee);
     ''')
 
     POP2R = Action(0x05, '''
     smite_WORD value;
     POP(&value);
-    S->exception = S->exception == 0 ? smite_push_return_stack(S, value) : S->exception;
+    RAISE(smite_push_return_stack(S, value));
     ''')
 
     RPOP = Action(0x06, '''
     smite_WORD value;
-    S->exception = smite_pop_return_stack(S, &value);
+    RAISE(smite_pop_return_stack(S, &value));
     PUSH(value);
     ''')
 
@@ -210,7 +211,7 @@ class Actions(Enum):
     smite_WORD addr;
     POP(&addr);
     smite_WORD value;
-    S->exception = S->exception ? S->exception : smite_load_word(S, addr, &value);
+    RAISE(smite_load_word(S, addr, &value));
     PUSH(value);
     ''')
 
@@ -219,14 +220,14 @@ class Actions(Enum):
     POP(&addr);
     smite_WORD value;
     POP(&value);
-    S->exception = S->exception ? S->exception : smite_store_word(S, addr, value);
+    RAISE(smite_store_word(S, addr, value));
     ''')
 
     LOADB = Action(0x17, '''
     smite_WORD addr;
     POP(&addr);
     smite_BYTE value;
-    S->exception = S->exception ? S->exception : smite_load_byte(S, addr, &value);
+    RAISE(smite_load_byte(S, addr, &value));
     PUSH((smite_WORD)value);
     ''')
 
@@ -235,7 +236,7 @@ class Actions(Enum):
     POP(&addr);
     smite_WORD value;
     POP(&value);
-    S->exception = S->exception ? S->exception : smite_store_byte(S, addr, (smite_BYTE)value);
+    RAISE(smite_store_byte(S, addr, (smite_BYTE)value));
     ''')
 
     BRANCH = Action(0x19, '''
@@ -247,17 +248,17 @@ class Actions(Enum):
     POP(&addr);
     smite_WORD cond;
     POP(&cond);
-    if (cond == 0)
+    if (S->exception == 0 && cond == 0)
         S->PC = addr;
     ''')
 
     CALL = Action(0x1b, '''
-    S->exception = smite_push_return_stack(S, S->PC);
+    RAISE(smite_push_return_stack(S, S->PC));
     POP((smite_WORD *)&(S->PC));
     ''')
 
     RET = Action(0x1c, '''
-    S->exception = smite_pop_return_stack(S, (smite_WORD *)&(S->PC));
+    RAISE(smite_pop_return_stack(S, (smite_WORD *)&(S->PC)));
     ''')
 
     HALT = Action(0x1d, '''
@@ -274,9 +275,7 @@ class Actions(Enum):
     ''')
 
     EXTRA = Action(0x1f, '''
-    smite_WORD ret;
-    if ((ret = smite_extra(S)) != 0)
-        RAISE(ret);
+    RAISE(smite_extra(S));
     ''')
 
     PUSH_WORD_SIZE = Action(0x20, '''
@@ -295,7 +294,8 @@ class Actions(Enum):
     STORE_SDEPTH = Action(0x23, '''
     smite_WORD value;
     POP(&value);
-    S->SDEPTH = value;
+    if (S->exception == 0)
+        S->SDEPTH = value;
     ''')
 
     PUSH_RDEPTH = Action(0x24, '''
@@ -305,7 +305,8 @@ class Actions(Enum):
     STORE_RDEPTH = Action(0x25, '''
     smite_WORD value;
     POP(&value);
-    S->RDEPTH = value;
+    if (S->exception == 0)
+        S->RDEPTH = value;
     ''')
 
     PUSH_PC = Action(0x26, '''
