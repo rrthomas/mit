@@ -164,7 +164,7 @@ class State:
     def __del__(self):
         libsmite.smite_destroy(self.state)
 
-    def globalize(self, globals=globals()):
+    def globalize(self, globals):
         '''Make the state accessible through global variables and functions:
 
         Registers: a variable for each register; also a list 'registers'
