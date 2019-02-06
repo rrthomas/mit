@@ -1,6 +1,6 @@
 # VM definition
 #
-# (c) Reuben Thomas 1994-2018
+# (c) Reuben Thomas 1994-2019
 #
 # The package is distributed under the GNU Public License version 3, or,
 # at your option, any later version.
@@ -31,9 +31,6 @@ class Registers(Enum):
     R0 = Register("smite_WORDP")
     RSIZE = Register(read_only=True)
     ENDISM = Register(read_only=True)
-    HANDLER = Register()
-    BADPC = Register()
-    INVALID = Register()
 
 @unique
 class Types(IntEnum):
@@ -60,15 +57,15 @@ class Actions(Enum):
     POP = Action(0x01, '''\
         smite_WORD depth;
         POP(&depth);
-        if (exception == 0)
+        if (S->exception == 0)
             S->SDEPTH -= depth;'''
     )
 
-    PUSH = Action(0x02, '''\
+    DUP = Action(0x02, '''\
         smite_WORD depth;
         POP(&depth);
         smite_WORD pickee;
-        RAISE(smite_load_stack(S, depth, &pickee));
+        S->exception = smite_load_stack(S, depth, &pickee);
         PUSH(pickee);'''
     )
 
@@ -135,7 +132,13 @@ class Actions(Enum):
         PUSH(b + a);'''
     )
 
-    MUL = Action(0x0b, '''\
+    NEGATE = Action(0x0b, '''\
+        smite_WORD a;
+        POP(&a);
+        PUSH(-a);'''
+    )
+
+    MUL = Action(0x0c, '''\
         smite_WORD multiplier;
         POP(&multiplier);
         smite_WORD multiplicand;
@@ -143,7 +146,7 @@ class Actions(Enum):
         PUSH(multiplier * multiplicand);'''
     )
 
-    UDIVMOD = Action(0x0c, '''\
+    UDIVMOD = Action(0x0d, '''\
         smite_UWORD divisor;
         POP((smite_WORD *)&divisor);
         smite_UWORD dividend;
@@ -153,7 +156,7 @@ class Actions(Enum):
         PUSH(dividend % divisor);'''
     )
 
-    DIVMOD = Action(0x0d, '''\
+    DIVMOD = Action(0x0e, '''\
         smite_WORD divisor;
         POP(&divisor);
         smite_WORD dividend;
@@ -161,12 +164,6 @@ class Actions(Enum):
         DIVZERO(divisor);
         PUSH(dividend / divisor);
         PUSH(dividend % divisor);'''
-    )
-
-    NEGATE = Action(0x0e, '''\
-        smite_WORD a;
-        POP(&a);
-        PUSH(-a);'''
     )
 
     INVERT = Action(0x0f, '''\
@@ -256,7 +253,7 @@ class Actions(Enum):
         POP(&addr);
         smite_WORD cond;
         POP(&cond);
-        if (exception == 0 && cond == 0)
+        if (S->exception == 0 && cond == 0)
             S->PC = addr;'''
     )
 
@@ -269,93 +266,67 @@ class Actions(Enum):
         RAISE(smite_pop_return_stack(S, (smite_WORD *)&(S->PC)));'''
     )
 
-    THROW = Action(0x1d, '''\
-        /* The POP macro may set exception */
-        smite_WORD exception_code;
-        POP(&exception_code);
-        RAISE(exception_code);'''
-    )
-
-    HALT = Action(0x1e, '''\
+    HALT = Action(0x1d, '''\
         smite_WORD ret;
         POP(&ret);
-        if (exception == 0)
-            halt_code = ret;
+        if (S->exception == 0)
+            S->halt_code = ret;
         RAISE(-255);'''
     )
 
-    CALL_NATIVE = Action(0x1f, '''\
+    CALL_NATIVE = Action(0x1e, '''\
         void *address;
         POP_NATIVE_TYPE(void *, &address);
         ((void (*)(smite_state *))(address))(S);'''
     )
 
-    EXTRA = Action(0x20, '''\
+    EXTRA = Action(0x1f, '''\
         RAISE(smite_extra(S));'''
     )
 
-    PUSH_WORD_SIZE = Action(0x21, '''\
+    PUSH_WORD_SIZE = Action(0x20, '''\
         PUSH(smite_word_size);'''
     )
 
-    PUSH_NATIVE_POINTER_SIZE = Action(0x22, '''\
+    PUSH_NATIVE_POINTER_SIZE = Action(0x21, '''\
         PUSH(smite_native_pointer_size);'''
     )
 
-    PUSH_SDEPTH = Action(0x23, '''\
+    PUSH_SDEPTH = Action(0x22, '''\
         smite_WORD value = S->SDEPTH;
         PUSH(value);'''
     )
 
-    STORE_SDEPTH = Action(0x24, '''\
+    STORE_SDEPTH = Action(0x23, '''\
         smite_WORD value;
         POP(&value);
-        if (exception == 0)
+        if (S->exception == 0)
             S->SDEPTH = value;'''
     )
 
-    PUSH_RDEPTH = Action(0x25, '''\
+    PUSH_RDEPTH = Action(0x24, '''\
         PUSH(S->RDEPTH);'''
     )
 
-    STORE_RDEPTH = Action(0x26, '''\
+    STORE_RDEPTH = Action(0x25, '''\
         smite_WORD value;
         POP(&value);
-        if (exception == 0)
+        if (S->exception == 0)
             S->RDEPTH = value;'''
     )
 
-    PUSH_PC = Action(0x27, '''\
+    PUSH_PC = Action(0x26, '''\
         PUSH(S->PC);'''
     )
 
-    PUSH_SSIZE = Action(0x28, '''\
+    PUSH_SSIZE = Action(0x27, '''\
         PUSH(S->SSIZE);'''
     )
 
-    PUSH_RSIZE = Action(0x29, '''\
+    PUSH_RSIZE = Action(0x28, '''\
         PUSH(S->RSIZE);'''
     )
 
-    PUSH_HANDLER = Action(0x2a, '''\
-        PUSH(S->HANDLER);'''
-    )
-
-    STORE_HANDLER = Action(0x2b, '''\
-        smite_WORD addr;
-        POP(&addr);
-        if (exception == 0)
-            S->HANDLER = addr;'''
-    )
-
-    PUSH_MEMORY = Action(0x2c, '''\
+    PUSH_MEMORY = Action(0x29, '''\
         PUSH(S->MEMORY);'''
-    )
-
-    PUSH_BADPC = Action(0x2d, '''\
-        PUSH(S->BADPC);'''
-    )
-
-    PUSH_INVALID = Action(0x2e, '''\
-        PUSH(S->INVALID);'''
     )

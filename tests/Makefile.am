@@ -18,7 +18,7 @@ TESTS =	\
 	call_native.py	\
 	comparison.py	\
 	extra_libc.py	\
-	exceptions.py	\
+	errors.py	\
 	hello.py	\
 	init.py		\
 	load_object.py	\

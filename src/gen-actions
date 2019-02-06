@@ -17,7 +17,7 @@ typedef struct action {
 print('''\
 #define RAISE(code)                             \\
     do {                                        \\
-        if (exception != 0 || (exception = (code)) != 0) \\
+        if (S->exception != 0 || (S->exception = (code)) != 0) \\
             return (action){NULL};              \\
     } while (0);
 ''')
@@ -26,7 +26,7 @@ for (instruction, action) in Actions.__members__.items():
     print('''\
 static action F_{}(smite_state *S)
 {{
-    assert(exception == 0);
+    assert(S->exception == 0);
     do {{
 {}
     }} while (0);
@@ -50,17 +50,17 @@ static void STEP(smite_state *S) {
         return;
     case INSTRUCTION_ACTION:
         if (S->I >= O_UNDEFINED) {
-            exception = -256;
+            S->exception = -256;
             return;
         }
         action next_action = instruction_table[S->I];
         while (next_action.call != NULL) {
-            assert(exception == 0);
+            assert(S->exception == 0);
             next_action = next_action.call(S);
         }
         return;
     default: /* Exception during instruction fetch */
-        exception = S->ITYPE;
+        S->exception = S->ITYPE;
         return;
     }
 }''')
