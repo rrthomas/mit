@@ -70,7 +70,7 @@ for label, (name, if_correct, if_wrong) in enumerate(labels):
     if ({}) {{
         // {}
 {}
-//        return; // Implement single-stepping then delete this.
+//        goto RET; // Implement single-stepping then delete this.
         FETCH
         goto {};
     }}

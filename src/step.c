@@ -32,8 +32,6 @@ static void trace(int type, smite_WORD opcode) {
     if (x == 0)                                 \
         RAISE(-10);
 
-static int halt_code;
-
 #include "instruction-actions.h"
 
 // Perform one pass of the execution cycle
@@ -44,12 +42,8 @@ smite_WORD smite_single_step(smite_state *S)
     if (exception != 0) {
         // Deal with address exceptions during execution cycle.
         if (exception == -255)
-            return halt_code;
-        S->BADPC = S->PC - 1;
-        if (smite_push_stack(S, exception) != 0)
-            return -257;
-        exception = 0;
-        S->PC = S->HANDLER;
+            return S->halt_code;
+        return exception;
     }
     return -258; // terminated OK
 }
