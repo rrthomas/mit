@@ -59,7 +59,7 @@ class Actions(Enum):
     POP = Action(0x01, '''\
         smite_WORD depth;
         POP(&depth);
-        if (S->exception == 0)
+        if (error == 0)
             S->SDEPTH -= depth;
     ''')
 
@@ -255,7 +255,7 @@ class Actions(Enum):
         POP(&addr);
         smite_WORD cond;
         POP(&cond);
-        if (S->exception == 0 && cond == 0)
+        if (error == 0 && cond == 0)
             S->PC = addr;
     ''')
 
@@ -271,7 +271,7 @@ class Actions(Enum):
     HALT = Action(0x1d, '''\
         smite_WORD ret;
         POP(&ret);
-        S->halt_code = S->exception ? -257 : ret;
+        S->halt_code = error ? -257 : ret;
         RAISE(-255);
     ''')
 
@@ -301,7 +301,7 @@ class Actions(Enum):
     STORE_SDEPTH = Action(0x23, '''\
         smite_WORD value;
         POP(&value);
-        if (S->exception == 0)
+        if (error == 0)
             S->SDEPTH = value;
     ''')
 
@@ -312,7 +312,7 @@ class Actions(Enum):
     STORE_RDEPTH = Action(0x25, '''\
         smite_WORD value;
         POP(&value);
-        if (S->exception == 0)
+        if (error == 0)
             S->RDEPTH = value;
     ''')
 

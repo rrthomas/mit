@@ -29,7 +29,6 @@ struct _smite_state {
 #undef R_RO
     smite_WORD *memory;
     int halt_code;
-    int exception;
     int main_argc;
     char **main_argv;
     smite_UWORD *main_argv_len;
@@ -45,9 +44,9 @@ extern smite_UWORD smite_default_stack_size;
 extern smite_UWORD smite_max_stack_size;
 
 #define POP(v)                                                          \
-    (S->exception == 0 ? smite_pop_stack(S, v) : S->exception)
+    (error == 0 ? smite_pop_stack(S, v) : error)
 #define PUSH(v)                                                         \
-    (S->exception == 0 ? smite_push_stack(S, v) : S->exception)
+    (error == 0 ? smite_push_stack(S, v) : error)
 
 #define PUSH_NATIVE_TYPE(ty, v)                                         \
     for (unsigned i = 0; i < smite_align(sizeof(ty)) / smite_word_size; i++) { \

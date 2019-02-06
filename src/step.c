@@ -36,15 +36,13 @@ verify(sizeof(int) <= sizeof(smite_WORD));
 // Perform one pass of the execution cycle
 smite_WORD smite_single_step(smite_state *S)
 {
-    S->exception = 0;
+    int error = STEP(S);
 
-    STEP(S);
-
-    if (S->exception != 0) {
-        // Deal with address exceptions during execution cycle.
-        if (S->exception == -255)
+    if (error != 0) {
+        // Deal with address errors during execution cycle.
+        if (error == -255)
             return S->halt_code;
-        return S->exception;
+        return error;
     }
     return -258; // terminated OK
 }

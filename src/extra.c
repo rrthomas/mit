@@ -73,7 +73,7 @@ int smite_register_args(smite_state *S, int argc, char *argv[])
 
 static int extra_smite(smite_state *S)
 {
-    int exception = 0;
+    int error = 0;
 
     smite_UWORD routine;
     POP((smite_WORD *)&routine);
@@ -211,16 +211,16 @@ static int extra_smite(smite_state *S)
         }
         break;
     default:
-        exception = -260;
+        error = -260;
         break;
     }
 
-    return exception;
+    return error;
 }
 
 static int extra_libc(smite_state *S)
 {
-    int exception = 0;
+    int error = 0;
 
     smite_UWORD routine;
     POP((smite_WORD *)&routine);
@@ -247,7 +247,7 @@ static int extra_libc(smite_state *S)
             smite_UWORD narg;
             POP((smite_WORD *)&narg);
 
-            if (exception == 0 && narg < (smite_UWORD)S->main_argc) {
+            if (error == 0 && narg < (smite_UWORD)S->main_argc) {
                 len = MIN(len, S->main_argv_len[narg]);
                 uint8_t *ptr = smite_native_address_of_range(S, buf, len);
                 if (ptr) {
@@ -299,14 +299,14 @@ static int extra_libc(smite_state *S)
             POP((smite_WORD *)&buf);
 
             ssize_t nread = 0;
-            if (exception == 0) {
+            if (error == 0) {
                 uint8_t *ptr = smite_native_address_of_range(S, buf, nbytes);
                 if (ptr)
                     nread = read((int)fd, ptr, nbytes);
             }
 
             PUSH(nread);
-            PUSH((exception == 0 && nread >= 0) ? 0 : -1);
+            PUSH((error == 0 && nread >= 0) ? 0 : -1);
         }
         break;
     case LIBC_WRITE_FILE:
@@ -319,14 +319,14 @@ static int extra_libc(smite_state *S)
             POP((smite_WORD *)&buf);
 
             ssize_t nwritten = 0;
-            if (exception == 0) {
+            if (error == 0) {
                 uint8_t *ptr = smite_native_address_of_range(S, buf, nbytes);
                 if (ptr)
                     nwritten = write((int)fd, ptr, nbytes);
             }
 
             PUSH(nwritten);
-            PUSH((exception == 0 && nwritten >= 0) ? 0 : -1);
+            PUSH((error == 0 && nwritten >= 0) ? 0 : -1);
         }
         break;
     case LIBC_FILE_POSITION:
@@ -365,8 +365,9 @@ static int extra_libc(smite_state *S)
             char *s1 = (char *)smite_native_address_of_range(S, str1, 0);
             char *s2 = (char *)smite_native_address_of_range(S, str2, 0);
             if (s1 == NULL || s2 == NULL)
-                exception = -9;
-            PUSH(exception == 0 ? rename(s2, s1) : exception);
+                error = -9;
+            if (error == 0)
+                PUSH(rename(s2, s1));
         }
         break;
     case LIBC_DELETE_FILE:
@@ -375,8 +376,9 @@ static int extra_libc(smite_state *S)
             POP((smite_WORD *)&str);
             char *s = (char *)smite_native_address_of_range(S, str, 0);
             if (s == NULL)
-                exception = -9;
-            PUSH(exception == 0 ? remove(s) : exception);
+                error = -9;
+            if (error == 0)
+                PUSH(remove(s));
         }
         break;
     case LIBC_FILE_SIZE:
@@ -410,30 +412,30 @@ static int extra_libc(smite_state *S)
         }
         break;
     default:
-        exception = -260;
+        error = -260;
         break;
     }
 
-    return exception;
+    return error;
 }
 
 int smite_extra(smite_state *S)
 {
-    int exception = 0;
+    int error = 0;
 
     smite_UWORD lib;
     POP((smite_WORD *)&lib);
     switch (lib) {
     case LIB_SMITE:
-        exception = extra_smite(S);
+        error = extra_smite(S);
         break;
     case LIB_LIBC:
-        exception = extra_libc(S);
+        error = extra_libc(S);
         break;
     default:
-        exception = -259;
+        error = -259;
         break;
     }
 
-    return exception;
+    return error;
 }
