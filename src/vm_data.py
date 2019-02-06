@@ -279,7 +279,8 @@ class Actions(Enum):
     HALT = Action(0x1e, '''\
         smite_WORD ret;
         POP(&ret);
-        halt_code = ret;
+        if (exception == 0)
+            halt_code = ret;
         RAISE(-255);'''
     )
 
@@ -309,7 +310,8 @@ class Actions(Enum):
     STORE_SDEPTH = Action(0x24, '''\
         smite_WORD value;
         POP(&value);
-        S->SDEPTH = value;'''
+        if (exception == 0)
+            S->SDEPTH = value;'''
     )
 
     PUSH_RDEPTH = Action(0x25, '''\
@@ -319,7 +321,8 @@ class Actions(Enum):
     STORE_RDEPTH = Action(0x26, '''\
         smite_WORD value;
         POP(&value);
-        S->RDEPTH = value;'''
+        if (exception == 0)
+            S->RDEPTH = value;'''
     )
 
     PUSH_PC = Action(0x27, '''\
@@ -341,7 +344,8 @@ class Actions(Enum):
     STORE_HANDLER = Action(0x2b, '''\
         smite_WORD addr;
         POP(&addr);
-        S->HANDLER = addr;'''
+        if (exception == 0)
+            S->HANDLER = addr;'''
     )
 
     PUSH_MEMORY = Action(0x2c, '''\
