@@ -203,10 +203,10 @@ class State:
         '''Single-step (or trace if trace is True) for n steps,
     or until PC=addr.'''
         done = 0
-        for i in range(n):
+        while True:
             ret = libsmite.smite_single_step(self.state)
-            if ret != -258 or self.registers["PC"].get() == addr:
-                done = i
+            done += 1
+            if ret != -258 or self.registers["PC"].get() == addr or (addr == None and done == n):
                 break
 
         if ret != -258:
