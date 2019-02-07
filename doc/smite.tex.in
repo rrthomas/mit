@@ -228,10 +228,6 @@ instruction, or during an instruction fetch (because {\tt PC} contains an
 invalid address). Error $-23$ is raised when an action expecting
 an address of type \spic{a-addr} (word-aligned) is given a non-aligned address.
 
-If putting the code on the stack would cause {\tt SDEPTH} to exceed {\tt SSIZE}, the effect of a {\tt HALT} with
-code $-257$ is performed (although the actual mechanics are not, as that too
-would involve putting a number on the stack).
-
 
 \section{Instruction set}
 \label{instset}
