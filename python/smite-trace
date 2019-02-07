@@ -16,6 +16,6 @@ load(sys.argv[1])
 h = open(sys.argv[2], "w")
 
 while True:
-    if step() != -258:
+    if step() != -257:
         break
     print(ITYPE.get(), I.get(), file=h)

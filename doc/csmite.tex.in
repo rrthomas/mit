@@ -110,7 +110,7 @@ C @PACKAGE_NAME@ provides some libraries of {\tt EXTRA} instruction functions, w
 \end{tabular}
 \end{center}
 
-Error~$-259$ is raised if an invalid library is accessed, and $-260$ for an invalid function in a known library.
+Error~$-258$ is raised if an invalid library is accessed, and $-259$ for an invalid function in a known library.
 
 
 \subsubsection{@PACKAGE_NAME@}

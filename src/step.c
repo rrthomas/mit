@@ -50,5 +50,5 @@ smite_WORD smite_single_step(smite_state *S)
             return S->halt_code;
         return error;
     }
-    return -258; // terminated OK
+    return -257; // terminated OK
 }

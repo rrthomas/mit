@@ -567,7 +567,7 @@ following calls:
     HALT} action (see section~\ref{erroract}), the reason code is
     returned as the result.}
 \iface{single\_step}{}{integer}{Execute a single pass of the execution
-    cycle, and return reason code $-258$, unless a {\tt HALT} action was
+    cycle, and return reason code $-257$, unless a {\tt HALT} action was
     obeyed (see section~\ref{erroract}), in which case the reason code
     passed to it is returned.}
 \iface{load\_object}{file, address}{integer}{Load the object module

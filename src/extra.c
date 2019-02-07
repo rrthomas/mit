@@ -215,7 +215,7 @@ static int extra_smite(smite_state *S)
         }
         break;
     default:
-        RAISE(-260);
+        RAISE(-259);
     }
 
     return 0;
@@ -407,7 +407,7 @@ static int extra_libc(smite_state *S)
         }
         break;
     default:
-        RAISE(-260);
+        RAISE(-259);
         break;
     }
 
@@ -424,6 +424,6 @@ int smite_extra(smite_state *S)
     case LIB_LIBC:
         return extra_libc(S);
     default:
-        return -259;
+        return -258;
     }
 }
