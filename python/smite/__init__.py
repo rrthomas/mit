@@ -190,7 +190,7 @@ class State:
         globals.update([("UNDEFINED", max([action.value.opcode for action in Actions]) + 1)])
 
     def run(self, trace=False):
-        '''Run (or trace if trace is True) until HALT or exception.'''
+        '''Run (or trace if trace is True) until HALT or error.'''
         if trace == True:
             return self.step(addr=self.registers["MEMORY"].get() + 1, trace=True)
         else:
