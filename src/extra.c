@@ -306,7 +306,7 @@ static int extra_libc(smite_state *S)
             }
 
             PUSH(nread);
-            PUSH((error == 0 && nread >= 0) ? 0 : -1);
+            PUSH(nread >= 0 ? 0 : -1);
         }
         break;
     case LIBC_WRITE_FILE:
@@ -326,7 +326,7 @@ static int extra_libc(smite_state *S)
             }
 
             PUSH(nwritten);
-            PUSH((error == 0 && nwritten >= 0) ? 0 : -1);
+            PUSH(nwritten >= 0 ? 0 : -1);
         }
         break;
     case LIBC_FILE_POSITION:
@@ -366,8 +366,10 @@ static int extra_libc(smite_state *S)
             char *s2 = (char *)smite_native_address_of_range(S, str2, 0);
             if (s1 == NULL || s2 == NULL)
                 error = -9;
-            if (error == 0)
-                PUSH(rename(s2, s1));
+            if (error == 0) {
+                int res = rename(s2, s1);
+                PUSH(res);
+            }
         }
         break;
     case LIBC_DELETE_FILE:
@@ -377,8 +379,10 @@ static int extra_libc(smite_state *S)
             char *s = (char *)smite_native_address_of_range(S, str, 0);
             if (s == NULL)
                 error = -9;
-            if (error == 0)
-                PUSH(remove(s));
+            if (error == 0) {
+                int res = remove(s);
+                PUSH(res);
+            }
         }
         break;
     case LIBC_FILE_SIZE:
