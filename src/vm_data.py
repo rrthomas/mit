@@ -254,7 +254,7 @@ class Actions(Enum):
         POP(&addr);
         smite_WORD cond;
         POP(&cond);
-        if (error == 0 && cond == 0)
+        if (cond == 0)
             S->PC = addr;
     ''')
 
