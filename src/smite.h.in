@@ -64,7 +64,7 @@ typedef struct _smite_state smite_state;
 #undef R_RO
 
 // Memory access
-// Return value is 0 if OK, or exception code for invalid or unaligned address
+// Return value is 0 if OK, or error code for invalid or unaligned address
 int smite_load_word(smite_state *S, smite_UWORD addr, smite_WORD *value);
 int smite_store_word(smite_state *S, smite_UWORD addr, smite_WORD value);
 int smite_load_byte(smite_state *S, smite_UWORD addr, smite_BYTE *value);
