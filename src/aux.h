@@ -43,10 +43,13 @@ extern const int smite_stack_direction;
 extern smite_UWORD smite_default_stack_size;
 extern smite_UWORD smite_max_stack_size;
 
+// RAISE(code) must be define before using `PUSH` or `POP`.
+// It must somehow exit if `code` is non-zero, e.g. return `code` to caller.
+
 #define POP(v)                                                          \
-    (error == 0 ? smite_pop_stack(S, v) : error)
+    RAISE(smite_pop_stack(S, v))
 #define PUSH(v)                                                         \
-    (error == 0 ? smite_push_stack(S, v) : error)
+    RAISE(smite_push_stack(S, v))
 
 #define PUSH_NATIVE_TYPE(ty, v)                                         \
     for (unsigned i = 0; i < smite_align(sizeof(ty)) / smite_word_size; i++) { \
