@@ -16,7 +16,7 @@
 
 % Font for stack pictures; macro \spic includes italic correction
 
-\newcommand{\spic}[1]{\texttt{#1\/}}
+\newcommand{\spic}[1]{\texttt{\textsl{#1\/}}}
 
 % Common stack items
 
