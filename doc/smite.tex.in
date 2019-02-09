@@ -46,9 +46,8 @@
 
 % Lay out a line of the opcode table
 
-\newcommand{\opcodetbl}[6]{0x#1 & {\tt #2} & 0x#3 & {\tt #4} & 0x#5 & {\tt #6}
-\\}
-\newcommand{\opcodetbltwo}[4]{0x#1 & {\tt #2} & 0x#3 & {\tt #4} \\}
+\newcommand{\opcodetbl}[4]{0x#1 & {\tt #2} & 0x#3 & {\tt #4} \\}
+\newcommand{\opcodetblone}[2]{0x#1 & {\tt #2} \\}
 
 
 \title{The @PACKAGE_NAME@ Virtual Machine}
@@ -493,24 +492,30 @@ Table~\ref{opcodetable} lists the action opcodes in numerical order. Other actio
 
 \begin{table}[htb]
 \begin{center}
-\begin{tabular}{*{3}{cc}} \toprule
-\bf Opcode & \bf Action & \bf Opcode & \bf
-    Action & \bf Opcode & \bf Action \\ \midrule
-\opcodetbl{00}{NOP}	{0f}{XOR}	{1e}{PUSH\_FRAME\_DEPTH}
-\opcodetbl{01}{POP}	{10}{LSHIFT}	{1f}{STORE\_FRAME\_DEPTH}
-\opcodetbl{02}{DUP}	{11}{RSHIFT}	{20}{PUSH\_PC}
-\opcodetbl{03}{SWAP}	{12}{LOAD}	{21}{PUSH\_MEMORY}
-\opcodetbl{04}{LT}	{13}{STORE}	{22}{PUSH\_F0}
-\opcodetbl{05}{EQ}	{14}{LOADB}	{23}{STORE\_F0}
-\opcodetbl{06}{ULT}	{15}{STOREB}	{24}{PUSH\_FRAME}
-\opcodetbl{07}{ADD}	{16}{BRANCH}	{25}{POP\_FRAME}
-\opcodetbl{08}{NEGATE}	{17}{BRANCHZ}	{26}{LOAD\_FRAME\_VALUE}
-\opcodetbl{09}{MUL}	{18}{CALL}	{27}{LOAD\_OUTER\_F0}
-\opcodetbl{0a}{UDIVMOD}	{19}{HALT}	{28}{LOAD\_OUTER\_DEPTH}
-\opcodetbl{0b}{DIVMOD}	{1a}{CALL\_NATIVE}	{29}{FRAME\_DUP}
-\opcodetbl{0c}{INVERT}	{1b}{EXTRA}	{2a}{FRAME\_SWAP}
-\opcodetbl{0d}{AND}	{1c}{PUSH\_WORD\_SIZE}	{2b}{CALL\_FRAME}
-\opcodetbltwo{0e}{OR}	{1d}{PUSH\_NATIVE\_POINTER\_SIZE}
+\begin{tabular}{*{2}{cc}} \toprule
+\bf Opcode & \bf Action & \bf Opcode & \bf Action \\ \midrule
+\opcodetbl{00}{NOP}	{16}{BRANCH}
+\opcodetbl{01}{POP}	{17}{BRANCHZ}
+\opcodetbl{02}{DUP}	{18}{CALL}
+\opcodetbl{03}{SWAP}	{19}{HALT}
+\opcodetbl{04}{LT}	{1a}{CALL\_NATIVE}
+\opcodetbl{05}{EQ}	{1b}{EXTRA}
+\opcodetbl{06}{ULT}	{1c}{PUSH\_WORD\_SIZE}
+\opcodetbl{07}{ADD}	{1d}{PUSH\_NATIVE\_POINTER\_SIZE}
+\opcodetbl{08}{NEGATE}	{1e}{PUSH\_FRAME\_DEPTH}
+\opcodetbl{09}{MUL}	{1f}{STORE\_FRAME\_DEPTH}
+\opcodetbl{0a}{UDIVMOD}	{20}{PUSH\_PC}
+\opcodetbl{0b}{DIVMOD}	{21}{PUSH\_MEMORY}
+\opcodetbl{0c}{INVERT}	{22}{PUSH\_F0}
+\opcodetbl{0d}{AND}	{23}{STORE\_F0}
+\opcodetbl{0e}{OR}	{24}{PUSH\_FRAME}
+\opcodetbl{0f}{XOR}	{25}{POP\_FRAME}
+\opcodetbl{10}{LSHIFT}	{26}{LOAD\_FRAME\_VALUE}
+\opcodetbl{11}{RSHIFT}	{27}{LOAD\_OUTER\_F0}
+\opcodetbl{12}{LOAD}	{28}{LOAD\_OUTER\_DEPTH}
+\opcodetbl{13}{STORE}   {29}{FRAME\_DUP}
+\opcodetbl{14}{LOADB}   {2a}{FRAME\_SWAP}
+\opcodetbl{15}{STOREB}  {2b}{CALL\_FRAME}
  \bottomrule
 \end{tabular}
 \caption{\label{opcodetable}Action opcodes}
