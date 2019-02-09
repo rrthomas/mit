@@ -46,9 +46,8 @@
 
 % Lay out a line of the opcode table
 
-\newcommand{\opcodetbl}[6]{0x#1 & {\tt #2} & 0x#3 & {\tt #4} & 0x#5 & {\tt #6}
-\\}
-\newcommand{\opcodetbltwo}[4]{0x#1 & {\tt #2} & 0x#3 & {\tt #4} \\}
+\newcommand{\opcodetbl}[4]{0x#1 & {\tt #2} & 0x#3 & {\tt #4} \\}
+\newcommand{\opcodetblone}[2]{0x#1 & {\tt #2} \\}
 
 
 \title{The @PACKAGE_NAME@ Virtual Machine}
@@ -472,21 +471,26 @@ Table~\ref{opcodetable} lists the action opcodes in numerical order. Other actio
 
 \begin{table}[htb]
 \begin{center}
-\begin{tabular}{*{3}{cc}} \toprule
-\bf Opcode & \bf Action & \bf Opcode & \bf
-    Action & \bf Opcode & \bf Action \\ \midrule
-\opcodetbl{00}{NOP}	{0c}{INVERT}	{18}{CALL}
-\opcodetbl{01}{POP}	{0d}{AND}	{19}{HALT}
-\opcodetbl{02}{DUP}	{0e}{OR}	{1a}{CALL\_NATIVE}
-\opcodetbl{03}{SWAP}	{0f}{XOR}	{1b}{EXTRA}
-\opcodetbl{04}{LT}	{10}{LSHIFT}	{1c}{PUSH\_WORD\_SIZE}
-\opcodetbl{05}{EQ}	{11}{RSHIFT}	{1d}{PUSH\_NATIVE\_POINTER\_SIZE}
-\opcodetbl{06}{ULT}	{12}{LOAD}	{1e}{PUSH\_STACK\_DEPTH}
-\opcodetbl{07}{ADD}	{13}{STORE}	{1f}{STORE\_STACK\_DEPTH}
-\opcodetbl{08}{MUL}	{14}{LOADB}	{20}{PUSH\_PC}
-\opcodetbl{09}{UDIVMOD}	{15}{STOREB}	{21}{PUSH\_STACK\_SIZE}
-\opcodetbl{0a}{DIVMOD}	{16}{BRANCH}	{22}{PUSH\_MEMORY}
-\opcodetbltwo{0b}{NEGATE}	{17}{BRANCHZ}
+\begin{tabular}{*{2}{cc}} \toprule
+\bf Opcode & \bf Action & \bf Opcode & \bf Action \\ \midrule
+\opcodetbl{00}{NOP}	{12}{LOAD}
+\opcodetbl{01}{POP}	{13}{STORE}
+\opcodetbl{02}{DUP}	{14}{LOADB}
+\opcodetbl{03}{SWAP}	{15}{STOREB}
+\opcodetbl{04}{LT}	{16}{BRANCH}
+\opcodetbl{05}{EQ}	{17}{BRANCHZ}
+\opcodetbl{06}{ULT}	{18}{CALL}
+\opcodetbl{07}{ADD}	{19}{HALT}
+\opcodetbl{08}{MUL}	{1a}{CALL\_NATIVE}
+\opcodetbl{09}{UDIVMOD}	{1b}{EXTRA}
+\opcodetbl{0a}{DIVMOD}	{1c}{PUSH\_WORD\_SIZE}
+\opcodetbl{0b}{NEGATE}	{1d}{PUSH\_NATIVE\_POINTER\_SIZE}
+\opcodetbl{0c}{INVERT}	{1e}{PUSH\_STACK\_DEPTH}
+\opcodetbl{0d}{AND}	{1f}{STORE\_STACK\_DEPTH}
+\opcodetbl{0e}{OR}	{20}{PUSH\_PC}
+\opcodetbl{0f}{XOR}	{21}{PUSH\_STACK\_SIZE}
+\opcodetbl{10}{LSHIFT}	{22}{PUSH\_MEMORY}
+\opcodetblone{11}{RSHIFT}
  \bottomrule
 \end{tabular}
 \caption{\label{opcodetable}Action opcodes}
