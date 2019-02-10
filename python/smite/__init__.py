@@ -38,10 +38,10 @@ class Error(Exception):
 
 
 # Constants (all of type unsigned)
-for c in ["word_size", "native_pointer_size", "byte_bit", "byte_mask",
-          "word_bit", "stack_direction"]:
-    vars().update([(c, c_uint.in_dll(libsmite, "smite_{}".format(c)).value)])
-vars().update([("byte_bit", 8)])
+vars().update([(c, c_uint.in_dll(libsmite, "smite_{}".format(c)).value)
+               for c in ["word_size", "native_pointer_size", "byte_bit", "byte_mask",
+                         "word_bit", "stack_direction"]])
+vars()["byte_bit"] = 8
 
 
 # Types
@@ -61,17 +61,17 @@ SMITE_CALLBACK_FUNCTYPE = CFUNCTYPE(None, c_void_p)
 
 
 # Constants that require VM types
-for (c, cty) in [
-        ("word_mask", c_word),
-        ("uword_max", c_uword),
-        ("word_min", c_word),
-        ("word_max", c_word),
-        ("default_memory_size", c_uword),
-        ("max_memory_size", c_uword),
-        ("default_stack_size", c_uword),
-        ("max_stack_size", c_uword),
-]:
-    vars().update([(c, cty.in_dll(libsmite, "smite_{}".format(c)).value)])
+vars().update([(c, cty.in_dll(libsmite, "smite_{}".format(c)).value)
+               for (c, cty) in [
+                       ("word_mask", c_word),
+                       ("uword_max", c_uword),
+                       ("word_min", c_word),
+                       ("word_max", c_word),
+                       ("default_memory_size", c_uword),
+                       ("max_memory_size", c_uword),
+                       ("default_stack_size", c_uword),
+                       ("max_stack_size", c_uword),
+               ]])
 
 
 # Functions
@@ -164,7 +164,7 @@ class State:
     def __del__(self):
         libsmite.smite_destroy(self.state)
 
-    def globalize(self, globals):
+    def globalize(self, globals_dict):
         '''Make the state accessible through global variables and functions:
 
         Registers: a variable for each register; also a list 'registers'
@@ -175,19 +175,20 @@ class State:
         'VM.here', which defaults to 0. The actions are available as
         constants.'''
 
-        for name, register in self.registers.items():
-            globals.update([(name, register)])
-        for name in ["M", "M_word", "S", "R", "registers",
-                     "load", "save",
-                     "run", "step", "trace", "dump", "disassemble",
-                     "disassemble_instruction",
-                     "action", "number", "byte", "pointer"]:
-            globals.update([(name, self.__getattribute__(name))])
+        globals_dict.update([(name, register) for name, register in self.registers.items()])
+        globals_dict.update([(name, self.__getattribute__(name)) for
+                             name in ["M", "M_word", "S", "R", "registers",
+                                      "load", "save",
+                                      "run", "step", "trace", "dump", "disassemble",
+                                      "disassemble_instruction",
+                                      "action", "number", "byte", "pointer"]])
+
+        # Abbreviations
+        globals_dict["dis"] = self.__getattribute__("disassemble")
 
         # Opcodes
-        for action in Actions:
-            globals.update([(action.name, action.value.opcode)])
-        globals.update([("UNDEFINED", max([action.value.opcode for action in Actions]) + 1)])
+        globals_dict.update([(action.name, action.value.opcode) for action in Actions])
+        globals_dict["UNDEFINED"] = max([action.value.opcode for action in Actions]) + 1
 
     def run(self, trace=False):
         '''Run (or trace if trace is True) until HALT or error.'''
