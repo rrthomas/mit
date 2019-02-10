@@ -30,7 +30,7 @@ MAINTAINERCLEANFILES = $(LATEX_PDFS)
 
 clean-local:
 	$(LATEXMK) -r $(srcdir)/latexmkrc -C -f $(LATEX_SRCS) \
-		$(builddir)/@PACKAGE@.tex $(builddir)/c@PACKAGE@.tex $(builddir)/shell.tex
+		$(builddir)/@PACKAGE@.tex $(builddir)/c@PACKAGE@.tex
 
 EXTRA_DIST = $(LATEX_SRCS) $(LATEX_PDFS) @PACKAGE@.tex.in c@PACKAGE@.tex.in latexmkrc
 
