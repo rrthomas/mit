@@ -473,7 +473,7 @@ Subroutine call and return:
 This action gives access to @PACKAGE_NAME@'s error mechanism (see section~\ref{errors}).
 
 \begin{description}
-\inst{HALT}{x —}{Stop @PACKAGE_NAME@, returning reason code \spic{x} to the calling program (see section~\ref{calls}). If {\tt SDEPTH} is greater than {\tt SSIZE}, $-257$ is returned as the reason code.}
+\inst{HALT}{x —}{Stop @PACKAGE_NAME@, returning reason code \spic{x} to the calling program (see section~\ref{calls}).}
 \end{description}
 
 
