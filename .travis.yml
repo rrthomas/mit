@@ -30,8 +30,7 @@ matrix:
         - MATRIX_EVAL="CC=gcc-8"
         # - CFLAGS="-g3 -fsanitize=address -fsanitize=undefined"
         # - LDFLAGS="-fsanitize=address -fsanitize=undefined"
-        # - PYTHONMALLOC=malloc
-        # - PY_LOG_ENV="LD_PRELOAD=/usr/lib/gcc/x86_64-linux-gnu/7/libasan.so"
+        # - PY_LOG_ENV="LD_PRELOAD=/usr/lib/gcc/x86_64-linux-gnu/7/libasan.so PYTHONMALLOC=malloc"
       addons:
         apt:
           sources:

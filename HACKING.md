@@ -4,7 +4,7 @@ See `README.md` for instructions on building from git.
 
 ## Testing
 
-ASAN (Address Sanitizer) is recommended for finding various classes of bug. See `.travis.yml` for sample settings to configure GCC to use ASAN. Note the use of `PY_LOG_ENV` to set `LD_PRELOAD` for the tests. This avoids `LD_PRELOAD` being set generally, which can cause problems.
+ASAN (Address Sanitizer) is recommended for finding various classes of bug. See `.travis.yml` for sample settings to configure GCC to use ASAN. Note the use of `PY_LOG_ENV` to set `LD_PRELOAD` and `PYTHONMALLOC` for the tests. This avoids needing to set these variables globally.
 
 ## Making a release
 
