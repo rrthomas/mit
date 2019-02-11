@@ -235,68 +235,61 @@ class Actions(Enum):
             S->PC = addr;
     ''')
 
-    CALL = Action(0x18, '''\
-        smite_WORD addr;
-        POP(&addr);
-        PUSH(S->PC);
-        S->PC = addr;
-    ''')
-
-    HALT = Action(0x19, '''\
+    HALT = Action(0x18, '''\
         smite_WORD ret;
         POP(&ret);
         S->halt_code = ret;
         RAISE(-255);
     ''')
 
-    CALL_NATIVE = Action(0x1a, '''\
+    CALL_NATIVE = Action(0x19, '''\
         void *address;
         POP_NATIVE_TYPE(void *, &address);
         ((void (*)(smite_state *))(address))(S);
     ''')
 
-    EXTRA = Action(0x1b, '''\
+    EXTRA = Action(0x1a, '''\
         RAISE(smite_extra(S));
     ''')
 
-    PUSH_WORD_SIZE = Action(0x1c, '''\
+    PUSH_WORD_SIZE = Action(0x1b, '''\
         PUSH(smite_word_size);
     ''')
 
-    PUSH_NATIVE_POINTER_SIZE = Action(0x1d, '''\
+    PUSH_NATIVE_POINTER_SIZE = Action(0x1c, '''\
         PUSH(smite_native_pointer_size);
     ''')
 
-    PUSH_FRAME_DEPTH = Action(0x1e, '''\
+    PUSH_FRAME_DEPTH = Action(0x1d, '''\
         smite_WORD value = S->FRAME_DEPTH;
         PUSH(value);
     ''')
 
-    STORE_FRAME_DEPTH = Action(0x1f, '''\
+    STORE_FRAME_DEPTH = Action(0x1e, '''\
         smite_WORD value;
         POP(&value);
         S->FRAME_DEPTH = value;
     ''')
 
-    PUSH_PC = Action(0x20, '''\
+    PUSH_PC = Action(0x1f, '''\
         PUSH(S->PC);
     ''')
 
-    PUSH_MEMORY = Action(0x21, '''\
+    PUSH_MEMORY = Action(0x20, '''\
         PUSH(S->MEMORY);
     ''')
 
-    PUSH_F0 = Action(0x22, '''\
+    PUSH_F0 = Action(0x21, '''\
         PUSH(S->F0);
     ''')
 
-    STORE_F0 = Action(0x23, '''\
+    STORE_F0 = Action(0x22, '''\
         smite_WORD addr;
         POP(&addr);
         S->F0 = addr;
     ''')
 
-    PUSH_FRAME = Action(0x24, '''\
+    PUSH_FRAME = Action(0x23, '''\
         smite_WORD addr;
         POP(&addr);
         smite_WORD items;
@@ -310,7 +303,7 @@ class Actions(Enum):
         RAISE(smite_store_stack_address(S, S->F0 - 1, old_F0));
     ''')
 
-    POP_FRAME = Action(0x25, '''\
+    POP_FRAME = Action(0x24, '''\
         smite_WORD outer_F0;
         RAISE(smite_load_stack_address(S, S->F0 - 1, &outer_F0));
         smite_WORD outer_value;
@@ -321,7 +314,7 @@ class Actions(Enum):
         PUSH(outer_value);
     ''')
 
-    LOAD_FRAME_VALUE = Action(0x26, '''\
+    LOAD_FRAME_VALUE = Action(0x25, '''\
         smite_WORD frame;
         POP(&frame);
         smite_WORD outer_value;
@@ -329,7 +322,7 @@ class Actions(Enum):
         PUSH(outer_value);
     ''')
 
-    LOAD_OUTER_F0 = Action(0x27, '''\
+    LOAD_OUTER_F0 = Action(0x26, '''\
         smite_WORD frame;
         POP(&frame);
         smite_WORD outer_F0;
@@ -337,7 +330,7 @@ class Actions(Enum):
         PUSH(outer_F0);
     ''')
 
-    LOAD_OUTER_DEPTH = Action(0x28, '''\
+    LOAD_OUTER_DEPTH = Action(0x27, '''\
         smite_WORD frame;
         POP(&frame);
         smite_WORD outer_F0;
@@ -345,7 +338,7 @@ class Actions(Enum):
         PUSH(frame - outer_F0 - smite_frame_info_words);
     ''')
 
-    FRAME_DUP = Action(0x29, '''\
+    FRAME_DUP = Action(0x28, '''\
         smite_WORD frame;
         POP(&frame);
         smite_WORD depth;
@@ -355,7 +348,7 @@ class Actions(Enum):
         PUSH(dupee);
     ''')
 
-    FRAME_SWAP = Action(0x2a, '''\
+    FRAME_SWAP = Action(0x29, '''\
         smite_WORD frame;
         POP(&frame);
         smite_WORD depth;
@@ -368,8 +361,7 @@ class Actions(Enum):
         RAISE(smite_store_stack_address(S, frame + depth, top));
     ''')
 
-    CALL_FRAME = Action(0x2b, '''\
-        /* FIXME: have a way to concatenate actions */
+    CALL = Action(0x2a, '''\
         /* CALL */
         {
             smite_WORD addr;

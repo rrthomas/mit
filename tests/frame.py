@@ -134,10 +134,10 @@ number(1)
 action(FRAME_SWAP)
 action(POP_FRAME)
 
-# Test CALL_FRAME
+# Test CALL
 subroutine = 1000
 number(subroutine)
-action(CALL_FRAME)
+action(CALL)
 correct += [
     [1, 1, 2, 2, 3, subroutine],
     [1, VM.here, initial_F0, 1, 2, 2],

@@ -317,6 +317,7 @@ These actions manage the stack.
 \end{description}
 
 \subsection{Frame manipulation}
+\label{frame}
 
 These actions manage the current frame and allow access to outer frames.
 
@@ -330,7 +331,6 @@ A memory error is raised for an invalid frame address or stack address.
 \inst{LOAD\_OUTER\_DEPTH}{f-addr -- u}{Push the number of items \spic{u} in the frame outside the frame whose address is \spic{f-addr}.}
 \inst{FRAME\_DUP}{u f-addr -- \x}{Push the \spic{u}th item of the frame whose address is \spic{f-addr}.}
 \inst{FRAME\_SWAP}{\x1 u f-addr -- \x2}{Exchange the stack item \x1 with the \spic{u}th item of the frame whose address is \spic{f-addr}.}
-\inst{CALL\_FRAME}{\x{u}\dots\x0 u addr | \x{u}\dots\x0}{Perform the action of {\tt CALL}, then the action of {\tt PUSH\_FRAME}.}
 \end{description}
 
 \subsection{Comparison}
@@ -454,9 +454,8 @@ Subroutine call (return is {\tt BRANCH}):
 \nopagebreak
 
 \begin{description}
-\inst{CALL}{\aaddr1 — \aaddr2}{Exchange {\tt PC} with the top stack value.}
+\inst{CALL}{\x{u}\dots\x0 u addr | \x{u}\dots\x0}{Exchange {\tt PC} with the top stack value, then perform the action of {\tt PUSH\_FRAME}. See section~\ref{frame}.}
 \end{description}
-
 
 \subsection{Errors}
 \label{erroract}
@@ -496,26 +495,26 @@ Table~\ref{opcodetable} lists the action opcodes in numerical order. Other actio
 \bf Opcode & \bf Action & \bf Opcode & \bf Action \\ \midrule
 \opcodetbl{00}{NOP}	{16}{BRANCH}
 \opcodetbl{01}{POP}	{17}{BRANCHZ}
-\opcodetbl{02}{DUP}	{18}{CALL}
-\opcodetbl{03}{SWAP}	{19}{HALT}
-\opcodetbl{04}{LT}	{1a}{CALL\_NATIVE}
-\opcodetbl{05}{EQ}	{1b}{EXTRA}
-\opcodetbl{06}{ULT}	{1c}{PUSH\_WORD\_SIZE}
-\opcodetbl{07}{ADD}	{1d}{PUSH\_NATIVE\_POINTER\_SIZE}
-\opcodetbl{08}{NEGATE}	{1e}{PUSH\_FRAME\_DEPTH}
-\opcodetbl{09}{MUL}	{1f}{STORE\_FRAME\_DEPTH}
-\opcodetbl{0a}{UDIVMOD}	{20}{PUSH\_PC}
-\opcodetbl{0b}{DIVMOD}	{21}{PUSH\_MEMORY}
-\opcodetbl{0c}{INVERT}	{22}{PUSH\_F0}
-\opcodetbl{0d}{AND}	{23}{STORE\_F0}
-\opcodetbl{0e}{OR}	{24}{PUSH\_FRAME}
-\opcodetbl{0f}{XOR}	{25}{POP\_FRAME}
-\opcodetbl{10}{LSHIFT}	{26}{LOAD\_FRAME\_VALUE}
-\opcodetbl{11}{RSHIFT}	{27}{LOAD\_OUTER\_F0}
-\opcodetbl{12}{LOAD}	{28}{LOAD\_OUTER\_DEPTH}
-\opcodetbl{13}{STORE}   {29}{FRAME\_DUP}
-\opcodetbl{14}{LOADB}   {2a}{FRAME\_SWAP}
-\opcodetbl{15}{STOREB}  {2b}{CALL\_FRAME}
+\opcodetbl{02}{DUP}	{18}{HALT}
+\opcodetbl{03}{SWAP}	{19}{CALL\_NATIVE}
+\opcodetbl{04}{LT}	{1a}{EXTRA}
+\opcodetbl{05}{EQ}	{1b}{PUSH\_WORD\_SIZE}
+\opcodetbl{06}{ULT}	{1c}{PUSH\_NATIVE\_POINTER\_SIZE}
+\opcodetbl{07}{ADD}	{1d}{PUSH\_FRAME\_DEPTH}
+\opcodetbl{08}{NEGATE}	{1e}{STORE\_FRAME\_DEPTH}
+\opcodetbl{09}{MUL}	{1f}{PUSH\_PC}
+\opcodetbl{0a}{UDIVMOD}	{20}{PUSH\_MEMORY}
+\opcodetbl{0b}{DIVMOD}	{21}{PUSH\_F0}
+\opcodetbl{0c}{INVERT}	{22}{STORE\_F0}
+\opcodetbl{0d}{AND}	{23}{PUSH\_FRAME}
+\opcodetbl{0e}{OR}	{24}{POP\_FRAME}
+\opcodetbl{0f}{XOR}	{25}{LOAD\_FRAME\_VALUE}
+\opcodetbl{10}{LSHIFT}	{26}{LOAD\_OUTER\_F0}
+\opcodetbl{11}{RSHIFT}	{27}{LOAD\_OUTER\_DEPTH}
+\opcodetbl{12}{LOAD}	{28}{FRAME\_DUP}
+\opcodetbl{13}{STORE}   {29}{FRAME\_SWAP}
+\opcodetbl{14}{LOADB}   {2a}{CALL}
+\opcodetblone{15}{STOREB}
  \bottomrule
 \end{tabular}
 \caption{\label{opcodetable}Action opcodes}
