@@ -28,8 +28,10 @@ from curses.ascii import isprint
 from smite.vm_data import *
 from smite.opcodes_extra import *
 
-libsmite = CDLL(find_library("smite"))
-assert(libsmite != None)
+library_file = find_library("smite")
+assert(library_file)
+libsmite = CDLL(library_file)
+assert(libsmite)
 
 
 # Errors
