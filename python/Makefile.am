@@ -8,8 +8,8 @@
 # THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER‘S
 # RISK.
 
-bin_SCRIPTS = @PACKAGE@-dump @PACKAGE@-shell @PACKAGE@-trace
-man_MANS = @PACKAGE@-dump.1 @PACKAGE@-shell.1 @PACKAGE@-trace.1
+bin_SCRIPTS = @PACKAGE@-dump @PACKAGE@-shell
+man_MANS = @PACKAGE@-dump.1 @PACKAGE@-shell.1
 pkgpython_PYTHON =		\
 	@PACKAGE@/__init__.py	\
 	@PACKAGE@/__main__.py	\
@@ -22,7 +22,6 @@ loc:
 EXTRA_DIST = \
 	$(man_MANS)		\
 	@PACKAGE@-dump.in	\
-	@PACKAGE@-shell.in	\
-	@PACKAGE@-trace.in
+	@PACKAGE@-shell.in
 
 DISTCLEANFILES = $(bin_SCRIPTS) $(man_MANS)
