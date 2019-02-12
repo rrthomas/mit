@@ -1,5 +1,5 @@
 # Test the memory operators. Also uses previously tested instructions.
-# See exceptions.c for address exception handling tests.
+# See errors.py for address error handling tests.
 #
 # (c) Reuben Thomas 1994-2018
 #

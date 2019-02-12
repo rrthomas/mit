@@ -1,6 +1,6 @@
 # Test the branch instructions. Also uses instructions tested by
 # earlier tests.
-# See exceptions.c for address exception handling tests.
+# See errors.py for address error handling tests.
 # The test program contains an infinite loop, but this is only executed
 # once.
 #

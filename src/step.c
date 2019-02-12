@@ -22,28 +22,32 @@
 // Assumption for file functions
 verify(sizeof(int) <= sizeof(smite_WORD));
 
+#define DIVZERO(x)                              \
+    if (x == 0)                                 \
+        RAISE(-10);
+
 FILE *trace_fp = NULL; // FILE * of trace file, if used
 static void trace(int type, smite_WORD opcode) {
     if (trace_fp)
         fprintf(trace_fp, "%d %08x\n", type, (smite_UWORD)opcode);
 }
 
-#define DIVZERO(x)                              \
-    if (x == 0)                                 \
-        RAISE(-10);
+// Defines two macros/functions:
+//   void STEP(smite_state *S): runs a single step of the given state.
+//   void RAISE(smite_WORD e): raise error e; do nothing if e == 0.
 
 #include "instruction-actions.h"
 
 // Perform one pass of the execution cycle
 smite_WORD smite_single_step(smite_state *S)
 {
-    int exception = STEP(S);
+    int error = STEP(S);
 
-    if (exception != 0) {
-        // Deal with address exceptions during execution cycle.
-        if (exception == -255)
+    if (error != 0) {
+        // Deal with address errors during execution cycle.
+        if (error == -255)
             return S->halt_code;
-        return exception;
+        return error;
     }
-    return -258; // terminated OK
+    return -257; // terminated OK
 }

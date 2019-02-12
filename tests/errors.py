@@ -71,7 +71,7 @@ for i in range(len(test)):
     res = run()
 
     if result[i] != res:
-         print("Error in exceptions tests: test {} failed; PC = {}".format(i + 1, PC.get()))
+         print("Error in errors tests: test {} failed; PC = {}".format(i + 1, PC.get()))
          print("Return code is {}; should be {}".format(res, result[i]))
          error += 1
     print()
@@ -79,4 +79,4 @@ for i in range(len(test)):
 if error != 0:
     sys.exit(error)
 
-print("Exceptions tests ran OK")
+print("Errors tests ran OK")

@@ -22,13 +22,13 @@
     {                                                                   \
         size_t len = 0;                                                 \
         smite_BYTE b;                                                   \
-        int exception;                                                  \
+        int error;                                                      \
                                                                         \
         /* Continuation bytes */                                        \
         for (int bits = smite_find_msbit(v) + 1; bits > INSTRUCTION_CHUNK_BIT; bits -= INSTRUCTION_CHUNK_BIT) { \
             b = (smite_BYTE)(v & INSTRUCTION_CHUNK_MASK) | INSTRUCTION_CONTINUATION_BIT; \
-            if ((exception = STORE(b)) != 0)                            \
-                return (ptrdiff_t)exception;                            \
+            if ((error = STORE(b)) != 0)                                \
+                return (ptrdiff_t)error;                                \
             len++;                                                      \
             v = ARSHIFT(v, INSTRUCTION_CHUNK_BIT);                      \
         }                                                               \
@@ -39,8 +39,8 @@
                                                                         \
         /* Last (or only) byte */                                       \
         b = (smite_BYTE)v;                                              \
-        if ((exception = STORE(b)))                                     \
-            return (ptrdiff_t)exception;                                \
+        if ((error = STORE(b)))                                         \
+            return (ptrdiff_t)error;                                    \
         len++;                                                          \
                                                                         \
         return len;                                                     \
@@ -65,21 +65,21 @@ STATEFUL_ENCODE_INSTRUCTION(smite_encode_instruction, smite_UWORD, addr, STORE_V
         unsigned bits = 0;                                              \
         smite_WORD n = 0;                                               \
         smite_BYTE b;                                                   \
-        int exception;                                                  \
+        int error;                                                      \
         int type = INSTRUCTION_NUMBER;                                  \
                                                                         \
         /* Continuation bytes */                                        \
-        for (exception = LOAD(b);                                       \
-             exception == 0 && bits <= smite_word_bit - INSTRUCTION_CHUNK_BIT && \
+        for (error = LOAD(b);                                           \
+             error == 0 && bits <= smite_word_bit - INSTRUCTION_CHUNK_BIT && \
                  (b & ~INSTRUCTION_CHUNK_MASK) == INSTRUCTION_CONTINUATION_BIT; \
-             exception = LOAD(b)) {                                     \
+             error = LOAD(b)) {                                         \
             n |= (smite_WORD)(b & INSTRUCTION_CHUNK_MASK) << bits;      \
             bits += INSTRUCTION_CHUNK_BIT;                              \
         }                                                               \
         if (bits > smite_word_bit)                                      \
             return -1;                                                  \
-        if (exception != 0)                                             \
-            return exception;                                           \
+        if (error != 0)                                                 \
+            return error;                                               \
                                                                         \
         /* Check for action opcode */                                   \
         if ((b & ~INSTRUCTION_CHUNK_MASK) == INSTRUCTION_ACTION_BIT) {  \

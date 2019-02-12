@@ -16,7 +16,7 @@
 
 % Font for stack pictures; macro \spic includes italic correction
 
-\newcommand{\spic}[1]{\texttt{#1\/}}
+\newcommand{\spic}[1]{\texttt{\textsl{#1\/}}}
 
 % Common stack items
 
@@ -227,10 +227,6 @@ address, either by an
 instruction, or during an instruction fetch (because {\tt PC} contains an
 invalid address). Error $-23$ is raised when an action expecting
 an address of type \spic{a-addr} (word-aligned) is given a non-aligned address.
-
-If putting the code on the stack would cause {\tt SDEPTH} to exceed {\tt SSIZE}, the effect of a {\tt HALT} with
-code $-257$ is performed (although the actual mechanics are not, as that too
-would involve putting a number on the stack).
 
 
 \section{Instruction set}
@@ -571,7 +567,7 @@ following calls:
     HALT} action (see section~\ref{erroract}), the reason code is
     returned as the result.}
 \iface{single\_step}{}{integer}{Execute a single pass of the execution
-    cycle, and return reason code $-258$, unless a {\tt HALT} action was
+    cycle, and return reason code $-257$, unless a {\tt HALT} action was
     obeyed (see section~\ref{erroract}), in which case the reason code
     passed to it is returned.}
 \iface{load\_object}{file, address}{integer}{Load the object module
