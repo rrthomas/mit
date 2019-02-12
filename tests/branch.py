@@ -19,8 +19,7 @@ VM.globalize(globals())
 
 # Test results
 correct = [0, 2, 96, 97, 48, 51, 10000, 10001, 10004, 10005, 10006, 10007, 10008,
-           10009, 10012, 11000, 11001, 11004, 11016, 11017, 60, 62,
-           200, 202, 300, 203, 63, 65, 66, 67, 68, 69, 70, 71, 72, 64
+           10009, 10012, 11000, 11001, 11004, 11016
 ]
 
 # Code
@@ -51,31 +50,6 @@ VM.here = 11000
 number(0)
 number(11016)
 action(BRANCHZ)
-
-VM.here = 11016
-number(60)
-action(CALL)
-
-VM.here = 60
-number(200)
-action(CALL)
-number(64)
-number(24)
-number(1)
-action(SWAP)
-number(1)
-action(DUP)
-action(STORE)
-action(LOAD)
-action(CALL)
-
-VM.here = 200
-number(300)
-action(CALL)
-action(RET)
-
-VM.here = 300
-action(RET)
 
 # Test
 for i in range(len(correct)):

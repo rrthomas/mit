@@ -50,6 +50,7 @@ extern const unsigned smite_word_bit;
 extern const smite_UWORD smite_word_mask;
 extern const smite_UWORD smite_uword_max;
 extern const smite_WORD smite_word_min;
+extern const smite_UWORD smite_frame_info_words;
 
 // VM registers
 typedef struct _smite_state smite_state;
@@ -65,21 +66,21 @@ typedef struct _smite_state smite_state;
 
 // Memory access
 // Return value is 0 if OK, or error code for invalid or unaligned address
+int smite_load_stack_address(smite_state *S, smite_UWORD addr, smite_WORD *v);
+int smite_store_stack_address(smite_state *S, smite_UWORD addr, smite_WORD v);
 int smite_load_word(smite_state *S, smite_UWORD addr, smite_WORD *value);
 int smite_store_word(smite_state *S, smite_UWORD addr, smite_WORD value);
 int smite_load_byte(smite_state *S, smite_UWORD addr, smite_BYTE *value);
 int smite_store_byte(smite_state *S, smite_UWORD addr, smite_BYTE value);
 
 // Stack access
-int smite_load_stack(smite_state *S, smite_UWORD pos, smite_WORD *v);
-int smite_store_stack(smite_state *S, smite_UWORD pos, smite_WORD v);
-int smite_pop_stack(smite_state *S, smite_WORD *v);
-int smite_push_stack(smite_state *S, smite_WORD v);
-
-int smite_load_return_stack(smite_state *S, smite_UWORD pos, smite_WORD *v);
-int smite_store_return_stack(smite_state *S, smite_UWORD pos, smite_WORD v);
-int smite_pop_return_stack(smite_state *S, smite_WORD *v);
-int smite_push_return_stack(smite_state *S, smite_WORD v);
+int smite_load_stack_address(smite_state *S, smite_UWORD addr, smite_WORD *v);
+int smite_store_stack_address(smite_state *S, smite_UWORD addr, smite_WORD v);
+int smite_copy_stack_address(smite_state *S, smite_UWORD from, smite_UWORD to, smite_UWORD depth);
+int smite_load_frame(smite_state *S, smite_UWORD pos, smite_WORD *v);
+int smite_store_frame(smite_state *S, smite_UWORD pos, smite_WORD v);
+int smite_pop_frame(smite_state *S, smite_WORD *v);
+int smite_push_frame(smite_state *S, smite_WORD v);
 
 // Interface calls
 uint8_t *smite_native_address_of_range(smite_state *S, smite_UWORD addr, smite_UWORD length);
@@ -89,7 +90,7 @@ ptrdiff_t smite_load_object(smite_state *S, smite_UWORD address, int fd);
 int smite_save_object(smite_state *S, smite_UWORD address, smite_UWORD length, int fd);
 
 // Additional implementation-specific routines, macros, types and quantities
-smite_state *smite_init(size_t size, size_t stack_size, size_t return_stack_size);
+smite_state *smite_init(size_t size, size_t stack_size);
 int smite_mem_realloc(smite_state *S, smite_UWORD size);
 void smite_destroy(smite_state *S);
 int smite_register_args(smite_state *S, int argc, char *argv[]);

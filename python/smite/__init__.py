@@ -9,7 +9,7 @@ methods available as globals, as well as the action opcode enumeration:
 
 Registers: a variable for each register; also a list, 'registers'
 Memory: M, M_word
-Stacks: S, R
+Stack: S
 Managing the VM state: load, save, initialise
 Controlling and observing execution: run, step, trace
 Examining memory: dump, disassemble
@@ -42,7 +42,7 @@ class Error(Exception):
 # Constants (all of type unsigned)
 vars().update([(c, c_uint.in_dll(libsmite, "smite_{}".format(c)).value)
                for c in ["word_size", "native_pointer_size", "byte_bit", "byte_mask",
-                         "word_bit", "stack_direction"]])
+                         "word_bit", "stack_direction", "frame_info_words"]])
 vars()["byte_bit"] = 8
 
 
@@ -86,15 +86,14 @@ libsmite.smite_store_word.argtypes = [c_void_p, c_uword, c_word]
 libsmite.smite_load_byte.argtypes = [c_void_p, c_uword, POINTER(c_ubyte)]
 libsmite.smite_store_byte.argtypes = [c_void_p, c_uword, c_ubyte]
 
-libsmite.smite_load_stack.argtypes = [c_void_p, c_uword, POINTER(c_word)]
-libsmite.smite_store_stack.argtypes = [c_void_p, c_uword, c_word]
-libsmite.smite_pop_stack.argtypes = [c_void_p, POINTER(c_word)]
-libsmite.smite_push_stack.argtypes = [c_void_p, c_word]
+libsmite.smite_load_stack_address.argtypes = [c_void_p, c_uword, POINTER(c_word)]
+libsmite.smite_store_stack_address.argtypes = [c_void_p, c_uword, c_word]
+libsmite.smite_copy_stack_address.argtypes = [c_void_p, c_uword, c_uword, c_uword]
 
-libsmite.smite_load_return_stack.argtypes = [c_void_p]
-libsmite.smite_store_return_stack.argtypes = [c_void_p]
-libsmite.smite_pop_return_stack.argtypes = [c_void_p]
-libsmite.smite_push_return_stack.argtypes = [c_void_p]
+libsmite.smite_load_frame.argtypes = [c_void_p, c_uword, POINTER(c_word)]
+libsmite.smite_store_frame.argtypes = [c_void_p, c_uword, c_word]
+libsmite.smite_pop_frame.argtypes = [c_void_p, POINTER(c_word)]
+libsmite.smite_push_frame.argtypes = [c_void_p, c_word]
 
 libsmite.smite_native_address_of_range.restype = POINTER(c_ubyte)
 libsmite.smite_native_address_of_range.argtypes = [c_void_p, c_uword, c_uword]
@@ -111,7 +110,7 @@ libsmite.smite_load_object.argtypes = [c_void_p, c_uword, c_int]
 libsmite.smite_save_object.argtypes = [c_void_p, c_uword, c_uword, c_int]
 
 libsmite.smite_init.restype = c_void_p
-libsmite.smite_init.argtypes = [c_size_t, c_size_t, c_size_t]
+libsmite.smite_init.argtypes = [c_size_t, c_size_t]
 
 libsmite.smite_mem_realloc.argtypes = [c_void_p, c_int, c_void_p]
 
@@ -130,9 +129,6 @@ libsmite.smite_find_msbit.argtypes = [c_word]
 
 libsmite.smite_byte_size.argtypes = [c_word]
 
-libsmite.smite_init_default_stacks.restype = c_void_p
-libsmite.smite_init_default_stacks.argtypes = [c_size_t]
-
 libsmite.smite_encode_instruction_file.restype = c_ptrdiff_t
 libsmite.smite_encode_instruction_file.argtypes = [c_int, c_int, c_word]
 
@@ -149,18 +145,16 @@ class State:
     '''A VM state.'''
 
     def __init__(self, memory_size=default_memory_size,
-                 data_stack_size=default_stack_size,
-                 return_stack_size=default_stack_size):
+                 data_stack_size=default_stack_size):
         '''Initialise the VM state.'''
-        self.state = libsmite.smite_init(memory_size, data_stack_size, return_stack_size)
+        self.state = libsmite.smite_init(memory_size, data_stack_size)
         if self.state == None:
             raise Exception("error creating virtual machine state")
 
         self.registers = {name : ActiveRegister(self.state, name, register.value) for (name, register) in Registers.__members__.items()}
         self.M = Memory(self)
         self.M_word = WordMemory(self)
-        self.S = Stack(self.state, self.registers["S0"], self.registers["SSIZE"], self.registers["SDEPTH"])
-        self.R = Stack(self.state, self.registers["R0"], self.registers["RSIZE"], self.registers["RDEPTH"])
+        self.S = Stack(self.state, self.registers["F0"], self.registers["FRAME_DEPTH"])
         self.here = 0
 
     def __del__(self):
@@ -179,7 +173,7 @@ class State:
 
         globals_dict.update([(name, register) for name, register in self.registers.items()])
         globals_dict.update([(name, self.__getattribute__(name)) for
-                             name in ["M", "M_word", "S", "R", "registers",
+                             name in ["M", "M_word", "S", "registers",
                                       "load", "save",
                                       "run", "step", "trace", "dump", "disassemble",
                                       "disassemble_instruction",
@@ -398,31 +392,29 @@ class Stack:
         pass
 
     '''VM stack.'''
-    def __init__(self, state, base, size, depth):
+    def __init__(self, state, frame_pointer, frame_depth):
         self.state = state
-        self.base = base
-        self.size = size
-        self.depth = depth
+        self.frame_pointer = frame_pointer
+        self.frame_depth = frame_depth
 
-    # After https://github.com/ipython/ipython/blob/master/IPython/lib/pretty.py
     def __str__(self):
         l = []
-        for i in range(self.depth.get(), 0, -1):
+        for i in range(self.frame_pointer.get() + self.frame_depth.get()):
             v = c_word()
-            libsmite.smite_load_stack(self.state, i - 1, byref(v))
+            libsmite.smite_load_stack_address(self.state, i, byref(v))
             l.append(v.value)
         return str(l)
 
     def push(self, v):
         '''Push a word on to the stack.'''
-        ret = libsmite.smite_push_stack(self.state, v)
+        ret = libsmite.smite_push_frame(self.state, v)
         if ret < 0:
             raise self.StackError("error pushing to stack")
 
     def pop(self):
         '''Pop a word off the stack.'''
         v = c_word()
-        ret = libsmite.smite_pop_stack(self.state, byref(v))
+        ret = libsmite.smite_pop_frame(self.state, byref(v))
         if ret < 0:
             raise self.StackError("error popping from stack")
         return v.value

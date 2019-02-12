@@ -34,16 +34,9 @@
 \newlength{\stackcom}\stackcom=3.0in
 \newlength{\beforestackcom} \advance\beforestackcom by \instname
 
-% With no return stack
 \newcommand{\inst}[3]{\item[]\parbox{\itemwidth}%
 {\makebox[\instname][l]{\tt #1}%
 \makebox[\stackcom][r]{\tt ( \spic{#2} )}\\[0.5ex]#3}}
-
-% With return stack
-\newcommand{\instr}[4]{\item[]\parbox{\itemwidth}%
-{\makebox[\instname][l]{\tt #1}%
-\makebox[\stackcom][r]{\tt ( \spic{#2} )}\\\makebox[\beforestackcom]{}%
-\makebox[\stackcom][r]{\tt R: ( \spic{#3} )}\\[0.5ex]#4}}
 
 % Lay out an external interface call
 
@@ -53,14 +46,13 @@
 
 % Lay out a line of the opcode table
 
-\newcommand{\opcodetbl}[6]{0x#1 & {\tt #2} & 0x#3 & {\tt #4} & 0x#5 & {\tt #6}
-\\}
-\newcommand{\opcodetbltwo}[4]{0x#1 & {\tt #2} & 0x#3 & {\tt #4} \\}
+\newcommand{\opcodetbl}[4]{0x#1 & {\tt #2} & 0x#3 & {\tt #4} \\}
+\newcommand{\opcodetblone}[2]{0x#1 & {\tt #2} \\}
 
 
 \title{The @PACKAGE_NAME@ Virtual Machine}
 \author{Reuben Thomas}
-\date{12th January 2019}
+\date{2nd February 2019}
 
 \begin{document}
 \maketitle
@@ -77,9 +69,9 @@ stated. Addresses are written in hexadecimal; hex numbers are prefixed with
 
 \section{Introduction}
 
-@PACKAGE_NAME@ is a simple virtual machine for study and experiment. It is a stack machine, based on the more complex register machine~\cite{mite0}.
+@PACKAGE_NAME@ is a simple virtual machine (VM) for study and experiment. It is a stack machine, based on the more complex register machine~\cite{mite0}.
 This paper gives a full description of @PACKAGE_NAME@, but
-certain implementation-dependent features, such as the size of the stacks, are
+certain implementation-dependent features are parametrized or
 purposely left unspecified, and the exact method of implementation is left to
 the implementor in many particulars.
 
@@ -88,14 +80,13 @@ code routines on the host computer may be accessed using the {\tt CALL\_NATIVE}
 action, which can also be used to implement I/O (see~\ref{accessact}). @PACKAGE_NAME@ supports a simple object module format.
 
 @PACKAGE_NAME@ is conceptually (and usually in fact) a library, embedded in other programs.
-A small interface is provided for other programs to control @PACKAGE_NAME@.
 
 
 \section{Architecture}
 
 @PACKAGE_NAME@'s address unit is the byte, which is eight bits.
 Words are {\tt WORD\_SIZE} bytes. The word is the size of the numbers
-and addresses on which @PACKAGE_NAME@ operates, and of the items placed on the stacks.
+and addresses on which @PACKAGE_NAME@ operates, and of the items placed on the stack.
 The size of the byte and range of word sizes allowed have been chosen with a view to making efficient implementation possible on the vast majority of current machine architectures.
 
 Words may have the bytes stored in big-endian or little-endian order. The
@@ -114,15 +105,13 @@ The registers, each with its function, are set out in table~\ref{regtable}.
     \midrule
 {\tt PC} & The {\tt P}rogram {\tt C}ounter. Points to the next
     byte from which an instruction may be loaded. \\
+{\tt F0} & The frame address of the bottom-most item of the current stack {\tt F}rame. \\
 {\tt ITYPE} & The type of an instruction to be executed: $0$ for a number, and $1$ for an action. \\
 {\tt I} & The {\tt I}nstruction. Holds the opcode of an instruction
     to be executed. \\
-{\tt MEMORY} & The size in bytes of @PACKAGE_NAME@'s memory,
+{\tt MEMORY\_SIZE} & The size in bytes of @PACKAGE_NAME@'s memory,
     which must be a whole number of words. \\
-{\tt SDEPTH} & The data {\tt S}tack {\tt DEPTH} (number of items on the stack). \\
-{\tt RDEPTH} & The {\tt R}eturn stack {\tt DEPTH} (number of items on the return stack. \\
-{\tt SSIZE} & The number of words allocated for the data stack. \\
-{\tt RSIZE} & The number of words allocated for the return stack. \\
+{\tt FRAME\_DEPTH} & The frame {\tt DEPTH} (number of items in the current frame). \\
 {\tt ENDISM} & The endianness of @PACKAGE_NAME@: 0 = Little-endian,
     1 = Big-endian. \\
 {\tt WORD\_SIZE} & The number of bytes in a word. Must be a power of $2$, and in the range $2$ to $32$ inclusive. \\
@@ -143,20 +132,13 @@ by actions (see section~\ref{registeract}); not all registers are accessible, an
 
 @PACKAGE_NAME@'s memory is a contiguous sequence of bytes with addresses in the range $0$ to {\tt MEMORY}~$-$~1.
 
-\subsection{Stacks}
 
-The data and return stacks are LIFO stacks of words. To {\bf push} an item on to
-a stack means to add a new item to the top of the stack, increasing the stack depth by $1$; to {\bf pop} an item means to reduce the stack depth by $1$. Actions that change the number of items on a
-stack implicitly pop their arguments and push their results.
+\subsection{Stack}
 
-The data stack is used for passing values to actions and routines and the
-return stack for holding subroutine return addresses. The return stack may be used for other
-operations subject to the restrictions placed on it by its normal usage: it must
-be returned before a {\tt RET} action to the state it was in directly
-after the corresponding {\tt CALL}.
+The stack is a LIFO stack of frames. Each frame is a stack of words, and has a frame value that is typically a subroutine return address. To {\bf push} an item on to
+the stack means to add a new item to the top of the frame, increasing the stack depth by $1$; to {\bf pop} an item means to reduce the stack depth by $1$. Actions that change the number of items in the frame implicitly pop their arguments and push their results.
 
-In what follows, for ``the stack'' read ``the data stack''; the return stack is
-always mentioned explicitly.
+Frame addresses are conceptually native addresses (and may be exactly native addresses), but must fit in a VM word. A valid frame address is the value of {\tt F0} of a currently-active frame.
 
 
 \subsection{Operation}
@@ -213,7 +195,7 @@ An error can be raised explicitly by {\tt HALT} (see section~\ref{erroract}); er
 \begin{center}
 \begin{tabular}{cl} \toprule
 \bf Code & \bf Meaning \\ \midrule
-$-9$ & Invalid address (see below). \\
+$-9$ & Invalid address (see below). \\ % FIXME: distinguish between invalid memory, stack and frame addresses
 $-10$ & Division by zero attempted (see section~\ref{arithmetic}). \\
 $-23$ & Address alignment error (see below). \\
 $-256$ & Invalid opcode (see section~\ref{opcodes}). \\ \bottomrule
@@ -237,19 +219,18 @@ with the instructions grouped according to function. The
 instructions are given in the following format:
 
 \begin{description}
-\instr{NAME}{before — after}{before — after}{Description.}
+\inst{NAME}{before — after}{Description.}
 \end{description}
 
-The first line consists of the name of the instruction. On the right are the
-stack effect or effects, which show the effect of the instruction on the data and return (R) stacks.
+The first line consists of the name of the instruction. On the right is the
+stack effect, which shows the effect of the instruction on the stack.
 Underneath is the description.
 
 {\bf Stack effects} are written
 
 \centerline{\tt ( \spic{before — after} )}
 
-\noindent where \spic{before} and \spic{after} are stack pictures showing the items on top
-of a stack before and after the instruction is executed.
+\noindent where \spic{before} and \spic{after} are stack pictures showing the items on top of the stack before and after the instruction is executed. If the instruction adds or removes a frame, then the dash {\tt {\spic{--}}} is replaced by a vertical bar {\tt |}.
 An instruction only affects the items shown in its
 stack effects. The brackets and dashes serve merely to delimit the stack
 effect and to separate \spic{before} from \spic{after}. {\bf Stack pictures}
@@ -273,6 +254,7 @@ different types of stack item are shown in table~\ref{typetable}.
 \spic{x} & unspecified word \\
 \spic{addr} & address \\
 \spic{a-addr} & word-aligned address \\
+\spic{f-addr} & frame address (may be a native address, but must fit in a single VM word) \\
 \spic{n-addr} & native address \\
 \bottomrule
 \end{tabular}
@@ -292,6 +274,7 @@ shows the subtype relationships. The subtype relation is transitive.
 \begin{tabular}{c} \toprule
 \spic{u} $\Rightarrow$ \spic{x} \\
 \spic{n} $\Rightarrow$ \spic{x} \\
+\spic{f-addr} $\Rightarrow$ \spic{x} \\
 \spic{flag} $\Rightarrow$ \spic{u} \\
 \spic{byte} $\Rightarrow$ \spic{u} \\
 \spic{a-addr} $\Rightarrow$ \spic{addr} $\Rightarrow$ \spic{u} \\
@@ -315,9 +298,6 @@ The symbols \spic{i*x} and \spic{j*x} are used to denote different
 collections of zero or more words of any data type. Ellipsis is used for
 indeterminate numbers of specified types of word.
 
-If an instruction does not modify the return stack, the corresponding stack
-picture is omitted.
-
 
 \subsection{Numbers}
 \label{numbers}
@@ -328,15 +308,29 @@ picture is omitted.
 
 \subsection{Stack manipulation}
 
-These actions manage the data stack and move values between stacks.
+These actions manage the stack.
 
 \begin{description}
 \inst{POP}{\x{u}\dots\x1 u —}{Remove \spic{u} items from the stack.}
 \inst{DUP}{\x{u}\dots\x0 u — \x{u}\dots\x0 \x{u}}{Remove \spic{u}. Copy \x{u} to the top of the stack.}
 \inst{SWAP}{\x{u}\dots\x0 u — \x0\x{u-1}\dots\x1 \x{u}}{Exchange the top stack item with the \spic{u}th. If \spic{u} is zero, do nothing.}
-\instr{POP2R}{x —}{— x}{Move \spic{x} to the return stack.}
-\instr{RPOP}{— x}{x —}{Move \spic{x} from the return stack to the data stack.}
-\instr{RPUSH}{u — \x{u}}{\x{u} \x{u-1}\dots\x{0} — \x{u} \x{u-1}\dots\x{0}}{Remove \spic{u}. Copy \x{u} to the top of the data stack.}
+\end{description}
+
+\subsection{Frame manipulation}
+\label{frame}
+
+These actions manage the current frame and allow access to outer frames.
+
+A memory error is raised for an invalid frame address or stack address.
+
+\begin{description}
+\inst{PUSH\_FRAME}{\x{u}\dots\x0 u x | \x{u}\dots\x0}{Push a new frame on the stack, with frame value \spic{x}, and move the \spic{u} top-most values of the old frame to the new frame.}
+\inst{POP\_FRAME}{i*x | j*x i*x x}{Pops the top-most frame, pushing its stack items to the next outer frame, followed by the frame value \spic{x} of the popped frame.}
+\inst{LOAD\_FRAME\_VALUE}{f-addr -- x}{Push the frame value \spic{x} of the frame whose address is \spic{f-addr}.}
+\inst{LOAD\_OUTER\_F0}{f-addr$_1$ -- f-addr$_2$}{Push the frame address \spic{f-addr$_2$} of the next outer frame from the frame whose address is \spic{f-addr$_1$}.}
+\inst{LOAD\_OUTER\_DEPTH}{f-addr -- u}{Push the number of items \spic{u} in the frame outside the frame whose address is \spic{f-addr}.}
+\inst{FRAME\_DUP}{u f-addr -- \x}{Push the \spic{u}th item of the frame whose address is \spic{f-addr}.}
+\inst{FRAME\_SWAP}{\x1 u f-addr -- \x2}{Exchange the stack item \x1 with the \spic{u}th item of the frame whose address is \spic{f-addr}.}
 \end{description}
 
 \subsection{Comparison}
@@ -421,13 +415,11 @@ also an action to add a number to another stored in memory.
 \label{registeract}
 
 \begin{description}
-\inst{PUSH\_SDEPTH}{— u}{\spic{u} is the value of {\tt SDEPTH}, the number of items on the stack.}
-\inst{STORE\_SDEPTH}{u —}{Set {\tt SDEPTH} to \spic{u}.}
-\inst{PUSH\_RP}{— a-addr}{\spic{a-addr} is the value of {\tt RP}.}
-\inst{STORE\_RP}{a-addr —}{Set {\tt RP} to \spic{a-addr}.}
+\inst{PUSH\_FRAME\_DEPTH}{— u}{\spic{u} is the value of {\tt FRAME\_DEPTH}.}
+\inst{STORE\_FRAME\_DEPTH}{u —}{Set {\tt FRAME\_DEPTH} to \spic{u}.}
 \inst{PUSH\_PC}{— addr}{Push {\tt PC} on to the stack.}
-\inst{PUSH\_SSIZE}{— u}{Push {\tt SSIZE} on to the stack.}
-\inst{PUSH\_RSIZE}{— u}{Push {\tt RSIZE} on to the stack.}
+\inst{PUSH\_F0}{— f-addr}{Push the current frame address on to the stack.}
+\inst{STORE\_F0}{f-addr —}{Set {\tt F0} to the given frame address.}
 \inst{PUSH\_MEMORY}{— a-addr}{Push {\tt MEMORY} on to the stack.}
 \inst{PUSH\_WORD\_SIZE}{— u}{\spic{u} is the value of {\tt WORD\_SIZE}.}
 \inst{PUSH\_NATIVE\_POINTER\_SIZE}{— u}{\spic{u} is the value of {\tt NATIVE\_POINTER\_SIZE}.}
@@ -457,15 +449,13 @@ Branches:
 \inst{BRANCHZ}{flag addr —}{If \spic{flag} is false then set {\tt PC} to \spic{addr}.}
 \end{description}
 
-Subroutine call and return:
+Subroutine call (return is {\tt BRANCH}):
 
 \nopagebreak
 
 \begin{description}
-\instr{CALL}{\aaddr1 —}{ — \aaddr2}{Push {\tt PC} on to the return stack, put \spic{\aaddr1} into {\tt PC}.}
-\instr{RET}{—}{addr —}{Put \spic{addr} into {\tt PC}.}
+\inst{CALL}{\x{u}\dots\x0 u addr | \x{u}\dots\x0}{Exchange {\tt PC} with the top stack value, then perform the action of {\tt PUSH\_FRAME}. See section~\ref{frame}.}
 \end{description}
-
 
 \subsection{Errors}
 \label{erroract}
@@ -473,7 +463,7 @@ Subroutine call and return:
 This action gives access to @PACKAGE_NAME@'s error mechanism (see section~\ref{errors}).
 
 \begin{description}
-\inst{HALT}{x —}{Stop @PACKAGE_NAME@, returning reason code \spic{x} to the calling program (see section~\ref{calls}). If {\tt SDEPTH} is greater than {\tt SSIZE}, $-257$ is returned as the reason code.}
+\inst{HALT}{x —}{Stop @PACKAGE_NAME@, returning reason code \spic{x} to the calling program (see section~\ref{calls}). If {\tt FRAME\_DEPTH} is $0$, $-257$ is returned as the reason code.}
 \end{description}
 
 
@@ -501,25 +491,30 @@ Table~\ref{opcodetable} lists the action opcodes in numerical order. Other actio
 
 \begin{table}[htb]
 \begin{center}
-\begin{tabular}{*{3}{cc}} \toprule
-\bf Opcode & \bf Action & \bf Opcode & \bf
-    Action & \bf Opcode & \bf Action \\ \midrule
-\opcodetbl{00}{NOP}	{10}{AND}	{20}{PUSH\_WORD\_SIZE}
-\opcodetbl{01}{POP}	{11}{OR}        {21}{PUSH\_NATIVE\_POINTER\_SIZE}
-\opcodetbl{02}{DUP}	{12}{XOR}	{22}{PUSH\_SDEPTH}
-\opcodetbl{03}{SWAP}	{13}{LSHIFT}	{23}{STORE\_SDEPTH}
-\opcodetbl{04}{RPUSH}	{14}{RSHIFT}	{24}{PUSH\_RDEPTH}
-\opcodetbl{05}{POP2R}	{15}{LOAD}	{25}{STORE\_RDEPTH}
-\opcodetbl{06}{RPOP}	{16}{STORE}	{26}{PUSH\_PC}
-\opcodetbl{07}{LT}	{17}{LOADB}	{27}{PUSH\_SSIZE}
-\opcodetbl{08}{EQ}	{18}{STOREB}	{28}{PUSH\_RSIZE}
-\opcodetbl{09}{ULT}	{19}{BRANCH}	{29}{PUSH\_MEMORY}
-\opcodetbltwo{0a}{ADD}	{1a}{BRANCHZ}
-\opcodetbltwo{0b}{NEGATE}	{1b}{CALL}
-\opcodetbltwo{0c}{MUL}	{1c}{RET}
-\opcodetbltwo{0d}{UDIVMOD}	{1d}{HALT}
-\opcodetbltwo{0e}{DIVMOD}	{1e}{CALL\_NATIVE}
-\opcodetbltwo{0f}{INVERT}  {1f}{EXTRA}
+\begin{tabular}{*{2}{cc}} \toprule
+\bf Opcode & \bf Action & \bf Opcode & \bf Action \\ \midrule
+\opcodetbl{00}{NOP}	{16}{BRANCH}
+\opcodetbl{01}{POP}	{17}{BRANCHZ}
+\opcodetbl{02}{DUP}	{18}{HALT}
+\opcodetbl{03}{SWAP}	{19}{CALL\_NATIVE}
+\opcodetbl{04}{LT}	{1a}{EXTRA}
+\opcodetbl{05}{EQ}	{1b}{PUSH\_WORD\_SIZE}
+\opcodetbl{06}{ULT}	{1c}{PUSH\_NATIVE\_POINTER\_SIZE}
+\opcodetbl{07}{ADD}	{1d}{PUSH\_FRAME\_DEPTH}
+\opcodetbl{08}{NEGATE}	{1e}{STORE\_FRAME\_DEPTH}
+\opcodetbl{09}{MUL}	{1f}{PUSH\_PC}
+\opcodetbl{0a}{UDIVMOD}	{20}{PUSH\_MEMORY}
+\opcodetbl{0b}{DIVMOD}	{21}{PUSH\_F0}
+\opcodetbl{0c}{INVERT}	{22}{STORE\_F0}
+\opcodetbl{0d}{AND}	{23}{PUSH\_FRAME}
+\opcodetbl{0e}{OR}	{24}{POP\_FRAME}
+\opcodetbl{0f}{XOR}	{25}{LOAD\_FRAME\_VALUE}
+\opcodetbl{10}{LSHIFT}	{26}{LOAD\_OUTER\_F0}
+\opcodetbl{11}{RSHIFT}	{27}{LOAD\_OUTER\_DEPTH}
+\opcodetbl{12}{LOAD}	{28}{FRAME\_DUP}
+\opcodetbl{13}{STORE}   {29}{FRAME\_SWAP}
+\opcodetbl{14}{LOADB}   {2a}{CALL}
+\opcodetblone{15}{STOREB}
  \bottomrule
 \end{tabular}
 \caption{\label{opcodetable}Action opcodes}

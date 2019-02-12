@@ -44,14 +44,6 @@ correct = [
      [],
      [0],
      [],
-     [0],
-     [0, 1],
-     [],
-     [0],
-     [],
-     [0],
-     [0, 1],
-     [],
 ]
 
 # Test code
@@ -79,16 +71,8 @@ number(size * word_size - word_size)
 action(LOAD)
 number(1)
 action(POP)
-action(PUSH_SDEPTH)
-action(STORE_SDEPTH)
-action(PUSH_RDEPTH)
-number(1)
-action(POP)
-number(0)
-action(STORE_RDEPTH)
-action(PUSH_RDEPTH)
-number(1)
-action(POP)
+action(PUSH_FRAME_DEPTH)
+action(STORE_FRAME_DEPTH)
 
 # Test
 for i in range(len(correct)):

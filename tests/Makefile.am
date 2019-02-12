@@ -19,6 +19,7 @@ TESTS =	\
 	comparison.py	\
 	extra_libc.py	\
 	errors.py	\
+	frame.py	\
 	hello.py	\
 	init.py		\
 	load_object.py	\

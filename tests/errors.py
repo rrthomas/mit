@@ -64,8 +64,6 @@ assert(len(test) == len(result))
 # Test
 error = 0
 for i in range(len(test)):
-    SDEPTH.set(0)    # reset stack pointer
-
     print("Test {}".format(i + 1))
     PC.set(test[i])
     res = run()

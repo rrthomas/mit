@@ -36,10 +36,6 @@ correct = [
     [2, 1, 2, 2],
     [2, 1, 2, 2, 0],
     [2, 1, 2, 2, 2],
-    [2, 1, 2, 2],
-    [2, 1, 2, 2, 0],
-    [2, 1, 2, 2, 2],
-    [2, 1, 2, 2, 2, 2],
 ]
 
 
@@ -72,13 +68,8 @@ number(0)
 action(DUP)
 number(0)
 action(DUP)
-action(POP2R)
-number(0)
-action(RPUSH)
-action(RPOP)
 
 # Test: first part
-first_len = 14
 for i in range(first_len):
     print("Data stack: {}".format(S))
     print("Correct stack: {}\n".format(correct[i]))
@@ -88,7 +79,7 @@ for i in range(first_len):
     step()
     print("I = {}".format(disassemble_instruction(ITYPE.get(), I.get())))
 
-SDEPTH.set(0)	# reset stack
+FRAME_DEPTH.set(0)	# reset stack
 S.push(2)
 S.push(1)
 S.push(0)		# initialise the stack
