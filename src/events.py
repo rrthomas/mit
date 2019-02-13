@@ -61,6 +61,7 @@ for i, a in enumerate(vm_data.Actions):
         '''\
         ITYPE = INSTRUCTION_ACTION;
         S->I = {};
+        trace(ITYPE, S->I);
 {}'''.format(a.value.opcode, a.value.code),
     ))
 for n in [0, 1]:
@@ -69,6 +70,7 @@ for n in [0, 1]:
         '''\
         ITYPE = INSTRUCTION_NUMBER;
         S->I = {};
+        trace(ITYPE, S->I);
         PUSH(S->I);'''.format(n),
     ))
 ALL_EVENTS.append(Event(b'0 n', 'LITn',
@@ -77,6 +79,7 @@ ALL_EVENTS.append(Event(b'0 n', 'LITn',
         ITYPE = INSTRUCTION_NUMBER;
         S->PC--;
         RAISE(smite_decode_instruction(S, &S->PC, &S->I));
+        trace(ITYPE, S->I);
         PUSH(S->I);''',
 ))
 
