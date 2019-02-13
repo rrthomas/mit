@@ -135,24 +135,7 @@ int smite_copy_stack_address(smite_state *S, smite_UWORD from, smite_UWORD to, s
         depth > S->F0 + S->FRAME_DEPTH - MAX(from, to))
         return -9;
 
-    if (from > to) {
-        for (smite_UWORD i = 0; i < depth; i++) {
-            smite_WORD v;
-            int ret = smite_load_stack_address(S, from + i, &v);
-            ret = ret ? ret : smite_store_stack_address(S, to + i, v);
-            if (ret)
-                return ret;
-        }
-    } else if (from < to) {
-        for (smite_UWORD i = 0; i < depth; i++) {
-            smite_WORD v;
-            int ret = smite_load_stack_address(S, from + depth - i - 1, &v);
-            ret = ret ? ret : smite_store_stack_address(S, to + depth - i - 1, v);
-            if (ret)
-                return ret;
-        }
-    }
-
+    memmove(S->S0 + to * smite_stack_direction, S->S0 + from * smite_stack_direction, depth * smite_word_size);
     return 0;
 }
 
