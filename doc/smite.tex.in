@@ -325,7 +325,7 @@ A memory error is raised for an invalid frame address or stack address.
 
 \begin{description}
 \inst{PUSH\_FRAME}{\x{u}\dots\x0 u x | \x{u}\dots\x0}{Push a new frame on the stack, with frame value \spic{x}, and move the \spic{u} top-most values of the old frame to the new frame.}
-\inst{POP\_FRAME}{i*x | j*x i*x x}{Pops the top-most frame, pushing its stack items to the next outer frame, followed by the frame value \spic{x} of the popped frame.}
+\inst{POP\_FRAME}{i*x | j*x i*x x f-addr}{Pops the frame whose address is \spic{f-addr}, and any inner frames; push the current frame’s stack items to the next outer frame, followed by the frame value \spic{x} of the popped frame.}
 \inst{LOAD\_FRAME\_VALUE}{f-addr -- x}{Push the frame value \spic{x} of the frame whose address is \spic{f-addr}.}
 \inst{LOAD\_OUTER\_F0}{f-addr$_1$ -- f-addr$_2$}{Push the frame address \spic{f-addr$_2$} of the next outer frame from the frame whose address is \spic{f-addr$_1$}.}
 \inst{LOAD\_OUTER\_DEPTH}{f-addr -- u}{Push the number of items \spic{u} in the frame outside the frame whose address is \spic{f-addr}.}

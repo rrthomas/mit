@@ -26,6 +26,7 @@ correct += [
     [answer, initial_F0, 1],
     [answer, initial_F0, 1, 2],
     [answer, initial_F0, 1, 2, 3],
+    [answer, initial_F0, 1, 2, 3, initial_F0 + frame_info_words],
     [1, 2, 3, answer],
     [1, 2, 3, answer, 4],
     [],
@@ -36,6 +37,7 @@ action(PUSH_FRAME)
 number(1)
 number(2)
 number(3)
+action(PUSH_F0)
 action(POP_FRAME)
 action(PUSH_FRAME_DEPTH)
 action(POP)
@@ -58,6 +60,7 @@ correct += [
     [answer, initial_F0, 1, 2, 3],
     [answer, initial_F0, 1, 2, 3, initial_F0 + frame_info_words],
     [answer, initial_F0, 1, 2, 3, 0],
+    [answer, initial_F0, 1, 2, 3, 0, initial_F0 + frame_info_words],
     [1, 2, 3, 0, answer],
     [1, 2, 3, 0, answer, 5],
     [],
@@ -78,6 +81,7 @@ number(2)
 number(3)
 action(PUSH_F0)
 action(LOAD_OUTER_DEPTH)
+action(PUSH_F0)
 action(POP_FRAME)
 action(PUSH_FRAME_DEPTH)
 action(POP)
@@ -118,6 +122,7 @@ correct += [
     [1, 2, 2, 3, initial_F0, 1, initial_F0],
     [1, 2, 2, 3, initial_F0, 1, initial_F0, 1],
     [1, 1, 2, 3, initial_F0, 2],
+    [1, 1, 2, 3, initial_F0, 2, initial_F0 + frame_info_words + 3],
     [1, 1, 2, 2, 3],
 ]
 number(0)
@@ -132,6 +137,7 @@ action(PUSH_F0)
 action(LOAD_OUTER_F0)
 number(1)
 action(FRAME_SWAP)
+action(PUSH_F0)
 action(POP_FRAME)
 
 # Test CALL
@@ -142,6 +148,7 @@ correct += [
     [1, 1, 2, 2, 3, subroutine],
     [1, VM.here, initial_F0, 1, 2, 2],
     [1, VM.here, initial_F0, 1, 2, 2, 3],
+    [1, VM.here, initial_F0, 1, 2, 2, 3, initial_F0 + frame_info_words + 1],
     [1, 1, 2, 2, 3, VM.here],
     [1, 1, 2, 2, 3],
     [1, 1, 2, 2, 3, answer],
@@ -159,7 +166,7 @@ correct += [
     [0, 1],
     [],
     [answer],
-    [42, 1, 2, 2, 3, 42, 6, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [42, 1, 2, 2, 3, 42, 6, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 ]
 action(PUSH_F0)
 number(1)
@@ -170,6 +177,7 @@ action(PUSH_F0)
 
 VM.here = subroutine
 number(3)
+action(PUSH_F0)
 action(POP_FRAME)
 action(BRANCH)
 

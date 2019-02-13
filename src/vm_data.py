@@ -304,12 +304,14 @@ class Actions(Enum):
     ''')
 
     POP_FRAME = Action(0x24, '''\
+        smite_WORD frame;
+        POP(&frame);
         smite_WORD outer_F0;
-        RAISE(smite_load_stack_address(S, S->F0 - 1, &outer_F0));
+        RAISE(smite_load_stack_address(S, frame - 1, &outer_F0));
         smite_WORD outer_value;
-        RAISE(smite_load_stack_address(S, S->F0 - 2, &outer_value));
-        RAISE(smite_copy_stack_address(S, S->F0, S->F0 - smite_frame_info_words, S->FRAME_DEPTH));
-        S->FRAME_DEPTH = S->F0 + S->FRAME_DEPTH - (smite_UWORD)outer_F0 - smite_frame_info_words;
+        RAISE(smite_load_stack_address(S, frame - 2, &outer_value));
+        RAISE(smite_copy_stack_address(S, S->F0, frame - smite_frame_info_words, S->FRAME_DEPTH));
+        S->FRAME_DEPTH += frame - smite_frame_info_words - outer_F0;
         S->F0 = (smite_UWORD)outer_F0;
         PUSH(outer_value);
     ''')
