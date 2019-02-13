@@ -11,9 +11,8 @@ this:
     $ smite --trace /tmp/myprog.trace myprog [arguments]
 
 An empty file is also acceptable as a trace file. Of course it won't make a
-very fast interpreter. However, the option of using an empty trace file would
-be useful for bootstrapping if, at some point in the future, the specialised
-interpreter supports "--trace".
+very fast interpreter. However, the option of using an empty trace file is
+useful for bootstrapping.
 
 Trace files can be slow to generate, so you may want to keep a library of
 them. However, trace files can also be very big (hundreds of megabytes per
