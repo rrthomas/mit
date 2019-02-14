@@ -34,7 +34,7 @@ verify(sizeof(int) <= sizeof(smite_WORD));
 FILE *trace_fp = NULL; // FILE * of trace file, if used
 static void trace(int type, smite_WORD opcode) {
     if (trace_fp)
-        fprintf(trace_fp, "%d %08x\n", type, (smite_UWORD)opcode);
+        fprintf(trace_fp, "%d %"PRI_XWORD"\n", type, (smite_UWORD)opcode);
 }
 
 #include "instruction-actions.h"
