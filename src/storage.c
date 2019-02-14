@@ -20,7 +20,6 @@
 
 // Constants
 const unsigned smite_word_size = WORD_SIZE;
-const unsigned smite_native_pointer_size = (unsigned)sizeof(void *);
 const unsigned smite_byte_bit = 8;
 const unsigned smite_byte_mask = (1 << smite_BYTE_BIT) - 1;
 const unsigned smite_word_bit = WORD_SIZE * smite_BYTE_BIT;
@@ -145,6 +144,33 @@ int smite_push_stack(smite_state *S, smite_WORD v)
     return smite_store_stack(S, 0, v);
 }
 
+int smite_rotate_stack(smite_state *S, smite_WORD pos)
+{
+    if (pos > 0) {
+        if (pos >= (smite_WORD)S->STACK_DEPTH)
+        return -9;
+
+        smite_UWORD offset = S->STACK_DEPTH - pos - 1;
+        smite_WORD temp = *(S->S0 + offset * smite_stack_direction);
+        memmove(S->S0 + offset * smite_stack_direction,
+                S->S0 + (offset + 1) * smite_stack_direction,
+                (S->STACK_DEPTH - offset) * sizeof(smite_WORD));
+        *(S->S0 + (S->STACK_DEPTH - 1) * smite_stack_direction) = temp;
+    } else if (pos < 0) {
+        if (pos <= -(smite_WORD)S->STACK_DEPTH)
+            return -9;
+
+        smite_UWORD offset = S->STACK_DEPTH + pos - 1;
+        smite_WORD temp = *(S->S0 + (S->STACK_DEPTH - 1) * smite_stack_direction);
+        memmove(S->S0 + (offset + 1) * smite_stack_direction,
+                S->S0 + offset * smite_stack_direction,
+                (S->STACK_DEPTH - offset) * sizeof(smite_WORD));
+        *(S->S0 + offset * smite_stack_direction) = temp;
+    }
+
+    return 0;
+}
+
 
 // Initialisation and memory management
 
@@ -165,6 +191,8 @@ int smite_mem_realloc(smite_state *S, smite_UWORD size)
 }
 
 
+// FIXME: instead of size parameters, use default values, and realloc on
+// demand for more memory.
 smite_state *smite_init(size_t size, size_t data_stack_size)
 {
     if (size > smite_max_memory_size || data_stack_size > smite_max_stack_size)

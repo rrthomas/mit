@@ -15,7 +15,6 @@ PY_LOG_COMPILER = env $(PY_LOG_ENV) $(PYTHON)
 TESTS =	\
 	arithmetic.py	\
 	branch.py	\
-	call_native.py	\
 	comparison.py	\
 	extra_libc.py	\
 	errors.py	\
@@ -25,7 +24,6 @@ TESTS =	\
 	logic.py	\
 	memory.py	\
 	numbers.py	\
-	registers.py	\
 	run.py		\
 	save_object.py	\
 	single_step.py	\

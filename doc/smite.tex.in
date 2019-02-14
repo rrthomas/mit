@@ -24,7 +24,7 @@
 \newcommand{\n}[1]{\spic{n$_{#1}$}}
 \newcommand{\U}[1]{\spic{u$_{#1}$}}
 \newcommand{\noru}[1]{\spic{n$_#1${\tt |}u$_{#1}$}}
-\newcommand{\aaddr}[1]{\spic{a-addr$_{#1}$}}
+\newcommand{\addr}[1]{\spic{addr$_{#1}$}}
 
 % Lay out an action definition
 
@@ -52,7 +52,7 @@
 
 \title{The @PACKAGE_NAME@ Virtual Machine}
 \author{Reuben Thomas}
-\date{27th January 2019}
+\date{13th February 2019}
 
 \begin{document}
 \maketitle
@@ -60,7 +60,7 @@
 \subsection*{Typographical conventions}
 
 Actions and registers are shown in {\tt Typewriter} font;
-interface calls are shown in {\bf Bold} type, and followed by empty parentheses.
+interface calls are shown in {\bf Bold} type.
 
 Addresses are given in bytes and refer to the VM address space except where
 stated. Addresses are written in hexadecimal; hex numbers are prefixed with
@@ -70,16 +70,10 @@ stated. Addresses are written in hexadecimal; hex numbers are prefixed with
 \section{Introduction}
 
 @PACKAGE_NAME@ is a simple virtual machine for study and experiment. It is a stack machine, based on the more complex register machine~\cite{mite0}.
-This paper gives a full description of @PACKAGE_NAME@, but
-certain implementation-dependent features, such as the size of the stack, are
-purposely left unspecified, and the exact method of implementation is left to
-the implementor in many particulars.
+This paper gives a full description of @PACKAGE_NAME@.
 
-@PACKAGE_NAME@ is self-contained. Machine
-code routines on the host computer may be accessed using the {\tt CALL\_NATIVE}
-action, which can also be used to implement I/O (see~\ref{accessact}). @PACKAGE_NAME@ supports a simple object module format.
-
-@PACKAGE_NAME@ is conceptually (and usually in fact) a library, embedded in other programs.
+@PACKAGE_NAME@ is conceptually (and usually in fact) a library, embedded in other programs; it supports a simple object module format.
+External access may be implemented via the implementation-defined {\tt EXTRA} instruction (see~\ref{accessact}).
 
 
 \section{Architecture}
@@ -102,20 +96,13 @@ The registers, each with its function, are set out in table~\ref{regtable}.
 \begin{center}
 \begin{tabular}{cp{3.75in}} \toprule
 \bf Register & \bf Function \\
-    \midrule
-{\tt PC} & The {\tt P}rogram {\tt C}ounter. Points to the next
-    byte from which an instruction may be loaded. \\
+ \midrule
+{\tt PC} & The {\tt P}rogram {\tt C}ounter. Points to the next byte from which an instruction may be loaded. \\
 {\tt ITYPE} & The type of an instruction to be executed: $0$ for a number, and $1$ for an action. \\
-{\tt I} & The {\tt I}nstruction. Holds the opcode of an instruction
-    to be executed. \\
-{\tt MEMORY\_SIZE} & The size in bytes of @PACKAGE_NAME@'s memory,
-    which must be a whole number of words. \\
-{\tt STACK\_DEPTH} & The stack {\tt DEPTH} (number of items on the stack). \\
-{\tt STACK\_SIZE} & The number of words allocated for the stack. \\
-{\tt ENDISM} & The endianness of @PACKAGE_NAME@: 0 = Little-endian,
-    1 = Big-endian. \\
-{\tt WORD\_SIZE} & The number of bytes in a word. Must be a power of $2$, and in the range $2$ to $32$ inclusive. \\
-{\tt NATIVE\_POINTER\_SIZE} & The number of bytes in a host machine pointer (for {\tt CALL\_NATIVE}; see section~\ref{accessact}). \\
+{\tt I} & The {\tt I}nstruction. Holds the opcode of an instruction to be executed. \\
+{\tt STACK\_DEPTH} & The number of items on the stack. \\
+{\tt ENDISM} & The endianness of @PACKAGE_NAME@: 0 = Little-endian, 1 = Big-endian. \\
+{\tt WORD\_SIZE} & The number of bytes in a word. Must be in the range $2$ to $32$ inclusive, and a power of $2$. \\
  \bottomrule
 \end{tabular}
 \caption{\label{regtable}Registers}
@@ -130,7 +117,7 @@ by actions (see section~\ref{registeract}); not all registers are accessible, an
 
 \subsection{Memory}
 
-@PACKAGE_NAME@'s memory is a contiguous sequence of bytes with addresses in the range $0$ to {\tt MEMORY}~$-$~1.
+@PACKAGE_NAME@'s memory is a contiguous sequence of bytes with addresses starting at $0$.
 
 
 \subsection{Stack}
@@ -142,9 +129,9 @@ the stack means to add a new item to the top of the stack, increasing the stack 
 \subsection{Operation}
 \label{operation}
 
-Before @PACKAGE_NAME@ is started, {\tt ENDISM} should be set to $0$ or $1$ according to the implementation, and {\tt WORD\_SIZE} and {\tt NATIVE\_POINTER\_SIZE} to the appropriate values. The other registers should be initialised to~$0$.
+Before @PACKAGE_NAME@ is started, {\tt ENDISM} should be set to $0$ or $1$ according to the implementation, and {\tt WORD\_SIZE} to the appropriate value. The other registers should be initialised to~$0$.
 
-{\tt ENDISM}, {\tt WORD\_SIZE} and {\tt NATIVE\_POINTER\_SIZE} must not change while @PACKAGE_NAME@ is executing.
+{\tt ENDISM} and {\tt WORD\_SIZE} must not change while @PACKAGE_NAME@ is executing.
 
 @PACKAGE_NAME@ is started by a call to the interface calls {\bf run()} or {\bf
 single\_step()} (see section~\ref{calls}). In the former case, the execution
@@ -253,7 +240,6 @@ different types of stack item are shown in table~\ref{typetable}.
 \spic{x} & unspecified word \\
 \spic{addr} & address \\
 \spic{a-addr} & word-aligned address \\
-\spic{n-addr} & native address \\
 \bottomrule
 \end{tabular}
 \caption{\label{typetable}Types used in stack effects}
@@ -283,7 +269,7 @@ shows the subtype relationships. The subtype relation is transitive.
 
 Numbers are represented in twos complement form. \spic{addr} consists of all
 valid virtual machine addresses. Numeric constants can be included in
-stack pictures, and are of type \spic{n{\tt |}u}. Native addresses may occupy more than one word, according to the values of {\tt WORD\_SIZE} and {\tt NATIVE\_POINTER\_SIZE}; the precise format of this address is implementation-dependent.
+stack pictures, and are of type \spic{n{\tt |}u}.
 
 Each type may be suffixed by a number in stack pictures; if the same combination
 of type and suffix appears more than once in a stack effect, it refers to
@@ -303,24 +289,40 @@ indeterminate numbers of specified types of word.
 \inst{number}{— n}{The number is pushed on to the stack.}
 \end{description}
 
+
+\subsection{Errors}
+\label{erroract}
+
+This action raises an error (see section~\ref{errors}):
+
+\nopagebreak
+\begin{description}
+\inst{HALT}{x —}{Stop @PACKAGE_NAME@, returning reason code \spic{x} to the calling program (see section~\ref{calls}).}
+\end{description}
+
+
 \subsection{Stack manipulation}
 
-These actions manage the stack.
+These actions manage the stack:
 
+\nopagebreak
 \begin{description}
 \inst{POP}{\x{u}\dots\x1 u —}{Remove \spic{u} items from the stack.}
 \inst{DUP}{\x{u}\dots\x0 u — \x{u}\dots\x0 \x{u}}{Remove \spic{u}. Copy \x{u} to the top of the stack.}
 \inst{SWAP}{\x{u}\dots\x0 u — \x0\x{u-1}\dots\x1 \x{u}}{Exchange the top stack item with the \spic{u}th. If \spic{u} is zero, do nothing.}
+\inst{ROTATE}{\x{n}\dots\x0 n — \x{n-1}\dots\x1 \x{+n} \textrm{|} \x0 \x{n}\dots\x1}{If \spic{n} is non-negative, rotate the \spic{n}th stack item to the top; otherwise, rotate the top stack item to position \spic{n}.}
 \end{description}
+
 
 \subsection{Comparison}
 
 These words compare two numbers (or, for equality tests, any two words) on the
-stack, returning a flag.
+stack, returning a flag:
 
+\nopagebreak
 \begin{description}
-\inst{LT}{\n1 \n2 — flag}{\spic{flag} is true if and only if \n1 is less than \n2.}
 \inst{EQ}{\x1 \x2 — flag}{\spic{flag} is true if and only if \x1 is bit-for-bit the same as \x2.}
+\inst{LT}{\n1 \n2 — flag}{\spic{flag} is true if and only if \n1 is less than \n2.}
 \inst{ULT}{\U1 \U2 — flag}{\spic{flag} is true if and only if \U1 is less than \U2.}
 \end{description}
 
@@ -332,57 +334,53 @@ These actions consist of monadic and dyadic operators.
 All calculations are made without bounds or overflow checking, except
 as detailed for certain actions.
 
-Addition and negation:
+Negation and addition:
 
 \nopagebreak
-
 \begin{description}
-\inst{ADD}{\noru1 \noru2 — \noru3}{Add \noru2 to \noru1, giving the sum \noru3.}
 \inst{NEGATE}{\n1 — \n2}{Negate \n1, giving its arithmetic inverse \n2.}
+\inst{ADD}{\noru1 \noru2 — \noru3}{Add \noru2 to \noru1, giving the sum \noru3.}
 \end{description}
 
 Multiplication and division (note that all division actions raise error
 $-10$ if division by zero is attempted):
 
 \nopagebreak
-
 \begin{description}
 \inst{MUL}{\noru1 \noru2 — \noru3}{Multiply \noru1 by \noru2 giving the product \noru3.}
-\inst{UDIVMOD}{\U1 \U2 — \U3 \U4}{Divide \U1 by \U2, giving the single-word quotient \U3 and the single-word remainder \U4.}
 \inst{DIVMOD}{\n1 \n2 — \n3 \n4}{Divide \n1 by \n2 using symmetric division, giving the single-word quotient \n3 and the single-word remainder \n4. The quotient is rounded towards zero.}
+\inst{UDIVMOD}{\U1 \U2 — \U3 \U4}{Divide \U1 by \U2, giving the single-word quotient \U3 and the single-word remainder \U4.}
 \end{description}
 
 
 \subsection{Logic and shifts}
 
-These actions consist of bitwise logical operators and bitwise shifts.
+Shifts:
+
+\nopagebreak
+\begin{description}
+\inst{LSHIFT}{\x1 u — \x2}{Perform a logical left shift of \spic{u} bit-places on \x1, giving \x2. Put zero into the least significant bits vacated by the shift. If \spic{u} is greater than or equal to the number of bits in a word, \x2 is zero.}
+\inst{RSHIFT}{\x1 u — \x2}{Perform a logical right shift of \spic{u} bit-places on \x1, giving \x2. Put zero into the most significant bits vacated by the shift. If \spic{u} is greater than or equal to the number of bits in a word, \x2 is zero.}
+\inst{ARSHIFT}{\x1 u — \x2}{Perform an arithmetic right shift of \spic{u} bit-places on \x1, giving \x2. Copy the original most-significant bits into the most significant bits vacated by the shift. If \spic{u} is greater than or equal to the number of bits in a word, all the bits of \x2 are the same as the original most-significant bit.}
+\end{description}
 
 Logic functions:
 
 \nopagebreak
-
 \begin{description}
-\inst{INVERT}{\x1 — \x2}{Invert all bits of \x1, giving its logical inverse \x2.}
+\inst{NOT}{\x1 — \x2}{Invert all bits of \x1, giving its logical inverse \x2.}
 \inst{AND}{\x1 \x2 — \x3}{\x3 is the bit-by-bit logical ``and'' of \x1 with \x2.}
 \inst{OR}{\x1 \x2 — \x3}{\x3 is the bit-by-bit inclusive-or of \x1 with \x2.}
 \inst{XOR}{\x1 \x2 — \x3}{\x3 is the bit-by-bit exclusive-or of \x1 with \x2.}
-\end{description}
-
-Shifts:
-
-\nopagebreak
-
-\begin{description}
-\inst{LSHIFT}{\x1 u — \x2}{Perform a logical left shift of \spic{u} bit-places on \x1, giving \x2. Put zero into the least significant bits vacated by the shift. If \spic{u} is greater than or equal to the number of bits in a word, \x2 is zero.}
-\inst{RSHIFT}{\x1 u — \x2}{Perform a logical right shift of \spic{u} bit-places on \x1, giving \x2. Put zero into the most significant bits vacated by the shift. If \spic{u} is greater than or equal to the number of bits in a word, \x2 is zero.}
 \end{description}
 
 
 \subsection{Memory}
 
 These actions fetch and store words and bytes to and from memory; there is
-also an action to add a number to another stored in memory.
+also an action to add a number to another stored in memory:
 
+\nopagebreak
 \begin{description}
 \inst{LOAD}{a-addr — x}{\spic{x} is the value stored at \spic{a-addr}.}
 \inst{STORE}{x a-addr —}{Store \spic{x} at \spic{a-addr}.}
@@ -391,106 +389,81 @@ also an action to add a number to another stored in memory.
 \end{description}
 
 
+\subsection{Control}
+\label{control}
+
+These actions implement unconditional and conditional branches, and subroutine
+call and return (subroutine return is {\tt BRANCH}):
+
+\nopagebreak
+\begin{description}
+\inst{BRANCH}{addr —}{Set {\tt PC} to \spic{addr}.}
+\inst{BRANCHZ}{flag addr —}{If \spic{flag} is false then set {\tt PC} to \spic{addr}.}
+\inst{CALL}{\addr1 — \addr2}{Exchange {\tt PC} with the top stack value.}
+\end{description}
+
+
 \subsection{Registers}
 \label{registeract}
 
 \begin{description}
-\inst{PUSH\_STACK\_DEPTH}{— u}{\spic{u} is the value of {\tt STACK\_DEPTH}, the number of items on the stack.}
-\inst{STORE\_STACK\_DEPTH}{u —}{Set {\tt STACK\_DEPTH} to \spic{u}.}
-\inst{PUSH\_PC}{— addr}{Push {\tt PC} on to the stack.}
-\inst{PUSH\_STACK\_SIZE}{— u}{Push {\tt STACK\_SIZE} on to the stack.}
-\inst{PUSH\_MEMORY}{— a-addr}{Push {\tt MEMORY} on to the stack.}
-\inst{PUSH\_WORD\_SIZE}{— u}{\spic{u} is the value of {\tt WORD\_SIZE}.}
-\inst{PUSH\_NATIVE\_POINTER\_SIZE}{— u}{\spic{u} is the value of {\tt NATIVE\_POINTER\_SIZE}.}
-\end{description}
-
-
-\subsection{Control structures}
-\label{control}
-
-These actions implement unconditional and conditional branches, and subroutine
-call and return; there is also a no-op.
-
-No-op:
-
-\nopagebreak
-
-\begin{description}
-\inst{NOP}{—}{Do nothing.}
-\end{description}
-
-Branches:
-
-\nopagebreak
-
-\begin{description}
-\inst{BRANCH}{addr —}{Set {\tt PC} to \spic{addr}.}
-\inst{BRANCHZ}{flag addr —}{If \spic{flag} is false then set {\tt PC} to \spic{addr}.}
-\end{description}
-
-Subroutine call (return is {\tt BRANCH}):
-
-\nopagebreak
-
-\begin{description}
-\inst{CALL}{\aaddr1 — \aaddr2}{Exchange {\tt PC} with the top stack value.}
-\end{description}
-
-
-\subsection{Errors}
-\label{erroract}
-
-This action gives access to @PACKAGE_NAME@'s error mechanism (see section~\ref{errors}).
-
-\begin{description}
-\inst{HALT}{x —}{Stop @PACKAGE_NAME@, returning reason code \spic{x} to the calling program (see section~\ref{calls}).}
+\inst{GET\_WORD\_SIZE}{— u}{\spic{u} is the value of {\tt WORD\_SIZE}.}
+\inst{GET\_STACK\_DEPTH}{— u}{\spic{u} is the value of {\tt STACK\_DEPTH}, the number of items on the stack.}
+\inst{SET\_STACK\_DEPTH}{u —}{Set {\tt STACK\_DEPTH} to \spic{u}.}
 \end{description}
 
 
 \subsection{External access}
 \label{accessact}
 
-These actions allow access to @PACKAGE_NAME@'s libraries, the operating system and native machine code.
+This action provides implementation-specific functions:
+
+\nopagebreak
+\begin{description}
+\inst{EXTRA}{i*x — j*x}{Perform implementation-dependent actions; for example, this can be used to implement system-dependent functionality such as I/O.}
+\end{description}
+
+
+\subsection{No-op}
 
 \begin{description}
-\inst{CALL\_NATIVE}{n-addr —}{Make a subroutine call to the routine at address \spic{n-addr}, passing the current state as an argument.}
-\inst{EXTRA}{i*x — j*x}{Perform implementation-dependent actions; for example, this can be used to implement system-dependent functionality such as I/O.}
+\inst{NOP}{—}{Do nothing.}
 \end{description}
 
 
 \subsection{Instruction encoding}
 \label{encoding}
 
-Instructions are words encoded by one or more bytes, as follows: the significant bits of the number are split into groups of six bits, starting at the least significant end. The chunks are stored in consecutive bytes. All but the last byte have the seventh bit set and eighth bit clear. If the instruction is a number the final byte has the top two bits either both set or both clear, to match the number’s most significant bit; otherwise, the top bit is set and the second bit clear, to indicate an action.
+Actions are encoded as a single byte with the top two bits clear.
+
+Numbers are words encoded by one or more bytes, as follows: the significant bits of the number are split into groups of six bits, starting at the most significant end, and then stored in little-endian order in consecutive bytes. All but the last byte have the seventh bit set and eighth bit clear; the final byte has the eighth bit set, and the seventh bit matches the sign bit.
 
 
 \subsection{Action opcodes}
 \label{opcodes}
 
-Table~\ref{opcodetable} lists the action opcodes in numerical order. Other action opcodes are undefined. Undefined action opcodes raise error $-256$.
+Table~\ref{opcodetable} lists the action opcodes in numerical order. Other action opcodes are undefined; undefined action opcodes raise error $-256$.
 
 \begin{table}[htb]
 \begin{center}
 \begin{tabular}{*{2}{cc}} \toprule
 \bf Opcode & \bf Action & \bf Opcode & \bf Action \\ \midrule
-\opcodetbl{00}{NOP}	{12}{LOAD}
-\opcodetbl{01}{POP}	{13}{STORE}
-\opcodetbl{02}{DUP}	{14}{LOADB}
-\opcodetbl{03}{SWAP}	{15}{STOREB}
-\opcodetbl{04}{LT}	{16}{BRANCH}
-\opcodetbl{05}{EQ}	{17}{BRANCHZ}
-\opcodetbl{06}{ULT}	{18}{CALL}
-\opcodetbl{07}{ADD}	{19}{HALT}
-\opcodetbl{08}{MUL}	{1a}{CALL\_NATIVE}
-\opcodetbl{09}{UDIVMOD}	{1b}{EXTRA}
-\opcodetbl{0a}{DIVMOD}	{1c}{PUSH\_WORD\_SIZE}
-\opcodetbl{0b}{NEGATE}	{1d}{PUSH\_NATIVE\_POINTER\_SIZE}
-\opcodetbl{0c}{INVERT}	{1e}{PUSH\_STACK\_DEPTH}
-\opcodetbl{0d}{AND}	{1f}{STORE\_STACK\_DEPTH}
-\opcodetbl{0e}{OR}	{20}{PUSH\_PC}
-\opcodetbl{0f}{XOR}	{21}{PUSH\_STACK\_SIZE}
-\opcodetbl{10}{LSHIFT}	{22}{PUSH\_MEMORY}
-\opcodetblone{11}{RSHIFT}
+\opcodetbl{00}{HALT}	{10}{NOT}
+\opcodetbl{01}{POP}	{11}{AND}
+\opcodetbl{02}{DUP}	{12}{OR}
+\opcodetbl{03}{SWAP}	{13}{XOR}
+\opcodetbl{04}{ROTATE}	{14}{LOAD}
+\opcodetbl{05}{EQ}	{15}{STORE}
+\opcodetbl{06}{LT}	{16}{LOADB}
+\opcodetbl{07}{ULT}	{17}{STOREB}
+\opcodetbl{08}{NEGATE}	{18}{BRANCH}
+\opcodetbl{09}{ADD}	{19}{BRANCHZ}
+\opcodetbl{0a}{MUL}	{1a}{CALL}
+\opcodetbl{0b}{DIVMOD}	{1b}{GET\_WORD\_SIZE}
+\opcodetbl{0c}{UDIVMOD}	{1c}{GET\_STACK\_DEPTH}
+\opcodetbl{0d}{LSHIFT}	{1d}{SET\_STACK\_DEPTH}
+\opcodetbl{0e}{RSHIFT}	{1e}{EXTRA}
+\opcodetbl{0f}{ARSHIFT}	{1f}{NOP}
  \bottomrule
 \end{tabular}
 \caption{\label{opcodetable}Action opcodes}
@@ -501,7 +474,7 @@ Table~\ref{opcodetable} lists the action opcodes in numerical order. Other actio
 \section{External interface}
 
 @PACKAGE_NAME@'s external interface comes in three parts. The calling interface allows
-@PACKAGE_NAME@ to be controlled by other programs. The {\tt CALL\_NATIVE} action (see section~\ref{accessact}) allows implementations to provide access to system facilities, previously written code,
+@PACKAGE_NAME@ to be controlled by other programs. The {\tt EXTRA} action (see section~\ref{accessact}) allows implementations to provide access to system facilities, previously written code,
 code written in other languages, and the speed of machine code in time-critical
 situations. The object module format allows compiled code to be saved, reloaded
 and shared between systems.
@@ -531,8 +504,6 @@ addresses passed as parameters must be word-aligned. An implementation of @PACKA
 following calls:
 
 \begin{description}
-\iface{native\_address}{integer, boolean}{pointer}{Return a native pointer corresponding
-    to the given VM address. If the address is invalid, or the Boolean flag is true and the address is read-only, then a distinguished invalid pointer is returned.}
 \iface{run}{}{integer}{Start @PACKAGE_NAME@ by entering the execution cycle as
     described in section~\ref{operation}. If @PACKAGE_NAME@ ever executes a {\tt
     HALT} action (see section~\ref{erroract}), the reason code is

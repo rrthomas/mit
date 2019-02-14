@@ -18,9 +18,9 @@ if VM == None:
     sys.exit(1)
 
 # Test code
-VM.here = 52
 number(37)
 action(HALT)
+final_pc = VM.here
 
 # Test
 ret = run()
@@ -31,7 +31,6 @@ if ret != return_value:
     print("Error in run() tests: incorrect return value from run")
     sys.exit(1)
 
-final_pc = 54
 print("PC should now be {}".format(final_pc))
 if PC.get() != final_pc:
     print("Error in run() tests: PC = {:#x}".format(PC.get()))

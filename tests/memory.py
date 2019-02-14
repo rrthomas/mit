@@ -17,37 +17,38 @@ VM.globalize(globals())
 
 # Test results
 correct = [
-     [],
-     [size * word_size],
-     [size * word_size, word_size],
-     [size * word_size, -word_size],
-     [size * word_size - word_size],
-     [size * word_size - word_size, 513],
-     [size * word_size - word_size, 513, 1],
-     [size * word_size - word_size, 513, size * word_size - word_size],
-     [size * word_size - word_size],
-     [size * word_size - word_size, 0],
-     [size * word_size - word_size, size * word_size - word_size],
-     [size * word_size - word_size, 513],
-     [size * word_size - word_size, 513, 1],
-     [size * word_size - word_size],
-     [size * word_size - word_size, 0],
-     [size * word_size - word_size, size * word_size - word_size],
-     [size * word_size - word_size, 1],
-     [size * word_size - word_size + 1],
-     [2],
-     [2, size * word_size - 1],
-     [],
-     [size * word_size - word_size],
-     [(0x02 << (word_bit - byte_bit)) | 0x0201],
-     [(0x02 << (word_bit - byte_bit)) | 0x0201, 1],
-     [],
-     [0],
-     [],
+    [],
+    [size * word_size],
+    [size * word_size, word_size],
+    [size * word_size, -word_size],
+    [size * word_size - word_size],
+    [size * word_size - word_size, 513],
+    [size * word_size - word_size, 513, 1],
+    [size * word_size - word_size, 513, size * word_size - word_size],
+    [size * word_size - word_size],
+    [size * word_size - word_size, 0],
+    [size * word_size - word_size, size * word_size - word_size],
+    [size * word_size - word_size, 513],
+    [size * word_size - word_size, 513, 1],
+    [size * word_size - word_size],
+    [size * word_size - word_size, 0],
+    [size * word_size - word_size, size * word_size - word_size],
+    [size * word_size - word_size, 1],
+    [size * word_size - word_size + 1],
+    [2],
+    [2, size * word_size - 1],
+    [],
+    [size * word_size - word_size],
+    [(0x02 << (word_bit - byte_bit)) | 0x0201],
+    [(0x02 << (word_bit - byte_bit)) | 0x0201, 1],
+    [],
+    [0],
+    [],
+    [word_size],
 ]
 
 # Test code
-action(PUSH_MEMORY)
+number(size * word_size)
 number(word_size)
 action(NEGATE)
 action(ADD)
@@ -71,8 +72,9 @@ number(size * word_size - word_size)
 action(LOAD)
 number(1)
 action(POP)
-action(PUSH_STACK_DEPTH)
-action(STORE_STACK_DEPTH)
+action(GET_STACK_DEPTH)
+action(SET_STACK_DEPTH)
+action(GET_WORD_SIZE)
 
 # Test
 for i in range(len(correct)):

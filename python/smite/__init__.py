@@ -40,7 +40,7 @@ class Error(Exception):
 
 # Constants (all of type unsigned)
 vars().update([(c, c_uint.in_dll(libsmite, "smite_{}".format(c)).value)
-               for c in ["word_size", "native_pointer_size", "byte_bit", "byte_mask",
+               for c in ["word_size", "byte_bit", "byte_mask",
                          "word_bit", "stack_direction"]])
 vars()["byte_bit"] = 8
 
@@ -175,7 +175,7 @@ class State:
                                       "load", "save",
                                       "run", "step", "trace", "dump", "disassemble",
                                       "disassemble_instruction",
-                                      "action", "number", "byte", "pointer"]])
+                                      "action", "number", "byte"]])
 
         # Abbreviations
         globals_dict["dis"] = self.__getattribute__("disassemble")
@@ -274,12 +274,6 @@ class State:
         '''Assemble a byte at 'here'.'''
         self.M[self.here] = byte
         self.here += 1
-
-    def pointer(self, pointer):
-        '''Assemble a native pointer at 'here'.'''
-        for i in range(libsmite.smite_align(native_pointer_size) // word_size):
-            self.number(pointer & word_mask)
-            pointer = pointer >> word_bit
 
 
     # Disassembly
