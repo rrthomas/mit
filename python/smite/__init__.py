@@ -214,10 +214,10 @@ class State:
         if ret != -257:
             if ret != 0:
                 print("HALT code {} was returned".format(ret), end='')
-            if n > 1:
-                print(" after {} steps".format(done), end='')
-            if addr != None:
-                print(" at PC = {:#x}".format(self.registers["PC"].get()), end='')
+                if n > 1:
+                    print(" after {} steps".format(done), end='')
+                if addr != None:
+                    print(" at PC = {:#x}".format(self.registers["PC"].get()), end='')
             print("")
 
         return ret
