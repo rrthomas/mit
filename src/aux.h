@@ -35,12 +35,8 @@ struct _smite_state {
     smite_UWORD *main_argv_len;
 };
 
-// Memory size
-extern smite_UWORD smite_default_memory_size;
-
 // Stacks
 extern const int smite_stack_direction;
-extern smite_UWORD smite_default_stack_size;
 
 #define UNCHECKED_LOAD_STACK(pos, vp)                                   \
     (*(vp) = *(S->S0 + (S->STACK_DEPTH - (pos) - 1) * smite_stack_direction))

@@ -37,8 +37,6 @@ const smite_WORD smite_word_max = INT64_MAX;
 #error "WORD_SIZE is not 4 or 8!"
 #endif
 const int smite_stack_direction = 1;
-smite_UWORD smite_default_memory_size = 0x100000U; // Default size of VM memory in words
-smite_UWORD smite_default_stack_size = 16384U;
 
 
 // Utility functions

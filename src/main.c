@@ -64,16 +64,6 @@ struct option longopts[] = {
   {0, 0, 0, 0}
 };
 
-static smite_WORD parse_memory_size(smite_UWORD max)
-{
-    char *endptr;
-    errno = 0;
-    long size = (smite_WORD)strtol(optarg, &endptr, 10);
-    if (*optarg == '\0' || *endptr != '\0' || size <= 0 || (smite_UWORD)size > max)
-        die("memory size must be a positive number up to %"PRI_UWORD, max);
-    return size;
-}
-
 static void usage(void)
 {
     char *doc, *shortopt, *buf;
@@ -106,14 +96,14 @@ int main(int argc, char *argv[])
     set_program_name(argv[0]);
 
     bool core_dump = false;
-    smite_UWORD memory_size = smite_default_memory_size;
-    smite_UWORD stack_size = smite_default_stack_size;
+    smite_UWORD memory_size = 0x100000U;
+    smite_UWORD stack_size = 16384U;
 
     // Options string starts with '+' to stop option processing at first non-option, then
     // leading ':' so as to return ':' for a missing arg, not '?'
     for (;;) {
         int this_optind = optind ? optind : 1, longindex = -1;
-        int c = getopt_long(argc, argv, "+:cm:s:", longopts, &longindex);
+        int c = getopt_long(argc, argv, "+:c", longopts, &longindex);
 
         if (c == -1)
             break;
@@ -122,32 +112,22 @@ int main(int argc, char *argv[])
         else if (c == '?')
             die("unrecognised option '%s'\nTry '%s --help' for more information.", argv[this_optind], program_name);
         else if (c == 'c')
-            longindex = 2;
-        else if (c == 'm')
             longindex = 0;
-        else if (c == 's')
-            longindex = 1;
 
         switch (longindex) {
         case 0:
-            memory_size = parse_memory_size(smite_uword_max);
-            break;
-        case 1:
-            stack_size = parse_memory_size(smite_uword_max);
-            break;
-        case 2:
             core_dump = true;
             break;
-        case 3:
+        case 1:
             trace_fp = fopen(optarg, "wb");
             if (trace_fp == NULL)
                 die("cannot not open file %s", optarg);
             warn("trace will be written to %s\n", optarg);
             break;
-        case 4:
+        case 2:
             usage();
             break;
-        case 5:
+        case 3:
             printf(PACKAGE_NAME " " VERSION "\n"
                    "(c) Reuben Thomas 1994-2019\n"
                    PACKAGE_NAME " comes with ABSOLUTELY NO WARRANTY.\n"

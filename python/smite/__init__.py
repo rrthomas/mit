@@ -68,8 +68,6 @@ vars().update([(c, cty.in_dll(libsmite, "smite_{}".format(c)).value)
                        ("uword_max", c_uword),
                        ("word_min", c_word),
                        ("word_max", c_word),
-                       ("default_memory_size", c_uword),
-                       ("default_stack_size", c_uword),
                ]])
 
 
@@ -140,8 +138,7 @@ libsmite.smite_decode_instruction.argtypes = [c_void_p, POINTER(c_uword), POINTE
 class State:
     '''A VM state.'''
 
-    def __init__(self, memory_size=default_memory_size,
-                 data_stack_size=default_stack_size):
+    def __init__(self, memory_size=16384, data_stack_size=1024):
         '''Initialise the VM state.'''
         self.state = libsmite.smite_init(memory_size, data_stack_size)
         if self.state == None:
