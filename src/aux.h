@@ -74,7 +74,11 @@ int smite_is_aligned(smite_UWORD addr);
 
 // Portable arithmetic right shift (the behaviour of >> on signed
 // quantities is implementation-defined in C99)
+#ifdef HAVE_ARITHMETIC_RSHIFT
+#define ARSHIFT(n, p) ((smite_WORD)(n) >> (p))
+#else
 #define ARSHIFT(n, p) (((n) >> (p)) | ((smite_UWORD)(-((smite_WORD)(n) < 0)) << (smite_word_bit - (p))))
+#endif
 
 // Bit utilities
 _GL_ATTRIBUTE_CONST int smite_find_msbit(smite_WORD v); // return msbit of a smite_WORD

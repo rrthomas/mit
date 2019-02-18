@@ -66,6 +66,7 @@ AC_SUBST([objdir])
 
 dnl Check features
 AC_C_BIGENDIAN
+AX_C_ARITHMETIC_RSHIFT
 
 dnl Set size of word
 AC_CHECK_SIZEOF([int])
