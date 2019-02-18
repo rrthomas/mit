@@ -23,7 +23,6 @@ import sys
 import collections.abc
 from ctypes import *
 from ctypes.util import find_library
-from curses.ascii import isprint
 
 from smite.vm_data import *
 from smite.opcodes_extra import *
@@ -354,7 +353,8 @@ class State:
                 byte = self.M[p + i]
                 print("{:02x} ".format(byte), end='', file=file)
                 i += 1
-                ascii += chr(byte) if isprint(byte) else '.'
+                c = chr(byte)
+                ascii += c if c.isprintable() else '.'
             p += chunk
             print(" |{0:.{1}}|".format(ascii, chunk), file=file)
 
