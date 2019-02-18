@@ -85,7 +85,7 @@ static int extra_smite(smite_state *S)
     case SMITE_CURRENT_STATE:
         PUSH_NATIVE_TYPE(smite_state *, S);
         break;
-    case SMITE_LOAD_smite_WORD:
+    case SMITE_LOAD_WORD:
         {
             smite_UWORD addr;
             POP((smite_WORD *)&addr);
@@ -97,7 +97,7 @@ static int extra_smite(smite_state *S)
             PUSH(ret);
         }
         break;
-    case SMITE_STORE_smite_WORD:
+    case SMITE_STORE_WORD:
         {
             smite_WORD value;
             POP(&value);
@@ -109,7 +109,7 @@ static int extra_smite(smite_state *S)
             PUSH(ret);
         }
         break;
-    case SMITE_LOAD_smite_BYTE:
+    case SMITE_LOAD_BYTE:
         {
             smite_UWORD addr;
             POP((smite_WORD *)&addr);
@@ -121,7 +121,7 @@ static int extra_smite(smite_state *S)
             PUSH(ret);
         }
         break;
-    case SMITE_STORE_smite_BYTE:
+    case SMITE_STORE_BYTE:
         {
             smite_WORD value;
             POP(&value);
@@ -133,13 +133,23 @@ static int extra_smite(smite_state *S)
             PUSH(ret);
         }
         break;
-    case SMITE_MEM_REALLOC:
+    case SMITE_REALLOC_MEMORY:
         {
             smite_UWORD n;
             POP((smite_WORD *)&n);
             smite_state *inner_smite_state;
             POP_NATIVE_TYPE(smite_state *, &inner_smite_state);
-            smite_UWORD ret = smite_mem_realloc(inner_smite_state, (size_t)n);
+            smite_UWORD ret = smite_realloc_memory(inner_smite_state, (size_t)n);
+            PUSH(ret);
+        }
+        break;
+    case SMITE_REALLOC_STACK:
+        {
+            smite_UWORD n;
+            POP((smite_WORD *)&n);
+            smite_state *inner_smite_state;
+            POP_NATIVE_TYPE(smite_state *, &inner_smite_state);
+            smite_UWORD ret = smite_realloc_stack(inner_smite_state, (size_t)n);
             PUSH(ret);
         }
         break;

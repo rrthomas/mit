@@ -86,7 +86,8 @@ int smite_save_object(smite_state *S, smite_UWORD address, smite_UWORD length, i
 
 // Additional implementation-specific routines, macros, types and quantities
 smite_state *smite_init(size_t size, size_t stack_size);
-int smite_mem_realloc(smite_state *S, smite_UWORD size);
+int smite_realloc_memory(smite_state *S, smite_UWORD size);
+int smite_realloc_stack(smite_state *S, smite_UWORD size);
 void smite_destroy(smite_state *S);
 int smite_register_args(smite_state *S, int argc, char *argv[]);
 

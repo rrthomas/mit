@@ -36,12 +36,10 @@ struct _smite_state {
 
 // Memory size
 extern smite_UWORD smite_default_memory_size;
-extern smite_UWORD smite_max_memory_size;
 
 // Stacks
 extern const int smite_stack_direction;
 extern smite_UWORD smite_default_stack_size;
-extern smite_UWORD smite_max_stack_size;
 
 // RAISE(code) must be define before using `PUSH` or `POP`.
 // It must somehow exit if `code` is non-zero, e.g. return `code` to caller.
@@ -83,9 +81,6 @@ int smite_is_aligned(smite_UWORD addr);
 // Bit utilities
 _GL_ATTRIBUTE_CONST int smite_find_msbit(smite_WORD v); // return msbit of a smite_WORD
 int smite_byte_size(smite_WORD v); // return number of significant bytes in a smite_WORD quantity
-
-// Initialisation helper
-smite_state *smite_init_default_stacks(size_t memory_size);
 
 // Instructions
 #define INSTRUCTION_CHUNK_BIT 6

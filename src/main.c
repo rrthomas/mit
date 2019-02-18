@@ -130,10 +130,10 @@ int main(int argc, char *argv[])
 
         switch (longindex) {
         case 0:
-            memory_size = parse_memory_size(smite_max_memory_size);
+            memory_size = parse_memory_size(smite_uword_max);
             break;
         case 1:
-            stack_size = parse_memory_size(smite_max_stack_size);
+            stack_size = parse_memory_size(smite_uword_max);
             break;
         case 2:
             core_dump = true;

@@ -69,9 +69,7 @@ vars().update([(c, cty.in_dll(libsmite, "smite_{}".format(c)).value)
                        ("word_min", c_word),
                        ("word_max", c_word),
                        ("default_memory_size", c_uword),
-                       ("max_memory_size", c_uword),
                        ("default_stack_size", c_uword),
-                       ("max_stack_size", c_uword),
                ]])
 
 
@@ -107,7 +105,9 @@ libsmite.smite_save_object.argtypes = [c_void_p, c_uword, c_uword, c_int]
 libsmite.smite_init.restype = c_void_p
 libsmite.smite_init.argtypes = [c_size_t, c_size_t]
 
-libsmite.smite_mem_realloc.argtypes = [c_void_p, c_int, c_void_p]
+libsmite.smite_realloc_memory.argtypes = [c_void_p, c_int]
+
+libsmite.smite_realloc_stack.argtypes = [c_void_p, c_int]
 
 libsmite.smite_destroy.restype = None
 libsmite.smite_destroy.argtypes = [c_void_p]
@@ -123,9 +123,6 @@ libsmite.smite_is_aligned.argtypes = [c_uword]
 libsmite.smite_find_msbit.argtypes = [c_word]
 
 libsmite.smite_byte_size.argtypes = [c_word]
-
-libsmite.smite_init_default_stacks.restype = c_void_p
-libsmite.smite_init_default_stacks.argtypes = [c_size_t]
 
 libsmite.smite_encode_instruction_file.restype = c_ptrdiff_t
 libsmite.smite_encode_instruction_file.argtypes = [c_int, c_int, c_word]

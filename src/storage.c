@@ -38,8 +38,6 @@ const smite_WORD smite_word_max = INT64_MAX;
 #endif
 const int smite_stack_direction = 1;
 smite_UWORD smite_default_memory_size = 0x100000U; // Default size of VM memory in words
-smite_UWORD smite_max_memory_size = ((smite_UWORD)1 << (WORD_SIZE * smite_BYTE_BIT - 1)) / WORD_SIZE; // Maximum size of memory in words (half the address space)
-smite_UWORD smite_max_stack_size = (((smite_UWORD)1) << (WORD_SIZE * smite_BYTE_BIT - 4)) / WORD_SIZE;
 smite_UWORD smite_default_stack_size = 16384U;
 
 
@@ -174,40 +172,45 @@ int smite_rotate_stack(smite_state *S, smite_WORD pos)
 
 // Initialisation and memory management
 
-int smite_mem_realloc(smite_state *S, smite_UWORD size)
+static int smite_realloc(smite_WORD **ptr, smite_UWORD old_size, smite_UWORD new_size)
 {
-    if (size > smite_uword_max / smite_word_size)
+    smite_WORD *new_ptr = realloc(*ptr, new_size);
+    if (new_ptr == NULL)
         return -1;
+    *ptr = new_ptr;
 
-    S->memory = realloc(S->memory, size * smite_word_size);
-    if (S->memory == NULL)
-        return -1;
-
-    if (S->MEMORY < size)
-        memset(S->memory + S->MEMORY, 0, (size - S->MEMORY) * smite_word_size);
-    S->MEMORY = size * smite_word_size;
+    if (old_size < new_size)
+        memset(*ptr + old_size, 0, new_size - old_size);
 
     return 0;
 }
 
-
-// FIXME: instead of size parameters, use default values, and realloc on
-// demand for more memory.
-smite_state *smite_init(size_t size, size_t data_stack_size)
+int smite_realloc_memory(smite_state *S, smite_UWORD size)
 {
-    if (size > smite_max_memory_size || data_stack_size > smite_max_stack_size)
-        return NULL;
+    int ret = smite_realloc(&S->memory, S->MEMORY * smite_word_size, size * smite_word_size);
+    if (ret == 0)
+        S->MEMORY = size * smite_word_size;
+    return ret;
+}
 
+int smite_realloc_stack(smite_state *S, smite_UWORD size)
+{
+    int ret = smite_realloc(&S->S0, S->STACK_SIZE * smite_word_size, size * smite_word_size);
+    if (ret == 0)
+        S->STACK_SIZE = size * smite_word_size;
+    return ret;
+}
+
+smite_state *smite_init(size_t memory_size, size_t stack_size)
+{
     smite_state *S = calloc(1, sizeof(smite_state));
     if (S == NULL)
         return NULL;
 
-    if (smite_mem_realloc(S, size) != 0)
+    if (smite_realloc_memory(S, memory_size) != 0)
         return NULL;
 
-    S->STACK_SIZE = data_stack_size;
-    S->S0 = calloc(S->STACK_SIZE, smite_word_size);
-    if (S->S0 == NULL)
+    if (smite_realloc_stack(S, stack_size) != 0)
         return NULL;
 
     S->ENDISM =
@@ -222,11 +225,6 @@ smite_state *smite_init(size_t size, size_t data_stack_size)
     S->STACK_DEPTH = 0;
 
     return S;
-}
-
-smite_state *smite_init_default_stacks(size_t memory_size)
-{
-    return smite_init(memory_size, smite_default_stack_size);
 }
 
 void smite_destroy(smite_state *S)
