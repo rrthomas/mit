@@ -14,7 +14,6 @@ VM.globalize(globals())
 
 
 def try_load(file):
-    print("try_load " + file)
     try:
         load(file)
         ret = 0
