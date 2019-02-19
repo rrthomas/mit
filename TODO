@@ -1,12 +1,8 @@
-Take account of --program-prefix/suffix/transform-name for library name too. See “15.7.3 Transformation Rules” in info autoconf.
-
-Also see GitHub issues: https://github.com/rrthomas/smite/issues/
+See GitHub issues: https://github.com/rrthomas/smite/issues/
 
 To support object files of the other endism, have a per-memory-area flag that indicates that word loads and stores must be reversed.
 
 Reorganize C implementation documentation into user’s guide and programmer’s guide.
-
-Auto-realloc stack when it runs out of space.
 
 Compile at load time using ideas in DDJ article
 (~/notmine/Computer/Language/forth/LoadCompilation).
