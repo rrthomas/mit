@@ -34,7 +34,7 @@ for (instruction, action) in Actions.__members__.items():
     ))
 print('''\
         default: /* Undefined instruction */
-            return -256;
+            return -1;
         }
         break;
     default: /* Error during instruction fetch */

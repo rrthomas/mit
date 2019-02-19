@@ -60,7 +60,7 @@ for good_file in good_files:
 
 
 # Generate test object file
-correct = [-257, 12345678]
+correct = [-128, 12345678]
 for n in correct:
     number(n)
 magic_number = 42

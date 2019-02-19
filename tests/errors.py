@@ -16,7 +16,7 @@ VM.globalize(globals())
 
 # Test results and data
 answer = 42
-result = [answer, -10, -9, -9, -23, -256]
+result = [answer, -4, -2, -2, -3, -1]
 invalid_address = size * word_size + 1000
 test = []
 

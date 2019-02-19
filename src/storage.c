@@ -65,9 +65,9 @@ _GL_ATTRIBUTE_PURE uint8_t *smite_native_address_of_range(smite_state *S, smite_
 int smite_load_word(smite_state *S, smite_UWORD addr, smite_WORD *value)
 {
     if (addr >= S->MEMORY)
-        return -9;
+        return -2;
     if (!smite_is_aligned(addr))
-        return -23;
+        return -3;
 
     *value = S->memory[addr / smite_word_size];
     return 0;
@@ -76,7 +76,7 @@ int smite_load_word(smite_state *S, smite_UWORD addr, smite_WORD *value)
 int smite_load_byte(smite_state *S, smite_UWORD addr, smite_BYTE *value)
 {
     if (addr >= S->MEMORY)
-        return -9;
+        return -2;
 
     *value = ((uint8_t *)(S->memory))[addr];
     return 0;
@@ -85,9 +85,9 @@ int smite_load_byte(smite_state *S, smite_UWORD addr, smite_BYTE *value)
 int smite_store_word(smite_state *S, smite_UWORD addr, smite_WORD value)
 {
     if (addr >= S->MEMORY)
-        return -9;
+        return -2;
     if (!smite_is_aligned(addr))
-        return -23;
+        return -3;
 
     S->memory[addr / smite_word_size] = value;
     return 0;
@@ -96,7 +96,7 @@ int smite_store_word(smite_state *S, smite_UWORD addr, smite_WORD value)
 int smite_store_byte(smite_state *S, smite_UWORD addr, smite_BYTE value)
 {
     if (addr >= S->MEMORY)
-        return -9;
+        return -2;
 
     ((uint8_t *)(S->memory))[addr] = value;
     return 0;
@@ -108,7 +108,7 @@ int smite_store_byte(smite_state *S, smite_UWORD addr, smite_BYTE value)
 int smite_load_stack(smite_state *S, smite_UWORD pos, smite_WORD *v)
 {
     if (pos >= S->STACK_DEPTH)
-        return -9;
+        return -2;
 
     *v = *(S->S0 + (S->STACK_DEPTH - pos - 1) * smite_stack_direction);
     return 0;
@@ -117,7 +117,7 @@ int smite_load_stack(smite_state *S, smite_UWORD pos, smite_WORD *v)
 int smite_store_stack(smite_state *S, smite_UWORD pos, smite_WORD v)
 {
     if (pos >= S->STACK_DEPTH)
-        return -9;
+        return -2;
 
     *(S->S0 + (S->STACK_DEPTH - pos - 1) * smite_stack_direction) = v;
     return 0;
@@ -126,7 +126,7 @@ int smite_store_stack(smite_state *S, smite_UWORD pos, smite_WORD v)
 int smite_pop_stack(smite_state *S, smite_WORD *v)
 {
     if (S->STACK_DEPTH == 0)
-        return -9;
+        return -2;
 
     int ret = smite_load_stack(S, 0, v);
     S->STACK_DEPTH--;
@@ -136,7 +136,7 @@ int smite_pop_stack(smite_state *S, smite_WORD *v)
 int smite_push_stack(smite_state *S, smite_WORD v)
 {
     if (S->STACK_DEPTH == S->STACK_SIZE)
-        return -9;
+        return -2;
 
     (S->STACK_DEPTH)++;
     return smite_store_stack(S, 0, v);
@@ -146,7 +146,7 @@ int smite_rotate_stack(smite_state *S, smite_WORD pos)
 {
     if (pos > 0) {
         if (pos >= (smite_WORD)S->STACK_DEPTH)
-        return -9;
+        return -2;
 
         smite_UWORD offset = S->STACK_DEPTH - pos - 1;
         smite_WORD temp = *(S->S0 + offset * smite_stack_direction);
@@ -156,7 +156,7 @@ int smite_rotate_stack(smite_state *S, smite_WORD pos)
         *(S->S0 + (S->STACK_DEPTH - 1) * smite_stack_direction) = temp;
     } else if (pos < 0) {
         if (pos <= -(smite_WORD)S->STACK_DEPTH)
-            return -9;
+            return -2;
 
         smite_UWORD offset = S->STACK_DEPTH + pos - 1;
         smite_WORD temp = *(S->S0 + (S->STACK_DEPTH - 1) * smite_stack_direction);

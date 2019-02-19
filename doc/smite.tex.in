@@ -152,48 +152,31 @@ Note that the calls {\bf run()} and {\bf single\_step()} do not perform the
 initialisation specified above.
 
 
-\subsection{Termination}
-
-When @PACKAGE_NAME@ encounters a {\tt HALT} action (see section~\ref{erroract}), execution terminates.
-
-Reason codes which are also valid error codes (either reserved (see section~\ref{errors})
-or user error codes) should not normally be used. This
-allows error codes to be passed back to the calling
-program, so that the calling program can handle certain errors without
-confusing error codes and reason codes.
-
-
-\subsection{Errors}
+\subsection{Errors and termination}
 \label{errors}
 
-Error conditions are dealt with by {\bf raising} an {\bf error}: the action
-of {\tt HALT} is performed as if the error code had been given as its
-argument. The instruction that caused the error to be raised is then
-considered to have finished executing. Error codes are signed numbers. $-1$
-to $-511$ are reserved for @PACKAGE_NAME@'s own error codes; the meanings of
+When @PACKAGE_NAME@ encounters certain abnormal situations, such as an attempt to access an invalid address, or divide by zero, an {\bf error} is {\bf raised}, and execution terminates; an {\bf error code} is returned to the caller. The instruction that caused the error to be raised is considered not to have executed.
+
+Execution can also be terminated explicitly by performing a {\tt HALT} action (see section~\ref{erroract}), which also returns a code.
+
+Error codes are signed numbers. Conventionally, negative numbers are considered to represent error conditions, and non-negative numbers (in particular, zero) successful termination. $-1$ to $-128$ are reserved for @PACKAGE_NAME@'s own error codes; the meanings of
 those that may be raised by @PACKAGE_NAME@ are shown in
 table~\ref{errortable}.
 
-An error can be raised explicitly by {\tt HALT} (see section~\ref{erroract}); errors are also raised by various conditions, such as an attempt to access an invalid address, or divide by zero.
-
 \begin{table}[htbp]
 \begin{center}
-\begin{tabular}{cl} \toprule
+\begin{tabular}{cp{4in}} \toprule
 \bf Code & \bf Meaning \\ \midrule
-$-9$ & Invalid address (see below). \\
-$-10$ & Division by zero attempted (see section~\ref{arithmetic}). \\
-$-23$ & Address alignment error (see below). \\
-$-256$ & Invalid opcode (see section~\ref{opcodes}). \\ \bottomrule
+$-1$ & Invalid opcode (see section~\ref{opcodes}). \\
+$-2$ & Invalid address: raised when an instruction attempts to read from or write to an invalid address. \\
+$-3$ & Address alignment error: raised when an instruction expecting a word-aligned address is given a valid but non-aligned address. \\
+$-4$ & Division by zero attempted (see section~\ref{arithmetic}). \\
+$-128$ & {\bf single\_step()} has terminated without error. \\
+ \bottomrule
 \end{tabular}
 \caption{\label{errortable}Errors raised by @PACKAGE_NAME@}
 \end{center}
 \end{table}
-
-Error $-9$ is raised whenever an attempt is made to access an invalid
-address, either by an
-instruction, or during an instruction fetch (because {\tt PC} contains an
-invalid address). Error $-23$ is raised when an action expecting
-an address of type \spic{a-addr} (word-aligned) is given a non-aligned address.
 
 
 \section{Instruction set}
@@ -343,7 +326,7 @@ Negation and addition:
 \end{description}
 
 Multiplication and division (note that all division actions raise error
-$-10$ if division by zero is attempted):
+$-4$ if division by zero is attempted):
 
 \nopagebreak
 \begin{description}
@@ -442,7 +425,7 @@ Numbers are words encoded by one or more bytes, as follows: the significant bits
 \subsection{Action opcodes}
 \label{opcodes}
 
-Table~\ref{opcodetable} lists the action opcodes in numerical order. Other action opcodes are undefined; undefined action opcodes raise error $-256$.
+Table~\ref{opcodetable} lists the action opcodes in numerical order. Other action opcodes are undefined.
 
 \begin{table}[htb]
 \begin{center}
@@ -509,9 +492,7 @@ following calls:
     HALT} action (see section~\ref{erroract}), the reason code is
     returned as the result.}
 \iface{single\_step}{}{integer}{Execute a single pass of the execution
-    cycle, and return reason code $-257$, unless a {\tt HALT} action was
-    obeyed (see section~\ref{erroract}), in which case the reason code
-    passed to it is returned.}
+    cycle. If an error is raised, it is returned; otherwise, return $-128$.}
 \iface{load\_object}{file, address}{integer}{Load the object module
     specified by \textit{file}, which may be a filename or some other
     specifier, to the VM address \textit{address}. First the module's

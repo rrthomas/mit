@@ -206,7 +206,7 @@ int main(int argc, char *argv[])
     int res = smite_run(S);
 
     // Core dump on error
-    if (core_dump && (res == -23 || res == -9 || (res <= -256 && res >= -259))) {
+    if (core_dump && (res <= -1 && res >= -128)) {
         warn("error %d raised at PC=%"PRI_XWORD, res, S->PC);
 
         char *file = xasprintf("smite-core.%lu", (unsigned long)getpid());

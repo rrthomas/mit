@@ -17,7 +17,7 @@ smite_WORD smite_run(smite_state *S)
 {
     smite_WORD ret;
 
-    while ((ret = smite_single_step(S)) == -257)
+    while ((ret = smite_single_step(S)) == -128)
         ;
 
     return ret;

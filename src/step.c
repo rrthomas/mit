@@ -25,7 +25,7 @@ verify(sizeof(int) <= sizeof(smite_WORD));
 
 #define DIVZERO(x)                              \
     if (x == 0)                                 \
-        RAISE(-10);
+        RAISE(-4);
 
 // Defines two macros/functions:
 //   void STEP(smite_state *S): runs a single step of the given state.
@@ -46,9 +46,9 @@ smite_WORD smite_single_step(smite_state *S)
 
     if (error != 0) {
         // Deal with address errors during execution cycle.
-        if (error == -255)
+        if (error == -127)
             return S->halt_code;
         return error;
     }
-    return -257; // terminated OK
+    return -128; // terminated OK
 }

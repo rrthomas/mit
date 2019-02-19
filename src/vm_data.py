@@ -53,7 +53,7 @@ class Actions(Enum):
         smite_WORD ret;
         POP(&ret);
         S->halt_code = ret;
-        RAISE(-255);
+        RAISE(-127);
     ''')
 
     POP = Action(0x01, '''\
