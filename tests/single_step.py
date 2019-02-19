@@ -1,7 +1,6 @@
-# Test that single_step works, and that address alignment and bounds
-# checking is properly performed on S->PC.
+# Test single_step and NOP.
 #
-# (c) Reuben Thomas 1994-2018
+# (c) Reuben Thomas 1994-2019
 #
 # The package is distributed under the GNU Public License version 3, or,
 # at your option, any later version.
@@ -15,6 +14,7 @@ VM.globalize(globals())
 
 
 for i in range(10):
+    action(NOP)
     print("PC = {:#x}".format(PC.get()))
     step()
 

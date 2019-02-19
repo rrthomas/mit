@@ -24,7 +24,7 @@
 \newcommand{\n}[1]{\spic{n$_{#1}$}}
 \newcommand{\U}[1]{\spic{u$_{#1}$}}
 \newcommand{\noru}[1]{\spic{n$_#1${\tt |}u$_{#1}$}}
-\newcommand{\aaddr}[1]{\spic{a-addr$_{#1}$}}
+\newcommand{\addr}[1]{\spic{addr$_{#1}$}}
 
 % Lay out an action definition
 
@@ -34,16 +34,9 @@
 \newlength{\stackcom}\stackcom=3.0in
 \newlength{\beforestackcom} \advance\beforestackcom by \instname
 
-% With no return stack
 \newcommand{\inst}[3]{\item[]\parbox{\itemwidth}%
 {\makebox[\instname][l]{\tt #1}%
 \makebox[\stackcom][r]{\tt ( \spic{#2} )}\\[0.5ex]#3}}
-
-% With return stack
-\newcommand{\instr}[4]{\item[]\parbox{\itemwidth}%
-{\makebox[\instname][l]{\tt #1}%
-\makebox[\stackcom][r]{\tt ( \spic{#2} )}\\\makebox[\beforestackcom]{}%
-\makebox[\stackcom][r]{\tt R: ( \spic{#3} )}\\[0.5ex]#4}}
 
 % Lay out an external interface call
 
@@ -53,14 +46,13 @@
 
 % Lay out a line of the opcode table
 
-\newcommand{\opcodetbl}[6]{0x#1 & {\tt #2} & 0x#3 & {\tt #4} & 0x#5 & {\tt #6}
-\\}
-\newcommand{\opcodetbltwo}[4]{0x#1 & {\tt #2} & 0x#3 & {\tt #4} \\}
+\newcommand{\opcodetbl}[4]{0x#1 & {\tt #2} & 0x#3 & {\tt #4} \\}
+\newcommand{\opcodetblone}[2]{0x#1 & {\tt #2} \\}
 
 
 \title{The @PACKAGE_NAME@ Virtual Machine}
 \author{Reuben Thomas}
-\date{12th January 2019}
+\date{13th February 2019}
 
 \begin{document}
 \maketitle
@@ -68,7 +60,7 @@
 \subsection*{Typographical conventions}
 
 Actions and registers are shown in {\tt Typewriter} font;
-interface calls are shown in {\bf Bold} type, and followed by empty parentheses.
+interface calls are shown in {\bf Bold} type.
 
 Addresses are given in bytes and refer to the VM address space except where
 stated. Addresses are written in hexadecimal; hex numbers are prefixed with
@@ -78,17 +70,10 @@ stated. Addresses are written in hexadecimal; hex numbers are prefixed with
 \section{Introduction}
 
 @PACKAGE_NAME@ is a simple virtual machine for study and experiment. It is a stack machine, based on the more complex register machine~\cite{mite0}.
-This paper gives a full description of @PACKAGE_NAME@, but
-certain implementation-dependent features, such as the size of the stacks, are
-purposely left unspecified, and the exact method of implementation is left to
-the implementor in many particulars.
+This paper gives a full description of @PACKAGE_NAME@.
 
-@PACKAGE_NAME@ is self-contained. Machine
-code routines on the host computer may be accessed using the {\tt CALL\_NATIVE}
-action, which can also be used to implement I/O (see~\ref{accessact}). @PACKAGE_NAME@ supports a simple object module format.
-
-@PACKAGE_NAME@ is conceptually (and usually in fact) a library, embedded in other programs.
-A small interface is provided for other programs to control @PACKAGE_NAME@.
+@PACKAGE_NAME@ is conceptually (and usually in fact) a library, embedded in other programs; it supports a simple object module format.
+External access may be implemented via the implementation-defined {\tt EXTRA} instruction (see~\ref{accessact}).
 
 
 \section{Architecture}
@@ -111,22 +96,13 @@ The registers, each with its function, are set out in table~\ref{regtable}.
 \begin{center}
 \begin{tabular}{cp{3.75in}} \toprule
 \bf Register & \bf Function \\
-    \midrule
-{\tt PC} & The {\tt P}rogram {\tt C}ounter. Points to the next
-    byte from which an instruction may be loaded. \\
+ \midrule
+{\tt PC} & The {\tt P}rogram {\tt C}ounter. Points to the next byte from which an instruction may be loaded. \\
 {\tt ITYPE} & The type of an instruction to be executed: $0$ for a number, and $1$ for an action. \\
-{\tt I} & The {\tt I}nstruction. Holds the opcode of an instruction
-    to be executed. \\
-{\tt MEMORY} & The size in bytes of @PACKAGE_NAME@'s memory,
-    which must be a whole number of words. \\
-{\tt SDEPTH} & The data {\tt S}tack {\tt DEPTH} (number of items on the stack). \\
-{\tt RDEPTH} & The {\tt R}eturn stack {\tt DEPTH} (number of items on the return stack. \\
-{\tt SSIZE} & The number of words allocated for the data stack. \\
-{\tt RSIZE} & The number of words allocated for the return stack. \\
-{\tt ENDISM} & The endianness of @PACKAGE_NAME@: 0 = Little-endian,
-    1 = Big-endian. \\
-{\tt WORD\_SIZE} & The number of bytes in a word. Must be a power of $2$, and in the range $2$ to $32$ inclusive. \\
-{\tt NATIVE\_POINTER\_SIZE} & The number of bytes in a host machine pointer (for {\tt CALL\_NATIVE}; see section~\ref{accessact}). \\
+{\tt I} & The {\tt I}nstruction. Holds the opcode of an instruction to be executed. \\
+{\tt STACK\_DEPTH} & The number of items on the stack. \\
+{\tt ENDISM} & The endianness of @PACKAGE_NAME@: 0 = Little-endian, 1 = Big-endian. \\
+{\tt WORD\_SIZE} & The number of bytes in a word. Must be in the range $2$ to $32$ inclusive, and a power of $2$. \\
  \bottomrule
 \end{tabular}
 \caption{\label{regtable}Registers}
@@ -141,30 +117,21 @@ by actions (see section~\ref{registeract}); not all registers are accessible, an
 
 \subsection{Memory}
 
-@PACKAGE_NAME@'s memory is a contiguous sequence of bytes with addresses in the range $0$ to {\tt MEMORY}~$-$~1.
+@PACKAGE_NAME@'s memory is a contiguous sequence of bytes with addresses starting at $0$.
 
-\subsection{Stacks}
 
-The data and return stacks are LIFO stacks of words. To {\bf push} an item on to
-a stack means to add a new item to the top of the stack, increasing the stack depth by $1$; to {\bf pop} an item means to reduce the stack depth by $1$. Actions that change the number of items on a
-stack implicitly pop their arguments and push their results.
+\subsection{Stack}
 
-The data stack is used for passing values to actions and routines and the
-return stack for holding subroutine return addresses. The return stack may be used for other
-operations subject to the restrictions placed on it by its normal usage: it must
-be returned before a {\tt RET} action to the state it was in directly
-after the corresponding {\tt CALL}.
-
-In what follows, for ``the stack'' read ``the data stack''; the return stack is
-always mentioned explicitly.
+The stack is a LIFO stacks of words used for passing values to actions and routines and for holding subroutine return addresses. To {\bf push} an item on to
+the stack means to add a new item to the top of the stack, increasing the stack depth by $1$; to {\bf pop} an item means to reduce the stack depth by $1$. Actions that change the number of items on the stack implicitly pop their arguments and push their results.
 
 
 \subsection{Operation}
 \label{operation}
 
-Before @PACKAGE_NAME@ is started, {\tt ENDISM} should be set to $0$ or $1$ according to the implementation, and {\tt WORD\_SIZE} and {\tt NATIVE\_POINTER\_SIZE} to the appropriate values. The other registers should be initialised to~$0$.
+Before @PACKAGE_NAME@ is started, {\tt ENDISM} should be set to $0$ or $1$ according to the implementation, and {\tt WORD\_SIZE} to the appropriate value. The other registers should be initialised to~$0$.
 
-{\tt ENDISM}, {\tt WORD\_SIZE} and {\tt NATIVE\_POINTER\_SIZE} must not change while @PACKAGE_NAME@ is executing.
+{\tt ENDISM} and {\tt WORD\_SIZE} must not change while @PACKAGE_NAME@ is executing.
 
 @PACKAGE_NAME@ is started by a call to the interface calls {\bf run()} or {\bf
 single\_step()} (see section~\ref{calls}). In the former case, the execution
@@ -185,48 +152,31 @@ Note that the calls {\bf run()} and {\bf single\_step()} do not perform the
 initialisation specified above.
 
 
-\subsection{Termination}
-
-When @PACKAGE_NAME@ encounters a {\tt HALT} action (see section~\ref{erroract}), execution terminates.
-
-Reason codes which are also valid error codes (either reserved (see section~\ref{errors})
-or user error codes) should not normally be used. This
-allows error codes to be passed back to the calling
-program, so that the calling program can handle certain errors without
-confusing error codes and reason codes.
-
-
-\subsection{Errors}
+\subsection{Errors and termination}
 \label{errors}
 
-Error conditions are dealt with by {\bf raising} an {\bf error}: the action
-of {\tt HALT} is performed as if the error code had been given as its
-argument. The instruction that caused the error to be raised is then
-considered to have finished executing. Error codes are signed numbers. $-1$
-to $-511$ are reserved for @PACKAGE_NAME@'s own error codes; the meanings of
+When @PACKAGE_NAME@ encounters certain abnormal situations, such as an attempt to access an invalid address, or divide by zero, an {\bf error} is {\bf raised}, and execution terminates; an {\bf error code} is returned to the caller. The instruction that caused the error to be raised is considered not to have executed.
+
+Execution can also be terminated explicitly by performing a {\tt HALT} action (see section~\ref{erroract}), which also returns a code.
+
+Error codes are signed numbers. Conventionally, negative numbers are considered to represent error conditions, and non-negative numbers (in particular, zero) successful termination. $-1$ to $-128$ are reserved for @PACKAGE_NAME@'s own error codes; the meanings of
 those that may be raised by @PACKAGE_NAME@ are shown in
 table~\ref{errortable}.
 
-An error can be raised explicitly by {\tt HALT} (see section~\ref{erroract}); errors are also raised by various conditions, such as an attempt to access an invalid address, or divide by zero.
-
 \begin{table}[htbp]
 \begin{center}
-\begin{tabular}{cl} \toprule
+\begin{tabular}{cp{4in}} \toprule
 \bf Code & \bf Meaning \\ \midrule
-$-9$ & Invalid address (see below). \\
-$-10$ & Division by zero attempted (see section~\ref{arithmetic}). \\
-$-23$ & Address alignment error (see below). \\
-$-256$ & Invalid opcode (see section~\ref{opcodes}). \\ \bottomrule
+$-1$ & Invalid opcode (see section~\ref{opcodes}). \\
+$-2$ & Invalid address: raised when an instruction attempts to read from or write to an invalid address. \\
+$-3$ & Address alignment error: raised when an instruction expecting a word-aligned address is given a valid but non-aligned address. \\
+$-4$ & Division by zero attempted (see section~\ref{arithmetic}). \\
+$-128$ & {\bf single\_step()} has terminated without error. \\
+ \bottomrule
 \end{tabular}
 \caption{\label{errortable}Errors raised by @PACKAGE_NAME@}
 \end{center}
 \end{table}
-
-Error $-9$ is raised whenever an attempt is made to access an invalid
-address, either by an
-instruction, or during an instruction fetch (because {\tt PC} contains an
-invalid address). Error $-23$ is raised when an action expecting
-an address of type \spic{a-addr} (word-aligned) is given a non-aligned address.
 
 
 \section{Instruction set}
@@ -237,11 +187,11 @@ with the instructions grouped according to function. The
 instructions are given in the following format:
 
 \begin{description}
-\instr{NAME}{before — after}{before — after}{Description.}
+\inst{NAME}{before — after}{Description.}
 \end{description}
 
-The first line consists of the name of the instruction. On the right are the
-stack effect or effects, which show the effect of the instruction on the data and return (R) stacks.
+The first line consists of the name of the instruction. On the right is the
+stack effect, which shows the effect of the instruction on the stack.
 Underneath is the description.
 
 {\bf Stack effects} are written
@@ -273,7 +223,6 @@ different types of stack item are shown in table~\ref{typetable}.
 \spic{x} & unspecified word \\
 \spic{addr} & address \\
 \spic{a-addr} & word-aligned address \\
-\spic{n-addr} & native address \\
 \bottomrule
 \end{tabular}
 \caption{\label{typetable}Types used in stack effects}
@@ -303,7 +252,7 @@ shows the subtype relationships. The subtype relation is transitive.
 
 Numbers are represented in twos complement form. \spic{addr} consists of all
 valid virtual machine addresses. Numeric constants can be included in
-stack pictures, and are of type \spic{n{\tt |}u}. Native addresses may occupy more than one word, according to the values of {\tt WORD\_SIZE} and {\tt NATIVE\_POINTER\_SIZE}; the precise format of this address is implementation-dependent.
+stack pictures, and are of type \spic{n{\tt |}u}.
 
 Each type may be suffixed by a number in stack pictures; if the same combination
 of type and suffix appears more than once in a stack effect, it refers to
@@ -315,9 +264,6 @@ The symbols \spic{i*x} and \spic{j*x} are used to denote different
 collections of zero or more words of any data type. Ellipsis is used for
 indeterminate numbers of specified types of word.
 
-If an instruction does not modify the return stack, the corresponding stack
-picture is omitted.
-
 
 \subsection{Numbers}
 \label{numbers}
@@ -326,27 +272,40 @@ picture is omitted.
 \inst{number}{— n}{The number is pushed on to the stack.}
 \end{description}
 
+
+\subsection{Errors}
+\label{erroract}
+
+This action raises an error (see section~\ref{errors}):
+
+\nopagebreak
+\begin{description}
+\inst{HALT}{x —}{Stop @PACKAGE_NAME@, returning reason code \spic{x} to the calling program (see section~\ref{calls}).}
+\end{description}
+
+
 \subsection{Stack manipulation}
 
-These actions manage the data stack and move values between stacks.
+These actions manage the stack:
 
+\nopagebreak
 \begin{description}
 \inst{POP}{\x{u}\dots\x1 u —}{Remove \spic{u} items from the stack.}
 \inst{DUP}{\x{u}\dots\x0 u — \x{u}\dots\x0 \x{u}}{Remove \spic{u}. Copy \x{u} to the top of the stack.}
 \inst{SWAP}{\x{u}\dots\x0 u — \x0\x{u-1}\dots\x1 \x{u}}{Exchange the top stack item with the \spic{u}th. If \spic{u} is zero, do nothing.}
-\instr{POP2R}{x —}{— x}{Move \spic{x} to the return stack.}
-\instr{RPOP}{— x}{x —}{Move \spic{x} from the return stack to the data stack.}
-\instr{RPUSH}{u — \x{u}}{\x{u} \x{u-1}\dots\x{0} — \x{u} \x{u-1}\dots\x{0}}{Remove \spic{u}. Copy \x{u} to the top of the data stack.}
+\inst{ROTATE}{\x{n}\dots\x0 n — \x{n-1}\dots\x1 \x{+n} \textrm{|} \x0 \x{n}\dots\x1}{If \spic{n} is non-negative, rotate the \spic{n}th stack item to the top; otherwise, rotate the top stack item to position \spic{n}.}
 \end{description}
+
 
 \subsection{Comparison}
 
 These words compare two numbers (or, for equality tests, any two words) on the
-stack, returning a flag.
+stack, returning a flag:
 
+\nopagebreak
 \begin{description}
-\inst{LT}{\n1 \n2 — flag}{\spic{flag} is true if and only if \n1 is less than \n2.}
 \inst{EQ}{\x1 \x2 — flag}{\spic{flag} is true if and only if \x1 is bit-for-bit the same as \x2.}
+\inst{LT}{\n1 \n2 — flag}{\spic{flag} is true if and only if \n1 is less than \n2.}
 \inst{ULT}{\U1 \U2 — flag}{\spic{flag} is true if and only if \U1 is less than \U2.}
 \end{description}
 
@@ -358,57 +317,53 @@ These actions consist of monadic and dyadic operators.
 All calculations are made without bounds or overflow checking, except
 as detailed for certain actions.
 
-Addition and negation:
+Negation and addition:
 
 \nopagebreak
-
 \begin{description}
-\inst{ADD}{\noru1 \noru2 — \noru3}{Add \noru2 to \noru1, giving the sum \noru3.}
 \inst{NEGATE}{\n1 — \n2}{Negate \n1, giving its arithmetic inverse \n2.}
+\inst{ADD}{\noru1 \noru2 — \noru3}{Add \noru2 to \noru1, giving the sum \noru3.}
 \end{description}
 
 Multiplication and division (note that all division actions raise error
-$-10$ if division by zero is attempted):
+$-4$ if division by zero is attempted):
 
 \nopagebreak
-
 \begin{description}
 \inst{MUL}{\noru1 \noru2 — \noru3}{Multiply \noru1 by \noru2 giving the product \noru3.}
-\inst{UDIVMOD}{\U1 \U2 — \U3 \U4}{Divide \U1 by \U2, giving the single-word quotient \U3 and the single-word remainder \U4.}
 \inst{DIVMOD}{\n1 \n2 — \n3 \n4}{Divide \n1 by \n2 using symmetric division, giving the single-word quotient \n3 and the single-word remainder \n4. The quotient is rounded towards zero.}
+\inst{UDIVMOD}{\U1 \U2 — \U3 \U4}{Divide \U1 by \U2, giving the single-word quotient \U3 and the single-word remainder \U4.}
 \end{description}
 
 
 \subsection{Logic and shifts}
 
-These actions consist of bitwise logical operators and bitwise shifts.
+Shifts:
+
+\nopagebreak
+\begin{description}
+\inst{LSHIFT}{\x1 u — \x2}{Perform a logical left shift of \spic{u} bit-places on \x1, giving \x2. Put zero into the least significant bits vacated by the shift. If \spic{u} is greater than or equal to the number of bits in a word, \x2 is zero.}
+\inst{RSHIFT}{\x1 u — \x2}{Perform a logical right shift of \spic{u} bit-places on \x1, giving \x2. Put zero into the most significant bits vacated by the shift. If \spic{u} is greater than or equal to the number of bits in a word, \x2 is zero.}
+\inst{ARSHIFT}{\x1 u — \x2}{Perform an arithmetic right shift of \spic{u} bit-places on \x1, giving \x2. Copy the original most-significant bits into the most significant bits vacated by the shift. If \spic{u} is greater than or equal to the number of bits in a word, all the bits of \x2 are the same as the original most-significant bit.}
+\end{description}
 
 Logic functions:
 
 \nopagebreak
-
 \begin{description}
-\inst{INVERT}{\x1 — \x2}{Invert all bits of \x1, giving its logical inverse \x2.}
+\inst{NOT}{\x1 — \x2}{Invert all bits of \x1, giving its logical inverse \x2.}
 \inst{AND}{\x1 \x2 — \x3}{\x3 is the bit-by-bit logical ``and'' of \x1 with \x2.}
 \inst{OR}{\x1 \x2 — \x3}{\x3 is the bit-by-bit inclusive-or of \x1 with \x2.}
 \inst{XOR}{\x1 \x2 — \x3}{\x3 is the bit-by-bit exclusive-or of \x1 with \x2.}
-\end{description}
-
-Shifts:
-
-\nopagebreak
-
-\begin{description}
-\inst{LSHIFT}{\x1 u — \x2}{Perform a logical left shift of \spic{u} bit-places on \x1, giving \x2. Put zero into the least significant bits vacated by the shift. If \spic{u} is greater than or equal to the number of bits in a word, \x2 is zero.}
-\inst{RSHIFT}{\x1 u — \x2}{Perform a logical right shift of \spic{u} bit-places on \x1, giving \x2. Put zero into the most significant bits vacated by the shift. If \spic{u} is greater than or equal to the number of bits in a word, \x2 is zero.}
 \end{description}
 
 
 \subsection{Memory}
 
 These actions fetch and store words and bytes to and from memory; there is
-also an action to add a number to another stored in memory.
+also an action to add a number to another stored in memory:
 
+\nopagebreak
 \begin{description}
 \inst{LOAD}{a-addr — x}{\spic{x} is the value stored at \spic{a-addr}.}
 \inst{STORE}{x a-addr —}{Store \spic{x} at \spic{a-addr}.}
@@ -417,109 +372,81 @@ also an action to add a number to another stored in memory.
 \end{description}
 
 
+\subsection{Control}
+\label{control}
+
+These actions implement unconditional and conditional branches, and subroutine
+call and return (subroutine return is {\tt BRANCH}):
+
+\nopagebreak
+\begin{description}
+\inst{BRANCH}{addr —}{Set {\tt PC} to \spic{addr}.}
+\inst{BRANCHZ}{flag addr —}{If \spic{flag} is false then set {\tt PC} to \spic{addr}.}
+\inst{CALL}{\addr1 — \addr2}{Exchange {\tt PC} with the top stack value.}
+\end{description}
+
+
 \subsection{Registers}
 \label{registeract}
 
 \begin{description}
-\inst{PUSH\_SDEPTH}{— u}{\spic{u} is the value of {\tt SDEPTH}, the number of items on the stack.}
-\inst{STORE\_SDEPTH}{u —}{Set {\tt SDEPTH} to \spic{u}.}
-\inst{PUSH\_RP}{— a-addr}{\spic{a-addr} is the value of {\tt RP}.}
-\inst{STORE\_RP}{a-addr —}{Set {\tt RP} to \spic{a-addr}.}
-\inst{PUSH\_PC}{— addr}{Push {\tt PC} on to the stack.}
-\inst{PUSH\_SSIZE}{— u}{Push {\tt SSIZE} on to the stack.}
-\inst{PUSH\_RSIZE}{— u}{Push {\tt RSIZE} on to the stack.}
-\inst{PUSH\_MEMORY}{— a-addr}{Push {\tt MEMORY} on to the stack.}
-\inst{PUSH\_WORD\_SIZE}{— u}{\spic{u} is the value of {\tt WORD\_SIZE}.}
-\inst{PUSH\_NATIVE\_POINTER\_SIZE}{— u}{\spic{u} is the value of {\tt NATIVE\_POINTER\_SIZE}.}
-\end{description}
-
-
-\subsection{Control structures}
-\label{control}
-
-These actions implement unconditional and conditional branches, and subroutine
-call and return; there is also a no-op.
-
-No-op:
-
-\nopagebreak
-
-\begin{description}
-\inst{NOP}{—}{Do nothing.}
-\end{description}
-
-Branches:
-
-\nopagebreak
-
-\begin{description}
-\inst{BRANCH}{addr —}{Set {\tt PC} to \spic{addr}.}
-\inst{BRANCHZ}{flag addr —}{If \spic{flag} is false then set {\tt PC} to \spic{addr}.}
-\end{description}
-
-Subroutine call and return:
-
-\nopagebreak
-
-\begin{description}
-\instr{CALL}{\aaddr1 —}{ — \aaddr2}{Push {\tt PC} on to the return stack, put \spic{\aaddr1} into {\tt PC}.}
-\instr{RET}{—}{addr —}{Put \spic{addr} into {\tt PC}.}
-\end{description}
-
-
-\subsection{Errors}
-\label{erroract}
-
-This action gives access to @PACKAGE_NAME@'s error mechanism (see section~\ref{errors}).
-
-\begin{description}
-\inst{HALT}{x —}{Stop @PACKAGE_NAME@, returning reason code \spic{x} to the calling program (see section~\ref{calls}).}
+\inst{GET\_WORD\_SIZE}{— u}{\spic{u} is the value of {\tt WORD\_SIZE}.}
+\inst{GET\_STACK\_DEPTH}{— u}{\spic{u} is the value of {\tt STACK\_DEPTH}, the number of items on the stack.}
+\inst{SET\_STACK\_DEPTH}{u —}{Set {\tt STACK\_DEPTH} to \spic{u}.}
 \end{description}
 
 
 \subsection{External access}
 \label{accessact}
 
-These actions allow access to @PACKAGE_NAME@'s libraries, the operating system and native machine code.
+This action provides implementation-specific functions:
+
+\nopagebreak
+\begin{description}
+\inst{EXTRA}{i*x — j*x}{Perform implementation-dependent actions; for example, this can be used to implement system-dependent functionality such as I/O.}
+\end{description}
+
+
+\subsection{No-op}
 
 \begin{description}
-\inst{CALL\_NATIVE}{n-addr —}{Make a subroutine call to the routine at address \spic{n-addr}, passing the current state as an argument.}
-\inst{EXTRA}{i*x — j*x}{Perform implementation-dependent actions; for example, this can be used to implement system-dependent functionality such as I/O.}
+\inst{NOP}{—}{Do nothing.}
 \end{description}
 
 
 \subsection{Instruction encoding}
 \label{encoding}
 
-Instructions are words encoded by one or more bytes, as follows: the significant bits of the number are split into groups of six bits, starting at the least significant end. The chunks are stored in consecutive bytes. All but the last byte have the seventh bit set and eighth bit clear. If the instruction is a number the final byte has the top two bits either both set or both clear, to match the number’s most significant bit; otherwise, the top bit is set and the second bit clear, to indicate an action.
+Actions are encoded as a single byte with the top two bits clear.
+
+Numbers are words encoded by one or more bytes, as follows: the significant bits of the number are split into groups of six bits, starting at the most significant end, and then stored in little-endian order in consecutive bytes. All but the last byte have the seventh bit set and eighth bit clear; the final byte has the eighth bit set, and the seventh bit matches the sign bit.
 
 
 \subsection{Action opcodes}
 \label{opcodes}
 
-Table~\ref{opcodetable} lists the action opcodes in numerical order. Other action opcodes are undefined. Undefined action opcodes raise error $-256$.
+Table~\ref{opcodetable} lists the action opcodes in numerical order. Other action opcodes are undefined.
 
 \begin{table}[htb]
 \begin{center}
-\begin{tabular}{*{3}{cc}} \toprule
-\bf Opcode & \bf Action & \bf Opcode & \bf
-    Action & \bf Opcode & \bf Action \\ \midrule
-\opcodetbl{00}{NOP}	{10}{AND}	{20}{PUSH\_WORD\_SIZE}
-\opcodetbl{01}{POP}	{11}{OR}        {21}{PUSH\_NATIVE\_POINTER\_SIZE}
-\opcodetbl{02}{DUP}	{12}{XOR}	{22}{PUSH\_SDEPTH}
-\opcodetbl{03}{SWAP}	{13}{LSHIFT}	{23}{STORE\_SDEPTH}
-\opcodetbl{04}{RPUSH}	{14}{RSHIFT}	{24}{PUSH\_RDEPTH}
-\opcodetbl{05}{POP2R}	{15}{LOAD}	{25}{STORE\_RDEPTH}
-\opcodetbl{06}{RPOP}	{16}{STORE}	{26}{PUSH\_PC}
-\opcodetbl{07}{LT}	{17}{LOADB}	{27}{PUSH\_SSIZE}
-\opcodetbl{08}{EQ}	{18}{STOREB}	{28}{PUSH\_RSIZE}
-\opcodetbl{09}{ULT}	{19}{BRANCH}	{29}{PUSH\_MEMORY}
-\opcodetbltwo{0a}{ADD}	{1a}{BRANCHZ}
-\opcodetbltwo{0b}{NEGATE}	{1b}{CALL}
-\opcodetbltwo{0c}{MUL}	{1c}{RET}
-\opcodetbltwo{0d}{UDIVMOD}	{1d}{HALT}
-\opcodetbltwo{0e}{DIVMOD}	{1e}{CALL\_NATIVE}
-\opcodetbltwo{0f}{INVERT}  {1f}{EXTRA}
+\begin{tabular}{*{2}{cc}} \toprule
+\bf Opcode & \bf Action & \bf Opcode & \bf Action \\ \midrule
+\opcodetbl{00}{HALT}	{10}{NOT}
+\opcodetbl{01}{POP}	{11}{AND}
+\opcodetbl{02}{DUP}	{12}{OR}
+\opcodetbl{03}{SWAP}	{13}{XOR}
+\opcodetbl{04}{ROTATE}	{14}{LOAD}
+\opcodetbl{05}{EQ}	{15}{STORE}
+\opcodetbl{06}{LT}	{16}{LOADB}
+\opcodetbl{07}{ULT}	{17}{STOREB}
+\opcodetbl{08}{NEGATE}	{18}{BRANCH}
+\opcodetbl{09}{ADD}	{19}{BRANCHZ}
+\opcodetbl{0a}{MUL}	{1a}{CALL}
+\opcodetbl{0b}{DIVMOD}	{1b}{GET\_WORD\_SIZE}
+\opcodetbl{0c}{UDIVMOD}	{1c}{GET\_STACK\_DEPTH}
+\opcodetbl{0d}{LSHIFT}	{1d}{SET\_STACK\_DEPTH}
+\opcodetbl{0e}{RSHIFT}	{1e}{EXTRA}
+\opcodetbl{0f}{ARSHIFT}	{1f}{NOP}
  \bottomrule
 \end{tabular}
 \caption{\label{opcodetable}Action opcodes}
@@ -530,7 +457,7 @@ Table~\ref{opcodetable} lists the action opcodes in numerical order. Other actio
 \section{External interface}
 
 @PACKAGE_NAME@'s external interface comes in three parts. The calling interface allows
-@PACKAGE_NAME@ to be controlled by other programs. The {\tt CALL\_NATIVE} action (see section~\ref{accessact}) allows implementations to provide access to system facilities, previously written code,
+@PACKAGE_NAME@ to be controlled by other programs. The {\tt EXTRA} action (see section~\ref{accessact}) allows implementations to provide access to system facilities, previously written code,
 code written in other languages, and the speed of machine code in time-critical
 situations. The object module format allows compiled code to be saved, reloaded
 and shared between systems.
@@ -560,26 +487,19 @@ addresses passed as parameters must be word-aligned. An implementation of @PACKA
 following calls:
 
 \begin{description}
-\iface{native\_address}{integer, boolean}{pointer}{Return a native pointer corresponding
-    to the given VM address. If the address is invalid, or the Boolean flag is true and the address is read-only, then a distinguished invalid pointer is returned.}
 \iface{run}{}{integer}{Start @PACKAGE_NAME@ by entering the execution cycle as
     described in section~\ref{operation}. If @PACKAGE_NAME@ ever executes a {\tt
     HALT} action (see section~\ref{erroract}), the reason code is
     returned as the result.}
 \iface{single\_step}{}{integer}{Execute a single pass of the execution
-    cycle, and return reason code $-257$, unless a {\tt HALT} action was
-    obeyed (see section~\ref{erroract}), in which case the reason code
-    passed to it is returned.}
+    cycle. If an error is raised, it is returned; otherwise, return $-128$.}
 \iface{load\_object}{file, address}{integer}{Load the object module
-    specified by \textit{file}, which may be a filename or some other
-    specifier, to the VM address \textit{address}. First the module's
-    header is checked; if the first seven bytes are not as specified above
-    in section~\ref{object}, or the endianness value is not 0 or 1, then
-    return $-2$. If the code will not fit into memory at the address given, or
-    the address is out of range or unaligned, return $-1$. Otherwise load the code into
+    given by the file descriptor \textit{file}, which may be a filename or some other
+    specifier, to the VM address \textit{address}. If the module is invalid, then return $-2$. If the module cannot be loaded by the current implementation (for example, the word size or {\tt ENDISM} is incompatible), return $-3$. If the code will not fit into memory at the address given, or the address is out of range or unaligned, return $-4$. Otherwise load the code into
     memory, converting it if the endianness value is different from the current
-    value of {\tt ENDISM}. The result is the length of the code in bytes if successful, and some other
-    implementation-defined value if there is a filing system or other error.}
+    value of {\tt ENDISM}. The result is the length of the code in bytes if successful, and $-1$ if there is a filing system or other error.}
+  \iface{save\_object}{file, address, length}{integer}{Save the area of memory
+    specified by \textit{address} and \textit{length} to the file descriptor given by \textit{file}. On success, $0$ is returned. If the address or length are invalid, the return code is $-2$. If a file system error occurs, the return code is $-1$.}
 \end{description}
 
 @PACKAGE_NAME@ must also provide access to its registers and address space through

@@ -75,11 +75,7 @@ int smite_load_stack(smite_state *S, smite_UWORD pos, smite_WORD *v);
 int smite_store_stack(smite_state *S, smite_UWORD pos, smite_WORD v);
 int smite_pop_stack(smite_state *S, smite_WORD *v);
 int smite_push_stack(smite_state *S, smite_WORD v);
-
-int smite_load_return_stack(smite_state *S, smite_UWORD pos, smite_WORD *v);
-int smite_store_return_stack(smite_state *S, smite_UWORD pos, smite_WORD v);
-int smite_pop_return_stack(smite_state *S, smite_WORD *v);
-int smite_push_return_stack(smite_state *S, smite_WORD v);
+int smite_rotate_stack(smite_state *S, smite_WORD pos);
 
 // Interface calls
 uint8_t *smite_native_address_of_range(smite_state *S, smite_UWORD addr, smite_UWORD length);
@@ -89,8 +85,9 @@ ptrdiff_t smite_load_object(smite_state *S, smite_UWORD address, int fd);
 int smite_save_object(smite_state *S, smite_UWORD address, smite_UWORD length, int fd);
 
 // Additional implementation-specific routines, macros, types and quantities
-smite_state *smite_init(size_t size, size_t stack_size, size_t return_stack_size);
-int smite_mem_realloc(smite_state *S, smite_UWORD size);
+smite_state *smite_init(size_t size, size_t stack_size);
+int smite_realloc_memory(smite_state *S, smite_UWORD size);
+int smite_realloc_stack(smite_state *S, smite_UWORD size);
 void smite_destroy(smite_state *S);
 int smite_register_args(smite_state *S, int argc, char *argv[]);
 

@@ -12,7 +12,7 @@
 from smite import *
 
 size = 1024
-VM = State(size // word_size, 1, 1)
+VM = State(size // word_size, 1)
 if VM == None:
     print("Error in init() tests: init with valid parameters failed")
     sys.exit(1)
