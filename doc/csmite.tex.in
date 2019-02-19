@@ -255,12 +255,6 @@ The following routine allows the calling program to register command-line argume
 \ifacec{int @PACKAGE@\_register\_args(@PACKAGE@\_state *state, int argc, char *argv[])}{Maps the given arguments register, which has the same format as that supplied to {\bf main()}, into @PACKAGE_NAME@’s memory. Returns $0$ on success and $-1$ if memory could not be allocated, or $-2$ if an argument could not be mapped to @PACKAGE_NAME@’s address space.}
 \end{description}
 
-The following routine allows object files to be saved:
-
-\begin{description}
-\ifacec{int @PACKAGE@\_save\_object(@PACKAGE@\_state, *state@PACKAGE@\_UWORD address, @PACKAGE@\_UWORD length, int fd)}{On success, $0$ is returned. If the address or length are invalid, the return code is $-1$. If a file system error occurs, the return code is $-2$.}
-\end{description}
-
 Programs which use C @PACKAGE_NAME@'s interface must {\tt \#include} the header file
 {\tt @PACKAGE@.h} and be linked with the @PACKAGE_NAME@ library. {\tt
 @PACKAGE@\_opcodes.h}, which contains an enumeration type of @PACKAGE_NAME@'s instruction set,

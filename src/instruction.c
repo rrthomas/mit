@@ -60,25 +60,25 @@ ENCODE_INSTRUCTION(smite_encode_instruction_file, int, fd, STORE_FILE)
 #define STORE_VIRTUAL(b) (smite_store_byte(S, addr++, (b)))
 STATEFUL_ENCODE_INSTRUCTION(smite_encode_instruction, smite_UWORD, addr, STORE_VIRTUAL)
 
-#define _DECODE_INSTRUCTION(NAME, TYPE, HANDLE, LOAD)                   \
+#define _DECODE_INSTRUCTION(RET_TYPE, NAME, TYPE, HANDLE, LOAD)         \
     {                                                                   \
         unsigned bits = 0;                                              \
         smite_WORD n = 0;                                               \
         smite_BYTE b;                                                   \
-        int error;                                                      \
+        RET_TYPE error;                                                 \
         int type = INSTRUCTION_ACTION;                                  \
                                                                         \
         /* Continuation bytes */                                        \
         for (error = LOAD(b);                                           \
-             error == 0 && bits <= smite_word_bit - INSTRUCTION_CHUNK_BIT && \
+             error >= 0 && bits <= smite_word_bit - INSTRUCTION_CHUNK_BIT && \
                  (b & ~INSTRUCTION_CHUNK_MASK) == INSTRUCTION_CONTINUATION_BIT; \
              error = LOAD(b)) {                                         \
             n |= (smite_WORD)(b & INSTRUCTION_CHUNK_MASK) << bits;      \
             bits += INSTRUCTION_CHUNK_BIT;                              \
         }                                                               \
         if (bits > smite_word_bit)                                      \
-            return -1;                                                  \
-        if (error != 0)                                                 \
+            return -2;                                                  \
+        if (error < 0)                                                  \
             return error;                                               \
                                                                         \
         /* Check for number opcode */                                   \
@@ -97,16 +97,16 @@ STATEFUL_ENCODE_INSTRUCTION(smite_encode_instruction, smite_UWORD, addr, STORE_V
         return type;                                                    \
     }
 
-#define DECODE_INSTRUCTION(NAME, TYPE, HANDLE, LOAD)                    \
-    int NAME(TYPE HANDLE, smite_WORD *val)                              \
-    _DECODE_INSTRUCTION(NAME, TYPE, HANDLE, LOAD)
+#define DECODE_INSTRUCTION(RET_TYPE, NAME, TYPE, HANDLE, LOAD)          \
+    RET_TYPE NAME(TYPE HANDLE, smite_WORD *val)                         \
+    _DECODE_INSTRUCTION(RET_TYPE, NAME, TYPE, HANDLE, LOAD)
 
-#define STATEFUL_DECODE_INSTRUCTION(NAME, TYPE, HANDLE, LOAD)           \
-    int NAME(smite_state *S, TYPE HANDLE, smite_WORD *val)              \
-    _DECODE_INSTRUCTION(NAME, TYPE, HANDLE, LOAD)
+#define STATEFUL_DECODE_INSTRUCTION(RET_TYPE, NAME, TYPE, HANDLE, LOAD) \
+    RET_TYPE NAME(smite_state *S, TYPE HANDLE, smite_WORD *val)         \
+    _DECODE_INSTRUCTION(RET_TYPE, NAME, TYPE, HANDLE, LOAD)
 
-#define LOAD_FILE(b) (-(read(fd, &b, 1) != 1))
-DECODE_INSTRUCTION(smite_decode_instruction_file, int, fd, LOAD_FILE)
+#define LOAD_FILE(b) (read(fd, &b, 1))
+DECODE_INSTRUCTION(ssize_t, smite_decode_instruction_file, int, fd, LOAD_FILE)
 
 #define LOAD_VIRTUAL(b) (smite_load_byte(S, (*addr)++, &(b)))
-STATEFUL_DECODE_INSTRUCTION(smite_decode_instruction, smite_UWORD *, addr, LOAD_VIRTUAL)
+STATEFUL_DECODE_INSTRUCTION(int, smite_decode_instruction, smite_UWORD *, addr, LOAD_VIRTUAL)

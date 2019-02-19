@@ -494,15 +494,12 @@ following calls:
 \iface{single\_step}{}{integer}{Execute a single pass of the execution
     cycle. If an error is raised, it is returned; otherwise, return $-128$.}
 \iface{load\_object}{file, address}{integer}{Load the object module
-    specified by \textit{file}, which may be a filename or some other
-    specifier, to the VM address \textit{address}. First the module's
-    header is checked; if the first seven bytes are not as specified above
-    in section~\ref{object}, or the endianness value is not 0 or 1, then
-    return $-2$. If the code will not fit into memory at the address given, or
-    the address is out of range or unaligned, return $-1$. Otherwise load the code into
+    given by the file descriptor \textit{file}, which may be a filename or some other
+    specifier, to the VM address \textit{address}. If the module is invalid, then return $-2$. If the module cannot be loaded by the current implementation (for example, the word size or {\tt ENDISM} is incompatible), return $-3$. If the code will not fit into memory at the address given, or the address is out of range or unaligned, return $-4$. Otherwise load the code into
     memory, converting it if the endianness value is different from the current
-    value of {\tt ENDISM}. The result is the length of the code in bytes if successful, and some other
-    implementation-defined value if there is a filing system or other error.}
+    value of {\tt ENDISM}. The result is the length of the code in bytes if successful, and $-1$ if there is a filing system or other error.}
+  \iface{save\_object}{file, address, length}{integer}{Save the area of memory
+    specified by \textit{address} and \textit{length} to the file descriptor given by \textit{file}. On success, $0$ is returned. If the address or length are invalid, the return code is $-2$. If a file system error occurs, the return code is $-1$.}
 \end{description}
 
 @PACKAGE_NAME@ must also provide access to its registers and address space through

@@ -34,7 +34,7 @@ build_dir = os.environ['builddir']
 
 
 bad_files = ["badobj1", "badobj2", "badobj3", "badobj4"]
-error_code = [-2, -2, -1, -3]
+error_code = [-2, -2, -4, -2]
 for i in range(len(bad_files)):
     s = obj_name(src_dir, bad_files[i], False, word_size)
     res = try_load(s)
@@ -91,7 +91,7 @@ assert(word_size == 4 or word_size == 8)
 wrong_word_size = 8 if word_size == 4 else 4
 s = obj_name(src_dir, good_files[0], True, wrong_word_size)
 res = try_load(s)
-incorrect_word_size_res = -5
+incorrect_word_size_res = -3
 print(" should be {}".format(incorrect_word_size_res))
 if res != incorrect_word_size_res:
     print("Error in load_object() tests: file {}".format(good_files[0]))

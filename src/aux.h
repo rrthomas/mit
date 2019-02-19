@@ -90,7 +90,7 @@ int smite_byte_size(smite_WORD v); // return number of significant bytes in a sm
 #define INSTRUCTION_MAX_CHUNKS (((smite_word_bit + INSTRUCTION_CHUNK_BIT - 1) / INSTRUCTION_CHUNK_BIT))
 ptrdiff_t smite_encode_instruction_file(int fd, enum instruction_type type, smite_WORD v);
 ptrdiff_t smite_encode_instruction(smite_state *S, smite_UWORD addr, enum instruction_type type, smite_WORD v);
-int smite_decode_instruction_file(int fd, smite_WORD *val);
+ssize_t smite_decode_instruction_file(int fd, smite_WORD *val);
 int smite_decode_instruction(smite_state *S, smite_UWORD *addr, smite_WORD *val);
 
 // Object files
