@@ -1,4 +1,5 @@
-// The interface call load_object(file, address) : integer.
+// The interface calls load_object(file, address) : integer and
+// save_object(file, address, length) : integer.
 //
 // (c) Reuben Thomas 1995-2019
 //
