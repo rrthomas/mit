@@ -45,6 +45,9 @@ class Action:
 
     C variables are created for the arguments and results; the arguments are
     pushed and results popped.
+
+    The code should RAISE any error before writing any state, so that if an
+    error is raised, the state of the VM is not changed.
     '''
     def __init__(self, opcode, args, results, code):
         self.opcode = opcode
