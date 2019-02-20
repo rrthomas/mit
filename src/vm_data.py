@@ -36,248 +36,161 @@ class Types(IntEnum):
     ACTION = 0x1
 
 class Action:
-    '''
-    VM action instruction descriptor.
+    '''VM action instruction descriptor.
 
      - opcode - int - SMite opcode number.
+     - args - list - list of stack arguments.
+     - results - list - list of stack results.
      - code - str - C source code.
+
+    C variables are created for the arguments and results; the arguments are
+    pushed and results popped.
     '''
-    def __init__(self, opcode, code):
+    def __init__(self, opcode, args, results, code):
         self.opcode = opcode
+        self.args = args
+        self.results = results
         self.code = code
 
 @unique
 class Actions(Enum):
     '''VM action instructions.'''
-    HALT = Action(0x00, '''\
-        smite_WORD ret;
-        POP(&ret);
-        S->halt_code = ret;
+    HALT = Action(0x00, ['error_code'], [], '''\
+        S->halt_code = error_code;
         RAISE(-127);
     ''')
 
-    POP = Action(0x01, '''\
-        smite_WORD depth;
-        POP(&depth);
+    POP = Action(0x01, ['depth'], [], '''\
         S->STACK_DEPTH -= depth;
     ''')
 
-    DUP = Action(0x02, '''\
-        smite_WORD depth;
-        POP(&depth);
-        smite_WORD pickee;
+    DUP = Action(0x02, ['depth'], ['pickee'], '''\
         RAISE(smite_load_stack(S, depth, &pickee));
-        PUSH(pickee);
     ''')
 
-    SWAP = Action(0x03, '''\
-        smite_WORD depth;
-        POP(&depth);
-        smite_WORD swapee;
-        RAISE(smite_load_stack(S, depth, &swapee));
-        smite_WORD top;
-        POP(&top);
-        PUSH(swapee);
-        RAISE(smite_store_stack(S, depth, top));
+    SWAP = Action(0x03, ['top', 'depth'], ['swapee'], '''\
+        if (depth > 0) {
+            RAISE(smite_load_stack(S, depth - 1, &swapee));
+            RAISE(smite_store_stack(S, depth - 1, top));
+        }
     ''')
 
-    ROTATE = Action(0x04, '''\
-        smite_WORD pos;
-        POP(&pos);
+    ROTATE = Action(0x04, ['pos'], [], '''\
         RAISE(smite_rotate_stack(S, pos));
     ''')
 
-    EQ = Action(0x05, '''\
-        smite_WORD a;
-        POP(&a);
-        smite_WORD b;
-        POP(&b);
-        PUSH(a == b);
+    EQ = Action(0x05, ['a', 'b'], ['flag'], '''\
+        flag = a == b;
     ''')
 
-    LT = Action(0x06, '''\
-        smite_WORD a;
-        POP(&a);
-        smite_WORD b;
-        POP(&b);
-        PUSH(b < a);
+    LT = Action(0x06, ['a', 'b'], ['flag'], '''\
+        flag = a < b;
     ''')
 
-    ULT = Action(0x07, '''\
-        smite_UWORD a;
-        POP((smite_WORD *)&a);
-        smite_UWORD b;
-        POP((smite_WORD *)&b);
-        PUSH(b < a);
+    ULT = Action(0x07, ['a', 'b'], ['flag'], '''\
+        flag = (smite_UWORD)a < (smite_UWORD)b;
     ''')
 
-    NEGATE = Action(0x08, '''\
-        smite_WORD a;
-        POP(&a);
-        PUSH(-a);
+    NEGATE = Action(0x08, ['a'], ['r'], '''\
+        r = -a;
     ''')
 
-    ADD = Action(0x09, '''\
-        smite_WORD a;
-        POP(&a);
-        smite_WORD b;
-        POP(&b);
-        PUSH(b + a);
+    ADD = Action(0x09, ['a', 'b'], ['r'], '''\
+        r = a + b;
     ''')
 
-    MUL = Action(0x0a, '''\
-        smite_WORD multiplier;
-        POP(&multiplier);
-        smite_WORD multiplicand;
-        POP(&multiplicand);
-        PUSH(multiplier * multiplicand);
+    MUL = Action(0x0a, ['a', 'b'], ['r'], '''\
+        r = a * b;
     ''')
 
-    DIVMOD = Action(0x0b, '''\
-        smite_WORD divisor;
-        POP(&divisor);
-        smite_WORD dividend;
-        POP(&dividend);
-        DIVZERO(divisor);
-        PUSH(dividend / divisor);
-        PUSH(dividend % divisor);
+    DIVMOD = Action(0x0b, ['a', 'b'], ['q', 'r'], '''\
+        DIVZERO(b);
+        q = a / b;
+        r = a % b;
     ''')
 
-    UDIVMOD = Action(0x0c, '''\
-        smite_UWORD divisor;
-        POP((smite_WORD *)&divisor);
-        smite_UWORD dividend;
-        POP((smite_WORD *)&dividend);
-        DIVZERO(divisor);
-        PUSH(dividend / divisor);
-        PUSH(dividend % divisor);
+    UDIVMOD = Action(0x0c, ['a', 'b'], ['q', 'r'], '''\
+        DIVZERO(b);
+        q = (smite_WORD)((smite_UWORD)a / (smite_UWORD)b);
+        r = (smite_WORD)((smite_UWORD)a / (smite_UWORD)b);
     ''')
 
-    LSHIFT = Action(0x0d, '''\
-        smite_WORD shift;
-        POP(&shift);
-        smite_WORD value;
-        POP(&value);
-        PUSH(shift < (smite_WORD)smite_word_bit ? value << shift : 0);
+    LSHIFT = Action(0x0d, ['x', 'n'], ['r'], '''\
+        r = n < (smite_WORD)smite_word_bit ? x << n : 0;
     ''')
 
-    RSHIFT = Action(0x0e, '''\
-        smite_WORD shift;
-        POP(&shift);
-        smite_WORD value;
-        POP(&value);
-        PUSH(shift < (smite_WORD)smite_word_bit ? (smite_WORD)((smite_UWORD)value >> shift) : 0);
+    RSHIFT = Action(0x0e, ['x', 'n'], ['r'], '''\
+        r = n < (smite_WORD)smite_word_bit ? (smite_WORD)((smite_UWORD)x >> n) : 0;
     ''')
 
-    ARSHIFT = Action(0x0f, '''\
-        smite_WORD shift;
-        POP(&shift);
-        smite_WORD value;
-        POP(&value);
-        PUSH(ARSHIFT(shift, value));
+    ARSHIFT = Action(0x0f, ['x', 'n'], ['r'], '''\
+        r = ARSHIFT(x, n);
     ''')
 
-    NOT = Action(0x10, '''\
-        smite_WORD a;
-        POP(&a);
-        PUSH(~a);
+    NOT = Action(0x10, ['x'], ['r'], '''\
+        r = ~x;
     ''')
 
-    AND = Action(0x11, '''\
-        smite_WORD a;
-        POP(&a);
-        smite_WORD b;
-        POP(&b);
-        PUSH(a & b);
+    AND = Action(0x11, ['x', 'y'], ['r'], '''\
+        r = x & y;
     ''')
 
-    OR = Action(0x12, '''\
-        smite_WORD a;
-        POP(&a);
-        smite_WORD b;
-        POP(&b);
-        PUSH(a | b);
+    OR = Action(0x12, ['x', 'y'], ['r'], '''\
+        r = x | y;
     ''')
 
-    XOR = Action(0x13, '''\
-        smite_WORD a;
-        POP(&a);
-        smite_WORD b;
-        POP(&b);
-        PUSH(a ^ b);
+    XOR = Action(0x13, ['x', 'y'], ['r'], '''\
+        r = x ^ y;
     ''')
 
-    LOAD = Action(0x14, '''\
-        smite_WORD addr;
-        POP(&addr);
-        smite_WORD value;
-        RAISE(smite_load_word(S, addr, &value));
-        PUSH(value);
+    LOAD = Action(0x14, ['addr'], ['x'], '''\
+        RAISE(smite_load_word(S, addr, &x));
     ''')
 
-    STORE = Action(0x15, '''\
-        smite_WORD addr;
-        POP(&addr);
-        smite_WORD value;
-        POP(&value);
-        RAISE(smite_store_word(S, addr, value));
+    STORE = Action(0x15, ['x', 'addr'], [], '''\
+        RAISE(smite_store_word(S, addr, x));
     ''')
 
-    LOADB = Action(0x16, '''\
-        smite_WORD addr;
-        POP(&addr);
-        smite_BYTE value;
-        RAISE(smite_load_byte(S, addr, &value));
-        PUSH((smite_WORD)value);
+    LOADB = Action(0x16, ['addr'], ['x'], '''\
+        smite_BYTE b_;
+        RAISE(smite_load_byte(S, addr, &b_));
+        x = (smite_WORD)b_;
     ''')
 
-    STOREB = Action(0x17, '''\
-        smite_WORD addr;
-        POP(&addr);
-        smite_WORD value;
-        POP(&value);
-        RAISE(smite_store_byte(S, addr, (smite_BYTE)value));
+    STOREB = Action(0x17, ['x', 'addr'], [], '''\
+        RAISE(smite_store_byte(S, addr, (smite_BYTE)x));
     ''')
 
-    BRANCH = Action(0x18, '''\
-        POP((smite_WORD *)&(S->PC));
+    BRANCH = Action(0x18, ['addr'], [], '''\
+        S->PC = (smite_UWORD)addr;
     ''')
 
-    BRANCHZ = Action(0x19, '''\
-        smite_WORD addr;
-        POP(&addr);
-        smite_WORD cond;
-        POP(&cond);
-        if (cond == 0)
-            S->PC = addr;
+    BRANCHZ = Action(0x19, ['flag', 'addr'], [], '''\
+        if (flag == 0)
+            S->PC = (smite_UWORD)addr;
     ''')
 
-    CALL = Action(0x1a, '''\
-        smite_WORD addr;
-        POP(&addr);
-        RAISE(smite_push_stack(S, S->PC));
-        S->PC = addr;
+    CALL = Action(0x1a, ['addr'], ['ret_addr'], '''\
+        ret_addr = S->PC;
+        S->PC = (smite_UWORD)addr;
     ''')
 
-    GET_WORD_SIZE = Action(0x1b, '''\
-        PUSH(smite_word_size);
+    GET_WORD_SIZE = Action(0x1b, [], ['r'], '''\
+        r = smite_word_size;
     ''')
 
-    GET_STACK_DEPTH = Action(0x1c, '''\
-        smite_WORD value = S->STACK_DEPTH;
-        PUSH(value);
+    GET_STACK_DEPTH = Action(0x1c, [], ['r'], '''\
+        r = S->STACK_DEPTH;
     ''')
 
-    SET_STACK_DEPTH = Action(0x1d, '''\
-        smite_WORD value;
-        POP(&value);
-        S->STACK_DEPTH = value;
+    SET_STACK_DEPTH = Action(0x1d, ['a'], [], '''\
+        S->STACK_DEPTH = a;
     ''')
 
-    EXTRA = Action(0x1e, '''\
+    EXTRA = Action(0x1e, [], [], '''\
         RAISE(smite_extra(S));
     ''')
 
-    NOP = Action(0x1f, '''\
+    NOP = Action(0x1f, [], [], '''\
         // Do nothing.'''
     )
