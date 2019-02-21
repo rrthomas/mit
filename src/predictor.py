@@ -100,6 +100,7 @@ for event in open_trace(trace_filename):
     if progress >= 1000000:
         progress = 0
         print('.', end='', flush=True)
+print()
 
 # Dump to a file, abstracting history, and removing rare states.
 

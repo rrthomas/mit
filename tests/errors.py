@@ -16,7 +16,7 @@ VM.globalize(globals())
 
 # Test results and data
 answer = 42
-result = [answer, -10, -9, -9, -23, -256]
+result = [answer, -4, -2, -2, -3, -1]
 invalid_address = size * word_size + 1000
 test = []
 
@@ -64,7 +64,7 @@ assert(len(test) == len(result))
 # Test
 error = 0
 for i in range(len(test)):
-    SDEPTH.set(0)    # reset stack pointer
+    STACK_DEPTH.set(0)    # reset stack pointer
 
     print("Test {}".format(i + 1))
     PC.set(test[i])

@@ -36,12 +36,13 @@ struct _smite_state {
 
 // Memory size
 extern smite_UWORD smite_default_memory_size;
-extern smite_UWORD smite_max_memory_size;
 
 // Stacks
 extern const int smite_stack_direction;
 extern smite_UWORD smite_default_stack_size;
-extern smite_UWORD smite_max_stack_size;
+
+// RAISE(code) must be define before using `PUSH` or `POP`.
+// It must somehow exit if `code` is non-zero, e.g. return `code` to caller.
 
 // RAISE(code) must be define before using `PUSH` or `POP`.
 // It must somehow exit if `code` is non-zero, e.g. return `code` to caller.
@@ -74,24 +75,25 @@ int smite_is_aligned(smite_UWORD addr);
 
 // Portable arithmetic right shift (the behaviour of >> on signed
 // quantities is implementation-defined in C99)
+#ifdef HAVE_ARITHMETIC_RSHIFT
+#define ARSHIFT(n, p) ((smite_WORD)(n) >> (p))
+#else
 #define ARSHIFT(n, p) (((n) >> (p)) | ((smite_UWORD)(-((smite_WORD)(n) < 0)) << (smite_word_bit - (p))))
+#endif
 
 // Bit utilities
 _GL_ATTRIBUTE_CONST int smite_find_msbit(smite_WORD v); // return msbit of a smite_WORD
 int smite_byte_size(smite_WORD v); // return number of significant bytes in a smite_WORD quantity
 
-// Initialisation helper
-smite_state *smite_init_default_stacks(size_t memory_size);
-
 // Instructions
 #define INSTRUCTION_CHUNK_BIT 6
 #define INSTRUCTION_CONTINUATION_BIT (1 << INSTRUCTION_CHUNK_BIT)
-#define INSTRUCTION_ACTION_BIT (1 << (INSTRUCTION_CHUNK_BIT + 1))
+#define INSTRUCTION_NUMBER_BIT (1 << (INSTRUCTION_CHUNK_BIT + 1))
 #define INSTRUCTION_CHUNK_MASK ((1 << INSTRUCTION_CHUNK_BIT) - 1)
 #define INSTRUCTION_MAX_CHUNKS (((smite_word_bit + INSTRUCTION_CHUNK_BIT - 1) / INSTRUCTION_CHUNK_BIT))
 ptrdiff_t smite_encode_instruction_file(int fd, enum instruction_type type, smite_WORD v);
 ptrdiff_t smite_encode_instruction(smite_state *S, smite_UWORD addr, enum instruction_type type, smite_WORD v);
-int smite_decode_instruction_file(int fd, smite_WORD *val);
+ssize_t smite_decode_instruction_file(int fd, smite_WORD *val);
 int smite_decode_instruction(smite_state *S, smite_UWORD *addr, smite_WORD *val);
 
 // Object files

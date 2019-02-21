@@ -39,15 +39,16 @@ class LibcLib(IntEnum):
 @unique
 class SMiteLib(IntEnum):
     CURRENT_STATE = 0x0
-    LOAD_smite_WORD = 0x1
-    STORE_smite_WORD = 0x2
-    LOAD_smite_BYTE = 0x3
-    STORE_smite_BYTE = 0x4
-    MEM_REALLOC = 0x5
-    NATIVE_ADDRESS_OF_RANGE = 0x6
-    RUN = 0x7
-    SINGLE_STEP = 0x8
-    LOAD_OBJECT = 0x9
-    INIT = 0xa
-    DESTROY = 0xb
-    REGISTER_ARGS = 0xc
+    LOAD_WORD = 0x1
+    STORE_WORD = 0x2
+    LOAD_BYTE = 0x3
+    STORE_BYTE = 0x4
+    REALLOC_MEMORY = 0x5
+    REALLOC_STACK = 0x6
+    NATIVE_ADDRESS_OF_RANGE = 0x7
+    RUN = 0x8
+    SINGLE_STEP = 0x9
+    LOAD_OBJECT = 0xa
+    INIT = 0xb
+    DESTROY = 0xc
+    REGISTER_ARGS = 0xd

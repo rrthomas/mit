@@ -37,9 +37,21 @@ class Event:
     SMite register if required.
     '''
 
-    def __init__(self, trace_name, name, guess_code, exec_code):
+    def __init__(
+        self,
+        trace_name,
+        name,
+        itype,
+        args,
+        results,
+        guess_code,
+        exec_code
+    ):
         self.trace_name = trace_name
         self.name = name
+        self.itype = itype
+        self.args = args
+        self.results = results
         self.guess_code = guess_code
         self.exec_code = exec_code
         # Compute hashes.
@@ -53,34 +65,56 @@ class Event:
 # the implementation of `smite_decode_instruction()`, and will break if the
 # instruction encoding changes. This seems unavoidable without calling
 # `smite_decode_instruction()` after every instruction.
-# FIXME: `next_byte` cannot exist.
 ALL_EVENTS = []
-for i, a in enumerate(vm_data.Actions):
-    ALL_EVENTS.append(Event(b'1 %08x' % a.value.opcode, a.name,
-        'NEXT == (INSTRUCTION_ACTION_BIT | {})'.format(a.value.opcode),
-        '''\
-        ITYPE = INSTRUCTION_ACTION;
+# Instructions.
+for a in vm_data.Actions:
+    exec_code = '''\
         S->I = {};
         trace(ITYPE, S->I);
-{}'''.format(a.value.opcode, a.value.code),
+    '''.rstrip().format(a.value.opcode) + '\n' + a.value.code
+    ALL_EVENTS.append(Event(
+        b'1 %08x' % a.value.opcode,
+        a.name,
+        'INSTRUCTION_ACTION',
+        a.value.args,
+        a.value.results,
+        'NEXT == {}'.format(a.value.opcode),
+        exec_code,
     ))
+# Common literals.
 for n in [0, 1]:
-    ALL_EVENTS.append(Event(b'0 %08x' % n, 'LIT{}'.format(n),
-        'NEXT == {}'.format(n),
-        '''\
-        ITYPE = INSTRUCTION_NUMBER;
-        S->I = {};
+    exec_code = '''\
+        lit = {};
+        S->I = lit;
         trace(ITYPE, S->I);
-        PUSH(S->I);'''.format(n),
+    '''.rstrip().format(n)
+    ALL_EVENTS.append(Event(
+        b'0 %08x' % n,
+        'LIT{}'.format(n),
+        'INSTRUCTION_NUMBER',
+        [],
+        ['lit'],
+        'NEXT == ({} | INSTRUCTION_NUMBER_BIT)'.format(n),
+        exec_code,
     ))
-ALL_EVENTS.append(Event(b'0 n', 'LITn',
-        '(NEXT & ~INSTRUCTION_CHUNK_MASK) != INSTRUCTION_ACTION_BIT && NEXT > 1',
-        '''\
-        ITYPE = INSTRUCTION_NUMBER;
+# General literals.
+exec_code = '''\
         S->PC--;
-        RAISE(smite_decode_instruction(S, &S->PC, &S->I));
+        RAISE(smite_decode_instruction(S, &S->PC, &lit));
+        S->I = lit;
         trace(ITYPE, S->I);
-        PUSH(S->I);''',
+'''.rstrip()
+ALL_EVENTS.append(Event(
+    b'0 n',
+    'LITn',
+    'INSTRUCTION_NUMBER',
+    [],
+    ['lit'],
+    '(NEXT & INSTRUCTION_CONTINUATION_BIT) != 0 || (\
+      (NEXT & INSTRUCTION_NUMBER_BIT) != 0 && \
+      (NEXT & ~INSTRUCTION_NUMBER_BIT) > 1 \
+     )',
+    exec_code,
 ))
 
 # Indices for finding Events.

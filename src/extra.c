@@ -85,7 +85,7 @@ static int extra_smite(smite_state *S)
     case SMITE_CURRENT_STATE:
         PUSH_NATIVE_TYPE(smite_state *, S);
         break;
-    case SMITE_LOAD_smite_WORD:
+    case SMITE_LOAD_WORD:
         {
             smite_UWORD addr;
             POP((smite_WORD *)&addr);
@@ -97,7 +97,7 @@ static int extra_smite(smite_state *S)
             PUSH(ret);
         }
         break;
-    case SMITE_STORE_smite_WORD:
+    case SMITE_STORE_WORD:
         {
             smite_WORD value;
             POP(&value);
@@ -109,7 +109,7 @@ static int extra_smite(smite_state *S)
             PUSH(ret);
         }
         break;
-    case SMITE_LOAD_smite_BYTE:
+    case SMITE_LOAD_BYTE:
         {
             smite_UWORD addr;
             POP((smite_WORD *)&addr);
@@ -121,7 +121,7 @@ static int extra_smite(smite_state *S)
             PUSH(ret);
         }
         break;
-    case SMITE_STORE_smite_BYTE:
+    case SMITE_STORE_BYTE:
         {
             smite_WORD value;
             POP(&value);
@@ -133,13 +133,23 @@ static int extra_smite(smite_state *S)
             PUSH(ret);
         }
         break;
-    case SMITE_MEM_REALLOC:
+    case SMITE_REALLOC_MEMORY:
         {
             smite_UWORD n;
             POP((smite_WORD *)&n);
             smite_state *inner_smite_state;
             POP_NATIVE_TYPE(smite_state *, &inner_smite_state);
-            smite_UWORD ret = smite_mem_realloc(inner_smite_state, (size_t)n);
+            smite_UWORD ret = smite_realloc_memory(inner_smite_state, (size_t)n);
+            PUSH(ret);
+        }
+        break;
+    case SMITE_REALLOC_STACK:
+        {
+            smite_UWORD n;
+            POP((smite_WORD *)&n);
+            smite_state *inner_smite_state;
+            POP_NATIVE_TYPE(smite_state *, &inner_smite_state);
+            smite_UWORD ret = smite_realloc_stack(inner_smite_state, (size_t)n);
             PUSH(ret);
         }
         break;
@@ -185,13 +195,11 @@ static int extra_smite(smite_state *S)
         break;
     case SMITE_INIT:
         {
-            smite_UWORD return_stack_size;
-            POP((smite_WORD *)&return_stack_size);
             smite_UWORD stack_size;
             POP((smite_WORD *)&stack_size);
             smite_UWORD memory_size;
             POP((smite_WORD *)&memory_size);
-            smite_state *new_smite_state = smite_init((size_t)memory_size, (size_t)stack_size, (size_t)return_stack_size);
+            smite_state *new_smite_state = smite_init((size_t)memory_size, (size_t)stack_size);
             PUSH_NATIVE_TYPE(smite_state *, new_smite_state);
         }
         break;
@@ -215,7 +223,7 @@ static int extra_smite(smite_state *S)
         }
         break;
     default:
-        RAISE(-259);
+        RAISE(-9);
     }
 
     return 0;
@@ -362,7 +370,7 @@ static int extra_libc(smite_state *S)
             char *s1 = (char *)smite_native_address_of_range(S, str1, 0);
             char *s2 = (char *)smite_native_address_of_range(S, str2, 0);
             if (s1 == NULL || s2 == NULL)
-                RAISE(-9);
+                RAISE(-2);
             PUSH(rename(s2, s1));
         }
         break;
@@ -372,7 +380,7 @@ static int extra_libc(smite_state *S)
             POP((smite_WORD *)&str);
             char *s = (char *)smite_native_address_of_range(S, str, 0);
             if (s == NULL)
-                RAISE(-9);
+                RAISE(-2);
             PUSH(remove(s));
         }
         break;
@@ -407,7 +415,7 @@ static int extra_libc(smite_state *S)
         }
         break;
     default:
-        RAISE(-259);
+        RAISE(-9);
         break;
     }
 
@@ -424,6 +432,6 @@ int smite_extra(smite_state *S)
     case LIB_LIBC:
         return extra_libc(S);
     default:
-        return -258;
+        return -8;
     }
 }

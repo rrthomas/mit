@@ -23,11 +23,11 @@ penultimate_byte_set = 0xff << byte_bit
 
 # Test results
 correct = [
-     [top_byte_set, byte_bit, 0xff, byte_bit],
-     [top_byte_set, byte_bit, 0xff << byte_bit],
-     [top_byte_set, byte_bit],
-     [second_byte_set],
-     [second_byte_set, penultimate_byte_set],
+     [byte_bit, top_byte_set, 0xff, byte_bit],
+     [byte_bit, top_byte_set, penultimate_byte_set],
+     [byte_bit, top_byte_set, penultimate_byte_set, 2],
+     [penultimate_byte_set, top_byte_set, byte_bit],
+     [penultimate_byte_set, second_byte_set],
      [second_byte_set | penultimate_byte_set],
      [~(second_byte_set | penultimate_byte_set)],
      [~(second_byte_set | penultimate_byte_set), 1],
@@ -37,18 +37,18 @@ correct = [
 ]
 
 # Test data
-S.push(-1 << (word_bit - byte_bit))
 S.push(byte_bit)
+S.push(top_byte_set)
 S.push(0xff)
 S.push(byte_bit)
 
 # Code
 action(LSHIFT)
-action(POP2R)
+number(2)
+action(SWAP)
 action(RSHIFT)
-action(RPOP)
 action(OR)
-action(INVERT)
+action(NOT)
 number(1)
 number(-1)
 action(XOR)

@@ -21,7 +21,7 @@ M_word[word_size] = 0x05060708
 # Test results
 addr = [(size + 1) * word_size, 0, 0]
 length = [16, 3000, 16]
-correct = [-1, -1, 0]
+correct = [-2, -2, 0]
 
 # Test
 def try_save(file, address, length):

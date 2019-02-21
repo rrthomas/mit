@@ -66,6 +66,7 @@ AC_SUBST([objdir])
 
 dnl Check features
 AC_C_BIGENDIAN
+AX_C_ARITHMETIC_RSHIFT
 
 dnl Set size of word
 AC_CHECK_SIZEOF([int])
@@ -87,12 +88,10 @@ AC_CONFIG_FILES([
         python/Makefile
         python/smite-dump.1
         python/smite-shell.1
-        python/smite-trace.1
         doc/Makefile
         doc/smite.tex
         doc/csmite.tex
 ])
 AC_CONFIG_FILES([python/smite-dump], [chmod +x python/smite-dump])
 AC_CONFIG_FILES([python/smite-shell], [chmod +x python/smite-shell])
-AC_CONFIG_FILES([python/smite-trace], [chmod +x python/smite-trace])
 AC_OUTPUT
