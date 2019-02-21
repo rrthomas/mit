@@ -67,8 +67,8 @@ class Actions(Enum):
         S->STACK_DEPTH -= depth;
     ''')
 
-    DUP = Action(0x02, ['depth'], ['pickee'], '''\
-        RAISE(smite_load_stack(S, depth, &pickee));
+    DUP = Action(0x02, ['depth'], ['dupee'], '''\
+        RAISE(smite_load_stack(S, depth, &dupee));
     ''')
 
     SWAP = Action(0x03, ['top', 'depth'], ['swapee'], '''\
