@@ -65,6 +65,11 @@ extern smite_UWORD smite_default_stack_size;
         *v = (ty)(((size_t)(*v) << smite_word_bit) | (smite_UWORD)w);   \
     }
 
+#define UNCHECKED_LOAD_STACK(pos, vp)                                   \
+    (*(vp) = *(S->S0 + (S->STACK_DEPTH - (pos) - 1) * smite_stack_direction))
+#define UNCHECKED_STORE_STACK(pos, v)                                   \
+    (*(S->S0 + (S->STACK_DEPTH - (pos) - 1) * smite_stack_direction) = (v))
+
 extern FILE *trace_fp; // FILE * of trace file, if used
 
 // Align a VM address

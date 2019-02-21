@@ -7,38 +7,36 @@ import vm_data
 
 # Variable creator
 def make_vars(vars):
-    code = []
-    for i in vars:
-        code.append('smite_WORD {var};'.format(var=i))
-    return '\n'.join(code)
+    return 'smite_WORD {};'.format(", ".join(vars)) if len(vars) != 0 else ''
 
 def check_stack_pointer(nargs, nresults):
-    cond = []
-    if nargs > 0:
-        cond.append('(S->STACK_DEPTH < {nargs})'.format(nargs=nargs))
-    if nresults > nargs:
-        cond.append('(S->STACK_DEPTH - {nargs} + {nresults} > S->STACK_SIZE)'.format(nargs=nargs, nresults=nresults))
-    if len(cond) > 0:
-        return '''\
-if ({})
+    return '''\
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wtype-limits"
+if ((S->STACK_DEPTH < {nargs}) ||
+    (S->STACK_SIZE - (S->STACK_DEPTH - {nargs}) < {nresults}))
     RAISE(-2);
-'''.format("||".join(cond))
-    return ""
+#pragma GCC diagnostic pop
+'''.format(nargs=nargs, nresults=nresults)
 
 def load_args(args):
     code = []
     for i in range(len(args)):
-        code.append('smite_load_stack(S, {pos}, &{var});'.format(pos=len(args) - i - 1, var=args[i]))
-    if len(args) != 0:
-        code.append('S->STACK_DEPTH -= {};'.format(len(args)))
+        code.append('UNCHECKED_LOAD_STACK({pos}, &{var});'.format(
+            pos=len(args) - i - 1,
+            var=args[i])
+        )
+    code.append('S->STACK_DEPTH -= {};'.format(len(args)))
     return '\n'.join(code)
 
 def store_results(results):
     code = []
-    if len(results) != 0:
-        code.append('S->STACK_DEPTH += {};'.format(len(results)))
+    code.append('S->STACK_DEPTH += {};'.format(len(results)))
     for i in range(len(results)):
-        code.append('smite_store_stack(S, {pos}, {var});'.format(pos=len(results) - i - 1, var=results[i]))
+        code.append('UNCHECKED_STORE_STACK({pos}, {var});'.format(
+            pos=len(results) - i - 1,
+            var=results[i])
+        )
     return '\n'.join(code)
 
 # Load language.
@@ -101,16 +99,17 @@ static int STEP(smite_state *S) {
 
 for label, (name, if_correct, if_wrong) in enumerate(labels):
     event = EVENT_NAMES[name]
-    code = textwrap.dedent(event.exec_code.rstrip())
+    # Concatenate the pieces.
     code = '\n'.join([
         'ITYPE = {};'.format(event.itype),
         check_stack_pointer(len(event.args), len(event.results)),
         make_vars(event.args),
         make_vars(event.results),
         load_args(event.args),
-        code,
+        textwrap.dedent(event.exec_code.rstrip()),
         store_results(event.results),
     ])
+    # Remove newlines resulting from empty strings in the above.
     code = re.sub('\n+', '\n', code, flags=re.MULTILINE).strip('\n')
     code = textwrap.indent(code, '        ')
     print('''\
@@ -128,7 +127,7 @@ for label, (name, if_correct, if_wrong) in enumerate(labels):
             label_names[label],
             event.guess_code,
             event.name,
-            code,
+            textwrap.indent(code, '        '),
             label_names[if_correct],
             label_names[if_wrong],
         )
