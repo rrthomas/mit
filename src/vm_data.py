@@ -168,17 +168,17 @@ class Actions(Enum):
     ''')
 
     BRANCH = Action(0x18, ['addr'], [], '''\
-        S->PC = (smite_UWORD)addr;
+        S->next_PC = (smite_UWORD)addr;
     ''')
 
     BRANCHZ = Action(0x19, ['flag', 'addr'], [], '''\
         if (flag == 0)
-            S->PC = (smite_UWORD)addr;
+            S->next_PC = (smite_UWORD)addr;
     ''')
 
     CALL = Action(0x1a, ['addr'], ['ret_addr'], '''\
-        ret_addr = S->PC;
-        S->PC = (smite_UWORD)addr;
+        ret_addr = S->next_PC;
+        S->next_PC = (smite_UWORD)addr;
     ''')
 
     GET_WORD_SIZE = Action(0x1b, [], ['r'], '''\
