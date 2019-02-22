@@ -71,10 +71,13 @@ class Actions(Enum):
         RAISE(smite_load_stack(S, depth, &dupee));
     ''')
 
-    SWAP = Action(0x03, ['top', 'depth'], ['swapee'], '''\
+    SWAP = Action(0x03, ['depth'], [], '''\
         if (depth > 0) {
-            RAISE(smite_load_stack(S, depth - 1, &swapee));
-            RAISE(smite_store_stack(S, depth - 1, top));
+            smite_WORD top, swapee;
+            RAISE(smite_load_stack(S, depth, &swapee));
+            RAISE(smite_load_stack(S, 0, &top));
+            RAISE(smite_store_stack(S, depth, top));
+            RAISE(smite_store_stack(S, 0, swapee));
         }
     ''')
 
