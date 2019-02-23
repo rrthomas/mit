@@ -73,7 +73,6 @@ stated. Addresses are written in hexadecimal; hex numbers are prefixed with
 This paper gives a full description of @PACKAGE_NAME@.
 
 @PACKAGE_NAME@ is conceptually (and usually in fact) a library, embedded in other programs; it supports a simple object module format.
-External access may be implemented via the implementation-defined {\tt EXTRA} instruction (see~\ref{accessact}).
 
 
 \section{Architecture}
@@ -396,17 +395,6 @@ call and return (subroutine return is {\tt BRANCH}):
 \end{description}
 
 
-\subsection{External access}
-\label{accessact}
-
-This action provides implementation-specific functions:
-
-\nopagebreak
-\begin{description}
-\inst{EXTRA}{i*x — j*x}{Perform implementation-dependent actions; for example, this can be used to implement system-dependent functionality such as I/O.}
-\end{description}
-
-
 \subsection{No-op}
 
 \begin{description}
@@ -445,8 +433,8 @@ Table~\ref{opcodetable} lists the action opcodes in numerical order. Other actio
 \opcodetbl{0b}{DIVMOD}	{1b}{GET\_WORD\_SIZE}
 \opcodetbl{0c}{UDIVMOD}	{1c}{GET\_STACK\_DEPTH}
 \opcodetbl{0d}{LSHIFT}	{1d}{SET\_STACK\_DEPTH}
-\opcodetbl{0e}{RSHIFT}	{1e}{EXTRA}
-\opcodetbl{0f}{ARSHIFT}	{1f}{NOP}
+\opcodetbl{0e}{RSHIFT}	{1e}{NOP}
+\opcodetblone{0f}{ARSHIFT}
  \bottomrule
 \end{tabular}
 \caption{\label{opcodetable}Action opcodes}

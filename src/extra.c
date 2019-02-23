@@ -28,6 +28,28 @@
 #include "opcodes.h"
 
 
+// RAISE(code) must be define before using `PUSH` or `POP`.
+// It must somehow exit if `code` is non-zero, e.g. return `code` to caller.
+
+#define POP(v)                                                          \
+    RAISE(smite_pop_stack(S, v))
+#define PUSH(v)                                                         \
+    RAISE(smite_push_stack(S, v))
+
+#define PUSH_NATIVE_TYPE(ty, v)                                         \
+    for (unsigned i = 0; i < smite_align(sizeof(ty)) / smite_word_size; i++) { \
+        PUSH((smite_UWORD)((size_t)v & smite_word_mask));               \
+        v = (ty)((size_t)v >> smite_word_bit);                          \
+    }
+#define POP_NATIVE_TYPE(ty, v)                                          \
+    *v = 0;                                                             \
+    for (unsigned i = 0; i < smite_align(sizeof(ty)) / smite_word_size; i++) { \
+        smite_WORD w;                                                   \
+        POP(&w);                                                        \
+        *v = (ty)(((size_t)(*v) << smite_word_bit) | (smite_UWORD)w);   \
+    }
+
+
 // I/O support
 
 // Convert portable open(2) flags bits to system flags
@@ -82,10 +104,10 @@ static int extra_smite(smite_state *S)
     smite_UWORD routine;
     POP((smite_WORD *)&routine);
     switch (routine) {
-    case SMITE_CURRENT_STATE:
+    case LIB_SMITE_CURRENT_STATE:
         PUSH_NATIVE_TYPE(smite_state *, S);
         break;
-    case SMITE_LOAD_WORD:
+    case LIB_SMITE_LOAD_WORD:
         {
             smite_UWORD addr;
             POP((smite_WORD *)&addr);
@@ -97,7 +119,7 @@ static int extra_smite(smite_state *S)
             PUSH(ret);
         }
         break;
-    case SMITE_STORE_WORD:
+    case LIB_SMITE_STORE_WORD:
         {
             smite_WORD value;
             POP(&value);
@@ -109,7 +131,7 @@ static int extra_smite(smite_state *S)
             PUSH(ret);
         }
         break;
-    case SMITE_LOAD_BYTE:
+    case LIB_SMITE_LOAD_BYTE:
         {
             smite_UWORD addr;
             POP((smite_WORD *)&addr);
@@ -121,7 +143,7 @@ static int extra_smite(smite_state *S)
             PUSH(ret);
         }
         break;
-    case SMITE_STORE_BYTE:
+    case LIB_SMITE_STORE_BYTE:
         {
             smite_WORD value;
             POP(&value);
@@ -133,7 +155,7 @@ static int extra_smite(smite_state *S)
             PUSH(ret);
         }
         break;
-    case SMITE_REALLOC_MEMORY:
+    case LIB_SMITE_REALLOC_MEMORY:
         {
             smite_UWORD n;
             POP((smite_WORD *)&n);
@@ -143,7 +165,7 @@ static int extra_smite(smite_state *S)
             PUSH(ret);
         }
         break;
-    case SMITE_REALLOC_STACK:
+    case LIB_SMITE_REALLOC_STACK:
         {
             smite_UWORD n;
             POP((smite_WORD *)&n);
@@ -153,7 +175,7 @@ static int extra_smite(smite_state *S)
             PUSH(ret);
         }
         break;
-    case SMITE_NATIVE_ADDRESS_OF_RANGE:
+    case LIB_SMITE_NATIVE_ADDRESS_OF_RANGE:
         {
             smite_UWORD len;
             POP((smite_WORD *)&len);
@@ -165,7 +187,7 @@ static int extra_smite(smite_state *S)
             PUSH_NATIVE_TYPE(uint8_t *, ptr);
         }
         break;
-    case SMITE_RUN:
+    case LIB_SMITE_RUN:
         {
             smite_state *inner_smite_state;
             POP_NATIVE_TYPE(smite_state *, &inner_smite_state);
@@ -173,7 +195,7 @@ static int extra_smite(smite_state *S)
             PUSH(ret);
         }
         break;
-    case SMITE_SINGLE_STEP:
+    case LIB_SMITE_SINGLE_STEP:
         {
             smite_state *inner_smite_state;
             POP_NATIVE_TYPE(smite_state *, &inner_smite_state);
@@ -181,7 +203,7 @@ static int extra_smite(smite_state *S)
             PUSH(ret);
         }
         break;
-    case SMITE_LOAD_OBJECT:
+    case LIB_SMITE_LOAD_OBJECT:
         {
             smite_UWORD address;
             POP((smite_WORD *)&address);
@@ -193,7 +215,7 @@ static int extra_smite(smite_state *S)
             PUSH(ret);
         }
         break;
-    case SMITE_INIT:
+    case LIB_SMITE_INIT:
         {
             smite_UWORD stack_size;
             POP((smite_WORD *)&stack_size);
@@ -203,14 +225,14 @@ static int extra_smite(smite_state *S)
             PUSH_NATIVE_TYPE(smite_state *, new_smite_state);
         }
         break;
-    case SMITE_DESTROY:
+    case LIB_SMITE_DESTROY:
         {
             smite_state *inner_smite_state;
             POP_NATIVE_TYPE(smite_state *, &inner_smite_state);
             smite_destroy(inner_smite_state);
         }
         break;
-    case SMITE_REGISTER_ARGS:
+    case LIB_SMITE_REGISTER_ARGS:
         {
             char **argv;
             POP_NATIVE_TYPE(char **, &argv);
@@ -223,7 +245,7 @@ static int extra_smite(smite_state *S)
         }
         break;
     default:
-        RAISE(-9);
+        RAISE(-8);
     }
 
     return 0;
@@ -234,10 +256,10 @@ static int extra_libc(smite_state *S)
     smite_UWORD routine;
     POP((smite_WORD *)&routine);
     switch (routine) {
-    case LIBC_ARGC: // ( -- u )
+    case LIB_C_ARGC: // ( -- u )
         PUSH(S->main_argc);
         break;
-    case LIBC_ARG_LEN: // ( u1 -- u2 )
+    case LIB_C_ARG_LEN: // ( u1 -- u2 )
         {
             smite_UWORD narg;
             POP((smite_WORD *)&narg);
@@ -247,7 +269,7 @@ static int extra_libc(smite_state *S)
                 PUSH(S->main_argv_len[narg]);
         }
         break;
-    case LIBC_ARG_COPY: // ( u1 c-addr u2 -- u3 )
+    case LIB_C_ARG_COPY: // ( u1 c-addr u2 -- u3 )
         {
             smite_UWORD len;
             POP((smite_WORD *)&len);
@@ -268,16 +290,16 @@ static int extra_libc(smite_state *S)
                 PUSH(0);
         }
         break;
-    case LIBC_STDIN:
+    case LIB_C_STDIN:
         PUSH((smite_WORD)(STDIN_FILENO));
         break;
-    case LIBC_STDOUT:
+    case LIB_C_STDOUT:
         PUSH((smite_WORD)(STDOUT_FILENO));
         break;
-    case LIBC_STDERR:
+    case LIB_C_STDERR:
         PUSH((smite_WORD)(STDERR_FILENO));
         break;
-    case LIBC_OPEN_FILE:
+    case LIB_C_OPEN_FILE:
         {
             bool binary = false;
             smite_WORD perm_;
@@ -291,14 +313,14 @@ static int extra_libc(smite_state *S)
             PUSH(fd < 0 || (binary && set_binary_mode(fd, O_BINARY) < 0) ? -1 : 0);
         }
         break;
-    case LIBC_CLOSE_FILE:
+    case LIB_C_CLOSE_FILE:
         {
             smite_WORD fd;
             POP(&fd);
             PUSH((smite_WORD)close(fd));
         }
         break;
-    case LIBC_READ_FILE:
+    case LIB_C_READ_FILE:
         {
             smite_WORD fd;
             POP(&fd);
@@ -316,7 +338,7 @@ static int extra_libc(smite_state *S)
             PUSH(nread >= 0 ? 0 : -1);
         }
         break;
-    case LIBC_WRITE_FILE:
+    case LIB_C_WRITE_FILE:
         {
             smite_WORD fd;
             POP(&fd);
@@ -334,7 +356,7 @@ static int extra_libc(smite_state *S)
             PUSH(nwritten >= 0 ? 0 : -1);
         }
         break;
-    case LIBC_FILE_POSITION:
+    case LIB_C_FILE_POSITION:
         {
             smite_WORD fd;
             POP(&fd);
@@ -343,7 +365,7 @@ static int extra_libc(smite_state *S)
             PUSH(res >= 0 ? 0 : -1);
         }
         break;
-    case LIBC_REPOSITION_FILE:
+    case LIB_C_REPOSITION_FILE:
         {
             smite_WORD fd;
             POP(&fd);
@@ -353,7 +375,7 @@ static int extra_libc(smite_state *S)
             PUSH(res >= 0 ? 0 : -1);
         }
         break;
-    case LIBC_FLUSH_FILE:
+    case LIB_C_FLUSH_FILE:
         {
             smite_WORD fd;
             POP(&fd);
@@ -361,7 +383,7 @@ static int extra_libc(smite_state *S)
             PUSH(res);
         }
         break;
-    case LIBC_RENAME_FILE:
+    case LIB_C_RENAME_FILE:
         {
             smite_UWORD str1;
             POP((smite_WORD *)&str1);
@@ -374,7 +396,7 @@ static int extra_libc(smite_state *S)
             PUSH(rename(s2, s1));
         }
         break;
-    case LIBC_DELETE_FILE:
+    case LIB_C_DELETE_FILE:
         {
             smite_UWORD str;
             POP((smite_WORD *)&str);
@@ -384,7 +406,7 @@ static int extra_libc(smite_state *S)
             PUSH(remove(s));
         }
         break;
-    case LIBC_FILE_SIZE:
+    case LIB_C_FILE_SIZE:
         {
             struct stat st;
             smite_WORD fd;
@@ -394,7 +416,7 @@ static int extra_libc(smite_state *S)
             PUSH(res);
         }
         break;
-    case LIBC_RESIZE_FILE:
+    case LIB_C_RESIZE_FILE:
         {
             smite_WORD fd;
             POP(&fd);
@@ -404,7 +426,7 @@ static int extra_libc(smite_state *S)
             PUSH(res);
         }
         break;
-    case LIBC_FILE_STATUS:
+    case LIB_C_FILE_STATUS:
         {
             struct stat st;
             smite_WORD fd;
@@ -415,7 +437,7 @@ static int extra_libc(smite_state *S)
         }
         break;
     default:
-        RAISE(-9);
+        RAISE(-8);
         break;
     }
 
@@ -424,14 +446,12 @@ static int extra_libc(smite_state *S)
 
 int smite_extra(smite_state *S)
 {
-    smite_UWORD lib;
-    POP((smite_WORD *)&lib);
-    switch (lib) {
+    switch (S->I) {
     case LIB_SMITE:
         return extra_smite(S);
-    case LIB_LIBC:
+    case LIB_C:
         return extra_libc(S);
     default:
-        return -8;
+        return -1;
     }
 }

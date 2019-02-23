@@ -181,6 +181,7 @@ class State:
         # Opcodes
         globals_dict.update([(action.name, action.value.opcode) for action in Actions])
         globals_dict["UNDEFINED"] = max([action.value.opcode for action in Actions]) + 1
+        globals_dict.update([(action.name, action.value) for action in LibActions])
 
     def run(self, trace=False):
         '''Run (or trace if trace is True) until HALT or error.'''
@@ -276,6 +277,7 @@ class State:
 
     # Disassembly
     mnemonic = {action.value.opcode:action.name for action in Actions}
+    mnemonic.update({action.value:action.name for action in LibActions})
 
     def disassemble_instruction(self, ty, opcode):
         if ty == Types.NUMBER:

@@ -57,7 +57,7 @@ static int STEP(smite_state *S) {
 
     switch (S->ITYPE) {
     case INSTRUCTION_NUMBER:
-        PUSH(S->I);
+        RAISE(smite_push_stack(S, S->I));
         break;
     case INSTRUCTION_ACTION:
         switch (S->I) {''')
@@ -88,8 +88,12 @@ for (instruction, action) in Actions.__members__.items():
                 code=textwrap.indent(code, '                '),
             ))
 print('''\
-        default: /* Undefined instruction */
-            return -1;
+        default: /* Undefined instruction; try extra instructions */
+            {
+                int res = smite_extra(S);
+                if (res != 0)
+                    return res;
+            }
         }
         break;
     default: /* Error during instruction fetch */

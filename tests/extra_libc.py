@@ -23,23 +23,20 @@ assert(libsmite.smite_register_args(VM.state, argc, argv) == 0)
 # Test code
 buffer = 0x100
 number(LibcLib.ARGC)
-number(EXTRALibs.LIBC)
-action(EXTRA)
+action(LIB_C)
 number(1)
 number(LibcLib.ARG_LEN)
-number(EXTRALibs.LIBC)
-action(EXTRA)
+action(LIB_C)
 number(1)
 number(buffer)
 number(16)
 number(LibcLib.ARG_COPY)
-number(EXTRALibs.LIBC)
-action(EXTRA)
+action(LIB_C)
 
 # Test 1: LibcLib.ARGC
 while True:
     step()
-    if I.get() == EXTRA:
+    if I.get() == LIB_C:
         break
 argc_ = S.pop()
 print("argc is {}, and should be {}".format(argc_, argc))
@@ -50,7 +47,7 @@ if argc_ != argc:
 # Test 2: LibcLib.ARG_LEN
 while True:
     step()
-    if I.get() == EXTRA:
+    if I.get() == LIB_C:
         break
 arg1len = S.pop()
 print("arg 1's length is {}, and should be {}".format(arg1len, len(argv[1])))
@@ -62,7 +59,7 @@ S.push(arg1len) # push length back for next test
 # Tests 3 & 4: LibcLib.ARG_COPY
 while True:
     step()
-    if I.get() == EXTRA:
+    if I.get() == LIB_C:
         break
 arg1len = S.pop()
 print("arg 1's length is {}, and should be {}".format(arg1len, len(argv[1])))

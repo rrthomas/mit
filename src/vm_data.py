@@ -193,10 +193,6 @@ class Actions(Enum):
         S->STACK_DEPTH = a;
     ''')
 
-    EXTRA = Action(0x1e, [], [], '''\
-        RAISE(smite_extra(S));
-    ''')
-
-    NOP = Action(0x1f, [], [], '''\
+    NOP = Action(0x1e, [], [], '''\
         // Do nothing.'''
     )
