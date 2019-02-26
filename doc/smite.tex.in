@@ -169,12 +169,13 @@ table~\ref{errortable}.
 \begin{tabular}{cp{4in}} \toprule
 \bf Code & \bf Meaning \\ \midrule
 $-1$ & Invalid opcode (see section~\ref{opcodes}). \\
-$-2$ & Invalid stack read. \\
-$-3$ & Invalid stack write. \\
-$-4$ & Invalid memory read. \\
-$-5$ & Invalid memory write. \\
-$-6$ & Address alignment error: raised when an instruction expecting a word-aligned address is given a valid but non-aligned address. \\
-$-7$ & Division by zero attempted (see section~\ref{arithmetic}). \\
+$-2$ & Attempt to set {\tt STACK\_DEPTH} greater than {\tt STACK\_SIZE}. {\tt BAD\_ADDRESS} is set to the extra number of words of stack space required. \\
+$-3$ & Invalid stack read. {\tt BAD\_ADDRESS} is set to the invalid stack position. \\
+$-4$ & Invalid stack write. {\tt BAD\_ADDRESS} is set to the invalid stack position. \\
+$-5$ & Invalid memory read. {\tt BAD\_ADDRESS} is set to the invalid address. \\
+$-6$ & Invalid memory write. {\tt BAD\_ADDRESS} is set to the invalid address. \\
+$-7$ & Address alignment error: raised when an instruction expecting a word-aligned address is given a valid but non-aligned address. \\
+$-8$ & Division by zero attempted (see section~\ref{arithmetic}). \\
 $-128$ & {\bf single\_step()} has terminated without error. \\
  \bottomrule
 \end{tabular}

@@ -10,7 +10,7 @@
 
 from smite import *
 size = 4096
-VM = State(size)
+VM = State(memory_size=size, stack_size=3)
 VM.globalize(globals())
 
 
@@ -29,43 +29,43 @@ action(HALT)
 
 # Try to divide by zero
 test.append(VM.here)
-result.append(-7)
+result.append(-8)
 print("Test {}: PC = {}".format(len(test), test[len(test) - 1]))
 number(1)
 number(0)
 action(DIVMOD)
 
-# Try to read from an invalid stack location
+# Try to set STACK_DEPTH to an invalid stack location
 test.append(VM.here)
 result.append(-2)
-print("Test {}: PC = {}".format(len(test), test[len(test) - 1]))
-action(DUP)
-
-# Try to write to an invalid stack location
-test.append(VM.here)
-result.append(-3)
 print("Test {}: PC = {}".format(len(test), test[len(test) - 1]))
 number(STACK_SIZE.get())
 action(SET_STACK_DEPTH)
 action(GET_STACK_DEPTH)
 
+# Try to read from an invalid stack location
+test.append(VM.here)
+result.append(-3)
+print("Test {}: PC = {}".format(len(test), test[len(test) - 1]))
+action(DUP)
+
 # Try to execute an invalid memory location
 test.append(VM.here)
-result.append(-4)
+result.append(-5)
 print("Test {}: PC = {}".format(len(test), test[len(test) - 1]))
 number(MEMORY.get() + 1)
 action(BRANCH)
 
 # Try to load from an invalid address
 test.append(VM.here)
-result.append(-4)
+result.append(-5)
 print("Test {}: PC = {}".format(len(test), test[len(test) - 1]))
 number(invalid_address)
 action(LOAD)
 
 # Try to store to an invalid address
 test.append(VM.here)
-result.append(-5)
+result.append(-6)
 print("Test {}: PC = {}".format(len(test), test[len(test) - 1]))
 number(0)
 number(invalid_address)
@@ -73,7 +73,7 @@ action(STORE)
 
 # Try to load from unaligned address
 test.append(VM.here)
-result.append(-6)
+result.append(-7)
 print("Test {}: PC = {}".format(len(test), test[len(test) - 1]))
 number(1)
 action(LOAD)
@@ -84,11 +84,8 @@ result.append(-1)
 print("Test {}: PC = {}".format(len(test), test[len(test) - 1]))
 action(UNDEFINED)
 
-
+# Tests
 assert(len(test) == len(result))
-
-
-# Test
 error = 0
 for i in range(len(test)):
     STACK_DEPTH.set(0)    # reset stack pointer
@@ -107,6 +104,11 @@ for i in range(len(test)):
          print("HALT code is {}; should be {}".format(res, result[i]))
          error += 1
     print()
+
+# Try to write to an invalid stack location (can't do this with virtual code)
+if libsmite.smite_store_stack(VM.state, 4, 0) != -4:
+    print("Error in errors test: test {} failed")
+    error += 1
 
 if error != 0:
     sys.exit(error)

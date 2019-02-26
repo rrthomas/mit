@@ -18,7 +18,7 @@
 
 #define DIVZERO(x)                              \
     if (x == 0)                                 \
-        RAISE(-7);
+        RAISE(-8);
 
 FILE *trace_fp = NULL; // FILE * of trace file, if used
 static void trace(int type, smite_WORD opcode) {

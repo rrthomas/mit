@@ -98,7 +98,7 @@ C @PACKAGE_NAME@ provides some extra action instructions, which give access to v
 \end{tabular}
 \end{center}
 
-Error~$-9$ is raised for an invalid function.
+Error~$-15$ is raised for an invalid function.
 
 
 \subsubsection{@PACKAGE_NAME@}
