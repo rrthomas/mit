@@ -41,7 +41,7 @@
 
 \title{An implementation of the @PACKAGE_NAME@ virtual machine\\for POSIX\\version @VERSION@}
 \author{Reuben Thomas}
-\date{12th January 2019}
+\date{26th February 2019}
 
 \begin{document}
 \maketitle
@@ -71,7 +71,7 @@ the interface calls and @PACKAGE_NAME@'s memory and registers should be accessed
 The @PACKAGE_NAME@ virtual machine is inherently 32-bit, but will run happily on systems with larger (or smaller) addresses.
 
 
-\subsection{Compilation}
+\subsection{Installation}
 
 @PACKAGE_NAME@'s build system is written with GNU autotools, and the user
 needs only standard POSIX utilities to run it. Installation
@@ -82,19 +82,9 @@ instructions are provided in the top-level file {\tt README.md}.
 
 @PACKAGE_NAME@'s registers are declared in {\tt @PACKAGE@.h}. Their names correspond to
 those given in~\cite[section~2.1]{@PACKAGE@}, although some have been changed
-to meet the rules for C identifiers. C @PACKAGE_NAME@ does not allocate any
-memory for @PACKAGE_NAME@, nor does it initialise any of the registers. C @PACKAGE_NAME@
-provides the interface call {\bf @PACKAGE@\_init()} to do this (see
+to meet the rules for C identifiers. C @PACKAGE_NAME@
+provides the interface call {\bf @PACKAGE@\_init()} to initialise a VM instance (see
 section~\ref{usingcalls}).
-
-The variables {\tt EP}, {\tt I}, {\tt A}, {\tt MEMORY} and {\tt STACK\_DEPTH}
-correspond exactly with the @PACKAGE_NAME@ registers they represent, and may be read
-and assigned to accordingly, bearing in mind the restrictions on their use
-given in~\cite{@PACKAGE@}.
-
-C @PACKAGE_NAME@ provides the ability to map native memory blocks into @PACKAGE_NAME@’s address space; see below.
-
-An additional pseudo-register is provided by C @PACKAGE_NAME@: {\tt S0}, the address of the base of the stack.
 
 
 \subsection{Extra instructions}
