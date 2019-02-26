@@ -13,10 +13,11 @@ import sys, pickle
 
 from events import ALL_EVENTS, EVENT_TRACE_NAMES, EVENT_NAMES
 
-if len(sys.argv) != 2:
-    print("Usage: predictor.py TRACE-FILE", file=sys.stderr)
+if len(sys.argv) != 3:
+    print("Usage: predictor.py TRACE-FILE PREDICTOR-FILE", file=sys.stderr)
     sys.exit(1)
 trace_filename = sys.argv[1]
+predictor_filename = sys.argv[2]
 
 # Predictor.
 
@@ -125,8 +126,7 @@ state_table = [
     for history in all_histories
 ]
 
-out_filename = '/tmp/predictor.pickle'
-with open(out_filename, 'wb') as f:
+with open(predictor_filename, 'wb') as f:
     # [{event_name: (new_state, count)]
     pickle.dump(state_table, f)
-print('Wrote {}'.format(out_filename))
+print('Wrote {}'.format(predictor_filename))

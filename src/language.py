@@ -13,10 +13,11 @@ import sys, pickle
 
 from events import Event, ALL_EVENTS, EVENT_NAMES
 
-if len(sys.argv) != 2:
-    print("Usage: language.py <predictor-filename>", file=sys.stderr)
+if len(sys.argv) != 3:
+    print("Usage: language.py PREDICTOR-FILENAME LABELS-FILENAME", file=sys.stderr)
     sys.exit(1)
 predictor_filename = sys.argv[1]
+labels_filename = sys.argv[2]
 
 with open(predictor_filename, 'rb') as f:
     # [{event_name: (new_state, count)]
@@ -194,8 +195,7 @@ assert len(label_map) == len(labels)
 
 # Dump to a file.
 
-out_filename = '/tmp/labels.pickle'
-with open(out_filename, 'wb') as f:
+with open(labels_filename, 'wb') as f:
     # [(event_name (str), if_correct (int?), if_wrong (int?))]
     pickle.dump(labels, file=f)
-print('Wrote {}'.format(out_filename))
+print('Wrote {}'.format(labels_filename))

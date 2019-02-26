@@ -37,6 +37,12 @@ main.o: tbl_opts.h register-list.h
 		--output=$@ ./@PACKAGE@$(EXEEXT); \
 	fi
 
+.trace.predictor_pickle:
+	$(PYTHON) $(srcdir)/predictor.py $< $@
+
+.predictor_pickle.labels_pickle:
+	$(PYTHON) $(srcdir)/language.py $< $@
+
 register-list.h: gen-register-list vm_data.py
 	$(PYTHON) $(srcdir)/gen-register-list > register-list.h
 
@@ -49,8 +55,8 @@ instruction-list.h: gen-instruction-list vm_data.py
 instruction-type-list.h: gen-instruction-type-list vm_data.py
 	$(PYTHON) $(srcdir)/gen-instruction-type-list > instruction-type-list.h
 
-instruction-actions.h: gen-actions vm_data.py
-	$(PYTHON) $(srcdir)/gen-actions > instruction-actions.h
+instruction-actions.h: gen-actions vm_data.py instructions.labels_pickle
+	$(PYTHON) $(srcdir)/gen-actions instructions.labels_pickle > instruction-actions.h
 
 loc:
 	$(CLOC) $(CLOC_OPTS) \

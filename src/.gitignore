@@ -3,6 +3,8 @@
 /__pycache__
 *.lo
 *.o
+*.labels_pickle
+*.predictor_pickle
 /libsmite.la
 /smite
 /smite.1
