@@ -59,6 +59,11 @@ print('''\
 
 #include <assert.h>
 
+#include "aux.h"
+#include "opcodes.h"
+#include "extra.h"
+#include "actions-common.h"
+
 #define RAISE(code)                             \\
         do {                                    \\
             error = (code);                     \\
