@@ -11,9 +11,9 @@
 from enum import IntEnum, unique
 
 @unique
-class EXTRALibs(IntEnum):
-    SMITE = -1
-    LIBC = 0
+class LibActions(IntEnum):
+    LIB_SMITE = 0x3f
+    LIB_C = 0x3e
 
 @unique
 class LibcLib(IntEnum):

@@ -99,21 +99,21 @@ An additional pseudo-register is provided by C @PACKAGE_NAME@: {\tt S0}, the add
 
 \subsection{Extra instructions}
 
-C @PACKAGE_NAME@ provides some libraries of {\tt EXTRA} instruction functions, which are called in general as:
+C @PACKAGE_NAME@ provides some extra action instructions, which give access to various library functions. They take the following form:
 
 \begin{center}
 \begin{tabular}{ll} \toprule
 \bf Stack effect & \bf Description \\ \midrule
-\spic{i*x u1 u2 — j*x} & Call the \spic{u1}th function of library \spic{u2}, passing arguments {i*x}, with results \spic{j*x}. \\ \bottomrule
+\spic{i*x u — j*x} & Call the \spic{u}th function of the library, passing arguments {i*x}, with results \spic{j*x}. \\ \bottomrule
 \end{tabular}
 \end{center}
 
-Error~$-8$ is raised if an invalid library is accessed, and $-9$ for an invalid function in a known library.
+Error~$-9$ is raised for an invalid function.
 
 
 \subsubsection{@PACKAGE_NAME@}
 
-@PACKAGE_NAME@ provides access to its own API as library~$-1$. This allows the current state to be controlled, or fresh states to be created and controlled.
+@PACKAGE_NAME@ provides access to its own API via the {\tt LIB\_@PACKAGE_UPPER@} instruction, opcode 0x3f. This allows the current state to be controlled, or fresh states to be created and controlled. The API is mapped to the following functions:
 
 \begin{center}
 \begin{tabular}{S[table-format=2.0]lll} \toprule
@@ -123,14 +123,15 @@ Error~$-8$ is raised if an invalid library is accessed, and $-9$ for an invalid 
 0x2 & {\tt STORE\_WORD} & \spic{n-addr a-addr x — n} & \\
 0x3 & {\tt LOAD\_BYTE} & \spic{n-addr addr x n} & \\
 0x4 & {\tt STORE\_BYTE} & \spic{n-addr addr x — n} & \\
-0x5 & {\tt MEM\_REALLOC} & \spic{\naddr1 \naddr2 u f — addr} & \\
-0x6 & {\tt NATIVE\_ADDRESS} & \spic{\naddr1 addr f — \naddr2} & \\
-0x7 & {\tt RUN} & \spic{n-addr — n} & \\
-0x8 & {\tt SINGLE\_STEP} & \spic{n-addr — n} & \\
-0x9 & {\tt LOAD\_OBJECT} & \spic{n-addr fid addr — n} & \\
-0xa & {\tt INIT} & \spic{a-addr \U1 \U2 \U3 — n-addr} & \\
-0xb & {\tt DESTROY} & \spic{n-addr} & \\
-0xc & {\tt REGISTER\_ARGS} & \spic{n-addr n-addr n — n} & \\
+0x5 & {\tt REALLOC\_MEMORY} & \spic{\naddr1 \naddr2 u f — addr} & \\
+0x6 & {\tt REALLOC\_STACK} & \spic{\naddr1 \naddr2 u f — addr} & \\
+0x7 & {\tt NATIVE\_ADDRESS\_OF\_RANGE} & \spic{\naddr1 addr f — \naddr2} & \\
+0x8 & {\tt RUN} & \spic{n-addr — n} & \\
+0x9 & {\tt SINGLE\_STEP} & \spic{n-addr — n} & \\
+0xa & {\tt LOAD\_OBJECT} & \spic{n-addr fid addr — n} & \\
+0xb & {\tt INIT} & \spic{a-addr \U1 \U2 \U3 — n-addr} & \\
+0xc & {\tt DESTROY} & \spic{n-addr} & \\
+0xd & {\tt REGISTER\_ARGS} & \spic{n-addr n-addr n — n} & \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -138,17 +139,17 @@ Error~$-8$ is raised if an invalid library is accessed, and $-9$ for an invalid 
 
 \subsubsection{Standard library}
 
-Standard C runtime and library functionality is accessed via library~$0$.
+Standard C runtime and library functionality is accessed via the {\tt LIB\_C} instruction, opcode 0x3e.
 
 \paragraph{Command-line arguments}
 
-Two calls are provided to access command-line arguments passed to C @PACKAGE_NAME@ (excluding any that it interprets itself). They are copied from Gforth (\cite{gforth}).
+Some functions are provided to access command-line arguments passed to C @PACKAGE_NAME@ (excluding any that it interprets itself).
 
 \begin{center}
 \begin{tabular}{S[table-format=2.0]lll} \toprule
 \bf Code & \bf Name & \bf Stack effect & \bf Description \\ \midrule
 0x0 & {\tt ARGC} & \spic{— u} & the number of arguments \\
-0x1 & {\tt ARG\_LEN} & \spic{u1 — u2} & the length of the \spic{u1}th argument \\
+0x1 & {\tt ARG\_LEN} & \spic{\U1 — \U2} & the length of the \spic{u1}th argument \\
 0x2 & {\tt ARG\_COPY} & \spic{\U1 c-addr \U2 — \U3} & copy argument \U1 to the buffer of length \U2 at \spic{c-addr}, leaving the number of characters actually copied as \U3 \\
  \bottomrule
 \end{tabular}
@@ -169,7 +170,7 @@ These extra instructions provide access to POSIX standard input, output and erro
 
 \paragraph{File system}
 
-The file system extra instructions correspond directly to ANS Forth words, as defined in~\cite{ANSIforth}.
+% FIXME: document these functions properly
 
 \begin{center}
 \begin{tabular}{S[table-format=2.0]l} \toprule
@@ -256,10 +257,8 @@ The following routine allows the calling program to register command-line argume
 \end{description}
 
 Programs which use C @PACKAGE_NAME@'s interface must {\tt \#include} the header file
-{\tt @PACKAGE@.h} and be linked with the @PACKAGE_NAME@ library. {\tt
-@PACKAGE@\_opcodes.h}, which contains an enumeration type of @PACKAGE_NAME@'s instruction set,
-and {\tt @PACKAGE@\_debug.h}, which contains useful debugging functions such as
-disassembly, may also be useful; they are not documented here.
+{\tt @PACKAGE@/@PACKAGE@.h} and be linked with the @PACKAGE_NAME@ library. {\tt @PACKAGE@/opcodes.h}, which contains an enumeration type of @PACKAGE_NAME@'s instruction set,
+and {\tt @PACKAGE@/@PACKAGE@\_aux.h}, which contains other useful declarations, may also be useful; they are not documented here.
 
 
 \subsection{Other extras provided by C @PACKAGE_NAME@}
@@ -268,7 +267,7 @@ C @PACKAGE_NAME@ provides various useful extras in {\tt @PACKAGE@\_aux.h}. These
 
 
 \bibliographystyle{plain}
-\bibliography{vm,rrt,ertl}
+\bibliography{rrt}
 
 
 \end{document}

@@ -31,14 +31,11 @@ test.append(VM.here)
 number(1)
 number(0)
 action(DIVMOD)
-number(1)
-action(POP)
 
 print("Test 3: PC = {}".format(VM.here))
-# Allow execution to run off the end of a memory area
-# (test 2 has set MEMORY - 1 to all zeroes)
+# Try to execute an invalid memory location
 test.append(VM.here)
-number(MEMORY.get() - 1)
+number(MEMORY.get() + 1)
 action(BRANCH)
 
 print("Test 4: PC = {}".format(VM.here))
@@ -68,7 +65,12 @@ for i in range(len(test)):
 
     print("Test {}".format(i + 1))
     PC.set(test[i])
-    res = run()
+    res = -128
+    while res == -128:
+        print("PC = {}".format(PC.get()))
+        print("S = {}".format(S))
+        res = step()
+        print("I = {}".format(disassemble_instruction(ITYPE.get(), I.get())))
 
     if result[i] != res:
          print("Error in errors tests: test {} failed; PC = {}".format(i + 1, PC.get()))

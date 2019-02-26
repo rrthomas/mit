@@ -28,6 +28,7 @@ struct _smite_state {
 #undef R
 #undef R_RO
     smite_WORD *memory;
+    smite_UWORD next_PC;
     int halt_code;
     int main_argc;
     char **main_argv;
@@ -41,35 +42,12 @@ extern smite_UWORD smite_default_memory_size;
 extern const int smite_stack_direction;
 extern smite_UWORD smite_default_stack_size;
 
-// RAISE(code) must be define before using `PUSH` or `POP`.
-// It must somehow exit if `code` is non-zero, e.g. return `code` to caller.
-
-// RAISE(code) must be define before using `PUSH` or `POP`.
-// It must somehow exit if `code` is non-zero, e.g. return `code` to caller.
-
-#define POP(v)                                                          \
-    RAISE(smite_pop_stack(S, v))
-#define PUSH(v)                                                         \
-    RAISE(smite_push_stack(S, v))
-
-#define PUSH_NATIVE_TYPE(ty, v)                                         \
-    for (unsigned i = 0; i < smite_align(sizeof(ty)) / smite_word_size; i++) { \
-        PUSH((smite_UWORD)((size_t)v & smite_word_mask));               \
-        v = (ty)((size_t)v >> smite_word_bit);                          \
-    }
-#define POP_NATIVE_TYPE(ty, v)                                          \
-    *v = 0;                                                             \
-    for (unsigned i = 0; i < smite_align(sizeof(ty)) / smite_word_size; i++) { \
-        smite_WORD w;                                                   \
-        POP(&w);                                                        \
-        *v = (ty)(((size_t)(*v) << smite_word_bit) | (smite_UWORD)w);   \
-    }
-
 #define UNCHECKED_LOAD_STACK(pos, vp)                                   \
     (*(vp) = *(S->S0 + (S->STACK_DEPTH - (pos) - 1) * smite_stack_direction))
 #define UNCHECKED_STORE_STACK(pos, v)                                   \
     (*(S->S0 + (S->STACK_DEPTH - (pos) - 1) * smite_stack_direction) = (v))
 
+// Tracing
 extern FILE *trace_fp; // FILE * of trace file, if used
 
 // Align a VM address

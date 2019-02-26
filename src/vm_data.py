@@ -71,10 +71,13 @@ class Actions(Enum):
         RAISE(smite_load_stack(S, depth, &dupee));
     ''')
 
-    SWAP = Action(0x03, ['top', 'depth'], ['swapee'], '''\
+    SWAP = Action(0x03, ['depth'], [], '''\
         if (depth > 0) {
-            RAISE(smite_load_stack(S, depth - 1, &swapee));
-            RAISE(smite_store_stack(S, depth - 1, top));
+            smite_WORD top, swapee;
+            RAISE(smite_load_stack(S, depth, &swapee));
+            RAISE(smite_load_stack(S, 0, &top));
+            RAISE(smite_store_stack(S, depth, top));
+            RAISE(smite_store_stack(S, 0, swapee));
         }
     ''')
 
@@ -165,17 +168,17 @@ class Actions(Enum):
     ''')
 
     BRANCH = Action(0x18, ['addr'], [], '''\
-        S->PC = (smite_UWORD)addr;
+        S->next_PC = (smite_UWORD)addr;
     ''')
 
     BRANCHZ = Action(0x19, ['flag', 'addr'], [], '''\
         if (flag == 0)
-            S->PC = (smite_UWORD)addr;
+            S->next_PC = (smite_UWORD)addr;
     ''')
 
     CALL = Action(0x1a, ['addr'], ['ret_addr'], '''\
-        ret_addr = S->PC;
-        S->PC = (smite_UWORD)addr;
+        ret_addr = S->next_PC;
+        S->next_PC = (smite_UWORD)addr;
     ''')
 
     GET_WORD_SIZE = Action(0x1b, [], ['r'], '''\
@@ -190,10 +193,6 @@ class Actions(Enum):
         S->STACK_DEPTH = a;
     ''')
 
-    EXTRA = Action(0x1e, [], [], '''\
-        RAISE(smite_extra(S));
-    ''')
-
-    NOP = Action(0x1f, [], [], '''\
+    NOP = Action(0x1e, [], [], '''\
         // Do nothing.'''
     )

@@ -181,19 +181,16 @@ int main(int argc, char *argv[])
     if (ret < 0)
         switch (ret) {
         case -1:
-            err = "address out of range or unaligned, or module too large";
+            err = "file system error";
             break;
         case -2:
-            err = "module header invalid";
+            err = "module invalid";
             break;
         case -3:
-            err = "error while loading module";
+            err = "module has wrong ENDISM or WORD_SIZE";
             break;
         case -4:
-            err = "module has wrong ENDISM";
-            break;
-        case -5:
-            err = "module has wrong WORD_SIZE";
+            err = "address out of range or unaligned, or module too large";
             break;
         default:
             err = "unknown error!";

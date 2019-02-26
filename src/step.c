@@ -10,17 +10,11 @@
 
 #include "config.h"
 
-#include <assert.h>
-#include "verify.h"
-
 #include "smite.h"
 #include "aux.h"
 #include "opcodes.h"
 #include "extra.h"
 
-
-// Assumption for file functions
-verify(sizeof(int) <= sizeof(smite_WORD));
 
 #define DIVZERO(x)                              \
     if (x == 0)                                 \

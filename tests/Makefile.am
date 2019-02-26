@@ -30,7 +30,7 @@ TESTS =	\
 	stack.py
 
 TESTS_ENVIRONMENT = \
-	export LD_LIBRARY_PATH=$(top_builddir)/src/@objdir@; \
+	export LD_LIBRARY_PATH=$(top_builddir)/src/@objdir@:$$LD_LIBRARY_PATH; \
 	export PYTHON=$(PYTHON); \
 	export PYTHONPATH=$(top_srcdir)/python; \
 	export srcdir=$(srcdir); \

@@ -141,7 +141,7 @@ A_ILLEGAL:
         ITYPE = smite_decode_instruction(S, &S->PC, &S->I);
         assert(ITYPE == INSTRUCTION_ACTION);
         assert(S->I >= O_UNDEFINED);
-        RAISE(-1);
+        RAISE(smite_extra(S));
     }
 
 RET:

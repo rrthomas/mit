@@ -181,6 +181,7 @@ class State:
         # Opcodes
         globals_dict.update([(action.name, action.value.opcode) for action in Actions])
         globals_dict["UNDEFINED"] = max([action.value.opcode for action in Actions]) + 1
+        globals_dict.update([(action.name, action.value) for action in LibActions])
 
     def run(self, trace=False):
         '''Run (or trace if trace is True) until HALT or error.'''
@@ -188,7 +189,7 @@ class State:
             return self.step(addr=self.registers["MEMORY"].get() + 1, trace=True)
         else:
             ret = libsmite.smite_run(self.state)
-            if ret != -257:
+            if ret != -128:
                 print("HALT code {} was returned".format(ret));
             return ret
 
@@ -199,10 +200,10 @@ class State:
         while True:
             ret = libsmite.smite_single_step(self.state)
             done += 1
-            if ret != -257 or self.registers["PC"].get() == addr or (addr == None and done == n):
+            if ret != -128 or self.registers["PC"].get() == addr or (addr == None and done == n):
                 break
 
-        if ret != -257:
+        if ret != -128:
             if ret != 0:
                 print("HALT code {} was returned".format(ret), end='')
                 if n > 1:
@@ -276,6 +277,7 @@ class State:
 
     # Disassembly
     mnemonic = {action.value.opcode:action.name for action in Actions}
+    mnemonic.update({action.value:action.name for action in LibActions})
 
     def disassemble_instruction(self, ty, opcode):
         if ty == Types.NUMBER:

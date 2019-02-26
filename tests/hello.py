@@ -15,25 +15,23 @@ VM.globalize(globals())
 
 # Assemble test code
 
-# 0
-number(10)
+# here = 0
+number(8)
 number(14)
 
-# 2
-number(0x4) # OX_STDOUT
-number(0x0) # OXLIB_LIBC
-action(EXTRA)
+# here = 2
+number(LibcLib.STDOUT)
+action(LIB_C)
 
-# 5
-number(0x9) # OX_WRITE_FILE
-number(0x0) # OXLIB_LIBC
-action(EXTRA)
+# here = 4
+number(LibcLib.WRITE_FILE)
+action(LIB_C)
 
-# 8
+# here = 6
 number(0)
 action(HALT)
 
-# 10
+# here = 8
 byte(0x48)
 byte(0x65)
 byte(0x6c)
