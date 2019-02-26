@@ -18,7 +18,7 @@ libsmite_la_LIBADD = $(top_builddir)/lib/libgnu.la
 bin_PROGRAMS = smite
 man_MANS = @PACKAGE@.1
 smite_LDADD = lib@PACKAGE@.la $(top_builddir)/lib/libgnu.la
-smite_SOURCES = main.c tbl_opts.h register-list.h $(internal_HDRS)
+smite_SOURCES = main.c tbl_opts.h $(internal_HDRS)
 pkginclude_HEADERS = @PACKAGE@.h aux.h opcodes.h opcodes-extra.h
 
 step.lo: instruction-actions.h
@@ -63,7 +63,7 @@ EXTRA_DIST = \
 	vm_data.py opcodes_extra.py \
 	gen-register-list gen-instruction-list gen-instruction-type-list gen-actions gen-opcodes-extra
 
-DISTCLEANFILES = @PACKAGE@.1 $(include_HEADERS)
+DISTCLEANFILES = @PACKAGE@.1
 # Ignore built files that are part of the distribution (specifically,
 # @PACKAGE@.1)
 distcleancheck_listfiles = \
