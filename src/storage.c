@@ -191,20 +191,20 @@ int smite_rotate_stack(smite_state *S, smite_WORD pos)
 
 static int smite_realloc(smite_WORD **ptr, smite_UWORD old_size, smite_UWORD new_size)
 {
-    smite_WORD *new_ptr = realloc(*ptr, new_size);
+    smite_WORD *new_ptr = realloc(*ptr, new_size * smite_word_size);
     if (new_ptr == NULL)
         return -1;
     *ptr = new_ptr;
 
     if (old_size < new_size)
-        memset(*ptr + old_size, 0, new_size - old_size);
+        memset(*ptr + old_size, 0, (new_size - old_size) * smite_word_size);
 
     return 0;
 }
 
 int smite_realloc_memory(smite_state *S, smite_UWORD size)
 {
-    int ret = smite_realloc(&S->memory, S->MEMORY * smite_word_size, size * smite_word_size);
+    int ret = smite_realloc(&S->memory, S->MEMORY / smite_word_size, size);
     if (ret == 0)
         S->MEMORY = size * smite_word_size;
     return ret;
@@ -212,9 +212,9 @@ int smite_realloc_memory(smite_state *S, smite_UWORD size)
 
 int smite_realloc_stack(smite_state *S, smite_UWORD size)
 {
-    int ret = smite_realloc(&S->S0, S->STACK_SIZE * smite_word_size, size * smite_word_size);
+    int ret = smite_realloc(&S->S0, S->STACK_SIZE, size);
     if (ret == 0)
-        S->STACK_SIZE = size * smite_word_size;
+        S->STACK_SIZE = size;
     return ret;
 }
 
