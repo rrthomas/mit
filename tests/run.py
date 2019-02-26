@@ -19,8 +19,8 @@ if VM == None:
 
 # Test code
 number(37)
-final_pc = VM.here
 action(HALT)
+final_pc = VM.here
 
 # Test
 ret = run()

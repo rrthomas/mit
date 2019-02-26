@@ -28,7 +28,6 @@ struct _smite_state {
 #undef R
 #undef R_RO
     smite_WORD *memory;
-    smite_UWORD next_PC;
     int halt_code;
     int main_argc;
     char **main_argv;
