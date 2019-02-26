@@ -78,7 +78,7 @@ print('''\
 ''')
 
 print('''\
-static int STEP(smite_state *S) {
+static int do_actions(smite_state *S) {
     int error = 0; // In a local so the compiler knows it's zero.
     smite_WORD ITYPE; // In a local so the compiler knows it's dead.
     smite_BYTE NEXT;
@@ -89,9 +89,11 @@ static int STEP(smite_state *S) {
     // probably comes next. If correct, there is a fast path for executing
     // that sequence, otherwise we fall back on a slow path with broader
     // expectations. Ultimately, we fall back to `A_ILLEGAL` which reports an
-    // illegal instruction (the most unexpected case).
+    // illegal instruction (the most unexpected case) or dispatches an extra
+    // (implementation-specific) instruction.
     //
     // The calling convention at each A_XXX label is as follows:
+    //
     //  - On entry, `error` is zero, `NEXT` is the first byte of the next
     //    instruction, `S->PC` has been incremented, and `ITYPE` and `S->I`
     //    are undefined.

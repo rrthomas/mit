@@ -70,7 +70,7 @@ ALL_EVENTS = []
 for a in vm_data.Actions:
     exec_code = '''\
         S->I = {};
-        trace(ITYPE, S->I);
+        trace(S, ITYPE, S->I);
     '''.rstrip().format(a.value.opcode) + '\n' + a.value.code
     ALL_EVENTS.append(Event(
         b'1 %08x' % a.value.opcode,
@@ -86,7 +86,7 @@ for n in [0, 1]:
     exec_code = '''\
         lit = {};
         S->I = lit;
-        trace(ITYPE, S->I);
+        trace(S, ITYPE, S->I);
     '''.rstrip().format(n)
     ALL_EVENTS.append(Event(
         b'0 %08x' % n,
@@ -102,7 +102,7 @@ exec_code = '''\
         S->PC--;
         RAISE(smite_decode_instruction(S, &S->PC, &lit));
         S->I = lit;
-        trace(ITYPE, S->I);
+        trace(S, ITYPE, S->I);
 '''.rstrip()
 ALL_EVENTS.append(Event(
     b'0 n',

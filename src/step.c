@@ -17,18 +17,20 @@
 //   void STEP(smite_state *S): runs a single step of the given state.
 //   void RAISE(smite_WORD e): raise error e; do nothing if e == 0.
 #define SINGLE_STEPPING
-#include "step-actions.h"
+#include "actions.h"
 
 // Perform one pass of the execution cycle
 smite_WORD smite_single_step(smite_state *S)
 {
-    int error = STEP(S);
+    int error = do_actions(S);
 
-    if (error != 0) {
-        // Deal with address errors during execution cycle.
-        if (error == -127)
-            return S->halt_code;
-        return error;
-    }
-    return -128; // terminated OK
+    // Normal completion of a single step.
+    if (error == 0)
+        return -128;
+
+    // Deal with HALT.
+    if (error == -127)
+        return S->halt_code;
+
+    return error;
 }

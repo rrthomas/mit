@@ -13,12 +13,17 @@
 #include "smite.h"
 
 
+#include "actions.h"
+
 smite_WORD smite_run(smite_state *S)
 {
-    smite_WORD ret;
-
-    while ((ret = smite_single_step(S)) == -128)
+    int error;
+    while ((error = do_actions(S)) == 0)
         ;
 
-    return ret;
+    // Deal with HALT.
+    if (error == -127)
+        return S->halt_code;
+
+    return error;
 }

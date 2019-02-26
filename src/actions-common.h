@@ -17,10 +17,9 @@
     if (x == 0)                                 \
         RAISE(-4);
 
-FILE *trace_fp = NULL; // FILE * of trace file, if used
-static void trace(int type, smite_WORD opcode) {
-    if (trace_fp)
-        fprintf(trace_fp, "%d %08x\n", type, (smite_UWORD)opcode);
+static void trace(smite_state *S, int type, smite_WORD opcode) {
+    if (S->trace_fp)
+        fprintf(S->trace_fp, "%d %08x\n", type, (smite_UWORD)opcode);
 }
 
 

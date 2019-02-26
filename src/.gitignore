@@ -11,7 +11,7 @@
 /smite-include.man
 /smite.h
 /tbl_opts.h
-/step-actions.h
+/actions.h
 /instruction-list.h
 /instruction-type-list.h
 /opcodes-extra.h

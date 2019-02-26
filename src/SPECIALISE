@@ -55,11 +55,4 @@ Step 4: Actions
 The script "gen-actions" reads a labels file and writes out a fragment of C
 source code. Run it like this:
 
-    $ ./gen-actions labels_pickle >step-actions.h
-
-Step 5: Make
-------------
-
-The SMite source file "step.c" depends on "step-actions.h".
-
-    $ make
+    $ ./gen-actions labels_pickle >actions.h
