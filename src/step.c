@@ -29,7 +29,7 @@ static void trace(int type, smite_WORD opcode) {
 // Defines two macros/functions:
 //   void STEP(smite_state *S): runs a single step of the given state.
 //   void RAISE(smite_WORD e): raise error e; do nothing if e == 0.
-
+#define SINGLE_STEPPING
 #include "step-actions.h"
 
 // Perform one pass of the execution cycle
