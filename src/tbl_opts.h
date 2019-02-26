@@ -8,13 +8,9 @@
 // THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER‘S
 // RISK.
 
-// D: documentation line
-// O: Option
-// A: Action
-//
-// D(text)
-// O(long name, short name ('\0' for none), argument, argument docstring, docstring)
-// A(argument, docstring)
+// DOC(text)
+// OPT(long name, short name ('\0' for none), argument, argument docstring, docstring)
+// ARG(argument, docstring)
 
 #define MEMORY_MESSAGE(type, max, def)                                  \
   "set " type " size to the given NUMBER of words\n"                    \
