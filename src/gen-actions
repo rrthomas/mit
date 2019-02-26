@@ -14,9 +14,10 @@ def check_stack_pointer(nargs, nresults):
     return '''\
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wtype-limits"
-if ((S->STACK_DEPTH < {nargs}) ||
-    (S->STACK_SIZE - (S->STACK_DEPTH - {nargs}) < {nresults}))
+if ((S->STACK_DEPTH < {nargs}))
     RAISE(-2);
+if ((S->STACK_SIZE - (S->STACK_DEPTH - {nargs}) < {nresults}))
+    RAISE(-3);
 #pragma GCC diagnostic pop
 '''.format(nargs=nargs, nresults=nresults)
 

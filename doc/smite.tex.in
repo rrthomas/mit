@@ -52,7 +52,7 @@
 
 \title{The @PACKAGE_NAME@ Virtual Machine}
 \author{Reuben Thomas}
-\date{13th February 2019}
+\date{26th February 2019}
 
 \begin{document}
 \maketitle
@@ -98,6 +98,7 @@ The registers, each with its function, are set out in table~\ref{regtable}.
  \midrule
 {\tt PC} & The {\tt P}rogram {\tt C}ounter. Points to the next byte from which an instruction may be loaded. \\
 {\tt BAD\_PC} & The value of {\tt PC} when an error was last raised. \\
+{\tt BAD\_ADDRESS} & The invalid stack position, or invalid or unaligned memory address, that caused the last memory error. \\
 {\tt ITYPE} & The type of an instruction to be executed: $0$ for a number, and $1$ for an action. \\
 {\tt I} & The {\tt I}nstruction. Holds the opcode of an instruction to be executed. \\
 {\tt STACK\_DEPTH} & The number of items on the stack. \\
@@ -155,7 +156,7 @@ initialisation specified above.
 \subsection{Errors and termination}
 \label{errors}
 
-When @PACKAGE_NAME@ encounters certain abnormal situations, such as an attempt to access an invalid address, or divide by zero, an {\bf error} is {\bf raised}, and execution terminates; an {\bf error code} is returned to the caller. The instruction that caused the error to be raised is considered not to have executed, and {\texttt BAD\_PC} is set to point to it.
+When @PACKAGE_NAME@ encounters certain abnormal situations, such as an attempt to access an invalid address, or divide by zero, an {\bf error} is {\bf raised}, and execution terminates; an {\bf error code} is returned to the caller. The instruction that caused the error to be raised is considered not to have executed, and {\texttt BAD\_PC} is set to point to it. If the error is a stack or memory access error, {\tt BAD\_ADDRESS} is set to the stack position or address that caused the error.
 
 Execution can also be terminated explicitly by performing a {\tt HALT} action (see section~\ref{erroract}), which also returns a code. The {\tt HALT} action {\it is} considered to have completed.
 
@@ -168,9 +169,12 @@ table~\ref{errortable}.
 \begin{tabular}{cp{4in}} \toprule
 \bf Code & \bf Meaning \\ \midrule
 $-1$ & Invalid opcode (see section~\ref{opcodes}). \\
-$-2$ & Invalid address: raised when an instruction attempts to read from or write to an invalid address. \\
-$-3$ & Address alignment error: raised when an instruction expecting a word-aligned address is given a valid but non-aligned address. \\
-$-4$ & Division by zero attempted (see section~\ref{arithmetic}). \\
+$-2$ & Invalid stack read. \\
+$-3$ & Invalid stack write. \\
+$-4$ & Invalid memory read. \\
+$-5$ & Invalid memory write. \\
+$-6$ & Address alignment error: raised when an instruction expecting a word-aligned address is given a valid but non-aligned address. \\
+$-7$ & Division by zero attempted (see section~\ref{arithmetic}). \\
 $-128$ & {\bf single\_step()} has terminated without error. \\
  \bottomrule
 \end{tabular}

@@ -395,7 +395,7 @@ static int extra_libc(smite_state *S)
             char *s1 = (char *)smite_native_address_of_range(S, str1, 0);
             char *s2 = (char *)smite_native_address_of_range(S, str2, 0);
             if (s1 == NULL || s2 == NULL)
-                RAISE(-2);
+                RAISE(-4);
             PUSH(rename(s2, s1));
         }
         break;
@@ -405,7 +405,7 @@ static int extra_libc(smite_state *S)
             POP((smite_WORD *)&str);
             char *s = (char *)smite_native_address_of_range(S, str, 0);
             if (s == NULL)
-                RAISE(-2);
+                RAISE(-4);
             PUSH(remove(s));
         }
         break;
