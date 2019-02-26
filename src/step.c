@@ -36,7 +36,7 @@ static void trace(int type, smite_WORD opcode) {
 //   void STEP(smite_state *S): runs a single step of the given state.
 //   void RAISE(smite_WORD e): raise error e; do nothing if e == 0.
 
-#include "instruction-actions.h"
+#include "step-actions.h"
 
 // Perform one pass of the execution cycle
 smite_WORD smite_single_step(smite_state *S)

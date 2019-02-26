@@ -22,31 +22,31 @@ The "zstd" compression tool achieves a 500:1 compression ratio.
 Step 2: Predictor
 -----------------
 
-The script "predictor.py" reads a trace file and approximates it by a
+The script "gen-predictor" reads a trace file and approximates it by a
 predictor: a lookup table that guesses the next instruction based on the
 previous instructions. Run it like this:
 
-    $ python3 predictor.py /tmp/myprog.trace 
+    $ ./gen-predictor myprog.trace myprog.predictor_pickle
 
-The result will be written to "/tmp/predictor.pickle".
+The result will be written to "myprog.predictor_pickle".
 
 The script is slow, because it has to replay the whole trace. You may want to
 keep a library of predictor files, which are typically small (tens of
-kilobytes). It is for this reason that the "predictor.py" script has been
+kilobytes). It is for this reason that the "gen-predictor" script has been
 separated out from the rest of the procedure.
 
 Step 3: Labels
 --------------
 
-The script "language.py" reads a predictor file and constructs a suitable
+The script "gen-labels" reads a predictor file and constructs a suitable
 control-flow graph for the specialised interpreter. Run it like this:
 
-    $ python3 -i language.py /tmp/predictor.pickle 
+    $ ./gen-labels myprog.predictor_pickle myprog.labels_pickle
 
-The result will be written to "/tmp/labels.pickle".
+The result will be written to "myprog.labels_pickle".
 
 The script is fast, but it has nonetheless been separated out from the rest of
-the procedure, so that it is possible to generate "labels.pickle" files in
+the procedure, so that it is possible to generate a ".labels_pickle" file in
 other ways, if desired, or to distribute them.
 
 Step 4: Actions
@@ -55,11 +55,11 @@ Step 4: Actions
 The script "gen-actions" reads a labels file and writes out a fragment of C
 source code. Run it like this:
 
-    $ ./gen-actions labels.pickle >instruction-actions.h
+    $ ./gen-actions labels_pickle >step-actions.h
 
 Step 5: Make
 ------------
 
-The SMite source file "step.c" depends on "instruction-actions.h".
+The SMite source file "step.c" depends on "step-actions.h".
 
     $ make

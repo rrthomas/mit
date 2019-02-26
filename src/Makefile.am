@@ -12,7 +12,7 @@ AM_CPPFLAGS = -I$(top_builddir)/lib -I$(top_srcdir)/lib $(WARN_CFLAGS)
 
 lib_LTLIBRARIES = libsmite.la
 libsmite_la_SOURCES = bits_util.c storage.c instruction.c extra.c extra.h step.c run.c object.c \
-	register-list.h instruction-list.h instruction-type-list.h instruction-actions.h
+	register-list.h instruction-list.h instruction-type-list.h step-actions.h
 libsmite_la_LIBADD = $(top_builddir)/lib/libgnu.la
 
 bin_PROGRAMS = smite
@@ -21,7 +21,7 @@ smite_LDADD = lib@PACKAGE@.la $(top_builddir)/lib/libgnu.la
 smite_SOURCES = main.c tbl_opts.h $(internal_HDRS)
 pkginclude_HEADERS = @PACKAGE@.h aux.h opcodes.h opcodes-extra.h
 
-step.lo: instruction-actions.h
+step.lo: step-actions.h
 bits_util.lo instruction.lo object.lo step.lo storage.lo main.o: register-list.h instruction-list.h instruction-type-list.h opcodes-extra.h
 main.o: tbl_opts.h register-list.h
 
@@ -38,10 +38,10 @@ main.o: tbl_opts.h register-list.h
 	fi
 
 .trace.predictor_pickle:
-	$(PYTHON) $(srcdir)/predictor.py $< $@
+	$(PYTHON) $(srcdir)/gen-predictor $< $@
 
 .predictor_pickle.labels_pickle:
-	$(PYTHON) $(srcdir)/language.py $< $@
+	$(PYTHON) $(srcdir)/gen-labels $< $@
 
 register-list.h: gen-register-list vm_data.py
 	$(PYTHON) $(srcdir)/gen-register-list > register-list.h
@@ -55,8 +55,8 @@ instruction-list.h: gen-instruction-list vm_data.py
 instruction-type-list.h: gen-instruction-type-list vm_data.py
 	$(PYTHON) $(srcdir)/gen-instruction-type-list > instruction-type-list.h
 
-instruction-actions.h: gen-actions vm_data.py instructions.labels_pickle
-	$(PYTHON) $(srcdir)/gen-actions instructions.labels_pickle > instruction-actions.h
+step-actions.h: gen-actions vm_data.py step.labels_pickle
+	$(PYTHON) $(srcdir)/gen-actions step.labels_pickle > step-actions.h
 
 loc:
 	$(CLOC) $(CLOC_OPTS) \

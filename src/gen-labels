@@ -14,7 +14,7 @@ import sys, pickle
 from events import Event, ALL_EVENTS, EVENT_NAMES
 
 if len(sys.argv) != 3:
-    print("Usage: language.py PREDICTOR-FILENAME LABELS-FILENAME", file=sys.stderr)
+    print("Usage: gen-labels PREDICTOR-FILENAME LABELS-FILENAME", file=sys.stderr)
     sys.exit(1)
 predictor_filename = sys.argv[1]
 labels_filename = sys.argv[2]
