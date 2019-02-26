@@ -46,13 +46,14 @@ print('''\
 #define RAISE(code)                             \\
         do {                                    \\
             int error = (code);                 \\
-            if (error != 0)                     \\
+            if (error != 0) {                   \\
+                S->BAD_PC = S->PC;              \\
                 return error;                   \\
+            }                                   \\
         } while(0)
 
 static int STEP(smite_state *S) {
-    S->next_PC = S->PC;
-    S->ITYPE = smite_decode_instruction(S, &S->next_PC, &S->I);
+    S->ITYPE = smite_decode_instruction(S, &S->PC, &S->I);
     trace(S->ITYPE, S->I);
 
     switch (S->ITYPE) {
@@ -96,8 +97,6 @@ print('''\
     default: /* Error during instruction fetch */
         return S->ITYPE;
     }
-
-    S->PC = S->next_PC;
 
     return 0;
 }''')
