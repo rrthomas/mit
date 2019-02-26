@@ -21,13 +21,13 @@ class Register:
 class Registers(Enum):
     '''VM registers.'''
     PC = Register()
-    BAD_PC = Register()
-    BAD_ADDRESS = Register()
-    ITYPE = Register(ty="smite_WORD", uty="smite_UWORD")
-    I = Register(ty="smite_WORD", uty="smite_UWORD")
+    BAD_PC = Register(read_only=True)
+    BAD_ADDRESS = Register(read_only=True)
+    ITYPE = Register(ty="smite_WORD", uty="smite_UWORD", read_only=True)
+    I = Register(ty="smite_WORD", uty="smite_UWORD", read_only=True)
     MEMORY = Register(read_only=True)
     STACK_DEPTH = Register()
-    S0 = Register("smite_WORDP")
+    S0 = Register("smite_WORDP", read_only=True)
     STACK_SIZE = Register(read_only=True)
     ENDISM = Register(read_only=True)
 
