@@ -89,11 +89,8 @@ for (instruction, action) in Actions.__members__.items():
             ))
 print('''\
         default: /* Undefined instruction; try extra instructions */
-            {
-                int res = smite_extra(S);
-                if (res != 0)
-                    return res;
-            }
+            RAISE(smite_extra(S));
+            break;
         }
         break;
     default: /* Error during instruction fetch */
