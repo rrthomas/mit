@@ -121,14 +121,8 @@ libsmite.smite_find_msbit.argtypes = [c_word]
 
 libsmite.smite_byte_size.argtypes = [c_word]
 
-libsmite.smite_encode_instruction_file.restype = c_ptrdiff_t
-libsmite.smite_encode_instruction_file.argtypes = [c_int, c_int, c_word]
-
 libsmite.smite_encode_instruction.restype = c_ptrdiff_t
 libsmite.smite_encode_instruction.argtypes = [c_void_p, c_uword, c_int, c_word]
-
-libsmite.smite_decode_instruction_file.restype = c_ssize_t
-libsmite.smite_decode_instruction_file.argtypes = [c_int, POINTER(c_word)]
 
 libsmite.smite_decode_instruction.argtypes = [c_void_p, POINTER(c_uword), POINTER(c_word)]
 

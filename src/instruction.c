@@ -45,16 +45,9 @@
         return len;                                                     \
     }
 
-#define ENCODE_INSTRUCTION(NAME, TYPE, HANDLE, STORE)                   \
-    ptrdiff_t NAME(TYPE HANDLE, enum instruction_type type, smite_WORD v) \
-    _ENCODE_INSTRUCTION(NAME, TYPE, HANDLE, STORE)
-
 #define STATEFUL_ENCODE_INSTRUCTION(NAME, TYPE, HANDLE, STORE)          \
     ptrdiff_t NAME(smite_state *S, TYPE HANDLE, enum instruction_type type, smite_WORD v) \
     _ENCODE_INSTRUCTION(NAME, TYPE, HANDLE, STORE)
-
-#define STORE_FILE(b) (-(write(fd, &b, 1) != 1))
-ENCODE_INSTRUCTION(smite_encode_instruction_file, int, fd, STORE_FILE)
 
 #define STORE_VIRTUAL(b) (smite_store_byte(S, addr++, (b)))
 STATEFUL_ENCODE_INSTRUCTION(smite_encode_instruction, smite_UWORD, addr, STORE_VIRTUAL)
@@ -96,16 +89,9 @@ STATEFUL_ENCODE_INSTRUCTION(smite_encode_instruction, smite_UWORD, addr, STORE_V
         return type;                                                    \
     }
 
-#define DECODE_INSTRUCTION(RET_TYPE, NAME, TYPE, HANDLE, LOAD)          \
-    RET_TYPE NAME(TYPE HANDLE, smite_WORD *val)                         \
-    _DECODE_INSTRUCTION(RET_TYPE, NAME, TYPE, HANDLE, LOAD)
-
 #define STATEFUL_DECODE_INSTRUCTION(RET_TYPE, NAME, TYPE, HANDLE, LOAD) \
     RET_TYPE NAME(smite_state *S, TYPE HANDLE, smite_WORD *val)         \
     _DECODE_INSTRUCTION(RET_TYPE, NAME, TYPE, HANDLE, LOAD)
-
-#define LOAD_FILE(b) (read(fd, &b, 1))
-DECODE_INSTRUCTION(ssize_t, smite_decode_instruction_file, int, fd, LOAD_FILE)
 
 #define LOAD_VIRTUAL(b) (smite_load_byte(S, (*addr)++, &(b)))
 STATEFUL_DECODE_INSTRUCTION(int, smite_decode_instruction, smite_UWORD *, addr, LOAD_VIRTUAL)
