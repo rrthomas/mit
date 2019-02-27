@@ -43,7 +43,7 @@ main.o: tbl_opts.h register-list.h
 actions.predictor_pickle: actions.trace events.py gen-predictor
 	$(PYTHON) $(srcdir)/gen-predictor actions.trace $@
 
-actions.labels_pickle: events.py gen-labels
+actions.labels_pickle: actions.predictor_pickle events.py gen-labels
 	$(PYTHON) $(srcdir)/gen-labels actions.predictor_pickle $@
 
 register-list.h: gen-register-list vm_data.py
