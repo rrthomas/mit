@@ -21,11 +21,13 @@ class Register:
 class Registers(Enum):
     '''VM registers.'''
     PC = Register()
-    ITYPE = Register(ty="smite_WORD", uty="smite_UWORD")
-    I = Register(ty="smite_WORD", uty="smite_UWORD")
+    BAD_PC = Register(read_only=True)
+    BAD_ADDRESS = Register(read_only=True)
+    ITYPE = Register(ty="smite_WORD", uty="smite_UWORD", read_only=True)
+    I = Register(ty="smite_WORD", uty="smite_UWORD", read_only=True)
     MEMORY = Register(read_only=True)
     STACK_DEPTH = Register()
-    S0 = Register("smite_WORDP")
+    S0 = Register("smite_WORDP", read_only=True)
     STACK_SIZE = Register(read_only=True)
     ENDISM = Register(read_only=True)
 
@@ -68,21 +70,21 @@ class Actions(Enum):
     ''')
 
     DUP = Action(0x02, ['depth'], ['dupee'], '''\
-        RAISE(smite_load_stack(S, depth, &dupee));
+        ABORT_AND_RAISE(smite_load_stack(S, depth, &dupee));
     ''')
 
     SWAP = Action(0x03, ['depth'], [], '''\
         if (depth > 0) {
             smite_WORD top, swapee;
-            RAISE(smite_load_stack(S, depth, &swapee));
-            RAISE(smite_load_stack(S, 0, &top));
-            RAISE(smite_store_stack(S, depth, top));
-            RAISE(smite_store_stack(S, 0, swapee));
+            ABORT_AND_RAISE(smite_load_stack(S, depth, &swapee));
+            ABORT_AND_RAISE(smite_load_stack(S, 0, &top));
+            ABORT_AND_RAISE(smite_store_stack(S, depth, top));
+            ABORT_AND_RAISE(smite_store_stack(S, 0, swapee));
         }
     ''')
 
     ROTATE = Action(0x04, ['pos'], [], '''\
-        RAISE(smite_rotate_stack(S, pos));
+        ABORT_AND_RAISE(smite_rotate_stack(S, pos));
     ''')
 
     EQ = Action(0x05, ['a', 'b'], ['flag'], '''\
@@ -150,35 +152,35 @@ class Actions(Enum):
     ''')
 
     LOAD = Action(0x14, ['addr'], ['x'], '''\
-        RAISE(smite_load_word(S, addr, &x));
+        ABORT_AND_RAISE(smite_load_word(S, addr, &x));
     ''')
 
     STORE = Action(0x15, ['x', 'addr'], [], '''\
-        RAISE(smite_store_word(S, addr, x));
+        ABORT_AND_RAISE(smite_store_word(S, addr, x));
     ''')
 
     LOADB = Action(0x16, ['addr'], ['x'], '''\
         smite_BYTE b_;
-        RAISE(smite_load_byte(S, addr, &b_));
+        ABORT_AND_RAISE(smite_load_byte(S, addr, &b_));
         x = (smite_WORD)b_;
     ''')
 
     STOREB = Action(0x17, ['x', 'addr'], [], '''\
-        RAISE(smite_store_byte(S, addr, (smite_BYTE)x));
+        ABORT_AND_RAISE(smite_store_byte(S, addr, (smite_BYTE)x));
     ''')
 
     BRANCH = Action(0x18, ['addr'], [], '''\
-        S->next_PC = (smite_UWORD)addr;
+        S->PC = (smite_UWORD)addr;
     ''')
 
     BRANCHZ = Action(0x19, ['flag', 'addr'], [], '''\
         if (flag == 0)
-            S->next_PC = (smite_UWORD)addr;
+            S->PC = (smite_UWORD)addr;
     ''')
 
     CALL = Action(0x1a, ['addr'], ['ret_addr'], '''\
-        ret_addr = S->next_PC;
-        S->next_PC = (smite_UWORD)addr;
+        ret_addr = S->PC;
+        S->PC = (smite_UWORD)addr;
     ''')
 
     GET_WORD_SIZE = Action(0x1b, [], ['r'], '''\
@@ -190,6 +192,10 @@ class Actions(Enum):
     ''')
 
     SET_STACK_DEPTH = Action(0x1d, ['a'], [], '''\
+        if ((smite_UWORD)a > S->STACK_SIZE) {
+            S->BAD_ADDRESS = a;
+            ABORT_AND_RAISE(-2);
+        }
         S->STACK_DEPTH = a;
     ''')
 

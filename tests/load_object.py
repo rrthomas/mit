@@ -77,9 +77,10 @@ if res != 0:
 if run() != magic_number:
     print("Error in load_object() tests: file {}".format(number_file))
     sys.exit(1)
+print("Data stack: {}".format(S))
 print("Correct stack: {}".format(correct))
 if str(correct) != str(S):
-    print("Error in arithmetic tests: PC = {:#x}".format(PC.get()))
+    print("Error in load_object() tests: PC = {:#x}".format(PC.get()))
     sys.exit(1)
 
 os.remove(number_file)
