@@ -35,7 +35,6 @@ const smite_WORD smite_word_max = INT64_MAX;
 #else
 #error "WORD_SIZE is not 4 or 8!"
 #endif
-const int smite_stack_direction = 1;
 
 
 // Utility functions
@@ -163,11 +162,11 @@ int smite_rotate_stack(smite_state *S, smite_WORD pos)
         }
 
         smite_UWORD offset = S->STACK_DEPTH - pos - 1;
-        smite_WORD temp = *(S->S0 + offset * smite_stack_direction);
-        memmove(S->S0 + offset * smite_stack_direction,
-                S->S0 + (offset + 1) * smite_stack_direction,
+        smite_WORD temp = *(S->S0 + offset * STACK_DIRECTION);
+        memmove(S->S0 + offset * STACK_DIRECTION,
+                S->S0 + (offset + 1) * STACK_DIRECTION,
                 (S->STACK_DEPTH - offset) * sizeof(smite_WORD));
-        *(S->S0 + (S->STACK_DEPTH - 1) * smite_stack_direction) = temp;
+        *(S->S0 + (S->STACK_DEPTH - 1) * STACK_DIRECTION) = temp;
     } else if (pos < 0) {
         if (pos <= -(smite_WORD)S->STACK_DEPTH) {
             S->BAD_ADDRESS = -pos;
@@ -175,11 +174,11 @@ int smite_rotate_stack(smite_state *S, smite_WORD pos)
         }
 
         smite_UWORD offset = S->STACK_DEPTH + pos - 1;
-        smite_WORD temp = *(S->S0 + (S->STACK_DEPTH - 1) * smite_stack_direction);
-        memmove(S->S0 + (offset + 1) * smite_stack_direction,
-                S->S0 + offset * smite_stack_direction,
+        smite_WORD temp = *(S->S0 + (S->STACK_DEPTH - 1) * STACK_DIRECTION);
+        memmove(S->S0 + (offset + 1) * STACK_DIRECTION,
+                S->S0 + offset * STACK_DIRECTION,
                 (S->STACK_DEPTH - offset) * sizeof(smite_WORD));
-        *(S->S0 + offset * smite_stack_direction) = temp;
+        *(S->S0 + offset * STACK_DIRECTION) = temp;
     }
 
     return 0;

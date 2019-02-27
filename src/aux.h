@@ -34,12 +34,12 @@ struct _smite_state {
 };
 
 // Stacks
-extern const int smite_stack_direction;
+#define STACK_DIRECTION 1
 
 #define UNCHECKED_LOAD_STACK(pos, vp)                                   \
-    (*(vp) = *(S->S0 + (S->STACK_DEPTH - (pos) - 1) * smite_stack_direction))
+    (*(vp) = *(S->S0 + (S->STACK_DEPTH - (pos) - 1) * STACK_DIRECTION))
 #define UNCHECKED_STORE_STACK(pos, v)                                   \
-    (*(S->S0 + (S->STACK_DEPTH - (pos) - 1) * smite_stack_direction) = (v))
+    (*(S->S0 + (S->STACK_DEPTH - (pos) - 1) * STACK_DIRECTION) = (v))
 
 // Tracing
 extern FILE *trace_fp; // FILE * of trace file, if used
