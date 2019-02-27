@@ -91,9 +91,17 @@ static void usage(void)
     exit(EXIT_SUCCESS);
 }
 
+static smite_UWORD page_size;
+
+static smite_UWORD round_up(smite_UWORD n, smite_UWORD multiple)
+{
+    return (n - 1) - (n - 1) % multiple + multiple;
+}
+
 int main(int argc, char *argv[])
 {
     set_program_name(argv[0]);
+    page_size = sysconf(_SC_PAGESIZE);
 
     bool core_dump = false;
     smite_UWORD memory_size = 0x100000U;
@@ -180,7 +188,29 @@ int main(int argc, char *argv[])
         die("%s: %s", argv[optind], err);
 
     // Run code
-    int res = smite_run(S);
+    // Automatically grow stack and memory on demand
+    int res;
+    bool again;
+    do {
+        again = false;
+        switch (res = smite_run(S)) {
+        case -2:
+            if (smite_realloc_stack(S, round_up(S->BAD_ADDRESS, page_size)) == 0) {
+                S->PC = S->BAD_PC;
+                again = true;
+            }
+            break;
+        case -5:
+        case -6:
+            if (smite_realloc_memory(S, round_up(S->BAD_ADDRESS, page_size)) == 0) {
+                S->PC = S->BAD_PC;
+                again = true;
+            }
+            break;
+        default:
+            break;
+        }
+    } while (again);
 
     // Core dump on error
     if (core_dump && (res <= -1 && res >= -128)) {
