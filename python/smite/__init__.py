@@ -138,7 +138,7 @@ libsmite.smite_decode_instruction.argtypes = [c_void_p, POINTER(c_uword), POINTE
 class State:
     '''A VM state.'''
 
-    def __init__(self, memory_size=16384, stack_size=1024):
+    def __init__(self, memory_size=1024*1024, stack_size=1024):
         '''Initialise the VM state.'''
         self.state = libsmite.smite_init(memory_size, stack_size)
         if self.state == None:
