@@ -56,6 +56,11 @@ correct = [
     [-1],
     [-1, -2],
     [1, 1],
+    [1, 1, 2],
+    [],
+    [4],
+    [4, 2],
+    [2, 0],
 ]
 
 # Code
@@ -94,6 +99,11 @@ action(DIVMOD)
 number(1)
 action(POP)
 number(-2)
+action(UDIVMOD)
+number(2)
+action(POP)
+number(4)
+number(2)
 action(UDIVMOD)
 
 # Test

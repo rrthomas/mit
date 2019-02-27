@@ -120,7 +120,7 @@ class Actions(Enum):
     UDIVMOD = Action(0x0c, ['a', 'b'], ['q', 'r'], '''\
         DIVZERO(b);
         q = (smite_WORD)((smite_UWORD)a / (smite_UWORD)b);
-        r = (smite_WORD)((smite_UWORD)a / (smite_UWORD)b);
+        r = (smite_WORD)((smite_UWORD)a % (smite_UWORD)b);
     ''')
 
     LSHIFT = Action(0x0d, ['x', 'n'], ['r'], '''\
