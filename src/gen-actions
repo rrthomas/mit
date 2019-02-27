@@ -70,7 +70,6 @@ print('''\
 static int STEP(smite_state *S) {
     smite_UWORD initial_PC = S->PC;
     S->ITYPE = smite_decode_instruction(S, &S->PC, &S->I);
-    trace(S->ITYPE, S->I);
 
     switch (S->ITYPE) {
     case INSTRUCTION_NUMBER:
@@ -113,6 +112,8 @@ print('''\
     default: /* Error during instruction fetch */
         return S->ITYPE;
     }
+
+    trace(S->ITYPE, S->I);
 
     return 0;
 }''')
