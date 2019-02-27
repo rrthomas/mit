@@ -70,21 +70,21 @@ class Actions(Enum):
     ''')
 
     DUP = Action(0x02, ['depth'], ['dupee'], '''\
-        RAISE(smite_load_stack(S, depth, &dupee));
+        ABORT_AND_RAISE(smite_load_stack(S, depth, &dupee));
     ''')
 
     SWAP = Action(0x03, ['depth'], [], '''\
         if (depth > 0) {
             smite_WORD top, swapee;
-            RAISE(smite_load_stack(S, depth, &swapee));
-            RAISE(smite_load_stack(S, 0, &top));
-            RAISE(smite_store_stack(S, depth, top));
-            RAISE(smite_store_stack(S, 0, swapee));
+            ABORT_AND_RAISE(smite_load_stack(S, depth, &swapee));
+            ABORT_AND_RAISE(smite_load_stack(S, 0, &top));
+            ABORT_AND_RAISE(smite_store_stack(S, depth, top));
+            ABORT_AND_RAISE(smite_store_stack(S, 0, swapee));
         }
     ''')
 
     ROTATE = Action(0x04, ['pos'], [], '''\
-        RAISE(smite_rotate_stack(S, pos));
+        ABORT_AND_RAISE(smite_rotate_stack(S, pos));
     ''')
 
     EQ = Action(0x05, ['a', 'b'], ['flag'], '''\
@@ -152,21 +152,21 @@ class Actions(Enum):
     ''')
 
     LOAD = Action(0x14, ['addr'], ['x'], '''\
-        RAISE(smite_load_word(S, addr, &x));
+        ABORT_AND_RAISE(smite_load_word(S, addr, &x));
     ''')
 
     STORE = Action(0x15, ['x', 'addr'], [], '''\
-        RAISE(smite_store_word(S, addr, x));
+        ABORT_AND_RAISE(smite_store_word(S, addr, x));
     ''')
 
     LOADB = Action(0x16, ['addr'], ['x'], '''\
         smite_BYTE b_;
-        RAISE(smite_load_byte(S, addr, &b_));
+        ABORT_AND_RAISE(smite_load_byte(S, addr, &b_));
         x = (smite_WORD)b_;
     ''')
 
     STOREB = Action(0x17, ['x', 'addr'], [], '''\
-        RAISE(smite_store_byte(S, addr, (smite_BYTE)x));
+        ABORT_AND_RAISE(smite_store_byte(S, addr, (smite_BYTE)x));
     ''')
 
     BRANCH = Action(0x18, ['addr'], [], '''\
@@ -194,7 +194,7 @@ class Actions(Enum):
     SET_STACK_DEPTH = Action(0x1d, ['a'], [], '''\
         if ((smite_UWORD)a > S->STACK_SIZE) {
             S->BAD_ADDRESS = a;
-            RAISE(-2);
+            ABORT_AND_RAISE(-2);
         }
         S->STACK_DEPTH = a;
     ''')
