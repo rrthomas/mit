@@ -2,8 +2,7 @@
 //
 // (c) Reuben Thomas 1995-2018
 //
-// The package is distributed under the GNU Public License version 3, or,
-// at your option, any later version.
+// The package is distributed under the MIT/X11 License.
 //
 // THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 // RISK.
@@ -137,11 +136,10 @@ int main(int argc, char *argv[])
             break;
         case 3:
             printf(PACKAGE_NAME " " VERSION "\n"
-                   "(c) Reuben Thomas 1994-2019\n"
+                   "(c) SMite authors 1994-2019\n"
                    PACKAGE_NAME " comes with ABSOLUTELY NO WARRANTY.\n"
-                   "You may redistribute copies of " PACKAGE_NAME "\n"
-                   "under the terms of the GNU General Public License.\n"
-                   "For more information about these matters, see the file named COPYING.\n");
+                   "You may redistribute copies of " PACKAGE_NAME
+                   "under the terms of the MIT/X11 License.\n");
             exit(EXIT_SUCCESS);
         default:
             break;

@@ -17,8 +17,7 @@ implementation in ISO C99 using POSIX APIs. Detailed documentation is in the
 `doc` directory; installation instructions follow. Maintainers should read
 `HACKING.md`.
 
-The package is distributed under the GNU Public License version 3, or,
-at your option, any later version.
+The package is distributed under the MIT/X11 License (see the file `COPYING`).
 
 THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 RISK.

@@ -2,8 +2,7 @@
 //
 // (c) Reuben Thomas 1994-2016
 //
-// The package is distributed under the GNU Public License version 3, or,
-// at your option, any later version.
+// The package is distributed under the MIT/X11 License.
 //
 // THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 // RISK.
