@@ -73,8 +73,5 @@ ptrdiff_t smite_encode_instruction(smite_state *S, smite_UWORD addr, enum instru
 ssize_t smite_decode_instruction_file(int fd, smite_WORD *val);
 int smite_decode_instruction(smite_state *S, smite_UWORD *addr, smite_WORD *val);
 
-// Object files
-#define MAGIC_LENGTH 8
-
 
 #endif

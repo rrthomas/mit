@@ -461,8 +461,8 @@ and shared between systems.
 \label{object}
 
 The object module starts with the ASCII codes of the letters
-``@PACKAGE@'' padded to eight bytes by ASCII NULs (0x00), then values of
-the {\tt ENDISM} and {\tt WORD\_SIZE} registers of the system which saved the module, then the number of bytes the code occupies. These values are all encoded as in section~\ref{encoding}. Then follows the code.
+``@PACKAGE@'' followed by ASCII NUL (0x00), then the one-byte values of
+the {\tt ENDISM} and {\tt WORD\_SIZE} registers of the system which saved the module, then a word (of the given endianness and size) containing the number of bytes the code occupies. Then follows the code.
 
 Object modules have a simple structure, as they are only intended for loading an
 initial memory image into @PACKAGE_NAME@.
