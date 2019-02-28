@@ -63,14 +63,11 @@ _GL_ATTRIBUTE_CONST int smite_find_msbit(smite_WORD v); // return msbit of a smi
 int smite_byte_size(smite_WORD v); // return number of significant bytes in a smite_WORD quantity
 
 // Instructions
-#define INSTRUCTION_CHUNK_BIT 6
-#define INSTRUCTION_CONTINUATION_BIT (1 << INSTRUCTION_CHUNK_BIT)
-#define INSTRUCTION_NUMBER_BIT (1 << (INSTRUCTION_CHUNK_BIT + 1))
-#define INSTRUCTION_CHUNK_MASK ((1 << INSTRUCTION_CHUNK_BIT) - 1)
-#define INSTRUCTION_MAX_CHUNKS (((smite_word_bit + INSTRUCTION_CHUNK_BIT - 1) / INSTRUCTION_CHUNK_BIT))
-ptrdiff_t smite_encode_instruction_file(int fd, enum instruction_type type, smite_WORD v);
+#define INSTRUCTION_CHUNK_BITS 6
+#define INSTRUCTION_CHUNK_MASK ((1 << INSTRUCTION_CHUNK_BITS) - 1)
+#define INSTRUCTION_CONTINUATION_BIT (1 << INSTRUCTION_CHUNK_BITS)
+#define INSTRUCTION_NUMBER_BIT (1 << (INSTRUCTION_CHUNK_BITS + 1))
 ptrdiff_t smite_encode_instruction(smite_state *S, smite_UWORD addr, enum instruction_type type, smite_WORD v);
-ssize_t smite_decode_instruction_file(int fd, smite_WORD *val);
 int smite_decode_instruction(smite_state *S, smite_UWORD *addr, smite_WORD *val);
 
 
