@@ -3,10 +3,9 @@
 //
 // (c) Reuben Thomas 1995-2019
 //
-// The package is distributed under the GNU Public License version 3, or,
-// at your option, any later version.
+// The package is distributed under the MIT/X11 License.
 //
-// THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER‘S
+// THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 // RISK.
 
 #include "config.h"
@@ -18,6 +17,8 @@
 #include "smite.h"
 #include "aux.h"
 
+
+#define HEADER_LENGTH 8
 
 ptrdiff_t smite_load_object(smite_state *S, smite_UWORD address, int fd)
 {
@@ -39,48 +40,32 @@ ptrdiff_t smite_load_object(smite_state *S, smite_UWORD address, int fd)
         nread = 0;
     }
 
-    // Read and check magic
-    char magic[MAGIC_LENGTH] = "";
-    memcpy(magic, buf, nread);
-    char correct_magic[MAGIC_LENGTH] = PACKAGE_UPPER;
-    assert(strlen(PACKAGE_UPPER) <= sizeof(magic));
-    if ((res = read(fd, &magic[nread], sizeof(magic) - nread)) == -1)
-        return -1;
-    if (res != (ssize_t)(sizeof(magic) - nread) ||
-             memcmp(magic, correct_magic, sizeof(magic)))
-        return -2;
-
-    // Read and check endism
+    // Read and check header
+    char header[HEADER_LENGTH] = {'\0'};
     smite_UWORD endism;
-    if (smite_decode_instruction_file(fd, (smite_WORD *)(&endism)) != INSTRUCTION_NUMBER)
-        return -1;
-    if (endism > 1)
-        return -2;
-    else if (endism != S->ENDISM)
-        return -3;
-
-    // Read and check word size
     smite_UWORD _smite_word_size;
-    ssize_t ty = smite_decode_instruction_file(fd, (smite_WORD *)&_smite_word_size);
-    if (ty == -1)
+    memcpy(header, buf, nread);
+    if ((res = read(fd, &header[nread], sizeof(header) - nread)) == -1)
         return -1;
-    else if (ty != INSTRUCTION_NUMBER)
+    if (res != (ssize_t)(sizeof(header) - nread) ||
+        memcmp(header, PACKAGE_UPPER, sizeof(PACKAGE_UPPER)) ||
+        (endism = header[sizeof(PACKAGE_UPPER)]) > 1)
         return -2;
-    if (_smite_word_size != smite_word_size)
+    if (endism != S->ENDISM ||
+        (_smite_word_size = header[sizeof(PACKAGE_UPPER) + 1]) != smite_word_size)
         return -3;
 
-    // Read and check size, and ensure module will fit in memory
+    // Read and check size, and ensure code will fit in memory
     smite_UWORD length = 0;
-    ty = smite_decode_instruction_file(fd, (smite_WORD *)&length);
-    if (ty == -1)
+    if ((res = read(fd, &length, sizeof(length))) == -1)
         return -1;
-    if (ty != INSTRUCTION_NUMBER)
+    if (res != sizeof(length))
         return -2;
     uint8_t *ptr = smite_native_address_of_range(S, address, length);
     if (ptr == NULL || !smite_is_aligned(address))
         return -4;
 
-    // Read module in
+    // Read code
     if ((res = read(fd, ptr, length)) == -1)
         return -1;
     else if (res != (ssize_t)length)
@@ -96,13 +81,13 @@ int smite_save_object(smite_state *S, smite_UWORD address, smite_UWORD length, i
         return -2;
 
     char hashbang[] = "#!/usr/bin/env smite\n";
-    smite_BYTE buf[MAGIC_LENGTH] = PACKAGE_UPPER;
+    smite_BYTE buf[HEADER_LENGTH] = PACKAGE_UPPER;
+    buf[sizeof(PACKAGE_UPPER)] = S->ENDISM;
+    buf[sizeof(PACKAGE_UPPER) + 1] = smite_word_size;
 
     if (write(fd, hashbang, sizeof(hashbang) - 1) != sizeof(hashbang) - 1 ||
-        write(fd, &buf[0], MAGIC_LENGTH) != MAGIC_LENGTH ||
-        smite_encode_instruction_file(fd, INSTRUCTION_NUMBER, S->ENDISM) < 0 ||
-        smite_encode_instruction_file(fd, INSTRUCTION_NUMBER, smite_word_size) < 0 ||
-        smite_encode_instruction_file(fd, INSTRUCTION_NUMBER, length) < 0 ||
+        write(fd, &buf[0], HEADER_LENGTH) != HEADER_LENGTH ||
+        write(fd, &length, sizeof(length)) != sizeof(length) ||
         write(fd, ptr, length) != (ssize_t)length)
         return -1;
 

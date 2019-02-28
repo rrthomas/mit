@@ -52,7 +52,7 @@
 
 \title{The @PACKAGE_NAME@ Virtual Machine}
 \author{Reuben Thomas}
-\date{13th February 2019}
+\date{26th February 2019}
 
 \begin{document}
 \maketitle
@@ -97,6 +97,8 @@ The registers, each with its function, are set out in table~\ref{regtable}.
 \bf Register & \bf Function \\
  \midrule
 {\tt PC} & The {\tt P}rogram {\tt C}ounter. Points to the next byte from which an instruction may be loaded. \\
+{\tt BAD\_PC} & The value of {\tt PC} when an error was last raised. \\
+{\tt BAD\_ADDRESS} & The invalid stack position, or invalid or unaligned memory address, that caused the last memory error. \\
 {\tt ITYPE} & The type of an instruction to be executed: $0$ for a number, and $1$ for an action. \\
 {\tt I} & The {\tt I}nstruction. Holds the opcode of an instruction to be executed. \\
 {\tt STACK\_DEPTH} & The number of items on the stack. \\
@@ -138,9 +140,9 @@ cycle is entered:
 
 \begin{tabbing}
 \hspace{0.5in}\=begin\=\+\+ \\*
-decode the next instruction into {\tt I} from the bytes at {\tt PC} \\*
-execute the instruction in {\tt I} \\*
-on successful completion, set {\tt PC} to point to the next instruction \- \\*
+decode the instruction pointed to by {\tt PC} into {\tt I} \\*
+set {\tt PC} to point to the next instruction \\*
+execute the instruction in {\tt I} \- \\*
 repeat
 \end{tabbing}
 
@@ -154,7 +156,7 @@ initialisation specified above.
 \subsection{Errors and termination}
 \label{errors}
 
-When @PACKAGE_NAME@ encounters certain abnormal situations, such as an attempt to access an invalid address, or divide by zero, an {\bf error} is {\bf raised}, and execution terminates; an {\bf error code} is returned to the caller. The instruction that caused the error to be raised is considered not to have executed, and {\texttt PC} still points to it.
+When @PACKAGE_NAME@ encounters certain abnormal situations, such as an attempt to access an invalid address, or divide by zero, an {\bf error} is {\bf raised}, and execution terminates; an {\bf error code} is returned to the caller. The instruction that caused the error to be raised is considered not to have executed, and {\texttt BAD\_PC} is set to point to it. If the error is a stack or memory access error, {\tt BAD\_ADDRESS} is set to the stack position or address that caused the error.
 
 Execution can also be terminated explicitly by performing a {\tt HALT} action (see section~\ref{erroract}), which also returns a code. The {\tt HALT} action {\it is} considered to have completed.
 
@@ -167,9 +169,13 @@ table~\ref{errortable}.
 \begin{tabular}{cp{4in}} \toprule
 \bf Code & \bf Meaning \\ \midrule
 $-1$ & Invalid opcode (see section~\ref{opcodes}). \\
-$-2$ & Invalid address: raised when an instruction attempts to read from or write to an invalid address. \\
-$-3$ & Address alignment error: raised when an instruction expecting a word-aligned address is given a valid but non-aligned address. \\
-$-4$ & Division by zero attempted (see section~\ref{arithmetic}). \\
+$-2$ & Attempt to set {\tt STACK\_DEPTH} greater than {\tt STACK\_SIZE}. {\tt BAD\_ADDRESS} is set to the extra number of words of stack space required. \\
+$-3$ & Invalid stack read. {\tt BAD\_ADDRESS} is set to the invalid stack position. \\
+$-4$ & Invalid stack write. {\tt BAD\_ADDRESS} is set to the invalid stack position. \\
+$-5$ & Invalid memory read. {\tt BAD\_ADDRESS} is set to the invalid address. \\
+$-6$ & Invalid memory write. {\tt BAD\_ADDRESS} is set to the invalid address. \\
+$-7$ & Address alignment error: raised when an instruction expecting a word-aligned address is given a valid but non-aligned address. \\
+$-8$ & Division by zero attempted (see section~\ref{arithmetic}). \\
 $-128$ & {\bf single\_step()} has terminated without error. \\
  \bottomrule
 \end{tabular}
@@ -292,7 +298,30 @@ These actions manage the stack:
 \inst{POP}{\x{u}\dots\x1 u —}{Remove \spic{u} items from the stack.}
 \inst{DUP}{\x{u}\dots\x0 u — \x{u}\dots\x0 \x{u}}{Remove \spic{u}. Copy \x{u} to the top of the stack.}
 \inst{SWAP}{\x{u}\dots\x0 u — \x0\x{u-1}\dots\x1 \x{u}}{Exchange the top stack item with the \spic{u}th. If \spic{u} is zero, do nothing.}
-\inst{ROTATE}{\x{n}\dots\x0 n — \x{n-1}\dots\x1 \x{+n} \textrm{|} \x0 \x{n}\dots\x1}{If \spic{n} is non-negative, rotate the \spic{n}th stack item to the top; otherwise, rotate the top stack item to position \spic{n}.}
+\inst{ROTATE\_UP}{\x{u}\dots\x0 u — \x{u-1}\dots\x1 \x{u}}{Rotate the \spic{u}th stack item to the top.}
+\inst{ROTATE\_DOWN}{\x{u}\dots\x0 u — \x0 \x{u}\dots\x1}{Rotate the top stack item to position \spic{u}.}
+\end{description}
+
+
+\subsection{Logic and shifts}
+
+Logic functions:
+
+\nopagebreak
+\begin{description}
+\inst{NOT}{\x1 — \x2}{Invert all bits of \x1, giving its logical inverse \x2.}
+\inst{AND}{\x1 \x2 — \x3}{\x3 is the bit-by-bit logical ``and'' of \x1 with \x2.}
+\inst{OR}{\x1 \x2 — \x3}{\x3 is the bit-by-bit inclusive-or of \x1 with \x2.}
+\inst{XOR}{\x1 \x2 — \x3}{\x3 is the bit-by-bit exclusive-or of \x1 with \x2.}
+\end{description}
+
+Shifts:
+
+\nopagebreak
+\begin{description}
+\inst{LSHIFT}{\x1 u — \x2}{Perform a logical left shift of \spic{u} bit-places on \x1, giving \x2. Put zero into the least significant bits vacated by the shift. If \spic{u} is greater than or equal to the number of bits in a word, \x2 is zero.}
+\inst{RSHIFT}{\x1 u — \x2}{Perform a logical right shift of \spic{u} bit-places on \x1, giving \x2. Put zero into the most significant bits vacated by the shift. If \spic{u} is greater than or equal to the number of bits in a word, \x2 is zero.}
+\inst{ARSHIFT}{\x1 u — \x2}{Perform an arithmetic right shift of \spic{u} bit-places on \x1, giving \x2. Copy the original most-significant bits into the most significant bits vacated by the shift. If \spic{u} is greater than or equal to the number of bits in a word, all the bits of \x2 are the same as the original most-significant bit.}
 \end{description}
 
 
@@ -332,28 +361,6 @@ $-4$ if division by zero is attempted):
 \inst{MUL}{\noru1 \noru2 — \noru3}{Multiply \noru1 by \noru2 giving the product \noru3.}
 \inst{DIVMOD}{\n1 \n2 — \n3 \n4}{Divide \n1 by \n2 using symmetric division, giving the single-word quotient \n3 and the single-word remainder \n4. The quotient is rounded towards zero.}
 \inst{UDIVMOD}{\U1 \U2 — \U3 \U4}{Divide \U1 by \U2, giving the single-word quotient \U3 and the single-word remainder \U4.}
-\end{description}
-
-
-\subsection{Logic and shifts}
-
-Shifts:
-
-\nopagebreak
-\begin{description}
-\inst{LSHIFT}{\x1 u — \x2}{Perform a logical left shift of \spic{u} bit-places on \x1, giving \x2. Put zero into the least significant bits vacated by the shift. If \spic{u} is greater than or equal to the number of bits in a word, \x2 is zero.}
-\inst{RSHIFT}{\x1 u — \x2}{Perform a logical right shift of \spic{u} bit-places on \x1, giving \x2. Put zero into the most significant bits vacated by the shift. If \spic{u} is greater than or equal to the number of bits in a word, \x2 is zero.}
-\inst{ARSHIFT}{\x1 u — \x2}{Perform an arithmetic right shift of \spic{u} bit-places on \x1, giving \x2. Copy the original most-significant bits into the most significant bits vacated by the shift. If \spic{u} is greater than or equal to the number of bits in a word, all the bits of \x2 are the same as the original most-significant bit.}
-\end{description}
-
-Logic functions:
-
-\nopagebreak
-\begin{description}
-\inst{NOT}{\x1 — \x2}{Invert all bits of \x1, giving its logical inverse \x2.}
-\inst{AND}{\x1 \x2 — \x3}{\x3 is the bit-by-bit logical ``and'' of \x1 with \x2.}
-\inst{OR}{\x1 \x2 — \x3}{\x3 is the bit-by-bit inclusive-or of \x1 with \x2.}
-\inst{XOR}{\x1 \x2 — \x3}{\x3 is the bit-by-bit exclusive-or of \x1 with \x2.}
 \end{description}
 
 
@@ -419,22 +426,22 @@ Table~\ref{opcodetable} lists the action opcodes in numerical order. Other actio
 \begin{center}
 \begin{tabular}{*{2}{cc}} \toprule
 \bf Opcode & \bf Action & \bf Opcode & \bf Action \\ \midrule
-\opcodetbl{00}{HALT}	{10}{NOT}
-\opcodetbl{01}{POP}	{11}{AND}
-\opcodetbl{02}{DUP}	{12}{OR}
-\opcodetbl{03}{SWAP}	{13}{XOR}
-\opcodetbl{04}{ROTATE}	{14}{LOAD}
-\opcodetbl{05}{EQ}	{15}{STORE}
-\opcodetbl{06}{LT}	{16}{LOADB}
-\opcodetbl{07}{ULT}	{17}{STOREB}
-\opcodetbl{08}{NEGATE}	{18}{BRANCH}
-\opcodetbl{09}{ADD}	{19}{BRANCHZ}
-\opcodetbl{0a}{MUL}	{1a}{CALL}
-\opcodetbl{0b}{DIVMOD}	{1b}{GET\_WORD\_SIZE}
-\opcodetbl{0c}{UDIVMOD}	{1c}{GET\_STACK\_DEPTH}
-\opcodetbl{0d}{LSHIFT}	{1d}{SET\_STACK\_DEPTH}
-\opcodetbl{0e}{RSHIFT}	{1e}{NOP}
-\opcodetblone{0f}{ARSHIFT}
+\opcodetbl{00}{HALT}		{10}{NEGATE}
+\opcodetbl{01}{POP}		{11}{ADD}
+\opcodetbl{02}{DUP}		{12}{MUL}
+\opcodetbl{03}{SWAP}		{13}{DIVMOD}
+\opcodetbl{04}{ROTATE\_UP}	{14}{UDIVMOD}
+\opcodetbl{05}{ROTATE\_DOWN}	{15}{LOAD}
+\opcodetbl{06}{NOT}             {16}{STORE}
+\opcodetbl{07}{AND}             {17}{LOADB}
+\opcodetbl{08}{OR}              {18}{STOREB}
+\opcodetbl{09}{XOR}             {19}{BRANCH}
+\opcodetbl{0a}{LSHIFT}          {1a}{BRANCHZ}
+\opcodetbl{0b}{RSHIFT}          {1b}{CALL}
+\opcodetbl{0c}{ARSHIFT}         {1c}{GET\_WORD\_SIZE}
+\opcodetbl{0d}{EQ}		{1d}{GET\_STACK\_DEPTH}
+\opcodetbl{0e}{LT}		{1e}{SET\_STACK\_DEPTH}
+\opcodetbl{0f}{ULT}		{1f}{NOP}
  \bottomrule
 \end{tabular}
 \caption{\label{opcodetable}Action opcodes}
@@ -455,8 +462,8 @@ and shared between systems.
 \label{object}
 
 The object module starts with the ASCII codes of the letters
-``@PACKAGE@'' padded to eight bytes by ASCII NULs (0x00), then values of
-the {\tt ENDISM} and {\tt WORD\_SIZE} registers of the system which saved the module, then the number of bytes the code occupies. These values are all encoded as in section~\ref{encoding}. Then follows the code.
+``@PACKAGE@'' followed by ASCII NUL (0x00), then the one-byte values of
+the {\tt ENDISM} and {\tt WORD\_SIZE} registers of the system which saved the module, then a word (of the given endianness and size) containing the number of bytes the code occupies. Then follows the code.
 
 Object modules have a simple structure, as they are only intended for loading an
 initial memory image into @PACKAGE_NAME@.

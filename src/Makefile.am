@@ -2,25 +2,23 @@
 #
 # (c) Reuben Thomas 2011-2019
 #
-# The package is distributed under the GNU Public License version 3, or,
-# at your option, any later version.
+# The package is distributed under the MIT/X11 License.
 #
-# THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER‘S
+# THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 # RISK.
 
 AM_CPPFLAGS = -I$(top_builddir)/lib -I$(top_srcdir)/lib $(WARN_CFLAGS)
 
 lib_LTLIBRARIES = libsmite.la
-libsmite_la_SOURCES = bits_util.c storage.c instruction.c extra.c \
-	extra.h step.c run.c object.c register-list.h \
-	instruction-list.h instruction-type-list.h actions.h \
-	actions-common.h
+C_SRCS = bits_util.c storage.c instruction.c extra.c extra.h step.c run.c object.c actions-common.h
+GENERATED_HDRS = register-list.h instruction-list.h instruction-type-list.h actions.h
+libsmite_la_SOURCES = $(C_SRCS) $(GENERATED_HDRS)
 libsmite_la_LIBADD = $(top_builddir)/lib/libgnu.la
 
 bin_PROGRAMS = smite
 man_MANS = @PACKAGE@.1
 smite_LDADD = lib@PACKAGE@.la $(top_builddir)/lib/libgnu.la
-smite_SOURCES = main.c tbl_opts.h $(internal_HDRS)
+smite_SOURCES = main.c tbl_opts.h
 pkginclude_HEADERS = @PACKAGE@.h aux.h opcodes.h opcodes-extra.h
 
 run.lo: actions.h
@@ -63,7 +61,7 @@ actions.h: gen-actions events.py vm_data.py actions.labels_pickle
 
 loc:
 	$(CLOC) $(CLOC_OPTS) \
-		$(lib@PACKAGE@_la_SOURCES) \
+		$(C_SRCS) \
 		$(@PACKAGE@_SOURCES) \
 		gen-register-list gen-instruction-list gen-instruction-type-list gen-opcodes-extra gen-actions
 

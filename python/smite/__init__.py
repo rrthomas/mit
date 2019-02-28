@@ -40,8 +40,7 @@ class Error(Exception):
 
 # Constants (all of type unsigned)
 vars().update([(c, c_uint.in_dll(libsmite, "smite_{}".format(c)).value)
-               for c in ["word_size", "byte_bit", "byte_mask",
-                         "word_bit", "stack_direction"]])
+               for c in ["word_size", "byte_bit", "byte_mask", "word_bit"]])
 vars()["byte_bit"] = 8
 
 
@@ -68,8 +67,6 @@ vars().update([(c, cty.in_dll(libsmite, "smite_{}".format(c)).value)
                        ("uword_max", c_uword),
                        ("word_min", c_word),
                        ("word_max", c_word),
-                       ("default_memory_size", c_uword),
-                       ("default_stack_size", c_uword),
                ]])
 
 
@@ -124,14 +121,8 @@ libsmite.smite_find_msbit.argtypes = [c_word]
 
 libsmite.smite_byte_size.argtypes = [c_word]
 
-libsmite.smite_encode_instruction_file.restype = c_ptrdiff_t
-libsmite.smite_encode_instruction_file.argtypes = [c_int, c_int, c_word]
-
 libsmite.smite_encode_instruction.restype = c_ptrdiff_t
 libsmite.smite_encode_instruction.argtypes = [c_void_p, c_uword, c_int, c_word]
-
-libsmite.smite_decode_instruction_file.restype = c_ssize_t
-libsmite.smite_decode_instruction_file.argtypes = [c_int, POINTER(c_word)]
 
 libsmite.smite_decode_instruction.argtypes = [c_void_p, POINTER(c_uword), POINTER(c_word)]
 
@@ -140,10 +131,9 @@ libsmite.smite_decode_instruction.argtypes = [c_void_p, POINTER(c_uword), POINTE
 class State:
     '''A VM state.'''
 
-    def __init__(self, memory_size=default_memory_size,
-                 data_stack_size=default_stack_size):
+    def __init__(self, memory_size=1024*1024, stack_size=1024):
         '''Initialise the VM state.'''
-        self.state = libsmite.smite_init(memory_size, data_stack_size)
+        self.state = libsmite.smite_init(memory_size, stack_size)
         if self.state == None:
             raise Exception("error creating virtual machine state")
 

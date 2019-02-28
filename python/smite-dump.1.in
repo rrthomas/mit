@@ -10,12 +10,10 @@ Dump the given file, typically \fIfoo.obj\fR, as hex (\fIfoo.hex\fR) and disasse
 .BR @PACKAGE@ (1)
 .SH "REPORTING BUGS"
 Report bugs to rrt@sc3d.org.
-.PP
+.SH "COPYRIGHT"
 \(co Reuben Thomas 1995\-2019
 .br
 @PACKAGE_NAME@ comes with ABSOLUTELY NO WARRANTY.
 .br
 You may redistribute copies of @PACKAGE_NAME@
-under the terms of the GNU General Public License.
-.br
-For more information about these matters, see the file named COPYING.
+under the terms of the MIT/X11 License.

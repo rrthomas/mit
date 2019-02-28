@@ -2,10 +2,9 @@
 //
 // (c) Reuben Thomas 1994-2019
 //
-// The package is distributed under the GNU Public License version 3, or,
-// at your option, any later version.
+// The package is distributed under the MIT/X11 License.
 //
-// THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER‘S
+// THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 // RISK.
 
 #include "config.h"
@@ -13,9 +12,8 @@
 #include "smite.h"
 
 
-// Defines two macros/functions:
-//   void STEP(smite_state *S): runs a single step of the given state.
-//   void RAISE(smite_WORD e): raise error e; do nothing if e == 0.
+// Defines a function:
+//   void do_actions(smite_state *S): runs a single step of the given state.
 #define SINGLE_STEPPING
 #include "actions.h"
 

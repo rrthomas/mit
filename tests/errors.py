@@ -2,63 +2,89 @@
 #
 # (c) Reuben Thomas 1995-2019
 #
-# The package is distributed under the GNU Public License version 3, or,
-# at your option, any later version.
+# The package is distributed under the MIT/X11 License.
 #
-# THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER‘S
+# THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 # RISK.
 
 from smite import *
 size = 4096
-VM = State(size)
+VM = State(memory_size=size, stack_size=3)
 VM.globalize(globals())
 
 
 # Test results and data
 answer = 42
-result = [answer, -4, -2, -2, -3, -1]
+result = []
 invalid_address = size * word_size + 1000
 test = []
 
-print("Test 1: PC = {}".format(VM.here))
 # Test arbitrary halt code
 test.append(VM.here)
+result.append(answer)
+print("Test {}: PC = {}".format(len(test), test[len(test) - 1]))
 number(answer)
 action(HALT)
 
-print("Test 2: PC = {}".format(VM.here))
+# Try to divide by zero
 test.append(VM.here)
+result.append(-8)
+print("Test {}: PC = {}".format(len(test), test[len(test) - 1]))
 number(1)
 number(0)
 action(DIVMOD)
 
-print("Test 3: PC = {}".format(VM.here))
+# Try to set STACK_DEPTH to an invalid stack location
+test.append(VM.here)
+result.append(-2)
+print("Test {}: PC = {}".format(len(test), test[len(test) - 1]))
+number(STACK_SIZE.get())
+action(SET_STACK_DEPTH)
+action(GET_STACK_DEPTH)
+
+# Try to read from an invalid stack location
+test.append(VM.here)
+result.append(-3)
+print("Test {}: PC = {}".format(len(test), test[len(test) - 1]))
+action(DUP)
+
 # Try to execute an invalid memory location
 test.append(VM.here)
+result.append(-5)
+print("Test {}: PC = {}".format(len(test), test[len(test) - 1]))
 number(MEMORY.get() + 1)
 action(BRANCH)
 
-print("Test 4: PC = {}".format(VM.here))
-# Fetch from an invalid address
+# Try to load from an invalid address
 test.append(VM.here)
+result.append(-5)
+print("Test {}: PC = {}".format(len(test), test[len(test) - 1]))
 number(invalid_address)
 action(LOAD)
 
-print("Test 5: PC = {}".format(VM.here))
+# Try to store to an invalid address
 test.append(VM.here)
+result.append(-6)
+print("Test {}: PC = {}".format(len(test), test[len(test) - 1]))
+number(0)
+number(invalid_address)
+action(STORE)
+
+# Try to load from unaligned address
+test.append(VM.here)
+result.append(-7)
+print("Test {}: PC = {}".format(len(test), test[len(test) - 1]))
 number(1)
 action(LOAD)
 
-print("Test 6: PC = {}".format(VM.here))
-# Test invalid opcode
+# Try to execute invalid opcode
 test.append(VM.here)
+result.append(-1)
+print("Test {}: PC = {}".format(len(test), test[len(test) - 1]))
 action(UNDEFINED)
 
-
+# Tests
 assert(len(test) == len(result))
-
-
-# Test
 error = 0
 for i in range(len(test)):
     STACK_DEPTH.set(0)    # reset stack pointer
@@ -74,9 +100,14 @@ for i in range(len(test)):
 
     if result[i] != res:
          print("Error in errors tests: test {} failed; PC = {}".format(i + 1, PC.get()))
-         print("Return code is {}; should be {}".format(res, result[i]))
+         print("HALT code is {}; should be {}".format(res, result[i]))
          error += 1
     print()
+
+# Try to write to an invalid stack location (can't do this with virtual code)
+if libsmite.smite_store_stack(VM.state, 4, 0) != -4:
+    print("Error in errors test: test {} failed")
+    error += 1
 
 if error != 0:
     sys.exit(error)

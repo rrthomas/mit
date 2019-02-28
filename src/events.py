@@ -70,8 +70,9 @@ ALL_EVENTS = []
 for a in vm_data.Actions:
     exec_code = '''\
         S->I = {};
+{}
         trace(S, ITYPE, S->I);
-    '''.rstrip().format(a.value.opcode) + '\n' + a.value.code
+    '''.format(a.value.opcode, a.value.code.rstrip())
     ALL_EVENTS.append(Event(
         b'1 %08x' % a.value.opcode,
         a.name,

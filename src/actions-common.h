@@ -15,11 +15,11 @@
 
 #define DIVZERO(x)                              \
     if (x == 0)                                 \
-        RAISE(-4);
+        RAISE(-8);
 
 static void trace(smite_state *S, int type, smite_WORD opcode) {
     if (S->trace_fp)
-        fprintf(S->trace_fp, "%d %08x\n", type, (smite_UWORD)opcode);
+        fprintf(S->trace_fp, "%d %"PRI_XWORD"\n", type, (smite_UWORD)opcode);
 }
 
 

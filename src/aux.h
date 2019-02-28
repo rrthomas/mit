@@ -3,10 +3,9 @@
 //
 // (c) Reuben Thomas 1994-2018
 //
-// The package is distributed under the GNU Public License version 3, or,
-// at your option, any later version.
+// The package is distributed under the MIT/X11 License.
 //
-// THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER‘S
+// THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 // RISK.
 
 #ifndef SMITE_AUX
@@ -35,17 +34,13 @@ struct _smite_state {
     FILE *trace_fp; // FILE * of trace file, if used
 };
 
-// Memory size
-extern smite_UWORD smite_default_memory_size;
-
 // Stacks
-extern const int smite_stack_direction;
-extern smite_UWORD smite_default_stack_size;
+#define STACK_DIRECTION 1
 
 #define UNCHECKED_LOAD_STACK(pos, vp)                                   \
-    (*(vp) = *(S->S0 + (S->STACK_DEPTH - (pos) - 1) * smite_stack_direction))
+    (*(vp) = *(S->S0 + (S->STACK_DEPTH - (pos) - 1) * STACK_DIRECTION))
 #define UNCHECKED_STORE_STACK(pos, v)                                   \
-    (*(S->S0 + (S->STACK_DEPTH - (pos) - 1) * smite_stack_direction) = (v))
+    (*(S->S0 + (S->STACK_DEPTH - (pos) - 1) * STACK_DIRECTION) = (v))
 
 // Align a VM address
 smite_UWORD smite_align(smite_UWORD addr);
@@ -66,18 +61,12 @@ _GL_ATTRIBUTE_CONST int smite_find_msbit(smite_WORD v); // return msbit of a smi
 int smite_byte_size(smite_WORD v); // return number of significant bytes in a smite_WORD quantity
 
 // Instructions
-#define INSTRUCTION_CHUNK_BIT 6
-#define INSTRUCTION_CONTINUATION_BIT (1 << INSTRUCTION_CHUNK_BIT)
-#define INSTRUCTION_NUMBER_BIT (1 << (INSTRUCTION_CHUNK_BIT + 1))
-#define INSTRUCTION_CHUNK_MASK ((1 << INSTRUCTION_CHUNK_BIT) - 1)
-#define INSTRUCTION_MAX_CHUNKS (((smite_word_bit + INSTRUCTION_CHUNK_BIT - 1) / INSTRUCTION_CHUNK_BIT))
-ptrdiff_t smite_encode_instruction_file(int fd, enum instruction_type type, smite_WORD v);
+#define INSTRUCTION_CHUNK_BITS 6
+#define INSTRUCTION_CHUNK_MASK ((1 << INSTRUCTION_CHUNK_BITS) - 1)
+#define INSTRUCTION_CONTINUATION_BIT (1 << INSTRUCTION_CHUNK_BITS)
+#define INSTRUCTION_NUMBER_BIT (1 << (INSTRUCTION_CHUNK_BITS + 1))
 ptrdiff_t smite_encode_instruction(smite_state *S, smite_UWORD addr, enum instruction_type type, smite_WORD v);
-ssize_t smite_decode_instruction_file(int fd, smite_WORD *val);
 int smite_decode_instruction(smite_state *S, smite_UWORD *addr, smite_WORD *val);
-
-// Object files
-#define MAGIC_LENGTH 8
 
 
 #endif

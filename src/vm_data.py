@@ -2,10 +2,9 @@
 #
 # (c) Reuben Thomas 1994-2019
 #
-# The package is distributed under the GNU Public License version 3, or,
-# at your option, any later version.
+# The package is distributed under the MIT/X11 License.
 #
-# THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER‘S
+# THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 # RISK.
 
 from enum import Enum, IntEnum, unique
@@ -21,11 +20,13 @@ class Register:
 class Registers(Enum):
     '''VM registers.'''
     PC = Register()
-    ITYPE = Register(ty="smite_WORD", uty="smite_UWORD")
-    I = Register(ty="smite_WORD", uty="smite_UWORD")
+    BAD_PC = Register(read_only=True)
+    BAD_ADDRESS = Register(read_only=True)
+    ITYPE = Register(ty="smite_WORD", uty="smite_UWORD", read_only=True)
+    I = Register(ty="smite_WORD", uty="smite_UWORD", read_only=True)
     MEMORY = Register(read_only=True)
     STACK_DEPTH = Register()
-    S0 = Register("smite_WORDP")
+    S0 = Register("smite_WORDP", read_only=True)
     STACK_SIZE = Register(read_only=True)
     ENDISM = Register(read_only=True)
 
@@ -60,6 +61,7 @@ class Actions(Enum):
     '''VM action instructions.'''
     HALT = Action(0x00, ['error_code'], [], '''\
         S->halt_code = error_code;
+        S->STACK_DEPTH--; // FIXME
         RAISE(-127);
     ''')
 
@@ -81,118 +83,146 @@ class Actions(Enum):
         }
     ''')
 
-    ROTATE = Action(0x04, ['pos'], [], '''\
-        RAISE(smite_rotate_stack(S, pos));
+    ROTATE_UP = Action(0x04, ['depth'], [], '''\
+        if (depth >= (smite_WORD)S->STACK_DEPTH) {
+            S->BAD_ADDRESS = depth;
+            RAISE(-3);
+        }
+
+        smite_UWORD offset = S->STACK_DEPTH - depth - 1;
+        smite_WORD temp = *(S->S0 + offset * STACK_DIRECTION);
+        memmove(S->S0 + offset * STACK_DIRECTION,
+                S->S0 + (offset + 1) * STACK_DIRECTION,
+                (S->STACK_DEPTH - offset) * sizeof(smite_WORD));
+        *(S->S0 + (S->STACK_DEPTH - 1) * STACK_DIRECTION) = temp;
     ''')
 
-    EQ = Action(0x05, ['a', 'b'], ['flag'], '''\
+    ROTATE_DOWN = Action(0x05, ['depth'], [], '''\
+        if (depth >= (smite_WORD)S->STACK_DEPTH) {
+            S->BAD_ADDRESS = depth;
+            RAISE(-3);
+        }
+
+        smite_UWORD offset = S->STACK_DEPTH - depth - 1;
+        smite_WORD temp = *(S->S0 + (S->STACK_DEPTH - 1) * STACK_DIRECTION);
+        memmove(S->S0 + (offset + 1) * STACK_DIRECTION,
+                S->S0 + offset * STACK_DIRECTION,
+                (S->STACK_DEPTH - offset) * sizeof(smite_WORD));
+        *(S->S0 + offset * STACK_DIRECTION) = temp;
+    ''')
+
+    NOT = Action(0x06, ['x'], ['r'], '''\
+        r = ~x;
+    ''')
+
+    AND = Action(0x07, ['x', 'y'], ['r'], '''\
+        r = x & y;
+    ''')
+
+    OR = Action(0x08, ['x', 'y'], ['r'], '''\
+        r = x | y;
+    ''')
+
+    XOR = Action(0x09, ['x', 'y'], ['r'], '''\
+        r = x ^ y;
+    ''')
+
+    LSHIFT = Action(0x0a, ['x', 'n'], ['r'], '''\
+        r = n < (smite_WORD)smite_word_bit ? x << n : 0;
+    ''')
+
+    RSHIFT = Action(0x0b, ['x', 'n'], ['r'], '''\
+        r = n < (smite_WORD)smite_word_bit ? (smite_WORD)((smite_UWORD)x >> n) : 0;
+    ''')
+
+    ARSHIFT = Action(0x0c, ['x', 'n'], ['r'], '''\
+        r = ARSHIFT(x, n);
+    ''')
+
+    EQ = Action(0x0d, ['a', 'b'], ['flag'], '''\
         flag = a == b;
     ''')
 
-    LT = Action(0x06, ['a', 'b'], ['flag'], '''\
+    LT = Action(0x0e, ['a', 'b'], ['flag'], '''\
         flag = a < b;
     ''')
 
-    ULT = Action(0x07, ['a', 'b'], ['flag'], '''\
+    ULT = Action(0x0f, ['a', 'b'], ['flag'], '''\
         flag = (smite_UWORD)a < (smite_UWORD)b;
     ''')
 
-    NEGATE = Action(0x08, ['a'], ['r'], '''\
+    NEGATE = Action(0x10, ['a'], ['r'], '''\
         r = -a;
     ''')
 
-    ADD = Action(0x09, ['a', 'b'], ['r'], '''\
+    ADD = Action(0x11, ['a', 'b'], ['r'], '''\
         r = a + b;
     ''')
 
-    MUL = Action(0x0a, ['a', 'b'], ['r'], '''\
+    MUL = Action(0x12, ['a', 'b'], ['r'], '''\
         r = a * b;
     ''')
 
-    DIVMOD = Action(0x0b, ['a', 'b'], ['q', 'r'], '''\
+    DIVMOD = Action(0x13, ['a', 'b'], ['q', 'r'], '''\
         DIVZERO(b);
         q = a / b;
         r = a % b;
     ''')
 
-    UDIVMOD = Action(0x0c, ['a', 'b'], ['q', 'r'], '''\
+    UDIVMOD = Action(0x14, ['a', 'b'], ['q', 'r'], '''\
         DIVZERO(b);
         q = (smite_WORD)((smite_UWORD)a / (smite_UWORD)b);
-        r = (smite_WORD)((smite_UWORD)a / (smite_UWORD)b);
+        r = (smite_WORD)((smite_UWORD)a % (smite_UWORD)b);
     ''')
 
-    LSHIFT = Action(0x0d, ['x', 'n'], ['r'], '''\
-        r = n < (smite_WORD)smite_word_bit ? x << n : 0;
-    ''')
-
-    RSHIFT = Action(0x0e, ['x', 'n'], ['r'], '''\
-        r = n < (smite_WORD)smite_word_bit ? (smite_WORD)((smite_UWORD)x >> n) : 0;
-    ''')
-
-    ARSHIFT = Action(0x0f, ['x', 'n'], ['r'], '''\
-        r = ARSHIFT(x, n);
-    ''')
-
-    NOT = Action(0x10, ['x'], ['r'], '''\
-        r = ~x;
-    ''')
-
-    AND = Action(0x11, ['x', 'y'], ['r'], '''\
-        r = x & y;
-    ''')
-
-    OR = Action(0x12, ['x', 'y'], ['r'], '''\
-        r = x | y;
-    ''')
-
-    XOR = Action(0x13, ['x', 'y'], ['r'], '''\
-        r = x ^ y;
-    ''')
-
-    LOAD = Action(0x14, ['addr'], ['x'], '''\
+    LOAD = Action(0x15, ['addr'], ['x'], '''\
         RAISE(smite_load_word(S, addr, &x));
     ''')
 
-    STORE = Action(0x15, ['x', 'addr'], [], '''\
+    STORE = Action(0x16, ['x', 'addr'], [], '''\
         RAISE(smite_store_word(S, addr, x));
     ''')
 
-    LOADB = Action(0x16, ['addr'], ['x'], '''\
+    LOADB = Action(0x17, ['addr'], ['x'], '''\
         smite_BYTE b_;
         RAISE(smite_load_byte(S, addr, &b_));
         x = (smite_WORD)b_;
     ''')
 
-    STOREB = Action(0x17, ['x', 'addr'], [], '''\
+    STOREB = Action(0x18, ['x', 'addr'], [], '''\
         RAISE(smite_store_byte(S, addr, (smite_BYTE)x));
     ''')
 
-    BRANCH = Action(0x18, ['addr'], [], '''\
+    BRANCH = Action(0x19, ['addr'], [], '''\
         S->PC = (smite_UWORD)addr;
     ''')
 
-    BRANCHZ = Action(0x19, ['flag', 'addr'], [], '''\
+    BRANCHZ = Action(0x1a, ['flag', 'addr'], [], '''\
         if (flag == 0)
             S->PC = (smite_UWORD)addr;
     ''')
 
-    CALL = Action(0x1a, ['addr'], ['ret_addr'], '''\
+    CALL = Action(0x1b, ['addr'], ['ret_addr'], '''\
         ret_addr = S->PC;
         S->PC = (smite_UWORD)addr;
     ''')
 
-    GET_WORD_SIZE = Action(0x1b, [], ['r'], '''\
+    GET_WORD_SIZE = Action(0x1c, [], ['r'], '''\
         r = smite_word_size;
     ''')
 
-    GET_STACK_DEPTH = Action(0x1c, [], ['r'], '''\
+    GET_STACK_DEPTH = Action(0x1d, [], ['r'], '''\
         r = S->STACK_DEPTH;
     ''')
 
-    SET_STACK_DEPTH = Action(0x1d, ['a'], [], '''\
+    SET_STACK_DEPTH = Action(0x1e, ['a'], [], '''\
+        if ((smite_UWORD)a > S->STACK_SIZE) {
+            S->BAD_ADDRESS = a;
+            RAISE(-2);
+        }
         S->STACK_DEPTH = a;
     ''')
 
-    NOP = Action(0x1e, [], [], '''\
+    NOP = Action(0x1f, [], [], '''\
         // Do nothing.'''
     )

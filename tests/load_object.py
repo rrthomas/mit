@@ -2,10 +2,9 @@
 #
 # (c) Reuben Thomas 1995-2019
 #
-# The package is distributed under the GNU Public License version 3, or,
-# at your option, any later version.
+# The package is distributed under the MIT/X11 License.
 #
-# THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER‘S
+# THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 # RISK.
 
 from smite import *
@@ -22,9 +21,8 @@ def try_load(file):
     print("load_object(\"{}\", 0) returns {}".format(file, ret), end='')
     return ret
 
-def obj_name(prefix, file, use_endism, word_size=None):
-    if use_endism:
-        endism = "-{}".format("le" if ENDISM.get() == 0 else "be")
+def obj_name(prefix, file, word_size=None, use_endism=True):
+    endism = "-{}".format("le" if ENDISM.get() == 0 else "be")
     suffix = "-{}".format(word_size) if word_size else ""
     name = "{}/{}{}{}".format(prefix, file, endism if use_endism else "", suffix)
     return name
@@ -36,7 +34,7 @@ build_dir = os.environ['builddir']
 bad_files = ["badobj1", "badobj2", "badobj3", "badobj4"]
 error_code = [-2, -2, -4, -2]
 for i in range(len(bad_files)):
-    s = obj_name(src_dir, bad_files[i], False, word_size)
+    s = obj_name(src_dir, bad_files[i], word_size)
     res = try_load(s)
     print(" should be {}".format(error_code[i]))
     if res != error_code[i]:
@@ -46,7 +44,7 @@ for i in range(len(bad_files)):
 
 good_files = ["testobj1", "testobj2"]
 for good_file in good_files:
-    s = obj_name(src_dir, good_file, True, word_size)
+    s = obj_name(src_dir, good_file, word_size)
     res = try_load(s)
     print(" should be {}".format(0))
     print("Word 0 of memory is {:#x}; should be 0x01020304".format(M_word[0]))
@@ -68,7 +66,7 @@ action(HALT)
 save("numbers.obj")
 
 number_file = "numbers.obj"
-s = obj_name(build_dir, number_file, False)
+s = obj_name(build_dir, number_file, use_endism=False)
 res = try_load(s)
 print(" should be {}".format(0))
 if res != 0:
@@ -77,9 +75,10 @@ if res != 0:
 if run() != magic_number:
     print("Error in load_object() tests: file {}".format(number_file))
     sys.exit(1)
+print("Data stack: {}".format(S))
 print("Correct stack: {}".format(correct))
 if str(correct) != str(S):
-    print("Error in arithmetic tests: PC = {:#x}".format(PC.get()))
+    print("Error in load_object() tests: PC = {:#x}".format(PC.get()))
     sys.exit(1)
 
 os.remove(number_file)
@@ -89,7 +88,7 @@ os.remove(number_file)
 # WORD_SIZE.
 assert(word_size == 4 or word_size == 8)
 wrong_word_size = 8 if word_size == 4 else 4
-s = obj_name(src_dir, good_files[0], True, wrong_word_size)
+s = obj_name(src_dir, good_files[0], wrong_word_size, use_endism=True)
 res = try_load(s)
 incorrect_word_size_res = -3
 print(" should be {}".format(incorrect_word_size_res))
