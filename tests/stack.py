@@ -45,7 +45,7 @@ correct = [
     [2, 1, 2, 2, 2],
     [2, 1, 2, 2, 2, 3],
     [2, 2, 2, 2, 1],
-    [2, 2, 2, 2, 1, -2],
+    [2, 2, 2, 2, 1, 2],
     [2, 2, 1, 2, 2],
 ]
 
@@ -79,9 +79,9 @@ action(DUP)
 number(0)
 action(DUP)
 number(3)
-action(ROTATE)
-number(-2)
-action(ROTATE)
+action(ROTATE_UP)
+number(2)
+action(ROTATE_DOWN)
 
 # Test
 for i in range(len(correct)):

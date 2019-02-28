@@ -153,37 +153,6 @@ int smite_push_stack(smite_state *S, smite_WORD v)
     return smite_store_stack(S, 0, v);
 }
 
-int smite_rotate_stack(smite_state *S, smite_WORD pos)
-{
-    if (pos > 0) {
-        if (pos >= (smite_WORD)S->STACK_DEPTH) {
-            S->BAD_ADDRESS = pos;
-            return -3;
-        }
-
-        smite_UWORD offset = S->STACK_DEPTH - pos - 1;
-        smite_WORD temp = *(S->S0 + offset * STACK_DIRECTION);
-        memmove(S->S0 + offset * STACK_DIRECTION,
-                S->S0 + (offset + 1) * STACK_DIRECTION,
-                (S->STACK_DEPTH - offset) * sizeof(smite_WORD));
-        *(S->S0 + (S->STACK_DEPTH - 1) * STACK_DIRECTION) = temp;
-    } else if (pos < 0) {
-        if (pos <= -(smite_WORD)S->STACK_DEPTH) {
-            S->BAD_ADDRESS = -pos;
-            return -3;
-        }
-
-        smite_UWORD offset = S->STACK_DEPTH + pos - 1;
-        smite_WORD temp = *(S->S0 + (S->STACK_DEPTH - 1) * STACK_DIRECTION);
-        memmove(S->S0 + (offset + 1) * STACK_DIRECTION,
-                S->S0 + offset * STACK_DIRECTION,
-                (S->STACK_DEPTH - offset) * sizeof(smite_WORD));
-        *(S->S0 + offset * STACK_DIRECTION) = temp;
-    }
-
-    return 0;
-}
-
 
 // Initialisation and memory management
 

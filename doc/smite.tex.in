@@ -298,7 +298,30 @@ These actions manage the stack:
 \inst{POP}{\x{u}\dots\x1 u —}{Remove \spic{u} items from the stack.}
 \inst{DUP}{\x{u}\dots\x0 u — \x{u}\dots\x0 \x{u}}{Remove \spic{u}. Copy \x{u} to the top of the stack.}
 \inst{SWAP}{\x{u}\dots\x0 u — \x0\x{u-1}\dots\x1 \x{u}}{Exchange the top stack item with the \spic{u}th. If \spic{u} is zero, do nothing.}
-\inst{ROTATE}{\x{n}\dots\x0 n — \x{n-1}\dots\x1 \x{+n} \textrm{|} \x0 \x{n}\dots\x1}{If \spic{n} is non-negative, rotate the \spic{n}th stack item to the top; otherwise, rotate the top stack item to position \spic{n}.}
+\inst{ROTATE\_UP}{\x{u}\dots\x0 u — \x{u-1}\dots\x1 \x{u}}{Rotate the \spic{u}th stack item to the top.}
+\inst{ROTATE\_DOWN}{\x{u}\dots\x0 u — \x0 \x{u}\dots\x1}{Rotate the top stack item to position \spic{u}.}
+\end{description}
+
+
+\subsection{Logic and shifts}
+
+Logic functions:
+
+\nopagebreak
+\begin{description}
+\inst{NOT}{\x1 — \x2}{Invert all bits of \x1, giving its logical inverse \x2.}
+\inst{AND}{\x1 \x2 — \x3}{\x3 is the bit-by-bit logical ``and'' of \x1 with \x2.}
+\inst{OR}{\x1 \x2 — \x3}{\x3 is the bit-by-bit inclusive-or of \x1 with \x2.}
+\inst{XOR}{\x1 \x2 — \x3}{\x3 is the bit-by-bit exclusive-or of \x1 with \x2.}
+\end{description}
+
+Shifts:
+
+\nopagebreak
+\begin{description}
+\inst{LSHIFT}{\x1 u — \x2}{Perform a logical left shift of \spic{u} bit-places on \x1, giving \x2. Put zero into the least significant bits vacated by the shift. If \spic{u} is greater than or equal to the number of bits in a word, \x2 is zero.}
+\inst{RSHIFT}{\x1 u — \x2}{Perform a logical right shift of \spic{u} bit-places on \x1, giving \x2. Put zero into the most significant bits vacated by the shift. If \spic{u} is greater than or equal to the number of bits in a word, \x2 is zero.}
+\inst{ARSHIFT}{\x1 u — \x2}{Perform an arithmetic right shift of \spic{u} bit-places on \x1, giving \x2. Copy the original most-significant bits into the most significant bits vacated by the shift. If \spic{u} is greater than or equal to the number of bits in a word, all the bits of \x2 are the same as the original most-significant bit.}
 \end{description}
 
 
@@ -338,28 +361,6 @@ $-4$ if division by zero is attempted):
 \inst{MUL}{\noru1 \noru2 — \noru3}{Multiply \noru1 by \noru2 giving the product \noru3.}
 \inst{DIVMOD}{\n1 \n2 — \n3 \n4}{Divide \n1 by \n2 using symmetric division, giving the single-word quotient \n3 and the single-word remainder \n4. The quotient is rounded towards zero.}
 \inst{UDIVMOD}{\U1 \U2 — \U3 \U4}{Divide \U1 by \U2, giving the single-word quotient \U3 and the single-word remainder \U4.}
-\end{description}
-
-
-\subsection{Logic and shifts}
-
-Shifts:
-
-\nopagebreak
-\begin{description}
-\inst{LSHIFT}{\x1 u — \x2}{Perform a logical left shift of \spic{u} bit-places on \x1, giving \x2. Put zero into the least significant bits vacated by the shift. If \spic{u} is greater than or equal to the number of bits in a word, \x2 is zero.}
-\inst{RSHIFT}{\x1 u — \x2}{Perform a logical right shift of \spic{u} bit-places on \x1, giving \x2. Put zero into the most significant bits vacated by the shift. If \spic{u} is greater than or equal to the number of bits in a word, \x2 is zero.}
-\inst{ARSHIFT}{\x1 u — \x2}{Perform an arithmetic right shift of \spic{u} bit-places on \x1, giving \x2. Copy the original most-significant bits into the most significant bits vacated by the shift. If \spic{u} is greater than or equal to the number of bits in a word, all the bits of \x2 are the same as the original most-significant bit.}
-\end{description}
-
-Logic functions:
-
-\nopagebreak
-\begin{description}
-\inst{NOT}{\x1 — \x2}{Invert all bits of \x1, giving its logical inverse \x2.}
-\inst{AND}{\x1 \x2 — \x3}{\x3 is the bit-by-bit logical ``and'' of \x1 with \x2.}
-\inst{OR}{\x1 \x2 — \x3}{\x3 is the bit-by-bit inclusive-or of \x1 with \x2.}
-\inst{XOR}{\x1 \x2 — \x3}{\x3 is the bit-by-bit exclusive-or of \x1 with \x2.}
 \end{description}
 
 
@@ -425,22 +426,22 @@ Table~\ref{opcodetable} lists the action opcodes in numerical order. Other actio
 \begin{center}
 \begin{tabular}{*{2}{cc}} \toprule
 \bf Opcode & \bf Action & \bf Opcode & \bf Action \\ \midrule
-\opcodetbl{00}{HALT}	{10}{NOT}
-\opcodetbl{01}{POP}	{11}{AND}
-\opcodetbl{02}{DUP}	{12}{OR}
-\opcodetbl{03}{SWAP}	{13}{XOR}
-\opcodetbl{04}{ROTATE}	{14}{LOAD}
-\opcodetbl{05}{EQ}	{15}{STORE}
-\opcodetbl{06}{LT}	{16}{LOADB}
-\opcodetbl{07}{ULT}	{17}{STOREB}
-\opcodetbl{08}{NEGATE}	{18}{BRANCH}
-\opcodetbl{09}{ADD}	{19}{BRANCHZ}
-\opcodetbl{0a}{MUL}	{1a}{CALL}
-\opcodetbl{0b}{DIVMOD}	{1b}{GET\_WORD\_SIZE}
-\opcodetbl{0c}{UDIVMOD}	{1c}{GET\_STACK\_DEPTH}
-\opcodetbl{0d}{LSHIFT}	{1d}{SET\_STACK\_DEPTH}
-\opcodetbl{0e}{RSHIFT}	{1e}{NOP}
-\opcodetblone{0f}{ARSHIFT}
+\opcodetbl{00}{HALT}		{10}{NEGATE}
+\opcodetbl{01}{POP}		{11}{ADD}
+\opcodetbl{02}{DUP}		{12}{MUL}
+\opcodetbl{03}{SWAP}		{13}{DIVMOD}
+\opcodetbl{04}{ROTATE\_UP}	{14}{UDIVMOD}
+\opcodetbl{05}{ROTATE\_DOWN}	{15}{LOAD}
+\opcodetbl{06}{NOT}             {16}{STORE}
+\opcodetbl{07}{AND}             {17}{LOADB}
+\opcodetbl{08}{OR}              {18}{STOREB}
+\opcodetbl{09}{XOR}             {19}{BRANCH}
+\opcodetbl{0a}{LSHIFT}          {1a}{BRANCHZ}
+\opcodetbl{0b}{RSHIFT}          {1b}{CALL}
+\opcodetbl{0c}{ARSHIFT}         {1c}{GET\_WORD\_SIZE}
+\opcodetbl{0d}{EQ}		{1d}{GET\_STACK\_DEPTH}
+\opcodetbl{0e}{LT}		{1e}{SET\_STACK\_DEPTH}
+\opcodetbl{0f}{ULT}		{1f}{NOP}
  \bottomrule
 \end{tabular}
 \caption{\label{opcodetable}Action opcodes}
