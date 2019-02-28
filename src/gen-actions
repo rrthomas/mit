@@ -16,10 +16,12 @@ def check_stack_pointer(nargs, nresults):
 #pragma GCC diagnostic ignored "-Wtype-limits"
 if ((S->STACK_DEPTH < {nargs})) {{
     S->BAD_ADDRESS = {nargs};
+    const smite_UWORD args = 0;
     RAISE(-3);
 }}
 if ((S->STACK_SIZE - (S->STACK_DEPTH - {nargs}) < {nresults})) {{
     S->BAD_ADDRESS = {nresults} - {nargs};
+    const smite_UWORD args = 0;
     RAISE(-2);
 }}
 #pragma GCC diagnostic pop
@@ -32,7 +34,7 @@ def load_args(args):
             pos=len(args) - i - 1,
             var=args[i])
         )
-    code.append('smite_UWORD args = {};'.format(len(args)))
+    code.append('const smite_UWORD args = {};'.format(len(args)))
     code.append('S->STACK_DEPTH -= args;')
     return '\n'.join(code)
 
@@ -55,19 +57,11 @@ print('''\
     do {                                    \\
         int error = (code);                 \\
         if (error != 0) {                   \\
+            S->STACK_DEPTH += args;         \\
             S->BAD_PC = initial_PC;         \\
             return error;                   \\
         }                                   \\
     } while(0)
-
-#define ABORT_AND_RAISE(code)               \\
-    do {                                    \\
-        int abort_error = (code);           \\
-        if (abort_error != 0) {             \\
-            S->STACK_DEPTH += args;         \\
-            RAISE(abort_error);             \\
-        }                                   \\
-    } while(0)                              \\
 
 static int STEP(smite_state *S) {
     smite_UWORD initial_PC = S->PC;
@@ -75,8 +69,11 @@ static int STEP(smite_state *S) {
 
     switch (S->ITYPE) {
     case INSTRUCTION_NUMBER:
-        RAISE(smite_push_stack(S, S->I));
-        break;
+        {
+            const smite_UWORD args = 0;
+            RAISE(smite_push_stack(S, S->I));
+            break;
+        }
     case INSTRUCTION_ACTION:
         switch (S->I) {''')
 for (instruction, action) in Actions.__members__.items():
@@ -107,8 +104,11 @@ for (instruction, action) in Actions.__members__.items():
             ))
 print('''\
         default: /* Undefined instruction; try extra instructions */
-            RAISE(smite_extra(S));
-            break;
+            {
+                const smite_UWORD args = 0;
+                RAISE(smite_extra(S));
+                break;
+            }
         }
         break;
     default: /* Error during instruction fetch */

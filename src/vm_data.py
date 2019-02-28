@@ -61,6 +61,7 @@ class Actions(Enum):
     '''VM action instructions.'''
     HALT = Action(0x00, ['error_code'], [], '''\
         S->halt_code = error_code;
+        S->STACK_DEPTH--; // FIXME
         RAISE(-127);
     ''')
 
@@ -69,23 +70,23 @@ class Actions(Enum):
     ''')
 
     DUP = Action(0x02, ['depth'], ['dupee'], '''\
-        ABORT_AND_RAISE(smite_load_stack(S, depth, &dupee));
+        RAISE(smite_load_stack(S, depth, &dupee));
     ''')
 
     SWAP = Action(0x03, ['depth'], [], '''\
         if (depth > 0) {
             smite_WORD top, swapee;
-            ABORT_AND_RAISE(smite_load_stack(S, depth, &swapee));
-            ABORT_AND_RAISE(smite_load_stack(S, 0, &top));
-            ABORT_AND_RAISE(smite_store_stack(S, depth, top));
-            ABORT_AND_RAISE(smite_store_stack(S, 0, swapee));
+            RAISE(smite_load_stack(S, depth, &swapee));
+            RAISE(smite_load_stack(S, 0, &top));
+            RAISE(smite_store_stack(S, depth, top));
+            RAISE(smite_store_stack(S, 0, swapee));
         }
     ''')
 
     ROTATE_UP = Action(0x04, ['depth'], [], '''\
         if (depth >= (smite_WORD)S->STACK_DEPTH) {
             S->BAD_ADDRESS = depth;
-            ABORT_AND_RAISE(-3);
+            RAISE(-3);
         }
 
         smite_UWORD offset = S->STACK_DEPTH - depth - 1;
@@ -99,7 +100,7 @@ class Actions(Enum):
     ROTATE_DOWN = Action(0x05, ['depth'], [], '''\
         if (depth >= (smite_WORD)S->STACK_DEPTH) {
             S->BAD_ADDRESS = depth;
-            ABORT_AND_RAISE(-3);
+            RAISE(-3);
         }
 
         smite_UWORD offset = S->STACK_DEPTH - depth - 1;
@@ -175,21 +176,21 @@ class Actions(Enum):
     ''')
 
     LOAD = Action(0x15, ['addr'], ['x'], '''\
-        ABORT_AND_RAISE(smite_load_word(S, addr, &x));
+        RAISE(smite_load_word(S, addr, &x));
     ''')
 
     STORE = Action(0x16, ['x', 'addr'], [], '''\
-        ABORT_AND_RAISE(smite_store_word(S, addr, x));
+        RAISE(smite_store_word(S, addr, x));
     ''')
 
     LOADB = Action(0x17, ['addr'], ['x'], '''\
         smite_BYTE b_;
-        ABORT_AND_RAISE(smite_load_byte(S, addr, &b_));
+        RAISE(smite_load_byte(S, addr, &b_));
         x = (smite_WORD)b_;
     ''')
 
     STOREB = Action(0x18, ['x', 'addr'], [], '''\
-        ABORT_AND_RAISE(smite_store_byte(S, addr, (smite_BYTE)x));
+        RAISE(smite_store_byte(S, addr, (smite_BYTE)x));
     ''')
 
     BRANCH = Action(0x19, ['addr'], [], '''\
@@ -217,7 +218,7 @@ class Actions(Enum):
     SET_STACK_DEPTH = Action(0x1e, ['a'], [], '''\
         if ((smite_UWORD)a > S->STACK_SIZE) {
             S->BAD_ADDRESS = a;
-            ABORT_AND_RAISE(-2);
+            RAISE(-2);
         }
         S->STACK_DEPTH = a;
     ''')
