@@ -13,6 +13,9 @@
 #define SMITE_ACTIONS_COMMON
 
 
+#include <string.h>
+
+
 #define DIVZERO(x)                              \
     if (x == 0)                                 \
         RAISE(-8);
