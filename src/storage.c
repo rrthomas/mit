@@ -62,11 +62,11 @@ int smite_load_word(smite_state *S, smite_UWORD addr, smite_WORD *value)
 {
     if (addr >= S->MEMORY) {
         S->BAD_ADDRESS = addr;
-        return -5;
+        return 5;
     }
     if (!smite_is_aligned(addr)) {
         S->BAD_ADDRESS = addr;
-        return -7;
+        return 7;
     }
 
     *value = S->memory[addr / smite_word_size];
@@ -77,7 +77,7 @@ int smite_load_byte(smite_state *S, smite_UWORD addr, smite_BYTE *value)
 {
     if (addr >= S->MEMORY) {
         S->BAD_ADDRESS = addr;
-        return -5;
+        return 5;
     }
 
     *value = ((uint8_t *)(S->memory))[addr];
@@ -88,11 +88,11 @@ int smite_store_word(smite_state *S, smite_UWORD addr, smite_WORD value)
 {
     if (addr >= S->MEMORY) {
         S->BAD_ADDRESS = addr;
-        return -6;
+        return 6;
     }
     if (!smite_is_aligned(addr)) {
         S->BAD_ADDRESS = addr;
-        return -7;
+        return 7;
     }
 
     S->memory[addr / smite_word_size] = value;
@@ -103,7 +103,7 @@ int smite_store_byte(smite_state *S, smite_UWORD addr, smite_BYTE value)
 {
     if (addr >= S->MEMORY) {
         S->BAD_ADDRESS = addr;
-        return -6;
+        return 6;
     }
 
     ((uint8_t *)(S->memory))[addr] = value;
@@ -117,7 +117,7 @@ int smite_load_stack(smite_state *S, smite_UWORD pos, smite_WORD *vp)
 {
     if (pos >= S->STACK_DEPTH) {
         S->BAD_ADDRESS = pos;
-        return -3;
+        return 3;
     }
 
     UNCHECKED_LOAD_STACK(pos, vp);
@@ -128,7 +128,7 @@ int smite_store_stack(smite_state *S, smite_UWORD pos, smite_WORD v)
 {
     if (pos >= S->STACK_DEPTH) {
         S->BAD_ADDRESS = pos;
-        return -4;
+        return 4;
     }
 
     UNCHECKED_STORE_STACK(pos, v);
@@ -146,7 +146,7 @@ int smite_push_stack(smite_state *S, smite_WORD v)
 {
     if (S->STACK_DEPTH == S->STACK_SIZE) {
         S->BAD_ADDRESS = S->STACK_SIZE;
-        return -2;
+        return 2;
     }
 
     (S->STACK_DEPTH)++;
@@ -160,7 +160,7 @@ static int smite_realloc(smite_WORD **ptr, smite_UWORD old_size, smite_UWORD new
 {
     smite_WORD *new_ptr = realloc(*ptr, new_size * smite_word_size);
     if (new_ptr == NULL)
-        return -1;
+        return 1;
     *ptr = new_ptr;
 
     if (old_size < new_size)

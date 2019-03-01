@@ -9,15 +9,10 @@
 
 #include "config.h"
 
+#include <stdio.h>
+
 #include "smite.h"
-#include "aux.h"
-#include "opcodes.h"
-#include "extra.h"
 
-
-#define DIVZERO(x)                              \
-    if (x == 0)                                 \
-        RAISE(-8);
 
 FILE *trace_fp = NULL; // FILE * of trace file, if used
 static void trace(int type, smite_WORD opcode) {
@@ -25,21 +20,5 @@ static void trace(int type, smite_WORD opcode) {
         fprintf(trace_fp, "%d %"PRI_XWORD"\n", type, (smite_UWORD)opcode);
 }
 
-// Defines two macros/functions:
-//   void STEP(smite_state *S): runs a single step of the given state.
-//   void RAISE(smite_WORD e): raise error e; do nothing if e == 0.
+// Defines the function smite_single_step:
 #include "instruction-actions.h"
-
-// Perform one pass of the execution cycle
-smite_WORD smite_single_step(smite_state *S)
-{
-    int error = STEP(S);
-
-    if (error != 0) {
-        // Deal with address errors during execution cycle.
-        if (error == -127)
-            return S->halt_code;
-        return error;
-    }
-    return -128; // terminated OK
-}

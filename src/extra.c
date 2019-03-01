@@ -30,8 +30,11 @@
 verify(sizeof(int) <= sizeof(smite_WORD));
 
 
-// RAISE(code) must be define before using `PUSH` or `POP`.
-// It must somehow exit if `code` is non-zero, e.g. return `code` to caller.
+#define RAISE(error)                                                    \
+    do {                                                                \
+        if (error != 0)                                                 \
+            return error;                                               \
+    } while(0)
 
 #define POP(v)                                                          \
     RAISE(smite_pop_stack(S, v))
@@ -94,12 +97,6 @@ int smite_register_args(smite_state *S, int argc, char *argv[])
 
     return 0;
 }
-
-#define RAISE(error)                                                    \
-    do {                                                                \
-        if (error != 0)                                                 \
-            return error;                                               \
-    } while(0)
 
 static int extra_smite(smite_state *S)
 {
@@ -247,7 +244,7 @@ static int extra_smite(smite_state *S)
         }
         break;
     default:
-        RAISE(-15);
+        RAISE(15);
     }
 
     return 0;
@@ -394,7 +391,7 @@ static int extra_libc(smite_state *S)
             char *s1 = (char *)smite_native_address_of_range(S, str1, 0);
             char *s2 = (char *)smite_native_address_of_range(S, str2, 0);
             if (s1 == NULL || s2 == NULL)
-                RAISE(-5);
+                RAISE(5);
             PUSH(rename(s2, s1));
         }
         break;
@@ -404,7 +401,7 @@ static int extra_libc(smite_state *S)
             POP((smite_WORD *)&str);
             char *s = (char *)smite_native_address_of_range(S, str, 0);
             if (s == NULL)
-                RAISE(-5);
+                RAISE(5);
             PUSH(remove(s));
         }
         break;
@@ -439,7 +436,7 @@ static int extra_libc(smite_state *S)
         }
         break;
     default:
-        RAISE(-15);
+        RAISE(15);
         break;
     }
 
@@ -454,6 +451,6 @@ int smite_extra(smite_state *S)
     case LIB_C:
         return extra_libc(S);
     default:
-        return -1;
+        return 1;
     }
 }

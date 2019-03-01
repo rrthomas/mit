@@ -158,25 +158,24 @@ initialisation specified above.
 
 When @PACKAGE_NAME@ encounters certain abnormal situations, such as an attempt to access an invalid address, or divide by zero, an {\bf error} is {\bf raised}, and execution terminates; an {\bf error code} is returned to the caller. The instruction that caused the error to be raised is considered not to have executed, and {\texttt BAD\_PC} is set to point to it. If the error is a stack or memory access error, {\tt BAD\_ADDRESS} is set to the stack position or address that caused the error.
 
-Execution can also be terminated explicitly by performing a {\tt HALT} action (see section~\ref{erroract}), which also returns a code. The {\tt HALT} action {\it is} considered to have completed.
+Execution can also be terminated explicitly by performing a {\tt HALT} action (see section~\ref{haltact}).
 
-Error codes are signed numbers. Conventionally, negative numbers are considered to represent error conditions, and non-negative numbers (in particular, zero) successful termination. $-1$ to $-128$ are reserved for @PACKAGE_NAME@'s own error codes; the meanings of
-those that may be raised by @PACKAGE_NAME@ are shown in
-table~\ref{errortable}.
+Error codes are unsigned numbers. $0$ to $128$ are reserved for @PACKAGE_NAME@'s own error codes; the meanings of those that may be raised by @PACKAGE_NAME@ are shown in table~\ref{errortable}.
 
 \begin{table}[htbp]
 \begin{center}
 \begin{tabular}{cp{4in}} \toprule
 \bf Code & \bf Meaning \\ \midrule
-$-1$ & Invalid opcode (see section~\ref{opcodes}). \\
-$-2$ & Attempt to set {\tt STACK\_DEPTH} greater than {\tt STACK\_SIZE}. {\tt BAD\_ADDRESS} is set to the extra number of words of stack space required. \\
-$-3$ & Invalid stack read. {\tt BAD\_ADDRESS} is set to the invalid stack position. \\
-$-4$ & Invalid stack write. {\tt BAD\_ADDRESS} is set to the invalid stack position. \\
-$-5$ & Invalid memory read. {\tt BAD\_ADDRESS} is set to the invalid address. \\
-$-6$ & Invalid memory write. {\tt BAD\_ADDRESS} is set to the invalid address. \\
-$-7$ & Address alignment error: raised when an instruction expecting a word-aligned address is given a valid but non-aligned address. \\
-$-8$ & Division by zero attempted (see section~\ref{arithmetic}). \\
-$-128$ & {\bf single\_step()} has terminated without error. \\
+$0$ & A {\tt HALT} instruction was executed. \\
+$1$ & Invalid opcode (see section~\ref{opcodes}). \\
+$2$ & Attempt to set {\tt STACK\_DEPTH} greater than {\tt STACK\_SIZE}. {\tt BAD\_ADDRESS} is set to the extra number of words of stack space required. \\
+$3$ & Invalid stack read. {\tt BAD\_ADDRESS} is set to the invalid stack position. \\
+$4$ & Invalid stack write. {\tt BAD\_ADDRESS} is set to the invalid stack position. \\
+$5$ & Invalid memory read. {\tt BAD\_ADDRESS} is set to the invalid address. \\
+$6$ & Invalid memory write. {\tt BAD\_ADDRESS} is set to the invalid address. \\
+$7$ & Address alignment error: raised when an instruction expecting a word-aligned address is given a valid but non-aligned address. \\
+$8$ & Division by zero attempted (see section~\ref{arithmetic}). \\
+$128$ & {\bf single\_step()} has terminated without error. \\
  \bottomrule
 \end{tabular}
 \caption{\label{errortable}Errors raised by @PACKAGE_NAME@}
@@ -278,14 +277,14 @@ indeterminate numbers of specified types of word.
 \end{description}
 
 
-\subsection{Errors}
-\label{erroract}
+\subsection{Termination}
+\label{haltact}
 
-This action raises an error (see section~\ref{errors}):
+This action terminates execution (see section~\ref{errors}):
 
 \nopagebreak
 \begin{description}
-\inst{HALT}{x —}{Stop @PACKAGE_NAME@, returning reason code \spic{x} to the calling program (see section~\ref{calls}).}
+\inst{HALT}{—}{Terminate execution with error code $0$.}
 \end{description}
 
 
@@ -483,11 +482,10 @@ following calls:
 
 \begin{description}
 \iface{run}{}{integer}{Start @PACKAGE_NAME@ by entering the execution cycle as
-    described in section~\ref{operation}. If @PACKAGE_NAME@ ever executes a {\tt
-    HALT} action (see section~\ref{erroract}), the reason code is
+    described in section~\ref{operation}. If an error is raised, the code is
     returned as the result.}
 \iface{single\_step}{}{integer}{Execute a single pass of the execution
-    cycle. If an error is raised, it is returned; otherwise, return $-128$.}
+    cycle. If an error is raised, it is returned; otherwise, return $128$.}
 \iface{load\_object}{file, address}{integer}{Load the object module
     given by the file descriptor \textit{file}, which may be a filename or some other
     specifier, to the VM address \textit{address}. If the module is invalid, then return $-2$. If the module cannot be loaded by the current implementation (for example, the word size or {\tt ENDISM} is incompatible), return $-3$. If the code will not fit into memory at the address given, or the address is out of range or unaligned, return $-4$. Otherwise load the code into

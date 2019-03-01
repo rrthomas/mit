@@ -12,7 +12,7 @@
 
 
 // Instruction encoding
-enum instruction_type {
+enum {
 #define TYPE(name, opcode) INSTRUCTION_ ## name = opcode,
 #include "instruction-type-list.h"
 #undef TYPE
