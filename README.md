@@ -50,14 +50,8 @@ The GNU autotools are required: automake, autoconf and libtool.
 [Gnulib](https://www.gnu.org/software/gnulib/) is also used, with a
 third-party `bootstrap` module; these are installed automatically.
 
-To build from a Git repository, first run
-
-```
-git submodule update --init --recursive
-./bootstrap
-```
-
-Then see "Building from source" above.
+To build from a Git repository, first run `./bootstrap`, then see "Building
+from source" above.
 
 To build the PDF documentation, a comprehensive TeX system such as TeXLive
 is required. This is only necessary when building from Git, as pre-built
