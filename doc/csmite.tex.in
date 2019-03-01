@@ -49,9 +49,7 @@
 
 \section{Introduction}
 
-The @PACKAGE_NAME@ virtual machine~\cite{@PACKAGE@} provides a portable virtual machine environment for study and experiment. To this end, @PACKAGE_NAME@ is itself written in ISO C, since almost all systems have an ISO C compiler available for them.
-
-As well as the virtual machine, C @PACKAGE_NAME@ provides a debugger, which is described in~\cite{@PACKAGE@uiface}.
+The @PACKAGE_NAME@ virtual machine~\cite{@PACKAGE@} provides a portable virtual machine environment for study and experiment.
 
 The @PACKAGE_NAME@ virtual machine is described in~\cite{@PACKAGE@}. This paper only
 describes the features specific to this implementation.
