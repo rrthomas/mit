@@ -10,9 +10,9 @@
 AM_CPPFLAGS = -I$(top_builddir)/lib -I$(top_srcdir)/lib $(WARN_CFLAGS)
 
 lib_LTLIBRARIES = libsmite.la
-C_SRCS = bits_util.c storage.c instruction.c extra.c extra.h step.c run.c object.c
-GENERATED_HDRS = register-list.h instruction-list.h instruction-type-list.h instruction-actions.h
-libsmite_la_SOURCES = $(C_SRCS) $(GENERATED_HDRS)
+C_SRCS = bits_util.c storage.c instruction.c extra.c extra.h object.c
+GENERATED_SRCS = register-list.h instruction-list.h instruction-type-list.h actions.c
+libsmite_la_SOURCES = $(C_SRCS) $(GENERATED_SRCS)
 libsmite_la_LIBADD = $(top_builddir)/lib/libgnu.la
 
 bin_PROGRAMS = smite
@@ -21,7 +21,7 @@ smite_LDADD = lib@PACKAGE@.la $(top_builddir)/lib/libgnu.la
 smite_SOURCES = main.c tbl_opts.h
 pkginclude_HEADERS = @PACKAGE@.h aux.h opcodes.h opcodes-extra.h
 
-step.lo: instruction-actions.h
+step.lo: actions.c
 bits_util.lo instruction.lo object.lo step.lo storage.lo main.o: register-list.h instruction-list.h instruction-type-list.h opcodes-extra.h
 main.o: tbl_opts.h register-list.h
 
@@ -49,8 +49,8 @@ instruction-list.h: gen-instruction-list vm_data.py
 instruction-type-list.h: gen-instruction-type-list vm_data.py
 	$(PYTHON) $(srcdir)/gen-instruction-type-list > instruction-type-list.h
 
-instruction-actions.h: gen-actions vm_data.py
-	$(PYTHON) $(srcdir)/gen-actions > instruction-actions.h
+actions.c: gen-actions vm_data.py
+	$(PYTHON) $(srcdir)/gen-actions > actions.c
 
 loc:
 	$(CLOC) $(CLOC_OPTS) \
