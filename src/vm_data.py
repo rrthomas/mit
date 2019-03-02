@@ -20,7 +20,6 @@ class Register:
 class Registers(Enum):
     '''VM registers.'''
     PC = Register()
-    BAD_PC = Register(read_only=True)
     BAD_ADDRESS = Register(read_only=True)
     ITYPE = Register(read_only=True)
     I = Register(ty="smite_WORD", uty="smite_UWORD", read_only=True)

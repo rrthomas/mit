@@ -97,7 +97,6 @@ The registers, each with its function, are set out in table~\ref{regtable}.
 \bf Register & \bf Function \\
  \midrule
 {\tt PC} & The {\tt P}rogram {\tt C}ounter. Points to the next byte from which an instruction may be loaded. \\
-{\tt BAD\_PC} & The value of {\tt PC} when an error was last raised. \\
 {\tt BAD\_ADDRESS} & The invalid stack position, or invalid or unaligned memory address, that caused the last memory error. \\
 {\tt ITYPE} & The type of an instruction to be executed: $0$ for a number, and $1$ for an action. \\
 {\tt I} & The {\tt I}nstruction. Holds the opcode of an instruction to be executed. \\
@@ -141,8 +140,8 @@ cycle is entered:
 \begin{tabbing}
 \hspace{0.5in}\=begin\=\+\+ \\*
 decode the instruction pointed to by {\tt PC} into {\tt I} \\*
-set {\tt PC} to point to the next instruction \\*
-execute the instruction in {\tt I} \- \\*
+execute the instruction in {\tt I} \\*
+set {\tt PC} to point to the next instruction \- \\*
 repeat
 \end{tabbing}
 
@@ -156,7 +155,7 @@ initialisation specified above.
 \subsection{Errors and termination}
 \label{errors}
 
-When @PACKAGE_NAME@ encounters certain abnormal situations, such as an attempt to access an invalid address, or divide by zero, an {\bf error} is {\bf raised}, and execution terminates; an {\bf error code} is returned to the caller. The instruction that caused the error to be raised is considered not to have executed, and {\texttt BAD\_PC} is set to point to it. If the error is a stack or memory access error, {\tt BAD\_ADDRESS} is set to the stack position or address that caused the error.
+When @PACKAGE_NAME@ encounters certain abnormal situations, such as an attempt to access an invalid address, or divide by zero, an {\bf error} is {\bf raised}, and execution terminates; an {\bf error code} is returned to the caller. The instruction has no effect, and {\tt PC} is not advanced to the next instruction. If the error is a stack or memory access error, {\tt BAD\_ADDRESS} is set to the stack position or address that caused the error.
 
 Execution can also be terminated explicitly by performing a {\tt HALT} action (see section~\ref{haltact}).
 

@@ -205,7 +205,6 @@ smite_state *smite_init(size_t memory_size, size_t stack_size)
 #endif
         ;
     S->PC = 0;
-    S->BAD_PC = 0;
     S->BAD_ADDRESS = 0;
     S->I = 0;
     S->STACK_DEPTH = 0;

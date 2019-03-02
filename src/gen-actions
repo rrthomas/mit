@@ -61,7 +61,7 @@ print('''\
     do {                                    \\
         int error = (code);                 \\
         S->STACK_DEPTH += args;             \\
-        S->BAD_PC = initial_PC;             \\
+        S->PC = initial_PC;                 \\
         return error;                       \\
     } while(0)
 

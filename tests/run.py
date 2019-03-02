@@ -16,8 +16,8 @@ if VM == None:
     sys.exit(1)
 
 # Test code
-action(HALT)
 final_pc = VM.here
+action(HALT)
 
 # Test
 ret = run()

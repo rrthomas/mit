@@ -200,17 +200,13 @@ int main(int argc, char *argv[])
             }
             break;
         case 2:
-            if (smite_realloc_stack(S, round_up(S->BAD_ADDRESS, page_size)) == 0) {
-                S->PC = S->BAD_PC;
+            if (smite_realloc_stack(S, round_up(S->BAD_ADDRESS, page_size)) == 0)
                 again = true;
-            }
             break;
         case 5:
         case 6:
-            if (smite_realloc_memory(S, round_up(S->BAD_ADDRESS, page_size)) == 0) {
-                S->PC = S->BAD_PC;
+            if (smite_realloc_memory(S, round_up(S->BAD_ADDRESS, page_size)) == 0)
                 again = true;
-            }
             break;
         default:
             break;
