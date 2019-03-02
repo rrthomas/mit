@@ -409,7 +409,7 @@ call and return (subroutine return is {\tt BRANCH}):
 
 Actions are encoded as a single byte with the top two bits clear.
 
-Numbers are words encoded by one or more bytes, as follows: the significant bits of the number are split into groups of six bits, starting at the most significant end, and then stored in little-endian order in consecutive bytes. All but the last byte have the seventh bit set and eighth bit clear; the final byte has the eighth bit set, and the seventh bit matches the sign bit.
+Numbers are words encoded by one or more bytes, as follows: the significant bits of the number are split into groups of six bits, starting at the least significant end, and then stored in little-endian order in consecutive bytes. All but the last byte have the seventh bit set and eighth bit clear; the final byte has the eighth bit set, and the seventh bit matches the sign bit of the number.
 
 
 \subsection{Action opcodes}
