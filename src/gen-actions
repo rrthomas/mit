@@ -92,8 +92,6 @@ print('''\
 #include "opcodes.h"
 #include "extra.h"
 
-#include <string.h>
-
 #define RAISE(code)                         \\
     do {                                    \\
         int error = (code);                 \\

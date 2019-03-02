@@ -45,8 +45,9 @@ correct = [
     [2, 1, 2, 2, 2],
     [2, 1, 2, 2, 2, 3],
     [2, 2, 2, 2, 1],
-    [2, 2, 2, 2, 1, 2],
-    [2, 2, 1, 2, 2],
+    [2, 2, 2, 2, 1, 3],
+    [2, 2, 2, 2, 1, 3, 2],
+    [2, 2, 2, 3, 2, 1],
 ]
 
 # Test code
@@ -80,6 +81,7 @@ number(0)
 action(DUP)
 number(3)
 action(ROTATE_UP)
+number(3)
 number(2)
 action(ROTATE_DOWN)
 

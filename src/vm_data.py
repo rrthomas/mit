@@ -78,21 +78,25 @@ class Actions(Enum):
     ''')
 
     ROTATE_UP = Action(0x04, ['ITEMS', 'COUNT'], ['ITEMS'], '''\
-        smite_UWORD offset = S->STACK_DEPTH - count - 1;
-        smite_WORD temp = *(S->S0 + offset * STACK_DIRECTION);
-        memmove(S->S0 + offset * STACK_DIRECTION,
-                S->S0 + (offset + 1) * STACK_DIRECTION,
-                (S->STACK_DEPTH - offset) * sizeof(smite_WORD));
-        *(S->S0 + (S->STACK_DEPTH - 1) * STACK_DIRECTION) = temp;
+        smite_WORD bottom;
+        UNCHECKED_LOAD_STACK(count, &bottom);
+        for (smite_UWORD i = (smite_UWORD)count; i > 0; i--) {
+            smite_WORD temp;
+            UNCHECKED_LOAD_STACK(i - 1, &temp);
+            UNCHECKED_STORE_STACK(i, temp);
+        }
+        UNCHECKED_STORE_STACK(0, bottom);
     ''')
 
     ROTATE_DOWN = Action(0x05, ['ITEMS', 'COUNT'], ['ITEMS'], '''\
-        smite_UWORD offset = S->STACK_DEPTH - count - 1;
-        smite_WORD temp = *(S->S0 + (S->STACK_DEPTH - 1) * STACK_DIRECTION);
-        memmove(S->S0 + (offset + 1) * STACK_DIRECTION,
-                S->S0 + offset * STACK_DIRECTION,
-                (S->STACK_DEPTH - offset) * sizeof(smite_WORD));
-        *(S->S0 + offset * STACK_DIRECTION) = temp;
+        smite_WORD top;
+        UNCHECKED_LOAD_STACK(0, &top);
+        for (smite_UWORD i = 0; i < (smite_UWORD)count; i++) {
+            smite_WORD temp;
+            UNCHECKED_LOAD_STACK(i + 1, &temp);
+            UNCHECKED_STORE_STACK(i, temp);
+        }
+        UNCHECKED_STORE_STACK(count, top);
     ''')
 
     NOT = Action(0x06, ['x'], ['r'], '''\
