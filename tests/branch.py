@@ -82,7 +82,7 @@ for i in range(len(correct)):
     if correct[i] != PC.get():
         print("Error in branch tests: PC = {:#x}".format(PC.get()))
         sys.exit(1)
+    print("I = {}".format(disassemble_instruction(PC.get())))
     step()
-    print("I = {}".format(disassemble_instruction(ITYPE.get(), I.get())))
 
 print("Branch tests ran OK")

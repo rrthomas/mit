@@ -443,9 +443,9 @@ static int extra_libc(smite_state *S)
     return 0;
 }
 
-int smite_extra(smite_state *S)
+int smite_extra(smite_state *S, smite_WORD I)
 {
-    switch (S->I) {
+    switch (I) {
     case LIB_SMITE:
         return extra_smite(S);
     case LIB_C:

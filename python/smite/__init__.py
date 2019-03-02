@@ -272,12 +272,16 @@ class State:
     mnemonic = {action.value.opcode:action.name for action in Actions}
     mnemonic.update({action.value:action.name for action in LibActions})
 
-    def disassemble_instruction(self, ty, opcode):
-        if ty == Types.NUMBER:
-            return "{} ({:#x})".format(opcode, opcode)
-        elif ty == Types.ACTION:
+    def disassemble_instruction(self, addr):
+        ptr = c_uword(addr)
+        ty = c_uword()
+        opcode = c_word()
+        libsmite.smite_decode_instruction(self.state, ptr, byref(ty), byref(opcode))
+        if ty.value == Types.NUMBER:
+            return "{} ({:#x})".format(opcode.value, opcode.value)
+        elif ty.value == Types.ACTION:
             try:
-                return self.mnemonic[opcode]
+                return self.mnemonic[opcode.value]
             except KeyError:
                 return "undefined"
         else:

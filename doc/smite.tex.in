@@ -98,8 +98,6 @@ The registers, each with its function, are set out in table~\ref{regtable}.
  \midrule
 {\tt PC} & The {\tt P}rogram {\tt C}ounter. Points to the next byte from which an instruction may be loaded. \\
 {\tt BAD\_ADDRESS} & The invalid stack position, or invalid or unaligned memory address, that caused the last memory error. \\
-{\tt ITYPE} & The type of an instruction to be executed: $0$ for a number, and $1$ for an action. \\
-{\tt I} & The {\tt I}nstruction. Holds the opcode of an instruction to be executed. \\
 {\tt STACK\_DEPTH} & The number of items on the stack. \\
 {\tt ENDISM} & The endianness of @PACKAGE_NAME@: 0 = Little-endian, 1 = Big-endian. \\
 {\tt WORD\_SIZE} & The number of bytes in a word. Must be in the range $2$ to $32$ inclusive, and a power of $2$. \\
@@ -139,8 +137,7 @@ cycle is entered:
 
 \begin{tabbing}
 \hspace{0.5in}\=begin\=\+\+ \\*
-decode the instruction pointed to by {\tt PC} into {\tt I} \\*
-execute the instruction in {\tt I} \\*
+execute the instruction pointed to by {\tt PC} \\*
 set {\tt PC} to point to the next instruction \- \\*
 repeat
 \end{tabbing}

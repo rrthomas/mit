@@ -112,7 +112,7 @@ for i in range(len(correct)):
     if str(correct[i]) != str(S):
         print("Error in arithmetic tests: PC = {:#x}".format(PC.get()))
         sys.exit(1)
+    print("I = {}".format(disassemble_instruction(PC.get())))
     step()
-    print("I = {}".format(disassemble_instruction(ITYPE.get(), I.get())))
 
 print("Arithmetic tests ran OK")

@@ -78,19 +78,21 @@ print('''\
 
 smite_WORD smite_single_step(smite_state *S) {
     smite_UWORD initial_PC = S->PC;
-    int res = smite_decode_instruction(S, &S->PC, &S->ITYPE, &S->I);
+    smite_UWORD ITYPE;
+    smite_WORD I;
+    int res = smite_decode_instruction(S, &S->PC, &ITYPE, &I);
     if (res != 0)
         return res;
 
-    switch (S->ITYPE) {
+    switch (ITYPE) {
     case INSTRUCTION_NUMBER:
         {
             const smite_UWORD args = 0;
-            RAISE_NON_ZERO(smite_push_stack(S, S->I));
+            RAISE_NON_ZERO(smite_push_stack(S, I));
             break;
         }
     case INSTRUCTION_ACTION:
-        switch (S->I) {''')
+        switch (I) {''')
 for (instruction, action) in Actions.__members__.items():
     # Concatenate the pieces.
     code = '\n'.join([
@@ -121,16 +123,16 @@ print('''\
         default: /* Undefined instruction; try extra instructions */
             {
                 const smite_UWORD args = 0;
-                RAISE_NON_ZERO(smite_extra(S));
+                RAISE_NON_ZERO(smite_extra(S, I));
                 break;
             }
         }
         break;
     default: /* Error during instruction fetch */
-        return S->ITYPE;
+        return ITYPE;
     }
 
-    trace(S->ITYPE, S->I);
+    trace(ITYPE, I);
 
     return 128;
 }''')

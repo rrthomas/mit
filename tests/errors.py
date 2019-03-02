@@ -87,8 +87,8 @@ for i in range(len(test)):
     while res == 128:
         print("PC = {}".format(PC.get()))
         print("S = {}".format(S))
+        print("I = {}".format(disassemble_instruction(PC.get())))
         res = step()
-        print("I = {}".format(disassemble_instruction(ITYPE.get(), I.get())))
 
     if result[i] != res:
          print("Error in errors tests: test {} failed; PC = {}".format(i + 1, PC.get()))
