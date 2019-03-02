@@ -30,6 +30,7 @@ struct _smite_state {
     int main_argc;
     char **main_argv;
     smite_UWORD *main_argv_len;
+    FILE *trace_fp; // FILE * of trace file, if used
 };
 
 // Stacks
@@ -39,9 +40,6 @@ struct _smite_state {
     (*(vp) = *(S->S0 + (S->STACK_DEPTH - (pos) - 1) * STACK_DIRECTION))
 #define UNCHECKED_STORE_STACK(pos, v)                                   \
     (*(S->S0 + (S->STACK_DEPTH - (pos) - 1) * STACK_DIRECTION) = (v))
-
-// Tracing
-extern FILE *trace_fp; // FILE * of trace file, if used
 
 // Align a VM address
 smite_UWORD smite_align(smite_UWORD addr);

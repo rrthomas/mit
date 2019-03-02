@@ -105,6 +105,7 @@ int main(int argc, char *argv[])
     bool core_dump = false;
     smite_UWORD memory_size = 0x100000U;
     smite_UWORD stack_size = 16384U;
+    FILE *trace_fp = NULL;
 
     // Options string starts with '+' to stop option processing at first non-option, then
     // leading ':' so as to return ':' for a missing arg, not '?'
@@ -151,6 +152,7 @@ int main(int argc, char *argv[])
         usage();
 
     smite_state *S = smite_init(memory_size, stack_size);
+    S->trace_fp = trace_fp;
     if (S == NULL)
         die("could not allocate virtual machine smite_state");
 
