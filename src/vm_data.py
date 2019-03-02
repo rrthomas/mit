@@ -60,31 +60,30 @@ class Actions(Enum):
         RAISE(0);
     ''')
 
-    POP = Action(0x01, ['depth'], [], '''\
-        S->STACK_DEPTH -= depth;
+    POP = Action(0x01, ['ITEMS', 'COUNT'], [], '''\
     ''')
 
-    DUP = Action(0x02, ['depth'], ['dupee'], '''\
-        RAISE_NON_ZERO(smite_load_stack(S, depth, &dupee));
+    DUP = Action(0x02, ['ITEMS', 'COUNT'], ['ITEMS', 'dupee'], '''\
+        RAISE_NON_ZERO(smite_load_stack(S, count, &dupee));
     ''')
 
-    SWAP = Action(0x03, ['depth'], [], '''\
-        if (depth > 0) {
+    SWAP = Action(0x03, ['ITEMS', 'COUNT'], ['ITEMS'], '''\
+        if (count > 0) {
             smite_WORD top, swapee;
-            RAISE_NON_ZERO(smite_load_stack(S, depth, &swapee));
+            RAISE_NON_ZERO(smite_load_stack(S, count, &swapee));
             RAISE_NON_ZERO(smite_load_stack(S, 0, &top));
-            RAISE_NON_ZERO(smite_store_stack(S, depth, top));
+            RAISE_NON_ZERO(smite_store_stack(S, count, top));
             RAISE_NON_ZERO(smite_store_stack(S, 0, swapee));
         }
     ''')
 
-    ROTATE_UP = Action(0x04, ['depth'], [], '''\
-        if (depth >= (smite_WORD)S->STACK_DEPTH) {
-            S->BAD_ADDRESS = depth;
-            RAISE(3);
+    ROTATE_UP = Action(0x04, ['ITEMS', 'COUNT'], ['ITEMS'], '''\
+        if (count >= (smite_WORD)S->STACK_DEPTH) {
+            S->BAD_ADDRESS = count;
+            RAISE_NON_ZERO(3);
         }
 
-        smite_UWORD offset = S->STACK_DEPTH - depth - 1;
+        smite_UWORD offset = S->STACK_DEPTH - count - 1;
         smite_WORD temp = *(S->S0 + offset * STACK_DIRECTION);
         memmove(S->S0 + offset * STACK_DIRECTION,
                 S->S0 + (offset + 1) * STACK_DIRECTION,
@@ -92,13 +91,13 @@ class Actions(Enum):
         *(S->S0 + (S->STACK_DEPTH - 1) * STACK_DIRECTION) = temp;
     ''')
 
-    ROTATE_DOWN = Action(0x05, ['depth'], [], '''\
-        if (depth >= (smite_WORD)S->STACK_DEPTH) {
-            S->BAD_ADDRESS = depth;
-            RAISE(3);
+    ROTATE_DOWN = Action(0x05, ['ITEMS', 'COUNT'], ['ITEMS'], '''\
+        if (count >= (smite_WORD)S->STACK_DEPTH) {
+            S->BAD_ADDRESS = count;
+            RAISE_NON_ZERO(3);
         }
 
-        smite_UWORD offset = S->STACK_DEPTH - depth - 1;
+        smite_UWORD offset = S->STACK_DEPTH - count - 1;
         smite_WORD temp = *(S->S0 + (S->STACK_DEPTH - 1) * STACK_DIRECTION);
         memmove(S->S0 + (offset + 1) * STACK_DIRECTION,
                 S->S0 + offset * STACK_DIRECTION,
