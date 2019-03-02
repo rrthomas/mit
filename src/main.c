@@ -192,14 +192,21 @@ int main(int argc, char *argv[])
     do {
         again = false;
         switch (res = smite_run(S)) {
-        case -2:
+        case 0:
+            {
+                smite_WORD v;
+                if ((res = (int)smite_pop_stack(S, &v)) == 0)
+                    res = (int)v;
+            }
+            break;
+        case 2:
             if (smite_realloc_stack(S, round_up(S->BAD_ADDRESS, page_size)) == 0) {
                 S->PC = S->BAD_PC;
                 again = true;
             }
             break;
-        case -5:
-        case -6:
+        case 5:
+        case 6:
             if (smite_realloc_memory(S, round_up(S->BAD_ADDRESS, page_size)) == 0) {
                 S->PC = S->BAD_PC;
                 again = true;
@@ -211,7 +218,7 @@ int main(int argc, char *argv[])
     } while (again);
 
     // Core dump on error
-    if (core_dump && (res <= -1 && res >= -128)) {
+    if (core_dump && (res >= 1 && res <= 128)) {
         warn("error %d raised at PC=%"PRI_XWORD, res, S->PC);
 
         char *file = xasprintf("smite-core.%lu", (unsigned long)getpid());

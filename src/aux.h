@@ -27,7 +27,6 @@ struct _smite_state {
 #undef R
 #undef R_RO
     smite_WORD *memory;
-    int halt_code;
     int main_argc;
     char **main_argv;
     smite_UWORD *main_argv_len;
@@ -67,8 +66,8 @@ int smite_byte_size(smite_WORD v); // return number of significant bytes in a sm
 #define INSTRUCTION_CHUNK_MASK ((1 << INSTRUCTION_CHUNK_BITS) - 1)
 #define INSTRUCTION_CONTINUATION_BIT (1 << INSTRUCTION_CHUNK_BITS)
 #define INSTRUCTION_NUMBER_BIT (1 << (INSTRUCTION_CHUNK_BITS + 1))
-ptrdiff_t smite_encode_instruction(smite_state *S, smite_UWORD addr, enum instruction_type type, smite_WORD v);
-int smite_decode_instruction(smite_state *S, smite_UWORD *addr, smite_WORD *val);
+int smite_encode_instruction(smite_state *S, smite_UWORD *addr, smite_UWORD type, smite_WORD v);
+int smite_decode_instruction(smite_state *S, smite_UWORD *addr, smite_UWORD *type, smite_WORD *val);
 
 
 #endif

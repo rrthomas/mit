@@ -121,10 +121,9 @@ libsmite.smite_find_msbit.argtypes = [c_word]
 
 libsmite.smite_byte_size.argtypes = [c_word]
 
-libsmite.smite_encode_instruction.restype = c_ptrdiff_t
-libsmite.smite_encode_instruction.argtypes = [c_void_p, c_uword, c_int, c_word]
+libsmite.smite_encode_instruction.argtypes = [c_void_p, POINTER(c_uword), c_uword, c_word]
 
-libsmite.smite_decode_instruction.argtypes = [c_void_p, POINTER(c_uword), POINTER(c_word)]
+libsmite.smite_decode_instruction.argtypes = [c_void_p, POINTER(c_uword), POINTER(c_uword), POINTER(c_word)]
 
 
 # State
@@ -180,7 +179,7 @@ class State:
         else:
             ret = libsmite.smite_run(self.state)
             if ret != -128:
-                print("HALT code {} was returned".format(ret));
+                print("Error code {} was returned".format(ret));
             return ret
 
     def step(self, n=1, addr=None, trace=False):
@@ -195,7 +194,7 @@ class State:
 
         if ret != -128:
             if ret != 0:
-                print("HALT code {} was returned".format(ret), end='')
+                print("Error code {} was returned".format(ret), end='')
                 if n > 1:
                     print(" after {} steps".format(done), end='')
                 if addr != None:
@@ -253,11 +252,15 @@ class State:
     # Assembly
     def action(self, instr):
         '''Assemble an action at 'here'.'''
-        self.here += libsmite.smite_encode_instruction(self.state, self.here, Types.ACTION, instr)
+        ptr = c_uword(self.here)
+        libsmite.smite_encode_instruction(self.state, byref(ptr), Types.ACTION, instr)
+        self.here = ptr.value
 
     def number(self, value):
         '''Assemble a number at 'here'.'''
-        self.here += libsmite.smite_encode_instruction(self.state, self.here, Types.NUMBER, value)
+        ptr = c_uword(self.here)
+        libsmite.smite_encode_instruction(self.state, byref(ptr), Types.NUMBER, value)
+        self.here = ptr.value
 
     def byte(self, byte):
         '''Assemble a byte at 'here'.'''
@@ -296,7 +299,8 @@ class State:
 
             ptr = c_uword(p)
             val = c_word()
-            ty = libsmite.smite_decode_instruction(self.state, byref(ptr), byref(val))
+            ty = c_uword()
+            libsmite.smite_decode_instruction(self.state, byref(ptr), byref(ty), byref(val))
             p = ptr.value
 
             if ty < 0:

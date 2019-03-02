@@ -15,7 +15,7 @@ VM.globalize(globals())
 # Assemble test code
 
 # here = 0
-number(8)
+number(7)
 number(14)
 
 # here = 2
@@ -27,10 +27,9 @@ number(LibcLib.WRITE_FILE)
 action(LIB_C)
 
 # here = 6
-number(0)
 action(HALT)
 
-# here = 8
+# here = 7
 byte(0x48)
 byte(0x65)
 byte(0x6c)
