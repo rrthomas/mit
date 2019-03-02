@@ -139,7 +139,7 @@ int main(int argc, char *argv[])
             printf(PACKAGE_NAME " " VERSION "\n"
                    "(c) SMite authors 1994-2019\n"
                    PACKAGE_NAME " comes with ABSOLUTELY NO WARRANTY.\n"
-                   "You may redistribute copies of " PACKAGE_NAME
+                   "You may redistribute copies of " PACKAGE_NAME "\n"
                    "under the terms of the MIT/X11 License.\n");
             exit(EXIT_SUCCESS);
         default:
