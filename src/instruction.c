@@ -9,9 +9,6 @@
 
 #include "config.h"
 
-#include <stddef.h>
-#include <unistd.h>
-
 #include "smite.h"
 #include "aux.h"
 #include "opcodes.h"

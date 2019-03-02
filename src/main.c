@@ -12,7 +12,6 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <stdarg.h>
-#include <errno.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <getopt.h>
