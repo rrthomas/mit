@@ -23,8 +23,8 @@ import collections.abc
 from ctypes import *
 from ctypes.util import find_library
 
-from smite.vm_data import *
-from smite.opcodes_extra import *
+from .vm_data import *
+from .opcodes_extra import *
 
 library_file = find_library("smite")
 assert(library_file)

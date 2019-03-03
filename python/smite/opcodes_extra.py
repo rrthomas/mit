@@ -1,1 +1,1 @@
-../../src/opcodes_extra.py
+../../src/smite_core/opcodes_extra.py
