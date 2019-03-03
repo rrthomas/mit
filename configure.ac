@@ -15,8 +15,7 @@ LT_INIT
 AM_PATH_PYTHON([3.4])
 AC_PATH_PROG(IPYTHON3, ipython3, [$PYTHON])
 AC_PATH_PROG(LATEXMK, latexmk, true)
-AC_PATH_PROG(CLOC, cloc, true)
-AC_SUBST([CLOC_OPTS], [--force-lang="C",h])
+AC_PATH_PROG(SLOCCOUNT, sloccount, true)
 AM_CONDITIONAL([HAVE_LATEXMK], [test "$ac_cv_path_LATEXMK" != "true"])
 gl_INIT
 

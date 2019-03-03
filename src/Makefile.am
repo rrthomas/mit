@@ -53,7 +53,7 @@ actions.c: gen-actions vm_data.py
 	$(PYTHON) $(srcdir)/gen-actions > actions.c
 
 loc:
-	$(CLOC) $(CLOC_OPTS) \
+	$(SLOCCOUNT) \
 		$(C_SRCS) \
 		$(@PACKAGE@_SOURCES) \
 		gen-register-list gen-instruction-list gen-instruction-type-list gen-opcodes-extra gen-actions

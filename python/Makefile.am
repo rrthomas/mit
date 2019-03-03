@@ -16,7 +16,7 @@ pkgpython_PYTHON =		\
 	@PACKAGE@/opcodes_extra.py
 
 loc:
-	$(CLOC) $(CLOC_OPTS) $(bin_SCRIPTS) $(pkgpython_PYTHON)
+	$(SLOCCOUNT) $(bin_SCRIPTS) $(pkgpython_PYTHON)
 
 EXTRA_DIST = \
 	$(man_MANS)		\
