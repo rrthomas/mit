@@ -1,6 +1,6 @@
 /.deps
 /.libs
-/__pycache__
+/smite_core/__pycache__
 *.lo
 *.o
 /libsmite.la
