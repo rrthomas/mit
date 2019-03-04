@@ -29,39 +29,129 @@ class Action:
         self.results = results
         self.code = code
 
-# Stack picture utilities
-COUNT_NAME = 'COUNT'
-VARIADIC_NAME = 'ITEMS'
 
-def is_named_stack_item(item):
-    return item != VARIADIC_NAME
-
-def _stack_item_to_var(item):
-    assert is_named_stack_item(item)
-    return item
-
+# Utility functions for StackPicture
 def stack_item_name(item):
-    return _stack_item_to_var(item).split(":")[0]
+    return item.split(":")[0]
 
 def stack_item_type(item):
-    l = _stack_item_to_var(item).split(":")
+    l = item.split(":")
     return l[1] if len(l) > 1 else 'smite_WORD'
 
-# Calculate (symbolic) depth of stack picture
 def item_size(item):
-    if is_named_stack_item(item):
-        return '(sizeof({}) / smite_word_size)'.format(stack_item_type(item))
+    '''Return a C expression for the size in stack words of a stack item.'''
+    return '(sizeof({}) / smite_word_size)'.format(stack_item_type(item))
+
+def load_var(pos, var):
+    if stack_item_type(var) != 'smite_WORD':
+        fmt = 'UNCHECKED_LOAD_STACK_TYPE({pos}, {type}, &{var})'
     else:
-        return '(smite_UWORD)COUNT'
+        fmt = 'UNCHECKED_LOAD_STACK({pos}, &{var})'
+    return fmt.format(
+        pos=pos,
+        var=stack_item_name(var),
+        type=stack_item_type(var)) + ';'
 
-def stack_depth(stack):
-    depth = ' + '.join([item_size(item) for item in stack])
-    return '({})'.format(depth if depth != '' else '0')
+def store_var(pos, var):
+    if stack_item_type(var) != 'smite_WORD':
+        fmt = 'UNCHECKED_STORE_STACK_TYPE({pos}, {type}, {var})'
+    else:
+        fmt = 'UNCHECKED_STORE_STACK({pos}, {var})'
+    return fmt.format(
+        pos=pos,
+        var=stack_item_name(var),
+        type=stack_item_type(var)) + ';'
 
-# Variable creator
-def declare_vars(stack):
-    return '\n'.join(['{} {};'.format(stack_item_type(v), stack_item_name(v))
-                      for v in stack if is_named_stack_item(v)])
+
+class StackPicture:
+    '''
+    Represents a description of the topmost items on the stack. The effect
+    of an instruction can be described using two StackPictures: one for the
+    arguments and one for the results.
+
+    Variadic instructions (such as POP, DUP, SWAP) have an argument called
+    "COUNT" which indicates how many additional (unnamed) items are on the
+    stack. The `is_variadic` flag is per-StackPicture, not per instruction.
+    For example, POP has variadic arguments but non-variadic results.
+
+    Public fields:
+
+     - named_items - list of str - the names of the non-variadic items,
+       which must be on the top of the stack, and might include "COUNT".
+       Each name may optionally be followed by ":TYPE" to give the C type of
+       the underlying quantity, if it might be bigger than one stack word.
+
+     - is_variadic - bool - If `True`, there are `COUNT` more items underneath
+       the non-variadic items.
+    '''
+    def __init__(self, named_items, is_variadic=False):
+        assert len(set(named_items)) == len(named_items)
+        self.named_items = named_items
+        self.is_variadic = is_variadic
+
+    @staticmethod
+    def from_list(stack):
+        '''
+         - stack - a stack picture as found in `vm_data.Action`, i.e. a list of
+           str. The first item is 'ITEMS' if the stack picture is variadic.
+           All other items are the names of items.
+        Returns a StackPicture.
+        '''
+        if stack and stack[0] == 'ITEMS':
+            return StackPicture(stack[1:], is_variadic=True)
+        else:
+            return StackPicture(stack)
+
+    def static_depth(self):
+        '''
+        Return a C expression for the number of stack words occupied by the
+        static items in a StackPicture.
+        '''
+        depth = ' + '.join([item_size(item) for item in self.named_items])
+        return '({})'.format(depth if depth != '' else '0')
+
+    def dynamic_depth(self):
+        '''
+        Returns a C expression that computes the total number of items,
+        including the variadic items. Assumes:
+         - the C variable `COUNT` contains the number of variadic items.
+        '''
+        depth = self.static_depth()
+        if self.is_variadic:
+            depth = '((smite_UWORD)COUNT + {})'.format(depth)
+        return depth
+
+    def declare_vars(self):
+        '''Returns C variable declarations for all of `self.named_items`.'''
+        return '\n'.join(['{} {};'.format(stack_item_type(i), stack_item_name(i))
+                          for i in self.named_items])
+
+    def load(self):
+        '''
+        Returns C source code to read the named items from the stack into C
+        variables.
+        `S->STACK_DEPTH` is not modified.
+        '''
+        code = []
+        pos = ['-1']
+        for i in reversed(self.named_items):
+            pos.append(item_size(i))
+            code.append(load_var("+".join(pos), i))
+        return '\n'.join(code)
+
+    def store(self):
+        '''
+        Returns C source code to write the named items from C variables into
+        the stack.
+        `S->STACK_DEPTH` must be modified first.
+        '''
+        code = []
+        pos = ['-1']
+        for i in reversed(self.named_items):
+            pos.append(item_size(i))
+            code.append(store_var("+".join(pos), i))
+        return '\n'.join(code)
+
 
 def disable_warnings(warnings, c_source):
     '''
@@ -98,54 +188,6 @@ if ({num_pushes} > {num_pops} && (S->STACK_SIZE - S->STACK_DEPTH < {num_pushes} 
     RAISE(2);
 }}'''.format(num_pops=num_pops, num_pushes=num_pushes))
 
-def load_var(pos, var):
-    if stack_item_type(var) != 'smite_WORD':
-        fmt = 'UNCHECKED_LOAD_STACK_TYPE({pos}, {type}, &{var})'
-    else:
-        fmt = 'UNCHECKED_LOAD_STACK({pos}, &{var})'
-    return fmt.format(
-        pos=pos,
-        var=stack_item_name(var),
-        type=stack_item_type(var)) + ';'
-
-def load_args(args):
-    '''
-    Returns C source code to read the named arguments from the stack into C
-    variables.
-    `S->STACK_DEPTH` is not modified.
-    '''
-    code = []
-    pos = ['-1']
-    for arg in reversed(args):
-        pos.append(str(item_size(arg)))
-        if is_named_stack_item(arg):
-            code.append(load_var("+".join(pos), arg))
-    return '\n'.join(code)
-
-def store_var(pos, var):
-    '''
-    Returns C source code to write the named arguments from C variables into
-    the stack.
-    `S->STACK_DEPTH` must be modified first.
-    '''
-    if stack_item_type(var) != 'smite_WORD':
-        fmt = 'UNCHECKED_STORE_STACK_TYPE({pos}, {type}, {var})'
-    else:
-        fmt = 'UNCHECKED_STORE_STACK({pos}, {var})'
-    return fmt.format(
-        pos=pos,
-        var=stack_item_name(var),
-        type=stack_item_type(var)) + ';'
-
-def store_results(args, results):
-    code = []
-    pos = ['-1']
-    for result in reversed(results):
-        pos.append(str(item_size(result)))
-        if is_named_stack_item(result):
-            code.append(store_var("+".join(pos), result))
-    return '\n'.join(code)
-
 def dispatch(actions, prefix, undefined_case):
     '''Generate dispatch code for some Actions.
 
@@ -154,18 +196,22 @@ def dispatch(actions, prefix, undefined_case):
     output = '        switch (I) {\n'
     for (instruction, action) in actions.__members__.items():
         # Concatenate the pieces.
+        args = StackPicture.from_list(action.value.args)
+        results = StackPicture.from_list(action.value.results)
+        dynamic_args = args.dynamic_depth()
+        dynamic_results = results.dynamic_depth()
         code = '\n'.join([
-            declare_vars(action.value.args),
-            declare_vars(action.value.results),
-            'const smite_UWORD static_args = {};'.format(stack_depth([arg for arg in action.value.args if is_named_stack_item(arg)])),
+            args.declare_vars(),
+            results.declare_vars(),
+            'const smite_UWORD static_args = {};'.format(args.static_depth()),
             check_pops('static_args'),
-            load_args(action.value.args),
-            check_pops(stack_depth(action.value.args)),
-            check_pops_then_pushes(stack_depth(action.value.args), stack_depth(action.value.results)),
+            args.load(),
+            check_pops(dynamic_args),
+            check_pops_then_pushes(dynamic_args, dynamic_results),
             'S->STACK_DEPTH -= static_args;',
             textwrap.dedent(action.value.code.rstrip()),
-            'S->STACK_DEPTH += {num_pushes} - ({num_pops} - {nstatic_args});'.format(num_pops=stack_depth(action.value.args), num_pushes=stack_depth(action.value.results), nstatic_args='static_args'),
-            store_results(action.value.args, action.value.results),
+            'S->STACK_DEPTH += {num_pushes} - ({num_pops} - {nstatic_args});'.format(num_pops=dynamic_args, num_pushes=dynamic_results, nstatic_args='static_args'),
+            results.store(),
         ])
         # Remove newlines resulting from empty strings in the above.
         code = re.sub('\n+', '\n', code, flags=re.MULTILINE).strip('\n')
