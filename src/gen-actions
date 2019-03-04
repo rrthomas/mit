@@ -19,7 +19,7 @@ print('''\
 #define RAISE(code)                         \\
     do {                                    \\
         int error = (code);                 \\
-        S->STACK_DEPTH += args;             \\
+        S->STACK_DEPTH += static_args;      \\
         S->PC = initial_PC;                 \\
         return error;                       \\
     } while(0)
@@ -43,7 +43,7 @@ smite_WORD smite_single_step(smite_state *S) {
     switch (ITYPE) {
     case INSTRUCTION_NUMBER:
         {
-            const smite_UWORD args = 0;
+            const smite_UWORD static_args = 0;
             RAISE_NON_ZERO(smite_push_stack(S, I));
             break;
         }
@@ -52,7 +52,7 @@ smite_WORD smite_single_step(smite_state *S) {
 print(dispatch(Actions, 'O_', '''\
             /* Undefined instruction; try extra instructions */
             {
-                const smite_UWORD args = 0;
+                const smite_UWORD static_args = 0;
                 RAISE_NON_ZERO(smite_extra(S, I));
             }'''))
 
