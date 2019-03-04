@@ -123,7 +123,6 @@ def store_var(pos, var):
 
 def store_results(args, results):
     code = []
-    code.append('S->STACK_DEPTH += {nresults} - ({nargs} - {nstatic_args});'.format(nargs=stack_depth(args), nresults=stack_depth(results), nstatic_args=len([arg for arg in args if stack_item_has_var(arg)])))
     pos = ['-1']
     for result in reversed(results):
         pos.append(str(item_size(result)))
@@ -147,6 +146,7 @@ def dispatch(actions, prefix, undefined_case):
             check_dynamic_args_and_results(action.value.args, action.value.results),
             'S->STACK_DEPTH -= args;',
             textwrap.dedent(action.value.code.rstrip()),
+            'S->STACK_DEPTH += {nresults} - ({nargs} - {nstatic_args});'.format(nargs=stack_depth(action.value.args), nresults=stack_depth(action.value.results), nstatic_args=len([arg for arg in action.value.args if stack_item_has_var(arg)])),
             store_results(action.value.args, action.value.results),
         ])
         # Remove newlines resulting from empty strings in the above.
