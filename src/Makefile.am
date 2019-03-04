@@ -38,22 +38,22 @@ main.o: tbl_opts.h register-list.h
 		--output=$@ ./@PACKAGE@$(EXEEXT); \
 	fi
 
-register-list.h: gen-register-list smite_core/vm_data.py
+register-list.h: gen-register-list smite_core/vm_data.py smite_core/action_gen.py
 	$(PYTHON_WITH_PATH) $(srcdir)/gen-register-list > register-list.h
 
-opcodes-extra.h: gen-opcodes-extra smite_core/opcodes_extra.py
+opcodes-extra.h: gen-opcodes-extra smite_core/opcodes_extra.py smite_core/action_gen.py
 	$(PYTHON_WITH_PATH) $(srcdir)/gen-opcodes-extra > opcodes-extra.h
 
-instruction-list.h: gen-instruction-list smite_core/vm_data.py
+instruction-list.h: gen-instruction-list smite_core/vm_data.py smite_core/action_gen.py
 	$(PYTHON_WITH_PATH) $(srcdir)/gen-instruction-list > instruction-list.h
 
-instruction-type-list.h: gen-instruction-type-list smite_core/vm_data.py
+instruction-type-list.h: gen-instruction-type-list smite_core/vm_data.py smite_core/action_gen.py
 	$(PYTHON_WITH_PATH) $(srcdir)/gen-instruction-type-list > instruction-type-list.h
 
 actions.c: gen-actions smite_core/vm_data.py smite_core/action_gen.py
 	$(PYTHON_WITH_PATH) $(srcdir)/gen-actions > actions.c
 
- extra.c: gen-extra smite_core/action_gen.py
+extra.c: gen-extra smite_core/action_gen.py
 	$(PYTHON_WITH_PATH) $(srcdir)/gen-extra > extra.c
 
 loc:
