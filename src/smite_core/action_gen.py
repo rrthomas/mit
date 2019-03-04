@@ -86,7 +86,7 @@ if ((S->STACK_DEPTH < {nargs})) {{
 
 def check_dynamic_args_and_results(args, results):
     return disable_warnings(['-Wtype-limits'], '''\
-if ((S->STACK_SIZE - (S->STACK_DEPTH - {nargs}) < {nresults})) {{
+if ((S->STACK_DEPTH < {nargs}) || (S->STACK_SIZE - (S->STACK_DEPTH - {nargs}) < {nresults})) {{
     S->BAD_ADDRESS = {nresults} - {nargs};
     RAISE(2);
 }}'''.format(nargs=stack_depth(args), nresults=stack_depth(results)))
@@ -109,7 +109,6 @@ def load_args(args):
         if stack_item_has_var(arg):
             code.append(load_var("+".join(pos), arg))
     code.append('const smite_UWORD args = {};'.format(len([arg for arg in args if stack_item_has_var(arg)])))
-    code.append('S->STACK_DEPTH -= args;')
     return '\n'.join(code)
 
 def store_var(pos, var):
@@ -146,6 +145,7 @@ def dispatch(actions, prefix, undefined_case):
             check_static_args(action.value.args),
             load_args(action.value.args),
             check_dynamic_args_and_results(action.value.args, action.value.results),
+            'S->STACK_DEPTH -= args;',
             textwrap.dedent(action.value.code.rstrip()),
             store_results(action.value.args, action.value.results),
         ])
