@@ -13,6 +13,7 @@ PYTHON_WITH_PATH = export PYTHONPATH=$(top_srcdir)/python; $(PYTHON)
 lib_LTLIBRARIES = libsmite.la
 C_SRCS = bits_util.c storage.c instruction.c extra.h object.c actions-common.h
 GENERATED_SRCS = register-list.h instruction-list.h instruction-type-list.h actions.c extra.c
+SMITE_CORE_SRCS = smite_core/vm_data.py smite_core/opcodes_extra.py smite_core/action_gen.py
 libsmite_la_SOURCES = $(C_SRCS) $(GENERATED_SRCS)
 libsmite_la_LIBADD = $(top_builddir)/lib/libgnu.la
 
@@ -60,11 +61,12 @@ loc:
 	$(SLOCCOUNT) \
 		$(C_SRCS) \
 		$(@PACKAGE@_SOURCES) \
+		$(SMITE_CORE_SRCS) \
 		gen-register-list gen-instruction-list gen-instruction-type-list gen-opcodes-extra gen-actions
 
 EXTRA_DIST = \
 	@PACKAGE@.h.in \
-	smite_core/vm_data.py smite_core/opcodes_extra.py smite_core/action_gen.py \
+	$(SMITE_CORE_SRCS) \
 	gen-register-list gen-instruction-list gen-instruction-type-list gen-actions gen-opcodes-extra gen-extra
 
 DISTCLEANFILES = @PACKAGE@.1
