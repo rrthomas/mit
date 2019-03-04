@@ -8,6 +8,7 @@
 # RISK.
 
 from enum import Enum, IntEnum, unique
+from .action_gen import Action
 
 class Register:
     '''VM register descriptor.'''
@@ -32,26 +33,6 @@ class Types(IntEnum):
     '''Instruction type opcode.'''
     NUMBER = 0x0
     ACTION = 0x1
-
-class Action:
-    '''VM action instruction descriptor.
-
-     - opcode - int - SMite opcode number.
-     - args - list - list of stack arguments.
-     - results - list - list of stack results.
-     - code - str - C source code.
-
-    C variables are created for the arguments and results; the arguments are
-    pushed and results popped.
-
-    The code should RAISE any error before writing any state, so that if an
-    error is raised, the state of the VM is not changed.
-    '''
-    def __init__(self, opcode, args, results, code):
-        self.opcode = opcode
-        self.args = args
-        self.results = results
-        self.code = code
 
 @unique
 class Actions(Enum):

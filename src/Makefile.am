@@ -8,10 +8,11 @@
 # RISK.
 
 AM_CPPFLAGS = -I$(top_builddir)/lib -I$(top_srcdir)/lib $(WARN_CFLAGS)
+PYTHON_WITH_PATH = export PYTHONPATH=$(top_srcdir)/python; $(PYTHON)
 
 lib_LTLIBRARIES = libsmite.la
-C_SRCS = bits_util.c storage.c instruction.c extra.c extra.h object.c
-GENERATED_SRCS = register-list.h instruction-list.h instruction-type-list.h actions.c
+C_SRCS = bits_util.c storage.c instruction.c extra.h object.c actions-common.h
+GENERATED_SRCS = register-list.h instruction-list.h instruction-type-list.h actions.c extra.c
 libsmite_la_SOURCES = $(C_SRCS) $(GENERATED_SRCS)
 libsmite_la_LIBADD = $(top_builddir)/lib/libgnu.la
 
@@ -37,20 +38,23 @@ main.o: tbl_opts.h register-list.h
 		--output=$@ ./@PACKAGE@$(EXEEXT); \
 	fi
 
-register-list.h: gen-register-list vm_data.py
-	$(PYTHON) $(srcdir)/gen-register-list > register-list.h
+register-list.h: gen-register-list smite_core/vm_data.py
+	$(PYTHON_WITH_PATH) $(srcdir)/gen-register-list > register-list.h
 
-opcodes-extra.h: gen-opcodes-extra opcodes_extra.py
-	$(PYTHON) $(srcdir)/gen-opcodes-extra > opcodes-extra.h
+opcodes-extra.h: gen-opcodes-extra smite_core/opcodes_extra.py
+	$(PYTHON_WITH_PATH) $(srcdir)/gen-opcodes-extra > opcodes-extra.h
 
-instruction-list.h: gen-instruction-list vm_data.py
-	$(PYTHON) $(srcdir)/gen-instruction-list > instruction-list.h
+instruction-list.h: gen-instruction-list smite_core/vm_data.py
+	$(PYTHON_WITH_PATH) $(srcdir)/gen-instruction-list > instruction-list.h
 
-instruction-type-list.h: gen-instruction-type-list vm_data.py
-	$(PYTHON) $(srcdir)/gen-instruction-type-list > instruction-type-list.h
+instruction-type-list.h: gen-instruction-type-list smite_core/vm_data.py
+	$(PYTHON_WITH_PATH) $(srcdir)/gen-instruction-type-list > instruction-type-list.h
 
-actions.c: gen-actions vm_data.py
-	$(PYTHON) $(srcdir)/gen-actions > actions.c
+actions.c: gen-actions smite_core/vm_data.py
+	$(PYTHON_WITH_PATH) $(srcdir)/gen-actions > actions.c
+
+extra.c: gen-extra
+	$(PYTHON_WITH_PATH) $(srcdir)/gen-extra > extra.c
 
 loc:
 	$(SLOCCOUNT) \
@@ -60,8 +64,8 @@ loc:
 
 EXTRA_DIST = \
 	@PACKAGE@.h.in \
-	vm_data.py opcodes_extra.py \
-	gen-register-list gen-instruction-list gen-instruction-type-list gen-actions gen-opcodes-extra
+	smite_core/vm_data.py smite_core/opcodes_extra.py smite_core/action_gen.py \
+	gen-register-list gen-instruction-list gen-instruction-type-list gen-actions gen-opcodes-extra gen-extra
 
 DISTCLEANFILES = @PACKAGE@.1
 # Ignore built files that are part of the distribution (specifically,

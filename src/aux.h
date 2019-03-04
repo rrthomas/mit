@@ -41,6 +41,19 @@ struct _smite_state {
 #define UNCHECKED_STORE_STACK(pos, v)                                   \
     (*(S->S0 + (S->STACK_DEPTH - (pos) - 1) * STACK_DIRECTION) = (v))
 
+#define UNCHECKED_LOAD_STACK_TYPE(pos, ty, vp)                          \
+    *vp = 0;                                                            \
+    for (unsigned i = 0; i < smite_align(sizeof(ty)) / smite_word_size; i++) { \
+        smite_WORD w;                                                   \
+        UNCHECKED_LOAD_STACK(pos + i, &w);                              \
+        *vp = (ty)(((size_t)(*vp) << smite_word_bit) | (smite_UWORD)w); \
+    }
+#define UNCHECKED_STORE_STACK_TYPE(pos, ty, v)                          \
+    for (unsigned i = 0; i < smite_align(sizeof(ty)) / smite_word_size; i++) { \
+        UNCHECKED_STORE_STACK(pos + i, (smite_UWORD)((size_t)v & smite_word_mask)); \
+        v = (ty)((size_t)v >> smite_word_bit);                          \
+    }
+
 // Align a VM address
 smite_UWORD smite_align(smite_UWORD addr);
 
