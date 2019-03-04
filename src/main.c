@@ -153,7 +153,7 @@ int main(int argc, char *argv[])
     smite_state *S = smite_init(memory_size, stack_size);
     S->trace_fp = trace_fp;
     if (S == NULL)
-        die("could not allocate virtual machine smite_state");
+        die("could not allocate virtual machine state");
 
     if (smite_register_args(S, argc, argv + optind) != 0)
         die("could not map command-line arguments");
