@@ -50,10 +50,10 @@ instruction-list.h: gen-instruction-list smite_core/vm_data.py
 instruction-type-list.h: gen-instruction-type-list smite_core/vm_data.py
 	$(PYTHON_WITH_PATH) $(srcdir)/gen-instruction-type-list > instruction-type-list.h
 
-actions.c: gen-actions smite_core/vm_data.py
+actions.c: gen-actions smite_core/vm_data.py smite_core/action_gen.py
 	$(PYTHON_WITH_PATH) $(srcdir)/gen-actions > actions.c
 
-extra.c: gen-extra
+ extra.c: gen-extra smite_core/action_gen.py
 	$(PYTHON_WITH_PATH) $(srcdir)/gen-extra > extra.c
 
 loc:
