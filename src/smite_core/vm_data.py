@@ -45,23 +45,23 @@ class Actions(Enum):
     ''')
 
     DUP = Action(0x02, ['ITEMS', 'COUNT'], ['ITEMS', 'dupee'], '''\
-        UNCHECKED_LOAD_STACK(count, &dupee);
+        UNCHECKED_LOAD_STACK(COUNT, &dupee);
     ''')
 
     SWAP = Action(0x03, ['ITEMS', 'COUNT'], ['ITEMS'], '''\
-        if (count > 0) {
+        if (COUNT > 0) {
             smite_WORD top, swapee;
-            UNCHECKED_LOAD_STACK(count, &swapee);
+            UNCHECKED_LOAD_STACK(COUNT, &swapee);
             UNCHECKED_LOAD_STACK(0, &top);
-            UNCHECKED_STORE_STACK(count, top);
+            UNCHECKED_STORE_STACK(COUNT, top);
             UNCHECKED_STORE_STACK(0, swapee);
         }
     ''')
 
     ROTATE_UP = Action(0x04, ['ITEMS', 'COUNT'], ['ITEMS'], '''\
         smite_WORD bottom;
-        UNCHECKED_LOAD_STACK(count, &bottom);
-        for (smite_UWORD i = (smite_UWORD)count; i > 0; i--) {
+        UNCHECKED_LOAD_STACK(COUNT, &bottom);
+        for (smite_UWORD i = (smite_UWORD)COUNT; i > 0; i--) {
             smite_WORD temp;
             UNCHECKED_LOAD_STACK(i - 1, &temp);
             UNCHECKED_STORE_STACK(i, temp);
@@ -72,12 +72,12 @@ class Actions(Enum):
     ROTATE_DOWN = Action(0x05, ['ITEMS', 'COUNT'], ['ITEMS'], '''\
         smite_WORD top;
         UNCHECKED_LOAD_STACK(0, &top);
-        for (smite_UWORD i = 0; i < (smite_UWORD)count; i++) {
+        for (smite_UWORD i = 0; i < (smite_UWORD)COUNT; i++) {
             smite_WORD temp;
             UNCHECKED_LOAD_STACK(i + 1, &temp);
             UNCHECKED_STORE_STACK(i, temp);
         }
-        UNCHECKED_STORE_STACK(count, top);
+        UNCHECKED_STORE_STACK(COUNT, top);
     ''')
 
     NOT = Action(0x06, ['x'], ['r'], '''\

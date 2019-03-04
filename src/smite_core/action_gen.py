@@ -30,13 +30,15 @@ class Action:
         self.code = code
 
 # Stack picture utilities
-stack_specials = {'COUNT': 'count', 'ITEMS': True}
+COUNT_NAME = 'COUNT'
+VARIADIC_NAME = 'ITEMS'
 
 def stack_item_has_var(item):
-    return stack_specials.get(item) != True
+    return item != VARIADIC_NAME
 
 def _stack_item_to_var(item):
-    return stack_specials.get(item) or item
+    assert stack_item_has_var(item)
+    return item
 
 def stack_item_name(item):
     return _stack_item_to_var(item).split(":")[0]
@@ -49,8 +51,8 @@ def stack_item_type(item):
 def item_size(item):
     if stack_item_has_var(item):
         return '(sizeof({}) / smite_word_size)'.format(stack_item_type(item))
-    elif stack_specials.get(item) == True:
-        return '(smite_UWORD)count'
+    else:
+        return '(smite_UWORD)COUNT'
 
 def stack_depth(stack):
     depth = ' + '.join([item_size(item) for item in stack])
@@ -61,29 +63,33 @@ def make_vars(stack):
     return '\n'.join(['{} {};'.format(stack_item_type(v), stack_item_name(v))
                       for v in stack if stack_item_has_var(v)])
 
-def check_static_args(args):
+def disable_warnings(warnings, c_source):
+    '''
+    Returns `c_source` wrapped in "#pragmas" to suppress the given list
+    `warnings` of warning flags.
+    '''
     return '''\
 #pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wtype-limits"
-#pragma GCC diagnostic ignored "-Wunused-variable"
+{pragmas}
+{c_source}
+#pragma GCC diagnostic pop'''.format(c_source=c_source,
+                                     pragmas='\n'.join(['#pragma GCC diagnostic ignored "{}"'.format(w)
+                                                        for w in warnings]))
+
+def check_static_args(args):
+    return disable_warnings(['-Wtype-limits', '-Wunused-variable'], '''\
 if ((S->STACK_DEPTH < {nargs})) {{
     S->BAD_ADDRESS = {nargs};
     const smite_UWORD args = 0;
     RAISE(3);
-}}
-#pragma GCC diagnostic pop
-'''.format(nargs=len(list(filter(stack_item_has_var, args))))
+}}'''.format(nargs=len([arg for arg in args if stack_item_has_var(arg)])))
 
 def check_dynamic_args_and_results(args, results):
-    return '''\
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wtype-limits"
+    return disable_warnings(['-Wtype-limits'], '''\
 if ((S->STACK_SIZE - (S->STACK_DEPTH - {nargs}) < {nresults})) {{
     S->BAD_ADDRESS = {nresults} - {nargs};
     RAISE(2);
-}}
-#pragma GCC diagnostic pop
-'''.format(nargs=stack_depth(args), nresults=stack_depth(results))
+}}'''.format(nargs=stack_depth(args), nresults=stack_depth(results)))
 
 def load_var(pos, var):
     if stack_item_type(var) != 'smite_WORD':
@@ -102,7 +108,7 @@ def load_args(args):
         pos.append(str(item_size(arg)))
         if stack_item_has_var(arg):
             code.append(load_var("+".join(pos), arg))
-    code.append('const smite_UWORD args = {};'.format(len(list(filter(stack_item_has_var, args)))))
+    code.append('const smite_UWORD args = {};'.format(len([arg for arg in args if stack_item_has_var(arg)])))
     code.append('S->STACK_DEPTH -= args;')
     return '\n'.join(code)
 
@@ -118,7 +124,7 @@ def store_var(pos, var):
 
 def store_results(args, results):
     code = []
-    code.append('S->STACK_DEPTH += {nresults} - ({nargs} - {nstatic_args});'.format(nargs=stack_depth(args), nresults=stack_depth(results), nstatic_args=len(list(filter(stack_item_has_var, args)))))
+    code.append('S->STACK_DEPTH += {nresults} - ({nargs} - {nstatic_args});'.format(nargs=stack_depth(args), nresults=stack_depth(results), nstatic_args=len([arg for arg in args if stack_item_has_var(arg)])))
     pos = ['-1']
     for result in reversed(results):
         pos.append(str(item_size(result)))
