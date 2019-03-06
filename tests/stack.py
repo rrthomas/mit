@@ -20,7 +20,6 @@ correct = [
     [1, 2, 3],
     [1, 2, 3, 0],
     [1, 2, 3, 3],
-    [1, 2, 3, 3, 1],
     [1, 2, 3],
     [1, 2, 3, 1],
     [1, 3, 2],
@@ -28,11 +27,10 @@ correct = [
     [1, 3, 2, 3],
     [1, 3, 2, 3, 1],
     [1, 3, 3, 2],
-    [1, 3, 3, 2, 1],
     [1, 3, 3],
     [1, 3, 3, 0],
     [1, 3, 3, 3],
-    [1, 3, 3, 3, 4],
+    [1, 3, 3, 3, 0],
     [],
     [2],
     [2, 1],
@@ -56,7 +54,6 @@ number(2)
 number(3)
 number(0)
 action(DUP)
-number(1)
 action(POP)
 number(1)
 action(SWAP)
@@ -64,12 +61,11 @@ number(1)
 action(DUP)
 number(1)
 action(SWAP)
-number(1)
 action(POP)
 number(0)
 action(DUP)
-action(GET_STACK_DEPTH)
-action(POP)
+number(0)
+action(SET_STACK_DEPTH)
 number(2)
 number(1)
 number(0)
