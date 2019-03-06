@@ -21,7 +21,7 @@ class Register:
 class Registers(Enum):
     '''VM registers.'''
     PC = Register()
-    BAD_ADDRESS = Register(read_only=True)
+    BAD = Register(read_only=True)
     MEMORY = Register(read_only=True)
     STACK_DEPTH = Register()
     S0 = Register("smite_WORDP", read_only=True)
@@ -194,7 +194,7 @@ class Actions(Enum):
 
     SET_STACK_DEPTH = Action(0x1e, ['a'], [], '''\
         if ((smite_UWORD)a > S->STACK_SIZE) {
-            S->BAD_ADDRESS = a;
+            S->BAD = a;
             RAISE(2);
         }
         S->STACK_DEPTH = a;

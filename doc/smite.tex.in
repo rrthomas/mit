@@ -97,7 +97,7 @@ The registers, each with its function, are set out in table~\ref{regtable}.
 \bf Register & \bf Function \\
  \midrule
 {\tt PC} & The {\tt P}rogram {\tt C}ounter. Points to the next byte from which an instruction may be loaded. \\
-{\tt BAD\_ADDRESS} & The invalid stack position, or invalid or unaligned memory address, that caused the last memory error. \\
+{\tt BAD} & The invalid stack position, or invalid or unaligned memory address, that caused the last memory error. \\
 {\tt STACK\_DEPTH} & The number of items on the stack. \\
 {\tt ENDISM} & The endianness of @PACKAGE_NAME@: 0 = Little-endian, 1 = Big-endian. \\
 {\tt WORD\_SIZE} & The number of bytes in a word. Must be in the range $2$ to $32$ inclusive, and a power of $2$. \\
@@ -152,7 +152,7 @@ initialisation specified above.
 \subsection{Errors and termination}
 \label{errors}
 
-When @PACKAGE_NAME@ encounters certain abnormal situations, such as an attempt to access an invalid address, or divide by zero, an {\bf error} is {\bf raised}, and execution terminates; an {\bf error code} is returned to the caller. The instruction has no effect, and {\tt PC} is not advanced to the next instruction. If the error is a stack or memory access error, {\tt BAD\_ADDRESS} is set to the stack position or address that caused the error.
+When @PACKAGE_NAME@ encounters certain abnormal situations, such as an attempt to access an invalid address, or divide by zero, an {\bf error} is {\bf raised}, and execution terminates; an {\bf error code} is returned to the caller. The instruction has no effect, and {\tt PC} is not advanced to the next instruction. If the error is a stack or memory access error, {\tt BAD} is set to the stack position or address that caused the error.
 
 Execution can also be terminated explicitly by performing a {\tt HALT} action (see section~\ref{haltact}).
 
@@ -164,11 +164,11 @@ Error codes are unsigned numbers. $0$ to $128$ are reserved for @PACKAGE_NAME@'s
 \bf Code & \bf Meaning \\ \midrule
 $0$ & A {\tt HALT} instruction was executed. \\
 $1$ & Invalid opcode (see section~\ref{opcodes}). \\
-$2$ & Attempt to set {\tt STACK\_DEPTH} greater than {\tt STACK\_SIZE}. {\tt BAD\_ADDRESS} is set to the extra number of words of stack space required. \\
-$3$ & Invalid stack read. {\tt BAD\_ADDRESS} is set to the invalid stack position. \\
-$4$ & Invalid stack write. {\tt BAD\_ADDRESS} is set to the invalid stack position. \\
-$5$ & Invalid memory read. {\tt BAD\_ADDRESS} is set to the invalid address. \\
-$6$ & Invalid memory write. {\tt BAD\_ADDRESS} is set to the invalid address. \\
+$2$ & Attempt to set {\tt STACK\_DEPTH} greater than {\tt STACK\_SIZE}. {\tt BAD} is set to the extra number of words of stack space required. \\
+$3$ & Invalid stack read. {\tt BAD} is set to the invalid stack position. \\
+$4$ & Invalid stack write. {\tt BAD} is set to the invalid stack position. \\
+$5$ & Invalid memory read. {\tt BAD} is set to the invalid address. \\
+$6$ & Invalid memory write. {\tt BAD} is set to the invalid address. \\
 $7$ & Address alignment error: raised when an instruction expecting a word-aligned address is given a valid but non-aligned address. \\
 $8$ & Division by zero attempted (see section~\ref{arithmetic}). \\
 $128$ & {\bf single\_step()} has terminated without error. \\

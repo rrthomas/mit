@@ -61,11 +61,11 @@ _GL_ATTRIBUTE_PURE uint8_t *smite_native_address_of_range(smite_state *S, smite_
 int smite_load_word(smite_state *S, smite_UWORD addr, smite_WORD *value)
 {
     if (addr >= S->MEMORY) {
-        S->BAD_ADDRESS = addr;
+        S->BAD = addr;
         return 5;
     }
     if (!smite_is_aligned(addr)) {
-        S->BAD_ADDRESS = addr;
+        S->BAD = addr;
         return 7;
     }
 
@@ -76,7 +76,7 @@ int smite_load_word(smite_state *S, smite_UWORD addr, smite_WORD *value)
 int smite_load_byte(smite_state *S, smite_UWORD addr, smite_BYTE *value)
 {
     if (addr >= S->MEMORY) {
-        S->BAD_ADDRESS = addr;
+        S->BAD = addr;
         return 5;
     }
 
@@ -87,11 +87,11 @@ int smite_load_byte(smite_state *S, smite_UWORD addr, smite_BYTE *value)
 int smite_store_word(smite_state *S, smite_UWORD addr, smite_WORD value)
 {
     if (addr >= S->MEMORY) {
-        S->BAD_ADDRESS = addr;
+        S->BAD = addr;
         return 6;
     }
     if (!smite_is_aligned(addr)) {
-        S->BAD_ADDRESS = addr;
+        S->BAD = addr;
         return 7;
     }
 
@@ -102,7 +102,7 @@ int smite_store_word(smite_state *S, smite_UWORD addr, smite_WORD value)
 int smite_store_byte(smite_state *S, smite_UWORD addr, smite_BYTE value)
 {
     if (addr >= S->MEMORY) {
-        S->BAD_ADDRESS = addr;
+        S->BAD = addr;
         return 6;
     }
 
@@ -116,7 +116,7 @@ int smite_store_byte(smite_state *S, smite_UWORD addr, smite_BYTE value)
 int smite_load_stack(smite_state *S, smite_UWORD pos, smite_WORD *vp)
 {
     if (pos >= S->STACK_DEPTH) {
-        S->BAD_ADDRESS = pos;
+        S->BAD = pos;
         return 3;
     }
 
@@ -127,7 +127,7 @@ int smite_load_stack(smite_state *S, smite_UWORD pos, smite_WORD *vp)
 int smite_store_stack(smite_state *S, smite_UWORD pos, smite_WORD v)
 {
     if (pos >= S->STACK_DEPTH) {
-        S->BAD_ADDRESS = pos;
+        S->BAD = pos;
         return 4;
     }
 
@@ -145,7 +145,7 @@ int smite_pop_stack(smite_state *S, smite_WORD *v)
 int smite_push_stack(smite_state *S, smite_WORD v)
 {
     if (S->STACK_DEPTH == S->STACK_SIZE) {
-        S->BAD_ADDRESS = S->STACK_SIZE;
+        S->BAD = S->STACK_SIZE;
         return 2;
     }
 
@@ -205,7 +205,7 @@ smite_state *smite_init(size_t memory_size, size_t stack_size)
 #endif
         ;
     S->PC = 0;
-    S->BAD_ADDRESS = 0;
+    S->BAD = 0;
     S->STACK_DEPTH = 0;
 
     return S;

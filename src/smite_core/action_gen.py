@@ -176,7 +176,7 @@ def check_pops(num_pops):
     '''
     return disable_warnings(['-Wtype-limits', '-Wunused-variable', '-Wshadow'], '''\
 if ((S->STACK_DEPTH < {num_pops})) {{
-    S->BAD_ADDRESS = {num_pops};
+    S->BAD = {num_pops};
     const smite_UWORD static_args = 0;
     RAISE(3);
 }}'''.format(num_pops=num_pops))
@@ -184,7 +184,7 @@ if ((S->STACK_DEPTH < {num_pops})) {{
 def check_pops_then_pushes(num_pops, num_pushes):
     return disable_warnings(['-Wtype-limits', '-Wtautological-compare'], '''\
 if ({num_pushes} > {num_pops} && (S->STACK_SIZE - S->STACK_DEPTH < {num_pushes} - {num_pops})) {{
-    S->BAD_ADDRESS = {num_pushes} - {num_pops};
+    S->BAD = {num_pushes} - {num_pops};
     RAISE(2);
 }}'''.format(num_pops=num_pops, num_pushes=num_pushes))
 
