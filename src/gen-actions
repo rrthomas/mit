@@ -14,7 +14,6 @@ print('''\
 #include "aux.h"
 #include "opcodes.h"
 #include "extra.h"
-#include "actions-common.h"
 
 #define RAISE(code)                         \\
     do {                                    \\
@@ -44,7 +43,9 @@ smite_WORD smite_single_step(smite_state *S) {
     case INSTRUCTION_NUMBER:
         {
             const smite_UWORD static_args = 0;
-            RAISE_NON_ZERO(smite_push_stack(S, I));
+            int ret = smite_push_stack(S, I);
+            if (ret != 0)
+                RAISE(ret);
             break;
         }
     case INSTRUCTION_ACTION:''')
@@ -53,7 +54,9 @@ print(dispatch(Actions, 'O_', '''\
             /* Undefined instruction; try extra instructions */
             {
                 const smite_UWORD static_args = 0;
-                RAISE_NON_ZERO(smite_extra(S, I));
+                int ret = smite_extra(S, I);
+                if (ret != 0)
+                    RAISE(ret);
             }'''))
 
 print('''

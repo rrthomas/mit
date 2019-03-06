@@ -11,7 +11,7 @@ AM_CPPFLAGS = -I$(top_builddir)/lib -I$(top_srcdir)/lib $(WARN_CFLAGS)
 PYTHON_WITH_PATH = export PYTHONPATH=$(top_srcdir)/python; $(PYTHON)
 
 lib_LTLIBRARIES = libsmite.la
-C_SRCS = bits_util.c storage.c instruction.c extra.h object.c actions-common.h
+C_SRCS = bits_util.c storage.c instruction.c extra.h object.c
 GENERATED_SRCS = register-list.h instruction-list.h instruction-type-list.h actions.c extra.c
 SMITE_CORE_SRCS = smite_core/vm_data.py smite_core/opcodes_extra.py smite_core/action_gen.py
 libsmite_la_SOURCES = $(C_SRCS) $(GENERATED_SRCS)

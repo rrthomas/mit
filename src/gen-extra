@@ -29,7 +29,6 @@ print('''
 #include "aux.h"
 #include "extra.h"
 #include "opcodes.h"
-#include "actions-common.h"
 
 
 #define RAISE(code)                         \
@@ -251,7 +250,12 @@ class SMiteLib(Enum):
 class Library(Action):
     '''Wrap an Action enumeration as a library.'''
     def __init__(self, opcode, library):
-        super().__init__(opcode, ['function'], [], 'RAISE_NON_ZERO(extra_{}(S, function));')
+        super().__init__(opcode, ['function'], [], '''\
+{{
+    int ret = extra_{}(S, function);
+    if (ret != 0)
+        RAISE(ret);
+}}''')
         self.library = library
 
 @unique
