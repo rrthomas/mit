@@ -177,7 +177,7 @@ class State:
             return self.step(addr=self.registers["MEMORY"].get() + 1, trace=True)
         else:
             ret = libsmite.smite_run(self.state)
-            if ret != -128:
+            if ret != 128:
                 print("Error code {} was returned".format(ret));
             return ret
 
@@ -188,10 +188,10 @@ class State:
         while True:
             ret = libsmite.smite_single_step(self.state)
             done += 1
-            if ret != -128 or self.registers["PC"].get() == addr or (addr == None and done == n):
+            if ret != 128 or self.registers["PC"].get() == addr or (addr == None and done == n):
                 break
 
-        if ret != -128:
+        if ret != 128:
             if ret != 0:
                 print("Error code {} was returned".format(ret), end='')
                 if n > 1:
