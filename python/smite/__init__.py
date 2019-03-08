@@ -275,16 +275,18 @@ class State:
         ptr = c_uword(addr)
         ty = c_uword()
         opcode = c_word()
-        libsmite.smite_decode_instruction(self.state, ptr, byref(ty), byref(opcode))
+        ret = libsmite.smite_decode_instruction(self.state, byref(ptr), byref(ty), byref(opcode))
+        if ret == 1:
+            return ptr.value, "invalid instruction!"
         if ty.value == Types.NUMBER:
-            return "{} ({:#x})".format(opcode.value, opcode.value)
+            return ptr.value, "{} ({:#x})".format(opcode.value, opcode.value)
         elif ty.value == Types.ACTION:
             try:
-                return self.mnemonic[opcode.value]
+                return ptr.value, self.mnemonic[opcode.value]
             except KeyError:
-                return "undefined"
+                return ptr.value, "undefined"
         else:
-            return "invalid type!"
+            return ptr.value, "invalid type (bug in smite_decode_instruction)!"
 
     def disassemble(self, start=None, length=None, end=None, file=sys.stdout):
         '''Disassemble from start to start+length or from start to end.
@@ -300,20 +302,8 @@ class State:
         while p < end:
             print("{:#x}: ".format(p), end='', file=file)
 
-            ptr = c_uword(p)
-            val = c_word()
-            ty = c_uword()
-            libsmite.smite_decode_instruction(self.state, byref(ptr), byref(ty), byref(val))
-            p = ptr.value
-
-            if ty < 0:
-                print("Error reading memory", file=file)
-            else:
-                s = self.disassemble_instruction(ty, val.value)
-                if s == "undefined":
-                    print("Undefined instruction", file=file)
-                else:
-                    print(s, file=file)
+            p, s = self.disassemble_instruction(p)
+            print(s, file=file)
 
     def dump(self, start=None, length=None, end=None, file=sys.stdout):
         '''Dump memory from start to start+length or from start to end.
