@@ -29,7 +29,6 @@ struct _smite_state {
     smite_WORD *memory;
     int main_argc;
     char **main_argv;
-    smite_UWORD *main_argv_len;
     FILE *trace_fp; // FILE * of trace file, if used
 };
 

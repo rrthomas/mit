@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 
-from smite_core.opcodes_extra import *
+from smite_core.vm_data_extra import *
 
-def print_enum(enum, prefix):
+def print_enum(actions, prefix):
     print('\nenum {')
-    for (name, opcode) in enum.__members__.items():
-        print("    {}{} = {:#x},".format(prefix, name, opcode))
+    for (instruction, action) in actions.__members__.items():
+        print("    INSTRUCTION({}{}, {:#x})".format(prefix, instruction, action.value.opcode))
     print('};')
 
 

@@ -19,11 +19,11 @@ number(7)
 number(14)
 
 # here = 2
-number(LibcLib.STDOUT)
+number(LIB_C_STDOUT)
 action(LIB_C)
 
 # here = 4
-number(LibcLib.WRITE_FILE)
+number(LIB_C_WRITE_FILE)
 action(LIB_C)
 
 # here = 6

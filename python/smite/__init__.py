@@ -24,7 +24,7 @@ from ctypes import *
 from ctypes.util import find_library
 
 from .vm_data import *
-from .opcodes_extra import *
+from .vm_data_extra import *
 
 library_file = find_library("smite")
 assert(library_file)
@@ -169,7 +169,9 @@ class State:
         # Opcodes
         globals_dict.update([(action.name, action.value.opcode) for action in Actions])
         globals_dict["UNDEFINED"] = max([action.value.opcode for action in Actions]) + 1
-        globals_dict.update([(action.name, action.value) for action in LibActions])
+        globals_dict.update([(action.name, action.value.opcode) for action in LibActions])
+        for (name, action) in LibActions.__members__.items():
+            globals_dict.update([('{}_{}'.format(name, function.name), function.value.opcode) for function in action.value.library])
 
     def register_args(self, *args):
         argc = len(args)
