@@ -198,7 +198,7 @@ class State:
                     print(" after {} steps".format(done), end='')
                 if addr != None:
                     print(" at PC = {:#x}".format(self.registers["PC"].get()), end='')
-            print("")
+                print("")
 
         return ret
 
