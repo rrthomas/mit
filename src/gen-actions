@@ -70,8 +70,8 @@ print(dispatch(Actions, 'O_', '''\
 print('''
         break;
 
-    default: /* Error during instruction fetch */
-        return ITYPE;
+    default: /* Bug in smite_decode_instruction! */
+        return 1;
     }
 
     TRACE(ITYPE, I);
