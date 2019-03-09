@@ -202,7 +202,8 @@ int main(int argc, char *argv[])
             break;
         case 2:
             if (S->BAD >= S->STACK_SIZE &&
-                smite_realloc_stack(S, round_up(S->BAD, page_size)) == 0)
+                S->BAD < smite_uword_max - S->STACK_SIZE &&
+                smite_realloc_stack(S, round_up(S->STACK_SIZE + S->BAD, page_size)) == 0)
                 again = true;
             break;
         case 5:
