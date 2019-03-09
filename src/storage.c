@@ -159,7 +159,7 @@ int smite_push_stack(smite_state *S, smite_WORD v)
 static int smite_realloc(smite_WORD **ptr, smite_UWORD old_size, smite_UWORD new_size)
 {
     smite_WORD *new_ptr = realloc(*ptr, new_size * smite_word_size);
-    if (new_ptr == NULL)
+    if (new_ptr == NULL && new_size > 0)
         return 1;
     *ptr = new_ptr;
 
