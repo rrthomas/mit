@@ -78,7 +78,7 @@ int smite_decode_instruction(
 
     // Final (or only) byte must be sign extended.
     if (bits >= smite_word_bit || (b & INSTRUCTION_NUMBER_BIT) == 0)
-        return 2;
+        return 1;
     const unsigned shift_distance =
         smite_word_bit - (INSTRUCTION_CHUNK_BITS + 1);
     smite_WORD w = ARSHIFT((smite_UWORD)b << shift_distance, shift_distance);
