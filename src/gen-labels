@@ -88,6 +88,24 @@ for path in language:
     assert path[1:] in language
     assert path[:-1] in language
 
+# Compute cached depths.
+
+def cached_depth(path):
+    '''
+    Works out how many stack items that exist at the end of the path were
+    computed during the path.
+    '''
+    current_depth = 0
+    min_depth = 0
+    for event in path:
+        event = EVENT_NAMES[event]
+        current_depth -= len(event.args.named_items)
+        min_depth = min(min_depth, current_depth)
+        current_depth += len(event.results.named_items)
+    return current_depth - min_depth
+    
+path_depths = {path: cached_depth(path) for path in language}
+
 # For each path, sort the possible next events by probability (decreasing).
 
 print("Choosing guesses")
@@ -183,12 +201,10 @@ def short_circuit(state):
 
 # List of (guess, label or None, label or None).
 labels = [
-    (guess.name, short_circuit(c), short_circuit(w))
-    for guess, c, w in [
-        t
-        for t in transitions
-        if isinstance(t, tuple)
-    ]
+    (path_depths[p], guess.name, short_circuit(c), short_circuit(w))
+    for (p, _), t in zip(states, transitions)
+    if isinstance(t, tuple)
+    for (guess, c, w) in [t]
 ]
 
 assert len(label_map) == len(labels)
@@ -196,6 +212,11 @@ assert len(label_map) == len(labels)
 # Dump to a file.
 
 with open(labels_filename, 'wb') as f:
-    # [(event_name (str), if_correct (int?), if_wrong (int?))]
+    # [(
+    #     cached_depth (int),
+    #     event_name (str),
+    #     if_correct (int?),
+    #     if_wrong (int?)
+    # )]
     pickle.dump(labels, file=f)
 print('Wrote {}'.format(labels_filename))

@@ -18,7 +18,7 @@ if len(sys.argv) != 2:
     print("Usage: gen-actions LABELS-FILE", file=sys.stderr)
     sys.exit(1)
 with open(sys.argv[1], "rb") as h:
-    # [str, int?, int?]
+    # [int, str, int?, int?]
     labels = pickle.load(h)
 
 label_names = {
@@ -147,7 +147,7 @@ smite_WORD smite_run(smite_state *S) {
         //    effects on STACK_DEPTH and PC described above.
 ''')
 
-for label, (name, if_correct, if_wrong) in enumerate(labels):
+for label, (depth, name, if_correct, if_wrong) in enumerate(labels):
     event = EVENT_NAMES[name]
     print('''\
     {}:
