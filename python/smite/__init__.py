@@ -171,8 +171,28 @@ class State:
         globals_dict["UNDEFINED"] = max([action.value.opcode for action in Actions]) + 1
         globals_dict.update([(action.name, action.value) for action in LibActions])
 
-    def run(self, trace=False):
-        '''Run (or trace if trace is True) until HALT or error.'''
+    def register_args(self, *args):
+        argc = len(args)
+        arg_strings = c_char_p * argc
+        bargs = []
+        for arg in args:
+            if type(arg) == str:
+                arg = bytes(arg, 'utf-8')
+            elif type(arg) == int:
+                arg = bytes(arg)
+            bargs.append(arg)
+        self.argv = arg_strings(*bargs)
+        assert(libsmite.smite_register_args(self.state, argc, self.argv) == 0)
+
+    def run(self, trace=False, args=None):
+        '''
+        Run (or trace if trace is True) until HALT or error. Register any given
+        command-line `args`.
+        '''
+        if args == None:
+            args = []
+        args.insert(0, b"smite-shell")
+        self.register_args(*args)
         if trace == True:
             return self.step(addr=self.registers["MEMORY"].get() + 1, trace=True)
         else:

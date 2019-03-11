@@ -14,10 +14,8 @@ VM.globalize(globals())
 
 
 # Data for ARGC/ARG_LEN/ARG_COPY tests
-argc = 3
-Argc_Strings = c_char_p * argc
-argv = Argc_Strings(b"foo", b"bard", b"basilisk")
-assert(libsmite.smite_register_args(VM.state, argc, argv) == 0)
+args = [b"foo", b"bard", b"basilisk"]
+VM.register_args(*args)
 
 # Test code
 buffer = 0x100
@@ -38,9 +36,9 @@ while True:
     step()
     if I == LIB_C:
         break
-argc_ = S.pop()
-print("argc is {}, and should be {}".format(argc_, argc))
-if argc_ != argc:
+argc = S.pop()
+print("argc is {}, and should be {}".format(argc, len(args)))
+if argc != len(args):
     print("Error in extra instructions tests: PC = {:#x}".format(PC.get()))
     sys.exit(1)
 
@@ -51,8 +49,8 @@ while True:
     if I == LIB_C:
         break
 arg1len = S.pop()
-print("arg 1's length is {}, and should be {}".format(arg1len, len(argv[1])))
-if arg1len != len(argv[1]):
+print("arg 1's length is {}, and should be {}".format(arg1len, len(args[1])))
+if arg1len != len(args[1]):
     print("Error in extra instructions tests: PC = {:#x}".format(PC.get()))
     sys.exit(1)
 S.push(arg1len) # push length back for next test
@@ -64,13 +62,13 @@ while True:
     if I == LIB_C:
         break
 arg1len = S.pop()
-print("arg 1's length is {}, and should be {}".format(arg1len, len(argv[1])))
-if arg1len != len(argv[1]):
+print("arg 1's length is {}, and should be {}".format(arg1len, len(args[1])))
+if arg1len != len(args[1]):
     print("Error in extra instructions tests: PC = {:#x}".format(PC.get()))
     sys.exit(1)
 c_str = string_at(libsmite.smite_native_address_of_range(VM.state, buffer, 0))
-print("arg 1 is {}, and should be {}".format(c_str, argv[1]))
-if c_str != argv[1]:
+print("arg 1 is {}, and should be {}".format(c_str, args[1]))
+if c_str != args[1]:
     print("Error in extra instructions tests: PC = {:#x}".format(PC.get()))
     sys.exit(1)
 
