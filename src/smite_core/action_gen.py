@@ -13,8 +13,8 @@ class Action:
     '''VM action instruction descriptor.
 
      - opcode - int - SMite opcode number.
-     - args - list - list of stack arguments.
-     - results - list - list of stack results.
+     - args - StackPicture.
+     - results - StackPicture.
      - code - str - C source code.
 
     C variables are created for the arguments and results; the arguments are
@@ -24,9 +24,13 @@ class Action:
     error is raised, the state of the VM is not changed.
     '''
     def __init__(self, opcode, args, results, code):
+        '''
+         - args - list acceptable to StackPicture.from_list.
+         - results - list acceptable to StackPicture.from_list.
+        '''
         self.opcode = opcode
-        self.args = args
-        self.results = results
+        self.args = StackPicture.from_list(args)
+        self.results = StackPicture.from_list(results)
         self.code = code
 
 
@@ -191,8 +195,8 @@ if ({num_pushes} > {num_pops} && (S->STACK_SIZE - S->STACK_DEPTH < {num_pushes} 
 
 def gen_case(event):
     # Concatenate the pieces.
-    args = StackPicture.from_list(event.args)
-    results = StackPicture.from_list(event.results)
+    args = event.args
+    results = event.results
     dynamic_args = args.dynamic_depth()
     dynamic_results = results.dynamic_depth()
     code = '\n'.join([

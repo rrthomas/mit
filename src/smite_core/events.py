@@ -1,6 +1,7 @@
 import hashlib
 
 from . import vm_data
+from .action_gen import StackPicture
 
 # Database of all possible trace events.
 
@@ -10,6 +11,8 @@ class Event:
 
      - trace_name - bytes - the text that appears in a trace.
      - name - str - the human-readable name of the event.
+     - args - StackPicture
+     - results - StackPicture
      - guess_code - str - C expression to test if this is the next event.
      - code - str - C statements to execute when the event happens.
      - hash0 - a random-looking 63-bit mask.
@@ -21,27 +24,16 @@ class Event:
 
     On entry to `code`:
      - `S->PC` is one byte beyond the beginning of the instruction,
-     - `ITYPE` is undefined.
-     - `S->I` is undefined.
      - (Deprecated) `exception` is 0.
     On exit:
      - `S->PC` must point to the next instruction,
-     - `ITYPE` is set to the value that `S->ITYPE` should hold.
-     - `S->I` is set correctly.
-    Exceptions can be thrown using the RAISE() macro, passing a non-zero code;
-    RAISE(0) succeeds (does nothing). (Deprecated) Setting `exception` to a
-    non-zero value on exit also works.
-    Note that `code` uses the local variable `ITYPE` to cache the value
-    of the corresponding SMite register. This values is kept in a local
-    variable because it is usually dead. Its value is only written to the
-    SMite register if required.
+    Exceptions can be thrown using the RAISE() macro.
     '''
 
     def __init__(
         self,
         trace_name,
         name,
-        itype,
         args,
         results,
         guess_code,
@@ -49,7 +41,6 @@ class Event:
     ):
         self.trace_name = trace_name
         self.name = name
-        self.itype = itype
         self.args = args
         self.results = results
         self.guess_code = guess_code
@@ -71,7 +62,6 @@ for a in vm_data.Actions:
     ALL_EVENTS.append(Event(
         b'1 %08x' % a.value.opcode,
         a.name,
-        'INSTRUCTION_ACTION',
         a.value.args,
         a.value.results,
         'NEXT == {}'.format(a.value.opcode),
@@ -86,9 +76,8 @@ for n in [0, 1]:
     ALL_EVENTS.append(Event(
         b'0 %08x' % n,
         'LIT{}'.format(n),
-        'INSTRUCTION_NUMBER',
-        [],
-        ['lit'],
+        StackPicture.from_list([]),
+        StackPicture.from_list(['lit']),
         'NEXT == ({} | INSTRUCTION_NUMBER_BIT)'.format(n),
         code,
     ))
@@ -105,9 +94,8 @@ code = '''\
 ALL_EVENTS.append(Event(
     b'0 n',
     'LITn',
-    'INSTRUCTION_NUMBER',
-    [],
-    ['lit'],
+    StackPicture.from_list([]),
+    StackPicture.from_list(['lit']),
     '(NEXT & INSTRUCTION_CONTINUATION_BIT) != 0 || (\
       (NEXT & INSTRUCTION_NUMBER_BIT) != 0 && \
       (NEXT & ~INSTRUCTION_NUMBER_BIT) > 1 \
