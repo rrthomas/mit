@@ -60,7 +60,7 @@ for a in vm_data.Actions:
         TRACE(INSTRUCTION_ACTION, {});
     '''.format(a.value.code.rstrip(), a.value.opcode)
     ALL_EVENTS.append(Event(
-        b'1 %08x' % a.value.opcode,
+        b'%d %#x' % (vm_data.Types.ACTION, a.value.opcode),
         a.name,
         a.value.args,
         a.value.results,
@@ -74,7 +74,7 @@ for n in [0, 1]:
         TRACE(INSTRUCTION_NUMBER, lit);
     '''.rstrip().format(n)
     ALL_EVENTS.append(Event(
-        b'0 %08x' % n,
+        b'%d %#x' % (vm_data.Types.NUMBER, n),
         'LIT{}'.format(n),
         StackPicture.from_list([]),
         StackPicture.from_list(['lit']),
@@ -92,7 +92,7 @@ code = '''\
         TRACE(INSTRUCTION_NUMBER, lit);
 '''.rstrip()
 ALL_EVENTS.append(Event(
-    b'0 n',
+    b'%d n' % vm_data.Types.NUMBER,
     'LITn',
     StackPicture.from_list([]),
     StackPicture.from_list(['lit']),

@@ -46,25 +46,33 @@ def item_size(item):
     '''Return a C expression for the size in stack words of a stack item.'''
     return '(sizeof({}) / smite_word_size)'.format(stack_item_type(item))
 
-def load_var(pos, var, cached_depth):
-    if stack_item_type(var) != 'smite_WORD':
+def stack_cache_var(pos, cached_depth):
+    '''
+    Calculate the name of the stack cache variable for position pos with the
+    given cached_depth.
+    '''
+    assert 0 <= pos < cached_depth
+    return 'stack_{}'.format(cached_depth - 1 - pos)
+
+def load_var(pos, item):
+    if stack_item_type(item) != 'smite_WORD':
         fmt = 'UNCHECKED_LOAD_STACK_TYPE({pos}, {type}, &{var})'
     else:
         fmt = 'UNCHECKED_LOAD_STACK({pos}, &{var})'
     return fmt.format(
         pos=pos,
-        var=stack_item_name(var),
-        type=stack_item_type(var)) + ';'
+        var=stack_item_name(item),
+        type=stack_item_type(item)) + ';'
 
-def store_var(pos, var, cached_depth):
-    if stack_item_type(var) != 'smite_WORD':
+def store_var(pos, item):
+    if stack_item_type(item) != 'smite_WORD':
         fmt = 'UNCHECKED_STORE_STACK_TYPE({pos}, {type}, {var})'
     else:
         fmt = 'UNCHECKED_STORE_STACK({pos}, {var})'
     return fmt.format(
         pos=pos,
-        var=stack_item_name(var),
-        type=stack_item_type(var)) + ';'
+        var=stack_item_name(item),
+        type=stack_item_type(item)) + ';'
 
 
 class StackPicture:
@@ -139,9 +147,16 @@ class StackPicture:
         '''
         code = []
         pos = ['-1']
-        for i in reversed(self.named_items):
-            pos.append(item_size(i))
-            code.append(load_var("+".join(pos), i, cached_depth))
+        for i, item in enumerate(reversed(self.named_items)):
+            pos.append(item_size(item))
+            if i < cached_depth:
+                assert stack_item_type(item) == 'smite_WORD'
+                code.append('{var} = {cache_var};'.format(
+                    var=stack_item_name(item),
+                    cache_var=stack_cache_var(i, cached_depth),
+                ))
+            else:
+                code.append(load_var("+".join(pos), item))
         return '\n'.join(code)
 
     def store(self, cached_depth):
@@ -152,9 +167,16 @@ class StackPicture:
         '''
         code = []
         pos = ['-1']
-        for i in reversed(self.named_items):
-            pos.append(item_size(i))
-            code.append(store_var("+".join(pos), i, cached_depth))
+        for i, item in enumerate(reversed(self.named_items)):
+            pos.append(item_size(item))
+            if i < cached_depth:
+                assert stack_item_type(item) == 'smite_WORD'
+                code.append('{cache_var} = {var};'.format(
+                    var=stack_item_name(item),
+                    cache_var=stack_cache_var(i, cached_depth),
+                ))
+            else:
+                code.append(store_var("+".join(pos), item))
         return '\n'.join(code)
 
 
@@ -193,7 +215,7 @@ if ({num_pushes} > {num_pops} && (S->STACK_SIZE - S->STACK_DEPTH < {num_pushes} 
     RAISE(2);
 }}'''.format(num_pops=num_pops, num_pushes=num_pushes))
 
-def gen_case(event, cached_depth=0):
+def gen_case(event, cached_depth=None):
     '''
     Generate the code for an Event. In the code, S is the smite_state, errors
     are reported by calling RAISE(), for which we maintain static_args.
@@ -201,26 +223,35 @@ def gen_case(event, cached_depth=0):
      - event - Event.
      - cached_depth - int - the number of stack items cached in C locals.
        Caching items does not affect S->STACK_DEPTH.
-       TODO: Items [0, cached_depth) are stored in variables. For 0 <= pos <
-       cached_depth, item pos is cached in stack_{cached_depth - 1 - pos}.
+       For pos in [0, cached_depth), item pos is cached in variable
+       stack_cache_var(pos, cached_depth).
     '''
     # Concatenate the pieces.
     args = event.args
     results = event.results
+    static_args = len(args.named_items)
     dynamic_args = args.dynamic_depth()
+    static_results = len(results.named_items)
     dynamic_results = results.dynamic_depth()
+    if cached_depth is None:
+        cached_depth_entry = 0
+        cached_depth_exit = 0
+    else:        
+        cached_depth_entry = cached_depth
+        cached_depth_exit = (
+            max(cached_depth_entry - static_args, 0) + static_results)
     code = '\n'.join([
         args.declare_vars(),
         results.declare_vars(),
-        'const smite_UWORD static_args = {};'.format(args.static_depth()),
+        'const smite_UWORD static_args = {};'.format(static_args),
         check_pops('static_args'),
-        args.load(cached_depth),
+        args.load(cached_depth_entry),
         check_pops(dynamic_args),
         check_pops_then_pushes(dynamic_args, dynamic_results),
         'S->STACK_DEPTH -= static_args;',
         textwrap.dedent(event.code.rstrip()),
-        'S->STACK_DEPTH += {num_pushes} - ({num_pops} - {nstatic_args});'.format(num_pops=dynamic_args, num_pushes=dynamic_results, nstatic_args='static_args'),
-        results.store(cached_depth),
+        'S->STACK_DEPTH += {num_pushes} - ({num_pops} - static_args);'.format(num_pops=dynamic_args, num_pushes=dynamic_results),
+        results.store(cached_depth_exit),
     ])
     # Remove newlines resulting from empty strings in the above.
     code = re.sub('\n+', '\n', code, flags=re.MULTILINE).strip('\n')
