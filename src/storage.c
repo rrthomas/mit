@@ -61,12 +61,12 @@ _GL_ATTRIBUTE_PURE uint8_t *smite_native_address_of_range(smite_state *S, smite_
 int smite_load_word(smite_state *S, smite_UWORD addr, smite_WORD *value)
 {
     if (addr >= S->MEMORY) {
-        S->BAD_ADDRESS = addr;
-        return -5;
+        S->BAD = addr;
+        return 5;
     }
     if (!smite_is_aligned(addr)) {
-        S->BAD_ADDRESS = addr;
-        return -7;
+        S->BAD = addr;
+        return 7;
     }
 
     *value = S->memory[addr / smite_word_size];
@@ -76,8 +76,8 @@ int smite_load_word(smite_state *S, smite_UWORD addr, smite_WORD *value)
 int smite_load_byte(smite_state *S, smite_UWORD addr, smite_BYTE *value)
 {
     if (addr >= S->MEMORY) {
-        S->BAD_ADDRESS = addr;
-        return -5;
+        S->BAD = addr;
+        return 5;
     }
 
     *value = ((uint8_t *)(S->memory))[addr];
@@ -87,12 +87,12 @@ int smite_load_byte(smite_state *S, smite_UWORD addr, smite_BYTE *value)
 int smite_store_word(smite_state *S, smite_UWORD addr, smite_WORD value)
 {
     if (addr >= S->MEMORY) {
-        S->BAD_ADDRESS = addr;
-        return -6;
+        S->BAD = addr;
+        return 6;
     }
     if (!smite_is_aligned(addr)) {
-        S->BAD_ADDRESS = addr;
-        return -7;
+        S->BAD = addr;
+        return 7;
     }
 
     S->memory[addr / smite_word_size] = value;
@@ -102,8 +102,8 @@ int smite_store_word(smite_state *S, smite_UWORD addr, smite_WORD value)
 int smite_store_byte(smite_state *S, smite_UWORD addr, smite_BYTE value)
 {
     if (addr >= S->MEMORY) {
-        S->BAD_ADDRESS = addr;
-        return -6;
+        S->BAD = addr;
+        return 6;
     }
 
     ((uint8_t *)(S->memory))[addr] = value;
@@ -116,8 +116,8 @@ int smite_store_byte(smite_state *S, smite_UWORD addr, smite_BYTE value)
 int smite_load_stack(smite_state *S, smite_UWORD pos, smite_WORD *vp)
 {
     if (pos >= S->STACK_DEPTH) {
-        S->BAD_ADDRESS = pos;
-        return -3;
+        S->BAD = pos;
+        return 3;
     }
 
     UNCHECKED_LOAD_STACK(pos, vp);
@@ -127,8 +127,8 @@ int smite_load_stack(smite_state *S, smite_UWORD pos, smite_WORD *vp)
 int smite_store_stack(smite_state *S, smite_UWORD pos, smite_WORD v)
 {
     if (pos >= S->STACK_DEPTH) {
-        S->BAD_ADDRESS = pos;
-        return -4;
+        S->BAD = pos;
+        return 4;
     }
 
     UNCHECKED_STORE_STACK(pos, v);
@@ -145,8 +145,8 @@ int smite_pop_stack(smite_state *S, smite_WORD *v)
 int smite_push_stack(smite_state *S, smite_WORD v)
 {
     if (S->STACK_DEPTH == S->STACK_SIZE) {
-        S->BAD_ADDRESS = S->STACK_SIZE;
-        return -2;
+        S->BAD = S->STACK_SIZE;
+        return 2;
     }
 
     (S->STACK_DEPTH)++;
@@ -159,8 +159,8 @@ int smite_push_stack(smite_state *S, smite_WORD v)
 static int smite_realloc(smite_WORD **ptr, smite_UWORD old_size, smite_UWORD new_size)
 {
     smite_WORD *new_ptr = realloc(*ptr, new_size * smite_word_size);
-    if (new_ptr == NULL)
-        return -1;
+    if (new_ptr == NULL && new_size > 0)
+        return 1;
     *ptr = new_ptr;
 
     if (old_size < new_size)
@@ -205,9 +205,7 @@ smite_state *smite_init(size_t memory_size, size_t stack_size)
 #endif
         ;
     S->PC = 0;
-    S->BAD_PC = 0;
-    S->BAD_ADDRESS = 0;
-    S->I = 0;
+    S->BAD = 0;
     S->STACK_DEPTH = 0;
 
     return S;
@@ -233,3 +231,17 @@ void smite_destroy(smite_state *S)
 #include "register-list.h"
 #undef R
 #undef R_RO
+
+// Register command-line args
+int smite_register_args(smite_state *S, int argc, char *argv[])
+{
+    S->main_argc = argc;
+    S->main_argv = argv;
+
+    if ((S->main_argv_len = calloc(argc, sizeof(smite_UWORD))) == NULL)
+        return -1;
+    for (int i = 0; i < argc; i++)
+        S->main_argv_len[i] = strlen(argv[i]);
+
+    return 0;
+}

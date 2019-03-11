@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from opcodes_extra import *
+from smite_core.opcodes_extra import *
 
 def print_enum(enum, prefix):
     print('\nenum {')

@@ -15,7 +15,6 @@ Controlling and observing execution: run, step, trace
 Examining memory: dump, disassemble
 Assembly: action, number, byte, pointer. Assembly is at address 'here',
 which defaults to 0.
-
 '''
 
 import os
@@ -24,8 +23,8 @@ import collections.abc
 from ctypes import *
 from ctypes.util import find_library
 
-from smite.vm_data import *
-from smite.opcodes_extra import *
+from .vm_data import *
+from .opcodes_extra import *
 
 library_file = find_library("smite")
 assert(library_file)
@@ -121,10 +120,9 @@ libsmite.smite_find_msbit.argtypes = [c_word]
 
 libsmite.smite_byte_size.argtypes = [c_word]
 
-libsmite.smite_encode_instruction.restype = c_ptrdiff_t
-libsmite.smite_encode_instruction.argtypes = [c_void_p, c_uword, c_int, c_word]
+libsmite.smite_encode_instruction.argtypes = [c_void_p, POINTER(c_uword), c_uword, c_word]
 
-libsmite.smite_decode_instruction.argtypes = [c_void_p, POINTER(c_uword), POINTER(c_word)]
+libsmite.smite_decode_instruction.argtypes = [c_void_p, POINTER(c_uword), POINTER(c_uword), POINTER(c_word)]
 
 
 # State
@@ -173,14 +171,34 @@ class State:
         globals_dict["UNDEFINED"] = max([action.value.opcode for action in Actions]) + 1
         globals_dict.update([(action.name, action.value) for action in LibActions])
 
-    def run(self, trace=False):
-        '''Run (or trace if trace is True) until HALT or error.'''
+    def register_args(self, *args):
+        argc = len(args)
+        arg_strings = c_char_p * argc
+        bargs = []
+        for arg in args:
+            if type(arg) == str:
+                arg = bytes(arg, 'utf-8')
+            elif type(arg) == int:
+                arg = bytes(arg)
+            bargs.append(arg)
+        self.argv = arg_strings(*bargs)
+        assert(libsmite.smite_register_args(self.state, argc, self.argv) == 0)
+
+    def run(self, trace=False, args=None):
+        '''
+        Run (or trace if trace is True) until HALT or error. Register any given
+        command-line `args`.
+        '''
+        if args == None:
+            args = []
+        args.insert(0, b"smite-shell")
+        self.register_args(*args)
         if trace == True:
             return self.step(addr=self.registers["MEMORY"].get() + 1, trace=True)
         else:
             ret = libsmite.smite_run(self.state)
-            if ret != -128:
-                print("HALT code {} was returned".format(ret));
+            if ret != 128:
+                print("Error code {} was returned".format(ret));
             return ret
 
     def step(self, n=1, addr=None, trace=False):
@@ -190,17 +208,17 @@ class State:
         while True:
             ret = libsmite.smite_single_step(self.state)
             done += 1
-            if ret != -128 or self.registers["PC"].get() == addr or (addr == None and done == n):
+            if ret != 128 or self.registers["PC"].get() == addr or (addr == None and done == n):
                 break
 
-        if ret != -128:
+        if ret != 128:
             if ret != 0:
-                print("HALT code {} was returned".format(ret), end='')
+                print("Error code {} was returned".format(ret), end='')
                 if n > 1:
                     print(" after {} steps".format(done), end='')
                 if addr != None:
                     print(" at PC = {:#x}".format(self.registers["PC"].get()), end='')
-            print("")
+                print("")
 
         return ret
 
@@ -253,11 +271,15 @@ class State:
     # Assembly
     def action(self, instr):
         '''Assemble an action at 'here'.'''
-        self.here += libsmite.smite_encode_instruction(self.state, self.here, Types.ACTION, instr)
+        ptr = c_uword(self.here)
+        libsmite.smite_encode_instruction(self.state, byref(ptr), Types.ACTION, instr)
+        self.here = ptr.value
 
     def number(self, value):
         '''Assemble a number at 'here'.'''
-        self.here += libsmite.smite_encode_instruction(self.state, self.here, Types.NUMBER, value)
+        ptr = c_uword(self.here)
+        libsmite.smite_encode_instruction(self.state, byref(ptr), Types.NUMBER, value)
+        self.here = ptr.value
 
     def byte(self, byte):
         '''Assemble a byte at 'here'.'''
@@ -269,16 +291,22 @@ class State:
     mnemonic = {action.value.opcode:action.name for action in Actions}
     mnemonic.update({action.value:action.name for action in LibActions})
 
-    def disassemble_instruction(self, ty, opcode):
-        if ty == Types.NUMBER:
-            return "{} ({:#x})".format(opcode, opcode)
-        elif ty == Types.ACTION:
+    def disassemble_instruction(self, addr):
+        ptr = c_uword(addr)
+        ty = c_uword()
+        opcode = c_word()
+        ret = libsmite.smite_decode_instruction(self.state, byref(ptr), byref(ty), byref(opcode))
+        if ret == 1:
+            return ptr.value, "invalid instruction!"
+        if ty.value == Types.NUMBER:
+            return ptr.value, "{} ({:#x})".format(opcode.value, opcode.value)
+        elif ty.value == Types.ACTION:
             try:
-                return self.mnemonic[opcode]
+                return ptr.value, self.mnemonic[opcode.value]
             except KeyError:
-                return "undefined"
+                return ptr.value, "undefined"
         else:
-            return "invalid type!"
+            return ptr.value, "invalid type (bug in smite_decode_instruction)!"
 
     def disassemble(self, start=None, length=None, end=None, file=sys.stdout):
         '''Disassemble from start to start+length or from start to end.
@@ -294,19 +322,8 @@ class State:
         while p < end:
             print("{:#x}: ".format(p), end='', file=file)
 
-            ptr = c_uword(p)
-            val = c_word()
-            ty = libsmite.smite_decode_instruction(self.state, byref(ptr), byref(val))
-            p = ptr.value
-
-            if ty < 0:
-                print("Error reading memory", file=file)
-            else:
-                s = self.disassemble_instruction(ty, val.value)
-                if s == "undefined":
-                    print("Undefined instruction", file=file)
-                else:
-                    print(s, file=file)
+            p, s = self.disassemble_instruction(p)
+            print(s, file=file)
 
     def dump(self, start=None, length=None, end=None, file=sys.stdout):
         '''Dump memory from start to start+length or from start to end.

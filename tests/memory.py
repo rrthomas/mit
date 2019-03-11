@@ -28,7 +28,6 @@ correct = [
     [size * word_size - word_size, 0],
     [size * word_size - word_size, size * word_size - word_size],
     [size * word_size - word_size, 513],
-    [size * word_size - word_size, 513, 1],
     [size * word_size - word_size],
     [size * word_size - word_size, 0],
     [size * word_size - word_size, size * word_size - word_size],
@@ -39,7 +38,6 @@ correct = [
     [],
     [size * word_size - word_size],
     [(0x02 << (word_bit - byte_bit)) | 0x0201],
-    [(0x02 << (word_bit - byte_bit)) | 0x0201, 1],
     [],
     [0],
     [],
@@ -58,7 +56,6 @@ action(STORE)
 number(0)
 action(DUP)
 action(LOAD)
-number(1)
 action(POP)
 number(0)
 action(DUP)
@@ -69,7 +66,6 @@ number(size * word_size - 1)
 action(STOREB)
 number(size * word_size - word_size)
 action(LOAD)
-number(1)
 action(POP)
 action(GET_STACK_DEPTH)
 action(SET_STACK_DEPTH)
@@ -82,7 +78,7 @@ for i in range(len(correct)):
     if str(correct[i]) != str(S):
         print("Error in memory tests: PC = {:#x}".format(PC.get()))
         sys.exit(1)
+    print("I = {}".format(disassemble_instruction(PC.get())))
     step()
-    print("I = {}".format(disassemble_instruction(ITYPE.get(), I.get())))
 
 print("Memory tests ran OK")

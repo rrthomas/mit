@@ -41,7 +41,7 @@
 
 \title{An implementation of the @PACKAGE_NAME@ virtual machine\\for POSIX\\version @VERSION@}
 \author{Reuben Thomas}
-\date{26th February 2019}
+\date{1st March 2019}
 
 \begin{document}
 \maketitle
@@ -49,9 +49,7 @@
 
 \section{Introduction}
 
-The @PACKAGE_NAME@ virtual machine~\cite{@PACKAGE@} provides a portable virtual machine environment for study and experiment. To this end, @PACKAGE_NAME@ is itself written in ISO C, since almost all systems have an ISO C compiler available for them.
-
-As well as the virtual machine, C @PACKAGE_NAME@ provides a debugger, which is described in~\cite{@PACKAGE@uiface}.
+The @PACKAGE_NAME@ virtual machine~\cite{@PACKAGE@} provides a portable virtual machine environment for study and experiment.
 
 The @PACKAGE_NAME@ virtual machine is described in~\cite{@PACKAGE@}. This paper only
 describes the features specific to this implementation.
@@ -66,9 +64,7 @@ the interface calls and @PACKAGE_NAME@'s memory and registers should be accessed
 \subsection{Configuration}
 \label{configuration}
 
-@PACKAGE_NAME@ is written in ISO C99 using POSIX-1.2001 APIs.
-
-The @PACKAGE_NAME@ virtual machine is inherently 32-bit, but will run happily on systems with larger (or smaller) addresses.
+C @PACKAGE_NAME@ is written in ISO C99 using POSIX-1.2001 APIs, and can be configured with a {\tt WORD\_SIZE} of $4$ or $8$. It defaults to the word size of the host system.
 
 
 \subsection{Installation}

@@ -60,8 +60,6 @@ for good_file in good_files:
 correct = [-128, 12345678]
 for n in correct:
     number(n)
-magic_number = 42
-number(magic_number)
 action(HALT)
 save("numbers.obj")
 
@@ -72,7 +70,7 @@ print(" should be {}".format(0))
 if res != 0:
     print("Error in load_object() tests: file {}".format(number_file))
     sys.exit(1)
-if run() != magic_number:
+if run() != 0:
     print("Error in load_object() tests: file {}".format(number_file))
     sys.exit(1)
 print("Data stack: {}".format(S))

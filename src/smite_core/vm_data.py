@@ -8,6 +8,7 @@
 # RISK.
 
 from enum import Enum, IntEnum, unique
+from .action_gen import Action
 
 class Register:
     '''VM register descriptor.'''
@@ -20,10 +21,7 @@ class Register:
 class Registers(Enum):
     '''VM registers.'''
     PC = Register()
-    BAD_PC = Register(read_only=True)
-    BAD_ADDRESS = Register(read_only=True)
-    ITYPE = Register(ty="smite_WORD", uty="smite_UWORD", read_only=True)
-    I = Register(ty="smite_WORD", uty="smite_UWORD", read_only=True)
+    BAD = Register(read_only=True)
     MEMORY = Register(read_only=True)
     STACK_DEPTH = Register()
     S0 = Register("smite_WORDP", read_only=True)
@@ -36,79 +34,50 @@ class Types(IntEnum):
     NUMBER = 0x0
     ACTION = 0x1
 
-class Action:
-    '''VM action instruction descriptor.
-
-     - opcode - int - SMite opcode number.
-     - args - list - list of stack arguments.
-     - results - list - list of stack results.
-     - code - str - C source code.
-
-    C variables are created for the arguments and results; the arguments are
-    pushed and results popped.
-
-    The code should RAISE any error before writing any state, so that if an
-    error is raised, the state of the VM is not changed.
-    '''
-    def __init__(self, opcode, args, results, code):
-        self.opcode = opcode
-        self.args = args
-        self.results = results
-        self.code = code
-
 @unique
 class Actions(Enum):
     '''VM action instructions.'''
-    HALT = Action(0x00, ['error_code'], [], '''\
-        S->halt_code = error_code;
-        S->STACK_DEPTH--; // FIXME
-        RAISE(-127);
+    HALT = Action(0x00, [], [], '''\
+        RAISE(0);
     ''')
 
-    POP = Action(0x01, ['depth'], [], '''\
-        S->STACK_DEPTH -= depth;
+    POP = Action(0x01, ['item',], [], '''\
     ''')
 
-    DUP = Action(0x02, ['depth'], ['dupee'], '''\
-        RAISE(smite_load_stack(S, depth, &dupee));
+    DUP = Action(0x02, ['ITEMS', 'COUNT'], ['ITEMS', 'dupee'], '''\
+        UNCHECKED_LOAD_STACK(COUNT, &dupee);
     ''')
 
-    SWAP = Action(0x03, ['depth'], [], '''\
-        if (depth > 0) {
+    SWAP = Action(0x03, ['ITEMS', 'COUNT'], ['ITEMS'], '''\
+        if (COUNT > 0) {
             smite_WORD top, swapee;
-            RAISE(smite_load_stack(S, depth, &swapee));
-            RAISE(smite_load_stack(S, 0, &top));
-            RAISE(smite_store_stack(S, depth, top));
-            RAISE(smite_store_stack(S, 0, swapee));
+            UNCHECKED_LOAD_STACK(COUNT, &swapee);
+            UNCHECKED_LOAD_STACK(0, &top);
+            UNCHECKED_STORE_STACK(COUNT, top);
+            UNCHECKED_STORE_STACK(0, swapee);
         }
     ''')
 
-    ROTATE_UP = Action(0x04, ['depth'], [], '''\
-        if (depth >= (smite_WORD)S->STACK_DEPTH) {
-            S->BAD_ADDRESS = depth;
-            RAISE(-3);
+    ROTATE_UP = Action(0x04, ['ITEMS', 'COUNT'], ['ITEMS'], '''\
+        smite_WORD bottom;
+        UNCHECKED_LOAD_STACK(COUNT, &bottom);
+        for (smite_UWORD i = (smite_UWORD)COUNT; i > 0; i--) {
+            smite_WORD temp;
+            UNCHECKED_LOAD_STACK(i - 1, &temp);
+            UNCHECKED_STORE_STACK(i, temp);
         }
-
-        smite_UWORD offset = S->STACK_DEPTH - depth - 1;
-        smite_WORD temp = *(S->S0 + offset * STACK_DIRECTION);
-        memmove(S->S0 + offset * STACK_DIRECTION,
-                S->S0 + (offset + 1) * STACK_DIRECTION,
-                (S->STACK_DEPTH - offset) * sizeof(smite_WORD));
-        *(S->S0 + (S->STACK_DEPTH - 1) * STACK_DIRECTION) = temp;
+        UNCHECKED_STORE_STACK(0, bottom);
     ''')
 
-    ROTATE_DOWN = Action(0x05, ['depth'], [], '''\
-        if (depth >= (smite_WORD)S->STACK_DEPTH) {
-            S->BAD_ADDRESS = depth;
-            RAISE(-3);
+    ROTATE_DOWN = Action(0x05, ['ITEMS', 'COUNT'], ['ITEMS'], '''\
+        smite_WORD top;
+        UNCHECKED_LOAD_STACK(0, &top);
+        for (smite_UWORD i = 0; i < (smite_UWORD)COUNT; i++) {
+            smite_WORD temp;
+            UNCHECKED_LOAD_STACK(i + 1, &temp);
+            UNCHECKED_STORE_STACK(i, temp);
         }
-
-        smite_UWORD offset = S->STACK_DEPTH - depth - 1;
-        smite_WORD temp = *(S->S0 + (S->STACK_DEPTH - 1) * STACK_DIRECTION);
-        memmove(S->S0 + (offset + 1) * STACK_DIRECTION,
-                S->S0 + offset * STACK_DIRECTION,
-                (S->STACK_DEPTH - offset) * sizeof(smite_WORD));
-        *(S->S0 + offset * STACK_DIRECTION) = temp;
+        UNCHECKED_STORE_STACK(COUNT, top);
     ''')
 
     NOT = Action(0x06, ['x'], ['r'], '''\
@@ -176,21 +145,29 @@ class Actions(Enum):
     ''')
 
     LOAD = Action(0x15, ['addr'], ['x'], '''\
-        RAISE(smite_load_word(S, addr, &x));
+        int ret = smite_load_word(S, addr, &x);
+        if (ret != 0)
+            RAISE(ret);
     ''')
 
     STORE = Action(0x16, ['x', 'addr'], [], '''\
-        RAISE(smite_store_word(S, addr, x));
+        int ret = smite_store_word(S, addr, x);
+        if (ret != 0)
+            RAISE(ret);
     ''')
 
     LOADB = Action(0x17, ['addr'], ['x'], '''\
         smite_BYTE b_;
-        RAISE(smite_load_byte(S, addr, &b_));
+        int ret = smite_load_byte(S, addr, &b_);
+        if (ret != 0)
+            RAISE(ret);
         x = (smite_WORD)b_;
     ''')
 
     STOREB = Action(0x18, ['x', 'addr'], [], '''\
-        RAISE(smite_store_byte(S, addr, (smite_BYTE)x));
+        int ret = smite_store_byte(S, addr, (smite_BYTE)x);
+        if (ret != 0)
+            RAISE(ret);
     ''')
 
     BRANCH = Action(0x19, ['addr'], [], '''\
@@ -217,8 +194,8 @@ class Actions(Enum):
 
     SET_STACK_DEPTH = Action(0x1e, ['a'], [], '''\
         if ((smite_UWORD)a > S->STACK_SIZE) {
-            S->BAD_ADDRESS = a;
-            RAISE(-2);
+            S->BAD = a - S->STACK_SIZE;
+            RAISE(2);
         }
         S->STACK_DEPTH = a;
     ''')

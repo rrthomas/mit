@@ -1,6 +1,6 @@
-// EXTRA instructions.
+// Extra instructions.
 //
-// (c) Reuben Thomas 1994-2018
+// (c) Reuben Thomas 1994-2019
 //
 // The package is distributed under the MIT/X11 License.
 //
@@ -11,6 +11,6 @@
 #define SMITE_EXTRA
 
 
-int smite_extra(smite_state *S);
+int smite_extra(smite_state *S, smite_WORD I);
 
 #endif

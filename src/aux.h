@@ -27,7 +27,6 @@ struct _smite_state {
 #undef R
 #undef R_RO
     smite_WORD *memory;
-    int halt_code;
     int main_argc;
     char **main_argv;
     smite_UWORD *main_argv_len;
@@ -41,6 +40,28 @@ struct _smite_state {
     (*(vp) = *(S->S0 + (S->STACK_DEPTH - (pos) - 1) * STACK_DIRECTION))
 #define UNCHECKED_STORE_STACK(pos, v)                                   \
     (*(S->S0 + (S->STACK_DEPTH - (pos) - 1) * STACK_DIRECTION) = (v))
+
+// FIXME: These macros should take ENDISM into account and store the
+// quantities on the stack in native order (though perhaps not native
+// alignment). Current code is correct for ENDISM=0; need to reverse the
+// directions of the loops for ENDISM=1. (Generate unrolled loops from
+// Python!)
+// Note: One might expect casts to smite_UWORD rather than size_t below. The
+// latter avoid warnings when the value `v` is a pointer and sizeof(void *)
+// > smite_word_size, but the effect (given unsigned sign extension &
+// truncation) is identical.
+#define UNCHECKED_LOAD_STACK_TYPE(pos, ty, vp)                          \
+    *vp = 0;                                                            \
+    for (unsigned i = 0; i < smite_align(sizeof(ty)) / smite_word_size; i++) { \
+        smite_WORD w;                                                   \
+        UNCHECKED_LOAD_STACK(pos - i, &w);                              \
+        *vp = (ty)(((size_t)(*vp) << smite_word_bit) | (smite_UWORD)w); \
+    }
+#define UNCHECKED_STORE_STACK_TYPE(pos, ty, v)                          \
+    for (unsigned i = smite_align(sizeof(ty)) / smite_word_size; i > 0; i--) { \
+        UNCHECKED_STORE_STACK(pos - i + 1, (smite_UWORD)((size_t)v & smite_word_mask)); \
+        v = (ty)((size_t)v >> smite_word_bit);                          \
+    }
 
 // Align a VM address
 smite_UWORD smite_align(smite_UWORD addr);
@@ -65,8 +86,8 @@ int smite_byte_size(smite_WORD v); // return number of significant bytes in a sm
 #define INSTRUCTION_CHUNK_MASK ((1 << INSTRUCTION_CHUNK_BITS) - 1)
 #define INSTRUCTION_CONTINUATION_BIT (1 << INSTRUCTION_CHUNK_BITS)
 #define INSTRUCTION_NUMBER_BIT (1 << (INSTRUCTION_CHUNK_BITS + 1))
-ptrdiff_t smite_encode_instruction(smite_state *S, smite_UWORD addr, enum instruction_type type, smite_WORD v);
-int smite_decode_instruction(smite_state *S, smite_UWORD *addr, smite_WORD *val);
+int smite_encode_instruction(smite_state *S, smite_UWORD *addr, smite_UWORD type, smite_WORD v);
+int smite_decode_instruction(smite_state *S, smite_UWORD *addr, smite_UWORD *type, smite_WORD *val);
 
 
 #endif

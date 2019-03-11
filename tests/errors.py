@@ -1,4 +1,4 @@
-# Test the VM-generated error codes (HALT).
+# Test the VM-generated error codes and HALT.
 #
 # (c) Reuben Thomas 1995-2019
 #
@@ -14,21 +14,13 @@ VM.globalize(globals())
 
 
 # Test results and data
-answer = 42
 result = []
 invalid_address = size * word_size + 1000
 test = []
 
-# Test arbitrary halt code
-test.append(VM.here)
-result.append(answer)
-print("Test {}: PC = {}".format(len(test), test[len(test) - 1]))
-number(answer)
-action(HALT)
-
 # Try to divide by zero
 test.append(VM.here)
-result.append(-8)
+result.append(8)
 print("Test {}: PC = {}".format(len(test), test[len(test) - 1]))
 number(1)
 number(0)
@@ -36,7 +28,7 @@ action(DIVMOD)
 
 # Try to set STACK_DEPTH to an invalid stack location
 test.append(VM.here)
-result.append(-2)
+result.append(2)
 print("Test {}: PC = {}".format(len(test), test[len(test) - 1]))
 number(STACK_SIZE.get())
 action(SET_STACK_DEPTH)
@@ -44,27 +36,27 @@ action(GET_STACK_DEPTH)
 
 # Try to read from an invalid stack location
 test.append(VM.here)
-result.append(-3)
+result.append(3)
 print("Test {}: PC = {}".format(len(test), test[len(test) - 1]))
 action(DUP)
 
 # Try to execute an invalid memory location
 test.append(VM.here)
-result.append(-5)
+result.append(5)
 print("Test {}: PC = {}".format(len(test), test[len(test) - 1]))
 number(MEMORY.get() + 1)
 action(BRANCH)
 
 # Try to load from an invalid address
 test.append(VM.here)
-result.append(-5)
+result.append(5)
 print("Test {}: PC = {}".format(len(test), test[len(test) - 1]))
 number(invalid_address)
 action(LOAD)
 
 # Try to store to an invalid address
 test.append(VM.here)
-result.append(-6)
+result.append(6)
 print("Test {}: PC = {}".format(len(test), test[len(test) - 1]))
 number(0)
 number(invalid_address)
@@ -72,14 +64,14 @@ action(STORE)
 
 # Try to load from unaligned address
 test.append(VM.here)
-result.append(-7)
+result.append(7)
 print("Test {}: PC = {}".format(len(test), test[len(test) - 1]))
 number(1)
 action(LOAD)
 
 # Try to execute invalid opcode
 test.append(VM.here)
-result.append(-1)
+result.append(1)
 print("Test {}: PC = {}".format(len(test), test[len(test) - 1]))
 action(UNDEFINED)
 
@@ -91,22 +83,22 @@ for i in range(len(test)):
 
     print("Test {}".format(i + 1))
     PC.set(test[i])
-    res = -128
-    while res == -128:
+    res = 128
+    while res == 128:
         print("PC = {}".format(PC.get()))
         print("S = {}".format(S))
+        print("I = {}".format(disassemble_instruction(PC.get())))
         res = step()
-        print("I = {}".format(disassemble_instruction(ITYPE.get(), I.get())))
 
     if result[i] != res:
          print("Error in errors tests: test {} failed; PC = {}".format(i + 1, PC.get()))
-         print("HALT code is {}; should be {}".format(res, result[i]))
+         print("Error code is {}; should be {}".format(res, result[i]))
          error += 1
     print()
 
 # Try to write to an invalid stack location (can't do this with virtual code)
-if libsmite.smite_store_stack(VM.state, 4, 0) != -4:
-    print("Error in errors test: test {} failed")
+if libsmite.smite_store_stack(VM.state, 4, 0) != 4:
+    print("Error in errors test: test {} failed".format(i + 1))
     error += 1
 
 if error != 0:

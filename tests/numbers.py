@@ -67,7 +67,7 @@ for i in range(len(correct)):
     if S.depth.get() != 1 or correct[i] != S.pop():
         print("Error in numbers tests: PC = {:#x}".format(PC.get()))
         sys.exit(1)
+    print("I = {}".format(disassemble_instruction(PC.get())))
     step()
-    print("I = {}".format(disassemble_instruction(ITYPE.get(), I.get())))
 
 print("Numbers tests ran OK")

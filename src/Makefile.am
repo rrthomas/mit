@@ -8,11 +8,13 @@
 # RISK.
 
 AM_CPPFLAGS = -I$(top_builddir)/lib -I$(top_srcdir)/lib $(WARN_CFLAGS)
+PYTHON_WITH_PATH = export PYTHONPATH=$(top_srcdir)/python; $(PYTHON)
 
 lib_LTLIBRARIES = libsmite.la
-C_SRCS = bits_util.c storage.c instruction.c extra.c extra.h step.c run.c object.c actions-common.h
-GENERATED_HDRS = register-list.h instruction-list.h instruction-type-list.h actions.h
-libsmite_la_SOURCES = $(C_SRCS) $(GENERATED_HDRS)
+C_SRCS = bits_util.c storage.c instruction.c extra.h object.c
+GENERATED_SRCS = register-list.h instruction-list.h instruction-type-list.h actions.c extra.c
+SMITE_CORE_SRCS = smite_core/vm_data.py smite_core/opcodes_extra.py smite_core/action_gen.py
+libsmite_la_SOURCES = $(C_SRCS) $(GENERATED_SRCS)
 libsmite_la_LIBADD = $(top_builddir)/lib/libgnu.la
 
 bin_PROGRAMS = smite
@@ -21,8 +23,7 @@ smite_LDADD = lib@PACKAGE@.la $(top_builddir)/lib/libgnu.la
 smite_SOURCES = main.c tbl_opts.h
 pkginclude_HEADERS = @PACKAGE@.h aux.h opcodes.h opcodes-extra.h
 
-run.lo: actions.h
-step.lo: actions.h
+step.lo: actions.c
 bits_util.lo instruction.lo object.lo step.lo storage.lo main.o: register-list.h instruction-list.h instruction-type-list.h opcodes-extra.h
 main.o: tbl_opts.h register-list.h
 
@@ -39,36 +40,40 @@ main.o: tbl_opts.h register-list.h
 	fi
 
 actions.predictor_pickle: actions.trace events.py gen-predictor
-	$(PYTHON) $(srcdir)/gen-predictor actions.trace $@
+	$(PYTHON_WITH_PATH) $(srcdir)/gen-predictor actions.trace $@
 
 actions.labels_pickle: actions.predictor_pickle events.py gen-labels
-	$(PYTHON) $(srcdir)/gen-labels actions.predictor_pickle $@
+	$(PYTHON_WITH_PATH) $(srcdir)/gen-labels actions.predictor_pickle $@
 
-register-list.h: gen-register-list vm_data.py
-	$(PYTHON) $(srcdir)/gen-register-list > register-list.h
+register-list.h: gen-register-list smite_core/vm_data.py smite_core/action_gen.py
+	$(PYTHON_WITH_PATH) $(srcdir)/gen-register-list > register-list.h
 
-opcodes-extra.h: gen-opcodes-extra opcodes_extra.py
-	$(PYTHON) $(srcdir)/gen-opcodes-extra > opcodes-extra.h
+opcodes-extra.h: gen-opcodes-extra smite_core/opcodes_extra.py smite_core/action_gen.py
+	$(PYTHON_WITH_PATH) $(srcdir)/gen-opcodes-extra > opcodes-extra.h
 
-instruction-list.h: gen-instruction-list vm_data.py
-	$(PYTHON) $(srcdir)/gen-instruction-list > instruction-list.h
+instruction-list.h: gen-instruction-list smite_core/vm_data.py smite_core/action_gen.py
+	$(PYTHON_WITH_PATH) $(srcdir)/gen-instruction-list > instruction-list.h
 
-instruction-type-list.h: gen-instruction-type-list vm_data.py
-	$(PYTHON) $(srcdir)/gen-instruction-type-list > instruction-type-list.h
+instruction-type-list.h: gen-instruction-type-list smite_core/vm_data.py smite_core/action_gen.py
+	$(PYTHON_WITH_PATH) $(srcdir)/gen-instruction-type-list > instruction-type-list.h
 
-actions.h: gen-actions events.py vm_data.py actions.labels_pickle
-	$(PYTHON) $(srcdir)/gen-actions actions.labels_pickle > actions.h
+actions.c: gen-actions events.py smite_core/vm_data.py actions.labels_pickle smite_core/action_gen.py 
+	$(PYTHON_WITH_PATH) $(srcdir)/gen-actions actions.labels_pickle > actions.c
+
+extra.c: gen-extra smite_core/action_gen.py
+	$(PYTHON_WITH_PATH) $(srcdir)/gen-extra > extra.c
 
 loc:
-	$(CLOC) $(CLOC_OPTS) \
+	$(SLOCCOUNT) \
 		$(C_SRCS) \
 		$(@PACKAGE@_SOURCES) \
+		$(SMITE_CORE_SRCS) \
 		gen-register-list gen-instruction-list gen-instruction-type-list gen-opcodes-extra gen-actions
 
 EXTRA_DIST = \
 	@PACKAGE@.h.in \
-	vm_data.py opcodes_extra.py \
-	gen-register-list gen-instruction-list gen-instruction-type-list gen-actions gen-opcodes-extra
+	$(SMITE_CORE_SRCS) \
+	gen-register-list gen-instruction-list gen-instruction-type-list gen-actions gen-opcodes-extra gen-extra
 
 DISTCLEANFILES = @PACKAGE@.1
 # Ignore built files that are part of the distribution (specifically,

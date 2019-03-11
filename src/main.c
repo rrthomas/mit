@@ -12,7 +12,6 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <stdarg.h>
-#include <errno.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <getopt.h>
@@ -139,7 +138,7 @@ int main(int argc, char *argv[])
             printf(PACKAGE_NAME " " VERSION "\n"
                    "(c) SMite authors 1994-2019\n"
                    PACKAGE_NAME " comes with ABSOLUTELY NO WARRANTY.\n"
-                   "You may redistribute copies of " PACKAGE_NAME
+                   "You may redistribute copies of " PACKAGE_NAME "\n"
                    "under the terms of the MIT/X11 License.\n");
             exit(EXIT_SUCCESS);
         default:
@@ -154,7 +153,7 @@ int main(int argc, char *argv[])
     smite_state *S = smite_init(memory_size, stack_size);
     S->trace_fp = trace_fp;
     if (S == NULL)
-        die("could not allocate virtual machine smite_state");
+        die("could not allocate virtual machine state");
 
     if (smite_register_args(S, argc, argv + optind) != 0)
         die("could not map command-line arguments");
@@ -194,18 +193,24 @@ int main(int argc, char *argv[])
     do {
         again = false;
         switch (res = smite_run(S)) {
-        case -2:
-            if (smite_realloc_stack(S, round_up(S->BAD_ADDRESS, page_size)) == 0) {
-                S->PC = S->BAD_PC;
-                again = true;
+        case 0:
+            {
+                smite_WORD v;
+                if ((res = (int)smite_pop_stack(S, &v)) == 0)
+                    res = (int)v;
             }
             break;
-        case -5:
-        case -6:
-            if (smite_realloc_memory(S, round_up(S->BAD_ADDRESS, page_size)) == 0) {
-                S->PC = S->BAD_PC;
+        case 2:
+            if (S->BAD >= S->STACK_SIZE &&
+                S->BAD < smite_uword_max - S->STACK_SIZE &&
+                smite_realloc_stack(S, round_up(S->STACK_SIZE + S->BAD, page_size)) == 0)
                 again = true;
-            }
+            break;
+        case 5:
+        case 6:
+            if (S->BAD >= S->MEMORY &&
+                smite_realloc_memory(S, round_up(S->BAD, page_size)) == 0)
+                again = true;
             break;
         default:
             break;
@@ -213,7 +218,7 @@ int main(int argc, char *argv[])
     } while (again);
 
     // Core dump on error
-    if (core_dump && (res <= -1 && res >= -128)) {
+    if (core_dump && (res >= 1 && res <= 128)) {
         warn("error %d raised at PC=%"PRI_XWORD, res, S->PC);
 
         char *file = xasprintf("smite-core.%lu", (unsigned long)getpid());

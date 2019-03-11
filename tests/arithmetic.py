@@ -35,27 +35,25 @@ correct = [
     [2, 0, -word_size],
     [2, 0, -word_size, 1],
     [2, -word_size, 0],
-    [2, -word_size, 0, 2],
+    [2, -word_size],
     [2],
     [-2],
     [-2, -1],
     [2, 0],
     [2, 0, 1],
     [0, 2],
-    [0, 2, 2],
+    [0],
     [],
     [word_size],
     [-word_size],
-    [-word_size, 1],
     [],
     [-word_size],
     [-word_size, word_size - 1],
     [-1, -1],
-    [-1, -1, 1],
     [-1],
     [-1, -2],
     [1, 1],
-    [1, 1, 2],
+    [1],
     [],
     [4],
     [4, 2],
@@ -79,27 +77,25 @@ number(word_size)
 action(MUL)
 number(1)
 action(SWAP)
-number(2)
+action(POP)
 action(POP)
 action(NEGATE)
 number(-1)
 action(DIVMOD)
 number(1)
 action(SWAP)
-number(2)
+action(POP)
 action(POP)
 number(word_size)
 action(NEGATE)
-number(1)
 action(POP)
 number(-word_size)
 number(word_size - 1)
 action(DIVMOD)
-number(1)
 action(POP)
 number(-2)
 action(UDIVMOD)
-number(2)
+action(POP)
 action(POP)
 number(4)
 number(2)
@@ -112,7 +108,7 @@ for i in range(len(correct)):
     if str(correct[i]) != str(S):
         print("Error in arithmetic tests: PC = {:#x}".format(PC.get()))
         sys.exit(1)
+    print("I = {}".format(disassemble_instruction(PC.get())))
     step()
-    print("I = {}".format(disassemble_instruction(ITYPE.get(), I.get())))
 
 print("Arithmetic tests ran OK")

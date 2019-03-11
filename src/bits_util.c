@@ -10,7 +10,6 @@
 #include "config.h"
 
 #include "count-leading-zeros.h"
-#include "verify.h"
 
 #include "smite.h"
 #include "aux.h"
