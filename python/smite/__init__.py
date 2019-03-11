@@ -171,13 +171,33 @@ class State:
         globals_dict["UNDEFINED"] = max([action.value.opcode for action in Actions]) + 1
         globals_dict.update([(action.name, action.value) for action in LibActions])
 
-    def run(self, trace=False):
-        '''Run (or trace if trace is True) until HALT or error.'''
+    def register_args(self, *args):
+        argc = len(args)
+        arg_strings = c_char_p * argc
+        bargs = []
+        for arg in args:
+            if type(arg) == str:
+                arg = bytes(arg, 'utf-8')
+            elif type(arg) == int:
+                arg = bytes(arg)
+            bargs.append(arg)
+        self.argv = arg_strings(*bargs)
+        assert(libsmite.smite_register_args(self.state, argc, self.argv) == 0)
+
+    def run(self, trace=False, args=None):
+        '''
+        Run (or trace if trace is True) until HALT or error. Register any given
+        command-line `args`.
+        '''
+        if args == None:
+            args = []
+        args.insert(0, b"smite-shell")
+        self.register_args(*args)
         if trace == True:
             return self.step(addr=self.registers["MEMORY"].get() + 1, trace=True)
         else:
             ret = libsmite.smite_run(self.state)
-            if ret != -128:
+            if ret != 128:
                 print("Error code {} was returned".format(ret));
             return ret
 
@@ -188,17 +208,17 @@ class State:
         while True:
             ret = libsmite.smite_single_step(self.state)
             done += 1
-            if ret != -128 or self.registers["PC"].get() == addr or (addr == None and done == n):
+            if ret != 128 or self.registers["PC"].get() == addr or (addr == None and done == n):
                 break
 
-        if ret != -128:
+        if ret != 128:
             if ret != 0:
                 print("Error code {} was returned".format(ret), end='')
                 if n > 1:
                     print(" after {} steps".format(done), end='')
                 if addr != None:
                     print(" at PC = {:#x}".format(self.registers["PC"].get()), end='')
-            print("")
+                print("")
 
         return ret
 
@@ -275,16 +295,18 @@ class State:
         ptr = c_uword(addr)
         ty = c_uword()
         opcode = c_word()
-        libsmite.smite_decode_instruction(self.state, ptr, byref(ty), byref(opcode))
+        ret = libsmite.smite_decode_instruction(self.state, byref(ptr), byref(ty), byref(opcode))
+        if ret == 1:
+            return ptr.value, "invalid instruction!"
         if ty.value == Types.NUMBER:
-            return "{} ({:#x})".format(opcode.value, opcode.value)
+            return ptr.value, "{} ({:#x})".format(opcode.value, opcode.value)
         elif ty.value == Types.ACTION:
             try:
-                return self.mnemonic[opcode.value]
+                return ptr.value, self.mnemonic[opcode.value]
             except KeyError:
-                return "undefined"
+                return ptr.value, "undefined"
         else:
-            return "invalid type!"
+            return ptr.value, "invalid type (bug in smite_decode_instruction)!"
 
     def disassemble(self, start=None, length=None, end=None, file=sys.stdout):
         '''Disassemble from start to start+length or from start to end.
@@ -300,20 +322,8 @@ class State:
         while p < end:
             print("{:#x}: ".format(p), end='', file=file)
 
-            ptr = c_uword(p)
-            val = c_word()
-            ty = c_uword()
-            libsmite.smite_decode_instruction(self.state, byref(ptr), byref(ty), byref(val))
-            p = ptr.value
-
-            if ty < 0:
-                print("Error reading memory", file=file)
-            else:
-                s = self.disassemble_instruction(ty, val.value)
-                if s == "undefined":
-                    print("Undefined instruction", file=file)
-                else:
-                    print(s, file=file)
+            p, s = self.disassemble_instruction(p)
+            print(s, file=file)
 
     def dump(self, start=None, length=None, end=None, file=sys.stdout):
         '''Dump memory from start to start+length or from start to end.

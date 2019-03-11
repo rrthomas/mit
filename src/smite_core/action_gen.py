@@ -70,9 +70,10 @@ class StackPicture:
     arguments and one for the results.
 
     Variadic instructions (such as POP, DUP, SWAP) have an argument called
-    "COUNT" which indicates how many additional (unnamed) items are on the
-    stack. The `is_variadic` flag is per-StackPicture, not per instruction.
-    For example, POP has variadic arguments but non-variadic results.
+    "COUNT" which is (N.B.!) one less than the number of additional
+    (unnamed) items are on the stack. The `is_variadic` flag is
+    per-StackPicture, not per instruction. For example, POP has variadic
+    arguments but non-variadic results.
 
     Public fields:
 
@@ -118,7 +119,7 @@ class StackPicture:
         '''
         depth = self.static_depth()
         if self.is_variadic:
-            depth = '((smite_UWORD)COUNT + {})'.format(depth)
+            depth = '((smite_UWORD)COUNT + 1 + {})'.format(depth)
         return depth
 
     def declare_vars(self):

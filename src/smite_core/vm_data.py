@@ -194,7 +194,7 @@ class Actions(Enum):
 
     SET_STACK_DEPTH = Action(0x1e, ['a'], [], '''\
         if ((smite_UWORD)a > S->STACK_SIZE) {
-            S->BAD = a;
+            S->BAD = a - S->STACK_SIZE;
             RAISE(2);
         }
         S->STACK_DEPTH = a;
