@@ -46,7 +46,7 @@ def item_size(item):
     '''Return a C expression for the size in stack words of a stack item.'''
     return '(sizeof({}) / smite_word_size)'.format(stack_item_type(item))
 
-def load_var(pos, var):
+def load_var(pos, var, cached_depth):
     if stack_item_type(var) != 'smite_WORD':
         fmt = 'UNCHECKED_LOAD_STACK_TYPE({pos}, {type}, &{var})'
     else:
@@ -56,7 +56,7 @@ def load_var(pos, var):
         var=stack_item_name(var),
         type=stack_item_type(var)) + ';'
 
-def store_var(pos, var):
+def store_var(pos, var, cached_depth):
     if stack_item_type(var) != 'smite_WORD':
         fmt = 'UNCHECKED_STORE_STACK_TYPE({pos}, {type}, {var})'
     else:
@@ -131,7 +131,7 @@ class StackPicture:
         return '\n'.join(['{} {};'.format(stack_item_type(i), stack_item_name(i))
                           for i in self.named_items])
 
-    def load(self):
+    def load(self, cached_depth):
         '''
         Returns C source code to read the named items from the stack into C
         variables.
@@ -141,10 +141,10 @@ class StackPicture:
         pos = ['-1']
         for i in reversed(self.named_items):
             pos.append(item_size(i))
-            code.append(load_var("+".join(pos), i))
+            code.append(load_var("+".join(pos), i, cached_depth))
         return '\n'.join(code)
 
-    def store(self):
+    def store(self, cached_depth):
         '''
         Returns C source code to write the named items from C variables into
         the stack.
@@ -154,7 +154,7 @@ class StackPicture:
         pos = ['-1']
         for i in reversed(self.named_items):
             pos.append(item_size(i))
-            code.append(store_var("+".join(pos), i))
+            code.append(store_var("+".join(pos), i, cached_depth))
         return '\n'.join(code)
 
 
@@ -193,7 +193,17 @@ if ({num_pushes} > {num_pops} && (S->STACK_SIZE - S->STACK_DEPTH < {num_pushes} 
     RAISE(2);
 }}'''.format(num_pops=num_pops, num_pushes=num_pushes))
 
-def gen_case(event):
+def gen_case(event, cached_depth=0):
+    '''
+    Generate the code for an Event. In the code, S is the smite_state, errors
+    are reported by calling RAISE(), for which we maintain static_args.
+    
+     - event - Event.
+     - cached_depth - int - the number of stack items cached in C locals.
+       Caching items does not affect S->STACK_DEPTH.
+       TODO: Items [0, cached_depth) are stored in variables. For 0 <= pos <
+       cached_depth, item pos is cached in stack_{cached_depth - 1 - pos}.
+    '''
     # Concatenate the pieces.
     args = event.args
     results = event.results
@@ -204,13 +214,13 @@ def gen_case(event):
         results.declare_vars(),
         'const smite_UWORD static_args = {};'.format(args.static_depth()),
         check_pops('static_args'),
-        args.load(),
+        args.load(cached_depth),
         check_pops(dynamic_args),
         check_pops_then_pushes(dynamic_args, dynamic_results),
         'S->STACK_DEPTH -= static_args;',
         textwrap.dedent(event.code.rstrip()),
         'S->STACK_DEPTH += {num_pushes} - ({num_pops} - {nstatic_args});'.format(num_pops=dynamic_args, num_pushes=dynamic_results, nstatic_args='static_args'),
-        results.store(),
+        results.store(cached_depth),
     ])
     # Remove newlines resulting from empty strings in the above.
     code = re.sub('\n+', '\n', code, flags=re.MULTILINE).strip('\n')
