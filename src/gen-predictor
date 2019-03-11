@@ -11,7 +11,7 @@ When finished, the program will compute the control-flow structure of an interpr
 
 import sys, pickle
 
-from events import ALL_EVENTS, EVENT_TRACE_NAMES, EVENT_NAMES
+from smite_core.events import ALL_EVENTS, EVENT_TRACE_NAMES, EVENT_NAMES
 
 if len(sys.argv) != 3:
     print("Usage: gen-predictor TRACE-FILE PREDICTOR-FILE", file=sys.stderr)

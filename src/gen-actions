@@ -10,7 +10,7 @@
 
 import sys, pickle, re, textwrap
 
-from events import Event, ALL_EVENTS, EVENT_NAMES
+from smite_core.events import Event, ALL_EVENTS, EVENT_NAMES
 from smite_core import vm_data, action_gen
 
 # Load language.

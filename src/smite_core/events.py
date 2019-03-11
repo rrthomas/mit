@@ -1,6 +1,6 @@
 import hashlib
 
-from smite_core import vm_data
+from . import vm_data
 
 # Database of all possible trace events.
 

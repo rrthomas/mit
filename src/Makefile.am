@@ -39,10 +39,10 @@ main.o: tbl_opts.h register-list.h
 		--output=$@ ./@PACKAGE@$(EXEEXT); \
 	fi
 
-actions.predictor_pickle: actions.trace events.py gen-predictor
+actions.predictor_pickle: actions.trace smite_core/events.py gen-predictor
 	$(PYTHON_WITH_PATH) $(srcdir)/gen-predictor actions.trace $@
 
-actions.labels_pickle: actions.predictor_pickle events.py gen-labels
+actions.labels_pickle: actions.predictor_pickle smite_core/events.py gen-labels
 	$(PYTHON_WITH_PATH) $(srcdir)/gen-labels actions.predictor_pickle $@
 
 register-list.h: gen-register-list smite_core/vm_data.py smite_core/action_gen.py
@@ -57,7 +57,7 @@ instruction-list.h: gen-instruction-list smite_core/vm_data.py smite_core/action
 instruction-type-list.h: gen-instruction-type-list smite_core/vm_data.py smite_core/action_gen.py
 	$(PYTHON_WITH_PATH) $(srcdir)/gen-instruction-type-list > instruction-type-list.h
 
-actions.c: gen-actions events.py smite_core/vm_data.py actions.labels_pickle smite_core/action_gen.py 
+actions.c: gen-actions smite_core/events.py smite_core/vm_data.py actions.labels_pickle smite_core/action_gen.py
 	$(PYTHON_WITH_PATH) $(srcdir)/gen-actions actions.labels_pickle > actions.c
 
 extra.c: gen-extra smite_core/action_gen.py
