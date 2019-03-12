@@ -215,7 +215,6 @@ void smite_destroy(smite_state *S)
 {
     free(S->memory);
     free(S->S0);
-    free(S->main_argv_len);
     free(S);
 }
 
@@ -237,11 +236,6 @@ int smite_register_args(smite_state *S, int argc, char *argv[])
 {
     S->main_argc = argc;
     S->main_argv = argv;
-
-    if ((S->main_argv_len = calloc(argc, sizeof(smite_UWORD))) == NULL)
-        return -1;
-    for (int i = 0; i < argc; i++)
-        S->main_argv_len[i] = strlen(argv[i]);
 
     return 0;
 }

@@ -13,7 +13,7 @@ pkgpython_PYTHON =			\
 	@PACKAGE@/__init__.py		\
 	@PACKAGE@/__main__.py		\
 	@PACKAGE@/vm_data.py		\
-	@PACKAGE@/opcodes_extra.py	\
+	@PACKAGE@/vm_data_extra.py	\
 	@PACKAGE@/action_gen.py
 
 loc:
