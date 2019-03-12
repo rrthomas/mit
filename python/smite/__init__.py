@@ -291,7 +291,7 @@ class State:
 
     # Disassembly
     mnemonic = {action.value.opcode:action.name for action in Actions}
-    mnemonic.update({action.value:action.name for action in LibActions})
+    mnemonic.update({action.value.opcode:action.name for action in LibActions})
 
     def disassemble_instruction(self, addr):
         ptr = c_uword(addr)
