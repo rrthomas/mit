@@ -57,7 +57,7 @@ def walk(path, distribution):
     '''
     # Check for statistical irrelevance (but keep singleton paths).
     estimated_count = sum(distribution)
-    if len(path) > 1 and estimated_count < 30000.: return
+    if len(path) > 1 and estimated_count < 100000.: return
     # Okay, we'll keep it.
     language[path] = estimated_count
     # Check for repetition.
@@ -101,6 +101,8 @@ def cached_depth(path):
         event = EVENT_NAMES[event]
         current_depth -= len(event.args.named_items)
         min_depth = min(min_depth, current_depth)
+        if event.results.is_variadic:
+            current_depth = min_depth
         current_depth += len(event.results.named_items)
     return current_depth - min_depth
     

@@ -279,18 +279,19 @@ def gen_case(event, cached_depth_entry=0, cached_depth_exit=0):
         check_underflow(dynamic_args),
         check_overflow(dynamic_args, dynamic_results),
         'S->STACK_DEPTH -= {};'.format(static_args),
-        # FIXME: Spill and restore if variadic.
-        textwrap.dedent(event.code.rstrip()),
         balance_cache(
             max(0, cached_depth_entry - static_args),
             max(0, cached_depth_exit - static_results),
         ),
+        textwrap.dedent(event.code.rstrip()),
         'S->STACK_DEPTH += {};'.format(static_args),
         'S->STACK_DEPTH -= {};'.format(dynamic_args),
         'S->STACK_DEPTH += {};'.format(dynamic_results),
         results.store(cached_depth_exit),
         'cached_depth = {};'.format(cached_depth_exit),
     ])
+    if results.is_variadic:
+        assert cached_depth_exit <= static_results
     # Remove newlines resulting from empty strings in the above.
     code = re.sub('\n+', '\n', code, flags=re.MULTILINE).strip('\n')
     return code
