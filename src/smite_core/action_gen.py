@@ -56,23 +56,50 @@ def stack_cache_var(pos, cached_depth):
 
 def load_var(pos, item):
     if stack_item_type(item) != 'smite_WORD':
-        fmt = 'UNCHECKED_LOAD_STACK_TYPE({pos}, {type}, &{var})'
+        fmt = 'UNCHECKED_LOAD_STACK_TYPE({pos}, {type}, &{var});'
     else:
-        fmt = 'UNCHECKED_LOAD_STACK({pos}, &{var})'
+        fmt = 'UNCHECKED_LOAD_STACK({pos}, &{var});'
     return fmt.format(
         pos=pos,
         var=stack_item_name(item),
-        type=stack_item_type(item)) + ';'
+        type=stack_item_type(item))
 
 def store_var(pos, item):
     if stack_item_type(item) != 'smite_WORD':
-        fmt = 'UNCHECKED_STORE_STACK_TYPE({pos}, {type}, {var})'
+        fmt = 'UNCHECKED_STORE_STACK_TYPE({pos}, {type}, {var});'
     else:
-        fmt = 'UNCHECKED_STORE_STACK({pos}, {var})'
+        fmt = 'UNCHECKED_STORE_STACK({pos}, {var});'
     return fmt.format(
         pos=pos,
         var=stack_item_name(item),
-        type=stack_item_type(item)) + ';'
+        type=stack_item_type(item))
+
+def balance_cache(entry_depth, exit_depth):
+    code = []
+    if entry_depth < exit_depth:
+        for pos in range(entry_depth):
+            code.append('{} = {};'.format(
+                stack_cache_var(pos, exit_depth),
+                stack_cache_var(pos, entry_depth),
+            ))
+        for pos in range(entry_depth, exit_depth):
+            code.append('UNCHECKED_LOAD_STACK({pos}, &{var});'.format(
+                pos=pos,
+                var=stack_cache_var(pos, exit_depth),
+            ))        
+    elif entry_depth > exit_depth:
+        for pos in reversed(range(exit_depth, entry_depth)):
+            code.append('UNCHECKED_STORE_STACK({pos}, {var});'.format(
+                pos=pos,
+                var=stack_cache_var(pos, entry_depth),
+            ))        
+        for pos in reversed(range(exit_depth)):
+            code.append('{} = {};'.format(
+                stack_cache_var(pos, exit_depth),
+                stack_cache_var(pos, entry_depth),
+            ))
+    return '\n'.join(code)
+    
 
 
 class StackPicture:
@@ -215,16 +242,20 @@ if ({num_pushes} > {num_pops} && (S->STACK_SIZE - S->STACK_DEPTH < {num_pushes} 
     RAISE(2);
 }}'''.format(num_pops=num_pops, num_pushes=num_pushes))
 
-def gen_case(event, cached_depth=None):
+def gen_case(event, cached_depth_entry=0, cached_depth_exit=0):
     '''
     Generate the code for an Event. In the code, S is the smite_state, errors
     are reported by calling RAISE(), for which we maintain static_args.
     
      - event - Event.
-     - cached_depth - int - the number of stack items cached in C locals.
-       Caching items does not affect S->STACK_DEPTH.
-       For pos in [0, cached_depth), item pos is cached in variable
-       stack_cache_var(pos, cached_depth).
+     - cached_depth_entry - int - the number of stack items cached in C locals
+       on entry.
+     - cached_depth_exit - int - the number of stack items cached in C locals
+       on exit.
+     
+    Caching items does not affect S->STACK_DEPTH. For pos in
+    [0, cached_depth), item pos is cached in variable
+    stack_cache_var(pos, cached_depth).
     '''
     # Concatenate the pieces.
     args = event.args
@@ -233,13 +264,6 @@ def gen_case(event, cached_depth=None):
     dynamic_args = args.dynamic_depth()
     static_results = len(results.named_items)
     dynamic_results = results.dynamic_depth()
-    if cached_depth is None:
-        cached_depth_entry = 0
-        cached_depth_exit = 0
-    else:        
-        cached_depth_entry = cached_depth
-        cached_depth_exit = (
-            max(cached_depth_entry - static_args, 0) + static_results)
     code = '\n'.join([
         args.declare_vars(),
         results.declare_vars(),
@@ -249,7 +273,12 @@ def gen_case(event, cached_depth=None):
         check_pops(dynamic_args),
         check_pops_then_pushes(dynamic_args, dynamic_results),
         'S->STACK_DEPTH -= static_args;',
+        # FIXME: Spill and restore if variadic.
         textwrap.dedent(event.code.rstrip()),
+        balance_cache(
+            max(0, cached_depth_entry - static_args),
+            max(0, cached_depth_exit - static_results),
+        ),
         'S->STACK_DEPTH += {num_pushes} - ({num_pops} - static_args);'.format(num_pops=dynamic_args, num_pushes=dynamic_results),
         results.store(cached_depth_exit),
     ])

@@ -23,9 +23,15 @@ with open(sys.argv[1], "rb") as h:
 
 label_names = {
     label: 'A_{}'.format(label)
-    for label in range(len(labels))
+    for label, _ in enumerate(labels)
 }
 label_names[None] = 'A_ILLEGAL'
+
+label_depths = {
+    label: depth
+    for label, (depth, _, _, _) in enumerate(labels)
+}
+label_depths[None] = 0
 
 # Write the output file.
 print('''\
@@ -168,15 +174,27 @@ for label, (depth, name, if_correct, if_wrong) in enumerate(labels):
             // {}
 {}
             FETCH;
-            goto {}; // TODO: spill if necessary
+            goto {};
         }}
-        goto {}; // TODO: spill if necessary
+{}
+        goto {};
 '''.format(
             label_names[label],
             event.guess_code,
             event.name,
-            textwrap.indent(action_gen.gen_case(event, depth), '            '),
+            textwrap.indent(
+                action_gen.gen_case(
+                    event,
+                    cached_depth_entry=depth,
+                    cached_depth_exit=label_depths[if_correct],
+                ),
+                '            ',
+            ),
             label_names[if_correct],
+            textwrap.indent(
+                action_gen.balance_cache(depth, label_depths[if_wrong]),
+                '        ',
+            ),
             label_names[if_wrong],
         )
     )
@@ -203,6 +221,7 @@ print('''\
         }
 
     RET:
+        // FIXME: Flush cached stack items to memory.
         {}
     } while (res == 128);
 
