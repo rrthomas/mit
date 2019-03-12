@@ -197,44 +197,54 @@ if ({num_pushes} > {num_pops} && (S->STACK_SIZE - S->STACK_DEPTH < {num_pushes} 
     RAISE(2);
 }}'''.format(num_pops=num_pops, num_pushes=num_pushes))
 
+def gen_case(action):
+    '''
+    Generate the code for an Action. In the code, S is the smite_state, errors
+    are reported by calling RAISE(), for which we maintain static_args.
+    
+     - action - Action.
+    '''
+    # Concatenate the pieces.
+    args = action.args
+    results = action.results
+    static_args = len(args.named_items)
+    dynamic_args = args.dynamic_depth()
+    static_results = len(results.named_items)
+    dynamic_results = results.dynamic_depth()
+    code = '\n'.join([
+        args.declare_vars(),
+        results.declare_vars(),
+        check_underflow(static_args),
+        args.load(),
+        check_underflow(dynamic_args),
+        check_overflow(dynamic_args, dynamic_results),
+        'S->STACK_DEPTH -= {};'.format(static_args),
+        textwrap.dedent(action.code.rstrip()),
+        'S->STACK_DEPTH += {};'.format(static_args),
+        'S->STACK_DEPTH -= {};'.format(dynamic_args),
+        'S->STACK_DEPTH += {};'.format(dynamic_results),
+        results.store(),
+    ])
+    # Remove newlines resulting from empty strings in the above.
+    code = re.sub('\n+', '\n', code, flags=re.MULTILINE).strip('\n')
+    return code
+
 def dispatch(actions, prefix, undefined_case):
     '''Generate dispatch code for some Actions.
 
     actions - Enum of Actions.
     '''
     output = '        switch (I) {\n'
-    for (instruction, action) in actions.__members__.items():
-        # Concatenate the pieces.
-        args = action.value.args
-        results = action.value.results
-        static_args = args.static_depth()
-        dynamic_args = args.dynamic_depth()
-        dynamic_results = results.dynamic_depth()
-        code = '\n'.join([
-            args.declare_vars(),
-            results.declare_vars(),
-            check_underflow(static_args),
-            args.load(),
-            check_underflow(dynamic_args),
-            check_overflow(dynamic_args, dynamic_results),
-            'S->STACK_DEPTH -= {};'.format(static_args),
-            textwrap.dedent(action.value.code.rstrip()),
-            'S->STACK_DEPTH += {};'.format(static_args),
-            'S->STACK_DEPTH -= {};'.format(dynamic_args),
-            'S->STACK_DEPTH += {};'.format(dynamic_results),
-            results.store(),
-        ])
-        # Remove newlines resulting from empty strings in the above.
-        code = re.sub('\n+', '\n', code, flags=re.MULTILINE).strip('\n')
+    for action in actions:
         output += '''\
         case {prefix}{instruction}:
             {{
 {code}
             }}
             break;\n'''.format(
-                    instruction=instruction,
+                    instruction=action.name,
                     prefix=prefix,
-                    code=textwrap.indent(code, '                '))
+                    code=textwrap.indent(gen_case(action.value), '                '))
     output += '''
         default:
 {}
