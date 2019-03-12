@@ -26,7 +26,7 @@ print('''\
 #define RAISE(code)                         \\
     do {                                    \\
         int error = (code);                 \\
-        S->STACK_DEPTH += static_args;      \\
+        S->STACK_DEPTH = initial_STACK_DEPTH; \\
         S->PC = initial_PC;                 \\
         return error;                       \\
     } while(0)
@@ -41,6 +41,7 @@ print('''\
 
 smite_WORD smite_single_step(smite_state *S) {
     smite_UWORD initial_PC = S->PC;
+    smite_UWORD initial_STACK_DEPTH = S->STACK_DEPTH;
     smite_UWORD ITYPE;
     smite_WORD I;
     int res = smite_decode_instruction(S, &S->PC, &ITYPE, &I);
@@ -50,7 +51,6 @@ smite_WORD smite_single_step(smite_state *S) {
     switch (ITYPE) {
     case INSTRUCTION_NUMBER:
         {
-            const smite_UWORD static_args = 0;
             int ret = smite_push_stack(S, I);
             if (ret != 0)
                 RAISE(ret);
@@ -61,7 +61,6 @@ smite_WORD smite_single_step(smite_state *S) {
 print(dispatch(Actions, 'O_', '''\
             /* Undefined instruction; try extra instructions */
             {
-                const smite_UWORD static_args = 0;
                 int ret = smite_extra(S, I);
                 if (ret != 0)
                     RAISE(ret);
