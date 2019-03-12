@@ -129,7 +129,7 @@ if max_cached_depth > 0:
     print('''\
     smite_WORD {};'''.format(
         ', '.join(
-            action_gen.stack_cache_var(pos, max_cached_depth) 
+            action_gen.stack_cache_var(pos, max_cached_depth)
             for pos in reversed(range(max_cached_depth))
         )
     ))

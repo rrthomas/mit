@@ -90,20 +90,20 @@ def balance_cache(entry_depth, exit_depth):
             code.append('UNCHECKED_LOAD_STACK({pos}, &{var});'.format(
                 pos=pos,
                 var=stack_cache_var(pos, exit_depth),
-            ))        
+            ))
     elif entry_depth > exit_depth:
         for pos in reversed(range(exit_depth, entry_depth)):
             code.append('UNCHECKED_STORE_STACK({pos}, {var});'.format(
                 pos=pos,
                 var=stack_cache_var(pos, entry_depth),
-            ))        
+            ))
         for pos in reversed(range(exit_depth)):
             code.append('{} = {};'.format(
                 stack_cache_var(pos, exit_depth),
                 stack_cache_var(pos, entry_depth),
             ))
     return '\n'.join(code)
-    
+
 
 class StackPicture:
     '''
@@ -259,7 +259,7 @@ def gen_case(event, cached_depth_entry=0, cached_depth_exit=0):
        on entry.
      - cached_depth_exit - int - the number of stack items cached in C locals
        on exit.
-     
+
     Caching items does not affect S->STACK_DEPTH. For pos in
     [0, cached_depth), item pos is cached in variable
     stack_cache_var(pos, cached_depth).

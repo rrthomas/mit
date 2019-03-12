@@ -105,7 +105,7 @@ def cached_depth(path):
             current_depth = min_depth
         current_depth += len(event.results.named_items)
     return current_depth - min_depth
-    
+
 path_depths = {path: cached_depth(path) for path in language}
 
 # For each path, sort the possible next events by probability (decreasing).
