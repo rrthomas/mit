@@ -13,8 +13,8 @@ class Action:
     '''VM action instruction descriptor.
 
      - opcode - int - SMite opcode number.
-     - args - list - list of stack arguments.
-     - results - list - list of stack results.
+     - args - StackPicture.
+     - results - StackPicture.
      - code - str - C source code.
 
     C variables are created for the arguments and results; the arguments are
@@ -24,9 +24,13 @@ class Action:
     error is raised, the state of the VM is not changed.
     '''
     def __init__(self, opcode, args, results, code):
+        '''
+         - args - list acceptable to StackPicture.from_list.
+         - results - list acceptable to StackPicture.from_list.
+        '''
         self.opcode = opcode
-        self.args = args
-        self.results = results
+        self.args = StackPicture.from_list(args)
+        self.results = StackPicture.from_list(results)
         self.code = code
 
 
@@ -44,23 +48,23 @@ def item_size(item):
 
 def load_var(pos, var):
     if stack_item_type(var) != 'smite_WORD':
-        fmt = 'UNCHECKED_LOAD_STACK_TYPE({pos}, {type}, &{var})'
+        fmt = 'UNCHECKED_LOAD_STACK_TYPE({pos}, {type}, &{var});'
     else:
-        fmt = 'UNCHECKED_LOAD_STACK({pos}, &{var})'
+        fmt = 'UNCHECKED_LOAD_STACK({pos}, &{var});'
     return fmt.format(
         pos=pos,
         var=stack_item_name(var),
-        type=stack_item_type(var)) + ';'
+        type=stack_item_type(var))
 
 def store_var(pos, var):
     if stack_item_type(var) != 'smite_WORD':
-        fmt = 'UNCHECKED_STORE_STACK_TYPE({pos}, {type}, {var})'
+        fmt = 'UNCHECKED_STORE_STACK_TYPE({pos}, {type}, {var});'
     else:
-        fmt = 'UNCHECKED_STORE_STACK({pos}, {var})'
+        fmt = 'UNCHECKED_STORE_STACK({pos}, {var});'
     return fmt.format(
         pos=pos,
         var=stack_item_name(var),
-        type=stack_item_type(var)) + ';'
+        type=stack_item_type(var))
 
 
 class StackPicture:
@@ -135,9 +139,9 @@ class StackPicture:
         '''
         code = []
         pos = ['-1']
-        for i in reversed(self.named_items):
-            pos.append(item_size(i))
-            code.append(load_var("+".join(pos), i))
+        for item in reversed(self.named_items):
+            pos.append(item_size(item))
+            code.append(load_var("+".join(pos), item))
         return '\n'.join(code)
 
     def store(self):
@@ -148,9 +152,9 @@ class StackPicture:
         '''
         code = []
         pos = ['-1']
-        for i in reversed(self.named_items):
-            pos.append(item_size(i))
-            code.append(store_var("+".join(pos), i))
+        for item in reversed(self.named_items):
+            pos.append(item_size(item))
+            code.append(store_var("+".join(pos), item))
         return '\n'.join(code)
 
 
@@ -201,8 +205,8 @@ def dispatch(actions, prefix, undefined_case):
     output = '        switch (I) {\n'
     for (instruction, action) in actions.__members__.items():
         # Concatenate the pieces.
-        args = StackPicture.from_list(action.value.args)
-        results = StackPicture.from_list(action.value.results)
+        args = action.value.args
+        results = action.value.results
         static_args = args.static_depth()
         dynamic_args = args.dynamic_depth()
         dynamic_results = results.dynamic_depth()
