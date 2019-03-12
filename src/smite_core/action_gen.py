@@ -101,7 +101,6 @@ def balance_cache(entry_depth, exit_depth):
     return '\n'.join(code)
     
 
-
 class StackPicture:
     '''
     Represents a description of the topmost items on the stack. The effect
@@ -220,7 +219,7 @@ def disable_warnings(warnings, c_source):
                                      pragmas='\n'.join(['#pragma GCC diagnostic ignored "{}"'.format(w)
                                                         for w in warnings]))
 
-def check_pops(num_pops):
+def check_underflow(num_pops):
     '''
     Returns C source code to check that the stack contains enough items to
     pop the specified number of items.
@@ -231,14 +230,18 @@ def check_pops(num_pops):
     return disable_warnings(['-Wtype-limits', '-Wunused-variable', '-Wshadow'], '''\
 if ((S->STACK_DEPTH < {num_pops})) {{
     S->BAD = {num_pops};
-    const smite_UWORD static_args = 0;
     RAISE(3);
 }}'''.format(num_pops=num_pops))
 
-def check_pops_then_pushes(num_pops, num_pushes):
+def check_overflow(num_pops, num_pushes):
+    '''
+    Returns C source code to check that the stack contains enough space to
+    push `num_pushes` items, given that `num_pops` items will first be
+    popped.
+    '''
     return disable_warnings(['-Wtype-limits', '-Wtautological-compare'], '''\
 if ({num_pushes} > {num_pops} && (S->STACK_SIZE - S->STACK_DEPTH < {num_pushes} - {num_pops})) {{
-    S->BAD = {num_pushes} - {num_pops};
+    S->BAD = ({num_pushes} - {num_pops}) - (S->STACK_SIZE - S->STACK_DEPTH);
     RAISE(2);
 }}'''.format(num_pops=num_pops, num_pushes=num_pushes))
 
@@ -267,19 +270,20 @@ def gen_case(event, cached_depth_entry=0, cached_depth_exit=0):
     code = '\n'.join([
         args.declare_vars(),
         results.declare_vars(),
-        'const smite_UWORD static_args = {};'.format(static_args),
-        check_pops('static_args'),
+        check_underflow(static_args),
         args.load(cached_depth_entry),
-        check_pops(dynamic_args),
-        check_pops_then_pushes(dynamic_args, dynamic_results),
-        'S->STACK_DEPTH -= static_args;',
+        check_underflow(dynamic_args),
+        check_overflow(dynamic_args, dynamic_results),
+        'S->STACK_DEPTH -= {};'.format(static_args),
         # FIXME: Spill and restore if variadic.
         textwrap.dedent(event.code.rstrip()),
         balance_cache(
             max(0, cached_depth_entry - static_args),
             max(0, cached_depth_exit - static_results),
         ),
-        'S->STACK_DEPTH += {num_pushes} - ({num_pops} - static_args);'.format(num_pops=dynamic_args, num_pushes=dynamic_results),
+        'S->STACK_DEPTH += {};'.format(static_args),
+        'S->STACK_DEPTH -= {};'.format(dynamic_args),
+        'S->STACK_DEPTH += {};'.format(dynamic_results),
         results.store(cached_depth_exit),
     ])
     # Remove newlines resulting from empty strings in the above.
@@ -292,14 +296,14 @@ def dispatch(actions, prefix, undefined_case):
     actions - Enum of Actions.
     '''
     output = '        switch (I) {\n'
-    for (instruction, action) in actions.__members__.items():
+    for action in actions:
         output += '''\
         case {prefix}{instruction}:
             {{
 {code}
             }}
             break;\n'''.format(
-                    instruction=instruction,
+                    instruction=action.name,
                     prefix=prefix,
                     code=textwrap.indent(gen_case(action.value), '                '))
     output += '''

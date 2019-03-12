@@ -8,7 +8,7 @@
 # THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 # RISK.
 
-import sys, pickle, re, textwrap
+import sys, pickle, textwrap
 
 from smite_core.events import Event, ALL_EVENTS, EVENT_NAMES
 from smite_core import vm_data, action_gen
@@ -50,7 +50,7 @@ print('''\
 #define RAISE(code)                         \\
     do {                                    \\
         res = (code);                       \\
-        S->STACK_DEPTH += static_args;      \\
+        S->STACK_DEPTH = initial_STACK_DEPTH; \\
         S->PC = initial_PC;                 \\
         goto RET;                           \\
     } while(0)
@@ -67,19 +67,18 @@ print('''\
 print('''\
 smite_WORD smite_single_step(smite_state *S) {
     smite_UWORD initial_PC = S->PC;
+    smite_UWORD initial_STACK_DEPTH = S->STACK_DEPTH;
     int res = 128, error;
     smite_UWORD ITYPE;
     smite_WORD I;
     error = smite_decode_instruction(S, &S->PC, &ITYPE, &I);
     if (error != 0) {
-        const smite_UWORD static_args = 0;
         RAISE(error);
     }
 
     switch (ITYPE) {
     case INSTRUCTION_NUMBER:
         {
-            const smite_UWORD static_args = 0;
             error = smite_push_stack(S, I);
             if (error != 0)
                 RAISE(error);
@@ -90,7 +89,6 @@ smite_WORD smite_single_step(smite_state *S) {
 print(action_gen.dispatch(vm_data.Actions, 'O_', '''\
             // Undefined instruction; try extra instructions.
             {
-                const smite_UWORD static_args = 0;
                 error = smite_extra(S, I);
                 if (error != 0)
                     RAISE(error);
@@ -114,15 +112,16 @@ print('''\
 #define FETCH                               \\
     do {                                    \\
         initial_PC = S->PC;                 \\
+        initial_STACK_DEPTH = S->STACK_DEPTH; \\
         error = smite_load_byte(S, S->PC++, &NEXT); \\
         if (error != 0)                     \\
             RAISE(error);                   \\
     } while (0)
 
 smite_WORD smite_run(smite_state *S) {
-    smite_UWORD initial_PC;
     int res = 128, error;''')
 
+# Declare stack cache variables.
 max_cached_depth = max(d for d, _, _, _ in labels)
 if max_cached_depth > 0:
     print('''\
@@ -135,25 +134,23 @@ if max_cached_depth > 0:
 
 print('''\
     do {
+        smite_UWORD initial_PC, initial_STACK_DEPTH;
         smite_BYTE NEXT;
-        {
-            smite_UWORD static_args = 0;
-            FETCH;
-        }
+        FETCH;
         goto A_0;
 
         // Each A_XXX label has an expectation of what instruction sequence
         // probably comes next. If correct, there is a fast path for executing
         // that sequence, otherwise we fall back on a slow path with broader
-        // expectations. Ultimately, we fall back to `A_ILLEGAL` which reports an
-        // illegal instruction (the most unexpected case) or dispatches an extra
-        // (implementation-specific) instruction.
+        // expectations. Ultimately, we fall back to `A_ILLEGAL` which reports
+        // an illegal instruction (the most unexpected case) or dispatches an
+        // extra (implementation-specific) instruction.
         //
         // The calling convention at each A_XXX label is as follows:
         //
         //  - On entry, `res` is 128, `NEXT` is the first byte of the next
-        //    instruction, `PC` has been incremented, and `STACK_DEPTH` has been
-        //    decremented to pop the arguments.
+        //    instruction, `PC` has been incremented, and `STACK_DEPTH` has
+        //    been decremented to pop the arguments.
         //  - When an error occurs, call `RAISE(code)`.
         //    It sets `res` to the return code; then it resets the stack depth
         //    to the depth on entry, and does "goto RET".
@@ -204,7 +201,6 @@ print('''\
         {
             // Pretend we fetched the instruction the formal way.
             S->PC--;
-            const smite_UWORD static_args = 0;
             smite_UWORD itype;
             smite_WORD opcode;
             error = smite_decode_instruction(S, &S->PC, &itype, &opcode);
