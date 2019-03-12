@@ -75,6 +75,10 @@ def store_var(pos, item):
         type=stack_item_type(item))
 
 def balance_cache(entry_depth, exit_depth):
+    '''
+    Change the number of stack items that are cached in C variables.
+    This may require moving values to other variables and to/from memory.
+    '''
     code = []
     if entry_depth < exit_depth:
         for pos in range(entry_depth):
@@ -285,6 +289,7 @@ def gen_case(event, cached_depth_entry=0, cached_depth_exit=0):
         'S->STACK_DEPTH -= {};'.format(dynamic_args),
         'S->STACK_DEPTH += {};'.format(dynamic_results),
         results.store(cached_depth_exit),
+        'cached_depth = {};'.format(cached_depth_exit),
     ])
     # Remove newlines resulting from empty strings in the above.
     code = re.sub('\n+', '\n', code, flags=re.MULTILINE).strip('\n')

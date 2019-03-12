@@ -14,6 +14,7 @@ from smite_core.action_gen import *
 print('''
 #include "config.h"
 
+#include <assert.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <unistd.h>
@@ -274,9 +275,11 @@ for action in LibActions:
     print('''\
 static int extra_{}(smite_state *S, smite_WORD I)
 {{
+    smite_UWORD cached_depth = 0;
 '''.format(str.lower(action.name)))
     print(dispatch(action.value.library, '{}_'.format(action.name), '            RAISE(15);'))
     print('''
+    assert(cached_depth == 0);
     return 0;
 }
 ''')
@@ -284,11 +287,13 @@ static int extra_{}(smite_state *S, smite_WORD I)
 print('''
 int smite_extra(smite_state *S, smite_WORD I)
 {
+    smite_UWORD cached_depth = 0;
 ''')
 
 print(dispatch(LibActions, '', '''
             return 1;'''))
 
 print('''
+    assert(cached_depth == 0);
     return 0;
 }''')

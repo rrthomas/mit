@@ -68,6 +68,7 @@ print('''\
 smite_WORD smite_single_step(smite_state *S) {
     smite_UWORD initial_PC = S->PC;
     smite_UWORD initial_STACK_DEPTH = S->STACK_DEPTH;
+    smite_UWORD cached_depth = 0; // Always zero.
     int res = 128, error;
     smite_UWORD ITYPE;
     smite_WORD I;
@@ -104,18 +105,19 @@ print('''
     TRACE(ITYPE, I);
 
 RET:
+    assert(cached_depth == 0);
     return res;
 }
 ''')
 
 print('''\
-#define FETCH                               \\
-    do {                                    \\
-        initial_PC = S->PC;                 \\
-        initial_STACK_DEPTH = S->STACK_DEPTH; \\
+#define FETCH                                       \\
+    do {                                            \\
+        initial_PC = S->PC;                         \\
+        initial_STACK_DEPTH = S->STACK_DEPTH;       \\
         error = smite_load_byte(S, S->PC++, &NEXT); \\
-        if (error != 0)                     \\
-            RAISE(error);                   \\
+        if (error != 0)                             \\
+            RAISE(error);                           \\
     } while (0)
 
 smite_WORD smite_run(smite_state *S) {
@@ -135,7 +137,9 @@ if max_cached_depth > 0:
 print('''\
     do {
         smite_UWORD initial_PC, initial_STACK_DEPTH;
+        smite_UWORD cached_depth = 0;
         smite_BYTE NEXT;
+
         FETCH;
         goto A_0;
 
@@ -165,21 +169,23 @@ print('''\
 for label, (depth, name, if_correct, if_wrong) in enumerate(labels):
     event = EVENT_NAMES[name]
     print('''\
-    {}:
+    {label}:
         assert(res == 128);
-        if ({}) {{
-            // {}
-{}
+        cached_depth = {depth};
+        if ({guess_code}) {{
+            // {name}
+{action_code}
             FETCH;
-            goto {};
+            goto {label_if_correct};
         }}
-{}
-        goto {};
+{balance_code}
+        goto {label_if_wrong};
 '''.format(
-            label_names[label],
-            event.guess_code,
-            event.name,
-            textwrap.indent(
+            label=label_names[label],
+            depth=depth,
+            guess_code=event.guess_code,
+            name=event.name,
+            action_code=textwrap.indent(
                 action_gen.gen_case(
                     event,
                     cached_depth_entry=depth,
@@ -187,18 +193,20 @@ for label, (depth, name, if_correct, if_wrong) in enumerate(labels):
                 ),
                 '            ',
             ),
-            label_names[if_correct],
-            textwrap.indent(
+            label_if_correct=label_names[if_correct],
+            balance_code=textwrap.indent(
                 action_gen.balance_cache(depth, label_depths[if_wrong]),
                 '        ',
             ),
-            label_names[if_wrong],
+            label_if_wrong=label_names[if_wrong],
         )
     )
 
 print('''\
     A_ILLEGAL:
-        {
+        {{
+            assert(res == 128);
+            cached_depth = {};
             // Pretend we fetched the instruction the formal way.
             S->PC--;
             smite_UWORD itype;
@@ -214,13 +222,29 @@ print('''\
             if (error != 0)
                 RAISE(error);
             goto RET;
-        }
+        }}
+'''.format(label_depths[None]))
 
+print('''\
     RET:
-        // FIXME: Flush cached stack items to memory.
-        {}
+        {
+            switch (cached_depth) {''')
+for depth in range(max_cached_depth, 0, -1):
+    print('''\
+            case {depth}:
+                UNCHECKED_STORE_STACK(cached_depth - {depth}, {var});
+                // Falls through.'''.format(
+        depth=depth,
+        var=action_gen.stack_cache_var(0, depth),
+    ))
+print('''\
+            case 0:
+                break;
+            default:
+                assert(0); // Unreachable.
+            }
+        }
     } while (res == 128);
-
     return res;
 }''')
 

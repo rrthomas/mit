@@ -39,6 +39,7 @@ if test "$gl_gcc_warnings" = yes; then
   nw=
   nw="$nw -Wvla"              # Require C99, so variable-length arrays are OK
   nw="$nw -Wsystem-headers"   # Don’t let system headers trigger warnings
+  nw="$nw -Wimplicit-fallthrough=5" # We want to allow "fallthrough" comments.
 
   gl_MANYWARN_ALL_GCC([warnings])
 
@@ -49,6 +50,8 @@ if test "$gl_gcc_warnings" = yes; then
   done
 
   dnl Add some more safety measures
+  gl_WARN_ADD([-Wimplicit-fallthrough])
+  gl_WARN_ADD([-Wswitch-default])
   gl_WARN_ADD([-D_FORTIFY_SOURCE=2])
 
   # When compiling with GCC, prefer -isystem to -I when including system
