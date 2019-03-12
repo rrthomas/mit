@@ -13,7 +13,7 @@ PYTHON_WITH_PATH = export PYTHONPATH=$(top_srcdir)/python; $(PYTHON)
 lib_LTLIBRARIES = libsmite.la
 C_SRCS = bits_util.c storage.c instruction.c extra.h object.c
 GENERATED_SRCS = register-list.h instruction-list.h instruction-type-list.h actions.c extra.c
-SMITE_CORE_SRCS = smite_core/vm_data.py smite_core/opcodes_extra.py smite_core/action_gen.py
+SMITE_CORE_SRCS = smite_core/vm_data.py smite_core/vm_data_extra.py smite_core/action_gen.py
 libsmite_la_SOURCES = $(C_SRCS) $(GENERATED_SRCS)
 libsmite_la_LIBADD = $(top_builddir)/lib/libgnu.la
 
@@ -42,7 +42,7 @@ main.o: tbl_opts.h register-list.h
 register-list.h: gen-register-list smite_core/vm_data.py smite_core/action_gen.py
 	$(PYTHON_WITH_PATH) $(srcdir)/gen-register-list > register-list.h
 
-opcodes-extra.h: gen-opcodes-extra smite_core/opcodes_extra.py smite_core/action_gen.py
+opcodes-extra.h: gen-opcodes-extra smite_core/vm_data_extra.py smite_core/action_gen.py
 	$(PYTHON_WITH_PATH) $(srcdir)/gen-opcodes-extra > opcodes-extra.h
 
 instruction-list.h: gen-instruction-list smite_core/vm_data.py smite_core/action_gen.py
@@ -54,7 +54,7 @@ instruction-type-list.h: gen-instruction-type-list smite_core/vm_data.py smite_c
 actions.c: gen-actions smite_core/vm_data.py smite_core/action_gen.py
 	$(PYTHON_WITH_PATH) $(srcdir)/gen-actions > actions.c
 
-extra.c: gen-extra smite_core/action_gen.py
+extra.c: gen-extra smite_core/vm_data_extra.py smite_core/action_gen.py
 	$(PYTHON_WITH_PATH) $(srcdir)/gen-extra > extra.c
 
 loc:

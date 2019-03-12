@@ -19,13 +19,13 @@ enum {
 };
 
 enum {
-#undef INSTRUCTION
 #define INSTRUCTION(name, opcode) O_ ## name = opcode,
 #include "instruction-list.h"
     O_UNDEFINED, // Not part of the spec
 #undef INSTRUCTION
 };
 
+#define INSTRUCTION(name, opcode) name = opcode,
 #include "opcodes-extra.h"
 
 
