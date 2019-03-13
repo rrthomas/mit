@@ -42,6 +42,7 @@ class Actions(Enum):
     ''')
 
     POP = Action(0x01, ['item',], [], '''\
+        (void)item;
     ''')
 
     DUP = Action(0x02, ['ITEMS', 'COUNT'], ['ITEMS', 'dupee'], '''\
