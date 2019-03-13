@@ -96,6 +96,18 @@ static smite_UWORD round_up(smite_UWORD n, smite_UWORD multiple)
     return (n - 1) - (n - 1) % multiple + multiple;
 }
 
+static int trace_step(smite_state *S, FILE *fp)
+{
+    smite_UWORD type, PC = S->PC;
+    smite_WORD opcode;
+    int res = smite_decode_instruction(S, &PC, &type, &opcode);
+    if (res != 0)
+        return res;
+
+    fprintf(fp, "%"PRI_UWORD" %"PRI_XWORD"\n", type, (smite_UWORD)opcode);
+    return smite_single_step(S);
+}
+
 int main(int argc, char *argv[])
 {
     set_program_name(argv[0]);
@@ -151,7 +163,6 @@ int main(int argc, char *argv[])
         usage();
 
     smite_state *S = smite_init(memory_size, stack_size);
-    S->trace_fp = trace_fp;
     if (S == NULL)
         die("could not allocate virtual machine state");
 
@@ -192,7 +203,7 @@ int main(int argc, char *argv[])
     bool again;
     do {
         again = false;
-        switch (res = smite_run(S)) {
+        switch (res = trace_fp ? trace_step(S, trace_fp) : smite_run(S)) {
         case 0:
             {
                 smite_WORD v;
@@ -212,6 +223,8 @@ int main(int argc, char *argv[])
                 smite_realloc_memory(S, round_up(S->BAD, page_size)) == 0)
                 again = true;
             break;
+        case 128:
+            again = true;
         default:
             break;
         }

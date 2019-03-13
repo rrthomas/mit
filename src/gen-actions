@@ -34,10 +34,6 @@ print('''\
     if (x == 0)                             \\
         RAISE(8);
 
-#define TRACE(type, opcode)                 \\
-    if (S->trace_fp)                        \\
-        fprintf(S->trace_fp, "%"PRI_UWORD" %"PRI_XWORD"\\n", type, (smite_UWORD)opcode);
-
 smite_WORD smite_single_step(smite_state *S) {
     smite_UWORD initial_PC = S->PC;
     smite_UWORD initial_STACK_DEPTH = S->STACK_DEPTH;
@@ -71,8 +67,6 @@ print('''
     default: /* Bug in smite_decode_instruction! */
         return 1;
     }
-
-    TRACE(ITYPE, I);
 
     return 128;
 }
