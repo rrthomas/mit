@@ -73,7 +73,8 @@ loc:
 EXTRA_DIST = \
 	@PACKAGE@.h.in \
 	$(SMITE_CORE_SRCS) \
-	gen-register-list gen-instruction-list gen-instruction-type-list gen-actions gen-opcodes-extra gen-extra
+	gen-register-list gen-instruction-list gen-instruction-type-list gen-actions gen-opcodes-extra gen-extra \
+	actions.trace
 
 DISTCLEANFILES = @PACKAGE@.1
 # Ignore built files that are part of the distribution (specifically,
