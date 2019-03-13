@@ -40,7 +40,7 @@ main.o: tbl_opts.h register-list.h
 	fi
 
 actions.predictor_pickle: actions.trace smite_core/events.py gen-predictor
-	$(PYTHON_WITH_PATH) $(srcdir)/gen-predictor actions.trace $@
+	$(PYTHON_WITH_PATH) $(srcdir)/gen-predictor $(srcdir)/actions.trace $@
 
 actions.labels_pickle: actions.predictor_pickle smite_core/events.py gen-labels
 	$(PYTHON_WITH_PATH) $(srcdir)/gen-labels actions.predictor_pickle $@
