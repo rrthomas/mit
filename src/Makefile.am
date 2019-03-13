@@ -76,7 +76,7 @@ EXTRA_DIST = \
 	gen-register-list gen-instruction-list gen-instruction-type-list gen-actions gen-opcodes-extra gen-extra gen-labels gen-predictor \
 	actions.trace
 
-DISTCLEANFILES = @PACKAGE@.1
+DISTCLEANFILES = @PACKAGE@.1 actions.predictor_pickle actions.labels_pickle actions.c
 # Ignore built files that are part of the distribution (specifically,
 # @PACKAGE@.1)
 distcleancheck_listfiles = \
