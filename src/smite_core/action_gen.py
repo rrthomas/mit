@@ -181,7 +181,7 @@ def check_underflow(num_pops):
     '''
     return disable_warnings(['-Wtype-limits', '-Wunused-variable', '-Wshadow'], '''\
 if ((S->STACK_DEPTH < {num_pops})) {{
-    S->BAD = {num_pops};
+    S->BAD = {num_pops} - 1;
     RAISE(3);
 }}'''.format(num_pops=num_pops))
 
@@ -201,7 +201,7 @@ def gen_case(action):
     '''
     Generate the code for an Action. In the code, S is the smite_state, errors
     are reported by calling RAISE(), for which we maintain static_args.
-    
+
      - action - Action.
     '''
     # Concatenate the pieces.
