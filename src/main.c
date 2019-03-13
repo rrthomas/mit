@@ -96,7 +96,14 @@ static smite_UWORD round_up(smite_UWORD n, smite_UWORD multiple)
     return (n - 1) - (n - 1) % multiple + multiple;
 }
 
-static int trace_step(smite_state *S, FILE *fp)
+static smite_state *S;
+
+static void exit_function(void)
+{
+    smite_destroy(S);
+}
+
+static int trace_step(FILE *fp)
 {
     smite_UWORD type, PC = S->PC;
     smite_WORD opcode;
@@ -162,9 +169,11 @@ int main(int argc, char *argv[])
     if (argc < 1)
         usage();
 
-    smite_state *S = smite_init(memory_size, stack_size);
+    S = smite_init(memory_size, stack_size);
     if (S == NULL)
         die("could not allocate virtual machine state");
+    if (atexit(exit_function) != 0)
+        die("could not register atexit handler");
 
     if (smite_register_args(S, argc, argv + optind) != 0)
         die("could not map command-line arguments");
@@ -203,14 +212,7 @@ int main(int argc, char *argv[])
     bool again;
     do {
         again = false;
-        switch (res = trace_fp ? trace_step(S, trace_fp) : smite_run(S)) {
-        case 0:
-            {
-                smite_WORD v;
-                if ((res = (int)smite_pop_stack(S, &v)) == 0)
-                    res = (int)v;
-            }
-            break;
+        switch (res = trace_fp ? trace_step(trace_fp) : smite_run(S)) {
         case 2:
             if (S->BAD >= S->STACK_SIZE &&
                 S->BAD < smite_uword_max - S->STACK_SIZE &&
@@ -245,8 +247,6 @@ int main(int argc, char *argv[])
             perror("open error");
         free(file);
     }
-
-    smite_destroy(S);
 
     return res;
 }
