@@ -219,7 +219,8 @@ int main(int argc, char *argv[])
 
     // Core dump on error
     if (core_dump && (res >= 1 && res <= 128)) {
-        warn("error %d raised at PC=%"PRI_XWORD, res, S->PC);
+        warn("error %d raised at PC=%"PRI_XWORD"; BAD=%"PRI_XWORD,
+             res, S->PC, S->BAD);
 
         char *file = xasprintf("smite-core.%lu", (unsigned long)getpid());
         // Ignore errors; best effort only, in the middle of an error exit
