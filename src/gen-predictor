@@ -88,6 +88,9 @@ def open_trace(trace_filename):
                 yield EVENT_TRACE_NAMES[line]
             elif line.startswith(b'0 '):
                 yield EVENT_TRACE_NAMES[b'0 n']
+            elif line.startswith(b'1 '):
+                # Ignore undefined instructions, which are occasionally used.
+                pass
             else:
                 raise ValueError(line)
 
