@@ -44,7 +44,7 @@ def stack_item_type(item):
 
 def item_size(item):
     '''Return a C expression for the size in stack words of a stack item.'''
-    return '(sizeof({}) / smite_word_size)'.format(stack_item_type(item))
+    return '(sizeof({}) / WORD_SIZE)'.format(stack_item_type(item))
 
 def stack_cache_var(pos, cached_depth):
     '''
@@ -228,11 +228,12 @@ def check_underflow(num_pops):
     Returns C source code to check that the stack contains enough items to
     pop the specified number of items.
      - num_pops - a C expression giving the number of items to pop.
+     - num_known - int - a lower bound on the stack depth, if available.
     Assumes:
      - No items have been popped so far. This is needed in the error case.
     '''
     return disable_warnings(['-Wtype-limits', '-Wunused-variable', '-Wshadow'], '''\
-if ((S->STACK_DEPTH < {num_pops})) {{
+if (S->STACK_DEPTH < {num_pops}) {{
     S->BAD = {num_pops};
     RAISE(3);
 }}'''.format(num_pops=num_pops))
@@ -242,6 +243,8 @@ def check_overflow(num_pops, num_pushes):
     Returns C source code to check that the stack contains enough space to
     push `num_pushes` items, given that `num_pops` items will first be
     popped.
+     - num_pops - a C expression.
+     - num_pushes - a C expression.
     '''
     return disable_warnings(['-Wtype-limits', '-Wtautological-compare'], '''\
 if ({num_pushes} > {num_pops} && (S->STACK_SIZE - S->STACK_DEPTH < {num_pushes} - {num_pops})) {{
