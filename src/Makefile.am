@@ -73,7 +73,7 @@ loc:
 EXTRA_DIST = \
 	@PACKAGE@.h.in \
 	$(SMITE_CORE_SRCS) \
-	gen-register-list gen-instruction-list gen-instruction-type-list gen-actions gen-opcodes-extra gen-extra \
+	gen-register-list gen-instruction-list gen-instruction-type-list gen-actions gen-opcodes-extra gen-extra gen-labels gen-predictor \
 	actions.trace
 
 DISTCLEANFILES = @PACKAGE@.1
