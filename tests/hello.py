@@ -23,7 +23,7 @@ number(LIB_C_STDOUT)
 action(LIB_C)
 
 # here = 4
-number(LIB_C_WRITE_FILE)
+number(LIB_C_WRITE)
 action(LIB_C)
 
 # here = 6

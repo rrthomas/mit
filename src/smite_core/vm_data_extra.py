@@ -44,54 +44,77 @@ class LibcLib(Enum):
         fd = (smite_WORD)STDERR_FILENO;
     ''')
 
-    OPEN_FILE = Action(0x8, ['str', 'perm_'], ['fd', 'ret'], '''\
+    O_RDONLY = Action(0x8, [], ['flag'], '''\
+        flag = (smite_WORD)O_RDONLY;
+    ''')
+
+    O_WRONLY = Action(0x9, [], ['flag'], '''\
+        flag = (smite_WORD)O_WRONLY;
+    ''')
+
+    O_RDWR = Action(0xa, [], ['flag'], '''\
+        flag = (smite_WORD)O_RDWR;
+    ''')
+
+    O_CREAT = Action(0xb, [], ['flag'], '''\
+        flag = (smite_WORD)O_CREAT;
+    ''')
+
+    O_TRUNC = Action(0xc, [], ['flag'], '''\
+        flag = (smite_WORD)O_TRUNC;
+    ''')
+
+    OPEN = Action(0xd, ['str', 'flags'], ['fd'], '''\
         {
-            bool binary = false;
-            int perm = getflags(perm_, &binary);
             char *s = (char *)smite_native_address_of_range(S, str, 0);
-            fd = s ? open(s, perm, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH) : -1;
-            ret = fd < 0 || (binary && set_binary_mode(fd, O_BINARY) < 0) ? -1 : 0;
+            fd = s ? open(s, flags, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH) : -1;
+            set_binary_mode(fd, O_BINARY); // Best effort
         }
     ''')
 
-    CLOSE_FILE = Action(0x9, ['fd'], ['ret'], '''\
+    CLOSE = Action(0xe, ['fd'], ['ret'], '''\
         ret = (smite_WORD)close(fd);
     ''')
 
-    READ_FILE = Action(0xa, ['buf', 'nbytes', 'fd'], ['nread', 'ret'], '''\
+    READ = Action(0xf, ['buf', 'nbytes', 'fd'], ['nread'], '''\
         {
-            nread = 0;
+            nread = -1;
             uint8_t *ptr = smite_native_address_of_range(S, buf, nbytes);
             if (ptr)
                 nread = read((int)fd, ptr, nbytes);
-            ret = nread >= 0 ? 0 : -1;
         }
     ''')
 
-    WRITE_FILE = Action(0xb, ['buf', 'nbytes', 'fd'], ['nwritten', 'ret'], '''\
+    WRITE = Action(0x10, ['buf', 'nbytes', 'fd'], ['nwritten'], '''\
         {
-            nwritten = 0;
+            nwritten = -1;
             uint8_t *ptr = smite_native_address_of_range(S, buf, nbytes);
             if (ptr)
                 nwritten = write((int)fd, ptr, nbytes);
-            ret = nwritten >= 0 ? 0 : -1;
         }
     ''')
 
-    FILE_POSITION = Action(0xc, ['fd'], ['pos:off_t', 'ret'], '''\
-        pos = lseek((int)fd, 0, SEEK_CUR);
-        ret = pos >= 0 ? 0 : -1;
+    SEEK_SET = Action(0x11, [], ['whence'], '''\
+        whence = (smite_WORD)SEEK_SET;
     ''')
 
-    REPOSITION_FILE = Action(0xd, ['pos:off_t', 'fd'], ['ret'], '''\
-        ret = lseek((int)fd, pos, SEEK_SET) >= 0 ? 0 : -1;
+    SEEK_CUR = Action(0x12, [], ['whence'], '''\
+        whence = (smite_WORD)SEEK_CUR;
     ''')
 
-    FLUSH_FILE = Action(0xe, ['fd'], ['ret'], '''\
+    SEEK_END = Action(0x13, [], ['whence'], '''\
+        whence = (smite_WORD)SEEK_END;
+    ''')
+
+    LSEEK = Action(0x14, ['fd', 'offset:off_t', 'whence'], ['pos:off_t'], '''\
+        pos = lseek((int)fd, offset, whence);
+    ''')
+
+    FDATASYNC = Action(0x15, ['fd'], ['ret'], '''\
         ret = fdatasync((int)fd);
     ''')
 
-    RENAME_FILE = Action(0xf, ['old_name', 'new_name'], ['ret'], '''\
+    RENAME = Action(0x16, ['old_name', 'new_name'], ['ret'], '''\
         {
             char *s1 = (char *)smite_native_address_of_range(S, old_name, 0);
             char *s2 = (char *)smite_native_address_of_range(S, new_name, 0);
@@ -101,7 +124,7 @@ class LibcLib(Enum):
         }
     ''')
 
-    DELETE_FILE = Action(0x10, ['name'], ['ret'], '''\
+    REMOVE = Action(0x17, ['name'], ['ret'], '''\
         {
             char *s = (char *)smite_native_address_of_range(S, name, 0);
             if (s == NULL)
@@ -110,7 +133,8 @@ class LibcLib(Enum):
         }
     ''')
 
-    FILE_SIZE = Action(0x11, ['fd'], ['size:off_t', 'ret'], '''\
+    # FIXME: Expose stat(2). This requires struct mapping!
+    FILE_SIZE = Action(0x18, ['fd'], ['size:off_t', 'ret'], '''\
         {
             struct stat st;
             ret = fstat((int)fd, &st);
@@ -118,11 +142,11 @@ class LibcLib(Enum):
         }
     ''')
 
-    RESIZE_FILE = Action(0x12, ['size:off_t', 'fd'], ['ret'], '''\
+    RESIZE_FILE = Action(0x19, ['size:off_t', 'fd'], ['ret'], '''\
         ret = ftruncate((int)fd, size);
     ''')
 
-    FILE_STATUS = Action(0x13, ['fd'], ['mode:mode_t', 'ret'], '''\
+    FILE_STATUS = Action(0x1a, ['fd'], ['mode:mode_t', 'ret'], '''\
         {
             struct stat st;
             ret = fstat((int)fd, &st);
