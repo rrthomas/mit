@@ -96,6 +96,25 @@ static smite_UWORD round_up(smite_UWORD n, smite_UWORD multiple)
     return (n - 1) - (n - 1) % multiple + multiple;
 }
 
+static smite_state *S;
+
+static void exit_function(void)
+{
+    smite_destroy(S);
+}
+
+static int trace_step(FILE *fp)
+{
+    smite_UWORD type, PC = S->PC;
+    smite_WORD opcode;
+    int res = smite_decode_instruction(S, &PC, &type, &opcode);
+    if (res != 0)
+        return res;
+
+    fprintf(fp, "%"PRI_UWORD" %"PRI_XWORD"\n", type, (smite_UWORD)opcode);
+    return smite_single_step(S);
+}
+
 int main(int argc, char *argv[])
 {
     set_program_name(argv[0]);
@@ -150,10 +169,11 @@ int main(int argc, char *argv[])
     if (argc < 1)
         usage();
 
-    smite_state *S = smite_init(memory_size, stack_size);
-    S->trace_fp = trace_fp;
+    S = smite_init(memory_size, stack_size);
     if (S == NULL)
         die("could not allocate virtual machine state");
+    if (atexit(exit_function) != 0)
+        die("could not register atexit handler");
 
     if (smite_register_args(S, argc, argv + optind) != 0)
         die("could not map command-line arguments");
@@ -192,14 +212,7 @@ int main(int argc, char *argv[])
     bool again;
     do {
         again = false;
-        switch (res = smite_run(S)) {
-        case 0:
-            {
-                smite_WORD v;
-                if ((res = (int)smite_pop_stack(S, &v)) == 0)
-                    res = (int)v;
-            }
-            break;
+        switch (res = trace_fp ? trace_step(trace_fp) : smite_run(S)) {
         case 2:
             if (S->BAD >= S->STACK_SIZE &&
                 S->BAD < smite_uword_max - S->STACK_SIZE &&
@@ -212,6 +225,8 @@ int main(int argc, char *argv[])
                 smite_realloc_memory(S, round_up(S->BAD, page_size)) == 0)
                 again = true;
             break;
+        case 128:
+            again = true;
         default:
             break;
         }
@@ -219,7 +234,8 @@ int main(int argc, char *argv[])
 
     // Core dump on error
     if (core_dump && (res >= 1 && res <= 128)) {
-        warn("error %d raised at PC=%"PRI_XWORD, res, S->PC);
+        warn("error %d raised at PC=%"PRI_XWORD"; BAD=%"PRI_XWORD,
+             res, S->PC, S->BAD);
 
         char *file = xasprintf("smite-core.%lu", (unsigned long)getpid());
         // Ignore errors; best effort only, in the middle of an error exit
@@ -231,8 +247,6 @@ int main(int argc, char *argv[])
             perror("open error");
         free(file);
     }
-
-    smite_destroy(S);
 
     return res;
 }

@@ -361,8 +361,7 @@ $-4$ if division by zero is attempted):
 
 \subsection{Memory}
 
-These actions fetch and store words and bytes to and from memory; there is
-also an action to add a number to another stored in memory:
+These actions fetch and store words and bytes to and from memory:
 
 \nopagebreak
 \begin{description}

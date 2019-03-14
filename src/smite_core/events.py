@@ -57,7 +57,6 @@ ALL_EVENTS = []
 for a in vm_data.Actions:
     code = '''\
 {}
-        TRACE(INSTRUCTION_ACTION, {});
     '''.format(a.value.code.rstrip(), a.value.opcode)
     ALL_EVENTS.append(Event(
         b'%d %#x' % (vm_data.Types.ACTION, a.value.opcode),
@@ -71,7 +70,6 @@ for a in vm_data.Actions:
 for n in [0, 1]:
     code = '''\
         lit = {};
-        TRACE(INSTRUCTION_NUMBER, lit);
     '''.rstrip().format(n)
     ALL_EVENTS.append(Event(
         b'%d %#x' % (vm_data.Types.NUMBER, n),
@@ -89,7 +87,6 @@ code = '''\
         if (error != 0)
             RAISE(error);
         assert(itype == INSTRUCTION_NUMBER);
-        TRACE(INSTRUCTION_NUMBER, lit);
 '''.rstrip()
 ALL_EVENTS.append(Event(
     b'%d n' % vm_data.Types.NUMBER,

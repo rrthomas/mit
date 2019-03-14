@@ -58,10 +58,6 @@ print('''\
 #define DIVZERO(x)                          \\
     if (x == 0)                             \\
         RAISE(8);
-
-#define TRACE(type, opcode)                 \\
-    if (S->trace_fp)                        \\
-        fprintf(S->trace_fp, "%"PRI_UWORD" %"PRI_XWORD"\\n", (smite_UWORD)type, (smite_UWORD)opcode);
 ''')
 
 print('''\
@@ -101,8 +97,6 @@ print('''
     default: // Bug in smite_decode_instruction!
         return 1;
     }
-
-    TRACE(ITYPE, I);
 
 RET:
     assert(cached_depth == 0);

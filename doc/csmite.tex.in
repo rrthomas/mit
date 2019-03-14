@@ -249,7 +249,7 @@ and {\tt @PACKAGE@/@PACKAGE@\_aux.h}, which contains other useful declarations, 
 
 \subsection{Other extras provided by C @PACKAGE_NAME@}
 
-C @PACKAGE_NAME@ provides various useful extras in {\tt @PACKAGE@\_aux.h}. These are used internally, and are thought to be useful, but may change at any time, so their stability should not be relied on.
+C @PACKAGE_NAME@ provides various useful extras in {\tt @PACKAGE@/aux.h}. These are used internally, and are thought to be useful, but may change at any time, so their stability should not be relied on.
 
 
 \bibliographystyle{plain}

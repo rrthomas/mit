@@ -38,33 +38,6 @@ print('''
 
 // Assumption for file functions
 verify(sizeof(int) <= sizeof(smite_WORD));
-
-// Convert portable open(2) flags bits to system flags
-static int getflags(smite_UWORD perm, bool *binary)
-{
-    int flags = 0;
-
-    switch (perm & 3) {
-    case 0:
-        flags = O_RDONLY;
-        break;
-    case 1:
-        flags = O_WRONLY;
-        break;
-    case 2:
-        flags = O_RDWR;
-        break;
-    default:
-        break;
-    }
-    if (perm & 4)
-        flags |= O_CREAT | O_TRUNC;
-
-    if (perm & 8)
-        *binary = true;
-
-    return flags;
-}
 ''')
 
 for action in LibActions:
