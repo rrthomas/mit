@@ -22,58 +22,58 @@ test = []
 test.append(VM.here)
 result.append(8)
 print("Test {}: PC = {}".format(len(test), test[len(test) - 1]))
-number(1)
-number(0)
-action(DIVMOD)
+lit(1)
+lit(0)
+ass(DIVMOD)
 
 # Try to set STACK_DEPTH to an invalid stack location
 test.append(VM.here)
 result.append(2)
 print("Test {}: PC = {}".format(len(test), test[len(test) - 1]))
-number(STACK_SIZE.get())
-action(SET_STACK_DEPTH)
-action(GET_STACK_DEPTH)
+lit(STACK_SIZE.get())
+ass(SET_STACK_DEPTH)
+ass(GET_STACK_DEPTH)
 
 # Try to read from an invalid stack location
 test.append(VM.here)
 result.append(3)
 print("Test {}: PC = {}".format(len(test), test[len(test) - 1]))
-action(DUP)
+ass(DUP)
 
 # Try to execute an invalid memory location
 test.append(VM.here)
 result.append(5)
 print("Test {}: PC = {}".format(len(test), test[len(test) - 1]))
-number(MEMORY.get() + 1)
-action(BRANCH)
+lit(MEMORY.get() + 1)
+ass(BRANCH)
 
 # Try to load from an invalid address
 test.append(VM.here)
 result.append(5)
 print("Test {}: PC = {}".format(len(test), test[len(test) - 1]))
-number(invalid_address)
-action(LOAD)
+lit(invalid_address)
+ass(LOAD)
 
 # Try to store to an invalid address
 test.append(VM.here)
 result.append(6)
 print("Test {}: PC = {}".format(len(test), test[len(test) - 1]))
-number(0)
-number(invalid_address)
-action(STORE)
+lit(0)
+lit(invalid_address)
+ass(STORE)
 
 # Try to load from unaligned address
 test.append(VM.here)
 result.append(7)
 print("Test {}: PC = {}".format(len(test), test[len(test) - 1]))
-number(1)
-action(LOAD)
+lit(1)
+ass(LOAD)
 
 # Try to execute invalid opcode
 test.append(VM.here)
 result.append(1)
 print("Test {}: PC = {}".format(len(test), test[len(test) - 1]))
-action(UNDEFINED)
+ass(UNDEFINED)
 
 # Tests
 assert(len(test) == len(result))

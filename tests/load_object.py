@@ -59,8 +59,8 @@ for good_file in good_files:
 # Generate test object file
 correct = [-128, 12345678]
 for n in correct:
-    number(n)
-action(HALT)
+    lit(n)
+ass(HALT)
 save("numbers.obj")
 
 number_file = "numbers.obj"

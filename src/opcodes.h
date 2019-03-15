@@ -1,6 +1,6 @@
 // Instruction opcodes.
 //
-// (c) Reuben Thomas 1994-2018
+// (c) Reuben Thomas 1994-2019
 //
 // The package is distributed under the MIT/X11 License.
 //
@@ -11,22 +11,13 @@
 #define SMITE_OPCODES
 
 
-// Instruction encoding
-enum {
-#define TYPE(name, opcode) INSTRUCTION_ ## name = opcode,
-#include "instruction-type-list.h"
-#undef TYPE
-};
-
-enum {
-#define INSTRUCTION(name, opcode) O_ ## name = opcode,
-#include "instruction-list.h"
-    O_UNDEFINED, // Not part of the spec
+#define INSTRUCTION(name, opcode) name = opcode,
+#include "opcodes-core.h"
 #undef INSTRUCTION
-};
 
 #define INSTRUCTION(name, opcode) name = opcode,
 #include "opcodes-extra.h"
+#undef INSTRUCTION
 
 
 #endif

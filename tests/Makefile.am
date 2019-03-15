@@ -19,10 +19,10 @@ TESTS =	\
 	errors.py	\
 	hello.py	\
 	init.py		\
+	literals.py	\
 	load_object.py	\
 	logic.py	\
 	memory.py	\
-	numbers.py	\
 	run.py		\
 	save_object.py	\
 	single_step.py	\

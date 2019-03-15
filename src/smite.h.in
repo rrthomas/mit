@@ -45,6 +45,7 @@ extern const unsigned smite_native_pointer_size;
 #define smite_BYTE_BIT 8
 extern const unsigned smite_byte_bit;
 extern const unsigned smite_byte_mask;
+#define smite_BYTE_MASK ((1 << smite_BYTE_BIT) - 1)
 extern const unsigned smite_word_bit;
 extern const smite_UWORD smite_word_mask;
 extern const smite_UWORD smite_uword_max;
@@ -58,7 +59,7 @@ typedef struct _smite_state smite_state;
 #define R(reg, type, utype)                     \
     R_RO(reg, type, utype)                      \
     void smite_set_ ## reg(smite_state *S, type value);
-#include "register-list.h"
+#include "registers.h"
 #undef R
 #undef R_RO
 

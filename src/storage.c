@@ -20,7 +20,7 @@
 // Constants
 const unsigned smite_word_size = WORD_SIZE;
 const unsigned smite_byte_bit = 8;
-const unsigned smite_byte_mask = (1 << smite_BYTE_BIT) - 1;
+const unsigned smite_byte_mask = smite_BYTE_MASK;
 const unsigned smite_word_bit = WORD_SIZE * smite_BYTE_BIT;
 #if WORD_SIZE == 4
 const smite_UWORD smite_word_mask = UINT32_MAX;
@@ -227,7 +227,7 @@ void smite_destroy(smite_state *S)
     void smite_set_ ## reg(smite_state *S, type value) {        \
         S->reg = value;                             \
     }
-#include "register-list.h"
+#include "registers.h"
 #undef R
 #undef R_RO
 

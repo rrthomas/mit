@@ -1,1 +1,0 @@
-../../src/smite_core/action_gen.py

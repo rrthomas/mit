@@ -1,4 +1,4 @@
-# Test numbers.
+# Test LIT.
 #
 # (c) Reuben Thomas 1994-2018
 #
@@ -18,15 +18,25 @@ correct = [
     1 << (word_bit - 2), -1 << (word_bit - byte_bit)
 ]
 
-encodings = ["\x7f\xfb", "\x4e\x45\x46\xaf", "\x84"]
+encodings = []
 if word_size == 4:
-    encodings.extend(["\x40\x40\x40\x40\x40\xfe",
-                      "\x40\x40\x40\x40\x40\x81",
-                      "\x40\x40\x40\x40\xff"])
+    encodings = [
+        "\x20\xff\xfe\xff\xff",
+        "\x20\x4e\x61\xbc\x00",
+        "\x20\x04\x00\x00\x00",
+        "\x20\x00\x00\x00\x80",
+        "\x20\x00\x00\x00\x40",
+        "\x20\x00\x00\x00\xff",
+    ]
 elif word_size == 8:
-    encodings.extend(["\x40\x40\x40\x40\x40\x40\x40\x40\x40\x40\xf8",
-                      "\x40\x40\x40\x40\x40\x40\x40\x40\x40\x40\x84",
-                      "\x40\x40\x40\x40\x40\x40\x40\x40\x40\xfc"])
+    encodings = [
+        "\x20\xff\xfe\xff\xff\xff\xff\xff\xff",
+        "\x20\x4e\x61\xbc\x00\x00\x00\x00\x00",
+        "\x20\x04\x00\x00\x00\x00\x00\x00\x00",
+        "\x20\x00\x00\x00\x00\x00\x00\x00\x80",
+        "\x20\x00\x00\x00\x00\x00\x00\x00\x40",
+        "\x20\x00\x00\x00\x00\x00\x00\x00\xff",
+    ]
 else:
     raise Exception("WORD_SIZE is not 4 or 8!")
 
@@ -37,7 +47,7 @@ assert(len(correct) == len(encodings))
 def number_test(n, encoding):
     start = VM.here
     print("here = {}".format(start))
-    number(n)
+    lit(n)
     length = VM.here - start
 
     bytes_ok = 0

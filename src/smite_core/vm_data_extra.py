@@ -8,7 +8,7 @@
 # RISK.
 
 from enum import Enum, unique
-from .action_gen import Action
+from .instruction_gen import Action
 
 @unique
 class LibcLib(Enum):

@@ -8,7 +8,7 @@
 # RISK.
 
 from enum import Enum, IntEnum, unique
-from .action_gen import Action
+from .instruction_gen import Action
 
 class Register:
     '''VM register descriptor.'''
@@ -27,12 +27,6 @@ class Registers(Enum):
     S0 = Register("smite_WORDP", read_only=True)
     STACK_SIZE = Register(read_only=True)
     ENDISM = Register(read_only=True)
-
-@unique
-class Types(IntEnum):
-    '''Instruction type opcode.'''
-    NUMBER = 0x0
-    ACTION = 0x1
 
 @unique
 class Actions(Enum):
@@ -203,3 +197,18 @@ class Actions(Enum):
     NOP = Action(0x1f, [], [], '''\
         // Do nothing.'''
     )
+
+    LIT = Action(0x20, [], ['n'], '''\
+        int ret = LOAD_IMMEDIATE_WORD(S, S->PC, &n);
+        if (ret != 0)
+            RAISE(ret);
+        S->PC += WORD_SIZE;
+    ''')
+
+    LIT_PC_REL = Action(0x21, [], ['n'], '''\
+        int ret = LOAD_IMMEDIATE_WORD(S, S->PC, &n);
+        if (ret != 0)
+            RAISE(ret);
+        n += S->PC;
+        S->PC += WORD_SIZE;
+    ''')

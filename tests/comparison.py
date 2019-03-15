@@ -17,16 +17,16 @@ VM.globalize(globals())
 correct = [0, 1, 0, 1, 1, 0, 0, 1, 0, 0]
 
 # Code
-action(LT)
-action(LT)
-action(LT)
-action(LT)
-action(EQ)
-action(EQ)
-action(ULT)
-action(ULT)
-action(ULT)
-action(ULT)
+ass(LT)
+ass(LT)
+ass(LT)
+ass(LT)
+ass(EQ)
+ass(EQ)
+ass(ULT)
+ass(ULT)
+ass(ULT)
+ass(ULT)
 
 # Test
 def stack1():

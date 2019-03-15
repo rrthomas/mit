@@ -14,7 +14,7 @@ pkgpython_PYTHON =			\
 	@PACKAGE@/__main__.py		\
 	@PACKAGE@/vm_data.py		\
 	@PACKAGE@/vm_data_extra.py	\
-	@PACKAGE@/action_gen.py
+	@PACKAGE@/instruction_gen.py
 
 loc:
 	$(SLOCCOUNT) $(bin_SCRIPTS) $(pkgpython_PYTHON)

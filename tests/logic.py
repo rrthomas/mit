@@ -42,16 +42,16 @@ S.push(0xff)
 S.push(byte_bit)
 
 # Code
-action(LSHIFT)
-number(2)
-action(SWAP)
-action(RSHIFT)
-action(OR)
-action(NOT)
-number(1)
-number(-1)
-action(XOR)
-action(AND)
+ass(LSHIFT)
+lit(2)
+ass(SWAP)
+ass(RSHIFT)
+ass(OR)
+ass(NOT)
+lit(1)
+lit(-1)
+ass(XOR)
+ass(AND)
 
 # Test
 for i in range(len(correct)):

@@ -9,7 +9,7 @@
 # RISK.
 
 from smite_core.vm_data_extra import *
-from smite_core.action_gen import *
+from smite_core.instruction_gen import *
 
 # Write the output file
 print('''
