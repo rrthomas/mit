@@ -312,13 +312,13 @@ class State:
 
     def disassemble(self, start=None, length=None, end=None, file=sys.stdout):
         '''Disassemble from start to start+length or from start to end.
-    Defaults to 64 bytes from 16 bytes before PC.'''
+    Defaults to 32 bytes from 4 bytes before PC.'''
         if start == None:
-            start = max(0, self.registers["PC"].get() - 16)
+            start = max(0, self.registers["PC"].get() - 4)
         if length != None:
             end = start + length
         elif end == None:
-            end = start + 64
+            end = start + 32
 
         p = start
         while p < end:
@@ -329,9 +329,9 @@ class State:
 
     def dump(self, start=None, length=None, end=None, file=sys.stdout):
         '''Dump memory from start to start+length or from start to end.
-    Defaults to 256 bytes from start - 64.'''
+    Defaults to 256 bytes from start - 16.'''
         if start == None:
-            start = max(0, self.registers["PC"].get() - 64)
+            start = max(0, self.registers["PC"].get() - 16)
         if length != None:
             end = start + length
         elif end == None:
