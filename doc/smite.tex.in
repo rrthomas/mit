@@ -79,7 +79,7 @@ This paper gives a full description of @PACKAGE_NAME@.
 
 @PACKAGE_NAME@'s address unit is the byte, which is eight bits.
 Words are {\tt WORD\_SIZE} bytes. The word is the size of the numbers
-and addresses on which @PACKAGE_NAME@ operates, and of the items placed on the stacks.
+and addresses on which @PACKAGE_NAME@ operates, and of the items placed on the stack.
 The size of the byte and range of word sizes allowed have been chosen with a view to making efficient implementation possible on the vast majority of current machine architectures.
 
 Words may have the bytes stored in big-endian or little-endian order. The
@@ -120,7 +120,7 @@ by instructions (see section~\ref{registeract}); not all registers are accessibl
 
 \subsection{Stack}
 
-The stack is a LIFO stacks of words used for passing values to instructions and routines and for holding subroutine return addresses. To {\bf push} an item on to
+The stack is a LIFO stack of words used for passing values to instructions and routines and for holding subroutine return addresses. To {\bf push} an item on to
 the stack means to add a new item to the top of the stack, increasing the stack depth by $1$; to {\bf pop} an item means to reduce the stack depth by $1$. Instructions that change the number of items on the stack implicitly pop their arguments and push their results.
 
 
