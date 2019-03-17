@@ -265,15 +265,6 @@ collections of zero or more words of any data type. Ellipsis is used for
 indeterminate numbers of specified types of word.
 
 
-\subsection{Numbers}
-\label{numbers}
-
-\begin{description}
-\inst{LIT}{— n}{The word comprised of the next {\tt WORD\_SIZE} bytes after {\tt PC}, interpreted in little-endian order, is pushed on to the stack, and {\tt PC} is incremented to point to the following byte.}
-\inst{LIT\_PC\_REL}{— n}{Like {\tt LIT}, except that the initial value of {\tt PC} is added to the value pushed on to the stack.}
-\end{description}
-
-
 \subsection{Termination}
 \label{haltact}
 
@@ -296,6 +287,15 @@ These instructions manage the stack:
 \inst{SWAP}{\x{u}\dots\x0 u — \x0\x{u-1}\dots\x1 \x{u}}{Exchange the top stack item with the \spic{u}th. If \spic{u} is zero, do nothing.}
 \inst{ROTATE\_UP}{\x{u}\dots\x0 u — \x{u-1}\dots\x1 \x{u}}{Rotate the \spic{u}th stack item to the top.}
 \inst{ROTATE\_DOWN}{\x{u}\dots\x0 u — \x0 \x{u}\dots\x1}{Rotate the top stack item to position \spic{u}.}
+\end{description}
+
+
+\subsection{Numbers}
+\label{numbers}
+
+\begin{description}
+\inst{LIT}{— n}{The word comprised of the next {\tt WORD\_SIZE} bytes after {\tt PC}, interpreted in little-endian order, is pushed on to the stack, and {\tt PC} is incremented to point to the following byte.}
+\inst{LIT\_PC\_REL}{— n}{Like {\tt LIT}, except that the initial value of {\tt PC} is added to the value pushed on to the stack.}
 \end{description}
 
 
@@ -423,8 +423,8 @@ Table~\ref{opcodetable} lists the instruction opcodes in numerical order. Other 
 \opcodetbl{01}{POP}		{11}{ADD}
 \opcodetbl{02}{DUP}		{12}{MUL}
 \opcodetbl{03}{SWAP}		{13}{DIVMOD}
-\opcodetbl{04}{ROTATE\_UP}	{14}{UDIVMOD}
-\opcodetbl{05}{ROTATE\_DOWN}	{15}{LOAD}
+\opcodetbl{04}{LIT}		{14}{UDIVMOD}
+\opcodetbl{05}{LIT\_PC\_REL}	{15}{LOAD}
 \opcodetbl{06}{NOT}             {16}{STORE}
 \opcodetbl{07}{AND}             {17}{LOADB}
 \opcodetbl{08}{OR}              {18}{STOREB}
@@ -435,7 +435,6 @@ Table~\ref{opcodetable} lists the instruction opcodes in numerical order. Other 
 \opcodetbl{0d}{EQ}		{1d}{GET\_STACK\_DEPTH}
 \opcodetbl{0e}{LT}		{1e}{SET\_STACK\_DEPTH}
 \opcodetbl{0f}{ULT}		{1f}{NOP}
-\opcodetbl{20}{LIT}		{21}{LIT\_PC\_REL}
  \bottomrule
 \end{tabular}
 \caption{\label{opcodetable}Instruction opcodes}

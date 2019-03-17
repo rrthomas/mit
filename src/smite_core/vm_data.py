@@ -52,26 +52,19 @@ class Actions(Enum):
         }
     ''')
 
-    ROTATE_UP = Action(0x04, ['ITEMS', 'COUNT'], ['ITEMS'], '''\
-        smite_WORD bottom;
-        UNCHECKED_LOAD_STACK(COUNT, &bottom);
-        for (smite_UWORD i = (smite_UWORD)COUNT; i > 0; i--) {
-            smite_WORD temp;
-            UNCHECKED_LOAD_STACK(i - 1, &temp);
-            UNCHECKED_STORE_STACK(i, temp);
-        }
-        UNCHECKED_STORE_STACK(0, bottom);
+    LIT = Action(0x04, [], ['n'], '''\
+        int ret = LOAD_IMMEDIATE_WORD(S, S->PC, &n);
+        if (ret != 0)
+            RAISE(ret);
+        S->PC += WORD_SIZE;
     ''')
 
-    ROTATE_DOWN = Action(0x05, ['ITEMS', 'COUNT'], ['ITEMS'], '''\
-        smite_WORD top;
-        UNCHECKED_LOAD_STACK(0, &top);
-        for (smite_UWORD i = 0; i < (smite_UWORD)COUNT; i++) {
-            smite_WORD temp;
-            UNCHECKED_LOAD_STACK(i + 1, &temp);
-            UNCHECKED_STORE_STACK(i, temp);
-        }
-        UNCHECKED_STORE_STACK(COUNT, top);
+    LIT_PC_REL = Action(0x05, [], ['n'], '''\
+        int ret = LOAD_IMMEDIATE_WORD(S, S->PC, &n);
+        if (ret != 0)
+            RAISE(ret);
+        n += S->PC;
+        S->PC += WORD_SIZE;
     ''')
 
     NOT = Action(0x06, ['x'], ['r'], '''\
@@ -197,18 +190,3 @@ class Actions(Enum):
     NOP = Action(0x1f, [], [], '''\
         // Do nothing.'''
     )
-
-    LIT = Action(0x20, [], ['n'], '''\
-        int ret = LOAD_IMMEDIATE_WORD(S, S->PC, &n);
-        if (ret != 0)
-            RAISE(ret);
-        S->PC += WORD_SIZE;
-    ''')
-
-    LIT_PC_REL = Action(0x21, [], ['n'], '''\
-        int ret = LOAD_IMMEDIATE_WORD(S, S->PC, &n);
-        if (ret != 0)
-            RAISE(ret);
-        n += S->PC;
-        S->PC += WORD_SIZE;
-    ''')

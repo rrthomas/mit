@@ -41,11 +41,6 @@ correct = [
     [2, 1, 2, 2],
     [2, 1, 2, 2, 0],
     [2, 1, 2, 2, 2],
-    [2, 1, 2, 2, 2, 3],
-    [2, 2, 2, 2, 1],
-    [2, 2, 2, 2, 1, 3],
-    [2, 2, 2, 2, 1, 3, 2],
-    [2, 2, 2, 3, 2, 1],
 ]
 
 # Test code
@@ -75,11 +70,6 @@ lit(0)
 ass(DUP)
 lit(0)
 ass(DUP)
-lit(3)
-ass(ROTATE_UP)
-lit(3)
-lit(2)
-ass(ROTATE_DOWN)
 
 # Test
 for i in range(len(correct)):
