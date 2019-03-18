@@ -40,44 +40,14 @@ class Action:
         self.code = code
 
 
-# Utility functions for StackPicture
-def stack_item_name(item):
-    return item.split(":")[0]
-
-def stack_item_type(item):
-    l = item.split(":")
-    return l[1] if len(l) > 1 else 'smite_WORD'
-
-def item_size(item):
-    '''Return a C expression for the size in stack words of a stack item.'''
-    return '(sizeof({}) / smite_word_size)'.format(stack_item_type(item))
-
-def load_var(pos, var):
-    if stack_item_type(var) != 'smite_WORD':
-        fmt = 'UNCHECKED_LOAD_STACK_TYPE({pos}, {type}, &{var});'
-    else:
-        fmt = 'UNCHECKED_LOAD_STACK({pos}, &{var});'
-    return fmt.format(
-        pos=pos,
-        var=stack_item_name(var),
-        type=stack_item_type(var))
-
-def store_var(pos, var):
-    if stack_item_type(var) != 'smite_WORD':
-        fmt = 'UNCHECKED_STORE_STACK_TYPE({pos}, {type}, {var});'
-    else:
-        fmt = 'UNCHECKED_STORE_STACK({pos}, {var});'
-    return fmt.format(
-        pos=pos,
-        var=stack_item_name(var),
-        type=stack_item_type(var))
-
-
 class StackPicture:
     '''
     Represents a description of the topmost items on the stack. The effect
     of an instruction can be described using two StackPictures: one for the
     arguments and one for the results.
+
+    The first item is 'ITEMS' if the stack picture is variadic.
+    All other items are the names of items.
 
     Variadic instructions (such as POP, DUP, SWAP) have an argument called
     "COUNT" which is (N.B.!) one less than the number of additional
@@ -87,8 +57,6 @@ class StackPicture:
 
      - named_items - list of str - the names of the non-variadic items,
        which must be on the top of the stack, and might include "COUNT".
-       Each name may optionally be followed by ":TYPE" to give the C type of
-       the underlying quantity, if it might be bigger than one stack word.
 
      - is_variadic - bool - If `True`, there are `COUNT` more items underneath
        the non-variadic items.
@@ -99,26 +67,32 @@ class StackPicture:
         self.named_items = named_items
         self.is_variadic = is_variadic
 
-    @staticmethod
-    def from_list(stack):
+    @classmethod
+    def from_list(cls, stack):
         '''
-         - stack - a stack picture as found in `vm_data.Action`, i.e. a list of
-           str. The first item is 'ITEMS' if the stack picture is variadic.
-           All other items are the names of items.
+         - stack - list of str - a stack picture.
+
         Returns a StackPicture.
         '''
         if stack and stack[0] == 'ITEMS':
-            return StackPicture(stack[1:], is_variadic=True)
+            return cls(stack[1:], is_variadic=True)
         else:
-            return StackPicture(stack)
+            return cls(stack)
+
+    @classmethod
+    def load_var(cls, pos, var):
+        return 'UNCHECKED_LOAD_STACK({pos}, &{var});'.format(pos=pos, var=var)
+
+    @classmethod
+    def store_var(cls, pos, var):
+        return 'UNCHECKED_STORE_STACK({pos}, {var});'.format(pos=pos, var=var)
 
     def static_depth(self):
         '''
         Return a C expression for the number of stack words occupied by the
         static items in a StackPicture.
         '''
-        depth = ' + '.join([item_size(item) for item in self.named_items])
-        return '({})'.format(depth if depth != '' else '0')
+        return '{}'.format(len(self.named_items))
 
     def dynamic_depth(self):
         '''
@@ -133,8 +107,8 @@ class StackPicture:
 
     def declare_vars(self):
         '''Returns C variable declarations for all of `self.named_items`.'''
-        return '\n'.join(['{} {};'.format(stack_item_type(i), stack_item_name(i))
-                          for i in self.named_items])
+        return '\n'.join(['{} {};'.format('smite_WORD', item)
+                          for item in self.named_items])
 
     def load(self):
         '''
@@ -142,12 +116,9 @@ class StackPicture:
         variables.
         `S->STACK_DEPTH` is not modified.
         '''
-        code = []
-        pos = ['-1']
-        for item in reversed(self.named_items):
-            pos.append(item_size(item))
-            code.append(load_var("+".join(pos), item))
-        return '\n'.join(code)
+        return '\n'.join([self.load_var(pos, item)
+                          for pos, item in enumerate(reversed(self.named_items))
+        ])
 
     def store(self):
         '''
@@ -155,12 +126,9 @@ class StackPicture:
         the stack.
         `S->STACK_DEPTH` must be modified first.
         '''
-        code = []
-        pos = ['-1']
-        for item in reversed(self.named_items):
-            pos.append(item_size(item))
-            code.append(store_var("+".join(pos), item))
-        return '\n'.join(code)
+        return '\n'.join([self.store_var(pos, item)
+                          for pos, item in enumerate(reversed(self.named_items))
+        ])
 
 
 def disable_warnings(warnings, c_source):
