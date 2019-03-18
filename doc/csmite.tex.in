@@ -244,12 +244,12 @@ The following routine allows the calling program to register command-line argume
 
 Programs which use C @PACKAGE_NAME@'s interface must {\tt \#include} the header file
 {\tt @PACKAGE@/@PACKAGE@.h} and be linked with the @PACKAGE_NAME@ library. {\tt @PACKAGE@/opcodes.h}, which contains an enumeration type of @PACKAGE_NAME@'s instruction set,
-and {\tt @PACKAGE@/@PACKAGE@\_aux.h}, which contains other useful declarations, may also be useful; they are not documented here.
+may also be useful; it is not documented here.
 
 
 \subsection{Other extras provided by C @PACKAGE_NAME@}
 
-C @PACKAGE_NAME@ provides various useful extras in {\tt @PACKAGE@/aux.h}. These are used internally, and are thought to be useful, but may change at any time, so their stability should not be relied on.
+Other useful extras are provided in {\tt @PACKAGE@/@PACKAGE@.h}. These are used internally, and are thought to be useful, but may change at any time, so their stability should not be relied on.
 
 
 \bibliographystyle{plain}

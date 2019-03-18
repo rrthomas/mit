@@ -12,13 +12,6 @@
 #define SMITE_AUX
 
 
-#include <stdio.h>      // for the FILE type
-#include <stdint.h>
-#include <limits.h>
-
-#include "opcodes.h"
-
-
 // Memory
 
 // FIXME: These macros should take ENDISM into account and store the
@@ -43,13 +36,5 @@
         v = (ty)((size_t)v >> smite_word_bit);                          \
     }
 
-// Portable arithmetic right shift (the behaviour of >> on signed
-// quantities is implementation-defined in C99)
-// FIXME: Can't test HAVE_ARITHMETIC_RSHIFT here!
-#ifdef HAVE_ARITHMETIC_RSHIFT
-#define ARSHIFT(n, p) ((smite_WORD)(n) >> (p))
-#else
-#define ARSHIFT(n, p) (((n) >> (p)) | ((smite_UWORD)(-((smite_WORD)(n) < 0)) << (smite_word_bit - (p))))
-#endif
 
 #endif

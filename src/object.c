@@ -14,7 +14,6 @@
 #include <string.h>
 
 #include "smite.h"
-#include "aux.h"
 
 
 #define HEADER_LENGTH 8

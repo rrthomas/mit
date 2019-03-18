@@ -110,7 +110,6 @@ libsmite.smite_destroy.argtypes = [c_void_p]
 
 libsmite.smite_register_args.argtypes = [c_void_p, c_int, c_void_p]
 
-# aux.h
 libsmite.smite_align.restype = c_uword
 libsmite.smite_align.argtypes = [c_uword]
 

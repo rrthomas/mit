@@ -229,5 +229,8 @@ int smite_realloc_stack(smite_state *S, smite_UWORD size);
 void smite_destroy(smite_state *S);
 int smite_register_args(smite_state *S, int argc, char *argv[]);
 
+// Arithmetic right shift (the behaviour of >> on signed quantities is
+// implementation-defined in C99)
+#define ARSHIFT(n, p) @ARITHMETIC_RSHIFT@
 
 #endif
