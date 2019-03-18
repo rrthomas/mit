@@ -132,27 +132,27 @@ class Actions(Enum):
     ''')
 
     LOAD = Action(0x15, ['addr'], ['x'], '''\
-        int ret = smite_load_word(S, addr, &x);
+        int ret = load_word(S, addr, &x);
         if (ret != 0)
             RAISE(ret);
     ''')
 
     STORE = Action(0x16, ['x', 'addr'], [], '''\
-        int ret = smite_store_word(S, addr, x);
+        int ret = store_word(S, addr, x);
         if (ret != 0)
             RAISE(ret);
     ''')
 
     LOADB = Action(0x17, ['addr'], ['x'], '''\
         smite_BYTE b_;
-        int ret = smite_load_byte(S, addr, &b_);
+        int ret = load_byte(S, addr, &b_);
         if (ret != 0)
             RAISE(ret);
         x = (smite_WORD)b_;
     ''')
 
     STOREB = Action(0x18, ['x', 'addr'], [], '''\
-        int ret = smite_store_byte(S, addr, (smite_BYTE)x);
+        int ret = store_byte(S, addr, (smite_BYTE)x);
         if (ret != 0)
             RAISE(ret);
     ''')

@@ -106,7 +106,7 @@ static void exit_function(void)
 static int trace_step(FILE *fp)
 {
     smite_BYTE opcode;
-    int res = smite_load_byte(S, S->PC, &opcode);
+    int res = load_byte(S, S->PC, &opcode);
     if (res != 0)
         return res;
 

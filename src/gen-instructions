@@ -39,7 +39,7 @@ static inline int LOAD_IMMEDIATE_WORD(smite_state *S, smite_UWORD addr, smite_WO
     smite_WORD v = 0;
     for (unsigned i = WORD_SIZE; i > 0; i--) {
         smite_BYTE b;
-        int ret = smite_load_byte(S, addr + i - 1, &b);
+        int ret = load_byte(S, addr + i - 1, &b);
         if (ret != 0)
             return ret;
         v = (v << smite_BYTE_BIT) | b;
@@ -52,7 +52,7 @@ smite_WORD smite_single_step(smite_state *S) {
     smite_UWORD initial_PC = S->PC;
     smite_UWORD initial_STACK_DEPTH = S->STACK_DEPTH;
     smite_BYTE I;
-    int res = smite_load_byte(S, S->PC++, &I);
+    int res = load_byte(S, S->PC++, &I);
     if (res != 0)
         return res;
 ''')

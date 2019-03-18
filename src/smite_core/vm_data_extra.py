@@ -161,23 +161,24 @@ class SMiteLib(Enum):
     ''')
 
     LOAD_WORD = Action(0x1, ['addr', 'inner_state:smite_state *'], ['value', 'ret'], '''\
-        ret = smite_load_word(inner_state, addr, &value);
+        value = 0;
+        ret = load_word(inner_state, addr, &value);
     ''')
 
     STORE_WORD = Action(0x2, ['value', 'addr', 'inner_state:smite_state *'], ['ret'], '''\
-        ret = smite_store_word(inner_state, addr, value);
+        ret = store_word(inner_state, addr, value);
     ''')
 
     LOAD_BYTE = Action(0x3, ['addr', 'inner_state:smite_state *'], ['value', 'ret'], '''\
         {
-            smite_BYTE b;
-            ret = smite_load_byte(inner_state, addr, &b);
+            smite_BYTE b = 0;
+            ret = load_byte(inner_state, addr, &b);
             value = b;
         }
     ''')
 
     STORE_BYTE = Action(0x4, ['value', 'addr', 'inner_state:smite_state *'], ['ret'], '''\
-        ret = smite_store_byte(inner_state, addr, (smite_BYTE)value);
+        ret = store_byte(inner_state, addr, (smite_BYTE)value);
     ''')
 
     REALLOC_MEMORY = Action(0x5, ['u', 'inner_state:smite_state *'], ['ret'], '''\

@@ -19,25 +19,7 @@
 #include "opcodes.h"
 
 
-// VM registers
-struct _smite_state {
-#define R(reg, type, utype) type reg;
-#define R_RO(reg, type, utype) R(reg, type, utype)
-#include "registers.h"
-#undef R
-#undef R_RO
-    smite_WORD *memory;
-    int main_argc;
-    char **main_argv;
-};
-
-// Stacks
-#define STACK_DIRECTION 1
-
-#define UNCHECKED_LOAD_STACK(pos, vp)                                   \
-    (*(vp) = *(S->S0 + (S->STACK_DEPTH - (pos) - 1) * STACK_DIRECTION))
-#define UNCHECKED_STORE_STACK(pos, v)                                   \
-    (*(S->S0 + (S->STACK_DEPTH - (pos) - 1) * STACK_DIRECTION) = (v))
+// Memory
 
 // FIXME: These macros should take ENDISM into account and store the
 // quantities on the stack in native order (though perhaps not native
@@ -61,14 +43,9 @@ struct _smite_state {
         v = (ty)((size_t)v >> smite_word_bit);                          \
     }
 
-// Align a VM address
-smite_UWORD smite_align(smite_UWORD addr);
-
-// Check whether a VM address is aligned
-int smite_is_aligned(smite_UWORD addr);
-
 // Portable arithmetic right shift (the behaviour of >> on signed
 // quantities is implementation-defined in C99)
+// FIXME: Can't test HAVE_ARITHMETIC_RSHIFT here!
 #ifdef HAVE_ARITHMETIC_RSHIFT
 #define ARSHIFT(n, p) ((smite_WORD)(n) >> (p))
 #else
