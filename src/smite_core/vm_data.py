@@ -172,7 +172,7 @@ class Actions(Enum):
     ''')
 
     GET_WORD_SIZE = Action(0x1c, [], ['r'], '''\
-        r = smite_word_size;
+        r = WORD_SIZE;
     ''')
 
     GET_STACK_DEPTH = Action(0x1d, [], ['r'], '''\

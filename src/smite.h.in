@@ -33,7 +33,7 @@ typedef int64_t smite_WORD;
 #define PRI_XWORD "#"PRIx64
 typedef uint64_t smite_UWORD;
 #else
-#error "smite_WORD_SIZE is not 4 or 8!"
+#error "WORD_SIZE is not 4 or 8!"
 #endif
 typedef smite_WORD * smite_WORDP;
 #define PRI_XWORDP "p"
@@ -76,12 +76,12 @@ typedef struct {
 
 _GL_ATTRIBUTE_CONST static inline smite_UWORD align(smite_UWORD addr)
 {
-    return (addr + smite_word_size - 1) & -smite_word_size;
+    return (addr + WORD_SIZE - 1) & -WORD_SIZE;
 }
 
 _GL_ATTRIBUTE_CONST static inline int is_aligned(smite_UWORD addr)
 {
-    return (addr & (smite_word_size - 1)) == 0;
+    return (addr & (WORD_SIZE - 1)) == 0;
 }
 
 // Linkable stubs

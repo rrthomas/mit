@@ -105,22 +105,22 @@ int smite_push_stack(smite_state *S, smite_WORD v)
 
 static int smite_realloc(smite_WORD **ptr, smite_UWORD old_size, smite_UWORD new_size)
 {
-    smite_WORD *new_ptr = realloc(*ptr, new_size * smite_word_size);
+    smite_WORD *new_ptr = realloc(*ptr, new_size * WORD_SIZE);
     if (new_ptr == NULL && new_size > 0)
         return 1;
     *ptr = new_ptr;
 
     if (old_size < new_size)
-        memset(*ptr + old_size, 0, (new_size - old_size) * smite_word_size);
+        memset(*ptr + old_size, 0, (new_size - old_size) * WORD_SIZE);
 
     return 0;
 }
 
 int smite_realloc_memory(smite_state *S, smite_UWORD size)
 {
-    int ret = smite_realloc(&S->memory, S->MEMORY / smite_word_size, size);
+    int ret = smite_realloc(&S->memory, S->MEMORY / WORD_SIZE, size);
     if (ret == 0)
-        S->MEMORY = size * smite_word_size;
+        S->MEMORY = size * WORD_SIZE;
     return ret;
 }
 
