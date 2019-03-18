@@ -296,11 +296,12 @@ class State:
     mnemonic.update({instruction.value.opcode:instruction.name for instruction in LibActions})
 
     def disassemble_instruction(self, addr):
-        ptr = c_uword(addr)
-        opcode = c_ubyte()
-        ret = libsmite.smite_load_byte(self.state, ptr, byref(opcode))
         try:
-            addr, inst = addr + 1, self.mnemonic[opcode.value]
+            opcode = self.M[addr]
+        except IndexError:
+            opcode = "invalid adddress!"
+        try:
+            addr, inst = addr + 1, self.mnemonic[opcode]
         except KeyError:
             return addr + 1, "undefined"
         if inst.startswith("LIT"):
