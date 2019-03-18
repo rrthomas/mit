@@ -1,4 +1,4 @@
-// Front-end and shell.
+// Front-end.
 //
 // (c) Reuben Thomas 1995-2018
 //
