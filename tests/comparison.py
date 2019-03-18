@@ -50,7 +50,8 @@ def stack2():
 def step(start, end):
     if end > start:
         for i in range(start, end):
-            print("I = {}".format(disassemble_instruction(PC.get())))
+            _, inst = disassemble_instruction(PC.get())
+            print("I = {}".format(inst))
             VM.step()
             v = S.pop()
             print("Result: {}; correct result: {}\n".format(v, correct[i]))

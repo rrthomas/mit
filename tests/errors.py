@@ -87,7 +87,8 @@ for i in range(len(test)):
     while res == 128:
         print("PC = {}".format(PC.get()))
         print("S = {}".format(S))
-        print("I = {}".format(disassemble_instruction(PC.get())))
+        _, inst = disassemble_instruction(PC.get())
+        print("I = {}".format(inst))
         res = step()
 
     if result[i] != res:

@@ -78,7 +78,8 @@ for i in range(len(correct)):
     if str(correct[i]) != str(S):
         print("Error in stack tests: PC = {:#x}".format(PC.get()))
         sys.exit(1)
-    print("I = {}".format(disassemble_instruction(PC.get())))
+    _, inst = disassemble_instruction(PC.get())
+    print("I = {}".format(inst))
     step()
 
 print("Stack tests ran OK")
