@@ -21,16 +21,16 @@ VM.register_args(*args)
 buffer = 0x100
 
 # Put address of buffer on stack for later
-number(buffer)
-number(16) # arbitary number > strlen(args[1])
-number(LIB_SMITE_CURRENT_STATE)
-action(LIB_SMITE)
-number(LIB_SMITE_NATIVE_ADDRESS_OF_RANGE)
-action(LIB_SMITE)
+lit(buffer)
+lit(16) # arbitary number > strlen(args[1])
+lit(LIB_SMITE_CURRENT_STATE)
+ass(LIB_SMITE)
+lit(LIB_SMITE_NATIVE_ADDRESS_OF_RANGE)
+ass(LIB_SMITE)
 
 # Test LIB_C_ARGC
-number(LIB_C_ARGC)
-action(LIB_C)
+lit(LIB_C_ARGC)
+ass(LIB_C)
 
 step(addr=VM.here + 1)
 argc = S.pop()
@@ -40,14 +40,14 @@ if argc != len(args):
     sys.exit(1)
 
 # Test LIB_C_ARG
-number(1)
-number(LIB_C_ARG)
-action(LIB_C)
+lit(1)
+lit(LIB_C_ARG)
+ass(LIB_C)
 for i in range(sizeof(c_char_p) // word_size):
-    number(sizeof(c_char_p) // word_size - 1)
-    action(DUP)
-number(LIB_C_STRLEN)
-action(LIB_C)
+    lit(sizeof(c_char_p) // word_size - 1)
+    ass(DUP)
+lit(LIB_C_STRLEN)
+ass(LIB_C)
 
 step(addr=VM.here + 1)
 arg1len = S.pop()
@@ -58,8 +58,8 @@ if arg1len != len(args[1]):
 S.push(arg1len) # push length back for next test
 
 # Test LIB_C_STRNCPY
-number(LIB_C_STRNCPY)
-action(LIB_C)
+lit(LIB_C_STRNCPY)
+ass(LIB_C)
 
 step(addr=VM.here + 1)
 c_str = string_at(libsmite.smite_native_address_of_range(VM.state, buffer, 0))

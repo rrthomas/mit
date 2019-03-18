@@ -116,14 +116,6 @@ libsmite.smite_align.argtypes = [c_uword]
 
 libsmite.smite_is_aligned.argtypes = [c_uword]
 
-libsmite.smite_find_msbit.argtypes = [c_word]
-
-libsmite.smite_byte_size.argtypes = [c_word]
-
-libsmite.smite_encode_instruction.argtypes = [c_void_p, POINTER(c_uword), c_uword, c_word]
-
-libsmite.smite_decode_instruction.argtypes = [c_void_p, POINTER(c_uword), POINTER(c_uword), POINTER(c_word)]
-
 
 # State
 class State:
@@ -161,9 +153,10 @@ class State:
                                       "load", "save",
                                       "run", "step", "trace", "dump", "disassemble",
                                       "disassemble_instruction",
-                                      "action", "number", "byte"]])
+                                      "assemble", "lit", "lit_pc_rel", "byte"]])
 
         # Abbreviations
+        globals_dict["ass"] = self.__getattribute__("assemble")
         globals_dict["dis"] = self.__getattribute__("disassemble")
 
         # Opcodes
@@ -271,54 +264,59 @@ class State:
         return ret
 
     # Assembly
-    def action(self, instr):
-        '''Assemble an action at 'here'.'''
+    def assemble(self, instr):
+        '''Assemble an instruction at 'here'.'''
         ptr = c_uword(self.here)
-        libsmite.smite_encode_instruction(self.state, byref(ptr), Types.ACTION, instr)
-        self.here = ptr.value
-
-    def number(self, value):
-        '''Assemble a number at 'here'.'''
-        ptr = c_uword(self.here)
-        libsmite.smite_encode_instruction(self.state, byref(ptr), Types.NUMBER, value)
-        self.here = ptr.value
+        libsmite.smite_store_byte(self.state, ptr, instr)
+        self.here += 1
 
     def byte(self, byte):
         '''Assemble a byte at 'here'.'''
         self.M[self.here] = byte
         self.here += 1
 
+    def lit(self, value):
+        '''Assemble LIT 'value' at 'here'.'''
+        self.assemble(Actions.LIT.value.opcode)
+        self.M_word[self.here] = value
+        self.here += word_size
+
+    def lit_pc_rel(self, value):
+        '''
+        Assemble 'value' at 'here' as a PC-relative value relative to 'here' +
+        1.
+        '''
+        self.assemble(Actions.LIT_PC_REL.value.opcode)
+        self.M_word[self.here] = value - self.here
+        self.here += word_size
+
 
     # Disassembly
-    mnemonic = {action.value.opcode:action.name for action in Actions}
-    mnemonic.update({action.value.opcode:action.name for action in LibActions})
+    mnemonic = {instruction.value.opcode:instruction.name for instruction in Actions}
+    mnemonic.update({instruction.value.opcode:instruction.name for instruction in LibActions})
 
     def disassemble_instruction(self, addr):
-        ptr = c_uword(addr)
-        ty = c_uword()
-        opcode = c_word()
-        ret = libsmite.smite_decode_instruction(self.state, byref(ptr), byref(ty), byref(opcode))
-        if ret == 1:
-            return ptr.value, "invalid instruction!"
-        if ty.value == Types.NUMBER:
-            return ptr.value, "{} ({:#x})".format(opcode.value, opcode.value)
-        elif ty.value == Types.ACTION:
-            try:
-                return ptr.value, self.mnemonic[opcode.value]
-            except KeyError:
-                return ptr.value, "undefined"
-        else:
-            return ptr.value, "invalid type (bug in smite_decode_instruction)!"
+        try:
+            opcode = self.M[addr]
+        except IndexError:
+            opcode = "invalid adddress!"
+        try:
+            addr, inst = addr + 1, self.mnemonic[opcode]
+        except KeyError:
+            return addr + 1, "undefined"
+        if inst.startswith("LIT"):
+            return addr + word_size, "{inst} {addr} ({addr:#x})".format(inst=inst, addr=self.M_word[addr])
+        return addr, inst
 
     def disassemble(self, start=None, length=None, end=None, file=sys.stdout):
         '''Disassemble from start to start+length or from start to end.
-    Defaults to 64 bytes from 16 bytes before PC.'''
+    Defaults to 32 bytes from 4 bytes before PC.'''
         if start == None:
-            start = max(0, self.registers["PC"].get() - 16)
+            start = max(0, self.registers["PC"].get() - 4)
         if length != None:
             end = start + length
         elif end == None:
-            end = start + 64
+            end = start + 32
 
         p = start
         while p < end:
@@ -329,9 +327,9 @@ class State:
 
     def dump(self, start=None, length=None, end=None, file=sys.stdout):
         '''Dump memory from start to start+length or from start to end.
-    Defaults to 256 bytes from start - 64.'''
+    Defaults to 256 bytes from start - 16.'''
         if start == None:
-            start = max(0, self.registers["PC"].get() - 64)
+            start = max(0, self.registers["PC"].get() - 16)
         if length != None:
             end = start + length
         elif end == None:
@@ -437,7 +435,7 @@ class AbstractMemory(collections.abc.Sequence):
             return [self[i] for i in range(*index_.indices(len(self)))]
         elif type(index) != int:
             raise TypeError
-        elif index >= len(self) or index % self.element_size != 0:
+        elif index >= len(self):
             raise IndexError
         else:
             return self.load(index)
@@ -451,7 +449,7 @@ class AbstractMemory(collections.abc.Sequence):
                 j += 1
         elif type(index) != int:
             raise TypeError
-        elif index >= len(self) or index % self.element_size != 0:
+        elif index >= len(self):
             raise IndexError
         else:
             self.store(index, value)
@@ -476,9 +474,20 @@ class WordMemory(AbstractMemory):
         self.element_size = word_size
 
     def load(self, index):
-        word = c_word()
-        libsmite.smite_load_word(self.VM.state, index, byref(word))
-        return word.value
+        if libsmite.smite_is_aligned(index):
+            word = c_word()
+            libsmite.smite_load_word(self.VM.state, index, byref(word))
+            return word.value
+        else:
+            value = 0
+            for i in reversed(range(0, word_size)):
+                value = (value << byte_bit) | self.VM.M[index + i]
+            return value
 
     def store(self, index, value):
-        libsmite.smite_store_word(self.VM.state, index, c_word(value))
+        if libsmite.smite_is_aligned(index):
+            libsmite.smite_store_word(self.VM.state, index, c_word(value))
+        else:
+            for i in range(0, word_size):
+                self.VM.M[index + i] = value & byte_mask
+                value >>= byte_bit

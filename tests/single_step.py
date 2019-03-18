@@ -13,7 +13,7 @@ VM.globalize(globals())
 
 
 for i in range(10):
-    action(NOP)
+    ass(NOP)
     print("PC = {:#x}".format(PC.get()))
     step()
 

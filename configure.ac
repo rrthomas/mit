@@ -68,9 +68,7 @@ AC_C_BIGENDIAN
 AX_C_ARITHMETIC_RSHIFT
 
 dnl Set size of word
-AC_CHECK_SIZEOF([int])
 AC_CHECK_SIZEOF([long])
-AC_CHECK_SIZEOF([long long])
 AC_ARG_VAR([WORD_SIZE],
   [value of WORD_SIZE register [default: sizeof(long)]])
 : "${WORD_SIZE=SIZEOF_LONG}"

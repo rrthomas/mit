@@ -105,13 +105,12 @@ static void exit_function(void)
 
 static int trace_step(FILE *fp)
 {
-    smite_UWORD type, PC = S->PC;
-    smite_WORD opcode;
-    int res = smite_decode_instruction(S, &PC, &type, &opcode);
+    smite_BYTE opcode;
+    int res = load_byte(S, S->PC, &opcode);
     if (res != 0)
         return res;
 
-    fprintf(fp, "%"PRI_UWORD" %"PRI_XWORD"\n", type, (smite_UWORD)opcode);
+    fprintf(fp, "%d\n", (int)opcode);
     return smite_single_step(S);
 }
 

@@ -45,38 +45,178 @@ extern const unsigned smite_native_pointer_size;
 #define smite_BYTE_BIT 8
 extern const unsigned smite_byte_bit;
 extern const unsigned smite_byte_mask;
+#define smite_BYTE_MASK ((1 << smite_BYTE_BIT) - 1)
 extern const unsigned smite_word_bit;
 extern const smite_UWORD smite_word_mask;
 extern const smite_UWORD smite_uword_max;
 extern const smite_WORD smite_word_min;
 
 // VM registers
-typedef struct _smite_state smite_state;
+typedef struct {
+#define R(reg, type, utype) type reg;
+#define R_RO(reg, type, utype) R(reg, type, utype)
+#include "registers.h"
+#undef R
+#undef R_RO
+    smite_WORD *memory;
+    int main_argc;
+    char **main_argv;
+} smite_state;
 
 #define R_RO(reg, type, utype)                  \
     type smite_get_ ## reg(smite_state *S);
 #define R(reg, type, utype)                     \
     R_RO(reg, type, utype)                      \
     void smite_set_ ## reg(smite_state *S, type value);
-#include "register-list.h"
+#include "registers.h"
 #undef R
 #undef R_RO
 
+// Utility functions
+
+_GL_ATTRIBUTE_CONST static inline smite_UWORD align(smite_UWORD addr)
+{
+    return (addr + smite_word_size - 1) & -smite_word_size;
+}
+
+_GL_ATTRIBUTE_CONST static inline int is_aligned(smite_UWORD addr)
+{
+    return (addr & (smite_word_size - 1)) == 0;
+}
+
+// Linkable stubs
+smite_UWORD smite_align(smite_UWORD addr);
+int smite_is_aligned(smite_UWORD addr);
+
 // Memory access
 // Return value is 0 if OK, or error code for invalid or unaligned address
+
+_GL_ATTRIBUTE_PURE static inline uint8_t *native_address_of_range(smite_state *S, smite_UWORD addr, smite_UWORD length)
+{
+    if (addr >= S->MEMORY || length > S->MEMORY - addr)
+        return NULL;
+    return ((uint8_t *)(S->memory)) + addr;
+}
+
+uint8_t *smite_native_address_of_range(smite_state *S, smite_UWORD addr, smite_UWORD length);
+
+static inline int load_word(smite_state *S, smite_UWORD addr, smite_WORD *value)
+{
+    if (addr >= S->MEMORY) {
+        S->BAD = addr;
+        return 5;
+    }
+    if (!smite_is_aligned(addr)) {
+        S->BAD = addr;
+        return 7;
+    }
+
+    *value = S->memory[addr / WORD_SIZE];
+    return 0;
+}
+
+static inline int load_byte(smite_state *S, smite_UWORD addr, smite_BYTE *value)
+{
+    if (addr >= S->MEMORY) {
+        S->BAD = addr;
+        return 5;
+    }
+
+    *value = ((smite_BYTE *)S->memory)[addr];
+    return 0;
+}
+
+static inline int store_word(smite_state *S, smite_UWORD addr, smite_WORD value)
+{
+    if (addr >= S->MEMORY) {
+        S->BAD = addr;
+        return 6;
+    }
+    if (!smite_is_aligned(addr)) {
+        S->BAD = addr;
+        return 7;
+    }
+
+    S->memory[addr / WORD_SIZE] = value;
+    return 0;
+}
+
+static inline int store_byte(smite_state *S, smite_UWORD addr, smite_BYTE value)
+{
+    if (addr >= S->MEMORY) {
+        S->BAD = addr;
+        return 6;
+    }
+
+    ((smite_BYTE *)S->memory)[addr] = value;
+    return 0;
+}
+
+// Linkable stubs
 int smite_load_word(smite_state *S, smite_UWORD addr, smite_WORD *value);
 int smite_store_word(smite_state *S, smite_UWORD addr, smite_WORD value);
 int smite_load_byte(smite_state *S, smite_UWORD addr, smite_BYTE *value);
 int smite_store_byte(smite_state *S, smite_UWORD addr, smite_BYTE value);
 
-// Stack access
+
+// Stacks
+// Return value is 0 if OK, or error code for invalid or unaligned address
+
+#define STACK_DIRECTION 1
+
+#define UNCHECKED_LOAD_STACK(pos, vp)                                   \
+    (*(vp) = *(S->S0 + (S->STACK_DEPTH - (pos) - 1) * STACK_DIRECTION))
+#define UNCHECKED_STORE_STACK(pos, v)                                   \
+    (*(S->S0 + (S->STACK_DEPTH - (pos) - 1) * STACK_DIRECTION) = (v))
+
+static inline int load_stack(smite_state *S, smite_UWORD pos, smite_WORD *vp)
+{
+    if (pos >= S->STACK_DEPTH) {
+        S->BAD = pos;
+        return 3;
+    }
+
+    UNCHECKED_LOAD_STACK(pos, vp);
+    return 0;
+}
+
+static inline int store_stack(smite_state *S, smite_UWORD pos, smite_WORD v)
+{
+    if (pos >= S->STACK_DEPTH) {
+        S->BAD = pos;
+        return 4;
+    }
+
+    UNCHECKED_STORE_STACK(pos, v);
+    return 0;
+}
+
+static inline int pop_stack(smite_state *S, smite_WORD *v)
+{
+    int ret = load_stack(S, 0, v);
+    S->STACK_DEPTH--;
+    return ret;
+}
+
+static inline int push_stack(smite_state *S, smite_WORD v)
+{
+    if (S->STACK_DEPTH == S->STACK_SIZE) {
+        S->BAD = S->STACK_SIZE;
+        return 2;
+    }
+
+    (S->STACK_DEPTH)++;
+    return store_stack(S, 0, v);
+}
+
+// Linkable stubs
 int smite_load_stack(smite_state *S, smite_UWORD pos, smite_WORD *v);
 int smite_store_stack(smite_state *S, smite_UWORD pos, smite_WORD v);
 int smite_pop_stack(smite_state *S, smite_WORD *v);
 int smite_push_stack(smite_state *S, smite_WORD v);
 
+
 // Interface calls
-uint8_t *smite_native_address_of_range(smite_state *S, smite_UWORD addr, smite_UWORD length);
 smite_WORD smite_run(smite_state *S);
 smite_WORD smite_single_step(smite_state *S);
 ptrdiff_t smite_load_object(smite_state *S, smite_UWORD address, int fd);

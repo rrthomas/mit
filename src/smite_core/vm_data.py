@@ -8,7 +8,7 @@
 # RISK.
 
 from enum import Enum, IntEnum, unique
-from .action_gen import Action
+from .instruction_gen import Action
 
 class Register:
     '''VM register descriptor.'''
@@ -27,12 +27,6 @@ class Registers(Enum):
     S0 = Register("smite_WORDP", read_only=True)
     STACK_SIZE = Register(read_only=True)
     ENDISM = Register(read_only=True)
-
-@unique
-class Types(IntEnum):
-    '''Instruction type opcode.'''
-    NUMBER = 0x0
-    ACTION = 0x1
 
 @unique
 class Actions(Enum):
@@ -58,26 +52,19 @@ class Actions(Enum):
         }
     ''')
 
-    ROTATE_UP = Action(0x04, ['ITEMS', 'COUNT'], ['ITEMS'], '''\
-        smite_WORD bottom;
-        UNCHECKED_LOAD_STACK(COUNT, &bottom);
-        for (smite_UWORD i = (smite_UWORD)COUNT; i > 0; i--) {
-            smite_WORD temp;
-            UNCHECKED_LOAD_STACK(i - 1, &temp);
-            UNCHECKED_STORE_STACK(i, temp);
-        }
-        UNCHECKED_STORE_STACK(0, bottom);
+    LIT = Action(0x04, [], ['n'], '''\
+        int ret = LOAD_IMMEDIATE_WORD(S, S->PC, &n);
+        if (ret != 0)
+            RAISE(ret);
+        S->PC += WORD_SIZE;
     ''')
 
-    ROTATE_DOWN = Action(0x05, ['ITEMS', 'COUNT'], ['ITEMS'], '''\
-        smite_WORD top;
-        UNCHECKED_LOAD_STACK(0, &top);
-        for (smite_UWORD i = 0; i < (smite_UWORD)COUNT; i++) {
-            smite_WORD temp;
-            UNCHECKED_LOAD_STACK(i + 1, &temp);
-            UNCHECKED_STORE_STACK(i, temp);
-        }
-        UNCHECKED_STORE_STACK(COUNT, top);
+    LIT_PC_REL = Action(0x05, [], ['n'], '''\
+        int ret = LOAD_IMMEDIATE_WORD(S, S->PC, &n);
+        if (ret != 0)
+            RAISE(ret);
+        n += S->PC;
+        S->PC += WORD_SIZE;
     ''')
 
     NOT = Action(0x06, ['x'], ['r'], '''\
@@ -145,27 +132,27 @@ class Actions(Enum):
     ''')
 
     LOAD = Action(0x15, ['addr'], ['x'], '''\
-        int ret = smite_load_word(S, addr, &x);
+        int ret = load_word(S, addr, &x);
         if (ret != 0)
             RAISE(ret);
     ''')
 
     STORE = Action(0x16, ['x', 'addr'], [], '''\
-        int ret = smite_store_word(S, addr, x);
+        int ret = store_word(S, addr, x);
         if (ret != 0)
             RAISE(ret);
     ''')
 
     LOADB = Action(0x17, ['addr'], ['x'], '''\
         smite_BYTE b_;
-        int ret = smite_load_byte(S, addr, &b_);
+        int ret = load_byte(S, addr, &b_);
         if (ret != 0)
             RAISE(ret);
         x = (smite_WORD)b_;
     ''')
 
     STOREB = Action(0x18, ['x', 'addr'], [], '''\
-        int ret = smite_store_byte(S, addr, (smite_BYTE)x);
+        int ret = store_byte(S, addr, (smite_BYTE)x);
         if (ret != 0)
             RAISE(ret);
     ''')

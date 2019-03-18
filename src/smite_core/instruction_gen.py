@@ -1,6 +1,4 @@
 '''
-action_gen
-
 Generate code for actions.
 
 The main entry point is dispatch.
@@ -8,6 +6,14 @@ The main entry point is dispatch.
 
 import re
 import textwrap
+
+
+def print_enum(actions, prefix):
+    '''Utility function to print an instruction enum.'''
+    print('\nenum {')
+    for (instruction, action) in actions.__members__.items():
+        print("    INSTRUCTION({}{}, {:#x})".format(prefix, instruction, action.value.opcode))
+    print('};')
 
 class Action:
     '''VM action instruction descriptor.
@@ -234,20 +240,20 @@ def dispatch(actions, prefix, undefined_case):
 
     actions - Enum of Actions.
     '''
-    output = '        switch (I) {\n'
+    output = '    switch (I) {\n'
     for action in actions:
         output += '''\
-        case {prefix}{instruction}:
-            {{
+    case {prefix}{instruction}:
+        {{
 {code}
-            }}
-            break;\n'''.format(
-                    instruction=action.name,
-                    prefix=prefix,
-                    code=textwrap.indent(gen_case(action.value), '                '))
+        }}
+        break;\n'''.format(
+            instruction=action.name,
+            prefix=prefix,
+            code=textwrap.indent(gen_case(action.value), '            '))
     output += '''
-        default:
+    default:
 {}
-            break;
-        }}'''.format(undefined_case)
+        break;
+    }}'''.format(undefined_case)
     return output

@@ -8,9 +8,8 @@
 /smite.1
 /smite-include.man
 /smite.h
-/actions.c
+/instructions.c
 /extra.c
-/instruction-list.h
-/instruction-type-list.h
+/opcodes-core.h
 /opcodes-extra.h
-/register-list.h
+/registers.h

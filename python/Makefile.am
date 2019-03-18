@@ -14,10 +14,10 @@ pkgpython_PYTHON =			\
 	@PACKAGE@/__main__.py		\
 	@PACKAGE@/vm_data.py		\
 	@PACKAGE@/vm_data_extra.py	\
-	@PACKAGE@/action_gen.py
+	@PACKAGE@/instruction_gen.py
 
 loc:
-	$(SLOCCOUNT) $(bin_SCRIPTS) $(pkgpython_PYTHON)
+	$(SLOCCOUNT) $(bin_SCRIPTS) @PACKAGE@/__init__.py @PACKAGE@/__main__.py
 
 EXTRA_DIST = \
 	$(man_MANS)		\

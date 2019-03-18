@@ -11,9 +11,9 @@ AM_CPPFLAGS = -I$(top_builddir)/lib -I$(top_srcdir)/lib $(WARN_CFLAGS)
 PYTHON_WITH_PATH = export PYTHONPATH=$(top_srcdir)/python; $(PYTHON)
 
 lib_LTLIBRARIES = libsmite.la
-C_SRCS = bits_util.c storage.c instruction.c extra.h object.c
-GENERATED_SRCS = register-list.h instruction-list.h instruction-type-list.h actions.c extra.c
-SMITE_CORE_SRCS = smite_core/vm_data.py smite_core/vm_data_extra.py smite_core/action_gen.py
+C_SRCS = storage.c extra.h object.c
+GENERATED_SRCS = registers.h opcodes-core.h opcodes-extra.h instructions.c extra.c
+SMITE_CORE_SRCS = smite_core/vm_data.py smite_core/vm_data_extra.py smite_core/instruction_gen.py
 libsmite_la_SOURCES = $(C_SRCS) $(GENERATED_SRCS)
 libsmite_la_LIBADD = $(top_builddir)/lib/libgnu.la
 
@@ -23,9 +23,9 @@ smite_LDADD = lib@PACKAGE@.la $(top_builddir)/lib/libgnu.la
 smite_SOURCES = main.c tbl_opts.h
 pkginclude_HEADERS = @PACKAGE@.h aux.h opcodes.h opcodes-extra.h
 
-step.lo: actions.c
-bits_util.lo instruction.lo object.lo step.lo storage.lo main.o: register-list.h instruction-list.h instruction-type-list.h opcodes-extra.h
-main.o: tbl_opts.h register-list.h
+step.lo: instructions.c
+object.lo step.lo storage.lo main.o: registers.h opcodes-core.h opcodes-extra.h
+main.o: tbl_opts.h registers.h
 
 # Depend on @PACKAGE@$(EXEEXT) rather than explicitly make-ing it, as otherwise
 # we break parallel builds, as lib@PACKAGE@.la can be built twice in parallel,
@@ -39,22 +39,19 @@ main.o: tbl_opts.h register-list.h
 		--output=$@ ./@PACKAGE@$(EXEEXT); \
 	fi
 
-register-list.h: gen-register-list smite_core/vm_data.py smite_core/action_gen.py
-	$(PYTHON_WITH_PATH) $(srcdir)/gen-register-list > register-list.h
+registers.h: gen-registers smite_core/vm_data.py smite_core/instruction_gen.py
+	$(PYTHON_WITH_PATH) $(srcdir)/gen-registers > registers.h
 
-opcodes-extra.h: gen-opcodes-extra smite_core/vm_data_extra.py smite_core/action_gen.py
+opcodes-extra.h: gen-opcodes-extra smite_core/vm_data_extra.py smite_core/instruction_gen.py
 	$(PYTHON_WITH_PATH) $(srcdir)/gen-opcodes-extra > opcodes-extra.h
 
-instruction-list.h: gen-instruction-list smite_core/vm_data.py smite_core/action_gen.py
-	$(PYTHON_WITH_PATH) $(srcdir)/gen-instruction-list > instruction-list.h
+opcodes-core.h: gen-opcodes-core smite_core/vm_data.py smite_core/instruction_gen.py
+	$(PYTHON_WITH_PATH) $(srcdir)/gen-opcodes-core > opcodes-core.h
 
-instruction-type-list.h: gen-instruction-type-list smite_core/vm_data.py smite_core/action_gen.py
-	$(PYTHON_WITH_PATH) $(srcdir)/gen-instruction-type-list > instruction-type-list.h
+instructions.c: gen-instructions smite_core/vm_data.py smite_core/instruction_gen.py
+	$(PYTHON_WITH_PATH) $(srcdir)/gen-instructions > instructions.c
 
-actions.c: gen-actions smite_core/vm_data.py smite_core/action_gen.py
-	$(PYTHON_WITH_PATH) $(srcdir)/gen-actions > actions.c
-
-extra.c: gen-extra smite_core/vm_data_extra.py smite_core/action_gen.py
+extra.c: gen-extra smite_core/vm_data_extra.py smite_core/instruction_gen.py
 	$(PYTHON_WITH_PATH) $(srcdir)/gen-extra > extra.c
 
 loc:
@@ -62,12 +59,12 @@ loc:
 		$(C_SRCS) \
 		$(@PACKAGE@_SOURCES) \
 		$(SMITE_CORE_SRCS) \
-		gen-register-list gen-instruction-list gen-instruction-type-list gen-opcodes-extra gen-actions
+		gen-registers gen-opcodes-core gen-opcodes-extra gen-instructions gen-extra
 
 EXTRA_DIST = \
 	@PACKAGE@.h.in \
 	$(SMITE_CORE_SRCS) \
-	gen-register-list gen-instruction-list gen-instruction-type-list gen-actions gen-opcodes-extra gen-extra
+	gen-registers gen-opcodes-core gen-opcodes-extra gen-instructions gen-extra
 
 DISTCLEANFILES = @PACKAGE@.1
 # Ignore built files that are part of the distribution (specifically,
