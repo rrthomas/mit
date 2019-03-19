@@ -24,7 +24,7 @@ class Action:
      - code - str - C source code.
 
     C variables are created for the arguments and results; the arguments are
-    pushed and results popped.
+    popped and results pushed.
 
     The code should RAISE any error before writing any state, so that if an
     error is raised, the state of the VM is not changed.
@@ -81,9 +81,7 @@ class StackPicture:
 
     Variadic instructions (such as POP, DUP, SWAP) have an argument called
     "COUNT" which is (N.B.!) one less than the number of additional
-    (unnamed) items are on the stack. The `is_variadic` flag is
-    per-StackPicture, not per instruction. For example, POP has variadic
-    arguments but non-variadic results.
+    (unnamed) items are on the stack.
 
     Public fields:
 
@@ -97,6 +95,7 @@ class StackPicture:
     '''
     def __init__(self, named_items, is_variadic=False):
         assert len(set(named_items)) == len(named_items)
+        assert 'ITEMS' not in named_items
         self.named_items = named_items
         self.is_variadic = is_variadic
 
@@ -182,8 +181,6 @@ def check_underflow(num_pops):
     Returns C source code to check that the stack contains enough items to
     pop the specified number of items.
      - num_pops - a C expression giving the number of items to pop.
-    Assumes:
-     - No items have been popped so far. This is needed in the error case.
     '''
     return disable_warnings(['-Wtype-limits', '-Wunused-variable', '-Wshadow'], '''\
 if ((S->STACK_DEPTH < {num_pops})) {{
@@ -205,8 +202,8 @@ if ({num_pushes} > {num_pops} && (S->STACK_SIZE - S->STACK_DEPTH < {num_pushes} 
 
 def gen_case(action):
     '''
-    Generate the code for an Action. In the code, S is the smite_state, errors
-    are reported by calling RAISE(), for which we maintain static_args.
+    Generate the code for an Action. In the code, S is the smite_state. Errors
+    are reported by calling RAISE().
 
      - action - Action.
     '''
