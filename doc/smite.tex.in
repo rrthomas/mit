@@ -182,7 +182,7 @@ $128$ & {\bf single\_step()} has terminated without error. \\
 \section{Instruction set}
 \label{instset}
 
-The instruction set is listed in sections~\ref{numbers} to~\ref{accessact},
+The instruction set is listed below,
 with the instructions grouped according to function. The
 instructions are given in the following format:
 
@@ -284,7 +284,7 @@ These instructions manage the stack:
 \begin{description}
 \inst{POP}{x —}{Remove \spic{x} from the stack.}
 \inst{DUP}{\x{u}\dots\x0 u — \x{u}\dots\x0 \x{u}}{Remove \spic{u}. Copy \x{u} to the top of the stack.}
-\inst{SWAP}{\x{u}\dots\x0 u — \x0\x{u-1}\dots\x1 \x{u}}{Exchange the top stack item with the \spic{u}th. If \spic{u} is zero, do nothing.}
+\inst{SWAP}{\x{u}\dots\x0 u — \x0 \x{u-1}\dots\x1 \x{u}}{Exchange the top stack item with the \spic{u}th. If \spic{u} is zero, do nothing.}
 \inst{ROTATE\_UP}{\x{u}\dots\x0 u — \x{u-1}\dots\x1 \x{u}}{Rotate the \spic{u}th stack item to the top.}
 \inst{ROTATE\_DOWN}{\x{u}\dots\x0 u — \x0 \x{u}\dots\x1}{Rotate the top stack item to position \spic{u}.}
 \end{description}
@@ -445,9 +445,7 @@ Table~\ref{opcodetable} lists the instruction opcodes in numerical order. Other 
 \section{External interface}
 
 @PACKAGE_NAME@'s external interface comes in three parts. The calling interface allows
-@PACKAGE_NAME@ to be controlled by other programs. The {\tt EXTRA} instruction (see section~\ref{accessact}) allows implementations to provide access to system facilities, previously written code,
-code written in other languages, and the speed of machine code in time-critical
-situations. The object module format allows compiled code to be saved, reloaded
+@PACKAGE_NAME@ to be controlled by other programs. Implementations can provide extra instructions to access system facilities, previously written code, native libraries and so on. The object module format allows compiled code to be saved, reloaded
 and shared between systems.
 
 
