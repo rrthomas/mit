@@ -11,7 +11,7 @@ Registers: a variable for each register; also a list, 'registers'
 Memory: M, M_word
 Stacks: S, R
 Managing the VM state: load, save, initialise
-Controlling and observing execution: run, step, trace
+Controlling and observing execution: run, step
 Examining memory: dump, disassemble
 Assembly: action, number, byte, pointer. Assembly is at address 'here',
 which defaults to 0.
@@ -140,7 +140,7 @@ class State:
 
         Registers: a variable for each register; also a list 'registers'
         Managing the VM state: load, save
-        Controlling and observing execution: run, step, trace
+        Controlling and observing execution: run, step
         Examining memory: dump, disassemble
         Assembly: action, number, byte, pointer. Assembly is at address
         'VM.here', which defaults to 0. The actions are available as
@@ -150,7 +150,7 @@ class State:
         globals_dict.update([(name, self.__getattribute__(name)) for
                              name in ["M", "M_word", "S", "registers",
                                       "load", "save",
-                                      "run", "step", "trace", "dump", "disassemble",
+                                      "run", "step", "dump", "disassemble",
                                       "disassemble_instruction",
                                       "assemble", "lit", "lit_pc_rel", "byte"]])
 
@@ -178,26 +178,21 @@ class State:
         self.argv = arg_strings(*bargs)
         assert(libsmite.smite_register_args(self.state, argc, self.argv) == 0)
 
-    def run(self, trace=False, args=None):
+    def run(self, args=None):
         '''
-        Run (or trace if trace is True) until HALT or error. Register any given
-        command-line `args`.
+        Run until HALT or error. Register any given command-line `args`.
         '''
         if args == None:
             args = []
         args.insert(0, b"smite-shell")
         self.register_args(*args)
-        if trace == True:
-            return self.step(addr=self.registers["MEMORY"].get() + 1, trace=True)
-        else:
-            ret = libsmite.smite_run(self.state)
-            if ret != 128:
-                print("Error code {} was returned".format(ret));
-            return ret
+        ret = libsmite.smite_run(self.state)
+        if ret != 128:
+            print("Error code {} was returned".format(ret));
+        return ret
 
-    def step(self, n=1, addr=None, trace=False):
-        '''Single-step (or trace if trace is True) for n steps,
-    or until PC=addr.'''
+    def step(self, n=1, addr=None):
+        '''Single-step for n steps, or until PC=addr.'''
         done = 0
         while True:
             ret = libsmite.smite_single_step(self.state)
@@ -215,10 +210,6 @@ class State:
                 print("")
 
         return ret
-
-    def trace(self, n=1, addr=None):
-        '''Alias for step with trace=True.'''
-        step(n, addr=addr, trace=True)
 
     class LoadError(Exception):
         pass
