@@ -479,7 +479,7 @@ class WordMemory(AbstractMemory):
             return word.value
         else:
             value = 0
-            for i in reversed(range(0, word_size)):
+            for i in reversed(range(word_size)):
                 value = (value << byte_bit) | self.VM.M[index + i]
             return value
 
@@ -487,6 +487,6 @@ class WordMemory(AbstractMemory):
         if libsmite.smite_is_aligned(index):
             libsmite.smite_store_word(self.VM.state, index, c_word(value))
         else:
-            for i in range(0, word_size):
+            for i in range(word_size):
                 self.VM.M[index + i] = value & byte_mask
                 value >>= byte_bit
