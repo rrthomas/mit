@@ -83,8 +83,8 @@ for i in range(len(test)):
 
     print("Test {}".format(i + 1))
     PC.set(test[i])
-    res = 128
-    while res == 128:
+    res = 0
+    while res == 0:
         print("PC = {}".format(PC.get()))
         print("S = {}".format(S))
         _, inst = disassemble_instruction(PC.get())

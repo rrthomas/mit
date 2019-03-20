@@ -187,7 +187,7 @@ class State:
         args.insert(0, b"smite-shell")
         self.register_args(*args)
         ret = libsmite.smite_run(self.state)
-        if ret != 128:
+        if ret != 0:
             print("Error code {} was returned".format(ret));
         return ret
 
@@ -197,10 +197,10 @@ class State:
         while True:
             ret = libsmite.smite_single_step(self.state)
             done += 1
-            if ret != 128 or self.registers["PC"].get() == addr or (addr == None and done == n):
+            if ret != 0 or self.registers["PC"].get() == addr or (addr == None and done == n):
                 break
 
-        if ret != 128:
+        if ret != 0:
             if ret != 0:
                 print("Error code {} was returned".format(ret), end='')
                 if n > 1:

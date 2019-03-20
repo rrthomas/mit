@@ -67,14 +67,14 @@ print(instruction_gen.dispatch(vm_data.Actions, 'O_', '''\
 
 print('''
 
-    return 128;
+    return 0;
 }
 
 
 smite_WORD smite_run(smite_state *S)
 {
     smite_WORD ret;
-    while ((ret = smite_single_step(S)) == 128)
+    while ((ret = smite_single_step(S)) == 0)
         ;
     return ret;
 }''')

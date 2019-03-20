@@ -32,7 +32,7 @@ class Registers(Enum):
 class Actions(Enum):
     '''VM action instructions.'''
     HALT = Action(0x00, [], [], '''\
-        RAISE(0);
+        RAISE(128);
     ''')
 
     POP = Action(0x01, ['item',], [], '''\
