@@ -19,7 +19,7 @@ ac_includes_default="\\
 {}"
 '''.format(re.sub('"', '\\"', includes)))
 
-for type in list(set([type for lib in LibActions
+for type in list(set([type for lib in LibInstructions
                       for type in lib.value.types()])):
     print('AC_CHECK_SIZEOF([{}])'.format(type))
 

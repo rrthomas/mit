@@ -1,5 +1,5 @@
 '''
-Generate code for actions.
+Generate code for instructions.
 
 The main entry point is dispatch.
 '''
@@ -8,15 +8,15 @@ import re
 import textwrap
 
 
-def print_enum(actions, prefix):
+def print_enum(instructions, prefix):
     '''Utility function to print an instruction enum.'''
     print('\nenum {')
-    for (instruction, action) in actions.__members__.items():
-        print("    INSTRUCTION({}{}, {:#x})".format(prefix, instruction, action.value.opcode))
+    for (name, instruction) in instructions.__members__.items():
+        print("    INSTRUCTION({}{}, {:#x})".format(prefix, name, instruction.value.opcode))
     print('};')
 
-class Action:
-    '''VM action instruction descriptor.
+class Instruction:
+    '''VM instruction instruction descriptor.
 
      - opcode - int - SMite opcode number.
      - args - StackPicture.
@@ -168,16 +168,16 @@ if ({num_pushes} > {num_pops} && (S->STACK_SIZE - S->STACK_DEPTH < {num_pushes} 
     RAISE(SMITE_ERR_STACK_OVERFLOW);
 }}'''.format(num_pops=num_pops, num_pushes=num_pushes))
 
-def gen_case(action):
+def gen_case(instruction):
     '''
-    Generate the code for an Action. In the code, S is the smite_state. Errors
+    Generate the code for an Instruction. In the code, S is the smite_state. Errors
     are reported by calling RAISE().
 
-     - action - Action.
+     - instruction - Instruction.
     '''
     # Concatenate the pieces.
-    args = action.args
-    results = action.results
+    args = instruction.args
+    results = instruction.results
     static_args = args.static_depth()
     dynamic_args = args.dynamic_depth()
     static_results = results.static_depth()
@@ -190,7 +190,7 @@ def gen_case(action):
         check_underflow(dynamic_args),
         check_overflow(dynamic_args, dynamic_results),
         'S->STACK_DEPTH -= {};'.format(static_args),
-        textwrap.dedent(action.code.rstrip()),
+        textwrap.dedent(instruction.code.rstrip()),
         'S->STACK_DEPTH += {};'.format(static_args),
         'S->STACK_DEPTH -= {};'.format(dynamic_args),
         'S->STACK_DEPTH += {};'.format(dynamic_results),
@@ -200,22 +200,22 @@ def gen_case(action):
     code = re.sub('\n+', '\n', code, flags=re.MULTILINE).strip('\n')
     return code
 
-def dispatch(actions, prefix, undefined_case):
-    '''Generate dispatch code for some Actions.
+def dispatch(instructions, prefix, undefined_case):
+    '''Generate dispatch code for some Instructions.
 
-    actions - Enum of Actions.
+    instructions - Enum of Instructions.
     '''
     output = '    switch (I) {\n'
-    for action in actions:
+    for instruction in instructions:
         output += '''\
     case {prefix}{instruction}:
         {{
 {code}
         }}
         break;\n'''.format(
-            instruction=action.name,
+            instruction=instruction.name,
             prefix=prefix,
-            code=textwrap.indent(gen_case(action.value), '            '))
+            code=textwrap.indent(gen_case(instruction.value), '            '))
     output += '''
     default:
 {}
