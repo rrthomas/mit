@@ -255,7 +255,7 @@ class LibcLib(Enum):
             char *s1 = (char *)smite_native_address_of_range(S, old_name, 0);
             char *s2 = (char *)smite_native_address_of_range(S, new_name, 0);
             if (s1 == NULL || s2 == NULL)
-                RAISE(5);
+                RAISE(SMITE_ERR_MEMORY_READ);
             ret = rename(s1, s2);
         }
     ''')
@@ -264,7 +264,7 @@ class LibcLib(Enum):
         {
             char *s = (char *)smite_native_address_of_range(S, name, 0);
             if (s == NULL)
-                RAISE(5);
+                RAISE(SMITE_ERR_MEMORY_READ);
             ret = remove(s);
         }
     ''')

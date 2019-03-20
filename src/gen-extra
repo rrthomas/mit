@@ -15,6 +15,10 @@ from smite_core.instruction_gen import *
 print(includes)
 
 print('''
+enum {
+    SMITE_ERR_EXTRA_INVALID_LIBRARY = 15,
+};
+
 #define RAISE(code)                         \
     return (code);                          \
 
@@ -28,9 +32,9 @@ static int extra_{}(smite_state *S, smite_WORD I)
 {{
     smite_WORD temp;
 '''.format(str.lower(lib.name)))
-    print(dispatch(lib.value.library, '{}_'.format(lib.name), '            RAISE(15);'))
+    print(dispatch(lib.value.library, '{}_'.format(lib.name), '            RAISE(SMITE_ERR_EXTRA_INVALID_LIBRARY);'))
     print('''
-    return 0;
+    return SMITE_ERR_OK;
 }
 ''')
 
@@ -41,8 +45,8 @@ int smite_extra(smite_state *S, smite_WORD I)
 ''')
 
 print(dispatch(LibActions, '', '''
-            return 1;'''))
+            return SMITE_ERR_INVALID_OPCODE;'''))
 
 print('''
-    return 0;
+    return SMITE_ERR_OK;
 }''')

@@ -86,6 +86,21 @@ typedef struct {
 #undef R
 #undef R_RO
 
+// Errors
+enum {
+    SMITE_ERR_OK = 0,
+    SMITE_ERR_INVALID_OPCODE = 1,
+    SMITE_ERR_STACK_OVERFLOW = 2,
+    SMITE_ERR_STACK_READ = 3,
+    SMITE_ERR_STACK_WRITE = 4,
+    SMITE_ERR_MEMORY_READ = 5,
+    SMITE_ERR_MEMORY_WRITE = 6,
+    SMITE_ERR_MEMORY_UNALIGNED = 7,
+    SMITE_ERR_DIVISION_BY_ZERO = 8,
+    SMITE_ERR_HALT = 128,
+};
+
+
 // Utility functions
 
 _GL_ATTRIBUTE_CONST static inline smite_UWORD align(smite_UWORD addr)
@@ -102,7 +117,8 @@ _GL_ATTRIBUTE_CONST static inline int is_aligned(smite_UWORD addr)
 smite_UWORD smite_align(smite_UWORD addr);
 int smite_is_aligned(smite_UWORD addr);
 
-// Memory access
+
+// Memory
 // Return value is 0 if OK, or error code for invalid or unaligned address
 
 _GL_ATTRIBUTE_PURE static inline uint8_t *native_address_of_range(smite_state *S, smite_UWORD addr, smite_UWORD length)
@@ -112,61 +128,60 @@ _GL_ATTRIBUTE_PURE static inline uint8_t *native_address_of_range(smite_state *S
     return ((uint8_t *)(S->memory)) + addr;
 }
 
-uint8_t *smite_native_address_of_range(smite_state *S, smite_UWORD addr, smite_UWORD length);
-
 static inline int load_word(smite_state *S, smite_UWORD addr, smite_WORD *value)
 {
     if (addr >= S->MEMORY) {
         S->BAD = addr;
-        return 5;
+        return SMITE_ERR_MEMORY_READ;
     }
     if (!smite_is_aligned(addr)) {
         S->BAD = addr;
-        return 7;
+        return SMITE_ERR_MEMORY_UNALIGNED;
     }
 
     *value = S->memory[addr / WORD_SIZE];
-    return 0;
+    return SMITE_ERR_OK;
 }
 
 static inline int load_byte(smite_state *S, smite_UWORD addr, smite_BYTE *value)
 {
     if (addr >= S->MEMORY) {
         S->BAD = addr;
-        return 5;
+        return SMITE_ERR_MEMORY_READ;
     }
 
     *value = ((smite_BYTE *)S->memory)[addr];
-    return 0;
+    return SMITE_ERR_OK;
 }
 
 static inline int store_word(smite_state *S, smite_UWORD addr, smite_WORD value)
 {
     if (addr >= S->MEMORY) {
         S->BAD = addr;
-        return 6;
+        return SMITE_ERR_MEMORY_WRITE;
     }
     if (!smite_is_aligned(addr)) {
         S->BAD = addr;
-        return 7;
+        return SMITE_ERR_MEMORY_UNALIGNED;
     }
 
     S->memory[addr / WORD_SIZE] = value;
-    return 0;
+    return SMITE_ERR_OK;
 }
 
 static inline int store_byte(smite_state *S, smite_UWORD addr, smite_BYTE value)
 {
     if (addr >= S->MEMORY) {
         S->BAD = addr;
-        return 6;
+        return SMITE_ERR_MEMORY_WRITE;
     }
 
     ((smite_BYTE *)S->memory)[addr] = value;
-    return 0;
+    return SMITE_ERR_OK;
 }
 
 // Linkable stubs
+uint8_t *smite_native_address_of_range(smite_state *S, smite_UWORD addr, smite_UWORD length);
 int smite_load_word(smite_state *S, smite_UWORD addr, smite_WORD *value);
 int smite_store_word(smite_state *S, smite_UWORD addr, smite_WORD value);
 int smite_load_byte(smite_state *S, smite_UWORD addr, smite_BYTE *value);
@@ -187,22 +202,22 @@ static inline int load_stack(smite_state *S, smite_UWORD pos, smite_WORD *vp)
 {
     if (pos >= S->STACK_DEPTH) {
         S->BAD = pos;
-        return 3;
+        return SMITE_ERR_STACK_READ;
     }
 
     UNCHECKED_LOAD_STACK(pos, vp);
-    return 0;
+    return SMITE_ERR_OK;
 }
 
 static inline int store_stack(smite_state *S, smite_UWORD pos, smite_WORD v)
 {
     if (pos >= S->STACK_DEPTH) {
         S->BAD = pos;
-        return 4;
+        return SMITE_ERR_STACK_WRITE;
     }
 
     UNCHECKED_STORE_STACK(pos, v);
-    return 0;
+    return SMITE_ERR_OK;
 }
 
 static inline int pop_stack(smite_state *S, smite_WORD *v)
@@ -216,7 +231,7 @@ static inline int push_stack(smite_state *S, smite_WORD v)
 {
     if (S->STACK_DEPTH == S->STACK_SIZE) {
         S->BAD = S->STACK_SIZE;
-        return 2;
+        return SMITE_ERR_STACK_OVERFLOW;
     }
 
     (S->STACK_DEPTH)++;

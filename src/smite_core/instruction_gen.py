@@ -153,7 +153,7 @@ def check_underflow(num_pops):
     return disable_warnings(['-Wtype-limits', '-Wunused-variable', '-Wshadow'], '''\
 if ((S->STACK_DEPTH < {num_pops})) {{
     S->BAD = {num_pops} - 1;
-    RAISE(3);
+    RAISE(SMITE_ERR_STACK_READ);
 }}'''.format(num_pops=num_pops))
 
 def check_overflow(num_pops, num_pushes):
@@ -165,7 +165,7 @@ def check_overflow(num_pops, num_pushes):
     return disable_warnings(['-Wtype-limits', '-Wtautological-compare'], '''\
 if ({num_pushes} > {num_pops} && (S->STACK_SIZE - S->STACK_DEPTH < {num_pushes} - {num_pops})) {{
     S->BAD = ({num_pushes} - {num_pops}) - (S->STACK_SIZE - S->STACK_DEPTH);
-    RAISE(2);
+    RAISE(SMITE_ERR_STACK_OVERFLOW);
 }}'''.format(num_pops=num_pops, num_pushes=num_pushes))
 
 def gen_case(action):

@@ -32,7 +32,7 @@ class Registers(Enum):
 class Actions(Enum):
     '''VM action instructions.'''
     HALT = Action(0x00, [], [], '''\
-        RAISE(128);
+        RAISE(SMITE_ERR_HALT);
     ''')
 
     POP = Action(0x01, ['item',], [], '''\
@@ -120,13 +120,15 @@ class Actions(Enum):
     ''')
 
     DIVMOD = Action(0x13, ['a', 'b'], ['q', 'r'], '''\
-        DIVZERO(b);
+        if (b == 0)
+          RAISE(SMITE_ERR_DIVISION_BY_ZERO);
         q = a / b;
         r = a % b;
     ''')
 
     UDIVMOD = Action(0x14, ['a', 'b'], ['q', 'r'], '''\
-        DIVZERO(b);
+        if (b == 0)
+          RAISE(SMITE_ERR_DIVISION_BY_ZERO);
         q = (smite_WORD)((smite_UWORD)a / (smite_UWORD)b);
         r = (smite_WORD)((smite_UWORD)a % (smite_UWORD)b);
     ''')
@@ -182,7 +184,7 @@ class Actions(Enum):
     SET_STACK_DEPTH = Action(0x1e, ['a'], [], '''\
         if ((smite_UWORD)a > S->STACK_SIZE) {
             S->BAD = a - S->STACK_SIZE;
-            RAISE(2);
+            RAISE(SMITE_ERR_STACK_OVERFLOW);
         }
         S->STACK_DEPTH = a;
     ''')

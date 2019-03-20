@@ -103,7 +103,7 @@ static int smite_realloc(smite_WORD **ptr, smite_UWORD old_size, smite_UWORD new
     if (old_size < new_size)
         memset(*ptr + old_size, 0, (new_size - old_size) * WORD_SIZE);
 
-    return 0;
+    return SMITE_ERR_OK;
 }
 
 int smite_realloc_memory(smite_state *S, smite_UWORD size)
@@ -174,5 +174,5 @@ int smite_register_args(smite_state *S, int argc, char *argv[])
     S->main_argc = argc;
     S->main_argv = argv;
 
-    return 0;
+    return SMITE_ERR_OK;
 }
