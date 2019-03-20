@@ -19,8 +19,8 @@ enum {
     SMITE_ERR_EXTRA_INVALID_LIBRARY = 15,
 };
 
-#define RAISE(code)                         \
-    return (code);                          \
+#define RAISE(code)                         \\
+    return (code);                          \\
 
 // Assumption for file functions
 verify(sizeof(int) <= sizeof(smite_WORD));
