@@ -8,7 +8,12 @@
 # RISK.
 
 from enum import Enum, unique
+
 from .instruction_gen import Action, StackPicture
+try:
+    from .type_sizes import type_sizes
+except ImportError:
+    pass # We can't generate code
 
 class TypedAction(Action):
     '''VM action instruction descriptor.
@@ -17,8 +22,8 @@ class TypedAction(Action):
     '''
     def __init__(self, opcode, args, results, code):
         '''
-         - args - list acceptable to StackPicture.from_list.
-         - results - list acceptable to StackPicture.from_list.
+         - args - list acceptable to TypedStackPicture.from_list.
+         - results - list acceptable to TypedStackPicture.from_list.
         '''
         self.opcode = opcode
         self.args = TypedStackPicture.from_list(args)
@@ -30,6 +35,10 @@ class TypedItem:
     def __init__(self, name, type):
         self.name = name
         self.type = type
+
+def bytes_to_words(size):
+    '''Return the number of words occupied by 'size' bytes.'''
+    return (size + (type_sizes['smite_WORD'] - 1)) // type_sizes['smite_WORD']
 
 class TypedStackPicture(StackPicture):
     '''
@@ -43,53 +52,49 @@ class TypedStackPicture(StackPicture):
 
      - is_variadic - bool - If `True`, there are `COUNT` more items underneath
        the non-variadic items.
+
+     FIXME: Generate a proper error if type_sizes is used when unavailable.
     '''
     def __init__(self, item_list, is_variadic=False):
         named_items = []
         for item in item_list:
-            named_items.append(TypedItem(self.stack_item_name(item),
-                                         self.stack_item_type(item)))
+            l = item.split(":")
+            name = l[0]
+            type = l[1] if len(l) > 1 else 'smite_WORD'
+            named_items.append(TypedItem(name, type))
         assert len(set(named_items)) == len(named_items)
         self.named_items = named_items
         self.is_variadic = is_variadic
 
-    @staticmethod
-    def stack_item_name(item):
-        return item.split(":")[0]
-
-    @staticmethod
-    def stack_item_type(item):
-        l = item.split(":")
-        return l[1] if len(l) > 1 else 'smite_WORD'
-
-    @staticmethod
-    def type_size(type):
-        '''Return a C expression for the size in stack words of a type.'''
-        return '(sizeof({}) / WORD_SIZE)'.format(type)
-
+    # In load_var & store_var, casts to size_t avoid warnings when `var` is
+    # a pointer and sizeof(void *) > WORD_SIZE, but the effect is identical.
     @staticmethod
     def load_var(pos, var):
-        if var.type != 'smite_WORD':
-            fmt = 'UNCHECKED_LOAD_STACK_TYPE({pos}, {type}, &{var});'
-        else:
-            fmt = 'UNCHECKED_LOAD_STACK({pos}, &{var});'
-        return fmt.format(pos=pos, var=var.name, type=var.type)
+        code = ['{} = 0;'.format(var.name)]
+        num_items = bytes_to_words(type_sizes[var.type])
+        for i in reversed(range(num_items)):
+            code.append('UNCHECKED_LOAD_STACK({}, &temp);'.format(pos + i))
+            if i < num_items - 1:
+                code.append('{var} = ({type})((size_t){var} << smite_WORD_BIT);'.format(var=var.name, type=var.type))
+            code.append('{var} = ({type})((size_t){var} | (smite_UWORD)temp);'.format(var=var.name, type=var.type))
+        return '\n'.join(code)
 
     @staticmethod
     def store_var(pos, var):
-        if var.type != 'smite_WORD':
-            fmt = 'UNCHECKED_STORE_STACK_TYPE({pos}, {type}, {var});'
-        else:
-            fmt = 'UNCHECKED_STORE_STACK({pos}, {var});'
-        return fmt.format(pos=pos, var=var.name, type=var.type)
+        code = []
+        num_items = bytes_to_words(type_sizes[var.type])
+        for i in range(num_items):
+            code.append('UNCHECKED_STORE_STACK({pos}, (smite_UWORD)((size_t){var} & smite_WORD_MASK));'.format(pos=pos + i, var=var.name))
+            if i < num_items - 1:
+                code.append('{var} = ({type})((size_t){var} >> smite_WORD_BIT);'.format(var=var.name, type=var.type))
+        return '\n'.join(code)
 
     def static_depth(self):
         '''
-        Return a C expression for the number of stack words occupied by the
-        static items in a TypedStackPicture.
+        Returns the number of stack words occupied by the static items in a
+        TypedStackPicture.
         '''
-        depth = ' + '.join([self.type_size(item.type) for item in self.named_items])
-        return '({})'.format(depth if depth != '' else '0')
+        return sum([type_sizes[item.type] // type_sizes['smite_WORD'] for item in self.named_items])
 
     def declare_vars(self):
         '''Returns C variable declarations for all of `self.named_items`.'''
@@ -103,10 +108,10 @@ class TypedStackPicture(StackPicture):
         `S->STACK_DEPTH` is not modified.
         '''
         code = []
-        pos = ['-1']
+        pos = 0
         for item in reversed(self.named_items):
-            pos.append(self.type_size(item.type))
-            code.append(self.load_var(" + ".join(pos), item))
+            code.append(self.load_var(pos, item))
+            pos += type_sizes[item.type] // type_sizes['smite_WORD']
         return '\n'.join(code)
 
     def store(self):
@@ -116,12 +121,30 @@ class TypedStackPicture(StackPicture):
         `S->STACK_DEPTH` must be modified first.
         '''
         code = []
-        pos = ['-1']
+        pos = 0
         for item in reversed(self.named_items):
-            pos.append(self.type_size(item.type))
-            code.append(self.store_var(" + ".join(pos), item))
+            code.append(self.store_var(pos, item))
+            pos += type_sizes[item.type] // type_sizes['smite_WORD']
         return '\n'.join(code)
 
+# FIXME: this should be a per-library attribute
+includes = '''\
+#include "config.h"
+
+#include <stdlib.h>
+#include <stdbool.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <string.h>
+#include "binary-io.h"
+#include "verify.h"
+
+#include "smite.h"
+#include "extra.h"
+#include "opcodes.h"
+'''
 
 @unique
 class LibcLib(Enum):
@@ -340,6 +363,13 @@ class Library(TypedAction):
         RAISE(ret);
 }}''')
         self.library = library
+
+    def types(self):
+        '''Return a list of all types used in the library.'''
+        return list(set([item.type for picture in
+                         [action.value
+                          for action in self.library]
+                         for item in picture.args.named_items + picture.results.named_items]))
 
 @unique
 class LibActions(Enum):

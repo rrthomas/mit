@@ -12,60 +12,23 @@ from smite_core.vm_data_extra import *
 from smite_core.instruction_gen import *
 
 # Write the output file
+print(includes)
+
 print('''
-#include "config.h"
-
-#include <stdlib.h>
-#include <stdbool.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <string.h>
-#include "binary-io.h"
-#include "verify.h"
-
-#include "smite.h"
-#include "aux.h"
-#include "extra.h"
-#include "opcodes.h"
-
-
 #define RAISE(code)                         \
     return (code);                          \
-
-// FIXME: These macros should take ENDISM into account and store the
-// quantities on the stack in native order (though perhaps not native
-// alignment). Current code is correct for ENDISM=0; need to reverse the
-// directions of the loops for ENDISM=1. (Generate unrolled loops from
-// Python!)
-// Note: One might expect casts to smite_UWORD rather than size_t below. The
-// latter avoid warnings when the value `v` is a pointer and sizeof(void *)
-// > WORD_SIZE, but the effect (given unsigned sign extension &
-// truncation) is identical.
-#define UNCHECKED_LOAD_STACK_TYPE(pos, ty, vp)                          \\
-    *vp = 0;                                                            \\
-    for (unsigned i = 0; i < smite_align(sizeof(ty)) / WORD_SIZE; i++) { \\
-        smite_WORD w;                                                   \\
-        UNCHECKED_LOAD_STACK(pos - i, &w);                              \\
-        *vp = (ty)(((size_t)(*vp) << smite_word_bit) | (smite_UWORD)w); \\
-    }
-#define UNCHECKED_STORE_STACK_TYPE(pos, ty, v)                          \\
-    for (unsigned i = smite_align(sizeof(ty)) / WORD_SIZE; i > 0; i--) { \\
-        UNCHECKED_STORE_STACK(pos - i + 1, (smite_UWORD)((size_t)v & smite_word_mask)); \\
-        v = (ty)((size_t)v >> smite_word_bit);                          \\
-    }
 
 // Assumption for file functions
 verify(sizeof(int) <= sizeof(smite_WORD));
 ''')
 
-for action in LibActions:
+for lib in LibActions:
     print('''\
 static int extra_{}(smite_state *S, smite_WORD I)
 {{
-'''.format(str.lower(action.name)))
-    print(dispatch(action.value.library, '{}_'.format(action.name), '            RAISE(15);'))
+    smite_WORD temp;
+'''.format(str.lower(lib.name)))
+    print(dispatch(lib.value.library, '{}_'.format(lib.name), '            RAISE(15);'))
     print('''
     return 0;
 }
@@ -74,6 +37,7 @@ static int extra_{}(smite_state *S, smite_WORD I)
 print('''
 int smite_extra(smite_state *S, smite_WORD I)
 {
+    smite_WORD temp;
 ''')
 
 print(dispatch(LibActions, '', '''

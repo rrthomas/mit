@@ -41,15 +41,29 @@ typedef void (*smite_callback_t)(void *);
 
 // Parameters
 extern const unsigned smite_word_size;
-extern const unsigned smite_native_pointer_size;
 #define smite_BYTE_BIT 8
 extern const unsigned smite_byte_bit;
 extern const unsigned smite_byte_mask;
 #define smite_BYTE_MASK ((1 << smite_BYTE_BIT) - 1)
 extern const unsigned smite_word_bit;
+#define smite_WORD_BIT (WORD_SIZE * smite_BYTE_BIT)
 extern const smite_UWORD smite_word_mask;
 extern const smite_UWORD smite_uword_max;
 extern const smite_WORD smite_word_min;
+extern const smite_WORD smite_word_max;
+#if WORD_SIZE == 4
+#define smite_WORD_MASK UINT32_MAX
+#define smite_UWORD_MAX UINT32_MAX
+#define smite_WORD_MIN INT32_MIN
+#define smite_WORD_MAX INT32_MAX
+#elif WORD_SIZE == 8
+#define smite_WORD_MASK UINT64_MAX
+#define smite_UWORD_MAX UINT64_MAX
+#define smite_WORD_MIN INT64_MIN
+#define smite_WORD_MAX INT64_MAX
+#else
+#error "WORD_SIZE is not 4 or 8!"
+#endif
 
 // VM registers
 typedef struct {

@@ -178,9 +178,9 @@ def gen_case(action):
     # Concatenate the pieces.
     args = action.args
     results = action.results
-    static_args = len(args.named_items)
+    static_args = args.static_depth()
     dynamic_args = args.dynamic_depth()
-    static_results = len(results.named_items)
+    static_results = results.static_depth()
     dynamic_results = results.dynamic_depth()
     code = '\n'.join([
         args.declare_vars(),
