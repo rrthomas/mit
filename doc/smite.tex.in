@@ -14,6 +14,9 @@
 
 % Macros for this document
 
+% Constants
+\newcommand{\instsize}{$6$}
+
 % Font for stack pictures; macro \spic includes italic correction
 
 \newcommand{\spic}[1]{\texttt{\textsl{#1\/}}}
@@ -25,6 +28,7 @@
 \newcommand{\U}[1]{\spic{u$_{#1}$}}
 \newcommand{\noru}[1]{\spic{n$_#1${\tt |}u$_{#1}$}}
 \newcommand{\addr}[1]{\spic{addr$_{#1}$}}
+\newcommand{\aaddr}[1]{\spic{a-addr$_{#1}$}}
 
 % Lay out an instruction definition
 
@@ -52,7 +56,7 @@
 
 \title{The @PACKAGE_NAME@ Virtual Machine}
 \author{Reuben Thomas}
-\date{26th February 2019}
+\date{22nd March 2019}
 
 \begin{document}
 \maketitle
@@ -82,8 +86,7 @@ Words are {\tt WORD\_SIZE} bytes. The word is the size of the numbers
 and addresses on which @PACKAGE_NAME@ operates, and of the items placed on the stack.
 The size of the byte and range of word sizes allowed have been chosen with a view to making efficient implementation possible on the vast majority of current machine architectures.
 
-Words may have the bytes stored in big-endian or little-endian order. The
-address of a word is that of the byte in it with the lowest address.
+Words have the bytes stored in big-endian or little-endian order, according to {\tt ENDISM}.
 
 
 \subsection{Registers}
@@ -96,8 +99,9 @@ The registers, each with its function, are set out in table~\ref{regtable}.
 \begin{tabular}{cp{3.75in}} \toprule
 \bf Register & \bf Function \\
  \midrule
-{\tt PC} & The {\tt P}rogram {\tt C}ounter. Points to the next byte from which an instruction may be loaded. \\
-{\tt BAD} & The invalid stack position, or invalid or unaligned memory address, that caused the last memory error. \\
+{\tt PC} & The {\tt P}rogram {\tt C}ounter. Points to the next word from which {\tt I} may be loaded. \\
+{\tt I} & The {\tt I}nstruction register. Contains instructions to be executed. \\
+{\tt BAD} & The invalid stack position, or invalid or unaligned memory address, that last caused an error. \\
 {\tt STACK\_DEPTH} & The number of items on the stack. \\
 {\tt ENDISM} & The endianness of @PACKAGE_NAME@: 0 = Little-endian, 1 = Big-endian. \\
 {\tt WORD\_SIZE} & The number of bytes in a word. Must be in the range $2$ to $32$ inclusive, and a power of $2$. \\
@@ -115,7 +119,9 @@ by instructions (see section~\ref{registeract}); not all registers are accessibl
 
 \subsection{Memory}
 
-@PACKAGE_NAME@'s memory is a contiguous sequence of bytes with addresses starting at $0$.
+@PACKAGE_NAME@'s memory is a contiguous sequence of bytes with addresses
+starting at $0$. The address of a word is that of the byte in it with the
+lowest address.
 
 
 \subsection{Stack}
@@ -129,7 +135,7 @@ the stack means to add a new item to the top of the stack, increasing the stack 
 
 Before @PACKAGE_NAME@ is started, {\tt ENDISM} should be set to $0$ or $1$ according to the implementation, and {\tt WORD\_SIZE} to the appropriate value. The other registers should be initialised to~$0$.
 
-{\tt ENDISM} and {\tt WORD\_SIZE} must not change while @PACKAGE_NAME@ is executing.
+{\tt ENDISM} and {\tt WORD\_SIZE} must not change.
 
 @PACKAGE_NAME@ is started by a call to the interface calls {\bf run()} or {\bf
 single\_step()} (see section~\ref{calls}). In the former case, the execution
@@ -137,8 +143,8 @@ cycle is entered:
 
 \begin{tabbing}
 \hspace{0.5in}\=begin\=\+\+ \\*
-execute the instruction pointed to by {\tt PC} \\*
-set {\tt PC} to point to the next instruction \- \\*
+execute the instruction in the \instsize\ least-significant bits of {\tt I} \\*
+shift {\tt I} logically \instsize\ bits to the right \\*
 repeat
 \end{tabbing}
 
@@ -265,14 +271,10 @@ collections of zero or more words of any data type. Ellipsis is used for
 indeterminate numbers of specified types of word.
 
 
-\subsection{Termination}
-\label{haltact}
+\subsection{Instruction fetch}
 
-This instruction terminates execution (see section~\ref{errors}):
-
-\nopagebreak
 \begin{description}
-\inst{HALT}{—}{Terminate execution with error code $0$.}
+\inst{NEXT}{—}{Load the word pointed to by {\tt PC} into {\tt I} then add {\tt WORD\_SIZE} to {\tt PC}. If {\tt PC} is not word-aligned, raise error $7$, setting {\tt BAD} to the contents of {\tt PC}.}
 \end{description}
 
 
@@ -292,7 +294,7 @@ These instructions manage the stack:
 \label{numbers}
 
 \begin{description}
-\inst{LIT}{— n}{The word comprised of the next {\tt WORD\_SIZE} bytes after {\tt PC}, interpreted in little-endian order, is pushed on to the stack, and {\tt PC} is incremented to point to the following byte.}
+\inst{LIT}{— n}{The word pointed to by {\tt PC} is pushed on to the stack, and {\tt PC} is incremented to point to the following word.}
 \inst{LIT\_PC\_REL}{— n}{Like {\tt LIT}, except that the initial value of {\tt PC} is added to the value pushed on to the stack.}
 \end{description}
 
@@ -364,8 +366,8 @@ These instructions fetch and store words and bytes to and from memory:
 
 \nopagebreak
 \begin{description}
-\inst{LOAD}{a-addr — x}{\spic{x} is the value stored at \spic{a-addr}.}
-\inst{STORE}{x a-addr —}{Store \spic{x} at \spic{a-addr}.}
+\inst{LOAD}{a-addr — x}{\spic{x} is the value stored at \spic{a-addr}. If \spic{a-addr} is not word-aligned, raise error $7$, setting {\tt BAD} to \spic{a-addr}.}
+\inst{STORE}{x a-addr —}{Store \spic{x} at \spic{a-addr}. If \spic{a-addr} is not word-aligned, raise error $7$, setting {\tt BAD} to \spic{a-addr}.}
 \inst{LOADB}{addr — byte}{Fetch the byte stored at \spic{addr}. The unused high-order bits are all zeroes.}
 \inst{STOREB}{byte addr —}{Store \spic{byte} at \spic{addr}. Only one byte is transferred.}
 \end{description}
@@ -379,9 +381,9 @@ call and return (subroutine return is {\tt BRANCH}):
 
 \nopagebreak
 \begin{description}
-\inst{BRANCH}{addr —}{Set {\tt PC} to \spic{addr}.}
-\inst{BRANCHZ}{flag addr —}{If \spic{flag} is false then set {\tt PC} to \spic{addr}.}
-\inst{CALL}{\addr1 — \addr2}{Exchange {\tt PC} with the top stack value.}
+\inst{BRANCH}{a-addr —}{Set {\tt PC} to \spic{a-addr}. Perform the action of {\tt NEXT}.}
+\inst{BRANCHZ}{flag a-addr —}{If \spic{flag} is false then set {\tt PC} to \spic{a-addr}. Perform the action of {\tt NEXT}.}
+\inst{CALL}{\aaddr1 — \aaddr2}{Exchange {\tt PC} with the top stack value. Perform the action of {\tt NEXT}.}
 \end{description}
 
 
@@ -395,17 +397,21 @@ call and return (subroutine return is {\tt BRANCH}):
 \end{description}
 
 
-\subsection{No-op}
+\subsection{Termination}
+\label{haltact}
 
+This instruction terminates execution (see section~\ref{errors}):
+
+\nopagebreak
 \begin{description}
-\inst{NOP}{—}{Do nothing.}
+\inst{HALT}{—}{Terminate execution with error code $128$.}
 \end{description}
 
 
 \subsection{Instruction encoding}
 \label{encoding}
 
-Instructions are encoded as a single byte.
+Instructions are encoded as {\instsize}-bit opcodes; opcodes are packed into words, which are executed starting at the least-significant bits.
 
 
 \subsection{Instruction opcodes}
@@ -417,7 +423,7 @@ Table~\ref{opcodetable} lists the instruction opcodes in numerical order. Other 
 \begin{center}
 \begin{tabular}{*{2}{cc}} \toprule
 \bf Opcode & \bf Instruction & \bf Opcode & \bf Instruction \\ \midrule
-\opcodetbl{00}{HALT}		{10}{NEGATE}
+\opcodetbl{00}{NEXT}		{10}{NEGATE}
 \opcodetbl{01}{POP}		{11}{ADD}
 \opcodetbl{02}{DUP}		{12}{MUL}
 \opcodetbl{03}{SWAP}		{13}{DIVMOD}
@@ -432,7 +438,7 @@ Table~\ref{opcodetable} lists the instruction opcodes in numerical order. Other 
 \opcodetbl{0c}{ARSHIFT}         {1c}{GET\_WORD\_SIZE}
 \opcodetbl{0d}{EQ}		{1d}{GET\_STACK\_DEPTH}
 \opcodetbl{0e}{LT}		{1e}{SET\_STACK\_DEPTH}
-\opcodetbl{0f}{ULT}		{1f}{NOP}
+\opcodetbl{0f}{ULT}		{1f}{HALT}
  \bottomrule
 \end{tabular}
 \caption{\label{opcodetable}Instruction opcodes}
