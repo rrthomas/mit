@@ -53,7 +53,7 @@ instructions.c: gen-instructions smite_core/vm_data.py smite_core/instruction_ge
 
 # Note: we grep config.log because the generated header file has the symbols
 # sorted lexically, and we need the output in the same order as the input.
-smite_core/type_sizes.py: $(top_builddir)/configure gen-type-sizes collate-type-sizes registers.h smite_core/vm_data_extra.py smite_core/instruction_gen.py
+smite_core/type_sizes.py: $(top_builddir)/config.status gen-type-sizes collate-type-sizes registers.h smite_core/vm_data_extra.py smite_core/instruction_gen.py
 	$(PYTHON_WITH_PATH) $(srcdir)/gen-type-sizes > type-sizes.ac && \
 	autoconf type-sizes.ac > type-sizes && \
 	CONFIG_SITE= CPPFLAGS="-I$(builddir) -I$(srcdir) -I$(top_builddir) $(AM_CPPFLAGS)" $(SHELL) type-sizes && \
