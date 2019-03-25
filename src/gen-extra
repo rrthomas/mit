@@ -12,25 +12,9 @@ from smite_core.vm_data_extra import *
 from smite_core.instruction_gen import *
 
 # Write the output file
+print(includes)
+
 print('''
-#include "config.h"
-
-#include <stdlib.h>
-#include <stdbool.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <string.h>
-#include "binary-io.h"
-#include "verify.h"
-
-#include "smite.h"
-#include "aux.h"
-#include "extra.h"
-#include "opcodes.h"
-
-
 #define RAISE(code)                         \
     return (code);                          \
 
@@ -38,12 +22,13 @@ print('''
 verify(sizeof(int) <= sizeof(smite_WORD));
 ''')
 
-for action in LibActions:
+for lib in LibActions:
     print('''\
 static int extra_{}(smite_state *S, smite_WORD I)
 {{
-'''.format(str.lower(action.name)))
-    print(dispatch(action.value.library, '{}_'.format(action.name), '            RAISE(15);'))
+    smite_WORD temp;
+'''.format(str.lower(lib.name)))
+    print(dispatch(lib.value.library, '{}_'.format(lib.name), '            RAISE(15);'))
     print('''
     return 0;
 }
@@ -52,6 +37,7 @@ static int extra_{}(smite_state *S, smite_WORD I)
 print('''
 int smite_extra(smite_state *S, smite_WORD I)
 {
+    smite_WORD temp;
 ''')
 
 print(dispatch(LibActions, '', '''

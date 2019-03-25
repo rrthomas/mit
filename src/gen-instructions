@@ -18,7 +18,6 @@ print('''\
 #include "config.h"
 
 #include "smite.h"
-#include "aux.h"
 #include "opcodes.h"
 #include "extra.h"
 

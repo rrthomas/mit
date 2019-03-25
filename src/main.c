@@ -22,7 +22,6 @@
 #include "xvasprintf.h"
 
 #include "smite.h"
-#include "aux.h"
 
 
 static _GL_ATTRIBUTE_FORMAT_PRINTF(1, 0) void verror(const char *format, va_list args)
