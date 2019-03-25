@@ -62,7 +62,7 @@ smite_core/type_sizes.py: $(top_builddir)/configure gen-type-sizes collate-type-
 		( $(PYTHON_WITH_PATH) $(srcdir)/collate-type-sizes > smite_core/type_sizes.py )
 
 extra.c: gen-extra smite_core/vm_data_extra.py smite_core/instruction_gen.py smite_core/type_sizes.py
-	$(PYTHON_WITH_PATH) $(srcdir)/gen-extra > extra.c
+	$(PYTHON_WITH_PATH) $(srcdir)/gen-extra > extra.c || rm -f extra.c
 
 loc:
 	$(SLOCCOUNT) \
@@ -83,7 +83,7 @@ EXTRA_DIST = \
 	collate-type-sizes
 
 distclean-local:
-	-rm -rf autom4te.cache smite_core/__pycache__
+	rm -rf autom4te.cache smite_core/__pycache__
 
 DISTCLEANFILES = @PACKAGE@.1 extra.c type-sizes.ac type-sizes config.log smite_core/type_sizes.py
 # Ignore built files that are part of the distribution (specifically,

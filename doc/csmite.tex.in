@@ -85,7 +85,7 @@ section~\ref{usingcalls}).
 
 \subsection{Extra instructions}
 
-C @PACKAGE_NAME@ provides some extra action instructions, which give access to various library functions. They take the following form:
+C @PACKAGE_NAME@ provides some extra instructions, which give access to various library functions. They take the following form:
 
 \begin{center}
 \begin{tabular}{ll} \toprule
