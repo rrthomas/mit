@@ -119,7 +119,7 @@ for i, pc in enumerate(correct):
     if pc != PC.get():
         print("Error in branch tests: PC = {:#x}".format(PC.get()))
         sys.exit(1)
-    while registers["I"].get() & INSTRUCTION_MASK == Instructions.NEXT.value.opcode:
+    while registers["I"].get() & instruction_mask == Instructions.NEXT.value.opcode:
         step(auto_NEXT=False)
     step(trace=True, auto_NEXT=False)
 

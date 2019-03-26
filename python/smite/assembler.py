@@ -67,8 +67,8 @@ class Disassembler:
     def disassemble(self):
         try:
             comment = ''
-            opcode = self.i & INSTRUCTION_MASK
-            self.i >>= INSTRUCTION_BITS
+            opcode = self.i & instruction_mask
+            self.i >>= instruction_bit
             try:
                 name = mnemonic[opcode]
             except KeyError:
@@ -77,7 +77,7 @@ class Disassembler:
                 initial_pc = self.pc
                 value = self._fetch()
                 signed_value = value
-                if value & SIGN_BIT:
+                if value & sign_bit:
                     signed_value -= 1 << word_bit
                 if opcode == LIT:
                     comment = ' ({:#x}={})'.format(value, signed_value)
@@ -160,7 +160,7 @@ class Assembler:
         Appends an instruction opcode. If possible, this will be put in the
         same word as the previous opcode, otherwise it will start a new word.
         '''
-        assert 0 <= opcode <= INSTRUCTION_MASK
+        assert 0 <= opcode <= instruction_mask
         if self.i_addr is None:
             # Start of a new word.
             assert self.i_shift is None
@@ -173,7 +173,7 @@ class Assembler:
             self._fetch()
             i = opcode
         self.state.M_word[self.i_addr] = i
-        self.i_shift += INSTRUCTION_BITS
+        self.i_shift += instruction_bit
         if opcode in TERMINAL_OPCODES:
             self.label()
 

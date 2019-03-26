@@ -39,8 +39,9 @@ def errcheck(code_to_message):
 
 # Constants (all of type unsigned)
 vars().update([(c, c_uint.in_dll(libsmite, "smite_{}".format(c)).value)
-               for c in ["word_size", "byte_bit", "byte_mask", "word_bit"]])
-vars()["byte_bit"] = 8
+               for c in ["word_size", "byte_bit", "byte_mask", "word_bit",
+                         "instruction_bit", "instruction_mask"]])
+sign_bit = 1 << (word_bit - 1)
 
 
 # Types
@@ -67,12 +68,6 @@ vars().update([(c, cty.in_dll(libsmite, "smite_{}".format(c)).value)
                        ("word_min", c_word),
                        ("word_max", c_word),
                ]])
-
-# FIXME: Get all these from C binding
-INSTRUCTION_BITS = 6
-INSTRUCTION_MASK = (1 << INSTRUCTION_BITS) - 1
-WORD_BITS = 8 * word_size
-SIGN_BIT = 1 << (WORD_BITS - 1)
 
 # Functions
 c_ptrdiff_t = c_ssize_t
