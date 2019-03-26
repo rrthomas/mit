@@ -36,6 +36,7 @@ class Instructions(Enum):
     ''')
 
     POP = Instruction(0x01, ['item',], [], '''\
+        (void)item;
     ''')
 
     DUP = Instruction(0x02, ['ITEMS', 'COUNT'], ['ITEMS', 'dupee'], '''\
