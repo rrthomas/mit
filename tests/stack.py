@@ -8,6 +8,7 @@
 # RISK.
 
 from smite import *
+from smite_test import *
 VM = State()
 VM.globalize(globals())
 
@@ -72,14 +73,4 @@ lit(0)
 ass(DUP)
 
 # Test
-for i in range(len(correct)):
-    print("Data stack: {}".format(S))
-    print("Correct stack: {}\n".format(correct[i]))
-    if str(correct[i]) != str(S):
-        print("Error in stack tests: PC = {:#x}".format(PC.get()))
-        sys.exit(1)
-    _, inst = disassemble_instruction(PC.get())
-    print("I = {}".format(inst))
-    step()
-
-print("Stack tests ran OK")
+run_test("stack", VM, correct)

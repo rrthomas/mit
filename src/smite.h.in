@@ -86,6 +86,10 @@ typedef struct {
 #undef R
 #undef R_RO
 
+// Instructions
+#define SMITE_INSTRUCTION_BIT 6
+#define SMITE_INSTRUCTION_MASK ((1 << SMITE_INSTRUCTION_BIT) - 1)
+
 // Errors
 enum {
     SMITE_ERR_OK = 0,

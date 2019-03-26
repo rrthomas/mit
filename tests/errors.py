@@ -19,61 +19,69 @@ invalid_address = size * word_size + 1000
 test = []
 
 # Try to divide by zero
-test.append(VM.here)
+test.append(VM.assembler.pc) # pc is None
 result.append(8)
 print("Test {}: PC = {}".format(len(test), test[len(test) - 1]))
 lit(1)
 lit(0)
 ass(DIVMOD)
+VM.assembler.label()
 
 # Try to set STACK_DEPTH to an invalid stack location
-test.append(VM.here)
+test.append(VM.assembler.pc)
 result.append(2)
 print("Test {}: PC = {}".format(len(test), test[len(test) - 1]))
 lit(STACK_SIZE.get())
 ass(SET_STACK_DEPTH)
 ass(GET_STACK_DEPTH)
+VM.assembler.label()
 
 # Try to read from an invalid stack location
-test.append(VM.here)
+test.append(VM.assembler.pc)
 result.append(3)
 print("Test {}: PC = {}".format(len(test), test[len(test) - 1]))
 ass(DUP)
+VM.assembler.label()
 
 # Try to execute an invalid memory location
-test.append(VM.here)
+test.append(VM.assembler.pc)
 result.append(5)
 print("Test {}: PC = {}".format(len(test), test[len(test) - 1]))
 lit(MEMORY.get() + 1)
 ass(BRANCH)
+VM.assembler.label()
 
 # Try to load from an invalid address
-test.append(VM.here)
+test.append(VM.assembler.pc)
 result.append(5)
 print("Test {}: PC = {}".format(len(test), test[len(test) - 1]))
 lit(invalid_address)
 ass(LOAD)
+VM.assembler.label()
 
 # Try to store to an invalid address
-test.append(VM.here)
+test.append(VM.assembler.pc)
 result.append(6)
 print("Test {}: PC = {}".format(len(test), test[len(test) - 1]))
 lit(0)
 lit(invalid_address)
 ass(STORE)
+VM.assembler.label()
 
 # Try to load from unaligned address
-test.append(VM.here)
+test.append(VM.assembler.pc)
 result.append(7)
 print("Test {}: PC = {}".format(len(test), test[len(test) - 1]))
 lit(1)
 ass(LOAD)
+VM.assembler.label()
 
 # Try to execute invalid opcode
-test.append(VM.here)
+test.append(VM.assembler.pc)
 result.append(1)
 print("Test {}: PC = {}".format(len(test), test[len(test) - 1]))
 ass(UNDEFINED)
+VM.assembler.label()
 
 # Tests
 assert(len(test) == len(result))
@@ -82,14 +90,15 @@ for i in range(len(test)):
     STACK_DEPTH.set(0)    # reset stack pointer
 
     print("Test {}".format(i + 1))
+    I.set(0)
     PC.set(test[i])
     res = 0
     while res == 0:
-        print("PC = {}".format(PC.get()))
-        print("S = {}".format(S))
-        _, inst = disassemble_instruction(PC.get())
-        print("I = {}".format(inst))
-        res = step()
+        try:
+            res = 0
+            step(trace=True)
+        except ErrorCode as e:
+            res = e.args[0]
 
     if result[i] != res:
          print("Error in errors tests: test {} failed; PC = {}".format(i + 1, PC.get()))
@@ -98,7 +107,12 @@ for i in range(len(test)):
     print()
 
 # Try to write to an invalid stack location (can't do this with virtual code)
-if libsmite.smite_store_stack(VM.state, 4, 0) != 4:
+try:
+    libsmite.smite_store_stack(VM.state, 4, 0)
+    ret = 0
+except ErrorCode as e:
+    ret = e.args[0]
+if ret != 4:
     print("Error in errors test: test {} failed".format(i + 1))
     error += 1
 

@@ -16,8 +16,8 @@ def try_load(file):
     try:
         load(file)
         ret = 0
-    except State.LoadError as e:
-        ret = e.args[1]
+    except ErrorCode as e:
+        ret = e.args[0]
     print("load_object(\"{}\", 0) returns {}".format(file, ret), end='')
     return ret
 
@@ -70,7 +70,9 @@ print(" should be {}".format(0))
 if res != 0:
     print("Error in load_object() tests: file {}".format(number_file))
     sys.exit(1)
-if run() != 128:
+try:
+    run()
+except ErrorCode:
     print("Error in load_object() tests: file {}".format(number_file))
     sys.exit(1)
 print("Data stack: {}".format(S))

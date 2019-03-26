@@ -12,6 +12,7 @@ TEST_EXTENSIONS = .py
 PY_LOG_COMPILER = env $(PY_LOG_ENV) $(PYTHON)
 
 TESTS =	\
+	smite_test.py	\
 	arithmetic.py	\
 	branch.py	\
 	comparison.py	\

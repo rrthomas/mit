@@ -17,45 +17,41 @@ print('''\
 
 #include "config.h"
 
+#include <stdio.h>
+
 #include "smite.h"
 #include "opcodes.h"
 #include "extra.h"
 
-#define RAISE(code)                         \\
-    do {                                    \\
-        int error = (code);                 \\
-        S->PC = initial_PC;                 \\
-        S->STACK_DEPTH = initial_STACK_DEPTH; \\
-        return error;                       \\
+#define RAISE(code)                                           \\
+    do {                                                      \\
+        int error = (code);                                   \\
+        S->PC = initial_PC;                                   \\
+        S->I = initial_I;                                     \\
+        S->STACK_DEPTH = initial_STACK_DEPTH;                 \\
+        return error;                                         \\
     } while (0)
 
-static inline int LOAD_IMMEDIATE_WORD(smite_state *S, smite_UWORD addr, smite_WORD *value)
-{
-    smite_WORD v = 0;
-    for (unsigned i = WORD_SIZE; i > 0; i--) {
-        smite_BYTE b;
-        int ret = load_byte(S, addr + i - 1, &b);
-        if (ret != 0)
-            return ret;
-        v = (v << smite_BYTE_BIT) | b;
-    }
-    *value = v;
-    return SMITE_ERR_OK;
-}
+#define FETCH                                                 \\
+    do {                                                      \\
+        int ret = load_word(S, S->PC, (smite_WORD *)&(S->I)); \\
+        if (ret != 0)                                         \\
+            RAISE(ret);                                       \\
+        S->PC += WORD_SIZE;                                   \\
+    } while (0)
 
 smite_WORD smite_single_step(smite_state *S) {
     smite_UWORD initial_PC = S->PC;
+    smite_UWORD initial_I = S->I;
     smite_UWORD initial_STACK_DEPTH = S->STACK_DEPTH;
-    smite_BYTE I;
-    int res = load_byte(S, S->PC++, &I);
-    if (res != 0)
-        return res;
+    smite_BYTE opcode = S->I & SMITE_INSTRUCTION_MASK;
+    S->I >>= SMITE_INSTRUCTION_BIT;
 ''')
 
 print(instruction_gen.dispatch(vm_data.Instructions, 'O_', '''\
         /* Undefined instruction; try extra instructions */
         {
-            int ret = smite_extra(S, I);
+            int ret = smite_extra(S, opcode);
             if (ret != 0)
                 RAISE(ret);
         }'''))

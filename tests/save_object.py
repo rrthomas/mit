@@ -24,7 +24,11 @@ correct = [-2, -2, 0]
 
 # Test
 def try_save(file, address, length):
-    ret = save(file, address, length)
+    try:
+        save(file, address, length)
+        ret = 0
+    except ErrorCode as e:
+        ret = e.args[0]
     print("save_object(\"{}\", {}, {}) returns {}".format(file, address, length, ret), end='')
     return ret
 

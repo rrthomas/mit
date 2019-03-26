@@ -3,7 +3,7 @@
 # one case, it will work in all (if the C compiler doesn't implement it
 # correctly, we're in trouble anyway!).
 #
-# (c) Reuben Thomas 1994-2018
+# (c) Reuben Thomas 1994-2019
 #
 # The package is distributed under the MIT/X11 License.
 #
@@ -11,6 +11,7 @@
 # RISK.
 
 from smite import *
+from smite_test import *
 VM = State()
 VM.globalize(globals())
 
@@ -54,14 +55,4 @@ ass(XOR)
 ass(AND)
 
 # Test
-for i in range(len(correct)):
-    print("Data stack: {}".format(S))
-    print("Correct stack: {}\n".format(correct[i]))
-    if str(correct[i]) != str(S):
-        print("Error in logic tests: PC = {:#x}".format(PC.get()))
-        sys.exit(1)
-    _, inst = disassemble_instruction(PC.get())
-    print("I = {}".format(inst))
-    step()
-
-print("Logic tests ran OK")
+run_test("logic", VM, correct)
