@@ -86,12 +86,12 @@ VM.assembler.label()
 # Tests
 assert(len(test) == len(result))
 error = 0
-for i in range(len(test)):
+for i, pc in enumerate(test):
     STACK_DEPTH.set(0)    # reset stack pointer
 
     print("Test {}".format(i + 1))
     I.set(0)
-    PC.set(test[i])
+    PC.set(pc)
     res = 0
     while res == 0:
         try:

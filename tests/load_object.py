@@ -33,12 +33,12 @@ build_dir = os.environ['builddir']
 
 bad_files = ["badobj1", "badobj2", "badobj3", "badobj4"]
 error_code = [-2, -2, -4, -2]
-for i in range(len(bad_files)):
-    s = obj_name(src_dir, bad_files[i], word_size)
+for i, bad_file in enumerate(bad_files):
+    s = obj_name(src_dir, bad_file, word_size)
     res = try_load(s)
     print(" should be {}".format(error_code[i]))
     if res != error_code[i]:
-        print("Error in load_object() tests: file {}".format(bad_files[i]))
+        print("Error in load_object() tests: file {}".format(bad_file))
         sys.exit(1)
 
 
