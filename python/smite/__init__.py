@@ -288,12 +288,6 @@ class AbstractMemory(collections.abc.Sequence):
         if isinstance(index, slice):
             index_ = slice(index.start, index.stop, self.element_size)
             return [self[i] for i in range(*index_.indices(len(self)))]
-        elif type(index) != int:
-            # FIXME: Unnecessary?
-            raise TypeError
-        elif index >= len(self):
-            # FIXME: Unnecessary?
-            raise IndexError
         else:
             return self.load(index)
 
@@ -304,12 +298,6 @@ class AbstractMemory(collections.abc.Sequence):
             for i in range(*index_.indices(len(self))):
                 self[i] = value[j]
                 j += 1
-        elif type(index) != int:
-            # FIXME: Unnecessary?
-            raise TypeError
-        elif index >= len(self):
-            # FIXME: Unnecessary?
-            raise IndexError
         else:
             self.store(index, value)
 
