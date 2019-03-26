@@ -18,7 +18,6 @@ print('''\
 #include "config.h"
 
 #include "smite.h"
-#include "aux.h"
 #include "opcodes.h"
 #include "extra.h"
 
@@ -29,10 +28,6 @@ print('''\
         S->STACK_DEPTH = initial_STACK_DEPTH; \\
         return error;                       \\
     } while (0)
-
-#define DIVZERO(x)                          \\
-    if (x == 0)                             \\
-        RAISE(8);
 
 static inline int LOAD_IMMEDIATE_WORD(smite_state *S, smite_UWORD addr, smite_WORD *value)
 {
@@ -45,7 +40,7 @@ static inline int LOAD_IMMEDIATE_WORD(smite_state *S, smite_UWORD addr, smite_WO
         v = (v << smite_BYTE_BIT) | b;
     }
     *value = v;
-    return 0;
+    return SMITE_ERR_OK;
 }
 
 smite_WORD smite_single_step(smite_state *S) {
@@ -57,7 +52,7 @@ smite_WORD smite_single_step(smite_state *S) {
         return res;
 ''')
 
-print(instruction_gen.dispatch(vm_data.Actions, 'O_', '''\
+print(instruction_gen.dispatch(vm_data.Instructions, 'O_', '''\
         /* Undefined instruction; try extra instructions */
         {
             int ret = smite_extra(S, I);
@@ -67,14 +62,14 @@ print(instruction_gen.dispatch(vm_data.Actions, 'O_', '''\
 
 print('''
 
-    return 128;
+    return SMITE_ERR_OK;
 }
 
 
 smite_WORD smite_run(smite_state *S)
 {
     smite_WORD ret;
-    while ((ret = smite_single_step(S)) == 128)
+    while ((ret = smite_single_step(S)) == 0)
         ;
     return ret;
 }''')

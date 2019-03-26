@@ -3,6 +3,9 @@
 /smite_core/__pycache__
 *.lo
 *.o
+/autom4te.cache
+/config.log
+/config.status
 /libsmite.la
 /smite
 /smite.1
@@ -13,3 +16,6 @@
 /opcodes-core.h
 /opcodes-extra.h
 /registers.h
+/type-sizes
+/type-sizes.ac
+/smite_core/type_sizes.py

@@ -162,7 +162,7 @@ Error codes are unsigned numbers. $0$ to $128$ are reserved for @PACKAGE_NAME@'s
 \begin{center}
 \begin{tabular}{cp{4in}} \toprule
 \bf Code & \bf Meaning \\ \midrule
-$0$ & A {\tt HALT} instruction was executed. \\
+$0$ & {\bf single\_step()} has terminated without error. \\
 $1$ & Invalid opcode (see section~\ref{opcodes}). \\
 $2$ & Attempt to set {\tt STACK\_DEPTH} greater than {\tt STACK\_SIZE}. {\tt BAD} is set to the extra number of words of stack space required. \\
 $3$ & Invalid stack read. {\tt BAD} is set to the invalid stack position. \\
@@ -171,7 +171,7 @@ $5$ & Invalid memory read. {\tt BAD} is set to the invalid address. \\
 $6$ & Invalid memory write. {\tt BAD} is set to the invalid address. \\
 $7$ & Address alignment error: raised when an instruction expecting a word-aligned address is given a valid but non-aligned address. \\
 $8$ & Division by zero attempted (see section~\ref{arithmetic}). \\
-$128$ & {\bf single\_step()} has terminated without error. \\
+$128$ & A {\tt HALT} instruction was executed. \\
  \bottomrule
 \end{tabular}
 \caption{\label{errortable}Errors raised by @PACKAGE_NAME@}
@@ -285,8 +285,6 @@ These instructions manage the stack:
 \inst{POP}{x —}{Remove \spic{x} from the stack.}
 \inst{DUP}{\x{u}\dots\x0 u — \x{u}\dots\x0 \x{u}}{Remove \spic{u}. Copy \x{u} to the top of the stack.}
 \inst{SWAP}{\x{u}\dots\x0 u — \x0 \x{u-1}\dots\x1 \x{u}}{Exchange the top stack item with the \spic{u}th. If \spic{u} is zero, do nothing.}
-\inst{ROTATE\_UP}{\x{u}\dots\x0 u — \x{u-1}\dots\x1 \x{u}}{Rotate the \spic{u}th stack item to the top.}
-\inst{ROTATE\_DOWN}{\x{u}\dots\x0 u — \x0 \x{u}\dots\x1}{Rotate the top stack item to position \spic{u}.}
 \end{description}
 
 

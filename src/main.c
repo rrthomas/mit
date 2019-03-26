@@ -22,7 +22,6 @@
 #include "xvasprintf.h"
 
 #include "smite.h"
-#include "aux.h"
 
 
 static _GL_ATTRIBUTE_FORMAT_PRINTF(1, 0) void verror(const char *format, va_list args)
@@ -213,6 +212,9 @@ int main(int argc, char *argv[])
     do {
         again = false;
         switch (res = trace_fp ? trace_step(trace_fp) : smite_run(S)) {
+        case 0:
+            again = true;
+            break;
         case 2:
             if (S->BAD >= S->STACK_SIZE &&
                 S->BAD < smite_uword_max - S->STACK_SIZE &&
@@ -225,15 +227,13 @@ int main(int argc, char *argv[])
                 smite_realloc_memory(S, round_up(S->BAD, page_size)) == 0)
                 again = true;
             break;
-        case 128:
-            again = true;
         default:
             break;
         }
     } while (again);
 
     // Core dump on error
-    if (core_dump && (res >= 1 && res <= 128)) {
+    if (core_dump && (res >= 1 && res < 128)) {
         warn("error %d raised at PC=%"PRI_XWORD"; BAD=%"PRI_XWORD,
              res, S->PC, S->BAD);
 
@@ -248,5 +248,5 @@ int main(int argc, char *argv[])
         free(file);
     }
 
-    return res;
+    return res == 128 ? 0 : res;
 }

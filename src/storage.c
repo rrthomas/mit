@@ -14,27 +14,17 @@
 #include <limits.h>
 
 #include "smite.h"
-#include "aux.h"
 
 
 // Constants
 const unsigned smite_word_size = WORD_SIZE;
 const unsigned smite_byte_bit = 8;
 const unsigned smite_byte_mask = smite_BYTE_MASK;
-const unsigned smite_word_bit = WORD_SIZE * smite_BYTE_BIT;
-#if WORD_SIZE == 4
-const smite_UWORD smite_word_mask = UINT32_MAX;
-const smite_UWORD smite_uword_max = UINT32_MAX;
-const smite_WORD smite_word_min = INT32_MIN;
-const smite_WORD smite_word_max = INT32_MAX;
-#elif WORD_SIZE == 8
-const smite_UWORD smite_word_mask = UINT64_MAX;
-const smite_UWORD smite_uword_max = UINT64_MAX;
-const smite_WORD smite_word_min = INT64_MIN;
-const smite_WORD smite_word_max = INT64_MAX;
-#else
-#error "WORD_SIZE is not 4 or 8!"
-#endif
+const unsigned smite_word_bit = smite_WORD_BIT;
+const smite_UWORD smite_word_mask = smite_WORD_MASK;
+const smite_UWORD smite_uword_max = smite_UWORD_MAX;
+const smite_WORD smite_word_min = smite_WORD_MIN;
+const smite_WORD smite_word_max = smite_WORD_MAX;
 
 
 // Utility functions
@@ -113,7 +103,7 @@ static int smite_realloc(smite_WORD **ptr, smite_UWORD old_size, smite_UWORD new
     if (old_size < new_size)
         memset(*ptr + old_size, 0, (new_size - old_size) * WORD_SIZE);
 
-    return 0;
+    return SMITE_ERR_OK;
 }
 
 int smite_realloc_memory(smite_state *S, smite_UWORD size)
@@ -184,5 +174,5 @@ int smite_register_args(smite_state *S, int argc, char *argv[])
     S->main_argc = argc;
     S->main_argv = argv;
 
-    return 0;
+    return SMITE_ERR_OK;
 }

@@ -5,7 +5,7 @@ set of functions and variables to interact with SMite in a Python REPL.
 
 When run as a script (SMite provides 'smite-shell' to do this), the module
 provides a global SMite instance in VM, with the following attributes and
-methods available as globals, as well as the action opcode enumeration:
+methods available as globals, as well as the instruction opcode enumeration:
 
 Registers: a variable for each register; also a list, 'registers'
 Memory: M, M_word
@@ -13,7 +13,7 @@ Stacks: S, R
 Managing the VM state: load, save, initialise
 Controlling and observing execution: run, step
 Examining memory: dump, disassemble
-Assembly: action, number, byte, pointer. Assembly is at address 'here',
+Assembly: instruction, number, byte, pointer. Assembly is at address 'here',
 which defaults to 0.
 '''
 
@@ -142,8 +142,8 @@ class State:
         Managing the VM state: load, save
         Controlling and observing execution: run, step
         Examining memory: dump, disassemble
-        Assembly: action, number, byte, pointer. Assembly is at address
-        'VM.here', which defaults to 0. The actions are available as
+        Assembly: instruction, number, byte, pointer. Assembly is at address
+        'VM.here', which defaults to 0. The instructions are available as
         constants.'''
 
         globals_dict.update([(name, register) for name, register in self.registers.items()])
@@ -159,11 +159,11 @@ class State:
         globals_dict["dis"] = self.__getattribute__("disassemble")
 
         # Opcodes
-        globals_dict.update([(action.name, action.value.opcode) for action in Actions])
-        globals_dict["UNDEFINED"] = max([action.value.opcode for action in Actions]) + 1
-        globals_dict.update([(action.name, action.value.opcode) for action in LibActions])
-        for (name, action) in LibActions.__members__.items():
-            globals_dict.update([('{}_{}'.format(name, function.name), function.value.opcode) for function in action.value.library])
+        globals_dict.update([(instruction.name, instruction.value.opcode) for instruction in Instructions])
+        globals_dict["UNDEFINED"] = max([instruction.value.opcode for instruction in Instructions]) + 1
+        globals_dict.update([(instruction.name, instruction.value.opcode) for instruction in LibInstructions])
+        for (name, instruction) in LibInstructions.__members__.items():
+            globals_dict.update([('{}_{}'.format(name, function.name), function.value.opcode) for function in instruction.value.library])
 
     def register_args(self, *args):
         argc = len(args)
@@ -187,7 +187,7 @@ class State:
         args.insert(0, b"smite-shell")
         self.register_args(*args)
         ret = libsmite.smite_run(self.state)
-        if ret != 128:
+        if ret != 0:
             print("Error code {} was returned".format(ret));
         return ret
 
@@ -197,10 +197,10 @@ class State:
         while True:
             ret = libsmite.smite_single_step(self.state)
             done += 1
-            if ret != 128 or self.registers["PC"].get() == addr or (addr == None and done == n):
+            if ret != 0 or self.registers["PC"].get() == addr or (addr == None and done == n):
                 break
 
-        if ret != 128:
+        if ret != 0:
             if ret != 0:
                 print("Error code {} was returned".format(ret), end='')
                 if n > 1:
@@ -267,7 +267,7 @@ class State:
 
     def lit(self, value):
         '''Assemble LIT 'value' at 'here'.'''
-        self.assemble(Actions.LIT.value.opcode)
+        self.assemble(Instructions.LIT.value.opcode)
         self.M_word[self.here] = value
         self.here += word_size
 
@@ -276,14 +276,14 @@ class State:
         Assemble 'value' at 'here' as a PC-relative value relative to 'here' +
         1.
         '''
-        self.assemble(Actions.LIT_PC_REL.value.opcode)
+        self.assemble(Instructions.LIT_PC_REL.value.opcode)
         self.M_word[self.here] = value - self.here
         self.here += word_size
 
 
     # Disassembly
-    mnemonic = {instruction.value.opcode:instruction.name for instruction in Actions}
-    mnemonic.update({instruction.value.opcode:instruction.name for instruction in LibActions})
+    mnemonic = {instruction.value.opcode:instruction.name for instruction in Instructions}
+    mnemonic.update({instruction.value.opcode:instruction.name for instruction in LibInstructions})
 
     def disassemble_instruction(self, addr):
         try:

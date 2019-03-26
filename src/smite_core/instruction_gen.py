@@ -1,5 +1,5 @@
 '''
-Generate code for actions.
+Generate code for instructions.
 
 The main entry point is dispatch.
 '''
@@ -8,15 +8,15 @@ import re
 import textwrap
 
 
-def print_enum(actions, prefix):
+def print_enum(instructions, prefix):
     '''Utility function to print an instruction enum.'''
     print('\nenum {')
-    for (instruction, action) in actions.__members__.items():
-        print("    INSTRUCTION({}{}, {:#x})".format(prefix, instruction, action.value.opcode))
+    for (name, instruction) in instructions.__members__.items():
+        print("    INSTRUCTION({}{}, {:#x})".format(prefix, name, instruction.value.opcode))
     print('};')
 
-class Action:
-    '''VM action instruction descriptor.
+class Instruction:
+    '''VM instruction instruction descriptor.
 
      - opcode - int - SMite opcode number.
      - args - StackPicture.
@@ -40,44 +40,14 @@ class Action:
         self.code = code
 
 
-# Utility functions for StackPicture
-def stack_item_name(item):
-    return item.split(":")[0]
-
-def stack_item_type(item):
-    l = item.split(":")
-    return l[1] if len(l) > 1 else 'smite_WORD'
-
-def item_size(item):
-    '''Return a C expression for the size in stack words of a stack item.'''
-    return '(sizeof({}) / smite_word_size)'.format(stack_item_type(item))
-
-def load_var(pos, var):
-    if stack_item_type(var) != 'smite_WORD':
-        fmt = 'UNCHECKED_LOAD_STACK_TYPE({pos}, {type}, &{var});'
-    else:
-        fmt = 'UNCHECKED_LOAD_STACK({pos}, &{var});'
-    return fmt.format(
-        pos=pos,
-        var=stack_item_name(var),
-        type=stack_item_type(var))
-
-def store_var(pos, var):
-    if stack_item_type(var) != 'smite_WORD':
-        fmt = 'UNCHECKED_STORE_STACK_TYPE({pos}, {type}, {var});'
-    else:
-        fmt = 'UNCHECKED_STORE_STACK({pos}, {var});'
-    return fmt.format(
-        pos=pos,
-        var=stack_item_name(var),
-        type=stack_item_type(var))
-
-
 class StackPicture:
     '''
     Represents a description of the topmost items on the stack. The effect
     of an instruction can be described using two StackPictures: one for the
     arguments and one for the results.
+
+    The first item is 'ITEMS' if the stack picture is variadic.
+    All other items are the names of items.
 
     Variadic instructions (such as POP, DUP, SWAP) have an argument called
     "COUNT" which is (N.B.!) one less than the number of additional
@@ -87,8 +57,6 @@ class StackPicture:
 
      - named_items - list of str - the names of the non-variadic items,
        which must be on the top of the stack, and might include "COUNT".
-       Each name may optionally be followed by ":TYPE" to give the C type of
-       the underlying quantity, if it might be bigger than one stack word.
 
      - is_variadic - bool - If `True`, there are `COUNT` more items underneath
        the non-variadic items.
@@ -99,26 +67,32 @@ class StackPicture:
         self.named_items = named_items
         self.is_variadic = is_variadic
 
-    @staticmethod
-    def from_list(stack):
+    @classmethod
+    def from_list(cls, stack):
         '''
-         - stack - a stack picture as found in `vm_data.Action`, i.e. a list of
-           str. The first item is 'ITEMS' if the stack picture is variadic.
-           All other items are the names of items.
+         - stack - list of str - a stack picture.
+
         Returns a StackPicture.
         '''
         if stack and stack[0] == 'ITEMS':
-            return StackPicture(stack[1:], is_variadic=True)
+            return cls(stack[1:], is_variadic=True)
         else:
-            return StackPicture(stack)
+            return cls(stack)
+
+    @classmethod
+    def load_var(cls, pos, var):
+        return 'UNCHECKED_LOAD_STACK({pos}, &{var});'.format(pos=pos, var=var)
+
+    @classmethod
+    def store_var(cls, pos, var):
+        return 'UNCHECKED_STORE_STACK({pos}, {var});'.format(pos=pos, var=var)
 
     def static_depth(self):
         '''
         Return a C expression for the number of stack words occupied by the
         static items in a StackPicture.
         '''
-        depth = ' + '.join([item_size(item) for item in self.named_items])
-        return '({})'.format(depth if depth != '' else '0')
+        return '{}'.format(len(self.named_items))
 
     def dynamic_depth(self):
         '''
@@ -133,8 +107,8 @@ class StackPicture:
 
     def declare_vars(self):
         '''Returns C variable declarations for all of `self.named_items`.'''
-        return '\n'.join(['{} {};'.format(stack_item_type(i), stack_item_name(i))
-                          for i in self.named_items])
+        return '\n'.join(['{} {};'.format('smite_WORD', item)
+                          for item in self.named_items])
 
     def load(self):
         '''
@@ -142,12 +116,9 @@ class StackPicture:
         variables.
         `S->STACK_DEPTH` is not modified.
         '''
-        code = []
-        pos = ['-1']
-        for item in reversed(self.named_items):
-            pos.append(item_size(item))
-            code.append(load_var("+".join(pos), item))
-        return '\n'.join(code)
+        return '\n'.join([self.load_var(pos, item)
+                          for pos, item in enumerate(reversed(self.named_items))
+        ])
 
     def store(self):
         '''
@@ -155,12 +126,9 @@ class StackPicture:
         the stack.
         `S->STACK_DEPTH` must be modified first.
         '''
-        code = []
-        pos = ['-1']
-        for item in reversed(self.named_items):
-            pos.append(item_size(item))
-            code.append(store_var("+".join(pos), item))
-        return '\n'.join(code)
+        return '\n'.join([self.store_var(pos, item)
+                          for pos, item in enumerate(reversed(self.named_items))
+        ])
 
 
 def disable_warnings(warnings, c_source):
@@ -185,7 +153,7 @@ def check_underflow(num_pops):
     return disable_warnings(['-Wtype-limits', '-Wunused-variable', '-Wshadow'], '''\
 if ((S->STACK_DEPTH < {num_pops})) {{
     S->BAD = {num_pops} - 1;
-    RAISE(3);
+    RAISE(SMITE_ERR_STACK_READ);
 }}'''.format(num_pops=num_pops))
 
 def check_overflow(num_pops, num_pushes):
@@ -197,22 +165,22 @@ def check_overflow(num_pops, num_pushes):
     return disable_warnings(['-Wtype-limits', '-Wtautological-compare'], '''\
 if ({num_pushes} > {num_pops} && (S->STACK_SIZE - S->STACK_DEPTH < {num_pushes} - {num_pops})) {{
     S->BAD = ({num_pushes} - {num_pops}) - (S->STACK_SIZE - S->STACK_DEPTH);
-    RAISE(2);
+    RAISE(SMITE_ERR_STACK_OVERFLOW);
 }}'''.format(num_pops=num_pops, num_pushes=num_pushes))
 
-def gen_case(action):
+def gen_case(instruction):
     '''
-    Generate the code for an Action. In the code, S is the smite_state. Errors
+    Generate the code for an Instruction. In the code, S is the smite_state. Errors
     are reported by calling RAISE().
 
-     - action - Action.
+     - instruction - Instruction.
     '''
     # Concatenate the pieces.
-    args = action.args
-    results = action.results
-    static_args = len(args.named_items)
+    args = instruction.args
+    results = instruction.results
+    static_args = args.static_depth()
     dynamic_args = args.dynamic_depth()
-    static_results = len(results.named_items)
+    static_results = results.static_depth()
     dynamic_results = results.dynamic_depth()
     code = '\n'.join([
         args.declare_vars(),
@@ -222,7 +190,7 @@ def gen_case(action):
         check_underflow(dynamic_args),
         check_overflow(dynamic_args, dynamic_results),
         'S->STACK_DEPTH -= {};'.format(static_args),
-        textwrap.dedent(action.code.rstrip()),
+        textwrap.dedent(instruction.code.rstrip()),
         'S->STACK_DEPTH += {};'.format(static_args),
         'S->STACK_DEPTH -= {};'.format(dynamic_args),
         'S->STACK_DEPTH += {};'.format(dynamic_results),
@@ -232,22 +200,22 @@ def gen_case(action):
     code = re.sub('\n+', '\n', code, flags=re.MULTILINE).strip('\n')
     return code
 
-def dispatch(actions, prefix, undefined_case):
-    '''Generate dispatch code for some Actions.
+def dispatch(instructions, prefix, undefined_case):
+    '''Generate dispatch code for some Instructions.
 
-    actions - Enum of Actions.
+    instructions - Enum of Instructions.
     '''
     output = '    switch (I) {\n'
-    for action in actions:
+    for instruction in instructions:
         output += '''\
     case {prefix}{instruction}:
         {{
 {code}
         }}
         break;\n'''.format(
-            instruction=action.name,
+            instruction=instruction.name,
             prefix=prefix,
-            code=textwrap.indent(gen_case(action.value), '            '))
+            code=textwrap.indent(gen_case(instruction.value), '            '))
     output += '''
     default:
 {}
