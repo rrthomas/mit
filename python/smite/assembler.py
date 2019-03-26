@@ -21,8 +21,6 @@ mnemonic.update({
 # The set of opcodes which must be the last in a word.
 TERMINAL_OPCODES = frozenset([0, BRANCH, CALL])
 
-# FIXME: add enumerate support, so we can co-iterate over PC and
-# disassembled instruction.
 class Disassembler:
     '''
     Represents the state of a disassembler. This class simulates the PC and I
