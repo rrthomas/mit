@@ -105,7 +105,7 @@ print('''\
     do {                                            \\
         initial_PC = S->PC;                         \\
         initial_STACK_DEPTH = S->STACK_DEPTH;       \\
-        error = smite_load_byte(S, S->PC++, &NEXT); \\
+        error = smite_load_byte(S, S->PC++, &I); \\
         if (error != 0)                             \\
             RAISE(error);                           \\
     } while (0)
@@ -128,7 +128,7 @@ print('''\
     do {
         smite_UWORD initial_PC, initial_STACK_DEPTH;
         smite_UWORD cached_depth = 0;
-        smite_BYTE NEXT;
+        smite_BYTE I;
 
         FETCH;
         goto A_0;
@@ -142,12 +142,11 @@ print('''\
         //
         // The calling convention at each A_XXX label is as follows:
         //
-        //  - On entry, `res` is `SMITE_ERR_OK`, `NEXT` is the first byte of
-        //    the next instruction, `PC` has been incremented, and
-        //    `STACK_DEPTH` has been decremented to pop the arguments.
+        //  - On entry, `res` is `SMITE_ERR_OK`, `I` is the next opcode,
+        //    and `PC` has been incremented.
         //  - When an error occurs, call `RAISE(code)`.
-        //    It sets `res` to the return code; then it resets the stack depth
-        //    to the depth on entry, and does "goto RET".
+        //    It sets `res` to the return code; then it resets the PC and
+        //    stack depth to their initial values, and does "goto RET".
         //  - "goto RET" (but do not "return") at any time after completely
         //    executing at least one instruction, or never.
         //  - On exit, whether by `RAISE` or otherwise, all SMite
@@ -199,7 +198,6 @@ print('''\
             cached_depth = {};
             // Pretend we fetched the instruction the formal way.
             S->PC--;
-            smite_BYTE I;
             error = load_byte(S, S->PC++, &I);
             if (error != 0)
                 RAISE(error);

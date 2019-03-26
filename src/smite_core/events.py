@@ -19,8 +19,7 @@ class Event:
      - hash1 - a random-looking 63-bit mask.
 
     `guess_code` must be side-effect-free; in particular it must not access
-    memory. On evaluation, `NEXT` will be the first byte of the
-    instruction.
+    memory. On evaluation, `I` will be the opcode of the instruction.
 
     On entry to `code`:
      - `S->PC` is one byte beyond the beginning of the instruction,
@@ -62,7 +61,7 @@ for a in vm_data.Instructions:
         a.name,
         a.value.args,
         a.value.results,
-        'NEXT == {}'.format(a.value.opcode),
+        'I == {}'.format(a.value.opcode),
         code,
     ))
 # Common literals.
@@ -75,7 +74,7 @@ for a in vm_data.Instructions:
 #        'LIT{}'.format(n),
 #        StackPicture.from_list([]),
 #        StackPicture.from_list(['lit']),
-#        'NEXT == ({} | INSTRUCTION_NUMBER_BIT)'.format(n),
+#        'I == ({} | INSTRUCTION_NUMBER_BIT)'.format(n),
 #        code,
 #    ))
 
