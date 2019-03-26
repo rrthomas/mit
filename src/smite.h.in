@@ -33,7 +33,7 @@ typedef int64_t smite_WORD;
 #define PRI_XWORD "#"PRIx64
 typedef uint64_t smite_UWORD;
 #else
-#error "smite_WORD_SIZE is not 4 or 8!"
+#error "WORD_SIZE is not 4 or 8!"
 #endif
 typedef smite_WORD * smite_WORDP;
 #define PRI_XWORDP "p"
@@ -41,42 +41,211 @@ typedef void (*smite_callback_t)(void *);
 
 // Parameters
 extern const unsigned smite_word_size;
-extern const unsigned smite_native_pointer_size;
 #define smite_BYTE_BIT 8
 extern const unsigned smite_byte_bit;
 extern const unsigned smite_byte_mask;
+#define smite_BYTE_MASK ((1 << smite_BYTE_BIT) - 1)
 extern const unsigned smite_word_bit;
+#define smite_WORD_BIT (WORD_SIZE * smite_BYTE_BIT)
 extern const smite_UWORD smite_word_mask;
 extern const smite_UWORD smite_uword_max;
 extern const smite_WORD smite_word_min;
+extern const smite_WORD smite_word_max;
+#if WORD_SIZE == 4
+#define smite_WORD_MASK UINT32_MAX
+#define smite_UWORD_MAX UINT32_MAX
+#define smite_WORD_MIN INT32_MIN
+#define smite_WORD_MAX INT32_MAX
+#elif WORD_SIZE == 8
+#define smite_WORD_MASK UINT64_MAX
+#define smite_UWORD_MAX UINT64_MAX
+#define smite_WORD_MIN INT64_MIN
+#define smite_WORD_MAX INT64_MAX
+#else
+#error "WORD_SIZE is not 4 or 8!"
+#endif
 
 // VM registers
-typedef struct _smite_state smite_state;
+typedef struct {
+#define R(reg, type, utype) type reg;
+#define R_RO(reg, type, utype) R(reg, type, utype)
+#include "registers.h"
+#undef R
+#undef R_RO
+    smite_WORD *memory;
+    int main_argc;
+    char **main_argv;
+} smite_state;
 
 #define R_RO(reg, type, utype)                  \
     type smite_get_ ## reg(smite_state *S);
 #define R(reg, type, utype)                     \
     R_RO(reg, type, utype)                      \
     void smite_set_ ## reg(smite_state *S, type value);
-#include "register-list.h"
+#include "registers.h"
 #undef R
 #undef R_RO
 
-// Memory access
+// Errors
+enum {
+    SMITE_ERR_OK = 0,
+    SMITE_ERR_INVALID_OPCODE = 1,
+    SMITE_ERR_STACK_OVERFLOW = 2,
+    SMITE_ERR_STACK_READ = 3,
+    SMITE_ERR_STACK_WRITE = 4,
+    SMITE_ERR_MEMORY_READ = 5,
+    SMITE_ERR_MEMORY_WRITE = 6,
+    SMITE_ERR_MEMORY_UNALIGNED = 7,
+    SMITE_ERR_DIVISION_BY_ZERO = 8,
+    SMITE_ERR_HALT = 128,
+};
+
+
+// Utility functions
+
+_GL_ATTRIBUTE_CONST static inline smite_UWORD align(smite_UWORD addr)
+{
+    return (addr + WORD_SIZE - 1) & -WORD_SIZE;
+}
+
+_GL_ATTRIBUTE_CONST static inline int is_aligned(smite_UWORD addr)
+{
+    return (addr & (WORD_SIZE - 1)) == 0;
+}
+
+// Linkable stubs
+smite_UWORD smite_align(smite_UWORD addr);
+int smite_is_aligned(smite_UWORD addr);
+
+
+// Memory
 // Return value is 0 if OK, or error code for invalid or unaligned address
+
+_GL_ATTRIBUTE_PURE static inline uint8_t *native_address_of_range(smite_state *S, smite_UWORD addr, smite_UWORD length)
+{
+    if (addr >= S->MEMORY || length > S->MEMORY - addr)
+        return NULL;
+    return ((uint8_t *)(S->memory)) + addr;
+}
+
+static inline int load_word(smite_state *S, smite_UWORD addr, smite_WORD *value)
+{
+    if (addr >= S->MEMORY) {
+        S->BAD = addr;
+        return SMITE_ERR_MEMORY_READ;
+    }
+    if (!smite_is_aligned(addr)) {
+        S->BAD = addr;
+        return SMITE_ERR_MEMORY_UNALIGNED;
+    }
+
+    *value = S->memory[addr / WORD_SIZE];
+    return SMITE_ERR_OK;
+}
+
+static inline int load_byte(smite_state *S, smite_UWORD addr, smite_BYTE *value)
+{
+    if (addr >= S->MEMORY) {
+        S->BAD = addr;
+        return SMITE_ERR_MEMORY_READ;
+    }
+
+    *value = ((smite_BYTE *)S->memory)[addr];
+    return SMITE_ERR_OK;
+}
+
+static inline int store_word(smite_state *S, smite_UWORD addr, smite_WORD value)
+{
+    if (addr >= S->MEMORY) {
+        S->BAD = addr;
+        return SMITE_ERR_MEMORY_WRITE;
+    }
+    if (!smite_is_aligned(addr)) {
+        S->BAD = addr;
+        return SMITE_ERR_MEMORY_UNALIGNED;
+    }
+
+    S->memory[addr / WORD_SIZE] = value;
+    return SMITE_ERR_OK;
+}
+
+static inline int store_byte(smite_state *S, smite_UWORD addr, smite_BYTE value)
+{
+    if (addr >= S->MEMORY) {
+        S->BAD = addr;
+        return SMITE_ERR_MEMORY_WRITE;
+    }
+
+    ((smite_BYTE *)S->memory)[addr] = value;
+    return SMITE_ERR_OK;
+}
+
+// Linkable stubs
+uint8_t *smite_native_address_of_range(smite_state *S, smite_UWORD addr, smite_UWORD length);
 int smite_load_word(smite_state *S, smite_UWORD addr, smite_WORD *value);
 int smite_store_word(smite_state *S, smite_UWORD addr, smite_WORD value);
 int smite_load_byte(smite_state *S, smite_UWORD addr, smite_BYTE *value);
 int smite_store_byte(smite_state *S, smite_UWORD addr, smite_BYTE value);
 
-// Stack access
+
+// Stacks
+// Return value is 0 if OK, or error code for invalid or unaligned address
+
+#define STACK_DIRECTION 1
+
+#define UNCHECKED_LOAD_STACK(pos, vp)                                   \
+    (*(vp) = *(S->S0 + (S->STACK_DEPTH - (pos) - 1) * STACK_DIRECTION))
+#define UNCHECKED_STORE_STACK(pos, v)                                   \
+    (*(S->S0 + (S->STACK_DEPTH - (pos) - 1) * STACK_DIRECTION) = (v))
+
+static inline int load_stack(smite_state *S, smite_UWORD pos, smite_WORD *vp)
+{
+    if (pos >= S->STACK_DEPTH) {
+        S->BAD = pos;
+        return SMITE_ERR_STACK_READ;
+    }
+
+    UNCHECKED_LOAD_STACK(pos, vp);
+    return SMITE_ERR_OK;
+}
+
+static inline int store_stack(smite_state *S, smite_UWORD pos, smite_WORD v)
+{
+    if (pos >= S->STACK_DEPTH) {
+        S->BAD = pos;
+        return SMITE_ERR_STACK_WRITE;
+    }
+
+    UNCHECKED_STORE_STACK(pos, v);
+    return SMITE_ERR_OK;
+}
+
+static inline int pop_stack(smite_state *S, smite_WORD *v)
+{
+    int ret = load_stack(S, 0, v);
+    S->STACK_DEPTH--;
+    return ret;
+}
+
+static inline int push_stack(smite_state *S, smite_WORD v)
+{
+    if (S->STACK_DEPTH == S->STACK_SIZE) {
+        S->BAD = S->STACK_SIZE;
+        return SMITE_ERR_STACK_OVERFLOW;
+    }
+
+    (S->STACK_DEPTH)++;
+    return store_stack(S, 0, v);
+}
+
+// Linkable stubs
 int smite_load_stack(smite_state *S, smite_UWORD pos, smite_WORD *v);
 int smite_store_stack(smite_state *S, smite_UWORD pos, smite_WORD v);
 int smite_pop_stack(smite_state *S, smite_WORD *v);
 int smite_push_stack(smite_state *S, smite_WORD v);
 
+
 // Interface calls
-uint8_t *smite_native_address_of_range(smite_state *S, smite_UWORD addr, smite_UWORD length);
 smite_WORD smite_run(smite_state *S);
 smite_WORD smite_single_step(smite_state *S);
 ptrdiff_t smite_load_object(smite_state *S, smite_UWORD address, int fd);
@@ -89,5 +258,8 @@ int smite_realloc_stack(smite_state *S, smite_UWORD size);
 void smite_destroy(smite_state *S);
 int smite_register_args(smite_state *S, int argc, char *argv[]);
 
+// Arithmetic right shift (the behaviour of >> on signed quantities is
+// implementation-defined in C99)
+#define ARSHIFT(n, p) @ARITHMETIC_RSHIFT@
 
 #endif

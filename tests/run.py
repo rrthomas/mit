@@ -17,12 +17,12 @@ if VM == None:
 
 # Test code
 final_pc = VM.here
-action(HALT)
+ass(HALT)
 
 # Test
 ret = run()
 
-return_value = 0
+return_value = 128
 print("Return value should be {} and is {}".format(return_value, ret))
 if ret != return_value:
     print("Error in run() tests: incorrect return value from run")

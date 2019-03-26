@@ -1,7 +1,7 @@
 import hashlib
 
 from . import vm_data
-from .action_gen import StackPicture
+from .instruction_gen import StackPicture
 
 # Database of all possible trace events.
 
@@ -54,12 +54,11 @@ class Event:
 
 ALL_EVENTS = []
 # Instructions.
-for a in vm_data.Actions:
-    code = '''\
-{}
-    '''.format(a.value.code.rstrip(), a.value.opcode)
+for a in vm_data.Instructions:
+    code = a.value.code
+    assert type(code) is str, code
     ALL_EVENTS.append(Event(
-        b'%d %#x' % (vm_data.Types.ACTION, a.value.opcode),
+        b'%d' % a.value.opcode,
         a.name,
         a.value.args,
         a.value.results,
@@ -67,38 +66,18 @@ for a in vm_data.Actions:
         code,
     ))
 # Common literals.
-for n in [0, 1]:
-    code = '''\
-        lit = {};
-    '''.rstrip().format(n)
-    ALL_EVENTS.append(Event(
-        b'%d %#x' % (vm_data.Types.NUMBER, n),
-        'LIT{}'.format(n),
-        StackPicture.from_list([]),
-        StackPicture.from_list(['lit']),
-        'NEXT == ({} | INSTRUCTION_NUMBER_BIT)'.format(n),
-        code,
-    ))
-# General literals.
-code = '''\
-        S->PC--;
-        smite_UWORD itype;
-        error = smite_decode_instruction(S, &S->PC, &itype, &lit);
-        if (error != 0)
-            RAISE(error);
-        assert(itype == INSTRUCTION_NUMBER);
-'''.rstrip()
-ALL_EVENTS.append(Event(
-    b'%d n' % vm_data.Types.NUMBER,
-    'LITn',
-    StackPicture.from_list([]),
-    StackPicture.from_list(['lit']),
-    '(NEXT & INSTRUCTION_CONTINUATION_BIT) != 0 || (\
-      (NEXT & INSTRUCTION_NUMBER_BIT) != 0 && \
-      (NEXT & ~INSTRUCTION_NUMBER_BIT) > 1 \
-     )',
-    code,
-))
+#for n in [0, 1]:
+#    code = '''\
+#        lit = {};
+#    '''.rstrip().format(n)
+#    ALL_EVENTS.append(Event(
+#        b'%d %#x' % (vm_data.Types.NUMBER, n),
+#        'LIT{}'.format(n),
+#        StackPicture.from_list([]),
+#        StackPicture.from_list(['lit']),
+#        'NEXT == ({} | INSTRUCTION_NUMBER_BIT)'.format(n),
+#        code,
+#    ))
 
 # Indices for finding Events.
 EVENT_TRACE_NAMES = {event.trace_name: event for event in ALL_EVENTS}

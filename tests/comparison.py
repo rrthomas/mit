@@ -17,16 +17,16 @@ VM.globalize(globals())
 correct = [0, 1, 0, 1, 1, 0, 0, 1, 0, 0]
 
 # Code
-action(LT)
-action(LT)
-action(LT)
-action(LT)
-action(EQ)
-action(EQ)
-action(ULT)
-action(ULT)
-action(ULT)
-action(ULT)
+ass(LT)
+ass(LT)
+ass(LT)
+ass(LT)
+ass(EQ)
+ass(EQ)
+ass(ULT)
+ass(ULT)
+ass(ULT)
+ass(ULT)
 
 # Test
 def stack1():
@@ -50,7 +50,8 @@ def stack2():
 def step(start, end):
     if end > start:
         for i in range(start, end):
-            print("I = {}".format(disassemble_instruction(PC.get())))
+            _, inst = disassemble_instruction(PC.get())
+            print("I = {}".format(inst))
             VM.step()
             v = S.pop()
             print("Result: {}; correct result: {}\n".format(v, correct[i]))

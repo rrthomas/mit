@@ -59,8 +59,8 @@ for good_file in good_files:
 # Generate test object file
 correct = [-128, 12345678]
 for n in correct:
-    number(n)
-action(HALT)
+    lit(n)
+ass(HALT)
 save("numbers.obj")
 
 number_file = "numbers.obj"
@@ -70,7 +70,7 @@ print(" should be {}".format(0))
 if res != 0:
     print("Error in load_object() tests: file {}".format(number_file))
     sys.exit(1)
-if run() != 0:
+if run() != 128:
     print("Error in load_object() tests: file {}".format(number_file))
     sys.exit(1)
 print("Data stack: {}".format(S))

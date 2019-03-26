@@ -15,21 +15,26 @@ VM.globalize(globals())
 # Assemble test code
 
 # here = 0
-number(7)
-number(14)
+print("PC = {}".format(VM.here))
+lit(4 * word_size + 7)
+lit(14)
 
-# here = 2
-number(LIB_C_STDOUT)
-action(LIB_C)
+# here = 2 × word_size + 2
+print("PC = {}".format(VM.here))
+lit(LIB_C_STDOUT)
+ass(LIB_C)
 
-# here = 4
-number(LIB_C_WRITE)
-action(LIB_C)
+# here = 3 × word_size + 4
+print("PC = {}".format(VM.here))
+lit(LIB_C_WRITE)
+ass(LIB_C)
 
-# here = 6
-action(HALT)
+# here = 4 × word_size + 6
+print("PC = {}".format(VM.here))
+ass(HALT)
 
-# here = 7
+# here = 4 × word_size + 7
+print("PC = {}".format(VM.here))
 byte(0x48)
 byte(0x65)
 byte(0x6c)

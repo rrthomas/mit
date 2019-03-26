@@ -69,11 +69,15 @@ AC_SUBST([objdir])
 dnl Check features
 AC_C_BIGENDIAN
 AX_C_ARITHMETIC_RSHIFT
+if test "x$ax_cv_c_arithmetic_rshift" = xyes; then
+  ARITHMETIC_RSHIFT="((smite_WORD)(n) >> (p))"
+else
+  ARITHMETIC_RSHIFT="(((n) >> (p)) | ((smite_UWORD)(-((smite_WORD)(n) < 0)) << (smite_word_bit - (p))))"
+fi
+AC_SUBST([ARITHMETIC_RSHIFT])
 
 dnl Set size of word
-AC_CHECK_SIZEOF([int])
 AC_CHECK_SIZEOF([long])
-AC_CHECK_SIZEOF([long long])
 AC_ARG_VAR([WORD_SIZE],
   [value of WORD_SIZE register [default: sizeof(long)]])
 : "${WORD_SIZE=SIZEOF_LONG}"

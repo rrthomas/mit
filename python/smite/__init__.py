@@ -5,15 +5,15 @@ set of functions and variables to interact with SMite in a Python REPL.
 
 When run as a script (SMite provides 'smite-shell' to do this), the module
 provides a global SMite instance in VM, with the following attributes and
-methods available as globals, as well as the action opcode enumeration:
+methods available as globals, as well as the instruction opcode enumeration:
 
 Registers: a variable for each register; also a list, 'registers'
 Memory: M, M_word
 Stacks: S, R
 Managing the VM state: load, save, initialise
-Controlling and observing execution: run, step, trace
+Controlling and observing execution: run, step
 Examining memory: dump, disassemble
-Assembly: action, number, byte, pointer. Assembly is at address 'here',
+Assembly: instruction, number, byte, pointer. Assembly is at address 'here',
 which defaults to 0.
 '''
 
@@ -110,19 +110,10 @@ libsmite.smite_destroy.argtypes = [c_void_p]
 
 libsmite.smite_register_args.argtypes = [c_void_p, c_int, c_void_p]
 
-# aux.h
 libsmite.smite_align.restype = c_uword
 libsmite.smite_align.argtypes = [c_uword]
 
 libsmite.smite_is_aligned.argtypes = [c_uword]
-
-libsmite.smite_find_msbit.argtypes = [c_word]
-
-libsmite.smite_byte_size.argtypes = [c_word]
-
-libsmite.smite_encode_instruction.argtypes = [c_void_p, POINTER(c_uword), c_uword, c_word]
-
-libsmite.smite_decode_instruction.argtypes = [c_void_p, POINTER(c_uword), POINTER(c_uword), POINTER(c_word)]
 
 
 # State
@@ -149,29 +140,30 @@ class State:
 
         Registers: a variable for each register; also a list 'registers'
         Managing the VM state: load, save
-        Controlling and observing execution: run, step, trace
+        Controlling and observing execution: run, step
         Examining memory: dump, disassemble
-        Assembly: action, number, byte, pointer. Assembly is at address
-        'VM.here', which defaults to 0. The actions are available as
+        Assembly: instruction, number, byte, pointer. Assembly is at address
+        'VM.here', which defaults to 0. The instructions are available as
         constants.'''
 
         globals_dict.update([(name, register) for name, register in self.registers.items()])
         globals_dict.update([(name, self.__getattribute__(name)) for
                              name in ["M", "M_word", "S", "registers",
                                       "load", "save",
-                                      "run", "step", "trace", "dump", "disassemble",
+                                      "run", "step", "dump", "disassemble",
                                       "disassemble_instruction",
-                                      "action", "number", "byte"]])
+                                      "assemble", "lit", "lit_pc_rel", "byte"]])
 
         # Abbreviations
+        globals_dict["ass"] = self.__getattribute__("assemble")
         globals_dict["dis"] = self.__getattribute__("disassemble")
 
         # Opcodes
-        globals_dict.update([(action.name, action.value.opcode) for action in Actions])
-        globals_dict["UNDEFINED"] = max([action.value.opcode for action in Actions]) + 1
-        globals_dict.update([(action.name, action.value.opcode) for action in LibActions])
-        for (name, action) in LibActions.__members__.items():
-            globals_dict.update([('{}_{}'.format(name, function.name), function.value.opcode) for function in action.value.library])
+        globals_dict.update([(instruction.name, instruction.value.opcode) for instruction in Instructions])
+        globals_dict["UNDEFINED"] = max([instruction.value.opcode for instruction in Instructions]) + 1
+        globals_dict.update([(instruction.name, instruction.value.opcode) for instruction in LibInstructions])
+        for (name, instruction) in LibInstructions.__members__.items():
+            globals_dict.update([('{}_{}'.format(name, function.name), function.value.opcode) for function in instruction.value.library])
 
     def register_args(self, *args):
         argc = len(args)
@@ -186,34 +178,29 @@ class State:
         self.argv = arg_strings(*bargs)
         assert(libsmite.smite_register_args(self.state, argc, self.argv) == 0)
 
-    def run(self, trace=False, args=None):
+    def run(self, args=None):
         '''
-        Run (or trace if trace is True) until HALT or error. Register any given
-        command-line `args`.
+        Run until HALT or error. Register any given command-line `args`.
         '''
         if args == None:
             args = []
         args.insert(0, b"smite-shell")
         self.register_args(*args)
-        if trace == True:
-            return self.step(addr=self.registers["MEMORY"].get() + 1, trace=True)
-        else:
-            ret = libsmite.smite_run(self.state)
-            if ret != 128:
-                print("Error code {} was returned".format(ret));
-            return ret
+        ret = libsmite.smite_run(self.state)
+        if ret != 0:
+            print("Error code {} was returned".format(ret));
+        return ret
 
-    def step(self, n=1, addr=None, trace=False):
-        '''Single-step (or trace if trace is True) for n steps,
-    or until PC=addr.'''
+    def step(self, n=1, addr=None):
+        '''Single-step for n steps, or until PC=addr.'''
         done = 0
         while True:
             ret = libsmite.smite_single_step(self.state)
             done += 1
-            if ret != 128 or self.registers["PC"].get() == addr or (addr == None and done == n):
+            if ret != 0 or self.registers["PC"].get() == addr or (addr == None and done == n):
                 break
 
-        if ret != 128:
+        if ret != 0:
             if ret != 0:
                 print("Error code {} was returned".format(ret), end='')
                 if n > 1:
@@ -223,10 +210,6 @@ class State:
                 print("")
 
         return ret
-
-    def trace(self, n=1, addr=None):
-        '''Alias for step with trace=True.'''
-        step(n, addr=addr, trace=True)
 
     class LoadError(Exception):
         pass
@@ -271,54 +254,59 @@ class State:
         return ret
 
     # Assembly
-    def action(self, instr):
-        '''Assemble an action at 'here'.'''
+    def assemble(self, instr):
+        '''Assemble an instruction at 'here'.'''
         ptr = c_uword(self.here)
-        libsmite.smite_encode_instruction(self.state, byref(ptr), Types.ACTION, instr)
-        self.here = ptr.value
-
-    def number(self, value):
-        '''Assemble a number at 'here'.'''
-        ptr = c_uword(self.here)
-        libsmite.smite_encode_instruction(self.state, byref(ptr), Types.NUMBER, value)
-        self.here = ptr.value
+        libsmite.smite_store_byte(self.state, ptr, instr)
+        self.here += 1
 
     def byte(self, byte):
         '''Assemble a byte at 'here'.'''
         self.M[self.here] = byte
         self.here += 1
 
+    def lit(self, value):
+        '''Assemble LIT 'value' at 'here'.'''
+        self.assemble(Instructions.LIT.value.opcode)
+        self.M_word[self.here] = value
+        self.here += word_size
+
+    def lit_pc_rel(self, value):
+        '''
+        Assemble 'value' at 'here' as a PC-relative value relative to 'here' +
+        1.
+        '''
+        self.assemble(Instructions.LIT_PC_REL.value.opcode)
+        self.M_word[self.here] = value - self.here
+        self.here += word_size
+
 
     # Disassembly
-    mnemonic = {action.value.opcode:action.name for action in Actions}
-    mnemonic.update({action.value.opcode:action.name for action in LibActions})
+    mnemonic = {instruction.value.opcode:instruction.name for instruction in Instructions}
+    mnemonic.update({instruction.value.opcode:instruction.name for instruction in LibInstructions})
 
     def disassemble_instruction(self, addr):
-        ptr = c_uword(addr)
-        ty = c_uword()
-        opcode = c_word()
-        ret = libsmite.smite_decode_instruction(self.state, byref(ptr), byref(ty), byref(opcode))
-        if ret == 1:
-            return ptr.value, "invalid instruction!"
-        if ty.value == Types.NUMBER:
-            return ptr.value, "{} ({:#x})".format(opcode.value, opcode.value)
-        elif ty.value == Types.ACTION:
-            try:
-                return ptr.value, self.mnemonic[opcode.value]
-            except KeyError:
-                return ptr.value, "undefined"
-        else:
-            return ptr.value, "invalid type (bug in smite_decode_instruction)!"
+        try:
+            opcode = self.M[addr]
+        except IndexError:
+            opcode = "invalid adddress!"
+        try:
+            addr, inst = addr + 1, self.mnemonic[opcode]
+        except KeyError:
+            return addr + 1, "undefined"
+        if inst.startswith("LIT"):
+            return addr + word_size, "{inst} {addr} ({addr:#x})".format(inst=inst, addr=self.M_word[addr])
+        return addr, inst
 
     def disassemble(self, start=None, length=None, end=None, file=sys.stdout):
         '''Disassemble from start to start+length or from start to end.
-    Defaults to 64 bytes from 16 bytes before PC.'''
+    Defaults to 32 bytes from 4 bytes before PC.'''
         if start == None:
-            start = max(0, self.registers["PC"].get() - 16)
+            start = max(0, self.registers["PC"].get() - 4)
         if length != None:
             end = start + length
         elif end == None:
-            end = start + 64
+            end = start + 32
 
         p = start
         while p < end:
@@ -329,9 +317,9 @@ class State:
 
     def dump(self, start=None, length=None, end=None, file=sys.stdout):
         '''Dump memory from start to start+length or from start to end.
-    Defaults to 256 bytes from start - 64.'''
+    Defaults to 256 bytes from start - 16.'''
         if start == None:
-            start = max(0, self.registers["PC"].get() - 64)
+            start = max(0, self.registers["PC"].get() - 16)
         if length != None:
             end = start + length
         elif end == None:
@@ -437,7 +425,7 @@ class AbstractMemory(collections.abc.Sequence):
             return [self[i] for i in range(*index_.indices(len(self)))]
         elif type(index) != int:
             raise TypeError
-        elif index >= len(self) or index % self.element_size != 0:
+        elif index >= len(self):
             raise IndexError
         else:
             return self.load(index)
@@ -451,7 +439,7 @@ class AbstractMemory(collections.abc.Sequence):
                 j += 1
         elif type(index) != int:
             raise TypeError
-        elif index >= len(self) or index % self.element_size != 0:
+        elif index >= len(self):
             raise IndexError
         else:
             self.store(index, value)
@@ -476,9 +464,20 @@ class WordMemory(AbstractMemory):
         self.element_size = word_size
 
     def load(self, index):
-        word = c_word()
-        libsmite.smite_load_word(self.VM.state, index, byref(word))
-        return word.value
+        if libsmite.smite_is_aligned(index):
+            word = c_word()
+            libsmite.smite_load_word(self.VM.state, index, byref(word))
+            return word.value
+        else:
+            value = 0
+            for i in reversed(range(word_size)):
+                value = (value << byte_bit) | self.VM.M[index + i]
+            return value
 
     def store(self, index, value):
-        libsmite.smite_store_word(self.VM.state, index, c_word(value))
+        if libsmite.smite_is_aligned(index):
+            libsmite.smite_store_word(self.VM.state, index, c_word(value))
+        else:
+            for i in range(word_size):
+                self.VM.M[index + i] = value & byte_mask
+                value >>= byte_bit

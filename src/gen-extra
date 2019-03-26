@@ -9,47 +9,38 @@
 # RISK.
 
 from smite_core.vm_data_extra import *
-from smite_core.action_gen import *
+from smite_core.instruction_gen import *
 
 # Write the output file
+print(includes)
+
 print('''
-#include "config.h"
+enum {
+    SMITE_ERR_EXTRA_INVALID_LIBRARY = 15,
+};
 
-#include <assert.h>
-#include <stdlib.h>
-#include <stdbool.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <string.h>
-#include "binary-io.h"
-#include "verify.h"
-#include "minmax.h"
-
-#include "smite.h"
-#include "aux.h"
-#include "extra.h"
-#include "opcodes.h"
-
-
-#define RAISE(code)                         \
-    return (code);                          \
+#define RAISE(code)                         \\
+    return (code);                          \\
 
 // Assumption for file functions
 verify(sizeof(int) <= sizeof(smite_WORD));
 ''')
 
-for action in LibActions:
+for lib in LibInstructions:
     print('''\
 static int extra_{}(smite_state *S, smite_WORD I)
 {{
     smite_UWORD cached_depth = 0;
-'''.format(str.lower(action.name)))
-    print(dispatch(action.value.library, '{}_'.format(action.name), '            RAISE(15);'))
+    smite_WORD temp;
+'''.format(str.lower(lib.name)))
+    print(dispatch(
+        lib.value.library,
+        '{}_'.format(lib.name),
+        '            RAISE(SMITE_ERR_EXTRA_INVALID_LIBRARY);',
+    ))
     print('''
     assert(cached_depth == 0);
-    return 0;
+    return SMITE_ERR_OK;
 }
 ''')
 
@@ -57,12 +48,16 @@ print('''
 int smite_extra(smite_state *S, smite_WORD I)
 {
     smite_UWORD cached_depth = 0;
+    smite_WORD temp;
 ''')
 
-print(dispatch(LibActions, '', '''
-            return 1;'''))
+print(dispatch(
+    LibInstructions,
+    '',
+    '\n            return SMITE_ERR_INVALID_OPCODE;',
+))
 
 print('''
     assert(cached_depth == 0);
-    return 0;
+    return SMITE_ERR_OK;
 }''')
