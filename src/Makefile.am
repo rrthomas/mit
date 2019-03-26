@@ -39,11 +39,11 @@ main.o: tbl_opts.h registers.h
 		--output=$@ ./@PACKAGE@$(EXEEXT); \
 	fi
 
-actions.predictor_pickle: actions.trace smite_core/events.py gen-predictor
-	$(PYTHON_WITH_PATH) $(srcdir)/gen-predictor $(srcdir)/actions.trace $@
+instructions.predictor_pickle: instructions.trace smite_core/events.py gen-predictor
+	$(PYTHON_WITH_PATH) $(srcdir)/gen-predictor $(srcdir)/instructions.trace $@
 
-actions.labels_pickle: actions.predictor_pickle smite_core/events.py gen-labels
-	$(PYTHON_WITH_PATH) $(srcdir)/gen-labels actions.predictor_pickle $@
+instructions.labels_pickle: instructions.predictor_pickle smite_core/events.py gen-labels
+	$(PYTHON_WITH_PATH) $(srcdir)/gen-labels instructions.predictor_pickle $@
 
 registers.h: gen-registers smite_core/vm_data.py smite_core/instruction_gen.py
 	$(PYTHON_WITH_PATH) $(srcdir)/gen-registers > registers.h
@@ -54,8 +54,8 @@ opcodes-extra.h: gen-opcodes-extra smite_core/vm_data_extra.py smite_core/instru
 opcodes-core.h: gen-opcodes-core smite_core/vm_data.py smite_core/instruction_gen.py
 	$(PYTHON_WITH_PATH) $(srcdir)/gen-opcodes-core > opcodes-core.h
 
-instructions.c: gen-instructions smite_core/events.py smite_core/vm_data.py actions.labels_pickle smite_core/instruction_gen.py
-	$(PYTHON_WITH_PATH) $(srcdir)/gen-instructions actions.labels_pickle > instructions.c
+instructions.c: gen-instructions smite_core/events.py smite_core/vm_data.py instructions.labels_pickle smite_core/instruction_gen.py
+	$(PYTHON_WITH_PATH) $(srcdir)/gen-instructions instructions.labels_pickle > instructions.c
 
 # Note: we grep config.log because the generated header file has the symbols
 # sorted lexically, and we need the output in the same order as the input.
@@ -89,12 +89,12 @@ EXTRA_DIST = \
 	collate-type-sizes \
 	gen-labels \
 	gen-predictor \
-	actions.trace
+	instructions.trace
 
 distclean-local:
 	rm -rf autom4te.cache smite_core/__pycache__
 
-DISTCLEANFILES = @PACKAGE@.1 actions.predictor_pickle actions.labels_pickle extra.c type-sizes.ac type-sizes config.log smite_core/type_sizes.py
+DISTCLEANFILES = @PACKAGE@.1 instructions.predictor_pickle instructions.labels_pickle extra.c type-sizes.ac type-sizes config.log smite_core/type_sizes.py
 
 # Ignore built files that are part of the distribution (specifically,
 # @PACKAGE@.1)

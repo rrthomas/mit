@@ -49,10 +49,10 @@ The script is fast, but it has nonetheless been separated out from the rest of
 the procedure, so that it is possible to generate a ".labels_pickle" file in
 other ways, if desired, or to distribute them.
 
-Step 4: Actions
----------------
+Step 4: Instructions
+--------------------
 
-The script "gen-actions" reads a labels file and writes out a fragment of C
+The script "gen-instructions" reads a labels file and writes out a fragment of C
 source code. Run it like this:
 
-    $ ./gen-actions labels_pickle >actions.h
+    $ ./gen-instructions my_prog.labels_pickle >instructions.c
