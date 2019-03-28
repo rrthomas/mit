@@ -57,8 +57,6 @@ elif word_size == sizeof(c_longlong):
 else:
     raise Exception("Could not find Python C type matching WORD (size {})".format(word_size))
 
-SMITE_CALLBACK_FUNCTYPE = CFUNCTYPE(None, c_void_p)
-
 
 # Constants that require VM types
 vars().update([(c, cty.in_dll(libsmite, "smite_{}".format(c)).value)
