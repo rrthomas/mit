@@ -5,8 +5,8 @@ set of functions and variables to interact with SMite in a Python REPL.
 Package smite.assembler provides Assembler and Disassembler.
 
 When run as a script (SMite provides 'smite-shell' to do this), the module
-provides a global SMite instance in VM, with the following attributes and
-methods available as globals, as well as the instruction opcode enumeration:
+provides a global SMite instance in VM, and defines various globals. See
+`globalize()` for details.
 
 Registers: a variable for each register; also a list, 'registers'
 Memory: M, M_word
@@ -36,10 +36,18 @@ class State:
         if self.state == None:
             raise Error("error creating virtual machine state")
 
-        self.registers = {name : ActiveRegister(self.state, name, register.value) for (name, register) in Registers.__members__.items()}
+        self.registers = {
+            name: ActiveRegister(self.state, name, register.value)
+            for (name, register) in Registers.__members__.items()
+        }
         self.M = Memory(self)
         self.M_word = WordMemory(self)
-        self.S = Stack(self.state, self.registers["S0"], self.registers["STACK_SIZE"], self.registers["STACK_DEPTH"])
+        self.S = Stack(
+            self.state,
+            self.registers["S0"],
+            self.registers["STACK_SIZE"],
+            self.registers["STACK_DEPTH"],
+        )
 
     def __del__(self):
         libsmite.smite_destroy(self.state)
@@ -51,34 +59,55 @@ class State:
         Registers: a variable for each register; also a list 'registers'
         Managing the VM state: load, save
         Controlling and observing execution: run, step
-        Examining memory: dump
-        Assembly: Assembler, word, bytes, instruction, lit, lit_pc_rel, label,
-                  goto
-        Disassembly: Disassembler, disassembler
-        Abbreviations: ass=assembler.instruction, dis=disassembler.__next__
+        Memory: M[], M_word[], dump
+        Assembly: Assembler, Disassembler, assembler,
+            word, bytes, instruction, lit, lit_pc_rel, label, goto
+        Abbreviations: ass=assembler.instruction, dis=self.disassemble
+
         The instruction opcodes are available as constants.
         '''
-        globals_dict.update([(name, register) for name, register in self.registers.items()])
-        globals_dict.update([(name, self.__getattribute__(name)) for
-                             name in ["M", "M_word", "S", "registers",
-                                      "load", "save", "run", "step",
-                                      "dump", "disassemble"]])
+        globals_dict.update({
+            name: register
+            for name, register in self.registers.items()
+        })
+        globals_dict.update({
+            name: self.__getattribute__(name)
+            for name in [
+                "M", "M_word", "S", "registers",
+                "load", "save", "run", "step",
+                "dump", "disassemble",
+            ]
+        })
         assembler = Assembler(self)
         globals_dict['assembler'] = assembler
-        globals_dict.update([(name, assembler.__getattribute__(name)) for
-                             name in ["instruction", "lit", "lit_pc_rel",
-                                      "word", "bytes", "label", "goto"]])
+        globals_dict.update({
+            name: assembler.__getattribute__(name)
+            for name in [
+                "instruction", "lit", "lit_pc_rel",
+                "word", "bytes", "label", "goto"
+            ]
+        })
 
         # Abbreviations
         globals_dict["ass"] = assembler.__getattribute__("instruction")
         globals_dict["dis"] = self.__getattribute__("disassemble")
 
         # Opcodes
-        globals_dict.update([(instruction.name, instruction.value.opcode) for instruction in Instructions])
-        globals_dict["UNDEFINED"] = max([instruction.value.opcode for instruction in Instructions]) + 1
-        globals_dict.update([(instruction.name, instruction.value.opcode) for instruction in LibInstructions])
+        globals_dict.update({
+            instruction.name: instruction.value.opcode
+            for instruction in Instructions
+        })
+        globals_dict["UNDEFINED"] = 1 + max([
+            instruction.value.opcode for instruction in Instructions])
+        globals_dict.update({
+            instruction.name: instruction.value.opcode
+            for instruction in LibInstructions
+        })
         for (name, instruction) in LibInstructions.__members__.items():
-            globals_dict.update([('{}_{}'.format(name, function.name), function.value.opcode) for function in instruction.value.library])
+            globals_dict.update({
+                '{}_{}'.format(name, function.name): function.value.opcode
+                for function in instruction.value.library
+            })
 
     def register_args(self, *args):
         argc = len(args)
