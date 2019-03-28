@@ -40,7 +40,6 @@ class State:
         self.M = Memory(self)
         self.M_word = WordMemory(self)
         self.S = Stack(self.state, self.registers["S0"], self.registers["STACK_SIZE"], self.registers["STACK_DEPTH"])
-        self.assembler = Assembler(self)
 
     def __del__(self):
         libsmite.smite_destroy(self.state)
@@ -53,7 +52,8 @@ class State:
         Managing the VM state: load, save
         Controlling and observing execution: run, step
         Examining memory: dump
-        Assembly: Assembler, word, instruction, lit, lit_pc_rel, label, goto
+        Assembly: Assembler, word, bytes, instruction, lit, lit_pc_rel, label,
+                  goto
         Disassembly: Disassembler, disassembler
         Abbreviations: ass=assembler.instruction, dis=disassembler.__next__
         The instruction opcodes are available as constants.
@@ -62,13 +62,15 @@ class State:
         globals_dict.update([(name, self.__getattribute__(name)) for
                              name in ["M", "M_word", "S", "registers",
                                       "load", "save", "run", "step",
-                                      "dump", "disassemble", "disassemble_pc"]])
-        globals_dict.update([(name, self.assembler.__getattribute__(name)) for
-                             name in ["instruction", "lit", "lit_pc_rel", "word",
-                                      "lit_bytes", "label", "goto"]])
+                                      "dump", "disassemble"]])
+        assembler = Assembler(self)
+        globals_dict['assembler'] = assembler
+        globals_dict.update([(name, assembler.__getattribute__(name)) for
+                             name in ["instruction", "lit", "lit_pc_rel",
+                                      "word", "bytes", "label", "goto"]])
 
         # Abbreviations
-        globals_dict["ass"] = self.assembler.__getattribute__("instruction")
+        globals_dict["ass"] = assembler.__getattribute__("instruction")
         globals_dict["dis"] = self.__getattribute__("disassemble")
 
         # Opcodes
@@ -109,7 +111,11 @@ class State:
                 raise
 
     def _print_trace_info(self):
-        print("step: PC={} I={:#x} instruction={}".format(self.registers["PC"].get(), self.registers["I"].get(), self.disassemble_pc()))
+        print("step: PC={} I={:#x} instruction={}".format(
+            self.registers["PC"].get(),
+            self.registers["I"].get(),
+            Disassembler(self).disassemble(),
+        ))
         print(str(self.S))
 
     def step(self, n=1, addr=None, trace=False, auto_NEXT=True):
@@ -123,11 +129,16 @@ class State:
             while True:
                 if trace: self._print_trace_info()
                 libsmite.smite_single_step(self.state)
-                if auto_NEXT and self.registers["I"].get() & instruction_mask == Instructions.NEXT.value.opcode:
+                if (auto_NEXT and
+                    self.registers["I"].get() & instruction_mask ==
+                        Instructions.NEXT.value.opcode
+                ):
                     if trace: self._print_trace_info()
                     ret = libsmite.smite_single_step(self.state)
                 done += 1
-                if self.registers["PC"].get() == addr or (addr == None and done == n):
+                if (self.registers["PC"].get() == addr or
+                    (addr == None and done == n)
+                ):
                     break
         except ErrorCode as e:
             ret = e.args[0]
@@ -137,7 +148,10 @@ class State:
                 if n > 1:
                     print(" after {} steps".format(done), end='')
                 if addr != None:
-                    print(" at PC = {:#x}".format(self.registers["PC"].get()), end='')
+                    print(" at PC = {:#x}".format(
+                        self.registers["PC"].get()),
+                        end='',
+                    )
                 print("")
             raise
 
@@ -155,10 +169,8 @@ class State:
     def save(self, file, address=0, length=None):
         '''
         Save an object file from the given address and length.
-        length defaults to 'self.assembler.pc'.
         '''
-        if length == None:
-            length = self.assembler.pc - address
+        assert length is not None
         ptr = libsmite.smite_native_address_of_range(self.state, address, length)
         if not is_aligned(address) or ptr == None:
             return -1
@@ -172,9 +184,6 @@ class State:
 
 
     # Disassembly
-    def disassemble_pc(self):
-        return Disassembler(self).disassemble()
-
     def disassemble(self, start=None, length=None, end=None, file=sys.stdout):
         '''
         Disassemble `length` bytes from `start`, or from `start` to `end`.

@@ -61,7 +61,7 @@ correct = [-128, 12345678]
 for n in correct:
     lit(n)
 ass(HALT)
-save("numbers.obj")
+save("numbers.obj", length=assembler.label())
 
 number_file = "numbers.obj"
 s = obj_name(build_dir, number_file, use_endism=False)

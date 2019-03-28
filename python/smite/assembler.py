@@ -1,6 +1,9 @@
 '''SMite assembler/disassembler'''
 
-from .binding import *
+from .binding import (
+    align, is_aligned,
+    word_size, word_bit, word_mask, instruction_bit, instruction_mask, sign_bit,
+)
 from .vm_data import Instructions
 from .vm_data_extra import LibInstructions
 
@@ -146,6 +149,13 @@ class Assembler:
         self.state.M_word[self.pc] = value
         self.pc += word_size
 
+    def bytes(self, bytes):
+        assert self.i_addr is None
+        for b in bytes:
+            self.state.M[self.pc] = b
+            self.pc += 1
+        self.pc = align(self.pc)
+
     def _fetch(self):
         '''
         Start a new word.
@@ -183,15 +193,6 @@ class Assembler:
     def lit_pc_rel(self, value):
         self.instruction(LIT_PC_REL)
         self.word(value - self.pc)
-
-    def lit_bytes(self, *values):
-        aligned_size = libsmite.smite_align(len(values))
-        values += (0,) * (aligned_size - len(values))
-        for i in range(libsmite.smite_align(len(values)) // word_size):
-            word = 0
-            for j in reversed(range(word_size)):
-                word = (word << byte_bit) | values[i * word_size + j]
-            self.word(word)
 
     def goto(self, pc):
         assert is_aligned(pc)

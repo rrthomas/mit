@@ -32,7 +32,7 @@ ass(LIB_SMITE)
 # Test LIB_C_ARGC
 lit(LIB_C_ARGC)
 ass(LIB_C)
-breaks.append(VM.assembler.label() + word_size)
+breaks.append(label() + word_size)
 
 # Test LIB_C_ARG
 lit(1)
@@ -43,12 +43,12 @@ for i in range(sizeof(c_char_p) // word_size):
     ass(DUP)
 lit(LIB_C_STRLEN)
 ass(LIB_C)
-breaks.append(VM.assembler.label() + word_size)
+breaks.append(label() + word_size)
 
 # Test LIB_C_STRNCPY
 lit(LIB_C_STRNCPY)
 ass(LIB_C)
-breaks.append(VM.assembler.label() + word_size)
+breaks.append(label() + word_size)
 
 # Run LIB_C_ARGC test
 step(addr=breaks[0])
