@@ -105,7 +105,7 @@ print('''\
     do {                                            \\
         initial_PC = S->PC;                         \\
         initial_STACK_DEPTH = S->STACK_DEPTH;       \\
-        error = smite_load_byte(S, S->PC++, &I); \\
+        error = load_byte(S, S->PC++, &I); \\
         if (error != 0)                             \\
             RAISE(error);                           \\
     } while (0)
