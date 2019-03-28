@@ -1,7 +1,7 @@
 # Test the comparison operators. We only test simple cases here, assuming
 # that the C compiler's comparison routines will work for other cases.
 #
-# (c) Reuben Thomas 1994-2018
+# (c) Reuben Thomas 1994-2019
 #
 # The package is distributed under the MIT/X11 License.
 #
@@ -9,61 +9,28 @@
 # RISK.
 
 from smite import *
+from smite_test import *
 VM = State()
 VM.globalize(globals())
 
 
-# Test results
-correct = [0, 1, 0, 1, 1, 0, 0, 1, 0, 0]
+# Utility function
+def assemble_tests(inputs, outputs, op):
+    assert(len(inputs) == len(outputs))
+    # Assemble test and compile 'correct'
+    for i, p in enumerate(inputs):
+        lit(p[0])
+        lit(p[1])
+        ass(op)
+        ass(POP)
+        correct.extend(([p[0]], [p[0], p[1]], [outputs[i]], []))
 
-# Code
-ass(LT)
-ass(LT)
-ass(LT)
-ass(LT)
-ass(EQ)
-ass(EQ)
-ass(ULT)
-ass(ULT)
-ass(ULT)
-ass(ULT)
+less_than_pairs = [(3, 1),  (1, 3),  (2, 2),  (-4, 3)]
+equality_pairs = [(237, 237),  (1, -1)]
+correct = [[]]
 
-# Test
-def stack1():
-    STACK_DEPTH.set(0)	# empty the stack
-    S.push(-4)
-    S.push(3)
-    S.push(2)
-    S.push(2)
-    S.push(1)
-    S.push(3)
-    S.push(3)
-    S.push(1)
+assemble_tests(less_than_pairs, [0, 1, 0, 1], LT)
+assemble_tests(equality_pairs, [1, 0], EQ)
+assemble_tests(less_than_pairs, [0, 1, 0, 0], ULT)
 
-def stack2():
-    STACK_DEPTH.set(0)	# empty the stack
-    S.push(1)
-    S.push(-1)
-    S.push(237)
-    S.push(237)
-
-def step(start, end):
-    if end > start:
-        for i in range(start, end):
-            _, inst = disassemble_instruction(PC.get())
-            print("I = {}".format(inst))
-            VM.step()
-            v = S.pop()
-            print("Result: {}; correct result: {}\n".format(v, correct[i]))
-            if correct[i] != v:
-                print("Error in comparison tests: PC = {:#x}".format(PC.get()))
-                sys.exit(1)
-
-stack1()      # set up the stack with four standard pairs to compare
-step(0, 4)    # do the < tests
-stack2()      # set up the stack with two standard pairs to compare
-step(4, 6)    # do the = tests
-stack1()      # set up the stack with four standard pairs to compare
-step(6, 10)   # do the U< tests
-
-print("Comparison tests ran OK")
+run_test("comparison", VM, correct)

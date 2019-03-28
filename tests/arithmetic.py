@@ -4,7 +4,7 @@
 # correctness of the operators here, assuming that if the arithmetic works
 # in one case, it will work in all.
 #
-# (c) Reuben Thomas 1994-2018
+# (c) Reuben Thomas 1994-2019
 #
 # The package is distributed under the MIT/X11 License.
 #
@@ -12,6 +12,7 @@
 # RISK.
 
 from smite import *
+from smite_test import *
 VM = State()
 VM.globalize(globals())
 
@@ -102,14 +103,4 @@ lit(2)
 ass(UDIVMOD)
 
 # Test
-for i in range(len(correct)):
-    print("Data stack: {}".format(S))
-    print("Correct stack: {}\n".format(correct[i]))
-    if str(correct[i]) != str(S):
-        print("Error in arithmetic tests: PC = {:#x}".format(PC.get()))
-        sys.exit(1)
-    _, inst = disassemble_instruction(PC.get())
-    print("I = {}".format(inst))
-    step()
-
-print("Arithmetic tests ran OK")
+run_test("arithmetic", VM, correct)

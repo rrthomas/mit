@@ -19,13 +19,11 @@ class Event:
      - hash1 - a random-looking 63-bit mask.
 
     `guess_code` must be side-effect-free; in particular it must not access
-    memory. On evaluation, `I` will be the opcode of the instruction.
+    memory. On evaluation, `opcode` will be the opcode of the instruction.
 
     On entry to `code`:
-     - `S->PC` is one byte beyond the beginning of the instruction,
-     - (Deprecated) `exception` is 0.
-    On exit:
-     - `S->PC` must point to the next instruction,
+     - `S->I` has already been shifted right.
+
     Exceptions can be thrown using the RAISE() macro.
     '''
 
@@ -61,7 +59,7 @@ for a in vm_data.Instructions:
         a.name,
         a.value.args,
         a.value.results,
-        'I == {}'.format(a.value.opcode),
+        'opcode == {}'.format(a.value.opcode),
         code,
     ))
 # Common literals.

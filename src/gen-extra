@@ -28,7 +28,7 @@ verify(sizeof(int) <= sizeof(smite_WORD));
 
 for lib in LibInstructions:
     print('''\
-static int extra_{}(smite_state *S, smite_WORD I)
+static int extra_{}(smite_state *S, smite_WORD opcode)
 {{
     smite_UWORD cached_depth = 0;
     smite_WORD temp;
@@ -45,7 +45,7 @@ static int extra_{}(smite_state *S, smite_WORD I)
 ''')
 
 print('''
-int smite_extra(smite_state *S, smite_WORD I)
+int smite_extra(smite_state *S, smite_WORD opcode)
 {
     smite_UWORD cached_depth = 0;
     smite_WORD temp;

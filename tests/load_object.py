@@ -16,8 +16,8 @@ def try_load(file):
     try:
         load(file)
         ret = 0
-    except State.LoadError as e:
-        ret = e.args[1]
+    except ErrorCode as e:
+        ret = e.args[0]
     print("load_object(\"{}\", 0) returns {}".format(file, ret), end='')
     return ret
 
@@ -33,12 +33,12 @@ build_dir = os.environ['builddir']
 
 bad_files = ["badobj1", "badobj2", "badobj3", "badobj4"]
 error_code = [-2, -2, -4, -2]
-for i in range(len(bad_files)):
-    s = obj_name(src_dir, bad_files[i], word_size)
+for i, bad_file in enumerate(bad_files):
+    s = obj_name(src_dir, bad_file, word_size)
     res = try_load(s)
     print(" should be {}".format(error_code[i]))
     if res != error_code[i]:
-        print("Error in load_object() tests: file {}".format(bad_files[i]))
+        print("Error in load_object() tests: file {}".format(bad_file))
         sys.exit(1)
 
 
@@ -61,7 +61,7 @@ correct = [-128, 12345678]
 for n in correct:
     lit(n)
 ass(HALT)
-save("numbers.obj")
+save("numbers.obj", length=assembler.label())
 
 number_file = "numbers.obj"
 s = obj_name(build_dir, number_file, use_endism=False)
@@ -70,7 +70,9 @@ print(" should be {}".format(0))
 if res != 0:
     print("Error in load_object() tests: file {}".format(number_file))
     sys.exit(1)
-if run() != 128:
+try:
+    run()
+except ErrorCode:
     print("Error in load_object() tests: file {}".format(number_file))
     sys.exit(1)
 print("Data stack: {}".format(S))

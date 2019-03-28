@@ -46,46 +46,39 @@ print('''\
 #include "opcodes.h"
 #include "extra.h"
 
-#define RAISE(code)                         \\
-    do {                                    \\
-        res = (code);                       \\
-        S->PC = initial_PC;                 \\
-        S->STACK_DEPTH = initial_STACK_DEPTH; \\
-        goto RET;                           \\
+#define RAISE(code)                                           \\
+    do {                                                      \\
+        res = (code);                                         \\
+        S->PC = initial_PC;                                   \\
+        S->I = initial_I;                                     \\
+        S->STACK_DEPTH = initial_STACK_DEPTH;                 \\
+        goto RET;                                             \\
     } while(0)
 
-static inline int LOAD_IMMEDIATE_WORD(smite_state *S, smite_UWORD addr, smite_WORD *value)
-{
-    smite_WORD v = 0;
-    for (unsigned i = WORD_SIZE; i > 0; i--) {
-        smite_BYTE b;
-        int ret = load_byte(S, addr + i - 1, &b);
-        if (ret != 0)
-            return ret;
-        v = (v << smite_BYTE_BIT) | b;
-    }
-    *value = v;
-    return SMITE_ERR_OK;
-}
+#define NEXT                                                  \\
+    do {                                                      \\
+        int ret = load_word(S, S->PC, (smite_WORD *)&(S->I)); \\
+        if (ret != 0)                                         \\
+            RAISE(ret);                                       \\
+        S->PC += WORD_SIZE;                                   \\
+    } while (0)
 ''')
 
 print('''\
 smite_WORD smite_single_step(smite_state *S) {
     smite_UWORD initial_PC = S->PC;
+    smite_UWORD initial_I = S->I;
     smite_UWORD initial_STACK_DEPTH = S->STACK_DEPTH;
     smite_UWORD cached_depth = 0; // Always zero.
     int res = SMITE_ERR_OK, error;
-    smite_BYTE I;
-    error = load_byte(S, S->PC++, &I);
-    if (error != 0) {
-        RAISE(error);
-    }
+    smite_BYTE opcode = S->I & SMITE_INSTRUCTION_MASK;
+    S->I >>= SMITE_INSTRUCTION_BIT;
 ''')
 
 print(instruction_gen.dispatch(vm_data.Instructions, 'O_', '''\
         // Undefined instruction; try extra instructions.
         {
-            error = smite_extra(S, I);
+            error = smite_extra(S, opcode);
             if (error != 0)
                 RAISE(error);
         }'''
@@ -104,10 +97,10 @@ print('''\
 #define FETCH                                       \\
     do {                                            \\
         initial_PC = S->PC;                         \\
+        initial_I = S->I;                           \\
         initial_STACK_DEPTH = S->STACK_DEPTH;       \\
-        error = load_byte(S, S->PC++, &I); \\
-        if (error != 0)                             \\
-            RAISE(error);                           \\
+        opcode = S->I & SMITE_INSTRUCTION_MASK;     \\
+        S->I >>= SMITE_INSTRUCTION_BIT;             \\
     } while (0)
 
 smite_WORD smite_run(smite_state *S) {
@@ -126,9 +119,9 @@ if max_cached_depth > 0:
 
 print('''\
     do {
-        smite_UWORD initial_PC, initial_STACK_DEPTH;
+        smite_UWORD initial_PC, initial_I, initial_STACK_DEPTH;
         smite_UWORD cached_depth = 0;
-        smite_BYTE I;
+        smite_BYTE opcode;
 
         FETCH;
         goto A_0;
@@ -196,15 +189,9 @@ print('''\
         {{
             assert(res == SMITE_ERR_OK);
             cached_depth = {};
-            // Pretend we fetched the instruction the formal way.
-            S->PC--;
-            error = load_byte(S, S->PC++, &I);
-            if (error != 0)
-                RAISE(error);
-
-            assert(I > {});
+            assert(opcode > {});
             // Undefined instruction; try extra instructions.
-            error = smite_extra(S, I);
+            error = smite_extra(S, opcode);
             if (error != 0)
                 RAISE(error);
             goto RET;

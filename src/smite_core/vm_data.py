@@ -21,7 +21,8 @@ class Register:
 class Registers(Enum):
     '''VM registers.'''
     PC = Register()
-    BAD = Register(read_only=True)
+    I = Register()
+    BAD = Register()
     MEMORY = Register(read_only=True)
     STACK_DEPTH = Register()
     S0 = Register("smite_WORDP", read_only=True)
@@ -31,11 +32,11 @@ class Registers(Enum):
 @unique
 class Instructions(Enum):
     '''VM instruction instructions.'''
-    HALT = Instruction(0x00, [], [], '''\
-        RAISE(SMITE_ERR_HALT);
-    ''')
+    NEXT = Instruction(0x00, [], [], '''\
+        NEXT;'''
+    )
 
-    POP = Instruction(0x01, ['item',], [], '''\
+    POP = Instruction(0x01, ['item'], [], '''\
         (void)item;
     ''')
 
@@ -54,14 +55,14 @@ class Instructions(Enum):
     ''')
 
     LIT = Instruction(0x04, [], ['n'], '''\
-        int ret = LOAD_IMMEDIATE_WORD(S, S->PC, &n);
+        int ret = load_word(S, S->PC, &n);
         if (ret != 0)
             RAISE(ret);
         S->PC += WORD_SIZE;
     ''')
 
     LIT_PC_REL = Instruction(0x05, [], ['n'], '''\
-        int ret = LOAD_IMMEDIATE_WORD(S, S->PC, &n);
+        int ret = load_word(S, S->PC, &n);
         if (ret != 0)
             RAISE(ret);
         n += S->PC;
@@ -162,16 +163,20 @@ class Instructions(Enum):
 
     BRANCH = Instruction(0x19, ['addr'], [], '''\
         S->PC = (smite_UWORD)addr;
+        NEXT;
     ''')
 
     BRANCHZ = Instruction(0x1a, ['flag', 'addr'], [], '''\
-        if (flag == 0)
+        if (flag == 0) {
             S->PC = (smite_UWORD)addr;
+            NEXT;
+        }
     ''')
 
     CALL = Instruction(0x1b, ['addr'], ['ret_addr'], '''\
         ret_addr = S->PC;
         S->PC = (smite_UWORD)addr;
+        NEXT;
     ''')
 
     GET_WORD_SIZE = Instruction(0x1c, [], ['r'], '''\
@@ -190,6 +195,6 @@ class Instructions(Enum):
         S->STACK_DEPTH = a;
     ''')
 
-    NOP = Instruction(0x1f, [], [], '''\
-        // Do nothing.'''
-    )
+    HALT = Instruction(0x1f, [], [], '''\
+        RAISE(SMITE_ERR_HALT);
+    ''')

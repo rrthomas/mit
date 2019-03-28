@@ -25,6 +25,8 @@ const smite_UWORD smite_word_mask = smite_WORD_MASK;
 const smite_UWORD smite_uword_max = smite_UWORD_MAX;
 const smite_WORD smite_word_min = smite_WORD_MIN;
 const smite_WORD smite_word_max = smite_WORD_MAX;
+const smite_UWORD smite_instruction_bit = SMITE_INSTRUCTION_BIT;
+const smite_UWORD smite_instruction_mask = SMITE_INSTRUCTION_MASK;
 
 
 // Utility functions

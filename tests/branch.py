@@ -4,7 +4,7 @@
 # The test program contains an infinite loop, but this is only executed
 # once.
 #
-# (c) Reuben Thomas 1994-2018
+# (c) Reuben Thomas 1994-2019
 #
 # The package is distributed under the MIT/X11 License.
 #
@@ -17,81 +17,110 @@ VM.globalize(globals())
 
 
 # Test results
-correct = [0, word_size + 1, 96, 96 + word_size + 1, 48, 48 + word_size + 1,
-           10000, 10000 + word_size + 1, 10000 + word_size * 2 + 2,
-           10000 + word_size * 2 + 3, 10000 + word_size * 3 + 4, 10000 + word_size * 4 + 5,
-           10000 + word_size * 4 + 6, 10000 + word_size * 5 + 7, 10000 + word_size * 6 + 8,
-           11000, 11000 + word_size + 1, 11000 + word_size * 2 + 2, 11000 + word_size * 8, 11000 + word_size * 9 + 1,
-           600, 600 + word_size + 1,
-           200, 200 + word_size + 1, 300,
-           200 + word_size + 2,
-           600 + word_size + 2, 600 + word_size * 2 + 3, 600 + word_size * 3 + 4, 600 + word_size * 4 + 5,
-           600 + word_size * 4 + 6, 600 + word_size * 5 + 7, 600 + word_size * 5 + 8,
-           600 + word_size * 5 + 9, 600 + word_size * 5 + 10, 64
-]
+correct = []
 
 # Code
-VM.here = 0
+goto(0)
+correct.append(assembler.pc)
 lit(96)
+correct.append(assembler.pc)
 ass(BRANCH)
 
-VM.here = 96
+goto(96)
+correct.append(assembler.pc + word_size)
 lit_pc_rel(48)
+correct.append(assembler.pc)
 ass(BRANCH)
 
-VM.here = 48
+goto(48)
+correct.append(assembler.pc + word_size)
 lit_pc_rel(10000)
+correct.append(assembler.pc)
 ass(BRANCH)
 
-VM.here = 10000
+goto(10000)
+correct.append(assembler.pc + word_size)
 lit(1)
+correct.append(assembler.pc)
 lit(9999)
+correct.append(assembler.pc)
 ass(BRANCHZ)
+correct.append(assembler.pc)
 lit(1)
+correct.append(assembler.pc)
 lit(0)
+correct.append(assembler.pc)
 ass(BRANCHZ)
+correct.append(assembler.pc)
 lit(0)
+correct.append(assembler.pc)
 lit_pc_rel(11000)
+correct.append(assembler.pc)
 ass(BRANCHZ)
 
-VM.here = 11000
+goto(11000)
+correct.append(assembler.pc + word_size)
 lit(0)
+correct.append(assembler.pc)
 lit_pc_rel(11000 + word_size * 8)
+correct.append(assembler.pc)
 ass(BRANCHZ)
 
-VM.here = 11000 + word_size * 8
+goto(11000 + word_size * 8)
+correct.append(assembler.pc + word_size)
 lit_pc_rel(600)
+correct.append(assembler.pc)
 ass(CALL)
 
-VM.here = 600
+goto(600)
+correct.append(assembler.pc + word_size)
 lit_pc_rel(200)
+correct.append(assembler.pc)
 ass(CALL)
+
+goto(200)
+correct.append(assembler.pc + word_size)
+lit(304)
+correct.append(assembler.pc)
+ass(CALL)
+
+goto(304)
+correct.append(assembler.pc + word_size)
+ass(BRANCH)
+
+goto(200 + word_size * 2)
+correct.append(assembler.pc + word_size)
+ass(BRANCH)
+
+goto(600 + word_size * 2)
+correct.append(assembler.pc + word_size)
 lit(64)
+correct.append(assembler.pc)
 lit(24)
+correct.append(assembler.pc)
 lit(1)
+correct.append(assembler.pc)
 ass(SWAP)
+correct.append(assembler.pc)
 lit(1)
+correct.append(assembler.pc)
 ass(DUP)
+correct.append(assembler.pc)
 ass(STORE)
+correct.append(assembler.pc)
 ass(LOAD)
+correct.append(assembler.pc)
 ass(CALL)
-
-VM.here = 200
-lit(300)
-ass(CALL)
-ass(BRANCH)
-
-VM.here = 300
-ass(BRANCH)
+correct.append(64 + word_size)
 
 # Test
-for i in range(len(correct)):
-    print("Instruction {}: PC = {} should be {}\n".format(i, PC.get(), correct[i]))
-    if correct[i] != PC.get():
+for i, pc in enumerate(correct):
+    print("Instruction {}: PC = {} should be {}\n".format(i, PC.get(), pc))
+    if pc != PC.get():
         print("Error in branch tests: PC = {:#x}".format(PC.get()))
         sys.exit(1)
-    _, inst = disassemble_instruction(PC.get())
-    print("I = {}".format(inst))
-    step()
+    while registers["I"].get() & instruction_mask == Instructions.NEXT.value.opcode:
+        step(auto_NEXT=False)
+    step(trace=True, auto_NEXT=False)
 
 print("Branch tests ran OK")
