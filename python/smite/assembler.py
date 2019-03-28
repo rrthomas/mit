@@ -8,6 +8,7 @@ LIT = Instructions.LIT.value.opcode
 LIT_PC_REL = Instructions.LIT_PC_REL.value.opcode
 BRANCH = Instructions.BRANCH.value.opcode
 CALL = Instructions.CALL.value.opcode
+HALT = Instructions.HALT.value.opcode
 
 mnemonic = {
     instruction.value.opcode: instruction.name
@@ -19,7 +20,7 @@ mnemonic.update({
 })
 
 # The set of opcodes which must be the last in a word.
-TERMINAL_OPCODES = frozenset([0, BRANCH, CALL])
+TERMINAL_OPCODES = frozenset([0, BRANCH, CALL, HALT])
 
 class Disassembler:
     '''
