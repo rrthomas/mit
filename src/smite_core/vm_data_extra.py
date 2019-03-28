@@ -73,7 +73,7 @@ class TypedStackPicture(StackPicture):
         code = ['{} = 0;'.format(var.name)]
         num_items = bytes_to_words(type_sizes[var.type])
         for i in reversed(range(num_items)):
-            code.append('UNCHECKED_LOAD_STACK({}, &temp);'.format(pos + i))
+            code.append('temp = *UNCHECKED_STACK({});'.format(pos + i))
             if i < num_items - 1:
                 code.append('{var} = ({type})((size_t){var} << smite_WORD_BIT);'.format(var=var.name, type=var.type))
             code.append('{var} = ({type})((size_t){var} | (smite_UWORD)temp);'.format(var=var.name, type=var.type))
@@ -84,7 +84,7 @@ class TypedStackPicture(StackPicture):
         code = []
         num_items = bytes_to_words(type_sizes[var.type])
         for i in range(num_items):
-            code.append('UNCHECKED_STORE_STACK({pos}, (smite_UWORD)((size_t){var} & smite_WORD_MASK));'.format(pos=pos + i, var=var.name))
+            code.append('*UNCHECKED_STACK({pos}) = (smite_UWORD)((size_t){var} & smite_WORD_MASK);'.format(pos=pos + i, var=var.name))
             if i < num_items - 1:
                 code.append('{var} = ({type})((size_t){var} >> smite_WORD_BIT);'.format(var=var.name, type=var.type))
         return '\n'.join(code)

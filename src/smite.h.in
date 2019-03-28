@@ -199,10 +199,8 @@ int smite_store_byte(smite_state *S, smite_UWORD addr, smite_BYTE value);
 
 #define STACK_DIRECTION 1
 
-#define UNCHECKED_LOAD_STACK(pos, vp)                                   \
-    (*(vp) = *(S->S0 + (S->STACK_DEPTH - (pos) - 1) * STACK_DIRECTION))
-#define UNCHECKED_STORE_STACK(pos, v)                                   \
-    (*(S->S0 + (S->STACK_DEPTH - (pos) - 1) * STACK_DIRECTION) = (v))
+#define UNCHECKED_STACK(pos)                                    \
+    (S->S0 + (S->STACK_DEPTH - (pos) - 1) * STACK_DIRECTION)
 
 static inline int load_stack(smite_state *S, smite_UWORD pos, smite_WORD *vp)
 {
@@ -211,7 +209,7 @@ static inline int load_stack(smite_state *S, smite_UWORD pos, smite_WORD *vp)
         return SMITE_ERR_STACK_READ;
     }
 
-    UNCHECKED_LOAD_STACK(pos, vp);
+    *vp = *UNCHECKED_STACK(pos);
     return SMITE_ERR_OK;
 }
 
@@ -222,7 +220,7 @@ static inline int store_stack(smite_state *S, smite_UWORD pos, smite_WORD v)
         return SMITE_ERR_STACK_WRITE;
     }
 
-    UNCHECKED_STORE_STACK(pos, v);
+    *UNCHECKED_STACK(pos) = v;
     return SMITE_ERR_OK;
 }
 

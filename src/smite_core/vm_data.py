@@ -37,19 +37,19 @@ class Instructions(Enum):
     )
 
     POP = Instruction(0x01, ['item'], [], '''\
+        (void)item;
     ''')
 
     DUP = Instruction(0x02, ['ITEMS', 'COUNT'], ['ITEMS', 'dupee'], '''\
-        UNCHECKED_LOAD_STACK(COUNT, &dupee);
+        dupee = *UNCHECKED_STACK(COUNT);
     ''')
 
     SWAP = Instruction(0x03, ['ITEMS', 'COUNT'], ['ITEMS'], '''\
         if (COUNT > 0) {
-            smite_WORD top, swapee;
-            UNCHECKED_LOAD_STACK(COUNT, &swapee);
-            UNCHECKED_LOAD_STACK(0, &top);
-            UNCHECKED_STORE_STACK(COUNT, top);
-            UNCHECKED_STORE_STACK(0, swapee);
+            smite_WORD swapee = *UNCHECKED_STACK(COUNT);
+            smite_WORD top = *UNCHECKED_STACK(0);
+            *UNCHECKED_STACK(COUNT) = top;
+            *UNCHECKED_STACK(0) = swapee;
         }
     ''')
 
