@@ -154,5 +154,9 @@ libsmite.smite_align.argtypes = [c_uword]
 
 libsmite.smite_is_aligned.argtypes = [c_uword]
 
+def align(addr):
+    return libsmite.smite_align(addr)
+
 def is_aligned(addr):
     return libsmite.smite_is_aligned(addr)
+
