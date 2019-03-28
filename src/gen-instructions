@@ -30,7 +30,7 @@ print('''\
         return error;                                         \\
     } while (0)
 
-#define FETCH                                                 \\
+#define NEXT                                                  \\
     do {                                                      \\
         int ret = load_word(S, S->PC, (smite_WORD *)&(S->I)); \\
         if (ret != 0)                                         \\

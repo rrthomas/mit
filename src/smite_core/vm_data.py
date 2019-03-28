@@ -33,7 +33,7 @@ class Registers(Enum):
 class Instructions(Enum):
     '''VM instruction instructions.'''
     NEXT = Instruction(0x00, [], [], '''\
-        FETCH;'''
+        NEXT;'''
     )
 
     POP = Instruction(0x01, ['item'], [], '''\
@@ -162,20 +162,20 @@ class Instructions(Enum):
 
     BRANCH = Instruction(0x19, ['addr'], [], '''\
         S->PC = (smite_UWORD)addr;
-        FETCH;
+        NEXT;
     ''')
 
     BRANCHZ = Instruction(0x1a, ['flag', 'addr'], [], '''\
         if (flag == 0) {
             S->PC = (smite_UWORD)addr;
-            FETCH;
+            NEXT;
         }
     ''')
 
     CALL = Instruction(0x1b, ['addr'], ['ret_addr'], '''\
         ret_addr = S->PC;
         S->PC = (smite_UWORD)addr;
-        FETCH;
+        NEXT;
     ''')
 
     GET_WORD_SIZE = Instruction(0x1c, [], ['r'], '''\
