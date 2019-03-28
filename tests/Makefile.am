@@ -37,6 +37,7 @@ TESTS_ENVIRONMENT = \
 
 EXTRA_DIST = \
 	$(TESTS) \
+	smite_test.py	\
 	redirect_stdout.py \
 	hello.correct \
 	badobj1-le-4 badobj1-be-4 \

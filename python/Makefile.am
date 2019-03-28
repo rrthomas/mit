@@ -12,6 +12,8 @@ man_MANS = @PACKAGE@-dump.1 @PACKAGE@-shell.1
 pkgpython_PYTHON =			\
 	@PACKAGE@/__init__.py		\
 	@PACKAGE@/__main__.py		\
+	@PACKAGE@/assembler.py		\
+	@PACKAGE@/binding.py		\
 	@PACKAGE@/vm_data.py		\
 	@PACKAGE@/vm_data_extra.py	\
 	@PACKAGE@/instruction_gen.py

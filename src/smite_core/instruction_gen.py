@@ -58,7 +58,7 @@ class StackPicture:
      - named_items - list of str - the names of the non-variadic items,
        which must be on the top of the stack, and might include "COUNT".
 
-     - is_variadic - bool - If `True`, there are `COUNT` more items underneath
+     - is_variadic - bool - if `True`, there are `COUNT` more items underneath
        the non-variadic items.
     '''
     def __init__(self, named_items, is_variadic=False):
@@ -205,7 +205,7 @@ def dispatch(instructions, prefix, undefined_case):
 
     instructions - Enum of Instructions.
     '''
-    output = '    switch (I) {\n'
+    output = '    switch (opcode) {\n'
     for instruction in instructions:
         output += '''\
     case {prefix}{instruction}:
