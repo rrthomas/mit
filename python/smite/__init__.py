@@ -224,11 +224,14 @@ class State:
 
     def dump(self, start=None, length=None, end=None, file=sys.stdout):
         '''
-        Dump `length` bytes from `start`, or from `start` to `end`.
-        Defaults to 256 bytes from `start` - 16.
+        Dump `length` bytes from `start` (rounded down to nearest 16),
+        or from `start` to `end`.
+        Defaults to 256 bytes from `start`.
         '''
+        chunk = 16
         if start == None:
-            start = max(0, self.registers["PC"].get() - 16)
+            start = max(0, self.registers["PC"].get())
+        start -= start % chunk
         if length != None:
             end = start + length
         elif end == None:
@@ -237,7 +240,6 @@ class State:
         p = start
         while p < end:
             print("{:#08x} ".format(p), end='', file=file)
-            chunk = 16
             ascii = ""
             i = 0
             while i < chunk and p < end:
