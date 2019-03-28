@@ -144,7 +144,7 @@ cycle is entered:
 \begin{tabbing}
 \hspace{0.5in}\=begin\=\+\+ \\*
 execute the instruction in the \instsize\ least-significant bits of {\tt I} \\*
-shift {\tt I} logically \instsize\ bits to the right \\*
+shift {\tt I} logically \instsize\ bits to the right \- \\*
 repeat
 \end{tabbing}
 
@@ -382,7 +382,7 @@ call and return (subroutine return is {\tt BRANCH}):
 \nopagebreak
 \begin{description}
 \inst{BRANCH}{a-addr —}{Set {\tt PC} to \spic{a-addr}. Perform the action of {\tt NEXT}.}
-\inst{BRANCHZ}{flag a-addr —}{If \spic{flag} is false then set {\tt PC} to \spic{a-addr}. Perform the action of {\tt NEXT}.}
+\inst{BRANCHZ}{flag a-addr —}{If \spic{flag} is false then set {\tt PC} to \spic{a-addr} and perform the action of {\tt NEXT}.}
 \inst{CALL}{\aaddr1 — \aaddr2}{Exchange {\tt PC} with the top stack value. Perform the action of {\tt NEXT}.}
 \end{description}
 
