@@ -274,7 +274,7 @@ indeterminate numbers of specified types of word.
 \subsection{Instruction fetch}
 
 \begin{description}
-\inst{NEXT}{—}{Load the word pointed to by {\tt PC} into {\tt I} then add {\tt WORD\_SIZE} to {\tt PC}. If {\tt PC} is not word-aligned, raise error $7$, setting {\tt BAD} to the contents of {\tt PC}.}
+\inst{NEXT}{—}{If {\tt I} is not $0$, raise error $1$. Load the word pointed to by {\tt PC} into {\tt I} then add {\tt WORD\_SIZE} to {\tt PC}. If {\tt PC} is not word-aligned, raise error $7$, setting {\tt BAD} to the contents of {\tt PC}.}
 \end{description}
 
 

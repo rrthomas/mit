@@ -32,6 +32,8 @@ print('''\
 
 #define NEXT                                                  \\
     do {                                                      \\
+        if (S->I != 0)                                        \\
+            RAISE(SMITE_ERR_INVALID_OPCODE);                  \\
         int ret = load_word(S, S->PC, (smite_WORD *)&(S->I)); \\
         if (ret != 0)                                         \\
             RAISE(ret);                                       \\
