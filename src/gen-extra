@@ -16,7 +16,7 @@ print(includes)
 
 print('''
 enum {
-    SMITE_ERR_EXTRA_INVALID_LIBRARY = 15,
+    SMITE_ERR_EXTRA_INVALID_FUNCTION = 15,
 };
 
 #define RAISE(code)                         \\
@@ -32,7 +32,7 @@ static int extra_{}(smite_state *S, smite_WORD opcode)
 {{
     smite_WORD temp;
 '''.format(str.lower(lib.name)))
-    print(dispatch(lib.value.library, '{}_'.format(lib.name), '            RAISE(SMITE_ERR_EXTRA_INVALID_LIBRARY);'))
+    print(dispatch(lib.value.library, '{}_'.format(lib.name), '            RAISE(SMITE_ERR_EXTRA_INVALID_FUNCTION);'))
     print('''
     return SMITE_ERR_OK;
 }
