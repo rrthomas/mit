@@ -13,9 +13,21 @@ gl_EARLY
 AM_PROG_AR
 LT_INIT
 AM_PATH_PYTHON([3.4])
-AC_PATH_PROG(IPYTHON3, ipython3, [$PYTHON])
-AC_PATH_PROG(LATEXMK, latexmk, true)
-AC_PATH_PROG(SLOCCOUNT, sloccount, true)
+AC_PATH_PROGS([IPYTHON], [ipython3 ipython])
+# Check detected/configured IPython, and set command-line options
+AS_IF([test "$IPYTHON" = ""],
+   [# If we don't have IPython, fall back to Python
+   IPYTHON=$PYTHON
+   IPYTHON_OPTS=""],
+   [# Check IPython is Python 3; error if not
+   PYTHON_VERSION=`$IPYTHON --quick --no-term-title -c "import sys; print(sys.version_info.major)"`
+   PYTHON_VERSION=${PYTHON_VERSION%\\n}
+   AS_IF([test "$PYTHON_VERSION" != "3"], AC_MSG_ERROR([IPYTHON is not Python 3]))
+   IPYTHON_OPTS="--autocall 2"]
+   AC_SUBST([IPYTHON_OPTS])
+)
+AC_PATH_PROG([LATEXMK], [latexmk], [true])
+AC_PATH_PROG([SLOCCOUNT], [sloccount], [true])
 AM_CONDITIONAL([HAVE_LATEXMK], [test "$ac_cv_path_LATEXMK" != "true"])
 gl_INIT
 
