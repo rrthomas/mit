@@ -11,6 +11,7 @@ addons:
       - texlive-science
       - texlive-fonts-recommended
       - texlive-fonts-extra
+      - tex-gyre
       - help2man
       - latexmk
       - hevea

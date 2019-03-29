@@ -1,6 +1,6 @@
 # Docs Makefile.am
 #
-# (c) Reuben Thomas 2011-2018
+# (c) Reuben Thomas 2011-2019
 #
 # The package is distributed under the MIT/X11 License.
 #
@@ -9,12 +9,10 @@
 
 LATEX_SRCS = \
 	$(srcdir)/bibtex/bib/rrt.bib \
-	$(srcdir)/bibtex/bib/vm.bib \
-	$(srcdir)/bibtex/bib/ertl.bib
+	$(srcdir)/bibtex/bib/vm.bib
 
 LATEX_PDFS = \
-	@PACKAGE@.pdf \
-	c@PACKAGE@.pdf
+	@PACKAGE@.pdf
 
 if HAVE_LATEXMK
 dist_doc_DATA = $(LATEX_PDFS)
@@ -29,9 +27,9 @@ MAINTAINERCLEANFILES = $(LATEX_PDFS)
 
 clean-local:
 	$(LATEXMK) -r $(srcdir)/latexmkrc -C -f $(LATEX_SRCS) \
-		$(builddir)/@PACKAGE@.tex $(builddir)/c@PACKAGE@.tex
+		$(builddir)/@PACKAGE@.tex
 
-EXTRA_DIST = $(LATEX_SRCS) $(LATEX_PDFS) @PACKAGE@.tex.in c@PACKAGE@.tex.in latexmkrc
+EXTRA_DIST = $(LATEX_SRCS) $(LATEX_PDFS) @PACKAGE@.tex.in latexmkrc
 
 # TODO: mv works around a bug in latexmk < 4.54, which sets $out_dir when it
 # shouldn't. Remove when we can require latexmk >= 4.54 (Ubuntu 20.04).

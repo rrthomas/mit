@@ -1,5 +1,5 @@
-// Public data structures and interface calls specified in the VM definition.
-// This is the header file to include in programs using an embedded VM.
+// Public data structures and interface calls.
+// This is the header file to include in programs using SMite.
 //
 // (c) Reuben Thomas 1994-2019
 //
@@ -81,7 +81,7 @@ typedef struct {
     type smite_get_ ## reg(smite_state *S);
 #define R(reg, type, utype)                     \
     R_RO(reg, type, utype)                      \
-    void smite_set_ ## reg(smite_state *S, type value);
+    void smite_set_ ## reg(smite_state *S, type val);
 #include "registers.h"
 #undef R
 #undef R_RO
@@ -109,6 +109,13 @@ enum {
 
 // Utility functions
 
+smite_UWORD smite_align(smite_UWORD addr);
+/* Return `addr` aligned to the next word boundary. */
+
+int smite_is_aligned(smite_UWORD addr);
+/* Return 1 if `addr` is aligned, or `0` if not.  */
+
+// Inline functions
 _GL_ATTRIBUTE_CONST static inline smite_UWORD align(smite_UWORD addr)
 {
     return (addr + WORD_SIZE - 1) & -WORD_SIZE;
@@ -119,22 +126,47 @@ _GL_ATTRIBUTE_CONST static inline int is_aligned(smite_UWORD addr)
     return (addr & (WORD_SIZE - 1)) == 0;
 }
 
-// Linkable stubs
-smite_UWORD smite_align(smite_UWORD addr);
-int smite_is_aligned(smite_UWORD addr);
 
+// Memory access
 
-// Memory
-// Return value is 0 if OK, or error code for invalid or unaligned address
+uint8_t *smite_native_address_of_range(smite_state *S, smite_UWORD addr, smite_UWORD len);
+/* Return a host pointer to the VM address `addr`, or `NULL` if any address
+   in the range [addr, addr+len] is invalid.
+*/
 
-_GL_ATTRIBUTE_PURE static inline uint8_t *native_address_of_range(smite_state *S, smite_UWORD addr, smite_UWORD length)
+int smite_load_word(smite_state *S, smite_UWORD addr, smite_WORD *val_ptr);
+/* Load the word at `addr` into the word pointed to by `val_ptr`.
+
+   Return 0 if OK, or error code if `addr` is invalid or unaligned.
+*/
+
+int smite_store_word(smite_state *S, smite_UWORD addr, smite_WORD val);
+/* Store the word `val` at virtual address `addr`.
+
+   Return 0 if OK, or error code if `addr` is invalid or unaligned.
+*/
+
+int smite_load_byte(smite_state *S, smite_UWORD addr, smite_BYTE *val_ptr);
+/* Load the byte at `addr` into the byte pointed to by `val_ptr`.
+
+   Return 0 if OK, or error code if `addr` is invalid.
+*/
+
+int smite_store_byte(smite_state *S, smite_UWORD addr, smite_BYTE val);
+/* Store the byte `val` at virtual address `addr`.
+
+   Return 0 if OK, or error code if `addr` is invalid.
+*/
+
+// Inline functions
+_GL_ATTRIBUTE_PURE static inline uint8_t *native_address_of_range(smite_state *S, smite_UWORD addr, smite_UWORD len)
 {
-    if (addr >= S->MEMORY || length > S->MEMORY - addr)
+    if (addr >= S->MEMORY || len > S->MEMORY - addr)
         return NULL;
     return ((uint8_t *)(S->memory)) + addr;
 }
 
-static inline int load_word(smite_state *S, smite_UWORD addr, smite_WORD *value)
+static inline int load_word(smite_state *S, smite_UWORD addr, smite_WORD *val_ptr)
 {
     if (addr >= S->MEMORY) {
         S->BAD = addr;
@@ -145,22 +177,11 @@ static inline int load_word(smite_state *S, smite_UWORD addr, smite_WORD *value)
         return SMITE_ERR_MEMORY_UNALIGNED;
     }
 
-    *value = S->memory[addr / WORD_SIZE];
+    *val_ptr = S->memory[addr / WORD_SIZE];
     return SMITE_ERR_OK;
 }
 
-static inline int load_byte(smite_state *S, smite_UWORD addr, smite_BYTE *value)
-{
-    if (addr >= S->MEMORY) {
-        S->BAD = addr;
-        return SMITE_ERR_MEMORY_READ;
-    }
-
-    *value = ((smite_BYTE *)S->memory)[addr];
-    return SMITE_ERR_OK;
-}
-
-static inline int store_word(smite_state *S, smite_UWORD addr, smite_WORD value)
+static inline int store_word(smite_state *S, smite_UWORD addr, smite_WORD val)
 {
     if (addr >= S->MEMORY) {
         S->BAD = addr;
@@ -171,37 +192,68 @@ static inline int store_word(smite_state *S, smite_UWORD addr, smite_WORD value)
         return SMITE_ERR_MEMORY_UNALIGNED;
     }
 
-    S->memory[addr / WORD_SIZE] = value;
+    S->memory[addr / WORD_SIZE] = val;
     return SMITE_ERR_OK;
 }
 
-static inline int store_byte(smite_state *S, smite_UWORD addr, smite_BYTE value)
+static inline int load_byte(smite_state *S, smite_UWORD addr, smite_BYTE *val_ptr)
+{
+    if (addr >= S->MEMORY) {
+        S->BAD = addr;
+        return SMITE_ERR_MEMORY_READ;
+    }
+
+    *val_ptr = ((smite_BYTE *)S->memory)[addr];
+    return SMITE_ERR_OK;
+}
+
+static inline int store_byte(smite_state *S, smite_UWORD addr, smite_BYTE val)
 {
     if (addr >= S->MEMORY) {
         S->BAD = addr;
         return SMITE_ERR_MEMORY_WRITE;
     }
 
-    ((smite_BYTE *)S->memory)[addr] = value;
+    ((smite_BYTE *)S->memory)[addr] = val;
     return SMITE_ERR_OK;
 }
 
-// Linkable stubs
-uint8_t *smite_native_address_of_range(smite_state *S, smite_UWORD addr, smite_UWORD length);
-int smite_load_word(smite_state *S, smite_UWORD addr, smite_WORD *value);
-int smite_store_word(smite_state *S, smite_UWORD addr, smite_WORD value);
-int smite_load_byte(smite_state *S, smite_UWORD addr, smite_BYTE *value);
-int smite_store_byte(smite_state *S, smite_UWORD addr, smite_BYTE value);
 
+// Stack access
 
-// Stacks
-// Return value is 0 if OK, or error code for invalid or unaligned address
+int smite_load_stack(smite_state *S, smite_UWORD pos, smite_WORD *val_ptr);
+/* Load the word position `pos` on the stack into the word pointed to by
+   `val_ptr`.
 
-#define STACK_DIRECTION 1
+   Return 0 if OK, or error code if `pos` is invalid.
+*/
 
-#define UNCHECKED_STACK(pos)                                    \
-    (S->S0 + (S->STACK_DEPTH - (pos) - 1) * STACK_DIRECTION)
+int smite_store_stack(smite_state *S, smite_UWORD pos, smite_WORD val);
+/* Store the word `val` into the word at position `pos` on the stack.
 
+   Return 0 if OK, or error code if `addr` is invalid.
+*/
+
+int smite_pop_stack(smite_state *S, smite_WORD *val_ptr);
+/* Load the word at position `0` on the stack into the word pointed to by
+   `val_ptr`, and decrement `STACK_DEPTH`.
+
+   Return 0 if OK, or error code if position `0` is invalid.
+ */
+
+int smite_push_stack(smite_state *S, smite_WORD val);
+/* Increment `STACK_DEPTH`, then store the word `val` value at position 0 on
+   the stack.
+
+   Return 0 if OK, or error code if `STACK_DEPTH` is greater than or equal
+   to `STACK_SIZE`.
+*/
+
+// Unchecked macro: UNSAFE!
+#define UNCHECKED_STACK(pos)                    \
+    (S->S0 + S->STACK_DEPTH - (pos) - 1)
+
+// Inline functions
 static inline int load_stack(smite_state *S, smite_UWORD pos, smite_WORD *vp)
 {
     if (pos >= S->STACK_DEPTH) {
@@ -233,7 +285,7 @@ static inline int pop_stack(smite_state *S, smite_WORD *v)
 
 static inline int push_stack(smite_state *S, smite_WORD v)
 {
-    if (S->STACK_DEPTH == S->STACK_SIZE) {
+    if (S->STACK_DEPTH >= S->STACK_SIZE) {
         S->BAD = S->STACK_SIZE;
         return SMITE_ERR_STACK_OVERFLOW;
     }
@@ -242,28 +294,107 @@ static inline int push_stack(smite_state *S, smite_WORD v)
     return store_stack(S, 0, v);
 }
 
-// Linkable stubs
-int smite_load_stack(smite_state *S, smite_UWORD pos, smite_WORD *v);
-int smite_store_stack(smite_state *S, smite_UWORD pos, smite_WORD v);
-int smite_pop_stack(smite_state *S, smite_WORD *v);
-int smite_push_stack(smite_state *S, smite_WORD v);
 
+// VM instantiation and control
 
-// Interface calls
-smite_WORD smite_run(smite_state *S);
-smite_WORD smite_single_step(smite_state *S);
-ptrdiff_t smite_load_object(smite_state *S, smite_UWORD address, int fd);
-int smite_save_object(smite_state *S, smite_UWORD address, smite_UWORD length, int fd);
+smite_state *smite_init(size_t memory_size, size_t stack_size);
+/* Create and initialize a virtual machine state.
 
-// Additional implementation-specific routines, macros, types and quantities
-smite_state *smite_init(size_t size, size_t stack_size);
-int smite_realloc_memory(smite_state *S, smite_UWORD size);
-int smite_realloc_stack(smite_state *S, smite_UWORD size);
+   - memory_size - number of words of memory required
+   - stack_size - number of words of stack space required
+
+   Return a pointer to a new state, or `NULL` if memory cannot be
+   allocated, or if any requested size is larger than `smite_UWORD_MAX`.
+
+   The memory and stack are zeroed, and the registers are initialized as per
+   the spec.
+*/
+
+int smite_realloc_memory(smite_state *S, smite_UWORD memory_size);
+/* Resize the memory of a state.
+
+   - state - the state to change
+   - memory_size - number of words of memory required
+
+   Return 0 on success, or -1 if the requested memory cannot be allocated.
+
+   Any new memory is zeroed.
+*/
+
+int smite_realloc_stack(smite_state *S, smite_UWORD stack_size);
+/* Resize the stack of a state.
+
+   - state - the state to change
+   - stack_size - number of words of stack required
+
+   Return 0 on success, or -1 if the requested memory cannot be allocated.
+
+   Any new memory is zeroed.
+*/
+
 void smite_destroy(smite_state *S);
-int smite_register_args(smite_state *S, int argc, char *argv[]);
+/* Destroy the given state, deallocating its memory. */
 
-// Arithmetic right shift (the behaviour of >> on signed quantities is
-// implementation-defined in C99)
+smite_WORD smite_run(smite_state *S);
+/* Start the execution cycle in the given state as described in the spec.
+   If an error is raised, the code is returned.
+*/
+
+smite_WORD smite_single_step(smite_state *S);
+/* Execute a single pass of the execution cycle in the given state.
+   Return 128 if execution completes without error, or the error code.
+*/
+
+ptrdiff_t smite_load_object(smite_state *S, smite_UWORD addr, int fd);
+/* Load an object file into a state.
+
+   - state - the state to load into
+   - addr - the address at which to load the object file
+   - fd - the file descriptor to load from
+
+   Return the number of bytes of code loaded, or one of the following
+   errors:
+
+   -1: error reading the object file
+   -2: module is invalid
+   -3: current implementation is incompatible with the module (for example,
+       the word size or `ENDISM` is incompatible)
+   -4: the code will not fit into memory at the address given, or the
+       address is out of range or unaligned.
+
+   As an extension to the specification, if an object file starts with the
+   ASCII bytes `#!`, then it is assumed to be the start of a UNIX-style
+   “hash bang” line, and the file contents up to and including the first
+   newline character is ignored.
+*/
+
+int smite_save_object(smite_state *S, smite_UWORD addr, smite_UWORD len, int fd);
+/* Save some memory as an object file.
+
+   - state - the state to save from
+   - addr, len - the area of memory to save
+   - fd - the file descriptor to save to
+
+   Return 0 on success, or one of the following errors:
+
+   -1: error writing the object file
+   -2: `addr` or `len` is invalid
+*/
+
+int smite_register_args(smite_state *S, int argc, char *argv[]);
+/* Register command-line arguments in the given state, which can be
+   retrieved using the `ARGC` and `ARG` functions of the `LIBC` extra
+   instruction (see `smite_core/vm_data_extra.py`).
+
+   - state - the state in which to register the arguments
+   - argc, argv - as for `main`.
+
+    Return 0.
+*/
+
 #define ARSHIFT(n, p) @ARITHMETIC_RSHIFT@
+/* Arithmetic right shift `n` by `p` places (the behaviour of >> on signed
+   quantities is implementation-defined in C99).
+*/
 
 #endif

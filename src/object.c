@@ -1,5 +1,4 @@
-// The interface calls load_object(file, address) : integer and
-// save_object(file, address, length) : integer.
+// Load and save object files.
 //
 // (c) Reuben Thomas 1995-2019
 //
@@ -18,7 +17,7 @@
 
 #define HEADER_LENGTH 8
 
-ptrdiff_t smite_load_object(smite_state *S, smite_UWORD address, int fd)
+ptrdiff_t smite_load_object(smite_state *S, smite_UWORD addr, int fd)
 {
     // Skip any #! header
     char buf[sizeof("#!") - 1];
@@ -54,28 +53,28 @@ ptrdiff_t smite_load_object(smite_state *S, smite_UWORD address, int fd)
         return -3;
 
     // Read and check size, and ensure code will fit in memory
-    smite_UWORD length = 0;
-    if ((res = read(fd, &length, sizeof(length))) == -1)
+    smite_UWORD len = 0;
+    if ((res = read(fd, &len, sizeof(len))) == -1)
         return -1;
-    if (res != sizeof(length))
+    if (res != sizeof(len))
         return -2;
-    uint8_t *ptr = smite_native_address_of_range(S, address, length);
-    if (ptr == NULL || !smite_is_aligned(address))
+    uint8_t *ptr = smite_native_address_of_range(S, addr, len);
+    if (ptr == NULL || !smite_is_aligned(addr))
         return -4;
 
     // Read code
-    if ((res = read(fd, ptr, length)) == -1)
+    if ((res = read(fd, ptr, len)) == -1)
         return -1;
-    else if (res != (ssize_t)length)
+    else if (res != (ssize_t)len)
         return -2;
 
-    return (ssize_t)length;
+    return (ssize_t)len;
 }
 
-int smite_save_object(smite_state *S, smite_UWORD address, smite_UWORD length, int fd)
+int smite_save_object(smite_state *S, smite_UWORD addr, smite_UWORD len, int fd)
 {
-    uint8_t *ptr = smite_native_address_of_range(S, address, length);
-    if (!smite_is_aligned(address) || ptr == NULL)
+    uint8_t *ptr = smite_native_address_of_range(S, addr, len);
+    if (!smite_is_aligned(addr) || ptr == NULL)
         return -2;
 
     char hashbang[] = "#!/usr/bin/env smite\n";
@@ -85,8 +84,8 @@ int smite_save_object(smite_state *S, smite_UWORD address, smite_UWORD length, i
 
     if (write(fd, hashbang, sizeof(hashbang) - 1) != sizeof(hashbang) - 1 ||
         write(fd, &buf[0], HEADER_LENGTH) != HEADER_LENGTH ||
-        write(fd, &length, sizeof(length)) != sizeof(length) ||
-        write(fd, ptr, length) != (ssize_t)length)
+        write(fd, &len, sizeof(len)) != sizeof(len) ||
+        write(fd, ptr, len) != (ssize_t)len)
         return -1;
 
     return 0;
