@@ -105,7 +105,7 @@ static void exit_function(void)
 
 static int trace_step(FILE *fp)
 {
-    fprintf(fp, "%d\n", S->I & SMITE_INSTRUCTION_MASK);
+    fprintf(fp, "%d\n", (int)(S->I & SMITE_INSTRUCTION_MASK));
     return smite_single_step(S);
 }
 
