@@ -81,11 +81,11 @@ class StackPicture:
 
     @classmethod
     def load_var(cls, pos, var):
-        return 'UNCHECKED_LOAD_STACK({pos}, &{var});'.format(pos=pos, var=var)
+        return '{var} = *UNCHECKED_STACK({pos});'.format(pos=pos, var=var)
 
     @classmethod
     def store_var(cls, pos, var):
-        return 'UNCHECKED_STORE_STACK({pos}, {var});'.format(pos=pos, var=var)
+        return '*UNCHECKED_STACK({pos}) = {var};'.format(pos=pos, var=var)
 
     def static_depth(self):
         '''
