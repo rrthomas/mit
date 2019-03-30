@@ -21,7 +21,8 @@ bin_PROGRAMS = smite
 man_MANS = @PACKAGE@.1
 smite_LDADD = lib@PACKAGE@.la $(top_builddir)/lib/libgnu.la
 smite_SOURCES = main.c tbl_opts.h
-pkginclude_HEADERS = @PACKAGE@.h opcodes.h opcodes-extra.h
+pkginclude_HEADERS = opcodes.h opcodes-extra.h
+nodist_pkginclude_HEADERS = @PACKAGE@.h
 
 step.lo: instructions.c
 object.lo step.lo storage.lo main.o: registers.h opcodes-core.h opcodes-extra.h
