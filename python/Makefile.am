@@ -1,6 +1,6 @@
 # Python bindings Makefile.am
 #
-# (c) Reuben Thomas 2019
+# (c) SMite authors 2019
 #
 # The package is distributed under the MIT/X11 License.
 #

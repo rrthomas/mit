@@ -1,6 +1,6 @@
 // Front-end.
 //
-// (c) Reuben Thomas 1995-2018
+// (c) SMite authors 1995-2019
 //
 // The package is distributed under the MIT/X11 License.
 //

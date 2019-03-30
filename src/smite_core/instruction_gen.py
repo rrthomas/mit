@@ -1,7 +1,14 @@
 '''
 Generate code for instructions.
 
-The main entry point is dispatch.
+Copyright (c) 2009-2019 SMite authors
+
+The package is distributed under the MIT/X11 License.
+
+THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
+RISK.
+
+The main entry point is dispatch().
 '''
 
 import re

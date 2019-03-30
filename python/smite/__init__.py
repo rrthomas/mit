@@ -1,8 +1,16 @@
-'''SMite
+'''
+SMite
 
 This module provides SMite bindings for Python 3, and offers a convenient
 set of functions and variables to interact with SMite in a Python REPL.
-Package smite.assembler provides Assembler and Disassembler.
+Module smite.assembler provides Assembler and Disassembler.
+
+(c) SMite authors 2019
+
+The package is distributed under the MIT/X11 License.
+
+THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
+RISK.
 
 When run as a script (SMite provides 'smite-shell' to do this), the module
 provides a global SMite instance in VM, and defines various globals. See

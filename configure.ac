@@ -1,4 +1,12 @@
-dnl Process this file with autoconf to produce a configure script
+# configure.ac for SMite
+# Process this file with autoconf to produce a configure script
+
+# (c) SMite authors 2011-2019
+#
+# The package is distributed under the MIT/X11 License.
+#
+# THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
+# RISK.
 
 AC_INIT(SMite, 0.1, rrt@sc3d.org)
 AC_CONFIG_AUX_DIR([build-aux])
@@ -7,7 +15,7 @@ package_upper=`echo ${PACKAGE} | tr '[[:lower:]]' '[[:upper:]]'`
 AC_SUBST([PACKAGE_UPPER], [$package_upper])
 AC_DEFINE_UNQUOTED([PACKAGE_UPPER], ["$package_upper"], [PACKAGE upper-cased])
 
-dnl Check for programs
+# Check for programs
 AC_PROG_CC_C99
 gl_EARLY
 AM_PROG_AR
@@ -31,11 +39,11 @@ AC_PATH_PROG([SLOCCOUNT], [sloccount], [true])
 AM_CONDITIONAL([HAVE_LATEXMK], [test "$ac_cv_path_LATEXMK" != "true"])
 gl_INIT
 
-dnl help2man
-dnl Set a value even if not found, so that an invocation via build-aux/missing works
+# help2man
+# Set a value even if not found, so that an invocation via build-aux/missing works
 AC_PATH_PROG([HELP2MAN], [help2man], [help2man])
 
-dnl Extra warnings with GCC
+# Extra warnings with GCC
 AC_ARG_ENABLE([gcc-warnings],
   [AS_HELP_STRING([--disable-gcc-warnings],
                   [turn off lots of GCC warnings])],
@@ -72,10 +80,10 @@ fi
 AC_SUBST([ISYSTEM])
 AC_SUBST([PY_LOG_ENV])
 
-dnl Accessing in-tree shared libraries
+# Accessing in-tree shared libraries
 AC_SUBST([objdir])
 
-dnl Check features
+# Check features
 AC_C_BIGENDIAN
 AX_C_ARITHMETIC_RSHIFT
 if test "x$ax_cv_c_arithmetic_rshift" = xyes; then
@@ -85,13 +93,13 @@ else
 fi
 AC_SUBST([ARITHMETIC_RSHIFT])
 
-dnl Set size of word
+# Set size of word
 AC_CHECK_SIZEOF([long])
 AC_ARG_VAR([WORD_SIZE],
   [value of WORD_SIZE register [default: sizeof(long)]])
 : "${WORD_SIZE=SIZEOF_LONG}"
 
-dnl Generate output files
+# Generate output files
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_FILES([
         Makefile

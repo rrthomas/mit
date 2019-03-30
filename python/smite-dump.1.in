@@ -11,7 +11,7 @@ Dump the given file, typically \fIfoo.obj\fR, as hex (\fIfoo.hex\fR) and disasse
 .SH "REPORTING BUGS"
 Report bugs to rrt@sc3d.org.
 .SH "COPYRIGHT"
-\(co Reuben Thomas 1995\-2019
+\(co SMite authors 1995\-2019
 .br
 @PACKAGE_NAME@ comes with ABSOLUTELY NO WARRANTY.
 .br

@@ -17,7 +17,7 @@ implementation in ISO C99 using POSIX APIs. Detailed documentation is in the
 `doc` directory; installation instructions follow. Maintainers should read
 `HACKING.md`.
 
-The package is distributed under the MIT/X11 License (see the file `COPYING`).
+The package is distributed under the MIT/X11 License (see the file `COPYING`). Note that some files are in the public domain, notably the specification of SMite; they are marked as such.
 
 THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 RISK.

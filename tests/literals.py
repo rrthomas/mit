@@ -1,6 +1,6 @@
 # Test LIT.
 #
-# (c) Reuben Thomas 1994-2019
+# (c) SMite authors 1994-2019
 #
 # The package is distributed under the MIT/X11 License.
 #

@@ -1,7 +1,7 @@
 # Test the comparison operators. We only test simple cases here, assuming
 # that the C compiler's comparison routines will work for other cases.
 #
-# (c) Reuben Thomas 1994-2019
+# (c) SMite authors 1994-2019
 #
 # The package is distributed under the MIT/X11 License.
 #
