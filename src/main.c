@@ -112,7 +112,9 @@ static int trace_step(FILE *fp)
 int main(int argc, char *argv[])
 {
     set_program_name(argv[0]);
-    page_size = sysconf(_SC_PAGESIZE);
+    // getpagesize() is obsolete, but gnulib provides it, and
+    // sysconf(_SC_PAGESIZE) does not work on some platforms.
+    page_size = getpagesize();
 
     bool core_dump = false;
     smite_UWORD memory_size = 0x100000U;
