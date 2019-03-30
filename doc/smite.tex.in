@@ -50,7 +50,7 @@
 
 \title{The @PACKAGE_NAME@ Virtual Machine}
 \author{Reuben Thomas}
-\date{29th March 2019}
+\date{30th March 2019}
 
 \begin{document}
 \maketitle
@@ -262,6 +262,20 @@ indeterminate numbers of specified types of word.
 \end{description}
 
 
+\subsection{Control}
+\label{control}
+
+These instructions implement unconditional and conditional branches, and subroutine
+call and return (subroutine return is {\tt BRANCH}):
+
+\nopagebreak
+\begin{description}
+\inst{BRANCH}{a-addr —}{Set {\tt PC} to \spic{a-addr}. Perform the action of {\tt NEXT}.}
+\inst{BRANCHZ}{flag a-addr —}{If \spic{flag} is false then set {\tt PC} to \spic{a-addr} and perform the action of {\tt NEXT}.}
+\inst{CALL}{\aaddr1 — \aaddr2}{Exchange {\tt PC} with the top stack value. Perform the action of {\tt NEXT}.}
+\end{description}
+
+
 \subsection{Stack manipulation}
 
 These instructions manage the stack:
@@ -274,8 +288,7 @@ These instructions manage the stack:
 \end{description}
 
 
-\subsection{Numbers}
-\label{numbers}
+\subsection{Literals}
 
 \begin{description}
 \inst{LIT}{— n}{The word pointed to by {\tt PC} is pushed on to the stack, and {\tt PC} is incremented to point to the following word.}
@@ -357,20 +370,6 @@ These instructions fetch and store words and bytes to and from memory:
 \end{description}
 
 
-\subsection{Control}
-\label{control}
-
-These instructions implement unconditional and conditional branches, and subroutine
-call and return (subroutine return is {\tt BRANCH}):
-
-\nopagebreak
-\begin{description}
-\inst{BRANCH}{a-addr —}{Set {\tt PC} to \spic{a-addr}. Perform the action of {\tt NEXT}.}
-\inst{BRANCHZ}{flag a-addr —}{If \spic{flag} is false then set {\tt PC} to \spic{a-addr} and perform the action of {\tt NEXT}.}
-\inst{CALL}{\aaddr1 — \aaddr2}{Exchange {\tt PC} with the top stack value. Perform the action of {\tt NEXT}.}
-\end{description}
-
-
 \subsection{Registers}
 \label{registeract}
 
@@ -407,22 +406,22 @@ Table~\ref{opcodetable} lists the instruction opcodes in numerical order. Other 
 \begin{center}
 \begin{tabular}{*{2}{cc}} \toprule
 \bf Opcode & \bf Instruction & \bf Opcode & \bf Instruction \\ \midrule
-\opcodetbl{00}{NEXT}		{10}{NEGATE}
-\opcodetbl{01}{POP}		{11}{ADD}
-\opcodetbl{02}{DUP}		{12}{MUL}
-\opcodetbl{03}{SWAP}		{13}{DIVMOD}
-\opcodetbl{04}{LIT}		{14}{UDIVMOD}
-\opcodetbl{05}{LIT\_PC\_REL}	{15}{LOAD}
-\opcodetbl{06}{NOT}             {16}{STORE}
-\opcodetbl{07}{AND}             {17}{LOADB}
-\opcodetbl{08}{OR}              {18}{STOREB}
-\opcodetbl{09}{XOR}             {19}{BRANCH}
-\opcodetbl{0a}{LSHIFT}          {1a}{BRANCHZ}
-\opcodetbl{0b}{RSHIFT}          {1b}{CALL}
-\opcodetbl{0c}{ARSHIFT}         {1c}{GET\_WORD\_SIZE}
-\opcodetbl{0d}{EQ}		{1d}{GET\_STACK\_DEPTH}
-\opcodetbl{0e}{LT}		{1e}{SET\_STACK\_DEPTH}
-\opcodetbl{0f}{ULT}		{1f}{HALT}
+\opcodetbl{00}{NEXT}		{10}{EQ}
+\opcodetbl{01}{BRANCH}		{11}{LT}
+\opcodetbl{02}{BRANCHZ}		{12}{ULT}
+\opcodetbl{03}{CALL}		{13}{NEGATE}
+\opcodetbl{04}{POP}		{14}{ADD}
+\opcodetbl{05}{DUP}		{15}{MUL}
+\opcodetbl{06}{SWAP}		{16}{DIVMOD}
+\opcodetbl{07}{LIT}		{17}{UDIVMOD}
+\opcodetbl{08}{LIT\_PC\_REL}	{18}{LOAD}
+\opcodetbl{09}{NOT}		{19}{STORE}
+\opcodetbl{0a}{AND}		{1a}{LOADB}
+\opcodetbl{0b}{OR}		{1b}{STOREB}
+\opcodetbl{0c}{XOR}		{1c}{GET\_WORD\_SIZE}
+\opcodetbl{0d}{LSHIFT}		{1d}{GET\_STACK\_DEPTH}
+\opcodetbl{0e}{RSHIFT}		{1e}{SET\_STACK\_DEPTH}
+\opcodetbl{0f}{ARSHIFT}		{1f}{HALT}
  \bottomrule
 \end{tabular}
 \caption{\label{opcodetable}Instruction opcodes}
