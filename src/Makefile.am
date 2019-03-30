@@ -16,8 +16,9 @@ GENERATED_SRCS = registers.h opcodes-core.h opcodes-extra.h instructions.c extra
 SMITE_CORE_SRCS = smite_core/vm_data.py smite_core/vm_data_extra.py smite_core/instruction_gen.py
 libsmite_la_SOURCES = $(C_SRCS) $(GENERATED_SRCS)
 libsmite_la_LIBADD = $(top_builddir)/lib/libgnu.la
+libsmite_la_LDFLAGS = -no-undefined -export-symbols-regex '^smite_.*'
 
-bin_PROGRAMS = smite
+bin_PROGRAMS = smite$(EXEEXT)
 man_MANS = @PACKAGE@.1
 smite_LDADD = lib@PACKAGE@.la $(top_builddir)/lib/libgnu.la
 smite_SOURCES = main.c tbl_opts.h

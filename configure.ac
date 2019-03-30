@@ -19,7 +19,7 @@ AC_DEFINE_UNQUOTED([PACKAGE_UPPER], ["$package_upper"], [PACKAGE upper-cased])
 AC_PROG_CC_C99
 gl_EARLY
 AM_PROG_AR
-LT_INIT
+LT_INIT([win32-dll])
 AM_PATH_PYTHON([3.4])
 AC_PATH_PROGS([IPYTHON], [ipython3 ipython])
 # Check detected/configured IPython, and set command-line options
