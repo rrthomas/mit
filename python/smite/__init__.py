@@ -199,9 +199,10 @@ class State:
         fd = os.open(file, os.O_RDONLY)
         if fd < 0:
             raise Error("cannot open file {}".format(file))
-        ret = libsmite.smite_load_object(self.state, addr, fd)
-        os.close(fd)
-        return ret
+        try:
+            libsmite.smite_load_object(self.state, addr, fd)
+        finally:
+            os.close(fd)
 
     def save(self, file, address=0, length=None):
         '''
@@ -215,10 +216,10 @@ class State:
         fd = os.open(file, os.O_CREAT | os.O_RDWR)
         if fd < 0:
             fatal("cannot open file {}".format(file))
-        ret = libsmite.smite_save_object(self.state, address, length, fd)
-        os.close(fd)
-        return ret
-
+        try:
+            libsmite.smite_save_object(self.state, address, length, fd)
+        finally:
+            os.close(fd)
 
     # Disassembly
     def disassemble(self, start=None, length=None, end=None, file=sys.stdout):
