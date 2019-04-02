@@ -94,10 +94,10 @@ fi
 AC_SUBST([ARITHMETIC_RSHIFT])
 
 # Set size of word
-AC_CHECK_SIZEOF([long])
+AC_CHECK_SIZEOF([size_t])
 AC_ARG_VAR([WORD_SIZE],
-  [value of WORD_SIZE register [default: sizeof(long)]])
-: "${WORD_SIZE=SIZEOF_LONG}"
+  [value of WORD_SIZE register [default: sizeof(size_t)]])
+: "${WORD_SIZE=SIZEOF_SIZE_T}"
 
 # Generate output files
 AC_CONFIG_HEADERS([config.h])
