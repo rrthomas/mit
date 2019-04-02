@@ -42,16 +42,16 @@ main.o: tbl_opts.h registers.h
 	fi
 
 registers.h: gen-registers smite_core/vm_data.py smite_core/instruction_gen.py
-	$(PYTHON_WITH_PATH) $(srcdir)/gen-registers > registers.h
+	$(PYTHON_WITH_PATH) $(srcdir)/gen-registers > registers.h || rm -f registers.h
 
 opcodes-extra.h: gen-opcodes-extra smite_core/vm_data_extra.py smite_core/instruction_gen.py
-	$(PYTHON_WITH_PATH) $(srcdir)/gen-opcodes-extra > opcodes-extra.h
+	$(PYTHON_WITH_PATH) $(srcdir)/gen-opcodes-extra > opcodes-extra.h || rm -f opcodes-extra.h
 
 opcodes-core.h: gen-opcodes-core smite_core/vm_data.py smite_core/instruction_gen.py
-	$(PYTHON_WITH_PATH) $(srcdir)/gen-opcodes-core > opcodes-core.h
+	$(PYTHON_WITH_PATH) $(srcdir)/gen-opcodes-core > opcodes-core.h || rm -f opcodes-core.h
 
-instructions.c: gen-instructions smite_core/vm_data.py smite_core/instruction_gen.py
-	$(PYTHON_WITH_PATH) $(srcdir)/gen-instructions > instructions.c
+instructions.c: gen-instructions smite_core/vm_data.py smite_core/instruction_gen.py smite_core/type_sizes.py
+	$(PYTHON_WITH_PATH) $(srcdir)/gen-instructions > instructions.c || rm -f instructions.c
 
 # Note: we grep config.log because the generated header file has the symbols
 # sorted lexically, and we need the output in the same order as the input.
@@ -61,7 +61,7 @@ smite_core/type_sizes.py: $(top_builddir)/config.status gen-type-sizes collate-t
 	CONFIG_SITE= CPPFLAGS="-I$(builddir) -I$(srcdir) -I$(top_builddir) $(AM_CPPFLAGS)" $(SHELL) type-sizes && \
 	$(MKDIR_P) smite_core && \
 	$(GREP) "^#define SIZEOF" config.log | cut -d " " -f 3 | \
-		( $(PYTHON_WITH_PATH) $(srcdir)/collate-type-sizes > smite_core/type_sizes.py )
+		( $(PYTHON_WITH_PATH) $(srcdir)/collate-type-sizes > smite_core/type_sizes.py ) || rm -f type-sizes.ac type-sizes smite_core/type_sizes.py
 
 extra.c: gen-extra smite_core/vm_data_extra.py smite_core/instruction_gen.py smite_core/type_sizes.py
 	$(PYTHON_WITH_PATH) $(srcdir)/gen-extra > extra.c || rm -f extra.c
@@ -87,7 +87,7 @@ EXTRA_DIST = \
 distclean-local:
 	rm -rf autom4te.cache smite_core/__pycache__
 
-DISTCLEANFILES = @PACKAGE@.1 extra.c type-sizes.ac type-sizes config.log smite_core/type_sizes.py
+DISTCLEANFILES = @PACKAGE@.1 instructions.c extra.c type-sizes.ac type-sizes config.log smite_core/type_sizes.py
 # Ignore built files that are part of the distribution (specifically,
 # @PACKAGE@.1)
 distcleancheck_listfiles = \
