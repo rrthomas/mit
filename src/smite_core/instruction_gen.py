@@ -14,6 +14,11 @@ The main entry point is dispatch().
 import re
 import textwrap
 
+try:
+    from .type_sizes import type_sizes
+except ImportError:
+    type_sizes = None # We can't generate code
+
 
 def print_enum(instructions, prefix):
     '''Utility function to print an instruction enum.'''
@@ -23,12 +28,12 @@ def print_enum(instructions, prefix):
     print('};')
 
 class Instruction:
-    '''VM instruction instruction descriptor.
+    '''
+    VM instruction instruction descriptor.
 
-     - opcode - int - SMite opcode number.
-     - args - StackPicture.
-     - results - StackPicture.
-     - code - str - C source code.
+     - opcode - int - opcode number
+     - effect - StackEffect
+     - code - str - C source code
 
     C variables are created for the arguments and results; the arguments are
     popped and results pushed.
@@ -38,104 +43,147 @@ class Instruction:
     '''
     def __init__(self, opcode, args, results, code):
         '''
-         - args - list acceptable to StackPicture.from_list.
-         - results - list acceptable to StackPicture.from_list.
+         - args, results - lists of str acceptable to StackEffect()
         '''
         self.opcode = opcode
-        self.args = StackPicture.from_list(args)
-        self.results = StackPicture.from_list(results)
+        self.effect = StackEffect(args, results)
         self.code = code
 
 
-class StackPicture:
+class StackItem:
     '''
-    Represents a description of the topmost items on the stack. The effect
-    of an instruction can be described using two StackPictures: one for the
-    arguments and one for the results.
-
-    The first item is 'ITEMS' if the stack picture is variadic.
-    All other items are the names of items.
-
-    Variadic instructions (such as POP, DUP, SWAP) have an argument called
-    "COUNT" which is (N.B.!) one less than the number of additional
-    (unnamed) items are on the stack.
+    Represents a stack item, which may occupy more than one word.
 
     Public fields:
 
-     - named_items - list of str - the names of the non-variadic items,
-       which must be on the top of the stack, and might include "COUNT".
-
-     - is_variadic - bool - if `True`, there are `COUNT` more items underneath
-       the non-variadic items.
+     - name - str
+     - type - str - C type of the item, or None if unknown
+     - size - str - C expression for the size of the item
     '''
-    def __init__(self, named_items, is_variadic=False):
-        assert len(set(named_items)) == len(named_items)
-        assert 'ITEMS' not in named_items
-        self.named_items = named_items
-        self.is_variadic = is_variadic
+    def __init__(self, name_and_type):
+        '''
+        Each name is optionally followed by ":TYPE" to give the C type of the
+        underlying quantity; the default is smite_WORD.
 
-    @classmethod
-    def from_list(cls, stack):
+        Items of unknown type are indicated by a colon with no type
+        following. The `size` field of such StackItems may be set later.
         '''
-         - stack - list of str - a stack picture.
+        l = name_and_type.split(":")
+        self.name = l[0]
+        self.type = l[1] if len(l) > 1 else 'smite_WORD'
+        self.size = None
+        if self.type == '':
+            self.type = None
+        elif type_sizes is not None:
+            self.size = ((type_sizes[self.type] +
+                          (type_sizes['smite_WORD'] - 1)) //
+                         type_sizes['smite_WORD'])
 
-        Returns a StackPicture.
-        '''
-        if stack and stack[0] == 'ITEMS':
-            return cls(stack[1:], is_variadic=True)
-        else:
-            return cls(stack)
+    def __eq__(self, item):
+        return (self.name == item.name and
+                self.type == item.type and
+                self.size == item.size)
 
-    @classmethod
-    def load_var(cls, pos, var):
-        return '{var} = *UNCHECKED_STACK({pos});'.format(pos=pos, var=var)
+class StackEffect:
+    '''
+    Represents the effect of an instruction on the stack, in the form of
+    'args' and 'results' stack pictures, which describe the topmost items on
+    the stack.
 
-    @classmethod
-    def store_var(cls, pos, var):
-        return '*UNCHECKED_STACK({pos}) = {var};'.format(pos=pos, var=var)
+    If the instruction is variadic, a pseudo-item 'ITEMS' represents the
+    unnamed items; one of the arguments above that must be 'COUNT', which is
+    (N.B.!) one less than the number of items below it on the stack
+    (including the items represented by 'ITEMS'). 'ITEMS', if used, may not
+    move relative to the bottom of the stack between 'args' and 'results'.
 
-    def static_depth(self):
-        '''
-        Return a C expression for the number of stack words occupied by the
-        static items in a StackPicture.
-        '''
-        return '{}'.format(len(self.named_items))
+    Public fields:
 
-    def dynamic_depth(self):
+     - items - addict of str to StackItem
+     - args - list of StackItem
+     - results - list of StackItem
+    '''
+    def __init__(self, args_str, results_str):
         '''
-        Returns a C expression that computes the total number of items,
-        including the variadic items. Assumes:
-         - the C variable `COUNT` contains the number of variadic items.
-        '''
-        depth = self.static_depth()
-        if self.is_variadic:
-            depth = '((smite_UWORD)COUNT + 1 + {})'.format(depth)
-        return depth
+         - args, results - list of str
 
-    def declare_vars(self):
-        '''Returns C variable declarations for all of `self.named_items`.'''
-        return '\n'.join(['{} {};'.format('smite_WORD', item)
-                          for item in self.named_items])
+        Items with the same name are the same item, so their type must be
+        the same.
+        '''
+        if 'ITEMS:' in args_str and 'ITEMS:' in results_str:
+            assert args_str.index('ITEMS:') == results_str.index('ITEMS:')
+        self.args = [StackItem(arg_str) for arg_str in args_str]
+        self.results = [StackItem(result_str) for result_str in results_str]
+        item_names_set, self.items = set(), {}
+        for item in self.args + self.results:
+            if item.name not in item_names_set:
+                item_names_set.add(item.name)
+                self.items[item.name] = item
+            else: # Check repeated item is consistent
+                assert item == self.items[item.name]
+        count_index = None
+        if 'COUNT' in args_str:
+            count_index = args_str.index('COUNT')
+        self._set_depths(self.args, count_index)
+        self._set_depths(self.results, count_index)
 
-    def load(self):
-        '''
-        Returns C source code to read the named items from the stack into C
-        variables.
-        `S->STACK_DEPTH` is not modified.
-        '''
-        return '\n'.join([self.load_var(pos, item)
-                          for pos, item in enumerate(reversed(self.named_items))
-        ])
+    @staticmethod
+    def _set_depths(items, count_index):
+        depth = '0'
+        for item in reversed(items):
+            item.depth = depth
+            if item.name == 'ITEMS':
+                item.size = '(COUNT + 1 - {})'.format(count_index - 1)
+                depth += ' + {}'.format(item.size)
+            else:
+                depth += ' + {}'.format(item.size)
 
-    def store(self):
+    # In load_item & store_item, casts to size_t avoid warnings when `var` is
+    # a pointer and sizeof(void *) > WORD_SIZE, but the effect is identical.
+    def load_item(self, item):
+        code = ['{} = 0;'.format(item.name)]
+        for i in reversed(range(item.size)):
+            code.append('temp = *UNCHECKED_STACK({} + {});'.format(item.depth, i))
+            if i < item.size - 1:
+                code.append('{var} = ({type})((size_t){var} << smite_WORD_BIT);'.format(var=item.name, type=item.type))
+            code.append('{var} = ({type})((size_t){var} | (smite_UWORD)temp);'.format(var=item.name, type=item.type))
+        return '''\
+{{
+    smite_WORD temp;
+{}
+}}'''.format(textwrap.indent('\n'.join(code), '    '))
+
+    def store_item(self, item):
+        code = []
+        for i in range(item.size):
+            code.append('*UNCHECKED_STACK({} + {}) = (smite_UWORD)((size_t){} & smite_WORD_MASK);'.format(item.depth, i, item.name))
+            if i < item.size - 1:
+                code.append('{var} = ({type})((size_t){var} >> smite_WORD_BIT);'.format(var=item.name, type=item.type))
+        return '\n'.join(code)
+
+    def declare_vars(self, items):
         '''
-        Returns C source code to write the named items from C variables into
-        the stack.
-        `S->STACK_DEPTH` must be modified first.
+        Returns C variable declarations for given `items` other than any
+        'ITEMS'.
         '''
-        return '\n'.join([self.store_var(pos, item)
-                          for pos, item in enumerate(reversed(self.named_items))
-        ])
+        return '\n'.join(['{} {};'.format(item.type, item.name)
+                          for item in items if item.name != 'ITEMS'])
+
+    def load_args(self):
+        '''
+        Returns C source code to read the arguments from the stack into C
+        variables. `S->STACK_DEPTH` is not modified.
+        '''
+        return '\n'.join([self.load_item(item)
+                          for item in self.args
+                          if item.name != 'ITEMS' and item.name != 'COUNT'])
+
+    def store_results(self):
+        '''
+        Returns C source code to write the results from C variables into the
+        stack. `S->STACK_DEPTH` must be modified first.
+        '''
+        return '\n'.join([self.store_item(item)
+                          for item in self.results if item.name != 'ITEMS'])
 
 
 def disable_warnings(warnings, c_source):
@@ -157,7 +205,7 @@ def check_underflow(num_pops):
     pop the specified number of items.
      - num_pops - a C expression giving the number of items to pop.
     '''
-    return disable_warnings(['-Wtype-limits', '-Wunused-variable', '-Wshadow'], '''\
+    return disable_warnings(['-Wtype-limits', '-Wsign-compare'], '''\
 if ((S->STACK_DEPTH < {num_pops})) {{
     S->BAD = {num_pops} - 1;
     RAISE(SMITE_ERR_STACK_READ);
@@ -169,7 +217,7 @@ def check_overflow(num_pops, num_pushes):
     push `num_pushes` items, given that `num_pops` items will first be
     popped.
     '''
-    return disable_warnings(['-Wtype-limits', '-Wtautological-compare'], '''\
+    return disable_warnings(['-Wtype-limits', '-Wtautological-compare', '-Wsign-compare', '-Wstrict-overflow'], '''\
 if ({num_pushes} > {num_pops} && (S->STACK_SIZE - S->STACK_DEPTH < {num_pushes} - {num_pops})) {{
     S->BAD = ({num_pushes} - {num_pops}) - (S->STACK_SIZE - S->STACK_DEPTH);
     RAISE(SMITE_ERR_STACK_OVERFLOW);
@@ -177,35 +225,39 @@ if ({num_pushes} > {num_pops} && (S->STACK_SIZE - S->STACK_DEPTH < {num_pushes} 
 
 def gen_case(instruction):
     '''
-    Generate the code for an Instruction. In the code, S is the smite_state. Errors
-    are reported by calling RAISE().
+    Generate the code for an Instruction.
+
+    In the code, S is the smite_state, and errors are reported by calling
+    RAISE().
 
      - instruction - Instruction.
     '''
     # Concatenate the pieces.
-    args = instruction.args
-    results = instruction.results
-    static_args = args.static_depth()
-    dynamic_args = args.dynamic_depth()
-    static_results = results.static_depth()
-    dynamic_results = results.dynamic_depth()
-    code = '\n'.join([
-        args.declare_vars(),
-        results.declare_vars(),
-        check_underflow(static_args),
-        args.load(),
-        check_underflow(dynamic_args),
-        check_overflow(dynamic_args, dynamic_results),
-        'S->STACK_DEPTH -= {};'.format(static_args),
+    effect = instruction.effect
+    code = [effect.declare_vars(effect.items.values()), '''\
+if (S->STACK_DEPTH > S->STACK_SIZE) {
+    S->BAD = S->STACK_DEPTH - S->STACK_SIZE;
+    RAISE(SMITE_ERR_STACK_OVERFLOW);
+}''']
+    if effect.items.get('COUNT'):
+        # If we have COUNT, check its stack position is valid, and load it
+        code += [
+            check_underflow('({} + 1)'.format(effect.items['COUNT'].depth)),
+            effect.load_item(effect.items['COUNT']),
+        ]
+    args_size = ' + '.join(str(item.size) for item in effect.args) or '0'
+    results_size = ' + '.join(str(item.size) for item in effect.results) or '0'
+    code += [
+        check_underflow(args_size),
+        check_overflow(args_size, results_size),
+        effect.load_args(),
+        'S->STACK_DEPTH -= {};'.format(args_size),
         textwrap.dedent(instruction.code.rstrip()),
-        'S->STACK_DEPTH += {};'.format(static_args),
-        'S->STACK_DEPTH -= {};'.format(dynamic_args),
-        'S->STACK_DEPTH += {};'.format(dynamic_results),
-        results.store(),
-    ])
+        'S->STACK_DEPTH += {};'.format(results_size),
+        effect.store_results(),
+    ]
     # Remove newlines resulting from empty strings in the above.
-    code = re.sub('\n+', '\n', code, flags=re.MULTILINE).strip('\n')
-    return code
+    return re.sub('\n+', '\n', '\n'.join(code), flags=re.MULTILINE).strip('\n')
 
 def dispatch(instructions, prefix, undefined_case):
     '''Generate dispatch code for some Instructions.

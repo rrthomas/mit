@@ -58,18 +58,9 @@ class Instructions(Enum):
         (void)item;
     ''')
 
-    DUP = Instruction(0x05, ['ITEMS', 'COUNT'], ['ITEMS', 'dupee'], '''\
-        dupee = *UNCHECKED_STACK(COUNT);
-    ''')
+    DUP = Instruction(0x05, ['x', 'ITEMS:', 'COUNT'], ['x', 'ITEMS:', 'x'], '')
 
-    SWAP = Instruction(0x06, ['ITEMS', 'COUNT'], ['ITEMS'], '''\
-        if (COUNT > 0) {
-            smite_WORD swapee = *UNCHECKED_STACK(COUNT);
-            smite_WORD top = *UNCHECKED_STACK(0);
-            *UNCHECKED_STACK(COUNT) = top;
-            *UNCHECKED_STACK(0) = swapee;
-        }
-    ''')
+    SWAP = Instruction(0x06, ['x', 'ITEMS', 'y', 'COUNT'], ['y', 'ITEMS', 'x'], '')
 
     LIT = Instruction(0x07, [], ['n'], '''\
         int ret = load_word(S, S->PC, &n);
