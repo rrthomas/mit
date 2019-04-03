@@ -375,7 +375,6 @@ These instructions fetch and store words and bytes to and from memory:
 \label{registeract}
 
 \begin{description}
-\inst{GET\_WORD\_SIZE}{— u}{\spic{u} is the value of {\tt WORD\_SIZE}.}
 \inst{GET\_STACK\_DEPTH}{— u}{\spic{u} is the value of {\tt STACK\_DEPTH}, the number of items on the stack.}
 \inst{SET\_STACK\_DEPTH}{u —}{Set {\tt STACK\_DEPTH} to \spic{u}.}
 \end{description}
@@ -419,7 +418,7 @@ Table~\ref{opcodetable} lists the instruction opcodes in numerical order. Other 
 \opcodetbl{09}{NOT}		{19}{STORE}
 \opcodetbl{0a}{AND}		{1a}{LOADB}
 \opcodetbl{0b}{OR}		{1b}{STOREB}
-\opcodetbl{0c}{XOR}		{1c}{GET\_WORD\_SIZE}
+\opcodetblone{0c}{XOR}
 \opcodetbl{0d}{LSHIFT}		{1d}{GET\_STACK\_DEPTH}
 \opcodetbl{0e}{RSHIFT}		{1e}{SET\_STACK\_DEPTH}
 \opcodetbl{0f}{ARSHIFT}		{1f}{HALT}

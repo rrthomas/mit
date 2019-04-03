@@ -42,7 +42,6 @@ correct = [
     [],
     [0],
     [],
-    [word_size],
 ]
 
 # Test code
@@ -70,7 +69,6 @@ ass(LOAD)
 ass(POP)
 ass(GET_STACK_DEPTH)
 ass(SET_STACK_DEPTH)
-ass(GET_WORD_SIZE)
 
 # Test
 run_test("memory", VM, correct)

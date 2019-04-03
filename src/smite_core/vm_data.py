@@ -169,10 +169,6 @@ class Instructions(Enum):
             RAISE(ret);
     ''')
 
-    GET_WORD_SIZE = Instruction(0x1c, [], ['r'], '''\
-        r = WORD_SIZE;
-    ''')
-
     GET_STACK_DEPTH = Instruction(0x1d, [], ['r'], '''\
         r = S->STACK_DEPTH;
     ''')
