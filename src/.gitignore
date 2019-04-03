@@ -13,9 +13,9 @@
 /smite-include.man
 /smite.h
 /instructions.c
-/extra.c
-/opcodes-core.h
-/opcodes-extra.h
+/ext.c
+/opcodes.h
+/ext-opcodes.h
 /registers.h
 /type-sizes
 /type-sizes.ac

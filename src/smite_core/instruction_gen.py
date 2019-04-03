@@ -32,7 +32,7 @@ class Instruction:
     VM instruction instruction descriptor.
 
      - opcode - int - opcode number
-     - effect - StackEffect
+     - effect - StackEffect (or None for arbitrary stack effect)
      - code - str - C source code
 
     C variables are created for the arguments and results; the arguments are
@@ -43,10 +43,15 @@ class Instruction:
     '''
     def __init__(self, opcode, args, results, code):
         '''
-         - args, results - lists of str acceptable to StackEffect()
+         - args, results - lists of str acceptable to StackEffect(); if both are
+           None, then the instruction has an arbitrary stack effect, like `EXT`.
         '''
         self.opcode = opcode
-        self.effect = StackEffect(args, results)
+        if args is None or results is None:
+            assert args is None and results is None
+            self.effect = None
+        else:
+            self.effect = StackEffect(args, results)
         self.code = code
 
 
@@ -234,28 +239,33 @@ def gen_case(instruction):
     '''
     # Concatenate the pieces.
     effect = instruction.effect
-    code = [effect.declare_vars(effect.items.values()), '''\
-if (S->STACK_DEPTH > S->STACK_SIZE) {
-    S->BAD = S->STACK_DEPTH - S->STACK_SIZE;
-    RAISE(SMITE_ERR_STACK_OVERFLOW);
-}''']
-    if effect.items.get('COUNT'):
-        # If we have COUNT, check its stack position is valid, and load it
+    code = []
+    if effect is not None:
+        code += [effect.declare_vars(effect.items.values()), '''\
+    if (S->STACK_DEPTH > S->STACK_SIZE) {
+        S->BAD = S->STACK_DEPTH - S->STACK_SIZE;
+        RAISE(SMITE_ERR_STACK_OVERFLOW);
+    }''']
+        if effect.items.get('COUNT'):
+            # If we have COUNT, check its stack position is valid, and load it
+            code += [
+                check_underflow('({} + 1)'.format(effect.items['COUNT'].depth)),
+                effect.load_item(effect.items['COUNT']),
+            ]
+        args_size = ' + '.join(str(item.size) for item in effect.args) or '0'
+        results_size = ' + '.join(str(item.size) for item in effect.results) or '0'
         code += [
-            check_underflow('({} + 1)'.format(effect.items['COUNT'].depth)),
-            effect.load_item(effect.items['COUNT']),
+            check_underflow(args_size),
+            check_overflow(args_size, results_size),
+            effect.load_args(),
+            'S->STACK_DEPTH -= {};'.format(args_size),
         ]
-    args_size = ' + '.join(str(item.size) for item in effect.args) or '0'
-    results_size = ' + '.join(str(item.size) for item in effect.results) or '0'
-    code += [
-        check_underflow(args_size),
-        check_overflow(args_size, results_size),
-        effect.load_args(),
-        'S->STACK_DEPTH -= {};'.format(args_size),
-        textwrap.dedent(instruction.code.rstrip()),
-        'S->STACK_DEPTH += {};'.format(results_size),
-        effect.store_results(),
-    ]
+    code += [textwrap.dedent(instruction.code.rstrip())]
+    if effect is not None:
+        code += [
+            'S->STACK_DEPTH += {};'.format(results_size),
+            effect.store_results(),
+        ]
     # Remove newlines resulting from empty strings in the above.
     return re.sub('\n+', '\n', '\n'.join(code), flags=re.MULTILINE).strip('\n')
 

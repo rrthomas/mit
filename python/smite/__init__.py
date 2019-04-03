@@ -29,7 +29,7 @@ import sys
 import collections.abc
 
 from .vm_data import *
-from .vm_data_extra import *
+from .ext import *
 from .binding import *
 from .assembler import *
 

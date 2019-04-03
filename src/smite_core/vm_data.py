@@ -169,16 +169,21 @@ class Instructions(Enum):
             RAISE(ret);
     ''')
 
-    GET_STACK_DEPTH = Instruction(0x1d, [], ['r'], '''\
+    GET_STACK_DEPTH = Instruction(0x1c, [], ['r'], '''\
         r = S->STACK_DEPTH;
     ''')
 
-    SET_STACK_DEPTH = Instruction(0x1e, ['a'], [], '''\
+    SET_STACK_DEPTH = Instruction(0x1d, ['a'], [], '''\
         if ((smite_UWORD)a > S->STACK_SIZE) {
             S->BAD = a - S->STACK_SIZE;
             RAISE(SMITE_ERR_STACK_OVERFLOW);
         }
         S->STACK_DEPTH = a;
+    ''')
+
+    EXT = Instruction(0x1e, None, None, '''\
+        int smite_ext(smite_state *S);
+        smite_ext(S);
     ''')
 
     HALT = Instruction(0x1f, [], [], '''\

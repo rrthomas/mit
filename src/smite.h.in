@@ -384,7 +384,7 @@ int smite_save_object(smite_state *S, smite_UWORD addr, smite_UWORD len, int fd)
 int smite_register_args(smite_state *S, int argc, char *argv[]);
 /* Register command-line arguments in the given state, which can be
    retrieved using the `ARGC` and `ARG` functions of the `LIBC` extra
-   instruction (see `smite_core/vm_data_extra.py`).
+   instruction (see `smite_core/ext.py`).
 
    - state - the state in which to register the arguments
    - argc, argv - as for `main`.

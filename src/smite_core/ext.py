@@ -1,4 +1,4 @@
-# Extra instructions.
+# EXT instruction.
 #
 # (c) SMite authors 1994-2019
 #
@@ -27,8 +27,6 @@ includes = '''\
 #include "verify.h"
 
 #include "smite.h"
-#include "extra.h"
-#include "opcodes.h"
 '''
 
 @unique
@@ -263,8 +261,8 @@ class Library(Instruction):
 @unique
 class LibInstructions(Enum):
     '''VM instruction instructions to access external libraries.'''
-    LIB_SMITE = Library(0x3f, SMiteLib)
-    LIB_C = Library(0x3e, LibcLib)
+    LIB_SMITE = Library(0x00, SMiteLib)
+    LIB_C = Library(0x01, LibcLib)
 
 # Inject name into each library's code
 for instruction in LibInstructions:

@@ -19,7 +19,6 @@ print('''\
 
 #include "smite.h"
 #include "opcodes.h"
-#include "extra.h"
 
 #define RAISE(code)                                           \\
     do {                                                      \\
@@ -49,12 +48,9 @@ smite_WORD smite_single_step(smite_state *S) {
 ''')
 
 print(instruction_gen.dispatch(vm_data.Instructions, 'O_', '''\
-        /* Undefined instruction; try extra instructions */
-        {
-            int ret = smite_extra(S, opcode);
-            if (ret != 0)
-                RAISE(ret);
-        }'''))
+        /* Undefined instruction. */
+        RAISE(SMITE_ERR_INVALID_OPCODE);
+'''))
 
 print('''
 

@@ -10,7 +10,7 @@
 
 import re
 
-from smite_core.vm_data_extra import *
+from smite_core.ext import *
 
 
 print('''\

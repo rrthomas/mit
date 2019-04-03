@@ -8,15 +8,19 @@
 # THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 # RISK.
 
-from smite_core.vm_data_extra import *
+from smite_core.ext import *
 from smite_core.instruction_gen import *
 
 # Write the output file
 print(includes)
 
 print('''
+#include "ext-opcodes.h"
+int smite_ext(smite_state *S);
+
 enum {
-    SMITE_ERR_EXTRA_INVALID_FUNCTION = 15,
+    SMITE_ERR_EXT_INVALID_LIBRARY = 16,
+    SMITE_ERR_EXT_INVALID_FUNCTION = 17,
 };
 
 #define RAISE(code)                         \\
@@ -29,21 +33,26 @@ verify(sizeof(int) <= sizeof(smite_WORD));
 for lib in LibInstructions:
     print('''\
 static int extra_{}(smite_state *S, smite_WORD opcode)
-{{
-'''.format(str.lower(lib.name)))
-    print(dispatch(lib.value.library, '{}_'.format(lib.name), '            RAISE(SMITE_ERR_EXTRA_INVALID_FUNCTION);'))
+{{'''.format(str.lower(lib.name)))
+    print(dispatch(lib.value.library, '{}_'.format(lib.name), '            RAISE(SMITE_ERR_EXT_INVALID_FUNCTION);'))
     print('''
     return SMITE_ERR_OK;
 }
 ''')
 
 print('''
-int smite_extra(smite_state *S, smite_WORD opcode)
+int smite_ext(smite_state *S)
 {
+    smite_WORD opcode;
+    {
+        int ret = pop_stack(S, &opcode);
+        if (ret != 0)
+            RAISE(ret);
+    }
 ''')
 
 print(dispatch(LibInstructions, '', '''
-            return SMITE_ERR_INVALID_OPCODE;'''))
+            return SMITE_ERR_EXT_INVALID_LIBRARY;'''))
 
 print('''
     return SMITE_ERR_OK;
