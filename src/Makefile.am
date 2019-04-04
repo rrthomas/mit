@@ -57,7 +57,7 @@ instructions.c: gen-instructions smite_core/vm_data.py smite_core/instruction_ge
 smite_core/type_sizes.py: $(top_builddir)/config.status gen-type-sizes collate-type-sizes registers.h smite_core/ext.py smite_core/instruction_gen.py
 	$(PYTHON_WITH_PATH) $(srcdir)/gen-type-sizes > type-sizes.ac && \
 	autoconf type-sizes.ac > type-sizes && \
-	CONFIG_SITE= CPPFLAGS="-I$(builddir) -I$(srcdir) -I$(top_builddir) $(AM_CPPFLAGS)" $(SHELL) type-sizes && \
+	CONFIG_SITE= CFLAGS="$(CFLAGS)" CPPFLAGS="-I$(builddir) -I$(srcdir) -I$(top_builddir) $(AM_CPPFLAGS)" $(SHELL) type-sizes && \
 	$(MKDIR_P) smite_core && \
 	$(GREP) "^#define SIZEOF" config.log | cut -d " " -f 3 | \
 		( $(PYTHON_WITH_PATH) $(srcdir)/collate-type-sizes > smite_core/type_sizes.py ) || rm -f type-sizes.ac type-sizes smite_core/type_sizes.py
