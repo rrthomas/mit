@@ -16,7 +16,7 @@
 % Macros for this document
 
 % Constants
-\newcommand{\instsize}{$6$}
+\newcommand{\instsize}{$8$}
 
 % Font for stack pictures; macro \spic includes italic correction
 
