@@ -100,6 +100,10 @@ class StackEffect:
     the number of words in 'ITEMS'. 'ITEMS', if used, may not move relative
     to the bottom of the stack between 'args' and 'results'.
 
+    'args' and 'results' are augmented with an extra field 'depth' which
+    gives the stack position of their top-most word, and is either int or
+    str (a C expression).
+
     Public fields:
 
      - items - a dict of str: StackItem
@@ -132,12 +136,15 @@ class StackEffect:
 
     @staticmethod
     def _set_depths(items, count_index):
-        depth = '0'
+        depth = 0
         for item in reversed(items):
             item.depth = depth
             if item.name == 'ITEMS':
                 item.size = 'COUNT'
-            depth += ' + {}'.format(item.size)
+            if type(depth) == int and type(item.size) == int:
+                depth += item.size
+            else:
+                depth = '{} + {}'.format(depth, item.size)
 
     # In load_item & store_item, casts to size_t avoid warnings when `var` is
     # a pointer and sizeof(void *) > WORD_SIZE, but the effect is identical.
