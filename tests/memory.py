@@ -29,6 +29,7 @@ correct = [
     [size * word_size - word_size, 0],
     [size * word_size - word_size, size * word_size - word_size],
     [size * word_size - word_size, 513],
+    [size * word_size - word_size, 513, 1],
     [size * word_size - word_size],
     [size * word_size - word_size, 0],
     [size * word_size - word_size, size * word_size - word_size],
@@ -39,6 +40,7 @@ correct = [
     [],
     [size * word_size - word_size],
     [(0x02 << (word_bit - byte_bit)) | 0x0201],
+    [(0x02 << (word_bit - byte_bit)) | 0x0201, 1],
     [],
     [0],
     [],
@@ -56,6 +58,7 @@ ass(STORE)
 lit(0)
 ass(DUP)
 ass(LOAD)
+lit(1)
 ass(POP)
 lit(0)
 ass(DUP)
@@ -66,6 +69,7 @@ lit(size * word_size - 1)
 ass(STOREB)
 lit(size * word_size - word_size)
 ass(LOAD)
+lit(1)
 ass(POP)
 ass(GET_STACK_DEPTH)
 ass(SET_STACK_DEPTH)

@@ -54,9 +54,7 @@ class Instructions(Enum):
         NEXT;
     ''')
 
-    POP = Instruction(0x04, ['item'], [], '''\
-        (void)item;
-    ''')
+    POP = Instruction(0x04, ['ITEMS:', 'COUNT'], [], '')
 
     DUP = Instruction(0x05, ['x', 'ITEMS:', 'COUNT'], ['x', 'ITEMS:', 'x'], '')
 
