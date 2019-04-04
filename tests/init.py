@@ -1,7 +1,7 @@
 # Test that the VM headers compile properly, and that the
 # storage allocation and register initialisation in storage.c works.
 #
-# (c) Reuben Thomas 1994-2019
+# (c) SMite authors 1994-2019
 #
 # The package is distributed under the MIT/X11 License.
 #

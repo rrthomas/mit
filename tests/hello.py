@@ -1,6 +1,6 @@
 # Hello world demo/test.
 #
-# (c) Reuben Thomas 2018-2019
+# (c) SMite authors 2018-2019
 #
 # The package is distributed under the MIT/X11 License.
 #

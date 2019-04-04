@@ -1,7 +1,7 @@
 # Test the memory operators. Also uses previously tested instructions.
 # See errors.py for address error handling tests.
 #
-# (c) Reuben Thomas 1994-2019
+# (c) SMite authors 1994-2019
 #
 # The package is distributed under the MIT/X11 License.
 #
@@ -42,7 +42,6 @@ correct = [
     [],
     [0],
     [],
-    [word_size],
 ]
 
 # Test code
@@ -70,7 +69,6 @@ ass(LOAD)
 ass(POP)
 ass(GET_STACK_DEPTH)
 ass(SET_STACK_DEPTH)
-ass(GET_WORD_SIZE)
 
 # Test
 run_test("memory", VM, correct)

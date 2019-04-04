@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # Generate code for extra instructions.
 #
-# (c) Reuben Thomas 1994-2019
+# (c) SMite authors 1994-2019
 #
 # The package is distributed under the MIT/X11 License.
 #
@@ -16,7 +16,7 @@ print(includes)
 
 print('''
 enum {
-    SMITE_ERR_EXTRA_INVALID_LIBRARY = 15,
+    SMITE_ERR_EXTRA_INVALID_FUNCTION = 15,
 };
 
 #define RAISE(code)                         \\
@@ -30,9 +30,8 @@ for lib in LibInstructions:
     print('''\
 static int extra_{}(smite_state *S, smite_WORD opcode)
 {{
-    smite_WORD temp;
 '''.format(str.lower(lib.name)))
-    print(dispatch(lib.value.library, '{}_'.format(lib.name), '            RAISE(SMITE_ERR_EXTRA_INVALID_LIBRARY);'))
+    print(dispatch(lib.value.library, '{}_'.format(lib.name), '            RAISE(SMITE_ERR_EXTRA_INVALID_FUNCTION);'))
     print('''
     return SMITE_ERR_OK;
 }
@@ -41,7 +40,6 @@ static int extra_{}(smite_state *S, smite_WORD opcode)
 print('''
 int smite_extra(smite_state *S, smite_WORD opcode)
 {
-    smite_WORD temp;
 ''')
 
 print(dispatch(LibInstructions, '', '''

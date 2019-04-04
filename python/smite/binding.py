@@ -1,7 +1,23 @@
+'''
+Python bindings for libsmite.
+
+(c) SMite authors 2019
+
+The package is distributed under the MIT/X11 License.
+
+THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
+RISK.
+'''
+
 from ctypes import *
 from ctypes.util import find_library
 
 library_file = find_library("smite")
+if not library_file:
+    # For Windows
+    # FIXME: Do this portably
+    # FIXME: Substitute version when library is versioned
+    library_file = find_library("libsmite-0")
 assert(library_file)
 libsmite = CDLL(library_file)
 assert(libsmite)

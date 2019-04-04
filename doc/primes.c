@@ -1,6 +1,7 @@
 /* Translation of Forth primes benchmark (adapted from Modula-2 version)
-   For comparison against pForth
-   Reuben Thomas   28/5/96
+   For comparison against pForth.
+   (c) Reuben Thomas   28th May 1996
+   This file is in the public domain.
 */
 
 #include <stdio.h>

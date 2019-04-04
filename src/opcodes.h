@@ -13,9 +13,6 @@
 
 #define INSTRUCTION(name, opcode) name = opcode,
 #include "opcodes-core.h"
-#undef INSTRUCTION
-
-#define INSTRUCTION(name, opcode) name = opcode,
 #include "opcodes-extra.h"
 #undef INSTRUCTION
 

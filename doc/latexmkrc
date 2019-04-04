@@ -1,4 +1,6 @@
 # latexmk -*- mode: perl -*-
+# (c) Reuben Thomas 2018-2019
+# This file is in the public domain.
 
 $pdf_mode = 1;
 $postscript_mode = $dvi_mode = 0;

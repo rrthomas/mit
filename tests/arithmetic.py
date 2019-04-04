@@ -4,7 +4,7 @@
 # correctness of the operators here, assuming that if the arithmetic works
 # in one case, it will work in all.
 #
-# (c) Reuben Thomas 1994-2019
+# (c) SMite authors 1994-2019
 #
 # The package is distributed under the MIT/X11 License.
 #

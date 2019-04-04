@@ -1,7 +1,8 @@
 %
 % The definition of @PACKAGE_NAME@ (self-contained paper)
 %
-% Reuben Thomas
+% (c) Reuben Thomas 1993-2019
+% This file is in the public domain.
 %
 % Started 1/6-29/10/93
 %
@@ -42,12 +43,6 @@
 {\makebox[\instname][l]{\tt #1}%
 \makebox[\stackcom][r]{\tt ( \spic{#2} )}\\[0.5ex]#3}}
 
-% Lay out an external interface call
-
-\newlength{\innerwidth}\innerwidth=\itemwidth \advance\innerwidth by -0.5in
-\newcommand{\iface}[4]{\item[]\parbox{\itemwidth}{{\bf #1} ({\it #2}\/) :
-#3\\[0.5ex]\hspace*{0.4in}\parbox{\innerwidth}{#4}}}
-
 % Lay out a line of the opcode table
 
 \newcommand{\opcodetbl}[4]{0x#1 & {\tt #2} & 0x#3 & {\tt #4} \\}
@@ -56,7 +51,7 @@
 
 \title{The @PACKAGE_NAME@ Virtual Machine}
 \author{Reuben Thomas}
-\date{22nd March 2019}
+\date{30th March 2019}
 
 \begin{document}
 \maketitle
@@ -92,7 +87,7 @@ Words have the bytes stored in big-endian or little-endian order, according to {
 \subsection{Registers}
 \label{registers}
 
-The registers, each with its function, are set out in table~\ref{regtable}.
+The registers are word quantities; they are listed, with their functions, in table~\ref{regtable}.
 
 \begin{table}[htbp]
 \begin{center}
@@ -110,11 +105,6 @@ The registers, each with its function, are set out in table~\ref{regtable}.
 \caption{\label{regtable}Registers}
 \end{center}
 \end{table}
-
-The registers are word quantities.
-
-To ease efficient implementation, the registers may only be accessed
-by instructions (see section~\ref{registeract}); not all registers are accessible, and only a few are writable.
 
 
 \subsection{Memory}
@@ -137,9 +127,7 @@ Before @PACKAGE_NAME@ is started, {\tt ENDISM} should be set to $0$ or $1$ accor
 
 {\tt ENDISM} and {\tt WORD\_SIZE} must not change.
 
-@PACKAGE_NAME@ is started by a call to the interface calls {\bf run()} or {\bf
-single\_step()} (see section~\ref{calls}). In the former case, the execution
-cycle is entered:
+Execution proceeds as follows:
 
 \begin{tabbing}
 \hspace{0.5in}\=begin\=\+\+ \\*
@@ -150,9 +138,6 @@ repeat
 
 In the latter case, the contents of the execution cycle is executed once, and
 control returns to the calling program.
-
-Note that the calls {\bf run()} and {\bf single\_step()} do not perform the
-initialisation specified above.
 
 
 \subsection{Errors and termination}
@@ -278,6 +263,20 @@ indeterminate numbers of specified types of word.
 \end{description}
 
 
+\subsection{Control}
+\label{control}
+
+These instructions implement unconditional and conditional branches, and subroutine
+call and return (subroutine return is {\tt BRANCH}):
+
+\nopagebreak
+\begin{description}
+\inst{BRANCH}{a-addr —}{Set {\tt PC} to \spic{a-addr}. Perform the action of {\tt NEXT}.}
+\inst{BRANCHZ}{flag a-addr —}{If \spic{flag} is false then set {\tt PC} to \spic{a-addr} and perform the action of {\tt NEXT}.}
+\inst{CALL}{\aaddr1 — \aaddr2}{Exchange {\tt PC} with the top stack value. Perform the action of {\tt NEXT}.}
+\end{description}
+
+
 \subsection{Stack manipulation}
 
 These instructions manage the stack:
@@ -290,8 +289,7 @@ These instructions manage the stack:
 \end{description}
 
 
-\subsection{Numbers}
-\label{numbers}
+\subsection{Literals}
 
 \begin{description}
 \inst{LIT}{— n}{The word pointed to by {\tt PC} is pushed on to the stack, and {\tt PC} is incremented to point to the following word.}
@@ -373,25 +371,10 @@ These instructions fetch and store words and bytes to and from memory:
 \end{description}
 
 
-\subsection{Control}
-\label{control}
-
-These instructions implement unconditional and conditional branches, and subroutine
-call and return (subroutine return is {\tt BRANCH}):
-
-\nopagebreak
-\begin{description}
-\inst{BRANCH}{a-addr —}{Set {\tt PC} to \spic{a-addr}. Perform the action of {\tt NEXT}.}
-\inst{BRANCHZ}{flag a-addr —}{If \spic{flag} is false then set {\tt PC} to \spic{a-addr} and perform the action of {\tt NEXT}.}
-\inst{CALL}{\aaddr1 — \aaddr2}{Exchange {\tt PC} with the top stack value. Perform the action of {\tt NEXT}.}
-\end{description}
-
-
 \subsection{Registers}
 \label{registeract}
 
 \begin{description}
-\inst{GET\_WORD\_SIZE}{— u}{\spic{u} is the value of {\tt WORD\_SIZE}.}
 \inst{GET\_STACK\_DEPTH}{— u}{\spic{u} is the value of {\tt STACK\_DEPTH}, the number of items on the stack.}
 \inst{SET\_STACK\_DEPTH}{u —}{Set {\tt STACK\_DEPTH} to \spic{u}.}
 \end{description}
@@ -423,22 +406,22 @@ Table~\ref{opcodetable} lists the instruction opcodes in numerical order. Other 
 \begin{center}
 \begin{tabular}{*{2}{cc}} \toprule
 \bf Opcode & \bf Instruction & \bf Opcode & \bf Instruction \\ \midrule
-\opcodetbl{00}{NEXT}		{10}{NEGATE}
-\opcodetbl{01}{POP}		{11}{ADD}
-\opcodetbl{02}{DUP}		{12}{MUL}
-\opcodetbl{03}{SWAP}		{13}{DIVMOD}
-\opcodetbl{04}{LIT}		{14}{UDIVMOD}
-\opcodetbl{05}{LIT\_PC\_REL}	{15}{LOAD}
-\opcodetbl{06}{NOT}             {16}{STORE}
-\opcodetbl{07}{AND}             {17}{LOADB}
-\opcodetbl{08}{OR}              {18}{STOREB}
-\opcodetbl{09}{XOR}             {19}{BRANCH}
-\opcodetbl{0a}{LSHIFT}          {1a}{BRANCHZ}
-\opcodetbl{0b}{RSHIFT}          {1b}{CALL}
-\opcodetbl{0c}{ARSHIFT}         {1c}{GET\_WORD\_SIZE}
-\opcodetbl{0d}{EQ}		{1d}{GET\_STACK\_DEPTH}
-\opcodetbl{0e}{LT}		{1e}{SET\_STACK\_DEPTH}
-\opcodetbl{0f}{ULT}		{1f}{HALT}
+\opcodetbl{00}{NEXT}		{10}{EQ}
+\opcodetbl{01}{BRANCH}		{11}{LT}
+\opcodetbl{02}{BRANCHZ}		{12}{ULT}
+\opcodetbl{03}{CALL}		{13}{NEGATE}
+\opcodetbl{04}{POP}		{14}{ADD}
+\opcodetbl{05}{DUP}		{15}{MUL}
+\opcodetbl{06}{SWAP}		{16}{DIVMOD}
+\opcodetbl{07}{LIT}		{17}{UDIVMOD}
+\opcodetbl{08}{LIT\_PC\_REL}	{18}{LOAD}
+\opcodetbl{09}{NOT}		{19}{STORE}
+\opcodetbl{0a}{AND}		{1a}{LOADB}
+\opcodetbl{0b}{OR}		{1b}{STOREB}
+\opcodetblone{0c}{XOR}
+\opcodetbl{0d}{LSHIFT}		{1d}{GET\_STACK\_DEPTH}
+\opcodetbl{0e}{RSHIFT}		{1e}{SET\_STACK\_DEPTH}
+\opcodetbl{0f}{ARSHIFT}		{1f}{HALT}
  \bottomrule
 \end{tabular}
 \caption{\label{opcodetable}Instruction opcodes}
@@ -448,9 +431,13 @@ Table~\ref{opcodetable} lists the instruction opcodes in numerical order. Other 
 
 \section{External interface}
 
-@PACKAGE_NAME@'s external interface comes in three parts. The calling interface allows
-@PACKAGE_NAME@ to be controlled by other programs. Implementations can provide extra instructions to access system facilities, previously written code, native libraries and so on. The object module format allows compiled code to be saved, reloaded
-and shared between systems.
+@PACKAGE_NAME@'s external interface comes in three parts:
+
+\begin{itemize}
+\item Implementations should provide an \textbf{API} to create and run virtual machine instances, and provide access to its registers, stack and memory.
+\item Implementations can add \textbf{extra instructions} to provide extra computational primitives, and offer access system facilities, previously written code, native libraries and so on.
+\item The \textbf{object module} format allows compiled code to be saved, reloaded and shared between systems.
+\end{itemize}
 
 
 \subsection{Object module format}
@@ -462,37 +449,6 @@ the {\tt ENDISM} and {\tt WORD\_SIZE} registers of the system which saved the mo
 
 Object modules have a simple structure, as they are only intended for loading an
 initial memory image into @PACKAGE_NAME@.
-
-
-\subsection{Calling interface}
-\label{calls}
-
-The calling interface is difficult to specify with the same precision as the
-rest of @PACKAGE_NAME@, as it may be implemented in any language. However, since only
-basic types are used, and the semantics are simple, it is expected that
-implementations in different language producing the same result will be easy to
-program. A Modula-like syntax is used to give the definitions here.
-Implementation-defined error codes must be documented, but are optional. All
-addresses passed as parameters must be word-aligned. An implementation of @PACKAGE_NAME@ must provide the
-following calls:
-
-\begin{description}
-\iface{run}{}{integer}{Start @PACKAGE_NAME@ by entering the execution cycle as
-    described in section~\ref{operation}. If an error is raised, the code is
-    returned as the result.}
-\iface{single\_step}{}{integer}{Execute a single pass of the execution
-    cycle. If an error is raised, it is returned; otherwise, return $128$.}
-\iface{load\_object}{file, address}{integer}{Load the object module
-    given by the file descriptor \textit{file}, which may be a filename or some other
-    specifier, to the VM address \textit{address}. If the module is invalid, then return $-2$. If the module cannot be loaded by the current implementation (for example, the word size or {\tt ENDISM} is incompatible), return $-3$. If the code will not fit into memory at the address given, or the address is out of range or unaligned, return $-4$. Otherwise load the code into
-    memory, converting it if the endianness value is different from the current
-    value of {\tt ENDISM}. The result is the length of the code in bytes if successful, and $-1$ if there is a filing system or other error.}
-  \iface{save\_object}{file, address, length}{integer}{Save the area of memory
-    specified by \textit{address} and \textit{length} to the file descriptor given by \textit{file}. On success, $0$ is returned. If the address or length are invalid, the return code is $-2$. If a file system error occurs, the return code is $-1$.}
-\end{description}
-
-@PACKAGE_NAME@ must also provide access to its registers and address space through
-appropriate data objects.
 
 
 \section*{Acknowledgements}
