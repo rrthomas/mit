@@ -97,9 +97,8 @@ class StackEffect:
 
     If the instruction is variadic, a pseudo-item 'ITEMS' represents the
     unnamed items; one of the arguments above that must be 'COUNT', which is
-    (N.B.!) one less than the number of items below it on the stack
-    (including the items represented by 'ITEMS'). 'ITEMS', if used, may not
-    move relative to the bottom of the stack between 'args' and 'results'.
+    the number of words in 'ITEMS'. 'ITEMS', if used, may not move relative
+    to the bottom of the stack between 'args' and 'results'.
 
     Public fields:
 
@@ -137,10 +136,8 @@ class StackEffect:
         for item in reversed(items):
             item.depth = depth
             if item.name == 'ITEMS':
-                item.size = '(COUNT + 1 - {})'.format(count_index - 1)
-                depth += ' + {}'.format(item.size)
-            else:
-                depth += ' + {}'.format(item.size)
+                item.size = 'COUNT'
+            depth += ' + {}'.format(item.size)
 
     # In load_item & store_item, casts to size_t avoid warnings when `var` is
     # a pointer and sizeof(void *) > WORD_SIZE, but the effect is identical.
@@ -249,7 +246,7 @@ def gen_case(instruction):
         if effect.items.get('COUNT'):
             # If we have COUNT, check its stack position is valid, and load it
             code += [
-                check_underflow('({} + 1)'.format(effect.items['COUNT'].depth)),
+                check_underflow('({})'.format(effect.items['COUNT'].depth)),
                 effect.load_item(effect.items['COUNT']),
             ]
         args_size = ' + '.join(str(item.size) for item in effect.args) or '0'

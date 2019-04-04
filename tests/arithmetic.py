@@ -29,19 +29,19 @@ correct = [
     [0, 1, -1],
     [0, 1, 1],
     [0, 2],
-    [0, 2, 1],
+    [0, 2, 0],
     [2, 0],
     [2, 0, -1],
     [2, 0, -1, word_size],
     [2, 0, -word_size],
-    [2, 0, -word_size, 1],
+    [2, 0, -word_size, 0],
     [2, -word_size, 0],
     [2, -word_size],
     [2],
     [-2],
     [-2, -1],
     [2, 0],
-    [2, 0, 1],
+    [2, 0, 0],
     [0, 2],
     [0],
     [],
@@ -71,19 +71,19 @@ ass(ADD)
 ass(ADD)
 ass(NEGATE)
 ass(ADD)
-lit(1)
+lit(0)
 ass(SWAP)
 lit(-1)
 lit(word_size)
 ass(MUL)
-lit(1)
+lit(0)
 ass(SWAP)
 ass(POP)
 ass(POP)
 ass(NEGATE)
 lit(-1)
 ass(DIVMOD)
-lit(1)
+lit(0)
 ass(SWAP)
 ass(POP)
 ass(POP)
