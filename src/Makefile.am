@@ -21,8 +21,8 @@ libsmite_la_LDFLAGS = -no-undefined -export-symbols-regex '^smite_.*'
 bin_PROGRAMS = smite$(EXEEXT)
 man_MANS = @PACKAGE@.1
 smite_LDADD = lib@PACKAGE@.la $(top_builddir)/lib/libgnu.la
-smite_SOURCES = main.c tbl_opts.h
-nodist_pkginclude_HEADERS = @PACKAGE@.h opcodes.h ext-opcodes.h
+smite_SOURCES = main.c tbl_opts.h @PACKAGE@.h
+nodist_pkginclude_HEADERS = opcodes.h ext-opcodes.h
 
 step.lo: instructions.c
 object.lo step.lo storage.lo main.o: registers.h opcodes.h ext-opcodes.h
@@ -73,7 +73,6 @@ loc:
 		gen-registers gen-opcodes gen-ext-opcodes gen-instructions gen-ext
 
 EXTRA_DIST = \
-	@PACKAGE@.h.in \
 	$(SMITE_CORE_SRCS) \
 	gen-registers \
 	gen-opcodes \

@@ -16,7 +16,6 @@ print(includes)
 
 print('''
 #include "ext-opcodes.h"
-int smite_ext(smite_state *S);
 
 enum {
     SMITE_ERR_EXT_INVALID_LIBRARY = 16,

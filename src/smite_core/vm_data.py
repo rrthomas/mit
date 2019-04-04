@@ -182,7 +182,6 @@ class Instructions(Enum):
     ''')
 
     EXT = Instruction(0x1e, None, None, '''\
-        int smite_ext(smite_state *S);
         smite_ext(S);
     ''')
 

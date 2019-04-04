@@ -17,29 +17,39 @@
 #include <inttypes.h>
 
 
-// Types
-#define WORD_SIZE @WORD_SIZE@
+// Types and printf formats
+#define DEFAULT_WORD_SIZE SIZEOF_SIZE_T
+#ifndef WORD_SIZE
+#define WORD_SIZE DEFAULT_WORD_SIZE
+#endif
 typedef uint8_t smite_BYTE;
 #if WORD_SIZE == 4
 typedef int32_t smite_WORD;
+typedef uint32_t smite_UWORD;
+#define smite_WORD_MASK UINT32_MAX
+#define smite_UWORD_MAX UINT32_MAX
+#define smite_WORD_MIN INT32_MIN
+#define smite_WORD_MAX INT32_MAX
 #define PRI_WORD PRId32
 #define PRI_UWORD PRIu32
 #define PRI_XWORD "#"PRIx32
-typedef uint32_t smite_UWORD;
 #elif WORD_SIZE == 8
 typedef int64_t smite_WORD;
+typedef uint64_t smite_UWORD;
+#define smite_WORD_MASK UINT64_MAX
+#define smite_UWORD_MAX UINT64_MAX
+#define smite_WORD_MIN INT64_MIN
+#define smite_WORD_MAX INT64_MAX
 #define PRI_WORD PRId64
 #define PRI_UWORD PRIu64
 #define PRI_XWORD "#"PRIx64
-typedef uint64_t smite_UWORD;
 #else
-#error "WORD_SIZE is not 4 or 8!"
+#error "WORD_SIZE must be 4 or 8!"
 #endif
 typedef smite_WORD * smite_WORDP;
 #define PRI_XWORDP "p"
-typedef void (*smite_callback_t)(void *);
 
-// Parameters
+// Constants
 extern const unsigned smite_word_size;
 #define smite_BYTE_BIT 8
 extern const unsigned smite_byte_bit;
@@ -51,19 +61,6 @@ extern const smite_UWORD smite_word_mask;
 extern const smite_UWORD smite_uword_max;
 extern const smite_WORD smite_word_min;
 extern const smite_WORD smite_word_max;
-#if WORD_SIZE == 4
-#define smite_WORD_MASK UINT32_MAX
-#define smite_UWORD_MAX UINT32_MAX
-#define smite_WORD_MIN INT32_MIN
-#define smite_WORD_MAX INT32_MAX
-#elif WORD_SIZE == 8
-#define smite_WORD_MASK UINT64_MAX
-#define smite_UWORD_MAX UINT64_MAX
-#define smite_WORD_MIN INT64_MIN
-#define smite_WORD_MAX INT64_MAX
-#else
-#error "WORD_SIZE is not 4 or 8!"
-#endif
 
 // VM registers
 typedef struct {
@@ -392,9 +389,18 @@ int smite_register_args(smite_state *S, int argc, char *argv[]);
     Return 0.
 */
 
-#define ARSHIFT(n, p) @ARITHMETIC_RSHIFT@
+#if HAVE_ARITHMETIC_RSHIFT
+#define ARSHIFT(n, p) \
+    ((smite_WORD)(n) >> (p))
+#else
+#define ARSHIFT(n, p) \
+    (((n) >> (p)) | ((smite_UWORD)(-((smite_WORD)(n) < 0)) << (smite_word_bit - (p))))
+#endif
 /* Arithmetic right shift `n` by `p` places (the behaviour of >> on signed
    quantities is implementation-defined in C99).
 */
+
+int smite_ext(smite_state *S);
+/* Implement the EXT instruction. */
 
 #endif

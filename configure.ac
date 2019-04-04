@@ -86,18 +86,12 @@ AC_SUBST([objdir])
 # Check features
 AC_C_BIGENDIAN
 AX_C_ARITHMETIC_RSHIFT
-if test "x$ax_cv_c_arithmetic_rshift" = xyes; then
-  ARITHMETIC_RSHIFT="((smite_WORD)(n) >> (p))"
-else
-  ARITHMETIC_RSHIFT="(((n) >> (p)) | ((smite_UWORD)(-((smite_WORD)(n) < 0)) << (smite_word_bit - (p))))"
-fi
-AC_SUBST([ARITHMETIC_RSHIFT])
 
 # Set size of word
 AC_CHECK_SIZEOF([size_t])
-AC_ARG_VAR([WORD_SIZE],
-  [value of WORD_SIZE register [default: sizeof(size_t)]])
-: "${WORD_SIZE=SIZEOF_SIZE_T}"
+AC_ARG_VAR([DEFAULT_WORD_SIZE],
+  [default value of WORD_SIZE register [default: sizeof(size_t)]])
+: "${DEFAULT_WORD_SIZE=SIZEOF_SIZE_T}"
 
 # Generate output files
 AC_CONFIG_HEADERS([config.h])
@@ -105,7 +99,6 @@ AC_CONFIG_FILES([
         Makefile
         lib/Makefile
         src/Makefile
-        src/smite.h
         src/smite-include.man
         tests/Makefile
         python/Makefile
