@@ -102,7 +102,7 @@ class StackEffect:
 
     Public fields:
 
-     - items - addict of str to StackItem
+     - items - a dict of str: StackItem
      - args - list of StackItem
      - results - list of StackItem
     '''
@@ -114,13 +114,13 @@ class StackEffect:
         the same.
         '''
         if 'ITEMS:' in args_str and 'ITEMS:' in results_str:
+            # FIXME: Assert the depth is the same, not the index.
             assert args_str.index('ITEMS:') == results_str.index('ITEMS:')
         self.args = [StackItem(arg_str) for arg_str in args_str]
         self.results = [StackItem(result_str) for result_str in results_str]
-        item_names_set, self.items = set(), {}
+        self.items = {}
         for item in self.args + self.results:
-            if item.name not in item_names_set:
-                item_names_set.add(item.name)
+            if item.name not in self.items:
                 self.items[item.name] = item
             else: # Check repeated item is consistent
                 assert item == self.items[item.name]
@@ -142,6 +142,7 @@ class StackEffect:
     # In load_item & store_item, casts to size_t avoid warnings when `var` is
     # a pointer and sizeof(void *) > WORD_SIZE, but the effect is identical.
     def load_item(self, item):
+        '''Load `item` from the stack to its C variable.'''
         code = ['{} = 0;'.format(item.name)]
         for i in reversed(range(item.size)):
             code.append('temp = *UNCHECKED_STACK({} + {});'.format(item.depth, i))
@@ -155,6 +156,10 @@ class StackEffect:
 }}'''.format(textwrap.indent('\n'.join(code), '    '))
 
     def store_item(self, item):
+        '''
+        Store `item` to the stack from its C variable.
+        The variable is corrupted.
+        '''
         code = []
         for i in range(item.size):
             code.append('*UNCHECKED_STACK({} + {}) = (smite_UWORD)((size_t){} & smite_WORD_MASK);'.format(item.depth, i, item.name))
@@ -162,13 +167,14 @@ class StackEffect:
                 code.append('{var} = ({type})((size_t){var} >> smite_WORD_BIT);'.format(var=item.name, type=item.type))
         return '\n'.join(code)
 
-    def declare_vars(self, items):
+    def declare_vars(self):
         '''
-        Returns C variable declarations for given `items` other than any
-        'ITEMS'.
+        Returns C variable declarations for `self.items.values()` other than
+        any 'ITEMS'.
         '''
         return '\n'.join(['{} {};'.format(item.type, item.name)
-                          for item in items if item.name != 'ITEMS'])
+                          for item in self.items.values()
+                          if item.name != 'ITEMS'])
 
     def load_args(self):
         '''
@@ -238,15 +244,18 @@ def gen_case(instruction):
     effect = instruction.effect
     code = []
     if effect is not None:
-        code += [effect.declare_vars(effect.items.values()), '''\
+        code += [effect.declare_vars(), '''\
     if (S->STACK_DEPTH > S->STACK_SIZE) {
         S->BAD = S->STACK_DEPTH - S->STACK_SIZE;
         RAISE(SMITE_ERR_STACK_OVERFLOW);
     }''']
-        if effect.items.get('COUNT'):
+        if 'COUNT' in effect.items:
             # If we have COUNT, check its stack position is valid, and load it
             code += [
-                check_underflow('({})'.format(effect.items['COUNT'].depth)),
+                check_underflow('({} + {})'.format(
+                    effect.items['COUNT'].depth,
+                    effect.items['COUNT'].size,
+                )),
                 effect.load_item(effect.items['COUNT']),
             ]
         args_size = ' + '.join(str(item.size) for item in effect.args) or '0'
