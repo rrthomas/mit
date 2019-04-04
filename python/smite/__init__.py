@@ -200,7 +200,7 @@ class State:
         if fd < 0:
             raise Error("cannot open file {}".format(file))
         try:
-            libsmite.smite_load_object(self.state, addr, fd)
+            return libsmite.smite_load_object(self.state, addr, fd)
         finally:
             os.close(fd)
 
