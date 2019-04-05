@@ -118,7 +118,7 @@ int smite_realloc_memory(smite_state *S, smite_UWORD memory_size)
 
 int smite_realloc_stack(smite_state *S, smite_UWORD stack_size)
 {
-    int ret = smite_realloc(&S->S0, S->STACK_SIZE, stack_size);
+    int ret = smite_realloc(&S->stack, S->STACK_SIZE, stack_size);
     if (ret == 0)
         S->STACK_SIZE = stack_size;
     return ret;
@@ -153,7 +153,7 @@ smite_state *smite_init(size_t memory_size, size_t stack_size)
 void smite_destroy(smite_state *S)
 {
     free(S->memory);
-    free(S->S0);
+    free(S->stack);
     free(S);
 }
 

@@ -52,7 +52,6 @@ class State:
         self.M_word = WordMemory(self)
         self.S = Stack(
             self.state,
-            self.registers["S0"],
             self.registers["STACK_SIZE"],
             self.registers["STACK_DEPTH"],
         )
@@ -300,9 +299,8 @@ class ActiveRegister:
 # Stacks
 class Stack:
     '''VM stack.'''
-    def __init__(self, state, base, size, depth):
+    def __init__(self, state, size, depth):
         self.state = state
-        self.base = base
         self.size = size
         self.depth = depth
 

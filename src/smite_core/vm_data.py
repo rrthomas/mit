@@ -25,7 +25,6 @@ class Registers(Enum):
     BAD = Register()
     MEMORY = Register(read_only=True)
     STACK_DEPTH = Register()
-    S0 = Register("smite_WORDP", read_only=True)
     STACK_SIZE = Register(read_only=True)
     ENDISM = Register(read_only=True)
 

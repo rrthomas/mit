@@ -70,6 +70,7 @@ typedef struct {
 #undef R
 #undef R_RO
     smite_WORD *memory;
+    smite_WORD *stack;
     int main_argc;
     char **main_argv;
 } smite_state;
@@ -248,7 +249,7 @@ int smite_push_stack(smite_state *S, smite_WORD val);
 
 // Unchecked macro: UNSAFE!
 #define UNCHECKED_STACK(pos)                    \
-    (S->S0 + S->STACK_DEPTH - (pos) - 1)
+    (S->stack + S->STACK_DEPTH - (pos) - 1)
 
 // Inline functions
 static inline int load_stack(smite_state *S, smite_UWORD pos, smite_WORD *vp)
