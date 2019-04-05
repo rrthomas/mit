@@ -97,8 +97,9 @@ class StackEffect:
 
     If the instruction is variadic, a pseudo-item 'ITEMS' represents the
     unnamed items; one of the arguments above that must be 'COUNT', which is
-    the number of words in 'ITEMS'. 'ITEMS', if used, may not move relative
-    to the bottom of the stack between 'args' and 'results'.
+    the number of words in 'ITEMS'. If 'ITEMS' appears in 'results', it must
+    be at the same position relative to the bottom of the stack as in
+    'args'.
 
     'args' and 'results' are augmented with an extra field 'depth' which
     gives the stack position of their top-most word, and is either int or
