@@ -12,7 +12,7 @@ import sys
 import re
 from pprint import pformat
 
-from smite_core.vm_data_extra import *
+from smite_core.ext import *
 
 
 # Read list of types

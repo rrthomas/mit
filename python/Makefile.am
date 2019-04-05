@@ -15,7 +15,7 @@ pkgpython_PYTHON =			\
 	@PACKAGE@/assembler.py		\
 	@PACKAGE@/binding.py		\
 	@PACKAGE@/vm_data.py		\
-	@PACKAGE@/vm_data_extra.py	\
+	@PACKAGE@/ext.py	\
 	@PACKAGE@/instruction_gen.py
 
 loc:

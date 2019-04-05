@@ -15,7 +15,7 @@ TESTS =	\
 	arithmetic.py	\
 	branch.py	\
 	comparison.py	\
-	extra_libc.py	\
+	ext.py		\
 	errors.py	\
 	hello.py	\
 	init.py		\

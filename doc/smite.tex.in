@@ -16,7 +16,7 @@
 % Macros for this document
 
 % Constants
-\newcommand{\instsize}{$6$}
+\newcommand{\instsize}{$8$}
 
 % Font for stack pictures; macro \spic includes italic correction
 
@@ -251,9 +251,7 @@ identical stack items. Alternative \spic{after} pictures are separated by ``{\tt
 |}'', and the circumstances under which each occurs are detailed in the
 instruction description.
 
-The symbols \spic{i*x} and \spic{j*x} are used to denote different
-collections of zero or more words of any data type. Ellipsis is used for
-indeterminate numbers of specified types of word.
+Ellipsis is used for indeterminate numbers of specified types of word.
 
 
 \subsection{Instruction fetch}
@@ -285,7 +283,9 @@ These instructions manage the stack:
 \begin{description}
 \inst{POP}{x —}{Remove \spic{x} from the stack.}
 \inst{DUP}{\x{u}\dots\x0 u — \x{u}\dots\x0 \x{u}}{Remove \spic{u}. Copy \x{u} to the top of the stack.}
-\inst{SWAP}{\x{u}\dots\x0 u — \x0 \x{u-1}\dots\x1 \x{u}}{Exchange the top stack item with the \spic{u}th. If \spic{u} is zero, do nothing.}
+\inst{SWAP}{\x{u+1}\dots\x0 u — \x0 \x{u}\dots\x1 \x{u+1}}{Exchange the top stack item with the \spic{u+1}th.}
+\inst{GET\_STACK\_DEPTH}{— u}{\spic{u} is the value of {\tt STACK\_DEPTH}, the number of items on the stack.}
+\inst{SET\_STACK\_DEPTH}{u —}{Set {\tt STACK\_DEPTH} to \spic{u}.}
 \end{description}
 
 
@@ -371,12 +371,13 @@ These instructions fetch and store words and bytes to and from memory:
 \end{description}
 
 
-\subsection{Registers}
-\label{registeract}
+\subsection{External access}
 
+This instruction is a general-purpose escape. In contrast to extra instructions, which are intended to be frequently used and potentially optimized, {\tt EXT}’s behaviour is not defined; in particular, it has an arbitrary stack effect.
+
+\nopagebreak
 \begin{description}
-\inst{GET\_STACK\_DEPTH}{— u}{\spic{u} is the value of {\tt STACK\_DEPTH}, the number of items on the stack.}
-\inst{SET\_STACK\_DEPTH}{u —}{Set {\tt STACK\_DEPTH} to \spic{u}.}
+\inst{EXT}{}{Perform arbitrary actions.}
 \end{description}
 
 
@@ -418,9 +419,9 @@ Table~\ref{opcodetable} lists the instruction opcodes in numerical order. Other 
 \opcodetbl{09}{NOT}		{19}{STORE}
 \opcodetbl{0a}{AND}		{1a}{LOADB}
 \opcodetbl{0b}{OR}		{1b}{STOREB}
-\opcodetblone{0c}{XOR}
-\opcodetbl{0d}{LSHIFT}		{1d}{GET\_STACK\_DEPTH}
-\opcodetbl{0e}{RSHIFT}		{1e}{SET\_STACK\_DEPTH}
+\opcodetbl{0c}{XOR}		{1c}{GET\_STACK\_DEPTH}
+\opcodetbl{0d}{LSHIFT}		{1d}{SET\_STACK\_DEPTH}
+\opcodetbl{0e}{RSHIFT}		{1e}{EXT}
 \opcodetbl{0f}{ARSHIFT}		{1f}{HALT}
  \bottomrule
 \end{tabular}
@@ -431,11 +432,10 @@ Table~\ref{opcodetable} lists the instruction opcodes in numerical order. Other 
 
 \section{External interface}
 
-@PACKAGE_NAME@'s external interface comes in three parts:
-
 \begin{itemize}
 \item Implementations should provide an \textbf{API} to create and run virtual machine instances, and provide access to its registers, stack and memory.
-\item Implementations can add \textbf{extra instructions} to provide extra computational primitives, and offer access system facilities, previously written code, native libraries and so on.
+\item Implementations can add \textbf{extra instructions} to provide extra computational primitives.
+\item The {\tt EXT} instruction can offer access to system facilities, previously written code, native libraries and so on.
 \item The \textbf{object module} format allows compiled code to be saved, reloaded and shared between systems.
 \end{itemize}
 
@@ -462,4 +462,4 @@ convinced me it was going to be fun working on virtual machines. He also supervi
 
 \end{document}
 
-% LocalWords:  discontiguous Richards's
+% LocalWords:  Richards's addr

@@ -14,7 +14,7 @@ from .binding import (
     word_size, word_bit, word_mask, instruction_bit, instruction_mask, sign_bit,
 )
 from .vm_data import Instructions
-from .vm_data_extra import LibInstructions
+from .ext import LibInstructions
 
 LIT = Instructions.LIT.value.opcode
 LIT_PC_REL = Instructions.LIT_PC_REL.value.opcode
@@ -26,10 +26,11 @@ mnemonic = {
     instruction.value.opcode: instruction.name
     for instruction in Instructions
 }
-mnemonic.update({
-    instruction.value.opcode: instruction.name
-    for instruction in LibInstructions
-})
+# FIXME: Disassemble LibInstructions when the literal directly precedes EXT
+# mnemonic.update({
+#     instruction.value.opcode: instruction.name
+#     for instruction in LibInstructions
+# })
 
 # The set of opcodes which must be the last in a word.
 TERMINAL_OPCODES = frozenset([0, BRANCH, CALL, HALT])
