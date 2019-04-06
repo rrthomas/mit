@@ -60,14 +60,14 @@ class Instructions(Enum):
     SWAP = Instruction(0x06, ['x', 'ITEMS', 'y', 'COUNT'], ['y', 'ITEMS', 'x'], '')
 
     LIT = Instruction(0x07, [], ['n'], '''\
-        int ret = load_word(S, S->PC, &n);
+        int ret = load(S, S->PC, smite_SIZE_WORD, &n);
         if (ret != 0)
             RAISE(ret);
         S->PC += WORD_SIZE;
     ''')
 
     LIT_PC_REL = Instruction(0x08, [], ['n'], '''\
-        int ret = load_word(S, S->PC, &n);
+        int ret = load(S, S->PC, smite_SIZE_WORD, &n);
         if (ret != 0)
             RAISE(ret);
         n += S->PC;
@@ -140,28 +140,25 @@ class Instructions(Enum):
         r = (smite_WORD)((smite_UWORD)a % (smite_UWORD)b);
     ''')
 
-    LOAD = Instruction(0x18, ['addr'], ['x'], '''\
-        int ret = load_word(S, addr, &x);
+    LOAD = Instruction(0x18, ['addr', 'size'], ['x'], '''\
+        int ret = load(S, addr, size, &x);
         if (ret != 0)
             RAISE(ret);
     ''')
 
-    STORE = Instruction(0x19, ['x', 'addr'], [], '''\
-        int ret = store_word(S, addr, x);
+    LOAD_SIGNED = Instruction(0x19, ['addr', 'size'], ['x'], '''\
+        int ret = load(S, addr, size, &x);
         if (ret != 0)
             RAISE(ret);
+        fprintf(stderr, "x: %"PRI_XWORD"\\n", (smite_UWORD)x);
+        x <<= (WORD_SIZE - (1 << size)) * smite_BYTE_BIT;
+        fprintf(stderr, "x: %"PRI_XWORD"\\n", (smite_UWORD)x);
+        x = ARSHIFT(x, (WORD_SIZE - (1 << size)) * smite_BYTE_BIT);
+        fprintf(stderr, "x: %"PRI_XWORD"\\n", (smite_UWORD)x);
     ''')
 
-    LOADB = Instruction(0x1a, ['addr'], ['x'], '''\
-        smite_BYTE b_;
-        int ret = load_byte(S, addr, &b_);
-        if (ret != 0)
-            RAISE(ret);
-        x = (smite_WORD)b_;
-    ''')
-
-    STOREB = Instruction(0x1b, ['x', 'addr'], [], '''\
-        int ret = store_byte(S, addr, (smite_BYTE)x);
+    STORE = Instruction(0x1a, ['x', 'addr', 'size'], [], '''\
+        int ret = store(S, addr, size, x);
         if (ret != 0)
             RAISE(ret);
     ''')

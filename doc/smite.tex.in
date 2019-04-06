@@ -160,8 +160,9 @@ $3$ & Invalid stack read. {\tt BAD} is set to the invalid stack position. \\
 $4$ & Invalid stack write. {\tt BAD} is set to the invalid stack position. \\
 $5$ & Invalid memory read. {\tt BAD} is set to the invalid address. \\
 $6$ & Invalid memory write. {\tt BAD} is set to the invalid address. \\
-$7$ & Address alignment error: raised when an instruction expecting a word-aligned address is given a valid but non-aligned address. \\
-$8$ & Division by zero attempted (see section~\ref{arithmetic}). \\
+$7$ & Address alignment error: raised when an instruction is given a valid address, but insufficiently aligned. \\
+$8$ & Invalid size (greater than $log_2{\tt WORD\_SIZE}$). \\
+$9$ & Division by zero attempted (see section~\ref{arithmetic}). \\
 $128$ & A {\tt HALT} instruction was executed. \\
  \bottomrule
 \end{tabular}
@@ -207,7 +208,7 @@ different types of stack item are shown in table~\ref{typetable}.
 \begin{tabular}{cl} \toprule
 \bf Symbol & \bf Data type \\ \midrule
 \spic{flag} & a Boolean flag, $1$ for true and $0$ for false \\
-\spic{byte} & byte \\
+\spic{size} & an integer in the range $0$ to $log_2{\tt WORD\_SIZE}$ inclusive. \\
 \spic{n} & signed number \\
 \spic{u} & unsigned number \\
 \spic{n{\tt |}u} & number (signed or unsigned) \\
@@ -233,7 +234,7 @@ shows the subtype relationships. The subtype relation is transitive.
 \spic{u} $\Rightarrow$ \spic{x} \\
 \spic{n} $\Rightarrow$ \spic{x} \\
 \spic{flag} $\Rightarrow$ \spic{u} \\
-\spic{byte} $\Rightarrow$ \spic{u} \\
+\spic{size} $\Rightarrow$ \spic{u} \\
 \spic{a-addr} $\Rightarrow$ \spic{addr} $\Rightarrow$ \spic{u} \\
  \bottomrule
 \end{tabular}
@@ -360,14 +361,14 @@ $-4$ if division by zero is attempted):
 
 \subsection{Memory}
 
-These instructions fetch and store words and bytes to and from memory:
+These instructions fetch and store quantities to and from memory.
+If a given address is incorrectly aligned, raise error $7$, setting {\tt BAD} to the address.
 
 \nopagebreak
 \begin{description}
-\inst{LOAD}{a-addr — x}{\spic{x} is the value stored at \spic{a-addr}. If \spic{a-addr} is not word-aligned, raise error $7$, setting {\tt BAD} to \spic{a-addr}.}
-\inst{STORE}{x a-addr —}{Store \spic{x} at \spic{a-addr}. If \spic{a-addr} is not word-aligned, raise error $7$, setting {\tt BAD} to \spic{a-addr}.}
-\inst{LOADB}{addr — byte}{Fetch the byte stored at \spic{addr}. The unused high-order bits are all zeroes.}
-\inst{STOREB}{byte addr —}{Store \spic{byte} at \spic{addr}. Only one byte is transferred.}
+\inst{LOAD}{addr size — x}{Load the $2^{\spic{size}}$-byte quantity \spic{x} stored at \spic{addr}, which must be a multiple of \spic{size}. Any unused high-order bits are set to zero.}
+\inst{LOAD\_SIGNED}{addr size — x}{Load the $2^{\spic{size}}$-byte quantity \spic{x} stored at \spic{addr}, which must be a multiple of \spic{size}. Sign extend the result to a word.}
+\inst{STORE}{x addr size —}{Store the $2^{\spic{size}}$ least-significant bytes of \spic{x} at \spic{addr}, which must be a multiple of \spic{size}.}
 \end{description}
 
 
@@ -416,9 +417,9 @@ Table~\ref{opcodetable} lists the instruction opcodes in numerical order. Other 
 \opcodetbl{06}{SWAP}		{16}{DIVMOD}
 \opcodetbl{07}{LIT}		{17}{UDIVMOD}
 \opcodetbl{08}{LIT\_PC\_REL}	{18}{LOAD}
-\opcodetbl{09}{NOT}		{19}{STORE}
-\opcodetbl{0a}{AND}		{1a}{LOADB}
-\opcodetbl{0b}{OR}		{1b}{STOREB}
+\opcodetbl{09}{NOT}		{19}{LOAD\_SIGNED}
+\opcodetbl{0a}{AND}		{1a}{STORE}
+\opcodetblone{0b}{OR}
 \opcodetbl{0c}{XOR}		{1c}{GET\_STACK\_DEPTH}
 \opcodetbl{0d}{LSHIFT}		{1d}{SET\_STACK\_DEPTH}
 \opcodetbl{0e}{RSHIFT}		{1e}{EXT}

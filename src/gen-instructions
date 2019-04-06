@@ -17,6 +17,8 @@ print('''\
 
 #include "config.h"
 
+#include <stdio.h>
+
 #include "smite.h"
 #include "opcodes.h"
 
@@ -33,7 +35,7 @@ print('''\
     do {                                                      \\
         if (S->I != 0)                                        \\
             RAISE(SMITE_ERR_INVALID_OPCODE);                  \\
-        int ret = load_word(S, S->PC, (smite_WORD *)&(S->I)); \\
+        int ret = load(S, S->PC, smite_SIZE_WORD, (smite_WORD *)&(S->I)); \\
         if (ret != 0)                                         \\
             RAISE(ret);                                       \\
         S->PC += WORD_SIZE;                                   \\

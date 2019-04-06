@@ -368,12 +368,12 @@ class AbstractMemory(collections.abc.Sequence):
 class Memory(AbstractMemory):
     '''A VM memory (byte-accessed).'''
     def load(self, index):
-        byte = c_ubyte()
-        libsmite.smite_load_byte(self.VM.state, index, byref(byte))
-        return byte.value
+        word = c_word()
+        libsmite.smite_load(self.VM.state, index, 0, byref(word))
+        return word.value
 
     def store(self, index, value):
-        libsmite.smite_store_byte(self.VM.state, index, c_ubyte(value))
+        libsmite.smite_store(self.VM.state, index, 0, c_word(value))
 
 class WordMemory(AbstractMemory):
     '''A VM memory (word-accessed).'''
@@ -382,20 +382,9 @@ class WordMemory(AbstractMemory):
         self.element_size = word_size
 
     def load(self, index):
-        if is_aligned(index):
-            word = c_word()
-            libsmite.smite_load_word(self.VM.state, index, byref(word))
-            return word.value
-        else:
-            value = 0
-            for i in reversed(range(word_size)):
-                value = (value << byte_bit) | self.VM.M[index + i]
-            return value
+        word = c_word()
+        libsmite.smite_load(self.VM.state, index, size_word, byref(word))
+        return word.value
 
     def store(self, index, value):
-        if is_aligned(index):
-            libsmite.smite_store_word(self.VM.state, index, c_word(value))
-        else:
-            for i in range(word_size):
-                self.VM.M[index + i] = value & byte_mask
-                value >>= byte_bit
+        libsmite.smite_store(self.VM.state, index, size_word, c_word(value))
