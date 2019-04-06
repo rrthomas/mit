@@ -17,8 +17,6 @@ print('''\
 
 #include "config.h"
 
-#include <stdio.h>
-
 #include "smite.h"
 #include "opcodes.h"
 
@@ -38,7 +36,7 @@ print('''\
         int ret = load(S, S->PC, smite_SIZE_WORD, (smite_WORD *)&(S->I)); \\
         if (ret != 0)                                         \\
             RAISE(ret);                                       \\
-        S->PC += WORD_SIZE;                                   \\
+        S->PC += WORD_BYTES;                                  \\
     } while (0)
 
 smite_WORD smite_single_step(smite_state *S) {

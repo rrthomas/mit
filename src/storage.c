@@ -17,7 +17,7 @@
 
 
 // Constants
-const unsigned smite_word_size = WORD_SIZE;
+const unsigned smite_word_bytes = WORD_BYTES;
 const unsigned smite_size_word = smite_SIZE_WORD;
 const unsigned smite_byte_bit = 8;
 const unsigned smite_byte_mask = smite_BYTE_MASK;
@@ -88,30 +88,30 @@ int smite_push_stack(smite_state *S, smite_WORD val)
 
 static int smite_realloc(smite_WORD **ptr, smite_UWORD old_size, smite_UWORD new_size)
 {
-    smite_WORD *new_ptr = realloc(*ptr, new_size * WORD_SIZE);
+    smite_WORD *new_ptr = realloc(*ptr, new_size * WORD_BYTES);
     if (new_ptr == NULL && new_size > 0)
         return 1;
     *ptr = new_ptr;
 
     if (old_size < new_size)
-        memset(*ptr + old_size, 0, (new_size - old_size) * WORD_SIZE);
+        memset(*ptr + old_size, 0, (new_size - old_size) * WORD_BYTES);
 
     return SMITE_ERR_OK;
 }
 
 int smite_realloc_memory(smite_state *S, smite_UWORD memory_size)
 {
-    int ret = smite_realloc(&S->memory, S->MEMORY / WORD_SIZE, memory_size);
+    int ret = smite_realloc(&S->memory, S->memory_size / WORD_BYTES, memory_size);
     if (ret == 0)
-        S->MEMORY = memory_size * WORD_SIZE;
+        S->memory_size = memory_size * WORD_BYTES;
     return ret;
 }
 
 int smite_realloc_stack(smite_state *S, smite_UWORD stack_size)
 {
-    int ret = smite_realloc(&S->stack, S->STACK_SIZE, stack_size);
+    int ret = smite_realloc(&S->stack, S->stack_size, stack_size);
     if (ret == 0)
-        S->STACK_SIZE = stack_size;
+        S->stack_size = stack_size;
     return ret;
 }
 

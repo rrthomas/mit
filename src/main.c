@@ -190,7 +190,7 @@ int main(int argc, char *argv[])
             err = "module invalid";
             break;
         case -3:
-            err = "module has wrong ENDISM or WORD_SIZE";
+            err = "module has wrong ENDISM or WORD_BYTES";
             break;
         case -4:
             err = "address out of range or unaligned, or module too large";
@@ -213,14 +213,14 @@ int main(int argc, char *argv[])
             again = true;
             break;
         case 2:
-            if (S->BAD >= S->STACK_SIZE &&
-                S->BAD < smite_uword_max - S->STACK_SIZE &&
-                smite_realloc_stack(S, round_up(S->STACK_SIZE + S->BAD, page_size)) == 0)
+            if (S->BAD >= S->stack_size &&
+                S->BAD < smite_uword_max - S->stack_size &&
+                smite_realloc_stack(S, round_up(S->stack_size + S->BAD, page_size)) == 0)
                 again = true;
             break;
         case 5:
         case 6:
-            if (S->BAD >= S->MEMORY &&
+            if (S->BAD >= S->memory_size &&
                 smite_realloc_memory(S, round_up(S->BAD, page_size)) == 0)
                 again = true;
             break;
@@ -237,7 +237,7 @@ int main(int argc, char *argv[])
         char *file = xasprintf("smite-core.%lu", (unsigned long)getpid());
         // Ignore errors; best effort only, in the middle of an error exit
         if ((fd = creat(file, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH)) >= 0) {
-            (void)smite_save_object(S, 0, S->MEMORY, fd);
+            (void)smite_save_object(S, 0, S->memory_size, fd);
             close(fd);
             warn("core dumped to %s", file);
         } else

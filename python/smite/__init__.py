@@ -49,12 +49,13 @@ class State:
             for (name, register) in Registers.__members__.items()
         }
         self.M = Memory(self)
+        self.memory_size = memory_size
         self.M_word = WordMemory(self)
         self.S = Stack(
             self.state,
-            self.registers["STACK_SIZE"],
             self.registers["STACK_DEPTH"],
         )
+        self.stack_size = stack_size
 
     def __del__(self):
         libsmite.smite_destroy(self.state)
@@ -299,9 +300,8 @@ class ActiveRegister:
 # Stacks
 class Stack:
     '''VM stack.'''
-    def __init__(self, state, size, depth):
+    def __init__(self, state, depth):
         self.state = state
-        self.size = size
         self.depth = depth
 
     # After https://github.com/ipython/ipython/blob/master/IPython/lib/pretty.py
@@ -363,7 +363,7 @@ class AbstractMemory(collections.abc.Sequence):
         raise NotImplementedError
 
     def __len__(self):
-       return self.VM.registers["MEMORY"].get()
+        return self.memory_size * word_bytes
 
 class Memory(AbstractMemory):
     '''A VM memory (byte-accessed).'''
@@ -379,7 +379,7 @@ class WordMemory(AbstractMemory):
     '''A VM memory (word-accessed).'''
     def __init__(self, VM):
         super().__init__(VM)
-        self.element_size = word_size
+        self.element_size = word_bytes
 
     def load(self, index):
         word = c_word()

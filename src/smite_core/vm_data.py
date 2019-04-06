@@ -23,9 +23,7 @@ class Registers(Enum):
     PC = Register()
     I = Register()
     BAD = Register()
-    MEMORY = Register(read_only=True)
     STACK_DEPTH = Register()
-    STACK_SIZE = Register(read_only=True)
     ENDISM = Register(read_only=True)
 
 @unique
@@ -63,7 +61,7 @@ class Instructions(Enum):
         int ret = load(S, S->PC, smite_SIZE_WORD, &n);
         if (ret != 0)
             RAISE(ret);
-        S->PC += WORD_SIZE;
+        S->PC += WORD_BYTES;
     ''')
 
     LIT_PC_REL = Instruction(0x08, [], ['n'], '''\
@@ -71,7 +69,7 @@ class Instructions(Enum):
         if (ret != 0)
             RAISE(ret);
         n += S->PC;
-        S->PC += WORD_SIZE;
+        S->PC += WORD_BYTES;
     ''')
 
     NOT = Instruction(0x09, ['x'], ['r'], '''\
@@ -151,9 +149,9 @@ class Instructions(Enum):
         if (ret != 0)
             RAISE(ret);
         fprintf(stderr, "x: %"PRI_XWORD"\\n", (smite_UWORD)x);
-        x <<= (WORD_SIZE - (1 << size)) * smite_BYTE_BIT;
+        x <<= (WORD_BYTES - (1 << size)) * smite_BYTE_BIT;
         fprintf(stderr, "x: %"PRI_XWORD"\\n", (smite_UWORD)x);
-        x = ARSHIFT(x, (WORD_SIZE - (1 << size)) * smite_BYTE_BIT);
+        x = ARSHIFT(x, (WORD_BYTES - (1 << size)) * smite_BYTE_BIT);
         fprintf(stderr, "x: %"PRI_XWORD"\\n", (smite_UWORD)x);
     ''')
 
@@ -168,8 +166,8 @@ class Instructions(Enum):
     ''')
 
     SET_STACK_DEPTH = Instruction(0x1d, ['a'], [], '''\
-        if ((smite_UWORD)a > S->STACK_SIZE) {
-            S->BAD = a - S->STACK_SIZE;
+        if ((smite_UWORD)a > S->stack_size) {
+            S->BAD = a - S->stack_size;
             RAISE(SMITE_ERR_STACK_OVERFLOW);
         }
         S->STACK_DEPTH = a;

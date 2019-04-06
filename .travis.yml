@@ -24,8 +24,8 @@ matrix:
   include:
     - os: linux
     - os: osx
-    - env: WORD_SIZE=4
-    - env: WORD_SIZE=8
+    - env: WORD_BYTES=4
+    - env: WORD_BYTES=8
     - compiler: gcc
       env:
         - MATRIX_EVAL="CC=gcc-8"

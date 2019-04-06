@@ -19,45 +19,45 @@ VM.globalize(globals())
 magic_number = 0xf201
 correct = [
     [],
-    [size * word_size],
-    [size * word_size, word_size],
-    [size * word_size, -word_size],
-    [size * word_size - word_size],
-    [size * word_size - word_size, magic_number],
-    [size * word_size - word_size, magic_number, 1],
-    [size * word_size - word_size, magic_number, size * word_size - word_size],
-    [size * word_size - word_size, magic_number, size * word_size - word_size, size_word],
-    [size * word_size - word_size],
-    [size * word_size - word_size, 0],
-    [size * word_size - word_size, size * word_size - word_size],
-    [size * word_size - word_size, size * word_size - word_size, size_word],
-    [size * word_size - word_size, magic_number],
-    [size * word_size - word_size, magic_number, 1],
-    [size * word_size - word_size],
-    [size * word_size - word_size, 0],
-    [size * word_size - word_size, size * word_size - word_size],
-    [size * word_size - word_size, size * word_size - word_size, 1],
-    [size * word_size - word_size, magic_number & 0xffff],
-    [size * word_size - word_size, magic_number, 1],
-    [size * word_size - word_size],
-    [size * word_size - word_size, 0],
-    [size * word_size - word_size, size * word_size - word_size],
-    [size * word_size - word_size, size * word_size - word_size, 1],
-    [size * word_size - word_size, magic_number | -0x10000],
-    [size * word_size - word_size, magic_number | -0x10000, 1],
-    [size * word_size - word_size],
-    [size * word_size - word_size, 0],
-    [size * word_size - word_size, size * word_size - word_size],
-    [size * word_size - word_size, size * word_size - word_size, 0],
-    [size * word_size - word_size, 1],
-    [size * word_size - word_size + 1],
-    [size * word_size - word_size + 1, 0],
+    [size * word_bytes],
+    [size * word_bytes, word_bytes],
+    [size * word_bytes, -word_bytes],
+    [size * word_bytes - word_bytes],
+    [size * word_bytes - word_bytes, magic_number],
+    [size * word_bytes - word_bytes, magic_number, 1],
+    [size * word_bytes - word_bytes, magic_number, size * word_bytes - word_bytes],
+    [size * word_bytes - word_bytes, magic_number, size * word_bytes - word_bytes, size_word],
+    [size * word_bytes - word_bytes],
+    [size * word_bytes - word_bytes, 0],
+    [size * word_bytes - word_bytes, size * word_bytes - word_bytes],
+    [size * word_bytes - word_bytes, size * word_bytes - word_bytes, size_word],
+    [size * word_bytes - word_bytes, magic_number],
+    [size * word_bytes - word_bytes, magic_number, 1],
+    [size * word_bytes - word_bytes],
+    [size * word_bytes - word_bytes, 0],
+    [size * word_bytes - word_bytes, size * word_bytes - word_bytes],
+    [size * word_bytes - word_bytes, size * word_bytes - word_bytes, 1],
+    [size * word_bytes - word_bytes, magic_number & 0xffff],
+    [size * word_bytes - word_bytes, magic_number, 1],
+    [size * word_bytes - word_bytes],
+    [size * word_bytes - word_bytes, 0],
+    [size * word_bytes - word_bytes, size * word_bytes - word_bytes],
+    [size * word_bytes - word_bytes, size * word_bytes - word_bytes, 1],
+    [size * word_bytes - word_bytes, magic_number | -0x10000],
+    [size * word_bytes - word_bytes, magic_number | -0x10000, 1],
+    [size * word_bytes - word_bytes],
+    [size * word_bytes - word_bytes, 0],
+    [size * word_bytes - word_bytes, size * word_bytes - word_bytes],
+    [size * word_bytes - word_bytes, size * word_bytes - word_bytes, 0],
+    [size * word_bytes - word_bytes, 1],
+    [size * word_bytes - word_bytes + 1],
+    [size * word_bytes - word_bytes + 1, 0],
     [0xf2],
-    [0xf2, size * word_size - 1],
-    [0xf2, size * word_size - 1, 0],
+    [0xf2, size * word_bytes - 1],
+    [0xf2, size * word_bytes - 1, 0],
     [],
-    [size * word_size - word_size],
-    [size * word_size - word_size, size_word],
+    [size * word_bytes - word_bytes],
+    [size * word_bytes - word_bytes, size_word],
     [(0xf2 << (word_bit - byte_bit)) | magic_number | -(word_mask + 1)],
     [(0xf2 << (word_bit - byte_bit)) | magic_number | -(word_mask + 1), 1],
     [],
@@ -66,8 +66,8 @@ correct = [
 ]
 
 # Test code
-lit(size * word_size)
-lit(word_size)
+lit(size * word_bytes)
+lit(word_bytes)
 ass(NEGATE)
 ass(ADD)
 lit(magic_number)
@@ -100,10 +100,10 @@ ass(LOAD)
 ass(ADD)
 lit(0)
 ass(LOAD)
-lit(size * word_size - 1)
+lit(size * word_bytes - 1)
 lit(0)
 ass(STORE)
-lit(size * word_size - word_size)
+lit(size * word_bytes - word_bytes)
 lit(size_word)
 ass(LOAD)
 lit(1)

@@ -19,7 +19,7 @@ for i in range(iterations):
 
 # The value of final_pc is caused by step() trying a second instruction each
 # time it hits a NEXT, and hence advancing two words.
-final_pc = (iterations * 2) * word_size
+final_pc = (iterations * 2) * word_bytes
 print("PC should now be {}".format(final_pc))
 if PC.get() != final_pc:
     print("Error in single_step() tests: PC = {:#x}".format(PC.get()))

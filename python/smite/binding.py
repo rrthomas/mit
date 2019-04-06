@@ -55,24 +55,24 @@ def errcheck(code_to_message):
 
 # Constants (all of type unsigned)
 vars().update([(c, c_uint.in_dll(libsmite, "smite_{}".format(c)).value)
-               for c in ["word_size", "size_word",
+               for c in ["word_bytes", "size_word",
                          "byte_bit", "byte_mask", "word_bit",
                          "instruction_bit", "instruction_mask"]])
 sign_bit = 1 << (word_bit - 1)
 
 
 # Types
-if word_size == sizeof(c_int):
+if word_bytes == sizeof(c_int):
     c_word = c_int
     c_uword = c_uint
-elif word_size == sizeof(c_long):
+elif word_bytes == sizeof(c_long):
     c_word = c_long
     c_uword = c_ulong
-elif word_size == sizeof(c_longlong):
+elif word_bytes == sizeof(c_longlong):
     c_word = c_longlong
     c_uword = c_ulonglong
 else:
-    raise Exception("Could not find Python C type matching WORD (size {})".format(word_size))
+    raise Exception("Could not find Python C type matching WORD (size {})".format(word_bytes))
 
 
 # Constants that require VM types
@@ -138,7 +138,7 @@ libsmite.smite_load_object.argtypes = [c_void_p, c_uword, c_int]
 libsmite.smite_load_object.errcheck = errcheck({
     -1: "file system error",
     -2: "module invalid",
-    -3: "module has wrong ENDISM or WORD_SIZE",
+    -3: "module has wrong ENDISM or WORD_BYTES",
     -4: "address out of range or unaligned, or module too large",
 })
 

@@ -15,7 +15,7 @@ VM.globalize(globals())
 
 # Test results and data
 result = []
-invalid_address = size * word_size + 1000
+invalid_address = size * word_bytes + 1000
 test = []
 
 # Try to divide by zero
@@ -30,7 +30,7 @@ ass(DIVMOD)
 test.append(label())
 result.append(2)
 print("Test {}: PC = {}".format(len(test), test[-1]))
-lit(STACK_SIZE.get())
+lit(VM.stack_size)
 ass(SET_STACK_DEPTH)
 ass(GET_STACK_DEPTH)
 
@@ -44,7 +44,7 @@ ass(DUP)
 test.append(label())
 result.append(5)
 print("Test {}: PC = {}".format(len(test), test[-1]))
-lit(MEMORY.get() + 1)
+lit(VM.memory_size * word_bytes + 1)
 ass(BRANCH)
 
 # Try to load from an invalid address

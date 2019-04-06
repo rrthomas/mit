@@ -40,7 +40,7 @@ ptrdiff_t smite_load_object(smite_state *S, smite_UWORD addr, int fd)
     // Read and check header
     char header[HEADER_LENGTH] = {'\0'};
     smite_UWORD endism;
-    smite_UWORD _WORD_SIZE;
+    smite_UWORD _WORD_BYTES;
     memcpy(header, buf, nread);
     if ((res = read(fd, &header[nread], sizeof(header) - nread)) == -1)
         return -1;
@@ -49,7 +49,7 @@ ptrdiff_t smite_load_object(smite_state *S, smite_UWORD addr, int fd)
         (endism = header[sizeof(PACKAGE_UPPER)]) > 1)
         return -2;
     if (endism != S->ENDISM ||
-        (_WORD_SIZE = header[sizeof(PACKAGE_UPPER) + 1]) != WORD_SIZE)
+        (_WORD_BYTES = header[sizeof(PACKAGE_UPPER) + 1]) != WORD_BYTES)
         return -3;
 
     // Read and check size, and ensure code will fit in memory
@@ -80,7 +80,7 @@ int smite_save_object(smite_state *S, smite_UWORD addr, smite_UWORD len, int fd)
     char hashbang[] = "#!/usr/bin/env smite\n";
     smite_BYTE buf[HEADER_LENGTH] = PACKAGE_UPPER;
     buf[sizeof(PACKAGE_UPPER)] = S->ENDISM;
-    buf[sizeof(PACKAGE_UPPER) + 1] = WORD_SIZE;
+    buf[sizeof(PACKAGE_UPPER) + 1] = WORD_BYTES;
 
     if (write(fd, hashbang, sizeof(hashbang) - 1) != sizeof(hashbang) - 1 ||
         write(fd, &buf[0], HEADER_LENGTH) != HEADER_LENGTH ||
