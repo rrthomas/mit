@@ -10,6 +10,7 @@
 from enum import Enum, unique
 
 from .instruction_gen import Instruction
+from .vm_data import Registers
 
 
 # FIXME: this should be a per-library attribute
@@ -173,56 +174,71 @@ class LibcLib(Enum):
         }
     ''')
 
-@unique
-class SMiteLib(Enum):
-    CURRENT_STATE = Instruction(0x0, [], ['state:smite_state *'], '''\
+smite_lib = {
+    'CURRENT_STATE': Instruction(0x0, [], ['state:smite_state *'], '''\
         state = S;
-    ''')
+    '''),
 
-    LOAD = Instruction(0x1, ['addr', 'size', 'inner_state:smite_state *'], ['value', 'ret'], '''\
+    'NATIVE_ADDRESS_OF_RANGE': Instruction(0x1, ['addr', 'len', 'inner_state:smite_state *'], ['ptr:uint8_t *'], '''\
+        ptr = smite_native_address_of_range(inner_state, addr, len);
+    '''),
+
+    'LOAD': Instruction(0x2, ['addr', 'size', 'inner_state:smite_state *'], ['value', 'ret'], '''\
         value = 0;
         ret = load(inner_state, addr, size, &value);
-    ''')
+    '''),
 
-    STORE = Instruction(0x2, ['value', 'addr', 'size', 'inner_state:smite_state *'], ['ret'], '''\
+    'STORE': Instruction(0x3, ['value', 'addr', 'size', 'inner_state:smite_state *'], ['ret'], '''\
         ret = store(inner_state, addr, size, value);
-    ''')
+    '''),
 
-    REALLOC_MEMORY = Instruction(0x5, ['u', 'inner_state:smite_state *'], ['ret'], '''\
-        ret = smite_realloc_memory(inner_state, (size_t)u);
-    ''')
-
-    REALLOC_STACK = Instruction(0x6, ['u', 'inner_state:smite_state *'], ['ret'], '''\
-        ret = smite_realloc_stack(inner_state, (size_t)u);
-    ''')
-
-    NATIVE_ADDRESS_OF_RANGE = Instruction(0x7, ['addr', 'len', 'inner_state:smite_state *'], ['ptr:uint8_t *'], '''\
-        ptr = smite_native_address_of_range(inner_state, addr, len);
-    ''')
-
-    RUN = Instruction(0x8, ['inner_state:smite_state *'], ['ret'], '''\
-        ret = smite_run(inner_state);
-    ''')
-
-    SINGLE_STEP = Instruction(0x9, ['inner_state:smite_state *'], ['ret'], '''\
-        ret = smite_single_step(inner_state);
-    ''')
-
-    LOAD_OBJECT = Instruction(0xa, ['fd', 'addr', 'inner_state:smite_state *'], ['ret'], '''\
-        ret = smite_load_object(inner_state, (int)fd, addr);
-    ''')
-
-    INIT = Instruction(0xb, ['memory_size', 'stack_size'], ['new_state:smite_state *'], '''\
+    'INIT': Instruction(0x4, ['memory_size', 'stack_size'], ['new_state:smite_state *'], '''\
         new_state = smite_init((size_t)memory_size, (size_t)stack_size);
-    ''')
+    '''),
 
-    DESTROY = Instruction(0xc, ['inner_state:smite_state *'], [], '''\
+    'REALLOC_MEMORY': Instruction(0x5, ['u', 'inner_state:smite_state *'], ['ret'], '''\
+        ret = smite_realloc_memory(inner_state, (size_t)u);
+    '''),
+
+    'REALLOC_STACK': Instruction(0x6, ['u', 'inner_state:smite_state *'], ['ret'], '''\
+        ret = smite_realloc_stack(inner_state, (size_t)u);
+    '''),
+
+    'DESTROY': Instruction(0x7, ['inner_state:smite_state *'], [], '''\
         smite_destroy(inner_state);
-    ''')
+    '''),
 
-    REGISTER_ARGS = Instruction(0xd, ['argv:char **', 'argc', 'inner_state:smite_state *'], ['ret'], '''\
+    'RUN': Instruction(0x8, ['inner_state:smite_state *'], ['ret'], '''\
+        ret = smite_run(inner_state);
+    '''),
+
+    'SINGLE_STEP': Instruction(0x9, ['inner_state:smite_state *'], ['ret'], '''\
+        ret = smite_single_step(inner_state);
+    '''),
+
+    'LOAD_OBJECT': Instruction(0xa, ['fd', 'addr', 'inner_state:smite_state *'], ['ret'], '''\
+        ret = smite_load_object(inner_state, addr, (int)fd);
+    '''),
+
+    'SAVE_OBJECT': Instruction(0xb, ['fd', 'addr', 'len', 'inner_state:smite_state *'], ['ret'], '''\
+        ret = smite_save_object(inner_state, addr, len, (int)fd);
+    '''),
+
+    'REGISTER_ARGS': Instruction(0xc, ['argv:char **', 'argc', 'inner_state:smite_state *'], ['ret'], '''\
         ret = smite_register_args(inner_state, (int)argc, argv);
-    ''')
+    '''),
+}
+
+for (name, register) in Registers.__members__.items():
+    smite_lib['GET_{}'.format(name.upper())] = Instruction(
+        len(smite_lib), ['inner_state:smite_state *'], ['value'], '''\
+    value = smite_get_{}(inner_state);'''.format(name))
+    if not register.value.read_only:
+        smite_lib['SET_{}'.format(name.upper())] = Instruction(
+            len(smite_lib), ['value', 'inner_state:smite_state *'], [], '''\
+    smite_set_{}(inner_state, value);'''.format(name))
+
+SMiteLib = Enum('SMiteLib', smite_lib)
 
 class Library(Instruction):
     '''Wrap an Instruction enumeration as a library.'''
