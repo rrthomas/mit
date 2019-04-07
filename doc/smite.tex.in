@@ -422,7 +422,7 @@ Table~\ref{opcodetable} lists the instruction opcodes in numerical order. Other 
 \opcodetbl{0c}{LSHIFT}		{1c}{GET\_STACK\_DEPTH}
 \opcodetbl{0d}{RSHIFT}		{1d}{SET\_STACK\_DEPTH}
 \opcodetbl{0e}{ARSHIFT}		{1e}{EXT}
-\opcodetbl{0f}{SIGN_EXTEND}	{1f}{HALT}
+\opcodetbl{0f}{SIGN\_EXTEND}	{1f}{HALT}
  \bottomrule
 \end{tabular}
 \caption{\label{opcodetable}Instruction opcodes}
