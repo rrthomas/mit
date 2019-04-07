@@ -57,47 +57,37 @@ class Instructions(Enum):
 
     SWAP = Instruction(0x06, ['x', 'ITEMS', 'y', 'COUNT'], ['y', 'ITEMS', 'x'], '')
 
-    LIT = Instruction(0x07, [], ['n'], '''\
-        int ret = load(S, S->PC, smite_SIZE_WORD, &n);
-        if (ret != 0)
-            RAISE(ret);
-        S->PC += WORD_BYTES;
-    ''')
-
-    LIT_PC_REL = Instruction(0x08, [], ['n'], '''\
-        int ret = load(S, S->PC, smite_SIZE_WORD, &n);
-        if (ret != 0)
-            RAISE(ret);
-        n += S->PC;
-        S->PC += WORD_BYTES;
-    ''')
-
-    NOT = Instruction(0x09, ['x'], ['r'], '''\
+    NOT = Instruction(0x08, ['x'], ['r'], '''\
         r = ~x;
     ''')
 
-    AND = Instruction(0x0a, ['x', 'y'], ['r'], '''\
+    AND = Instruction(0x09, ['x', 'y'], ['r'], '''\
         r = x & y;
     ''')
 
-    OR = Instruction(0x0b, ['x', 'y'], ['r'], '''\
+    OR = Instruction(0x0a, ['x', 'y'], ['r'], '''\
         r = x | y;
     ''')
 
-    XOR = Instruction(0x0c, ['x', 'y'], ['r'], '''\
+    XOR = Instruction(0x0b, ['x', 'y'], ['r'], '''\
         r = x ^ y;
     ''')
 
-    LSHIFT = Instruction(0x0d, ['x', 'n'], ['r'], '''\
+    LSHIFT = Instruction(0x0c, ['x', 'n'], ['r'], '''\
         r = n < (smite_WORD)smite_word_bit ? x << n : 0;
     ''')
 
-    RSHIFT = Instruction(0x0e, ['x', 'n'], ['r'], '''\
+    RSHIFT = Instruction(0x0d, ['x', 'n'], ['r'], '''\
         r = n < (smite_WORD)smite_word_bit ? (smite_WORD)((smite_UWORD)x >> n) : 0;
     ''')
 
-    ARSHIFT = Instruction(0x0f, ['x', 'n'], ['r'], '''\
+    ARSHIFT = Instruction(0x0e, ['x', 'n'], ['r'], '''\
         r = ARSHIFT(x, n);
+    ''')
+
+    SIGN_EXTEND = Instruction(0x0f, ['n1', 'size'], ['n2'], '''\
+        n2 = n1 << (WORD_BYTES - (1 << size)) * smite_BYTE_BIT;
+        n2 = ARSHIFT(n2, (WORD_BYTES - (1 << size)) * smite_BYTE_BIT);
     ''')
 
     EQ = Instruction(0x10, ['a', 'b'], ['flag'], '''\
@@ -144,21 +134,25 @@ class Instructions(Enum):
             RAISE(ret);
     ''')
 
-    LOAD_SIGNED = Instruction(0x19, ['addr', 'size'], ['x'], '''\
-        int ret = load(S, addr, size, &x);
-        if (ret != 0)
-            RAISE(ret);
-        fprintf(stderr, "x: %"PRI_XWORD"\\n", (smite_UWORD)x);
-        x <<= (WORD_BYTES - (1 << size)) * smite_BYTE_BIT;
-        fprintf(stderr, "x: %"PRI_XWORD"\\n", (smite_UWORD)x);
-        x = ARSHIFT(x, (WORD_BYTES - (1 << size)) * smite_BYTE_BIT);
-        fprintf(stderr, "x: %"PRI_XWORD"\\n", (smite_UWORD)x);
-    ''')
-
-    STORE = Instruction(0x1a, ['x', 'addr', 'size'], [], '''\
+    STORE = Instruction(0x19, ['x', 'addr', 'size'], [], '''\
         int ret = store(S, addr, size, x);
         if (ret != 0)
             RAISE(ret);
+    ''')
+
+    LIT = Instruction(0x1a, [], ['n'], '''\
+        int ret = load(S, S->PC, smite_SIZE_WORD, &n);
+        if (ret != 0)
+            RAISE(ret);
+        S->PC += WORD_BYTES;
+    ''')
+
+    LIT_PC_REL = Instruction(0x1b, [], ['n'], '''\
+        int ret = load(S, S->PC, smite_SIZE_WORD, &n);
+        if (ret != 0)
+            RAISE(ret);
+        n += S->PC;
+        S->PC += WORD_BYTES;
     ''')
 
     GET_STACK_DEPTH = Instruction(0x1c, [], ['r'], '''\

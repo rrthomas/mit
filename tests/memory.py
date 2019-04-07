@@ -43,6 +43,8 @@ correct = [
     [size * word_bytes - word_bytes, 0],
     [size * word_bytes - word_bytes, size * word_bytes - word_bytes],
     [size * word_bytes - word_bytes, size * word_bytes - word_bytes, 1],
+    [size * word_bytes - word_bytes, magic_number],
+    [size * word_bytes - word_bytes, magic_number, 1],
     [size * word_bytes - word_bytes, magic_number | -0x10000],
     [size * word_bytes - word_bytes, magic_number | -0x10000, 1],
     [size * word_bytes - word_bytes],
@@ -90,7 +92,9 @@ ass(POP)
 lit(0)
 ass(DUP)
 lit(1)
-ass(LOAD_SIGNED)
+ass(LOAD)
+lit(1)
+ass(SIGN_EXTEND)
 lit(1)
 ass(POP)
 lit(0)

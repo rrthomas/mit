@@ -316,6 +316,7 @@ Shifts:
 \inst{LSHIFT}{\x1 u — \x2}{Perform a logical left shift of \spic{u} bit-places on \x1, giving \x2. Put zero into the least significant bits vacated by the shift. If \spic{u} is greater than or equal to the number of bits in a word, \x2 is zero.}
 \inst{RSHIFT}{\x1 u — \x2}{Perform a logical right shift of \spic{u} bit-places on \x1, giving \x2. Put zero into the most significant bits vacated by the shift. If \spic{u} is greater than or equal to the number of bits in a word, \x2 is zero.}
 \inst{ARSHIFT}{\x1 u — \x2}{Perform an arithmetic right shift of \spic{u} bit-places on \x1, giving \x2. Copy the original most-significant bits into the most significant bits vacated by the shift. If \spic{u} is greater than or equal to the number of bits in a word, all the bits of \x2 are the same as the original most-significant bit.}
+\inst{SIGN\_EXTEND}{u size — n}{Sign extend the $2^{\spic{size}}$-byte quantity \spic{u} to \spic{n}.}
 \end{description}
 
 
@@ -366,7 +367,6 @@ If a given address is incorrectly aligned, raise error $7$, setting {\tt BAD} to
 \nopagebreak
 \begin{description}
 \inst{LOAD}{addr size — x}{Load the $2^{\spic{size}}$-byte quantity \spic{x} stored at \spic{addr}, which must be a multiple of \spic{size}. Any unused high-order bits are set to zero.}
-\inst{LOAD\_SIGNED}{addr size — x}{Load the $2^{\spic{size}}$-byte quantity \spic{x} stored at \spic{addr}, which must be a multiple of \spic{size}. Sign extend the result to a word.}
 \inst{STORE}{x addr size —}{Store the $2^{\spic{size}}$ least-significant bytes of \spic{x} at \spic{addr}, which must be a multiple of \spic{size}.}
 \end{description}
 
@@ -414,15 +414,15 @@ Table~\ref{opcodetable} lists the instruction opcodes in numerical order. Other 
 \opcodetbl{04}{POP}		{14}{ADD}
 \opcodetbl{05}{DUP}		{15}{MUL}
 \opcodetbl{06}{SWAP}		{16}{DIVMOD}
-\opcodetbl{07}{LIT}		{17}{UDIVMOD}
-\opcodetbl{08}{LIT\_PC\_REL}	{18}{LOAD}
-\opcodetbl{09}{NOT}		{19}{LOAD\_SIGNED}
-\opcodetbl{0a}{AND}		{1a}{STORE}
-\opcodetblone{0b}{OR}
-\opcodetbl{0c}{XOR}		{1c}{GET\_STACK\_DEPTH}
-\opcodetbl{0d}{LSHIFT}		{1d}{SET\_STACK\_DEPTH}
-\opcodetbl{0e}{RSHIFT}		{1e}{EXT}
-\opcodetbl{0f}{ARSHIFT}		{1f}{HALT}
+\opcodetbl{07}{undefined}	{17}{UDIVMOD}
+\opcodetbl{08}{NOT}		{18}{LOAD}
+\opcodetbl{09}{AND}		{19}{STORE}
+\opcodetbl{0a}{OR}		{1a}{LIT}
+\opcodetbl{0b}{XOR}		{1b}{LIT\_PC\_REL}
+\opcodetbl{0c}{LSHIFT}		{1c}{GET\_STACK\_DEPTH}
+\opcodetbl{0d}{RSHIFT}		{1d}{SET\_STACK\_DEPTH}
+\opcodetbl{0e}{ARSHIFT}		{1e}{EXT}
+\opcodetbl{0f}{SIGN_EXTEND}	{1f}{HALT}
  \bottomrule
 \end{tabular}
 \caption{\label{opcodetable}Instruction opcodes}
