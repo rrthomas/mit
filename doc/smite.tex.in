@@ -51,7 +51,7 @@
 
 \title{The @PACKAGE_NAME@ Virtual Machine}
 \author{Reuben Thomas}
-\date{30th March 2019}
+\date{7th April 2019}
 
 \begin{document}
 \maketitle
@@ -419,8 +419,8 @@ Table~\ref{opcodetable} lists the instruction opcodes in numerical order. Other 
 \opcodetbl{09}{AND}		{19}{STORE}
 \opcodetbl{0a}{OR}		{1a}{LIT}
 \opcodetbl{0b}{XOR}		{1b}{LIT\_PC\_REL}
-\opcodetbl{0c}{LSHIFT}		{1c}{GET\_STACK\_DEPTH}
-\opcodetbl{0d}{RSHIFT}		{1d}{SET\_STACK\_DEPTH}
+\opcodetblone{0c}{LSHIFT}	{1c}{undefined}
+\opcodetblone{0d}{RSHIFT}	{1d}{undefined}
 \opcodetbl{0e}{ARSHIFT}		{1e}{EXT}
 \opcodetbl{0f}{SIGN\_EXTEND}	{1f}{HALT}
  \bottomrule

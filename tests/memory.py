@@ -63,8 +63,6 @@ correct = [
     [(0xf2 << (word_bit - byte_bit)) | magic_number | -(word_mask + 1)],
     [(0xf2 << (word_bit - byte_bit)) | magic_number | -(word_mask + 1), 1],
     [],
-    [0],
-    [],
 ]
 
 # Test code
@@ -112,8 +110,6 @@ lit(size_word)
 ass(LOAD)
 lit(1)
 ass(POP)
-ass(GET_STACK_DEPTH)
-ass(SET_STACK_DEPTH)
 
 # Test
 run_test("memory", VM, correct)

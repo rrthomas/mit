@@ -26,14 +26,6 @@ lit(1)
 lit(0)
 ass(DIVMOD)
 
-# Try to set STACK_DEPTH to an invalid stack location
-test.append(label())
-result.append(2)
-print("Test {}: PC = {}".format(len(test), test[-1]))
-lit(VM.stack_size)
-ass(SET_STACK_DEPTH)
-ass(GET_STACK_DEPTH)
-
 # Try to read from an invalid stack location
 test.append(label())
 result.append(3)

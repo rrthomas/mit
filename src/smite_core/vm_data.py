@@ -155,18 +155,6 @@ class Instructions(Enum):
         S->PC += WORD_BYTES;
     ''')
 
-    GET_STACK_DEPTH = Instruction(0x1c, [], ['r'], '''\
-        r = S->STACK_DEPTH;
-    ''')
-
-    SET_STACK_DEPTH = Instruction(0x1d, ['a'], [], '''\
-        if ((smite_UWORD)a > S->stack_size) {
-            S->BAD = a - S->stack_size;
-            RAISE(SMITE_ERR_STACK_OVERFLOW);
-        }
-        S->STACK_DEPTH = a;
-    ''')
-
     EXT = Instruction(0x1e, None, None, '''\
         smite_ext(S);
     ''')
