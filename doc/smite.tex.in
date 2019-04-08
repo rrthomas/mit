@@ -294,6 +294,8 @@ These instructions manage the stack:
 \begin{description}
 \inst{LIT}{— n}{The word pointed to by {\tt PC} is pushed on to the stack, and {\tt PC} is incremented to point to the following word.}
 \inst{LIT\_PC\_REL}{— n}{Like {\tt LIT}, except that the initial value of {\tt PC} is added to the value pushed on to the stack.}
+\inst{LIT\_0}{— $0$}{Push $0$ on to the stack.}
+\inst{LIT\_1}{— $1$}{Push $1$ on to the stack.}
 \end{description}
 
 
@@ -419,8 +421,8 @@ Table~\ref{opcodetable} lists the instruction opcodes in numerical order. Other 
 \opcodetbl{09}{AND}		{19}{STORE}
 \opcodetbl{0a}{OR}		{1a}{LIT}
 \opcodetbl{0b}{XOR}		{1b}{LIT\_PC\_REL}
-\opcodetblone{0c}{LSHIFT}	{1c}{undefined}
-\opcodetblone{0d}{RSHIFT}	{1d}{undefined}
+\opcodetblone{0c}{LSHIFT}	{1c}{LIT\_0}
+\opcodetblone{0d}{RSHIFT}	{1d}{LIT\_1}
 \opcodetbl{0e}{ARSHIFT}		{1e}{EXT}
 \opcodetbl{0f}{SIGN\_EXTEND}	{1f}{HALT}
  \bottomrule

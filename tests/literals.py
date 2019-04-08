@@ -15,6 +15,7 @@ VM.globalize(globals())
 
 # Test results
 values = [
+    0, 1,
     -257, 12345678, 4, -1 << (word_bit - 1),
     1 << (word_bit - 2), -1 << (word_bit - byte_bit)
 ]
@@ -22,7 +23,12 @@ values = [
 # Test
 correct = []
 for n, v in enumerate(values):
-    lit(v)
+    if n == 0:
+        ass(LIT_0)
+    elif n == 1:
+        ass(LIT_1)
+    else:
+        lit(v)
     correct.append([values[i] for i in range(n)])
 
 run_test("literals", VM, correct)

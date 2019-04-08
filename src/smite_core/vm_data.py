@@ -155,6 +155,14 @@ class Instructions(Enum):
         S->PC += WORD_BYTES;
     ''')
 
+    LIT_0 = Instruction(0x1c, [], ['zero'], '''\
+        zero = 0;
+    ''')
+
+    LIT_1 = Instruction(0x1d, [], ['one'], '''\
+        one = 1;
+    ''')
+
     EXT = Instruction(0x1e, None, None, '''\
         smite_ext(S);
     ''')
