@@ -222,9 +222,9 @@ class State:
 
         fd = os.open(file, os.O_CREAT | os.O_RDWR | O_BINARY)
         if fd < 0:
-            fatal("cannot open file {}".format(file))
+            raise Error("cannot open file {}".format(file))
         try:
-            libsmite.smite_save_object(self.state, address, length, fd)
+            return libsmite.smite_save_object(self.state, address, length, fd)
         finally:
             os.close(fd)
 
