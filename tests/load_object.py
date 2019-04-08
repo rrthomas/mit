@@ -57,13 +57,13 @@ for good_file in good_files:
 
 
 # Generate test object file
+number_file = "numbers.obj"
 correct = [-128, 12345678]
 for n in correct:
     lit(n)
 ass(HALT)
-save("numbers.obj", length=assembler.label())
+save(number_file, length=assembler.label())
 
-number_file = "numbers.obj"
 s = obj_name(build_dir, number_file, use_endism=False)
 res = try_load(s)
 print(" should be {}".format(0))
