@@ -34,6 +34,13 @@ from .binding import *
 from .assembler import *
 
 
+# Set up binary I/O flag
+O_BINARY = 0
+try:
+    O_BINARY = os.O_BINARY
+except:
+    pass
+
 # State
 class State:
     '''A VM state.'''
@@ -196,7 +203,7 @@ class State:
         '''
         Load an object file at the given address. Returns the length.
         '''
-        fd = os.open(file, os.O_RDONLY)
+        fd = os.open(file, os.O_RDONLY | O_BINARY)
         if fd < 0:
             raise Error("cannot open file {}".format(file))
         try:
@@ -213,7 +220,7 @@ class State:
         if not is_aligned(address) or ptr == None:
             return -1
 
-        fd = os.open(file, os.O_CREAT | os.O_RDWR)
+        fd = os.open(file, os.O_CREAT | os.O_RDWR | O_BINARY)
         if fd < 0:
             fatal("cannot open file {}".format(file))
         try:
