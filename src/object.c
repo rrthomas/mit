@@ -48,7 +48,7 @@ ptrdiff_t smite_load_object(smite_state *S, smite_UWORD addr, int fd)
         memcmp(header, PACKAGE_UPPER, sizeof(PACKAGE_UPPER)) ||
         (endism = header[sizeof(PACKAGE_UPPER)]) > 1)
         return -2;
-    if (endism != S->ENDISM ||
+    if (endism != ENDISM ||
         (_WORD_BYTES = header[sizeof(PACKAGE_UPPER) + 1]) != WORD_BYTES)
         return -3;
 
@@ -79,7 +79,7 @@ int smite_save_object(smite_state *S, smite_UWORD addr, smite_UWORD len, int fd)
 
     char hashbang[] = "#!/usr/bin/env smite\n";
     smite_BYTE buf[HEADER_LENGTH] = PACKAGE_UPPER;
-    buf[sizeof(PACKAGE_UPPER)] = S->ENDISM;
+    buf[sizeof(PACKAGE_UPPER)] = ENDISM;
     buf[sizeof(PACKAGE_UPPER) + 1] = WORD_BYTES;
 
     if (write(fd, hashbang, sizeof(hashbang) - 1) != sizeof(hashbang) - 1 ||

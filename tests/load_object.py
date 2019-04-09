@@ -22,9 +22,9 @@ def try_load(file):
     return ret
 
 def obj_name(prefix, file, word_bytes=None, use_endism=True):
-    endism = "-{}".format("le" if ENDISM.get() == 0 else "be")
+    endism_str = "-{}".format("le" if endism == 0 else "be")
     suffix = "-{}".format(word_bytes) if word_bytes else ""
-    name = "{}/{}{}{}".format(prefix, file, endism if use_endism else "", suffix)
+    name = "{}/{}{}{}".format(prefix, file, endism_str if use_endism else "", suffix)
     return name
 
 src_dir = os.environ['srcdir']
