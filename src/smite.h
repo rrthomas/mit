@@ -104,8 +104,8 @@ typedef struct {
 // Instructions
 #define SMITE_INSTRUCTION_BIT 8
 #define SMITE_INSTRUCTION_MASK ((1 << SMITE_INSTRUCTION_BIT) - 1)
-extern const smite_UWORD smite_instruction_bit;
-extern const smite_UWORD smite_instruction_mask;
+extern const unsigned smite_instruction_bit;
+extern const unsigned smite_instruction_mask;
 
 // Errors
 enum {
