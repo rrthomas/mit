@@ -128,7 +128,7 @@ smite_state *smite_init(size_t memory_size, size_t stack_size)
         return NULL;
 
     S->ENDISM =
-#ifdef smite_WORDS_BIGENDIAN
+#ifdef WORDS_BIGENDIAN
         1
 #else
         0
