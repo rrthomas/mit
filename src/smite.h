@@ -17,11 +17,22 @@
 #include <inttypes.h>
 
 
-// Types and printf formats
+// Build-time parameters
 #define DEFAULT_WORD_BYTES SIZEOF_SIZE_T
 #ifndef WORD_BYTES
 #define WORD_BYTES DEFAULT_WORD_BYTES
 #endif
+
+#ifndef WORDS_BIGENDIAN
+#define DEFAULT_ENDISM 0
+#else
+#define DEFAULT_ENDISM 1
+#endif
+#ifndef ENDISM
+#define ENDISM DEFAULT_ENDISM
+#endif
+
+// Types and printf formats
 typedef uint8_t smite_BYTE;
 #if WORD_BYTES == 4
 typedef int32_t smite_WORD;
@@ -53,6 +64,7 @@ typedef smite_WORD * smite_WORDP;
 
 // Constants
 extern const unsigned smite_word_bytes;
+extern const unsigned smite_endism;
 extern const unsigned smite_size_word;
 #define smite_BYTE_BIT 8
 extern const unsigned smite_byte_bit;

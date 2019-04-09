@@ -55,7 +55,7 @@ def errcheck(code_to_message):
 
 # Constants (all of type unsigned)
 vars().update([(c, c_uint.in_dll(libsmite, "smite_{}".format(c)).value)
-               for c in ["word_bytes", "size_word",
+               for c in ["word_bytes", "endism", "size_word",
                          "byte_bit", "byte_mask", "word_bit",
                          "instruction_bit", "instruction_mask"]])
 sign_bit = 1 << (word_bit - 1)
