@@ -15,6 +15,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <inttypes.h>
+#include <byteswap.h>
 
 
 // Build-time parameters
@@ -176,6 +177,14 @@ _GL_ATTRIBUTE_PURE static inline uint8_t *native_address_of_range(smite_state *S
     return ((uint8_t *)(S->memory)) + addr;
 }
 
+#if WORD_BYTES == 4
+#define reverse_endianness bswap_32
+#elif WORD_BYTES == 8
+#define reverse_endianness bswap_64
+#else
+#error "WORD_BYTES must be 4 or 8!"
+#endif
+
 static inline int load(smite_state *S, smite_UWORD addr, unsigned size, smite_WORD *val_ptr)
 {
     if (addr >= S->memory_size) {
@@ -187,22 +196,31 @@ static inline int load(smite_state *S, smite_UWORD addr, unsigned size, smite_WO
         return SMITE_ERR_MEMORY_UNALIGNED;
     }
 
+    smite_WORD val;
     switch (size) {
     case 0:
-        *val_ptr = (smite_UWORD)((uint8_t *)S->memory)[addr];
+        val = (smite_UWORD)((uint8_t *)S->memory)[addr];
         break;
     case 1:
-        *val_ptr = (smite_UWORD)((uint16_t *)S->memory)[addr / 2];
+        val = (smite_UWORD)((uint16_t *)S->memory)[addr / 2];
+        if (ENDISM != DEFAULT_ENDISM)
+            val = bswap_16(val);
         break;
     case 2:
-        *val_ptr = (smite_UWORD)((uint32_t *)S->memory)[addr / 4];
+        val = (smite_UWORD)((uint32_t *)S->memory)[addr / 4];
+        if (ENDISM != DEFAULT_ENDISM)
+            val = bswap_32(val);
         break;
     case 3:
-        *val_ptr = (smite_UWORD)((uint64_t *)S->memory)[addr / 8];
+        val = (smite_UWORD)((uint64_t *)S->memory)[addr / 8];
+        if (ENDISM != DEFAULT_ENDISM)
+            val = bswap_64(val);
         break;
     default:
         return SMITE_ERR_BAD_SIZE;
     }
+
+    *val_ptr = val;
     return SMITE_ERR_OK;
 }
 
@@ -222,17 +240,24 @@ static inline int store(smite_state *S, smite_UWORD addr, unsigned size, smite_W
         ((uint8_t *)S->memory)[addr] = (uint8_t)val;
         break;
     case 1:
+        if (ENDISM != DEFAULT_ENDISM)
+            val = bswap_16(val);
         ((uint16_t *)S->memory)[addr / 2] = (uint16_t)val;
         break;
     case 2:
+        if (ENDISM != DEFAULT_ENDISM)
+            val = bswap_32(val);
         ((uint32_t *)S->memory)[addr / 4] = (uint32_t)val;
         break;
     case 3:
+        if (ENDISM != DEFAULT_ENDISM)
+            val = bswap_64(val);
         ((uint64_t *)S->memory)[addr / 8] = (uint64_t)val;
         break;
     default:
         return SMITE_ERR_BAD_SIZE;
     }
+
     return SMITE_ERR_OK;
 }
 
