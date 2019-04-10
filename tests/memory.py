@@ -19,97 +19,69 @@ VM.globalize(globals())
 magic_number = 0xf201
 correct = [
     [],
-    [size * word_bytes],
-    [size * word_bytes, word_bytes],
-    [size * word_bytes, -word_bytes],
-    [size * word_bytes - word_bytes],
-    [size * word_bytes - word_bytes, magic_number],
-    [size * word_bytes - word_bytes, magic_number, 1],
-    [size * word_bytes - word_bytes, magic_number, size * word_bytes - word_bytes],
-    [size * word_bytes - word_bytes, magic_number, size * word_bytes - word_bytes, size_word],
-    [size * word_bytes - word_bytes],
-    [size * word_bytes - word_bytes, 0],
-    [size * word_bytes - word_bytes, size * word_bytes - word_bytes],
-    [size * word_bytes - word_bytes, size * word_bytes - word_bytes, size_word],
-    [size * word_bytes - word_bytes, magic_number],
-    [size * word_bytes - word_bytes, magic_number, 1],
-    [size * word_bytes - word_bytes],
-    [size * word_bytes - word_bytes, 0],
-    [size * word_bytes - word_bytes, size * word_bytes - word_bytes],
-    [size * word_bytes - word_bytes, size * word_bytes - word_bytes, 1],
-    [size * word_bytes - word_bytes, magic_number & 0xffff],
-    [size * word_bytes - word_bytes, magic_number, 1],
-    [size * word_bytes - word_bytes],
-    [size * word_bytes - word_bytes, 0],
-    [size * word_bytes - word_bytes, size * word_bytes - word_bytes],
-    [size * word_bytes - word_bytes, size * word_bytes - word_bytes, 1],
-    [size * word_bytes - word_bytes, magic_number],
-    [size * word_bytes - word_bytes, magic_number, 1],
-    [size * word_bytes - word_bytes, magic_number | -0x10000],
-    [size * word_bytes - word_bytes, magic_number | -0x10000, 1],
-    [size * word_bytes - word_bytes],
-    [size * word_bytes - word_bytes, 0],
-    [size * word_bytes - word_bytes, size * word_bytes - word_bytes],
-    [size * word_bytes - word_bytes, size * word_bytes - word_bytes, 0],
-    [size * word_bytes - word_bytes, 1],
-    [size * word_bytes - word_bytes + 1],
-    [size * word_bytes - word_bytes + 1, 0],
+    [magic_number],
+    [magic_number, (size - 1) * word_bytes],
+    [magic_number, (size - 1) * word_bytes, size_word],
+    [],
+    [(size - 1) * word_bytes],
+    [(size - 1) * word_bytes, size_word],
+    [magic_number],
+    [magic_number, 1],
+    [],
+    [(size - 1) * word_bytes + (word_bytes - 2) * endism],
+    [(size - 1) * word_bytes + (word_bytes - 2) * endism, 1],
+    [magic_number],
+    [magic_number, 1],
+    [],
+    [(size - 1) * word_bytes + (word_bytes - 2) * endism],
+    [(size - 1) * word_bytes + (word_bytes - 2) * endism, 1],
+    [magic_number],
+    [magic_number, 1],
+    [magic_number | -0x10000],
+    [magic_number | -0x10000, 1],
+    [],
+    [(size - 1) * word_bytes + (word_bytes - 2) * endism + 1 * (1 - endism)],
+    [(size - 1) * word_bytes + (word_bytes - 2) * endism + 1 * (1 - endism), 0],
     [0xf2],
-    [0xf2, size * word_bytes - 1],
-    [0xf2, size * word_bytes - 1, 0],
+    [0xf2, size * word_bytes - ((word_bytes - 1) * endism + 1)],
+    [0xf2, size * word_bytes - ((word_bytes - 1) * endism + 1), 0],
     [],
-    [size * word_bytes - word_bytes],
-    [size * word_bytes - word_bytes, size_word],
+    [(size - 1) * word_bytes],
+    [(size - 1) * word_bytes, size_word],
     [(0xf2 << (word_bit - byte_bit)) | magic_number | -(word_mask + 1)],
-    [(0xf2 << (word_bit - byte_bit)) | magic_number | -(word_mask + 1), 1],
-    [],
 ]
 
 # Test code
-lit(size * word_bytes)
-lit(word_bytes)
-ass(NEGATE)
-ass(ADD)
 lit(magic_number)
-lit(1)
-ass(DUP)
+lit((size - 1) * word_bytes)
 lit(size_word)
 ass(STORE)
-lit(0)
-ass(DUP)
+lit((size - 1) * word_bytes)
 lit(size_word)
 ass(LOAD)
 lit(1)
 ass(POP)
-lit(0)
-ass(DUP)
+lit((size - 1) * word_bytes + (word_bytes - 2) * endism)
 lit(1)
 ass(LOAD)
 lit(1)
 ass(POP)
-lit(0)
-ass(DUP)
+lit((size - 1) * word_bytes + (word_bytes - 2) * endism)
 lit(1)
 ass(LOAD)
 lit(1)
 ass(SIGN_EXTEND)
 lit(1)
 ass(POP)
-lit(0)
-ass(DUP)
-lit(0)
-ass(LOAD)
-ass(ADD)
+lit((size - 1) * word_bytes + (word_bytes - 2) * endism + 1 * (1 - endism))
 lit(0)
 ass(LOAD)
-lit(size * word_bytes - 1)
+lit(size * word_bytes - ((word_bytes - 1) * endism + 1))
 lit(0)
 ass(STORE)
-lit(size * word_bytes - word_bytes)
+lit((size - 1) * word_bytes)
 lit(size_word)
 ass(LOAD)
-lit(1)
-ass(POP)
 
 # Test
 run_test("memory", VM, correct)

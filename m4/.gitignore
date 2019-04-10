@@ -144,3 +144,4 @@
 /wcrtomb.m4
 /strings_h.m4
 /getpagesize.m4
+/byteswap.m4

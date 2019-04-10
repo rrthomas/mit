@@ -56,6 +56,8 @@ ptrdiff_t smite_load_object(smite_state *S, smite_UWORD addr, int fd)
     smite_UWORD len = 0;
     if ((res = read(fd, &len, sizeof(len))) == -1)
         return -1;
+    if (ENDISM != DEFAULT_ENDISM)
+        len = reverse_endianness(len);
     if (res != sizeof(len))
         return -2;
     uint8_t *ptr = smite_native_address_of_range(S, addr, len);
@@ -82,9 +84,13 @@ int smite_save_object(smite_state *S, smite_UWORD addr, smite_UWORD len, int fd)
     buf[sizeof(PACKAGE_UPPER)] = ENDISM;
     buf[sizeof(PACKAGE_UPPER) + 1] = WORD_BYTES;
 
+    smite_UWORD len_save = len;
+    if (ENDISM != DEFAULT_ENDISM)
+        len_save = reverse_endianness(len_save);
+
     if (write(fd, hashbang, sizeof(hashbang) - 1) != sizeof(hashbang) - 1 ||
         write(fd, &buf[0], HEADER_LENGTH) != HEADER_LENGTH ||
-        write(fd, &len, sizeof(len)) != sizeof(len) ||
+        write(fd, &len_save, sizeof(len_save)) != sizeof(len_save) ||
         write(fd, ptr, len) != (ssize_t)len)
         return -1;
 
