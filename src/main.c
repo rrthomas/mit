@@ -150,11 +150,12 @@ int main(int argc, char *argv[])
             usage();
             break;
         case 3:
-            printf(PACKAGE_NAME " " VERSION "\n"
+            printf(PACKAGE_NAME " " VERSION " (%d-byte word, %s-endian)\n"
                    "(c) SMite authors 1994-2019\n"
                    PACKAGE_NAME " comes with ABSOLUTELY NO WARRANTY.\n"
                    "You may redistribute copies of " PACKAGE_NAME "\n"
-                   "under the terms of the MIT/X11 License.\n");
+                   "under the terms of the MIT/X11 License.\n",
+                   WORD_BYTES, ENDISM ? "big" : "little");
             exit(EXIT_SUCCESS);
         default:
             break;
