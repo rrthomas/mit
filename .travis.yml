@@ -24,11 +24,9 @@ matrix:
   include:
     - os: linux
     - os: osx
-    - env: WORD_BYTES=4
-    - env: WORD_BYTES=8
     - compiler: gcc
       env:
-        - MATRIX_EVAL="CC=gcc-8"
+        - MATRIX_EVAL="CC=gcc-8 GLOBAL_CONFIGURE_OPTS=--enable-silent-rules"
         # - CFLAGS="-g3 -fsanitize=address -fsanitize=undefined"
         # - LDFLAGS="-fsanitize=address -fsanitize=undefined"
         # - PY_LOG_ENV="LD_PRELOAD=/usr/lib/gcc/x86_64-linux-gnu/7/libasan.so PYTHONMALLOC=malloc"
@@ -45,7 +43,6 @@ before_install:
 
 # Run make install so that Python's ctypes.util.find_library works on Python < 3.6
 script:
-  - ./bootstrap && ./configure --enable-silent-rules
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install help2man ; fi
-  - make && sudo make install
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then make check ; else make distcheck ; fi
+  - ./bootstrap
+  - for flavour in "CFLAGS=-DWORD_BYTES=4 -DENDISM=0" "CFLAGS=-DWORD_BYTES=4 -DENDISM=1" "CFLAGS=-DWORD_BYTES=8 -DENDISM=0" "CFLAGS=-DWORD_BYTES=8 -DENDISM=1"; do ./configure $GLOBAL_CONFIGURE_OPTS "$flavour" && make && sudo make install && if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then make check ; else make distcheck ; fi; done
