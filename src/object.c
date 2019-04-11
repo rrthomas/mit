@@ -79,7 +79,6 @@ int smite_save_object(smite_state *S, smite_UWORD addr, smite_UWORD len, int fd)
     if (!smite_is_aligned(addr, smite_SIZE_WORD) || ptr == NULL)
         return -2;
 
-    char hashbang[] = "#!/usr/bin/env smite\n";
     smite_BYTE buf[HEADER_LENGTH] = PACKAGE_UPPER;
     buf[sizeof(PACKAGE_UPPER)] = ENDISM;
     buf[sizeof(PACKAGE_UPPER) + 1] = WORD_BYTES;
@@ -88,8 +87,7 @@ int smite_save_object(smite_state *S, smite_UWORD addr, smite_UWORD len, int fd)
     if (ENDISM != DEFAULT_ENDISM)
         len_save = reverse_endianness(len_save);
 
-    if (write(fd, hashbang, sizeof(hashbang) - 1) != sizeof(hashbang) - 1 ||
-        write(fd, &buf[0], HEADER_LENGTH) != HEADER_LENGTH ||
+    if (write(fd, &buf[0], HEADER_LENGTH) != HEADER_LENGTH ||
         write(fd, &len_save, sizeof(len_save)) != sizeof(len_save) ||
         write(fd, ptr, len) != (ssize_t)len)
         return -1;
