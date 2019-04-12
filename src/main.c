@@ -54,7 +54,7 @@ struct option longopts[] = {
 #define OPT(longname, shortname, arg, argstring, docstring) \
   {longname, arg, NULL, shortname},
 #define ARG(argstring, docstring)
-#define DOC(docstring)
+#define DOC(text)
 #include "tbl_opts.h"
 #undef OPT
 #undef ARG
@@ -64,18 +64,16 @@ struct option longopts[] = {
 
 static void usage(void)
 {
-    char *doc, *shortopt, *buf;
+    char *shortopt, *buf;
     printf ("Usage: %s [OPTION...] [OBJECT-FILE ARGUMENT...]\n"
             "\n"
             "Run " PACKAGE_NAME ".\n"
             "\n",
             program_name);
 #define OPT(longname, shortname, arg, argstring, docstring)             \
-    doc = xasprintf(docstring);                                         \
     shortopt = xasprintf(", -%c", shortname);                           \
     buf = xasprintf("--%s%s %s", longname, shortname ? shortopt : "", argstring); \
-    printf("  %-26s%s\n", buf, doc);                                    \
-    free(doc);                                                          \
+    printf("  %-26s%s\n", buf, docstring);                              \
     free(shortopt);                                                     \
     free(buf);
 #define ARG(argstring, docstring)                       \
