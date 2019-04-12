@@ -123,11 +123,38 @@ int main(int argc, char *argv[])
     smite_UWORD memory_size = 0x100000U;
     smite_UWORD stack_size = 16384U;
 
-    // Options string starts with '+' to stop option processing at first non-option, then
-    // leading ':' so as to return ':' for a missing arg, not '?'
+    // Options string starts with '+' to stop option processing at first
+    // non-option, then leading ':' so as to return ':' for a missing arg,
+    // not '?'
+    char *shortopts = xasprintf("+:");
+#define OPT(longname, shortname, arg, argstring, docstring)             \
+    {                                                                   \
+        const char *colons = "";                                        \
+        switch (arg) {                                                  \
+        case required_argument:                                         \
+            colons = ":";                                               \
+            break;                                                      \
+        case optional_argument:                                         \
+            colons = "::";                                              \
+            break;                                                      \
+        default:                                                        \
+            break;                                                      \
+        }                                                               \
+        char *shortopt = xasprintf("%c%s", shortname, colons);          \
+        char *new_shortopts = xasprintf("%s%s", shortopts, shortopt);   \
+        free(shortopts);                                                \
+        shortopts = new_shortopts;                                      \
+    }
+#define ARG(argstring, docstring)
+#define DOC(text)
+#include "tbl_opts.h"
+#undef OPT
+#undef ARG
+#undef DOC
+
     for (;;) {
         int this_optind = optind ? optind : 1, longindex = -1;
-        int c = getopt_long(argc, argv, "+:c", longopts, &longindex);
+        int c = getopt_long(argc, argv, shortopts, longopts, &longindex);
 
         if (c == -1)
             break;
