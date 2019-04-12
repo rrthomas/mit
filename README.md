@@ -61,7 +61,7 @@ PDFs are supplied in release archives.
 ## Use
 
 Run `smite OBJECT-FILE` (see `smite --help` for documentation). To run the
-shell, `python3 -i -m smite`.
+shell, `smite-shell`.
 
 
 ## C API
