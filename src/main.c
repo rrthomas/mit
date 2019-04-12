@@ -103,10 +103,15 @@ static void exit_function(void)
     smite_destroy(S);
 }
 
-static int trace_step(FILE *fp)
+FILE *trace_fp = NULL;
+static int trace_run(smite_state *state)
 {
-    fprintf(fp, "%d\n", (int)(S->I & SMITE_INSTRUCTION_MASK));
-    return smite_single_step(S);
+    int ret = 0;
+    do {
+        fprintf(trace_fp, "%d\n", (int)(state->I & SMITE_INSTRUCTION_MASK));
+        ret = smite_single_step(state);
+    } while (ret == 0);
+    return ret;
 }
 
 int main(int argc, char *argv[])
@@ -119,7 +124,6 @@ int main(int argc, char *argv[])
     bool core_dump = false;
     smite_UWORD memory_size = 0x100000U;
     smite_UWORD stack_size = 16384U;
-    FILE *trace_fp = NULL;
 
     // Options string starts with '+' to stop option processing at first non-option, then
     // leading ':' so as to return ':' for a missing arg, not '?'
@@ -204,47 +208,41 @@ int main(int argc, char *argv[])
         die("%s: %s", argv[optind], err);
 
     // Run code
-    // Automatically grow stack and memory on demand
-    int res;
-    bool again;
-    do {
-        again = false;
-        switch (res = trace_fp ? trace_step(trace_fp) : smite_run(S)) {
-        case 0:
-            again = true;
-            break;
+    int (*run_fn)(smite_state *) = trace_fp ? trace_run : smite_run;
+    for (;;) {
+        int res;
+        switch (res = run_fn(S)) {
         case 2:
-            if (S->BAD >= S->stack_size &&
-                S->BAD < smite_uword_max - S->stack_size &&
-                smite_realloc_stack(S, round_up(S->stack_size + S->BAD, page_size)) == 0)
-                again = true;
+            // Grow stack on demand
+            if (S->BAD < S->stack_size ||
+                S->BAD >= smite_uword_max - S->stack_size ||
+                (res = smite_realloc_stack(S, round_up(S->stack_size + S->BAD, page_size))) != 0)
+                return res;
             break;
         case 5:
         case 6:
-            if (S->BAD >= S->memory_size &&
-                smite_realloc_memory(S, round_up(S->BAD, page_size)) == 0)
-                again = true;
+            // Grow memory on demand
+            if (S->BAD < S->memory_size ||
+                (res = smite_realloc_memory(S, round_up(S->BAD, page_size))) != 0)
+                return res;
             break;
         default:
-            break;
+            // Core dump on error
+            if (core_dump) {
+                warn("error %d raised at PC=%"PRI_XWORD"; BAD=%"PRI_XWORD,
+                     res, S->PC, S->BAD);
+
+                char *file = xasprintf("smite-core.%lu", (unsigned long)getpid());
+                // Ignore errors; best effort only, in the middle of an error exit
+                if ((fd = creat(file, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH)) >= 0) {
+                    (void)smite_save_object(S, 0, S->memory_size, fd);
+                    close(fd);
+                    warn("core dumped to %s", file);
+                } else
+                    perror("open error");
+                free(file);
+            }
+            return res == 128 ? 0 : res;
         }
-    } while (again);
-
-    // Core dump on error
-    if (core_dump && (res >= 1 && res < 128)) {
-        warn("error %d raised at PC=%"PRI_XWORD"; BAD=%"PRI_XWORD,
-             res, S->PC, S->BAD);
-
-        char *file = xasprintf("smite-core.%lu", (unsigned long)getpid());
-        // Ignore errors; best effort only, in the middle of an error exit
-        if ((fd = creat(file, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH)) >= 0) {
-            (void)smite_save_object(S, 0, S->memory_size, fd);
-            close(fd);
-            warn("core dumped to %s", file);
-        } else
-            perror("open error");
-        free(file);
     }
-
-    return res == 128 ? 0 : res;
 }
