@@ -91,7 +91,7 @@ static int smite_realloc(smite_WORD **ptr, smite_UWORD old_size, smite_UWORD new
 {
     smite_WORD *new_ptr = realloc(*ptr, new_size * WORD_BYTES);
     if (new_ptr == NULL && new_size > 0)
-        return 1;
+        return -1;
     *ptr = new_ptr;
 
     if (old_size < new_size)
