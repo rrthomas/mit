@@ -20,13 +20,20 @@ libsmite_la_LDFLAGS = -no-undefined -export-symbols-regex '^smite_.*'
 
 bin_PROGRAMS = smite$(EXEEXT)
 man_MANS = @PACKAGE@.1
-smite_LDADD = lib@PACKAGE@.la $(top_builddir)/lib/libgnu.la
-smite_SOURCES = main.c tbl_opts.h @PACKAGE@.h
+smite_LDADD = lib@PACKAGE@.la libcmdline.la $(top_builddir)/lib/libgnu.la
+smite_SOURCES = main.c @PACKAGE@.h
 nodist_pkginclude_HEADERS = opcodes.h ext-opcodes.h
+
+noinst_LTLIBRARIES = libcmdline.la
+libcmdline_la_SOURCES = cmdline.c cmdline.h
+libcmdline_la_CPPFLAGS = -I$(top_builddir)/lib -I$(top_srcdir)/lib -Wno-unused-but-set-variable
 
 step.lo: instructions.c
 object.lo step.lo storage.lo main.o: registers.h opcodes.h ext-opcodes.h
-main.o: tbl_opts.h registers.h
+main.o: cmdline.h registers.h
+
+cmdline.c: opts.ggo
+	$(GENGETOPT) --input=opts.ggo
 
 # Depend on @PACKAGE@$(EXEEXT) rather than explicitly make-ing it, as otherwise
 # we break parallel builds, as lib@PACKAGE@.la can be built twice in parallel,
@@ -74,6 +81,7 @@ loc:
 
 EXTRA_DIST = \
 	$(SMITE_CORE_SRCS) \
+	opts.ggo \
 	gen-registers \
 	gen-opcodes \
 	gen-instructions \

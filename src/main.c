@@ -1,4 +1,4 @@
-// Front-end.
+// SMite front end.
 //
 // (c) SMite authors 1995-2019
 //
@@ -13,15 +13,16 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <stdarg.h>
+#include <string.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include <getopt.h>
 #include <sys/stat.h>
 
 #include "progname.h"
 #include "xvasprintf.h"
 
 #include "smite.h"
+#include "cmdline.h"
 
 
 static _GL_ATTRIBUTE_FORMAT_PRINTF(1, 0) void verror(const char *format, va_list args)
@@ -49,44 +50,6 @@ static _GL_ATTRIBUTE_FORMAT_PRINTF(1, 2) void die(const char *format, ...)
 }
 
 
-// Options table
-struct option longopts[] = {
-#define OPT(longname, shortname, arg, argstring, docstring) \
-  {longname, arg, NULL, shortname},
-#define ARG(argstring, docstring)
-#define DOC(text)
-#include "tbl_opts.h"
-#undef OPT
-#undef ARG
-#undef DOC
-  {0, 0, 0, 0}
-};
-
-static void usage(void)
-{
-    char *shortopt, *buf;
-    printf ("Usage: %s [OPTION...] [OBJECT-FILE ARGUMENT...]\n"
-            "\n"
-            "Run " PACKAGE_NAME ".\n"
-            "\n",
-            program_name);
-#define OPT(longname, shortname, arg, argstring, docstring)             \
-    shortopt = xasprintf(", -%c", shortname);                           \
-    buf = xasprintf("--%s%s %s", longname, shortname ? shortopt : "", argstring); \
-    printf("  %-26s%s\n", buf, docstring);                              \
-    free(shortopt);                                                     \
-    free(buf);
-#define ARG(argstring, docstring)                       \
-    printf("  %-26s%s\n", argstring, docstring);
-#define DOC(text)                               \
-    printf(text "\n");
-#include "tbl_opts.h"
-#undef OPT
-#undef ARG
-#undef DOC
-    exit(EXIT_SUCCESS);
-}
-
 static smite_UWORD page_size;
 
 static smite_UWORD round_up(smite_UWORD n, smite_UWORD multiple)
@@ -112,6 +75,21 @@ static int trace_run(smite_state *state)
     return ret;
 }
 
+// Declarations missing from cmdline.h
+extern const char *gengetopt_args_info_versiontext;
+extern const char *gengetopt_args_info_help[];
+
+static void usage(void)
+{
+    printf("%s\n\n%s\n\n",
+           gengetopt_args_info_usage,
+           gengetopt_args_info_purpose);
+    for (unsigned i = 0; gengetopt_args_info_help[i]; i++)
+        printf("%s\n", gengetopt_args_info_help[i]);
+
+    exit(EXIT_SUCCESS);
+}
+
 int main(int argc, char *argv[])
 {
     set_program_name(argv[0]);
@@ -123,76 +101,31 @@ int main(int argc, char *argv[])
     smite_UWORD memory_size = 0x100000U;
     smite_UWORD stack_size = 16384U;
 
-    // Options string starts with '+' to stop option processing at first
-    // non-option, then leading ':' so as to return ':' for a missing arg,
-    // not '?'
-    char *shortopts = xasprintf("+:");
-#define OPT(longname, shortname, arg, argstring, docstring)             \
-    {                                                                   \
-        const char *colons = "";                                        \
-        switch (arg) {                                                  \
-        case required_argument:                                         \
-            colons = ":";                                               \
-            break;                                                      \
-        case optional_argument:                                         \
-            colons = "::";                                              \
-            break;                                                      \
-        default:                                                        \
-            break;                                                      \
-        }                                                               \
-        char *shortopt = xasprintf("%c%s", shortname, colons);          \
-        char *new_shortopts = xasprintf("%s%s", shortopts, shortopt);   \
-        free(shortopts);                                                \
-        shortopts = new_shortopts;                                      \
+    // Parse command-line options
+    struct gengetopt_args_info args_info;
+    if (cmdline_parser(argc, argv, &args_info) != 0)
+        exit(EXIT_FAILURE);
+    else if (args_info.help_given) {
+        usage();
+    } else if (args_info.version_given) {
+        printf("%s %s (%d-byte word, %s-endian)\n%s\n",
+               PACKAGE_NAME, VERSION,
+               WORD_BYTES, ENDISM ? "big" : "little",
+               gengetopt_args_info_versiontext);
+        exit(EXIT_SUCCESS);
     }
-#define ARG(argstring, docstring)
-#define DOC(text)
-#include "tbl_opts.h"
-#undef OPT
-#undef ARG
-#undef DOC
 
-    for (;;) {
-        int this_optind = optind ? optind : 1, longindex = -1;
-        int c = getopt_long(argc, argv, shortopts, longopts, &longindex);
-
-        if (c == -1)
-            break;
-        else if (c == ':')
-            die("option '%s' requires an argument", argv[this_optind]);
-        else if (c == '?')
-            die("unrecognised option '%s'\nTry '%s --help' for more information.", argv[this_optind], program_name);
-        else if (c == 'c')
-            longindex = 0;
-
-        switch (longindex) {
-        case 0:
-            core_dump = true;
-            break;
-        case 1:
+    // Set parameters from command-line options
+    core_dump = args_info.core_dump_given;
+    if (args_info.trace_given) {
             trace_fp = fopen(optarg, "wb");
             if (trace_fp == NULL)
-                die("cannot not open file %s", optarg);
+                die("cannot open file %s", optarg);
             warn("trace will be written to %s\n", optarg);
-            break;
-        case 2:
-            usage();
-            break;
-        case 3:
-            printf(PACKAGE_NAME " " VERSION " (%d-byte word, %s-endian)\n"
-                   "(c) SMite authors 1994-2019\n"
-                   PACKAGE_NAME " comes with ABSOLUTELY NO WARRANTY.\n"
-                   "You may redistribute copies of " PACKAGE_NAME "\n"
-                   "under the terms of the MIT/X11 License.\n",
-                   WORD_BYTES, ENDISM ? "big" : "little");
-            exit(EXIT_SUCCESS);
-        default:
-            break;
-        }
     }
 
-    argc -= optind;
-    if (argc < 1)
+    // Print usage and exit if no object file given
+    if (args_info.inputs_num == 0)
         usage();
 
     S = smite_init(memory_size, stack_size);
@@ -201,13 +134,14 @@ int main(int argc, char *argv[])
     if (atexit(exit_function) != 0)
         die("could not register atexit handler");
 
-    if (smite_register_args(S, argc, argv + optind) != 0)
+    if (smite_register_args(S, args_info.inputs_num - 1, &args_info.inputs[0]) != 0)
         die("could not map command-line arguments");
 
     // Load object file and report any error
-    int fd = open(argv[optind], O_RDONLY);
+    char *object_file = args_info.inputs[0];
+    int fd = open(object_file, O_RDONLY);
     if (fd < 0)
-        die("cannot not open file %s", argv[optind]);
+        die("cannot open file %s", object_file);
     int ret = smite_load_object(S, 0, fd);
     close(fd);
     const char *err = NULL;
@@ -230,7 +164,7 @@ int main(int argc, char *argv[])
             break;
         }
     if (err != NULL)
-        die("%s: %s", argv[optind], err);
+        die("%s: %s", object_file, err);
 
     // Run code
     int (*run_fn)(smite_state *) = trace_fp ? trace_run : smite_run;

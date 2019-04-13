@@ -11,6 +11,9 @@
 /smite.exe
 /smite.1
 /smite-include.man
+/opts.ggo
+/cmdline.[ch]
+/libcmdline.la
 /instructions.c
 /ext.c
 /opcodes.h

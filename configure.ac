@@ -21,6 +21,7 @@ gl_EARLY
 AM_PROG_AR
 LT_INIT([win32-dll])
 AM_PATH_PYTHON([3.4])
+AC_PATH_PROG([GENGETOPT], [gengetopt])
 AC_PATH_PROGS([IPYTHON], [ipython3 ipython])
 # Check detected/configured IPython, and set command-line options
 AS_IF([test "$IPYTHON" = ""],
@@ -100,6 +101,7 @@ AC_CONFIG_FILES([
         lib/Makefile
         src/Makefile
         src/smite-include.man
+        src/opts.ggo
         tests/Makefile
         python/Makefile
         python/smite-dump.1

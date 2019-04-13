@@ -1,0 +1,30 @@
+# Table of command-line options (for gengetopt)
+#
+# Copyright (c) 2009-2019 SMite authors
+#
+# The package is distributed under the MIT/X11 License.
+#
+# THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
+# RISK.
+
+purpose "Run the @PACKAGE_NAME@ program OBJECT-FILE and the given ARGUMENTs."
+usage " [OPTION...] [OBJECT-FILE ARGUMENT...]"
+versiontext "(c) SMite authors 1994-2019
+This is free software: you are free to change and redistribute it
+under the terms of the MIT/X11 License.
+There is NO WARRANTY, to the extent permitted by law."
+
+args "--unamed-opts --default-optional --no-handle-help --no-handle-version"
+
+text "\
+The exit status is the error code, or zero if execution HALTs normally.
+
+The memory and stack are automatically grown as required.
+
+To avoid an ARGUMENT being interpreted as an OPTION, add `--' before the
+OBJECT-FILE.
+
+Please report bugs to @PACKAGE_BUGREPORT@."
+
+option "core-dump" c "dump core on memory exception" flag off
+option "trace" - "write dynamic instruction trace to FILE" string typestr="FILE"

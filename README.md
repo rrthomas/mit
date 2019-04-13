@@ -49,6 +49,7 @@ should be used.
 The GNU autotools are required: automake, autoconf and libtool.
 [Gnulib](https://www.gnu.org/software/gnulib/) is also used, with a
 third-party `bootstrap` module; these are installed automatically.
+Python 3.4 or later and GNU gengetopts are also needed.
 
 To build from a Git repository, first run `./bootstrap`, then see "Building
 from source" above.
@@ -61,7 +62,7 @@ PDFs are supplied in release archives.
 ## Use
 
 Run `smite OBJECT-FILE` (see `smite --help` for documentation). To run the
-shell, `smite-shell`.
+shell: `smite-shell` (needs Python 3.4 or later).
 
 
 ## C API
