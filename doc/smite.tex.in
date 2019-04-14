@@ -160,7 +160,7 @@ $4$ & Invalid stack write. {\tt BAD} is set to the invalid stack position. \\
 $5$ & Invalid memory read. {\tt BAD} is set to the invalid address. \\
 $6$ & Invalid memory write. {\tt BAD} is set to the invalid address. \\
 $7$ & Address alignment error: raised when an instruction is given a valid address, but insufficiently aligned. \\
-$8$ & Invalid size (greater than $log_2{\tt WORD\_BYTES}$). \\
+$8$ & Invalid size (greater than $\log_2{\tt WORD\_BYTES}$). \\
 $9$ & Division by zero attempted (see section~\ref{arithmetic}). \\
 $128$ & A {\tt HALT} instruction was executed. \\
  \bottomrule
@@ -207,7 +207,7 @@ different types of stack item are shown in table~\ref{typetable}.
 \begin{tabular}{cl} \toprule
 \bf Symbol & \bf Data type \\ \midrule
 \spic{flag} & a Boolean flag, $1$ for true and $0$ for false \\
-\spic{size} & an integer in the range $0$ to $log_2{\tt WORD\_BYTES}$ inclusive. \\
+\spic{size} & an integer in the range $0$ to $\log_2{\tt WORD\_BYTES}$ inclusive. \\
 \spic{n} & signed number \\
 \spic{u} & unsigned number \\
 \spic{n{\tt |}u} & number (signed or unsigned) \\
