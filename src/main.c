@@ -51,7 +51,7 @@ static _GL_ATTRIBUTE_FORMAT_PRINTF(1, 2) void die(const char *format, ...)
 
 // Options table
 struct option longopts[] = {
-#define OPT(longname, shortname, arg, argstring, docstring) \
+#define OPT(longname, shortname, arg, argstring, docstring, init_code)    \
   {longname, arg, NULL, shortname},
 #define ARG(argstring, docstring)
 #define DOC(text)
@@ -70,7 +70,7 @@ static void usage(void)
             "Run " PACKAGE_NAME ".\n"
             "\n",
             program_name);
-#define OPT(longname, shortname, arg, argstring, docstring)             \
+#define OPT(longname, shortname, arg, argstring, docstring, init_code)  \
     shortopt = xasprintf(", -%c", shortname);                           \
     buf = xasprintf("--%s%s %s", longname, shortname ? shortopt : "", argstring); \
     printf("  %-26s%s\n", buf, docstring);                              \
@@ -127,7 +127,7 @@ int main(int argc, char *argv[])
     // non-option, then leading ':' so as to return ':' for a missing arg,
     // not '?'
     char *shortopts = xasprintf("+:");
-#define OPT(longname, shortname, arg, argstring, docstring)             \
+#define OPT(longname, shortname, arg, argstring, docstring, init_code)  \
     {                                                                   \
         const char *colons = "";                                        \
         switch (arg) {                                                  \
@@ -162,33 +162,35 @@ int main(int argc, char *argv[])
             die("option '%s' requires an argument", argv[this_optind]);
         else if (c == '?')
             die("unrecognised option '%s'\nTry '%s --help' for more information.", argv[this_optind], program_name);
-        else if (c == 'c')
-            longindex = 0;
 
-        switch (longindex) {
-        case 0:
-            core_dump = true;
-            break;
-        case 1:
-            trace_fp = fopen(optarg, "wb");
-            if (trace_fp == NULL)
-                die("cannot not open file %s", optarg);
-            warn("trace will be written to %s\n", optarg);
-            break;
-        case 2:
-            usage();
-            break;
-        case 3:
-            printf(PACKAGE_NAME " " VERSION " (%d-byte word, %s-endian)\n"
-                   "(c) SMite authors 1994-2019\n"
-                   PACKAGE_NAME " comes with ABSOLUTELY NO WARRANTY.\n"
-                   "You may redistribute copies of " PACKAGE_NAME "\n"
-                   "under the terms of the MIT/X11 License.\n",
-                   WORD_BYTES, ENDISM ? "big" : "little");
-            exit(EXIT_SUCCESS);
-        default:
-            break;
+        {
+            int index = 0;
+#define OPT(longname, shortname, arg, argstring, docstring, init_code)  \
+            if (shortname != '\0' && c == shortname)                    \
+                longindex = index;                                      \
+            index++;
+#define ARG(argstring, docstring)
+#define DOC(text)
+#include "opts.h"
+#undef OPT
+#undef ARG
+#undef DOC
         }
+
+        {
+            int index = 0;
+#define OPT(longname, shortname, arg, argstring, docstring, init_code)  \
+            if (longindex == index)                                     \
+                init_code                                               \
+            index++;
+#define ARG(argstring, docstring)
+#define DOC(text)
+#include "opts.h"
+#undef OPT
+#undef ARG
+#undef DOC
+        }
+
     }
 
     argc -= optind;
