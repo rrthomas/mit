@@ -441,7 +441,7 @@ int smite_register_args(smite_state *S, int argc, char *argv[]);
     ((smite_WORD)(n) >> (p))
 #else
 #define ARSHIFT(n, p) \
-    (((n) >> (p)) | ((smite_UWORD)(-((smite_WORD)(n) < 0)) << (smite_word_bit - (p))))
+    (((n) >> (p)) | ((smite_UWORD)(-((smite_WORD)(n) < 0)) << (smite_WORD_BIT - (p))))
 #endif
 /* Arithmetic right shift `n` by `p` places (the behaviour of >> on signed
    quantities is implementation-defined in C99).
