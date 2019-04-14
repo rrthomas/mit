@@ -232,7 +232,7 @@ def check_overflow(num_pops, num_pushes):
     push `num_pushes` items, given that `num_pops` items will first be
     popped.
     '''
-    return disable_warnings(['-Wtype-limits', '-Wtautological-compare', '-Wsign-compare', '-Wstrict-overflow'], '''\
+    return disable_warnings(['-Wtype-limits', '-Wsign-compare', '-Wstrict-overflow'], '''\
 if ({num_pushes} > {num_pops} && (S->STACK_SIZE - S->STACK_DEPTH < {num_pushes} - {num_pops})) {{
     S->BAD = ({num_pushes} - {num_pops}) - (S->STACK_SIZE - S->STACK_DEPTH);
     RAISE(SMITE_ERR_STACK_OVERFLOW);
