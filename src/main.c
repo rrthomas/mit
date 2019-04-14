@@ -1,6 +1,6 @@
 // Front-end.
 //
-// (c) Reuben Thomas 1995-2018
+// (c) SMite authors 1995-2019
 //
 // The package is distributed under the MIT/X11 License.
 //
@@ -105,19 +105,16 @@ static void exit_function(void)
 
 static int trace_step(FILE *fp)
 {
-    smite_BYTE opcode;
-    int res = load_byte(S, S->PC, &opcode);
-    if (res != 0)
-        return res;
-
-    fprintf(fp, "%d\n", (int)opcode);
+    fprintf(fp, "%d\n", (int)(S->I & SMITE_INSTRUCTION_MASK));
     return smite_single_step(S);
 }
 
 int main(int argc, char *argv[])
 {
     set_program_name(argv[0]);
-    page_size = sysconf(_SC_PAGESIZE);
+    // getpagesize() is obsolete, but gnulib provides it, and
+    // sysconf(_SC_PAGESIZE) does not work on some platforms.
+    page_size = getpagesize();
 
     bool core_dump = false;
     smite_UWORD memory_size = 0x100000U;

@@ -1,2 +1,2 @@
 #!/bin/sh
-@IPYTHON3@ -i --autocall 2 -m smite
+@IPYTHON@ -i @IPYTHON_OPTS@ -m smite

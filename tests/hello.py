@@ -1,6 +1,6 @@
 # Hello world demo/test.
 #
-# (c) Reuben Thomas 2018
+# (c) SMite authors 2018-2019
 #
 # The package is distributed under the MIT/X11 License.
 #
@@ -14,41 +14,23 @@ VM.globalize(globals())
 
 # Assemble test code
 
-# here = 0
-print("PC = {}".format(VM.here))
-lit(4 * word_size + 7)
-lit(14)
+# Address in next line = instructions + word_size × literals
+code_len = 0
+# Hack: two-pass assembly to calculate code_len
+for i in range(2):
+    goto(0)
+    lit(code_len)
+    lit(14)
+    lit(LIB_C_STDOUT)
+    lit(LIB_C)
+    ass(EXT)
+    lit(LIB_C_WRITE)
+    lit(LIB_C)
+    ass(EXT)
+    ass(HALT)
+    code_len = assembler.pc
 
-# here = 2 × word_size + 2
-print("PC = {}".format(VM.here))
-lit(LIB_C_STDOUT)
-ass(LIB_C)
-
-# here = 3 × word_size + 4
-print("PC = {}".format(VM.here))
-lit(LIB_C_WRITE)
-ass(LIB_C)
-
-# here = 4 × word_size + 6
-print("PC = {}".format(VM.here))
-ass(HALT)
-
-# here = 4 × word_size + 7
-print("PC = {}".format(VM.here))
-byte(0x48)
-byte(0x65)
-byte(0x6c)
-byte(0x6c)
-byte(0x6f)
-byte(0x2c)
-byte(0x20)
-byte(0x77)
-byte(0x6f)
-byte(0x72)
-byte(0x6c)
-byte(0x64)
-byte(0x21)
-byte(0x0a)
+bytes(b"Hello, world!\n")
 
 
 # Test

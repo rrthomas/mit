@@ -3,7 +3,7 @@
 # one case, it will work in all (if the C compiler doesn't implement it
 # correctly, we're in trouble anyway!).
 #
-# (c) Reuben Thomas 1994-2018
+# (c) SMite authors 1994-2019
 #
 # The package is distributed under the MIT/X11 License.
 #
@@ -11,6 +11,7 @@
 # RISK.
 
 from smite import *
+from smite_test import *
 VM = State()
 VM.globalize(globals())
 
@@ -24,7 +25,7 @@ penultimate_byte_set = 0xff << byte_bit
 correct = [
      [byte_bit, top_byte_set, 0xff, byte_bit],
      [byte_bit, top_byte_set, penultimate_byte_set],
-     [byte_bit, top_byte_set, penultimate_byte_set, 2],
+     [byte_bit, top_byte_set, penultimate_byte_set, 1],
      [penultimate_byte_set, top_byte_set, byte_bit],
      [penultimate_byte_set, second_byte_set],
      [second_byte_set | penultimate_byte_set],
@@ -43,7 +44,7 @@ S.push(byte_bit)
 
 # Code
 ass(LSHIFT)
-lit(2)
+lit(1)
 ass(SWAP)
 ass(RSHIFT)
 ass(OR)
@@ -54,14 +55,4 @@ ass(XOR)
 ass(AND)
 
 # Test
-for i in range(len(correct)):
-    print("Data stack: {}".format(S))
-    print("Correct stack: {}\n".format(correct[i]))
-    if str(correct[i]) != str(S):
-        print("Error in logic tests: PC = {:#x}".format(PC.get()))
-        sys.exit(1)
-    _, inst = disassemble_instruction(PC.get())
-    print("I = {}".format(inst))
-    step()
-
-print("Logic tests ran OK")
+run_test("logic", VM, correct)

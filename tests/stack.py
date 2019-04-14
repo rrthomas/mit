@@ -1,6 +1,6 @@
 # Test the stack operators.
 #
-# (c) Reuben Thomas 1994-2019
+# (c) SMite authors 1994-2019
 #
 # The package is distributed under the MIT/X11 License.
 #
@@ -8,6 +8,7 @@
 # RISK.
 
 from smite import *
+from smite_test import *
 VM = State()
 VM.globalize(globals())
 
@@ -20,13 +21,15 @@ correct = [
     [1, 2, 3],
     [1, 2, 3, 0],
     [1, 2, 3, 3],
+    [1, 2, 3, 3, 1],
     [1, 2, 3],
-    [1, 2, 3, 1],
+    [1, 2, 3, 0],
     [1, 3, 2],
     [1, 3, 2, 1],
     [1, 3, 2, 3],
-    [1, 3, 2, 3, 1],
+    [1, 3, 2, 3, 0],
     [1, 3, 3, 2],
+    [1, 3, 3, 2, 1],
     [1, 3, 3],
     [1, 3, 3, 0],
     [1, 3, 3, 3],
@@ -49,13 +52,15 @@ lit(2)
 lit(3)
 lit(0)
 ass(DUP)
-ass(POP)
 lit(1)
+ass(POP)
+lit(0)
 ass(SWAP)
 lit(1)
 ass(DUP)
-lit(1)
+lit(0)
 ass(SWAP)
+lit(1)
 ass(POP)
 lit(0)
 ass(DUP)
@@ -72,14 +77,4 @@ lit(0)
 ass(DUP)
 
 # Test
-for i in range(len(correct)):
-    print("Data stack: {}".format(S))
-    print("Correct stack: {}\n".format(correct[i]))
-    if str(correct[i]) != str(S):
-        print("Error in stack tests: PC = {:#x}".format(PC.get()))
-        sys.exit(1)
-    _, inst = disassemble_instruction(PC.get())
-    print("I = {}".format(inst))
-    step()
-
-print("Stack tests ran OK")
+run_test("stack", VM, correct)

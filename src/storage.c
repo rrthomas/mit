@@ -1,6 +1,6 @@
-// Allocate storage for the registers and memory.
+// Manage storage for the state, registers and memory.
 //
-// (c) Reuben Thomas 1994-2018
+// (c) SMite authors 1994-2019
 //
 // The package is distributed under the MIT/X11 License.
 //
@@ -25,6 +25,8 @@ const smite_UWORD smite_word_mask = smite_WORD_MASK;
 const smite_UWORD smite_uword_max = smite_UWORD_MAX;
 const smite_WORD smite_word_min = smite_WORD_MIN;
 const smite_WORD smite_word_max = smite_WORD_MAX;
+const smite_UWORD smite_instruction_bit = SMITE_INSTRUCTION_BIT;
+const smite_UWORD smite_instruction_mask = SMITE_INSTRUCTION_MASK;
 
 
 // Utility functions
@@ -42,52 +44,52 @@ _GL_ATTRIBUTE_CONST int smite_is_aligned(smite_UWORD addr)
 
 // Memory
 
-_GL_ATTRIBUTE_PURE uint8_t *smite_native_address_of_range(smite_state *S, smite_UWORD addr, smite_UWORD length)
+_GL_ATTRIBUTE_PURE uint8_t *smite_native_address_of_range(smite_state *S, smite_UWORD addr, smite_UWORD len)
 {
-    return native_address_of_range(S, addr, length);
+    return native_address_of_range(S, addr, len);
 }
 
-int smite_load_word(smite_state *S, smite_UWORD addr, smite_WORD *value)
+int smite_load_word(smite_state *S, smite_UWORD addr, smite_WORD *val_ptr)
 {
-    return load_word(S, addr, value);
+    return load_word(S, addr, val_ptr);
 }
 
-int smite_store_word(smite_state *S, smite_UWORD addr, smite_WORD value)
+int smite_store_word(smite_state *S, smite_UWORD addr, smite_WORD val)
 {
-    return store_word(S, addr, value);
+    return store_word(S, addr, val);
 }
 
-int smite_load_byte(smite_state *S, smite_UWORD addr, smite_BYTE *value)
+int smite_load_byte(smite_state *S, smite_UWORD addr, smite_BYTE *val_ptr)
 {
-    return load_byte(S, addr, value);
+    return load_byte(S, addr, val_ptr);
 }
 
-int smite_store_byte(smite_state *S, smite_UWORD addr, smite_BYTE value)
+int smite_store_byte(smite_state *S, smite_UWORD addr, smite_BYTE val)
 {
-    return store_byte(S, addr, value);
+    return store_byte(S, addr, val);
 }
 
 
 // Stacks
 
-int smite_load_stack(smite_state *S, smite_UWORD pos, smite_WORD *v)
+int smite_load_stack(smite_state *S, smite_UWORD pos, smite_WORD *val_ptr)
 {
-    return load_stack(S, pos, v);
+    return load_stack(S, pos, val_ptr);
 }
 
-int smite_store_stack(smite_state *S, smite_UWORD pos, smite_WORD v)
+int smite_store_stack(smite_state *S, smite_UWORD pos, smite_WORD val)
 {
-    return store_stack(S, pos, v);
+    return store_stack(S, pos, val);
 }
 
-int smite_pop_stack(smite_state *S, smite_WORD *v)
+int smite_pop_stack(smite_state *S, smite_WORD *val_ptr)
 {
-    return pop_stack(S, v);
+    return pop_stack(S, val_ptr);
 }
 
-int smite_push_stack(smite_state *S, smite_WORD v)
+int smite_push_stack(smite_state *S, smite_WORD val)
 {
-    return push_stack(S, v);
+    return push_stack(S, val);
 }
 
 
@@ -106,19 +108,19 @@ static int smite_realloc(smite_WORD **ptr, smite_UWORD old_size, smite_UWORD new
     return SMITE_ERR_OK;
 }
 
-int smite_realloc_memory(smite_state *S, smite_UWORD size)
+int smite_realloc_memory(smite_state *S, smite_UWORD memory_size)
 {
-    int ret = smite_realloc(&S->memory, S->MEMORY / WORD_SIZE, size);
+    int ret = smite_realloc(&S->memory, S->MEMORY / WORD_SIZE, memory_size);
     if (ret == 0)
-        S->MEMORY = size * WORD_SIZE;
+        S->MEMORY = memory_size * WORD_SIZE;
     return ret;
 }
 
-int smite_realloc_stack(smite_state *S, smite_UWORD size)
+int smite_realloc_stack(smite_state *S, smite_UWORD stack_size)
 {
-    int ret = smite_realloc(&S->S0, S->STACK_SIZE, size);
+    int ret = smite_realloc(&S->S0, S->STACK_SIZE, stack_size);
     if (ret == 0)
-        S->STACK_SIZE = size;
+        S->STACK_SIZE = stack_size;
     return ret;
 }
 
@@ -155,14 +157,14 @@ void smite_destroy(smite_state *S)
     free(S);
 }
 
-#define R_RO(reg, type, utype)                          \
+#define R_RO(reg, type, utype)                                      \
     _GL_ATTRIBUTE_PURE type smite_get_ ## reg(smite_state *S) {     \
-        return S->reg;                                  \
+        return S->reg;                                              \
     }
-#define R(reg, type, utype)                         \
-    R_RO(reg, type, utype)                          \
-    void smite_set_ ## reg(smite_state *S, type value) {        \
-        S->reg = value;                             \
+#define R(reg, type, utype)                                   \
+    R_RO(reg, type, utype)                                    \
+    void smite_set_ ## reg(smite_state *S, type val) {        \
+        S->reg = val;                                         \
     }
 #include "registers.h"
 #undef R

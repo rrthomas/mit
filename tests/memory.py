@@ -1,7 +1,7 @@
 # Test the memory operators. Also uses previously tested instructions.
 # See errors.py for address error handling tests.
 #
-# (c) Reuben Thomas 1994-2018
+# (c) SMite authors 1994-2019
 #
 # The package is distributed under the MIT/X11 License.
 #
@@ -9,6 +9,7 @@
 # RISK.
 
 from smite import *
+from smite_test import *
 size = 4096
 VM = State(size)
 VM.globalize(globals())
@@ -28,6 +29,7 @@ correct = [
     [size * word_size - word_size, 0],
     [size * word_size - word_size, size * word_size - word_size],
     [size * word_size - word_size, 513],
+    [size * word_size - word_size, 513, 1],
     [size * word_size - word_size],
     [size * word_size - word_size, 0],
     [size * word_size - word_size, size * word_size - word_size],
@@ -38,10 +40,10 @@ correct = [
     [],
     [size * word_size - word_size],
     [(0x02 << (word_bit - byte_bit)) | 0x0201],
+    [(0x02 << (word_bit - byte_bit)) | 0x0201, 1],
     [],
     [0],
     [],
-    [word_size],
 ]
 
 # Test code
@@ -56,6 +58,7 @@ ass(STORE)
 lit(0)
 ass(DUP)
 ass(LOAD)
+lit(1)
 ass(POP)
 lit(0)
 ass(DUP)
@@ -66,20 +69,10 @@ lit(size * word_size - 1)
 ass(STOREB)
 lit(size * word_size - word_size)
 ass(LOAD)
+lit(1)
 ass(POP)
 ass(GET_STACK_DEPTH)
 ass(SET_STACK_DEPTH)
-ass(GET_WORD_SIZE)
 
 # Test
-for i in range(len(correct)):
-    print("Data stack: {}".format(S))
-    print("Correct stack: {}\n".format(correct[i]))
-    if str(correct[i]) != str(S):
-        print("Error in memory tests: PC = {:#x}".format(PC.get()))
-        sys.exit(1)
-    _, inst = disassemble_instruction(PC.get())
-    print("I = {}".format(inst))
-    step()
-
-print("Memory tests ran OK")
+run_test("memory", VM, correct)

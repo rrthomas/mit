@@ -1,6 +1,6 @@
 # Python bindings Makefile.am
 #
-# (c) Reuben Thomas 2019
+# (c) SMite authors 2019
 #
 # The package is distributed under the MIT/X11 License.
 #
@@ -12,8 +12,10 @@ man_MANS = @PACKAGE@-dump.1 @PACKAGE@-shell.1
 pkgpython_PYTHON =			\
 	@PACKAGE@/__init__.py		\
 	@PACKAGE@/__main__.py		\
+	@PACKAGE@/assembler.py		\
+	@PACKAGE@/binding.py		\
 	@PACKAGE@/vm_data.py		\
-	@PACKAGE@/vm_data_extra.py	\
+	@PACKAGE@/ext.py	\
 	@PACKAGE@/instruction_gen.py
 
 loc:
