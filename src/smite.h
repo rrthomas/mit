@@ -169,7 +169,7 @@ static inline int load_word(smite_state *S, smite_UWORD addr, smite_WORD *val_pt
         S->BAD = addr;
         return SMITE_ERR_MEMORY_READ;
     }
-    if (!smite_is_aligned(addr)) {
+    if (!is_aligned(addr)) {
         S->BAD = addr;
         return SMITE_ERR_MEMORY_UNALIGNED;
     }
@@ -184,7 +184,7 @@ static inline int store_word(smite_state *S, smite_UWORD addr, smite_WORD val)
         S->BAD = addr;
         return SMITE_ERR_MEMORY_WRITE;
     }
-    if (!smite_is_aligned(addr)) {
+    if (!is_aligned(addr)) {
         S->BAD = addr;
         return SMITE_ERR_MEMORY_UNALIGNED;
     }
