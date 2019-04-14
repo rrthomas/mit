@@ -15,7 +15,7 @@
 #include "mit/features.h"
 
 
-mit_WORD mit_trace_run(mit_state *state, FILE *trace_fp)
+mit_WORD mit_trace_run(mit_state * restrict state, FILE *trace_fp)
 {
     int ret = 0;
     do {

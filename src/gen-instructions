@@ -42,7 +42,7 @@ print('''\
         S->PC += mit_WORD_BYTES;                              \\
     } while (0)
 
-mit_WORD mit_single_step(mit_state *S) {
+mit_WORD mit_single_step(mit_state * restrict S) {
     mit_UWORD initial_PC = S->PC;
     mit_UWORD initial_I = S->I;
     mit_BYTE opcode = S->I & MIT_INSTRUCTION_MASK;
@@ -66,7 +66,7 @@ print('''
 }
 
 
-mit_WORD mit_run(mit_state *S)
+mit_WORD mit_run(mit_state * restrict S)
 {
     mit_WORD ret;
     while ((ret = mit_single_step(S)) == 0)
