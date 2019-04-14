@@ -1,4 +1,4 @@
-// Table of command-line options
+// Command-line options
 //
 // Copyright (c) 2009-2019 SMite authors
 //
