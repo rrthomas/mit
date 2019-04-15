@@ -204,7 +204,7 @@ int main(int argc, char *argv[])
         die("could not register atexit handler");
 
     if (smite_register_args(S, argc, argv + optind) != 0)
-        die("could not map command-line arguments");
+        die("could not register command-line arguments");
 
     // Load object file and report any error
     int fd = open(argv[optind], O_RDONLY);
