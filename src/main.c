@@ -102,7 +102,7 @@ static void exit_function(void)
 }
 
 FILE *trace_fp = NULL;
-static int trace_run(smite_state *state)
+static smite_WORD trace_run(smite_state *state)
 {
     int ret = 0;
     do {
@@ -235,7 +235,7 @@ int main(int argc, char *argv[])
         die("%s: %s", argv[optind], err);
 
     // Run code
-    int (*run_fn)(smite_state *) = trace_fp ? trace_run : smite_run;
+    smite_WORD (*run_fn)(smite_state *) = trace_fp ? trace_run : smite_run;
     for (;;) {
         int res;
         switch (res = run_fn(S)) {
