@@ -122,6 +122,7 @@ int main(int argc, char *argv[])
     bool core_dump = false;
     smite_UWORD memory_size = 0x100000U;
     smite_UWORD stack_size = 16384U;
+    smite_WORD (*run_fn)(smite_state *) = smite_run;
 
     // Options string starts with '+' to stop option processing at first
     // non-option, then leading ':' so as to return ':' for a missing arg,
@@ -235,7 +236,6 @@ int main(int argc, char *argv[])
         die("%s: %s", argv[optind], err);
 
     // Run code
-    smite_WORD (*run_fn)(smite_state *) = trace_fp ? trace_run : smite_run;
     for (;;) {
         int res;
         switch (res = run_fn(S)) {

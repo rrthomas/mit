@@ -19,6 +19,7 @@ OPT("trace", '\0', required_argument, "FILE",
     "write dynamic instruction trace to FILE",
     {
         trace_fp = fopen(optarg, "wb");
+        run_fn = trace_run;
         if (trace_fp == NULL)
             die("cannot not open file %s", optarg);
         warn("trace will be written to %s\n", optarg);
