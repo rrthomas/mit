@@ -45,6 +45,12 @@ smite_WORD smite_single_step(smite_state *S) {
     smite_UWORD initial_STACK_DEPTH = S->STACK_DEPTH;
     smite_BYTE opcode = S->I & SMITE_INSTRUCTION_MASK;
     S->I >>= SMITE_INSTRUCTION_BIT;
+
+    // Check STACK_DEPTH is valid
+    if (S->STACK_DEPTH > S->stack_size) {
+        S->BAD = S->STACK_DEPTH - S->stack_size;
+        RAISE(SMITE_ERR_STACK_OVERFLOW);
+    }
 ''')
 
 print(instruction_gen.dispatch(vm_data.Instructions, 'O_', '''\

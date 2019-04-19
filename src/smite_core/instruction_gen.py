@@ -252,11 +252,7 @@ def gen_case(instruction):
     effect = instruction.effect
     code = []
     if effect is not None:
-        code += [effect.declare_vars(), '''\
-    if (S->STACK_DEPTH > S->stack_size) {
-        S->BAD = S->STACK_DEPTH - S->stack_size;
-        RAISE(SMITE_ERR_STACK_OVERFLOW);
-    }''']
+        code.append(effect.declare_vars())
         if 'COUNT' in effect.items:
             # If we have COUNT, check its stack position is valid, and load it
             code += [
