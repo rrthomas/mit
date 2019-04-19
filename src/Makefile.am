@@ -12,21 +12,21 @@ PYTHON_WITH_PATH = export PYTHONPATH=$(top_srcdir)/python:$(top_builddir)/src; $
 
 lib_LTLIBRARIES = libsmite.la
 C_SRCS = storage.c object.c
-GENERATED_SRCS = registers.h opcodes.h ext-opcodes.h instructions.c ext.c
-SMITE_CORE_SRCS = smite_core/vm_data.py smite_core/ext.py smite_core/instruction_gen.py
-libsmite_la_SOURCES = $(C_SRCS) $(GENERATED_SRCS)
+LIB_GENERATED_SRCS = registers.h opcodes.h ext-opcodes.h instructions.c ext.c
+LIB_CORE_SRCS = smite_core/vm_data.py smite_core/ext.py smite_core/instruction_gen.py
+libsmite_la_SOURCES = $(C_SRCS) $(LIB_GENERATED_SRCS)
 libsmite_la_LIBADD = $(top_builddir)/lib/libgnu.la
 libsmite_la_LDFLAGS = -no-undefined -export-symbols-regex '^smite_.*'
 
 bin_PROGRAMS = smite$(EXEEXT)
 man_MANS = @PACKAGE@.1
 smite_LDADD = lib@PACKAGE@.la $(top_builddir)/lib/libgnu.la
-smite_SOURCES = main.c opts.h @PACKAGE@.h
+smite_SOURCES = main.c @PACKAGE@.h
 nodist_pkginclude_HEADERS = opcodes.h ext-opcodes.h
 
 step.lo: instructions.c
 object.lo step.lo storage.lo main.o: registers.h opcodes.h ext-opcodes.h
-main.o: opts.h registers.h
+main.o: gen-main registers.h
 
 # Depend on @PACKAGE@$(EXEEXT) rather than explicitly make-ing it, as otherwise
 # we break parallel builds, as lib@PACKAGE@.la can be built twice in parallel,
@@ -65,27 +65,32 @@ smite_core/type_sizes.py: $(top_builddir)/config.status gen-type-sizes collate-t
 ext.c: gen-ext smite_core/ext.py smite_core/instruction_gen.py smite_core/type_sizes.py
 	$(PYTHON_WITH_PATH) $(srcdir)/gen-ext > ext.c || rm -f ext.c
 
+main.c: $(srcdir)/feature/*.py gen-main
+	$(PYTHON_WITH_PATH) $(builddir)/gen-main $(srcdir)/feature > main.c || rm -f main.c
+
 loc:
 	$(SLOCCOUNT) \
 		$(C_SRCS) \
 		$(@PACKAGE@_SOURCES) \
-		$(SMITE_CORE_SRCS) \
-		gen-registers gen-opcodes gen-ext-opcodes gen-instructions gen-ext
+		$(LIB_CORE_SRCS) \
+		gen-registers gen-opcodes gen-ext-opcodes gen-instructions gen-ext gen-main.in
 
 EXTRA_DIST = \
-	$(SMITE_CORE_SRCS) \
+	$(LIB_CORE_SRCS) \
 	gen-registers \
 	gen-opcodes \
 	gen-instructions \
+	gen-main.in \
 	gen-ext-opcodes \
 	gen-ext \
 	gen-type-sizes \
-	collate-type-sizes
+	collate-type-sizes \
+	$(srcdir)/feature/*.py
 
 distclean-local:
 	rm -rf autom4te.cache smite_core/__pycache__
 
-DISTCLEANFILES = @PACKAGE@.1 instructions.c ext.c type-sizes.ac type-sizes config.log smite_core/type_sizes.py
+DISTCLEANFILES = @PACKAGE@.1 instructions.c main.c ext.c type-sizes.ac type-sizes config.log smite_core/type_sizes.py
 # Ignore built files that are part of the distribution (specifically,
 # @PACKAGE@.1)
 distcleancheck_listfiles = \
