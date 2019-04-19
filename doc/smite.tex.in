@@ -206,7 +206,7 @@ different types of stack item are shown in table~\ref{typetable}.
 \begin{center}
 \begin{tabular}{cl} \toprule
 \bf Symbol & \bf Data type \\ \midrule
-\spic{flag} & a Boolean flag, $1$ for true and $0$ for false \\
+\spic{flag} & a Boolean flag, $0$ for false or $1$ for true; other non-zero values are also treated as true \\
 \spic{size} & an integer in the range $0$ to $\log_2{\tt WORD\_BYTES}$ inclusive. \\
 \spic{n} & signed number \\
 \spic{u} & unsigned number \\
