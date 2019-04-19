@@ -12,17 +12,18 @@ PYTHON_WITH_PATH = export PYTHONPATH=$(top_srcdir)/python:$(top_builddir)/src; $
 
 lib_LTLIBRARIES = libsmite.la
 C_SRCS = storage.c object.c
-LIB_GENERATED_SRCS = registers.h opcodes.h ext-opcodes.h instructions.c ext.c
+nodist_LIB_SRCS = registers.h opcodes.h ext-opcodes.h instructions.c ext.c
 LIB_CORE_SRCS = smite_core/vm_data.py smite_core/ext.py smite_core/instruction_gen.py
-libsmite_la_SOURCES = $(C_SRCS) $(LIB_GENERATED_SRCS)
+nodist_libsmite_la_SOURCES = $(C_SRCS) $(nodist_LIB_SRCS)
 libsmite_la_LIBADD = $(top_builddir)/lib/libgnu.la
 libsmite_la_LDFLAGS = -no-undefined -export-symbols-regex '^smite_.*'
 
 bin_PROGRAMS = smite$(EXEEXT)
 man_MANS = @PACKAGE@.1
 smite_LDADD = lib@PACKAGE@.la $(top_builddir)/lib/libgnu.la
-smite_SOURCES = main.c @PACKAGE@.h
+nodist_smite_SOURCES = main.c
 nodist_pkginclude_HEADERS = opcodes.h ext-opcodes.h
+pkginclude_HEADERS = @PACKAGE@.h
 
 step.lo: instructions.c
 object.lo step.lo storage.lo main.o: registers.h opcodes.h ext-opcodes.h
@@ -77,6 +78,7 @@ loc:
 
 EXTRA_DIST = \
 	$(LIB_CORE_SRCS) \
+	$(C_SRCS) \
 	gen-registers \
 	gen-opcodes \
 	gen-instructions \
@@ -90,7 +92,10 @@ EXTRA_DIST = \
 distclean-local:
 	rm -rf autom4te.cache smite_core/__pycache__
 
-DISTCLEANFILES = @PACKAGE@.1 instructions.c main.c ext.c type-sizes.ac type-sizes config.log smite_core/type_sizes.py
+DISTCLEANFILES = @PACKAGE@.1 \
+	$(nodist_LIB_SRCS) \
+	$(nodist_smite_SOURCES) \
+	type-sizes.ac type-sizes config.log smite_core/type_sizes.py
 # Ignore built files that are part of the distribution (specifically,
 # @PACKAGE@.1)
 distcleancheck_listfiles = \
