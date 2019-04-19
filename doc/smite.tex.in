@@ -96,7 +96,7 @@ The registers are word quantities; they are listed, with their functions, in tab
 {\tt PC} & The {\tt P}rogram {\tt C}ounter. Points to the next word from which {\tt I} may be loaded. \\
 {\tt I} & The {\tt I}nstruction register. Contains instructions to be executed. \\
 {\tt BAD} & The invalid stack position, or invalid or unaligned memory address, that last caused an error. \\
-{\tt STACK\_DEPTH} & The number of items on the stack. \\
+{\tt STACK\_DEPTH} & The number of words on the stack. \\
 {\tt ENDISM} & The endianness of @PACKAGE_NAME@: 0 = Little-endian, 1 = Big-endian. \\
 {\tt WORD\_BYTES} & The number of bytes in a word. Must be in the range $2$ to $32$ inclusive, and a power of $2$. \\
  \bottomrule
@@ -115,8 +115,7 @@ lowest address.
 
 \subsection{Stack}
 
-The stack is a LIFO stack of words used for passing values to instructions and routines and for holding subroutine return addresses. To {\bf push} an item on to
-the stack means to add a new item to the top of the stack, increasing the stack depth by $1$; to {\bf pop} an item means to reduce the stack depth by $1$. Instructions that change the number of items on the stack implicitly pop their arguments and push their results.
+The stack is a LIFO stack of words used for passing values to instructions and routines and for holding subroutine return addresses. To {\bf push} a word on to the stack means to add a new word to the top of the stack, increasing the stack depth by $1$; to {\bf pop} a word means to reduce the stack depth by $1$. Instructions that change the number of words on the stack implicitly pop their arguments and push their results.
 
 
 \subsection{Operation}
@@ -198,9 +197,7 @@ are a representation of the top-most items on the stack, and are written
 
 \centerline{\spic{i$_1$ i$_2$\dots i$_{n-1}$ i$_n$}}
 
-\noindent where the \spic{i$_k$} are stack items, each of which occupies a whole number of
-words, with \spic{i$_n$} being on top of the stack. The symbols denoting
-different types of stack item are shown in table~\ref{typetable}.
+\noindent where the \spic{i$_k$} are stack items, each of which occupies a whole number of words,\footnote{In this specification, each stack item occupies \emph{precisely} one word.} with \spic{i$_n$} being on top of the stack. The symbols denoting different types of stack item are shown in table~\ref{typetable}.
 
 \begin{table}[htbp]
 \begin{center}
@@ -242,16 +239,12 @@ shows the subtype relationships. The subtype relation is transitive.
 \end{table}
 
 Numbers are represented in twos complement form. \spic{addr} consists of all
-valid virtual machine addresses. Numeric constants can be included in
-stack pictures, and are of type \spic{n{\tt |}u}.
+valid virtual machine addresses.
 
 Each type may be suffixed by a number in stack pictures; if the same combination
-of type and suffix appears more than once in a stack effect, it refers to
-identical stack items. Alternative \spic{after} pictures are separated by ``{\tt
-|}'', and the circumstances under which each occurs are detailed in the
-instruction description.
+of type and suffix appears more than once in a stack effect, it refers each time to the identical stack item.
 
-Ellipsis is used for indeterminate numbers of specified types of word.
+Ellipsis is used for indeterminate numbers of specified types of item.
 
 
 \subsection{Instruction fetch}
@@ -283,8 +276,8 @@ These instructions manage the stack:
 \begin{description}
 \inst{POP}{x —}{Remove \spic{x} from the stack.}
 \inst{DUP}{\x{u}\dots\x0 u — \x{u}\dots\x0 \x{u}}{Remove \spic{u}. Copy \x{u} to the top of the stack.}
-\inst{SWAP}{\x{u+1}\dots\x0 u — \x0 \x{u}\dots\x1 \x{u+1}}{Exchange the top stack item with the \spic{u+1}th.}
-\inst{GET\_STACK\_DEPTH}{— u}{\spic{u} is the value of {\tt STACK\_DEPTH}, the number of items on the stack.}
+\inst{SWAP}{\x{u+1}\dots\x0 u — \x0 \x{u}\dots\x1 \x{u+1}}{Exchange the top stack word with the \spic{u+1}th.}
+\inst{GET\_STACK\_DEPTH}{— u}{\spic{u} is the value of {\tt STACK\_DEPTH}, the number of words on the stack.}
 \inst{SET\_STACK\_DEPTH}{u —}{Set {\tt STACK\_DEPTH} to \spic{u}.}
 \end{description}
 
