@@ -122,7 +122,7 @@ int smite_is_aligned(smite_UWORD addr, unsigned size);
 // Inline functions
 _GL_ATTRIBUTE_CONST static inline smite_UWORD align(smite_UWORD addr, unsigned size)
 {
-    return (addr + (1 << size) - 1) & -(1 << size);
+    return (addr + ((1 << size) - 1)) & -(1 << size);
 }
 
 _GL_ATTRIBUTE_CONST static inline int is_aligned(smite_UWORD addr, unsigned size)
