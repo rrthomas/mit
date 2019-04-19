@@ -139,19 +139,20 @@ uint8_t *smite_native_address_of_range(smite_state *S, smite_UWORD addr, smite_U
 */
 
 int smite_load(smite_state *S, smite_UWORD addr, unsigned size, smite_WORD *val_ptr);
-/* Copy `size` bytes from `addr` to `val_ptr`.
+/* Copy 1 << `size` bytes from `addr` to `val_ptr`.
 
-   `size` must be a power of 2, between 1 and WORD_BYTES inclusive.
-   `addr` must be `size`-aligned.
+   `size` must be between 0 and log2(WORD_BYTES) inclusive.
+   `addr` must be 1 << `size`-aligned.
 
    Return 0 if OK, or error code if `addr` is invalid or unaligned.
 */
 
 int smite_store(smite_state *S, smite_UWORD addr, unsigned size, smite_WORD val);
-/* Store the `size` least-significant bytes of `val` at virtual address `addr`.
+/* Store the 1 << `size` least-significant bytes of `val` at virtual address
+   `addr`.
 
-   `size` must be a power of 2, between 1 and WORD_BYTES inclusive.
-   `addr` must be `size`-aligned.
+   `size` must be between 0 and log2(WORD_BYTES) inclusive.
+   `addr` must be 1 << `size`-aligned.
 
    Return 0 if OK, or error code if `addr` is invalid or unaligned.
 */

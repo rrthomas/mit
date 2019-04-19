@@ -368,8 +368,8 @@ If a given address is incorrectly aligned, raise error $7$, setting {\tt BAD} to
 
 \nopagebreak
 \begin{description}
-\inst{LOAD}{addr size — x}{Load the $2^{\spic{size}}$-byte quantity \spic{x} stored at \spic{addr}, which must be a multiple of \spic{size}. Any unused high-order bits are set to zero.}
-\inst{STORE}{x addr size —}{Store the $2^{\spic{size}}$ least-significant bytes of \spic{x} at \spic{addr}, which must be a multiple of \spic{size}.}
+\inst{LOAD}{addr size — x}{Load the $2^{\spic{size}}$-byte quantity \spic{x} stored at \spic{addr}, which must be a multiple of $2^{\spic{size}}$. Any unused high-order bits are set to zero.}
+\inst{STORE}{x addr size —}{Store the $2^{\spic{size}}$ least-significant bytes of \spic{x} at \spic{addr}, which must be a multiple of $2^{\spic{size}}$.}
 \end{description}
 
 
