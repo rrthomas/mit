@@ -77,10 +77,8 @@ This paper gives a full description of @PACKAGE_NAME@.
 \section{Architecture}
 
 @PACKAGE_NAME@'s address unit is the byte, which is eight bits.
-Words are {\tt WORD\_BYTES} bytes. Most of the quantities on which @PACKAGE_NAME@ operates are words.
-The size of the byte and range of word sizes allowed have been chosen with a view to making efficient implementation possible on the vast majority of current machine architectures.
-
-Words have the bytes stored in big-endian or little-endian order, according to {\tt ENDISM}.
+Most of the quantities on which @PACKAGE_NAME@ operates are fixed-size words, which are stored in memory in either big- or little-endian order.
+These parameters enable efficient implementation on the vast majority of machine architectures.
 
 
 \subsection{Registers}
