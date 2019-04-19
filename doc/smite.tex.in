@@ -421,8 +421,8 @@ Table~\ref{opcodetable} lists the instruction opcodes in numerical order. Other 
 \opcodetbl{09}{AND}		{19}{STORE}
 \opcodetbl{0a}{OR}		{1a}{LIT}
 \opcodetbl{0b}{XOR}		{1b}{LIT\_PC\_REL}
-\opcodetblone{0c}{LSHIFT}	{1c}{LIT\_0}
-\opcodetblone{0d}{RSHIFT}	{1d}{LIT\_1}
+\opcodetbl{0c}{LSHIFT}		{1c}{LIT\_0}
+\opcodetbl{0d}{RSHIFT}		{1d}{LIT\_1}
 \opcodetbl{0e}{ARSHIFT}		{1e}{EXT}
 \opcodetbl{0f}{SIGN\_EXTEND}	{1f}{HALT}
  \bottomrule
