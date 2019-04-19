@@ -86,7 +86,7 @@ Words have the bytes stored in big-endian or little-endian order, according to {
 \subsection{Registers}
 \label{registers}
 
-The registers are word quantities; they are listed, with their functions, in table~\ref{regtable}.
+The registers are word quantities; they are listed, with their functions, in table~\ref{regtable}. Registers without fixed values are initialised to~$0$.
 
 \begin{table}[htbp]
 \begin{center}
@@ -97,8 +97,8 @@ The registers are word quantities; they are listed, with their functions, in tab
 {\tt I} & The {\tt I}nstruction register. Contains instructions to be executed. \\
 {\tt BAD} & The invalid stack position, or invalid or unaligned memory address, that last caused an error. \\
 {\tt STACK\_DEPTH} & The number of words on the stack. \\
-{\tt ENDISM} & The endianness of @PACKAGE_NAME@: 0 = Little-endian, 1 = Big-endian. \\
-{\tt WORD\_BYTES} & The number of bytes in a word. Must be in the range $2$ to $32$ inclusive, and a power of $2$. \\
+{\tt ENDISM} & The endianness of @PACKAGE_NAME@: 0 = Little-endian, 1 = Big-endian. Fixed for a particular instance of @PACKAGE_NAME@. \\
+{\tt WORD\_BYTES} & The number of bytes in a word. Must be in the range $2$ to $32$ inclusive, and a power of $2$. Fixed for a particular instance of @PACKAGE_NAME@. \\
  \bottomrule
 \end{tabular}
 \caption{\label{regtable}Registers}
@@ -118,12 +118,7 @@ lowest address.
 The stack is a LIFO stack of words used for passing values to instructions and routines and for holding subroutine return addresses. To {\bf push} a word on to the stack means to add a new word to the top of the stack, increasing the stack depth by $1$; to {\bf pop} a word means to reduce the stack depth by $1$. Instructions that change the number of words on the stack implicitly pop their arguments and push their results.
 
 
-\subsection{Operation}
-\label{operation}
-
-Before @PACKAGE_NAME@ is started, {\tt ENDISM} should be set to $0$ or $1$ according to the implementation, and {\tt WORD\_BYTES} to the appropriate value. The other registers should be initialised to~$0$.
-
-{\tt ENDISM} and {\tt WORD\_BYTES} must not change.
+\subsection{Execution}
 
 Execution proceeds as follows:
 
