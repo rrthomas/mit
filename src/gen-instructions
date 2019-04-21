@@ -25,7 +25,6 @@ print('''\
         int error = (code);                                   \\
         S->PC = initial_PC;                                   \\
         S->I = initial_I;                                     \\
-        S->STACK_DEPTH = initial_STACK_DEPTH;                 \\
         return error;                                         \\
     } while (0)
 
@@ -42,7 +41,6 @@ print('''\
 smite_WORD smite_single_step(smite_state *S) {
     smite_UWORD initial_PC = S->PC;
     smite_UWORD initial_I = S->I;
-    smite_UWORD initial_STACK_DEPTH = S->STACK_DEPTH;
     smite_BYTE opcode = S->I & SMITE_INSTRUCTION_MASK;
     S->I >>= SMITE_INSTRUCTION_BIT;
 

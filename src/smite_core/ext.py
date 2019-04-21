@@ -243,9 +243,13 @@ SMiteLib = Enum('SMiteLib', smite_lib)
 class Library(Instruction):
     '''Wrap an Instruction enumeration as a library.'''
     def __init__(self, opcode, library):
-        super().__init__(opcode, ['function'], [], '''\
+        super().__init__(opcode, None, None, '''\
 {{
-    int ret = extra_{}(S, function);
+    smite_WORD function;
+    int ret = pop_stack(S, &function);
+    if (ret != 0)
+        RAISE(ret);
+    ret = extra_{}(S, function);
     if (ret != 0)
         RAISE(ret);
 }}''')
