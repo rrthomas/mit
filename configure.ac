@@ -89,9 +89,9 @@ AX_C_ARITHMETIC_RSHIFT
 
 # Set size of word
 AC_CHECK_SIZEOF([size_t])
-AC_ARG_VAR([DEFAULT_WORD_SIZE],
-  [default value of WORD_SIZE register [default: sizeof(size_t)]])
-: "${DEFAULT_WORD_SIZE=SIZEOF_SIZE_T}"
+AC_ARG_VAR([DEFAULT_WORD_BYTES],
+  [default value of WORD_BYTES register [default: sizeof(size_t)]])
+: "${DEFAULT_WORD_BYTES=SIZEOF_SIZE_T}"
 
 # Generate output files
 AC_CONFIG_HEADERS([config.h])

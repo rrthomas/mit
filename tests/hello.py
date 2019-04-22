@@ -14,7 +14,7 @@ VM.globalize(globals())
 
 # Assemble test code
 
-# Address in next line = instructions + word_size × literals
+# Address in next line = instructions + word_bytes × literals
 code_len = 0
 # Hack: two-pass assembly to calculate code_len
 for i in range(2):

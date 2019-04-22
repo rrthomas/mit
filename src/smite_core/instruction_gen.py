@@ -97,8 +97,9 @@ class StackEffect:
 
     If the instruction is variadic, a pseudo-item 'ITEMS' represents the
     unnamed items; one of the arguments above that must be 'COUNT', which is
-    the number of words in 'ITEMS'. 'ITEMS', if used, may not move relative
-    to the bottom of the stack between 'args' and 'results'.
+    the number of words in 'ITEMS'. If 'ITEMS' appears in 'results', it must
+    be at the same position relative to the bottom of the stack as in
+    'args'.
 
     'args' and 'results' are augmented with an extra field 'depth' which
     gives the stack position of their top-most word, and is either int or
@@ -147,7 +148,7 @@ class StackEffect:
                 depth = '{} + {}'.format(depth, item.size)
 
     # In load_item & store_item, casts to size_t avoid warnings when `var` is
-    # a pointer and sizeof(void *) > WORD_SIZE, but the effect is identical.
+    # a pointer and sizeof(void *) > WORD_BYTES, but the effect is identical.
     def load_item(self, item):
         '''Load `item` from the stack to its C variable.'''
         code = ['{} = 0;'.format(item.name)]
@@ -233,8 +234,8 @@ def check_overflow(num_pops, num_pushes):
     popped.
     '''
     return disable_warnings(['-Wtype-limits', '-Wtautological-compare', '-Wsign-compare', '-Wstrict-overflow'], '''\
-if ({num_pushes} > {num_pops} && (S->STACK_SIZE - S->STACK_DEPTH < {num_pushes} - {num_pops})) {{
-    S->BAD = ({num_pushes} - {num_pops}) - (S->STACK_SIZE - S->STACK_DEPTH);
+if ({num_pushes} > {num_pops} && (S->stack_size - S->STACK_DEPTH < {num_pushes} - {num_pops})) {{
+    S->BAD = ({num_pushes} - {num_pops}) - (S->stack_size - S->STACK_DEPTH);
     RAISE(SMITE_ERR_STACK_OVERFLOW);
 }}'''.format(num_pops=num_pops, num_pushes=num_pushes))
 
@@ -252,8 +253,8 @@ def gen_case(instruction):
     code = []
     if effect is not None:
         code += [effect.declare_vars(), '''\
-    if (S->STACK_DEPTH > S->STACK_SIZE) {
-        S->BAD = S->STACK_DEPTH - S->STACK_SIZE;
+    if (S->STACK_DEPTH > S->stack_size) {
+        S->BAD = S->STACK_DEPTH - S->stack_size;
         RAISE(SMITE_ERR_STACK_OVERFLOW);
     }''']
         if 'COUNT' in effect.items:

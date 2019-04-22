@@ -33,7 +33,7 @@ correct = [
     [1, 3, 3],
     [1, 3, 3, 0],
     [1, 3, 3, 3],
-    [1, 3, 3, 3, 0],
+    [1, 3, 3, 3, 4],
     [],
     [2],
     [2, 1],
@@ -64,8 +64,8 @@ lit(1)
 ass(POP)
 lit(0)
 ass(DUP)
-lit(0)
-ass(SET_STACK_DEPTH)
+lit(4)
+ass(POP)
 lit(2)
 lit(1)
 lit(0)

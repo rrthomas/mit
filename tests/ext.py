@@ -35,26 +35,26 @@ ass(EXT)
 lit(LIB_C_ARGC)
 lit(LIB_C)
 ass(EXT)
-breaks.append(label() + word_size)
+breaks.append(label() + word_bytes)
 
 # Test LIB_C_ARG
 lit(1)
 lit(LIB_C_ARG)
 lit(LIB_C)
 ass(EXT)
-for i in range(sizeof(c_char_p) // word_size):
-    lit(sizeof(c_char_p) // word_size - 1)
+for i in range(sizeof(c_char_p) // word_bytes):
+    lit(sizeof(c_char_p) // word_bytes - 1)
     ass(DUP)
 lit(LIB_C_STRLEN)
 lit(LIB_C)
 ass(EXT)
-breaks.append(label() + word_size)
+breaks.append(label() + word_bytes)
 
 # Test LIB_C_STRNCPY
 lit(LIB_C_STRNCPY)
 lit(LIB_C)
 ass(EXT)
-breaks.append(label() + word_size)
+breaks.append(label() + word_bytes)
 
 # Run LIB_C_ARGC test
 step(addr=breaks[0])

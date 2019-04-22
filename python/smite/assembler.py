@@ -11,7 +11,7 @@ RISK.
 
 from .binding import (
     align, is_aligned,
-    word_size, word_bit, word_mask, instruction_bit, instruction_mask, sign_bit,
+    word_bytes, word_bit, word_mask, instruction_bit, instruction_mask, sign_bit,
 )
 from .vm_data import Instructions
 from .ext import LibInstructions
@@ -70,7 +70,7 @@ class Disassembler:
         if self.pc >= self.end:
             raise StopIteration
         word = self.state.M_word[self.pc] & word_mask
-        self.pc += word_size
+        self.pc += word_bytes
         return word
 
     def __iter__(self):
@@ -157,7 +157,7 @@ class Assembler:
         Inserts a word with value `value`.
         '''
         self.state.M_word[self.pc] = value
-        self.pc += word_size
+        self.pc += word_bytes
 
     def bytes(self, bytes):
         assert self.i_addr is None

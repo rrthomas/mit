@@ -18,14 +18,15 @@
 
 
 // Types and printf formats
-#define DEFAULT_WORD_SIZE SIZEOF_SIZE_T
-#ifndef WORD_SIZE
-#define WORD_SIZE DEFAULT_WORD_SIZE
+#define DEFAULT_WORD_BYTES SIZEOF_SIZE_T
+#ifndef WORD_BYTES
+#define WORD_BYTES DEFAULT_WORD_BYTES
 #endif
 typedef uint8_t smite_BYTE;
-#if WORD_SIZE == 4
+#if WORD_BYTES == 4
 typedef int32_t smite_WORD;
 typedef uint32_t smite_UWORD;
+#define smite_SIZE_WORD 2
 #define smite_WORD_MASK UINT32_MAX
 #define smite_UWORD_MAX UINT32_MAX
 #define smite_WORD_MIN INT32_MIN
@@ -33,9 +34,10 @@ typedef uint32_t smite_UWORD;
 #define PRI_WORD PRId32
 #define PRI_UWORD PRIu32
 #define PRI_XWORD "#"PRIx32
-#elif WORD_SIZE == 8
+#elif WORD_BYTES == 8
 typedef int64_t smite_WORD;
 typedef uint64_t smite_UWORD;
+#define smite_SIZE_WORD 3
 #define smite_WORD_MASK UINT64_MAX
 #define smite_UWORD_MAX UINT64_MAX
 #define smite_WORD_MIN INT64_MIN
@@ -44,19 +46,20 @@ typedef uint64_t smite_UWORD;
 #define PRI_UWORD PRIu64
 #define PRI_XWORD "#"PRIx64
 #else
-#error "WORD_SIZE must be 4 or 8!"
+#error "WORD_BYTES must be 4 or 8!"
 #endif
 typedef smite_WORD * smite_WORDP;
 #define PRI_XWORDP "p"
 
 // Constants
-extern const unsigned smite_word_size;
+extern const unsigned smite_word_bytes;
+extern const unsigned smite_size_word;
 #define smite_BYTE_BIT 8
 extern const unsigned smite_byte_bit;
 extern const unsigned smite_byte_mask;
 #define smite_BYTE_MASK ((1 << smite_BYTE_BIT) - 1)
 extern const unsigned smite_word_bit;
-#define smite_WORD_BIT (WORD_SIZE * smite_BYTE_BIT)
+#define smite_WORD_BIT (WORD_BYTES * smite_BYTE_BIT)
 extern const smite_UWORD smite_word_mask;
 extern const smite_UWORD smite_uword_max;
 extern const smite_WORD smite_word_min;
@@ -70,6 +73,9 @@ typedef struct {
 #undef R
 #undef R_RO
     smite_WORD *memory;
+    smite_UWORD memory_size;
+    smite_WORD *stack;
+    smite_UWORD stack_size;
     int main_argc;
     char **main_argv;
 } smite_state;
@@ -99,28 +105,29 @@ enum {
     SMITE_ERR_MEMORY_READ = 5,
     SMITE_ERR_MEMORY_WRITE = 6,
     SMITE_ERR_MEMORY_UNALIGNED = 7,
-    SMITE_ERR_DIVISION_BY_ZERO = 8,
+    SMITE_ERR_BAD_SIZE = 8,
+    SMITE_ERR_DIVISION_BY_ZERO = 9,
     SMITE_ERR_HALT = 128,
 };
 
 
 // Utility functions
 
-smite_UWORD smite_align(smite_UWORD addr);
-/* Return `addr` aligned to the next word boundary. */
+smite_UWORD smite_align(smite_UWORD addr, unsigned size);
+/* Return `addr` aligned to the next 2^`size`-byte boundary. */
 
-int smite_is_aligned(smite_UWORD addr);
-/* Return 1 if `addr` is aligned, or `0` if not.  */
+int smite_is_aligned(smite_UWORD addr, unsigned size);
+/* Return 1 if `addr` is a multiple of 2^`size`, or `0` if not. */
 
 // Inline functions
-_GL_ATTRIBUTE_CONST static inline smite_UWORD align(smite_UWORD addr)
+_GL_ATTRIBUTE_CONST static inline smite_UWORD align(smite_UWORD addr, unsigned size)
 {
-    return (addr + WORD_SIZE - 1) & -WORD_SIZE;
+    return (addr + ((1 << size) - 1)) & -(1 << size);
 }
 
-_GL_ATTRIBUTE_CONST static inline int is_aligned(smite_UWORD addr)
+_GL_ATTRIBUTE_CONST static inline int is_aligned(smite_UWORD addr, unsigned size)
 {
-    return (addr & (WORD_SIZE - 1)) == 0;
+    return (addr & ((1 << size) - 1)) == 0;
 }
 
 
@@ -131,87 +138,90 @@ uint8_t *smite_native_address_of_range(smite_state *S, smite_UWORD addr, smite_U
    in the range [addr, addr+len] is invalid.
 */
 
-int smite_load_word(smite_state *S, smite_UWORD addr, smite_WORD *val_ptr);
-/* Load the word at `addr` into the word pointed to by `val_ptr`.
+int smite_load(smite_state *S, smite_UWORD addr, unsigned size, smite_WORD *val_ptr);
+/* Copy 1 << `size` bytes from `addr` to `val_ptr`.
+
+   `size` must be between 0 and log2(WORD_BYTES) inclusive.
+   `addr` must be 1 << `size`-aligned.
 
    Return 0 if OK, or error code if `addr` is invalid or unaligned.
 */
 
-int smite_store_word(smite_state *S, smite_UWORD addr, smite_WORD val);
-/* Store the word `val` at virtual address `addr`.
+int smite_store(smite_state *S, smite_UWORD addr, unsigned size, smite_WORD val);
+/* Store the 1 << `size` least-significant bytes of `val` at virtual address
+   `addr`.
+
+   `size` must be between 0 and log2(WORD_BYTES) inclusive.
+   `addr` must be 1 << `size`-aligned.
 
    Return 0 if OK, or error code if `addr` is invalid or unaligned.
-*/
-
-int smite_load_byte(smite_state *S, smite_UWORD addr, smite_BYTE *val_ptr);
-/* Load the byte at `addr` into the byte pointed to by `val_ptr`.
-
-   Return 0 if OK, or error code if `addr` is invalid.
-*/
-
-int smite_store_byte(smite_state *S, smite_UWORD addr, smite_BYTE val);
-/* Store the byte `val` at virtual address `addr`.
-
-   Return 0 if OK, or error code if `addr` is invalid.
 */
 
 // Inline functions
 _GL_ATTRIBUTE_PURE static inline uint8_t *native_address_of_range(smite_state *S, smite_UWORD addr, smite_UWORD len)
 {
-    if (addr >= S->MEMORY || len > S->MEMORY - addr)
+    if (addr >= S->memory_size || len > S->memory_size - addr)
         return NULL;
     return ((uint8_t *)(S->memory)) + addr;
 }
 
-static inline int load_word(smite_state *S, smite_UWORD addr, smite_WORD *val_ptr)
+static inline int load(smite_state *S, smite_UWORD addr, unsigned size, smite_WORD *val_ptr)
 {
-    if (addr >= S->MEMORY) {
+    if (addr >= S->memory_size) {
         S->BAD = addr;
         return SMITE_ERR_MEMORY_READ;
     }
-    if (!smite_is_aligned(addr)) {
+    if (!is_aligned(addr, size)) {
         S->BAD = addr;
         return SMITE_ERR_MEMORY_UNALIGNED;
     }
 
-    *val_ptr = S->memory[addr / WORD_SIZE];
+    switch (size) {
+    case 0:
+        *val_ptr = (smite_UWORD)((uint8_t *)S->memory)[addr];
+        break;
+    case 1:
+        *val_ptr = (smite_UWORD)((uint16_t *)S->memory)[addr / 2];
+        break;
+    case 2:
+        *val_ptr = (smite_UWORD)((uint32_t *)S->memory)[addr / 4];
+        break;
+    case 3:
+        *val_ptr = (smite_UWORD)((uint64_t *)S->memory)[addr / 8];
+        break;
+    default:
+        return SMITE_ERR_BAD_SIZE;
+    }
     return SMITE_ERR_OK;
 }
 
-static inline int store_word(smite_state *S, smite_UWORD addr, smite_WORD val)
+static inline int store(smite_state *S, smite_UWORD addr, unsigned size, smite_WORD val)
 {
-    if (addr >= S->MEMORY) {
+    if (addr >= S->memory_size) {
         S->BAD = addr;
         return SMITE_ERR_MEMORY_WRITE;
     }
-    if (!smite_is_aligned(addr)) {
+    if (!is_aligned(addr, size)) {
         S->BAD = addr;
         return SMITE_ERR_MEMORY_UNALIGNED;
     }
 
-    S->memory[addr / WORD_SIZE] = val;
-    return SMITE_ERR_OK;
-}
-
-static inline int load_byte(smite_state *S, smite_UWORD addr, smite_BYTE *val_ptr)
-{
-    if (addr >= S->MEMORY) {
-        S->BAD = addr;
-        return SMITE_ERR_MEMORY_READ;
+    switch (size) {
+    case 0:
+        ((uint8_t *)S->memory)[addr] = (uint8_t)val;
+        break;
+    case 1:
+        ((uint16_t *)S->memory)[addr / 2] = (uint16_t)val;
+        break;
+    case 2:
+        ((uint32_t *)S->memory)[addr / 4] = (uint32_t)val;
+        break;
+    case 3:
+        ((uint64_t *)S->memory)[addr / 8] = (uint64_t)val;
+        break;
+    default:
+        return SMITE_ERR_BAD_SIZE;
     }
-
-    *val_ptr = ((smite_BYTE *)S->memory)[addr];
-    return SMITE_ERR_OK;
-}
-
-static inline int store_byte(smite_state *S, smite_UWORD addr, smite_BYTE val)
-{
-    if (addr >= S->MEMORY) {
-        S->BAD = addr;
-        return SMITE_ERR_MEMORY_WRITE;
-    }
-
-    ((smite_BYTE *)S->memory)[addr] = val;
     return SMITE_ERR_OK;
 }
 
@@ -243,12 +253,12 @@ int smite_push_stack(smite_state *S, smite_WORD val);
    the stack.
 
    Return 0 if OK, or error code if `STACK_DEPTH` is greater than or equal
-   to `STACK_SIZE`.
+   to `S->stack_size`.
 */
 
 // Unchecked macro: UNSAFE!
 #define UNCHECKED_STACK(pos)                    \
-    (S->S0 + S->STACK_DEPTH - (pos) - 1)
+    (S->stack + S->STACK_DEPTH - (pos) - 1)
 
 // Inline functions
 static inline int load_stack(smite_state *S, smite_UWORD pos, smite_WORD *vp)
@@ -282,8 +292,8 @@ static inline int pop_stack(smite_state *S, smite_WORD *v)
 
 static inline int push_stack(smite_state *S, smite_WORD v)
 {
-    if (S->STACK_DEPTH >= S->STACK_SIZE) {
-        S->BAD = S->STACK_SIZE;
+    if (S->STACK_DEPTH >= S->stack_size) {
+        S->BAD = S->stack_size;
         return SMITE_ERR_STACK_OVERFLOW;
     }
 
