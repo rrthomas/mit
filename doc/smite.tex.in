@@ -78,7 +78,7 @@ This paper gives a full description of @PACKAGE_NAME@.
 
 @PACKAGE_NAME@'s address unit is the byte, which is eight bits.
 Most of the quantities on which @PACKAGE_NAME@ operates are fixed-size words, which are stored in memory in either big- or little-endian order.
-These parameters enable efficient implementation on the vast majority of machine architectures.
+The choice of byte and word size enable efficient implementation on the vast majority of machine architectures.
 
 
 \subsection{Registers}
@@ -126,9 +126,6 @@ execute the instruction in the \instsize\ least-significant bits of {\tt I} \\*
 shift {\tt I} logically \instsize\ bits to the right \- \\*
 repeat
 \end{tabbing}
-
-In the latter case, the contents of the execution cycle is executed once, and
-control returns to the calling program.
 
 
 \subsection{Errors and termination}
@@ -197,7 +194,7 @@ are a representation of the top-most items on the stack, and are written
 \begin{tabular}{cl} \toprule
 \bf Symbol & \bf Data type \\ \midrule
 \spic{flag} & a Boolean flag, $0$ for false or $1$ for true; other non-zero values are also treated as true \\
-\spic{size} & an integer in the range $0$ to $\log_2{\tt WORD\_BYTES}$ inclusive. \\
+\spic{size} & an integer in the range $0$ to $\log_2{\tt WORD\_BYTES}$ inclusive \\
 \spic{n} & signed number \\
 \spic{u} & unsigned number \\
 \spic{n{\tt |}u} & number (signed or unsigned) \\
