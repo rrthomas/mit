@@ -24,7 +24,6 @@ class Registers(Enum):
     I = Register()
     BAD = Register()
     STACK_DEPTH = Register()
-    ENDISM = Register(read_only=True)
 
 @unique
 class Instructions(Enum):

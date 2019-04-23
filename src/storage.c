@@ -18,6 +18,7 @@
 
 // Constants
 const unsigned smite_word_bytes = WORD_BYTES;
+const unsigned smite_endism = ENDISM;
 const unsigned smite_size_word = smite_SIZE_WORD;
 const unsigned smite_byte_bit = 8;
 const unsigned smite_byte_mask = smite_BYTE_MASK;
@@ -26,8 +27,8 @@ const smite_UWORD smite_word_mask = smite_WORD_MASK;
 const smite_UWORD smite_uword_max = smite_UWORD_MAX;
 const smite_WORD smite_word_min = smite_WORD_MIN;
 const smite_WORD smite_word_max = smite_WORD_MAX;
-const smite_UWORD smite_instruction_bit = SMITE_INSTRUCTION_BIT;
-const smite_UWORD smite_instruction_mask = SMITE_INSTRUCTION_MASK;
+const unsigned smite_instruction_bit = SMITE_INSTRUCTION_BIT;
+const unsigned smite_instruction_mask = SMITE_INSTRUCTION_MASK;
 
 
 // Utility functions
@@ -127,13 +128,6 @@ smite_state *smite_init(size_t memory_size, size_t stack_size)
     if (smite_realloc_stack(S, stack_size) != 0)
         return NULL;
 
-    S->ENDISM =
-#ifdef smite_WORDS_BIGENDIAN
-        1
-#else
-        0
-#endif
-        ;
     S->PC = 0;
     S->BAD = 0;
     S->STACK_DEPTH = 0;
