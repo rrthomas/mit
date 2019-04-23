@@ -127,7 +127,7 @@ print('''\
 // Options table
 struct option longopts[] = {''')
 for feature in features:
-    if type(feature) == Option:
+    if isinstance(feature, Option):
         print('    {{"{long_name}", {arg}, NULL, \'{short_name}\'}},'.format(
             long_name=feature.long_name, arg=feature.arg or '""',
             short_name=feature.short_name or "\\0"))
@@ -145,19 +145,19 @@ static void usage(void)
            program_name);''')
 
 for feature in features:
-    if type(feature) == Option:
+    if isinstance(feature, Option):
         print('    printf("  %-26s%s\\n", "--{long_name}{short_opt} {arg_name}", "{docstring}");'.format(
             long_name=feature.long_name,
             short_opt=', -{}'.format(feature.short_name) if feature.short_name else '',
             arg_name=feature.arg_name or '',
             docstring=feature.docstring,
         ))
-    elif type(feature) == Arg:
+    elif isinstance(feature, Arg):
         print('printf("  %-26s%s\\n", {arg}, {docstring});'.format(
             arg=feature.arg,
             docstring=feature.docstring
         ))
-    elif type(feature) == Doc:
+    elif isinstance(feature, Doc):
         print('    printf("{}\\n");'.format(feature.text))
 
 print('''
@@ -172,7 +172,7 @@ static void exit_function(void)
 }''')
 
 for feature in features:
-    if type(feature) == Option and feature.top_level_code:
+    if isinstance(feature, Option) and feature.top_level_code:
         print(feature.top_level_code)
 
 print('''
@@ -185,7 +185,7 @@ int main(int argc, char *argv[])
 
 shortopts = ''
 for feature in features:
-    if type(feature) == Option and feature.short_name:
+    if isinstance(feature, Option) and feature.short_name:
         shortopts += feature.short_name
         if feature.arg == 'required_argument':
             shortopts += ':'
@@ -212,7 +212,7 @@ print('''
 
 index = 0
 for feature in features:
-    if type(feature) == Option:
+    if isinstance(feature, Option):
         if feature.short_name:
             print('''\
         if (c == '{short_name}')
@@ -225,7 +225,7 @@ for feature in features:
 
 index = 0
 for feature in features:
-    if type(feature) == Option:
+    if isinstance(feature, Option):
         if feature.init_code:
             print('        if (longindex == {})\n'.format(index) +
                   textwrap.indent(feature.init_code, '            '))
@@ -284,7 +284,7 @@ print('''\
         switch (res) {''')
 
 for feature in features:
-    if type(feature) == Option and feature.exception_handler:
+    if isinstance(feature, Option) and feature.exception_handler:
         print(textwrap.indent(feature.exception_handler, '        '))
 
 print('''\
