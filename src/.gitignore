@@ -12,10 +12,12 @@
 /smite.1
 /smite-include.man
 /instructions.c
+/main.c
 /ext.c
 /opcodes.h
 /ext-opcodes.h
 /registers.h
+/gen-main
 /type-sizes
 /type-sizes.ac
 /smite_core/type_sizes.py

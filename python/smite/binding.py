@@ -95,7 +95,7 @@ execution_error = errcheck({
     3: "invalid stack read",
     4: "invalid stack write",
     5: "invalid memory read",
-    6: "invalud memory write",
+    6: "invalid memory write",
     7: "unaligned address",
     8: "bad size",
     9: "division by zero",
