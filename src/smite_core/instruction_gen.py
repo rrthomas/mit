@@ -78,7 +78,7 @@ class Size:
             return value
         if type(value) is int:
             return Size(value)
-        raise NotImplemented
+        return NotImplemented
 
     def __int__(self):
         if self.count != 0:
