@@ -284,7 +284,7 @@ def check_underflow(num_pops):
     '''
     if not num_pops <= 0:
         return '''\
-if ((S->STACK_DEPTH < (smite_UWORD){num_pops})) {{
+if ((S->STACK_DEPTH < (smite_UWORD)({num_pops}))) {{
     S->BAD = {num_pops} - 1;
     RAISE(SMITE_ERR_STACK_READ);
 }}'''.format(num_pops=num_pops)
