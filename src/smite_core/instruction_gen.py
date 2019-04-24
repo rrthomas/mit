@@ -159,6 +159,9 @@ class StackItem:
                 self.type == item.type and
                 self.size == item.size)
 
+    def __hash__(self):
+        return hash((self.name, self.type, self.size))
+
 class StackEffect:
     '''
     Represents the effect of an instruction on the stack, in the form of
@@ -179,16 +182,18 @@ class StackEffect:
      - items - a dict of str: StackItem
      - args - list of StackItem
      - results - list of StackItem
+     - args_size - total size of `args`.
+     - results_size - total size of `results`.
     '''
     def __init__(self, args_str, results_str):
         '''
-         - args, results - list of str
+         - args_str, results_str - list of str
 
         Items with the same name are the same item, so their type must be
         the same.
         '''
         if 'ITEMS:' in args_str and 'ITEMS:' in results_str:
-            # FIXME: Assert the depth is the same, not the index.
+            # FIXME: Assert the stack address is the same, not the index.
             assert args_str.index('ITEMS:') == results_str.index('ITEMS:')
         self.args = [StackItem(arg_str) for arg_str in args_str]
         self.results = [StackItem(result_str) for result_str in results_str]
@@ -199,8 +204,8 @@ class StackEffect:
             else: # Check repeated item is consistent
                 assert item == self.items[item.name]
         if type_sizes is not None:
-            self._set_depths(self.args)
-            self._set_depths(self.results)
+            self.args_size = self._set_depths(self.args)
+            self.results_size = self._set_depths(self.results)
 
     @staticmethod
     def _set_depths(items):
@@ -210,6 +215,7 @@ class StackEffect:
             if item.name == 'ITEMS':
                 item.size = Size(0, count=1)
             depth += item.size
+        return depth
 
     # In load_item & store_item, casts to size_t avoid warnings when `var` is
     # a pointer and sizeof(void *) > WORD_BYTES, but the effect is identical.
@@ -241,11 +247,11 @@ class StackEffect:
 
     def declare_vars(self):
         '''
-        Returns C variable declarations for `self.items.values()` other than
-        any 'ITEMS'.
+        Returns C variable declarations for arguments and results other than
+        'ITEMS'.
         '''
         return '\n'.join(['{} {};'.format(item.type, item.name)
-                          for item in self.items.values()
+                          for item in set(self.args + self.results)
                           if item.name != 'ITEMS'])
 
     def load_args(self):
@@ -320,17 +326,16 @@ def gen_case(instruction):
                 ),
                 effect.load_item(effect.items['COUNT']),
             ]
-        args_size = sum(item.size for item in effect.args)
-        results_size = sum(item.size for item in effect.results)
         code += [
-            check_underflow(args_size),
-            check_overflow(args_size, results_size),
+            check_underflow(effect.args_size),
+            check_overflow(effect.args_size, effect.results_size),
             effect.load_args(),
         ]
     code += [textwrap.dedent(instruction.code.rstrip())]
     if effect is not None:
         code += [
-            'S->STACK_DEPTH += {};'.format(results_size - args_size),
+            'S->STACK_DEPTH += {};'.format(
+                effect.results_size - effect.args_size),
             effect.store_results(),
         ]
     # Remove newlines resulting from empty strings in the above.
