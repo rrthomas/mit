@@ -132,8 +132,9 @@ class StackEffect:
         count_index = None
         if 'COUNT' in args_str:
             count_index = args_str.index('COUNT')
-        self._set_depths(self.args, count_index)
-        self._set_depths(self.results, count_index)
+        if type_sizes is not None:
+            self._set_depths(self.args, count_index)
+            self._set_depths(self.results, count_index)
 
     @staticmethod
     def _set_depths(items, count_index):
