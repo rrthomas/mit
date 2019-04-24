@@ -11,6 +11,7 @@ RISK.
 The main entry point is dispatch().
 '''
 
+import functools
 import re
 import textwrap
 
@@ -54,6 +55,74 @@ class Instruction:
             self.effect = StackEffect(args, results)
         self.code = code
 
+@functools.total_ordering
+class Size:
+    '''
+    Represents the size of some stack items.
+
+     - size - int or Size.
+     - count - int - ±1 if the size includes variadic 'ITEMS'
+    '''
+    def __init__(self, size, count=0):
+        assert type(size) is int
+        assert type(count) is int
+        self.size = size
+        if not(-1 <= count <= 1):
+            raise ValueError
+        self.count = count
+
+    @staticmethod
+    def of(value):
+        '''Convert `value` to a Size or raise NotImplemented.'''
+        if isinstance(value, Size):
+            return value
+        if type(value) is int:
+            return Size(value)
+        raise NotImplemented
+
+    def __int__(self):
+        if self.count != 0:
+            raise ValueError('{} cannot be represented as an integer'.format(
+                self))
+        return self.size
+
+    def __index__(self):
+        return self.__int__()
+
+    def __hash__(self):
+        if self.count == 0:
+            # In this case we must match `int.__hash__()`.
+            return hash(self.size)
+        return hash((self.size, self.count))
+
+    def __eq__(self, value):
+        value = Size.of(value)
+        return self.size == value.size and self.count == value.count
+
+    def __le__(self, value):
+        value = Size.of(value)
+        return self.size <= value.size and self.count <= value.count
+
+    def __str__(self):
+        if self.count == 0: s = '{}'
+        elif self.count == 1: s = '{} + COUNT'
+        elif self.count == -1: s = '{} - COUNT'
+        else: assert False
+        return s.format(self.size)
+
+    def __add__(self, value):
+        value = Size.of(value)
+        return Size(self.size + value.size, count=self.count + value.count)
+
+    def __radd__(self, value):
+        return Size.of(value).__add__(self)
+
+    def __sub__(self, value):
+        value = Size.of(value)
+        return Size(self.size - value.size, count=self.count - value.count)
+
+    def __rsub__(self, value):
+        return Size.of(value).__sub__(self)
 
 class StackItem:
     '''
@@ -63,7 +132,8 @@ class StackItem:
 
      - name - str
      - type - str - C type of the item, or None if unknown
-     - size - str - C expression for the size of the item
+     - size - Size, or None if unknown - number of words occupied by the item
+     - depth - TODO.
     '''
     def __init__(self, name_and_type):
         '''
@@ -80,9 +150,9 @@ class StackItem:
         if self.type == '':
             self.type = None
         elif type_sizes is not None:
-            self.size = ((type_sizes[self.type] +
-                          (type_sizes['smite_WORD'] - 1)) //
-                         type_sizes['smite_WORD'])
+            self.size = Size((type_sizes[self.type] +
+                              (type_sizes['smite_WORD'] - 1)) //
+                             type_sizes['smite_WORD'])
 
     def __eq__(self, item):
         return (self.name == item.name and
@@ -101,9 +171,8 @@ class StackEffect:
     be at the same position relative to the bottom of the stack as in
     'args'.
 
-    'args' and 'results' are augmented with an extra field 'depth' which
-    gives the stack position of their top-most word, and is either int or
-    str (a C expression).
+    'args' and 'results' are augmented with an extra field 'depth' (a Size),
+    which gives the stack position of their top-most word.
 
     Public fields:
 
@@ -129,24 +198,18 @@ class StackEffect:
                 self.items[item.name] = item
             else: # Check repeated item is consistent
                 assert item == self.items[item.name]
-        count_index = None
-        if 'COUNT' in args_str:
-            count_index = args_str.index('COUNT')
         if type_sizes is not None:
-            self._set_depths(self.args, count_index)
-            self._set_depths(self.results, count_index)
+            self._set_depths(self.args)
+            self._set_depths(self.results)
 
     @staticmethod
-    def _set_depths(items, count_index):
-        depth = 0
+    def _set_depths(items):
+        depth = Size(0)
         for item in reversed(items):
             item.depth = depth
             if item.name == 'ITEMS':
-                item.size = 'COUNT'
-            if type(depth) == int and type(item.size) == int:
-                depth += item.size
-            else:
-                depth = '{} + {}'.format(depth, item.size)
+                item.size = Size(0, count=1)
+            depth += item.size
 
     # In load_item & store_item, casts to size_t avoid warnings when `var` is
     # a pointer and sizeof(void *) > WORD_BYTES, but the effect is identical.
@@ -154,7 +217,7 @@ class StackEffect:
         '''Load `item` from the stack to its C variable.'''
         code = ['{} = 0;'.format(item.name)]
         for i in reversed(range(item.size)):
-            code.append('temp = *UNCHECKED_STACK({} + {});'.format(item.depth, i))
+            code.append('temp = *UNCHECKED_STACK({});'.format(item.depth + i))
             if i < item.size - 1:
                 code.append('{var} = ({type})((size_t){var} << smite_WORD_BIT);'.format(var=item.name, type=item.type))
             code.append('{var} = ({type})((size_t){var} | (smite_UWORD)temp);'.format(var=item.name, type=item.type))
@@ -171,7 +234,7 @@ class StackEffect:
         '''
         code = []
         for i in range(item.size):
-            code.append('*UNCHECKED_STACK({} + {}) = (smite_UWORD)((size_t){} & smite_WORD_MASK);'.format(item.depth, i, item.name))
+            code.append('*UNCHECKED_STACK({}) = (smite_UWORD)((size_t){} & smite_WORD_MASK);'.format(item.depth + i, item.name))
             if i < item.size - 1:
                 code.append('{var} = ({type})((size_t){var} >> smite_WORD_BIT);'.format(var=item.name, type=item.type))
         return '\n'.join(code)
@@ -203,30 +266,20 @@ class StackEffect:
                           for item in self.results if item.name != 'ITEMS'])
 
 
-def disable_warnings(warnings, c_source):
-    '''
-    Returns `c_source` wrapped in "#pragmas" to suppress the given list
-    `warnings` of warning flags.
-    '''
-    return '''\
-#pragma GCC diagnostic push
-{pragmas}
-{c_source}
-#pragma GCC diagnostic pop'''.format(c_source=c_source,
-                                     pragmas='\n'.join(['#pragma GCC diagnostic ignored "{}"'.format(w)
-                                                        for w in warnings]))
-
 def check_underflow(num_pops):
     '''
     Returns C source code to check that the stack contains enough items to
     pop the specified number of items.
      - num_pops - a C expression giving the number of items to pop.
     '''
-    return disable_warnings(['-Wtype-limits', '-Wsign-compare'], '''\
-if ((S->STACK_DEPTH < {num_pops})) {{
+    if not num_pops <= 0:
+        return '''\
+if ((S->STACK_DEPTH < (smite_UWORD){num_pops})) {{
     S->BAD = {num_pops} - 1;
     RAISE(SMITE_ERR_STACK_READ);
-}}'''.format(num_pops=num_pops))
+}}'''.format(num_pops=num_pops)
+    else:
+        return ''
 
 def check_overflow(num_pops, num_pushes):
     '''
@@ -234,11 +287,15 @@ def check_overflow(num_pops, num_pushes):
     push `num_pushes` items, given that `num_pops` items will first be
     popped.
     '''
-    return disable_warnings(['-Wtype-limits', '-Wtautological-compare', '-Wsign-compare', '-Wstrict-overflow'], '''\
-if ({num_pushes} > {num_pops} && (S->stack_size - S->STACK_DEPTH < {num_pushes} - {num_pops})) {{
-    S->BAD = ({num_pushes} - {num_pops}) - (S->stack_size - S->STACK_DEPTH);
+    depth_change = num_pushes - num_pops
+    if not depth_change <= 0:
+        return '''\
+if (((S->stack_size - S->STACK_DEPTH) < (smite_UWORD)({depth_change}))) {{
+    S->BAD = ({depth_change}) - (S->stack_size - S->STACK_DEPTH);
     RAISE(SMITE_ERR_STACK_OVERFLOW);
-}}'''.format(num_pops=num_pops, num_pushes=num_pushes))
+}}'''.format(depth_change=depth_change)
+    else:
+        return ''
 
 def gen_case(instruction):
     '''
@@ -257,14 +314,14 @@ def gen_case(instruction):
         if 'COUNT' in effect.items:
             # If we have COUNT, check its stack position is valid, and load it
             code += [
-                check_underflow('({} + {})'.format(
-                    effect.items['COUNT'].depth,
-                    effect.items['COUNT'].size,
-                )),
+                check_underflow(
+                    effect.items['COUNT'].depth +
+                    effect.items['COUNT'].size
+                ),
                 effect.load_item(effect.items['COUNT']),
             ]
-        args_size = ' + '.join(str(item.size) for item in effect.args) or '0'
-        results_size = ' + '.join(str(item.size) for item in effect.results) or '0'
+        args_size = sum(item.size for item in effect.args)
+        results_size = sum(item.size for item in effect.results)
         code += [
             check_underflow(args_size),
             check_overflow(args_size, results_size),
@@ -273,7 +330,7 @@ def gen_case(instruction):
     code += [textwrap.dedent(instruction.code.rstrip())]
     if effect is not None:
         code += [
-            'S->STACK_DEPTH += {} - ({});'.format(results_size, args_size),
+            'S->STACK_DEPTH += {};'.format(results_size - args_size),
             effect.store_results(),
         ]
     # Remove newlines resulting from empty strings in the above.
