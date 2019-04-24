@@ -225,29 +225,41 @@ class StackEffect:
     # a pointer and sizeof(void *) > WORD_BYTES, but the effect is identical.
     def load_item(self, item):
         '''Load `item` from the stack to its C variable.'''
-        code = ['{} = 0;'.format(item.name)]
-        for i in reversed(range(item.size)):
-            code.append('temp = *UNCHECKED_STACK({});'.format(item.depth + i))
-            if i < item.size - 1:
-                code.append('{var} = ({type})((size_t){var} << smite_WORD_BIT);'.format(var=item.name, type=item.type))
-            code.append('{var} = ({type})((size_t){var} | (smite_UWORD)temp);'.format(var=item.name, type=item.type))
+        code = [
+            'size_t temp = (smite_UWORD)(*UNCHECKED_STACK({}));'
+            .format(item.depth + (item.size - 1))
+        ]
+        for i in reversed(range(item.size - 1)):
+            code.append('temp <<= smite_WORD_BIT;')
+            code.append(
+                'temp |= (smite_UWORD)(*UNCHECKED_STACK({}));'
+                .format(item.depth + i)
+            )
+        code.append('{} = ({})temp;'.format(item.name, item.type))
         return '''\
 {{
-    smite_WORD temp;
 {}
 }}'''.format(textwrap.indent('\n'.join(code), '    '))
 
     def store_item(self, item):
         '''
         Store `item` to the stack from its C variable.
-        The variable is corrupted.
         '''
-        code = []
-        for i in range(item.size):
-            code.append('*UNCHECKED_STACK({}) = (smite_UWORD)((size_t){} & smite_WORD_MASK);'.format(item.depth + i, item.name))
-            if i < item.size - 1:
-                code.append('{var} = ({type})((size_t){var} >> smite_WORD_BIT);'.format(var=item.name, type=item.type))
-        return '\n'.join(code)
+        code = ['size_t temp = (size_t){};'.format(item.name)]
+        for i in range(item.size - 1):
+            code.append(
+                '*UNCHECKED_STACK({}) = (smite_UWORD)(temp & smite_WORD_MASK);'
+                .format(item.depth + i)
+            )
+            code.append('temp >>= smite_WORD_BIT;')
+        code.append(
+            '*UNCHECKED_STACK({}) = (smite_UWORD)(temp & smite_WORD_MASK);'
+            .format(item.depth + (item.size - 1))
+        )
+        return '''\
+{{
+{}
+}}'''.format(textwrap.indent('\n'.join(code), '    '))
 
     def declare_vars(self):
         '''
