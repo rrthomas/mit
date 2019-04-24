@@ -24,8 +24,12 @@ except ImportError:
 def print_enum(instructions, prefix):
     '''Utility function to print an instruction enum.'''
     print('\nenum {')
-    for (name, instruction) in instructions.__members__.items():
-        print("    INSTRUCTION({}{}, {:#x})".format(prefix, name, instruction.value.opcode))
+    for instruction in instructions:
+        print("    INSTRUCTION({}{}, {:#x})".format(
+            prefix,
+            instruction.name,
+            instruction.value.opcode,
+        ))
     print('};')
 
 class Instruction:
