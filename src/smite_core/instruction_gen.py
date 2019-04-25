@@ -465,7 +465,7 @@ if (((S->stack_size - S->STACK_DEPTH) < (smite_UWORD)({depth_change}))) {{
         return '\n'.join(code)
 
 
-def gen_case(instruction, cache_state, exit_depth):
+def gen_case(instruction, cache_state=CacheState(0), exit_depth=0):
     '''
     Generate the code for an Instruction.
 
@@ -548,7 +548,7 @@ def dispatch(instructions, prefix, undefined_case):
             instruction=instruction.name,
             prefix=prefix,
             code=textwrap.indent(
-                gen_case(instruction.value, CacheState(0), 0),
+                gen_case(instruction.value),
                 '            ',
             ),
         ))

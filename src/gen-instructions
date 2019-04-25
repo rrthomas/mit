@@ -11,7 +11,7 @@
 import sys, pickle, textwrap
 
 from smite_core.vm_data import Instructions
-from smite_core import instruction_gen
+from smite_core.instruction_gen import dispatch, gen_case, CacheState
 
 # Load language.
 if len(sys.argv) != 2:
@@ -103,7 +103,7 @@ smite_WORD smite_single_step(smite_state *S) {
     }
 ''')
 
-print(instruction_gen.dispatch(Instructions, 'O_', '''\
+print(dispatch(Instructions, 'O_', '''\
         /* Undefined instruction. */
         RAISE(SMITE_ERR_INVALID_OPCODE);
 '''))
@@ -135,7 +135,7 @@ if max_cached_depth > 0:
     print('''\
     smite_WORD {};'''.format(
         ', '.join(
-            instruction_gen.CacheState.var_for_depth(pos, max_cached_depth)
+            CacheState.var_for_depth(pos, max_cached_depth)
             for pos in reversed(range(max_cached_depth))
         )
     ))
@@ -183,12 +183,11 @@ for label in labels:
         guess_name=label.guess.name,
     ))
     # If correct.
-    cache_state = instruction_gen.CacheState(label.cached_depth)
     label_c = label_by_index(label.if_correct)
     print(textwrap.indent(
-        instruction_gen.gen_case(
+        gen_case(
             label.guess.value,
-            cache_state,
+            CacheState(label.cached_depth),
             label_c.cached_depth,
         ),
         '            ',
@@ -199,10 +198,9 @@ for label in labels:
         }}'''.format(label_c.name)
     )
     # If wrong.
-    cache_state = instruction_gen.CacheState(label.cached_depth)
     label_w = label_by_index(label.if_wrong)
     print(textwrap.indent(
-        cache_state.flush(label_w.cached_depth),
+        CacheState(label.cached_depth).flush(label_w.cached_depth),
         '        ',
     ))
     print('''\
@@ -227,7 +225,7 @@ print('''\
         {
             switch (cached_depth) {'''
 )
-cache_state = instruction_gen.CacheState(max_cached_depth)
+cache_state = CacheState(max_cached_depth)
 while cache_state.depth > 0:
     print('''\
             case {}:'''.format(cache_state.depth)
