@@ -48,16 +48,21 @@ class Instruction:
     '''
     def __init__(self, opcode, args, results, code):
         '''
-         - args, results - lists of str acceptable to StackEffect(); if both are
-           None, then the instruction has an arbitrary stack effect, like `EXT`.
+         - args, results - lists of str, acceptable to StackPicture.of().
+           If both are `None`, then the instruction has an arbitrary stack
+           effect, like `EXT`.
         '''
         self.opcode = opcode
         if args is None or results is None:
             assert args is None and results is None
             self.effect = None
         else:
-            self.effect = StackEffect(args, results)
+            self.effect = StackEffect(
+                StackPicture.of(args),
+                StackPicture.of(results),
+            )
         self.code = code
+
 
 @functools.total_ordering
 class Size:
@@ -142,7 +147,7 @@ class StackItem:
      - type - str - C type of the item (ignore if `name` is 'ITEMS').
      - size - Size, or `None` if unknown - The number of words occupied by
        the item.
-     - depth - If this StackItem is part of a StackEffect, the total size of
+     - depth - If this StackItem is part of a StackPicture, the total size of
        the StackItems above this one, otherwise `None`.
     '''
     def __init__(self, name, type_):
@@ -222,6 +227,38 @@ class StackItem:
 }}'''.format(textwrap.indent('\n'.join(code), '    '))
 
 
+class StackPicture:
+    '''
+    Represents the top few items on the stack.
+
+    Each of `items` is augmented with an extra field 'depth' (a Size),
+    which gives the stack position of its top-most word.
+
+    Public fields:
+
+     - items - [StackItem] - the StackItems, ending with the topmost.
+     - by_name - {str: StackItem} - `items` indexed by `name`.
+     - size - Size - the total size of `items`, or `None` if unknown.
+    '''
+    def __init__(self, items):
+        self.items = items
+        self.by_name = {i.name: i for i in items}
+        if type_sizes is None:
+            self.size = None
+        else:
+            self.size = Size(0)
+            for item in reversed(items):
+                item.depth = self.size
+                self.size += item.size
+
+    @staticmethod
+    def of(strs):
+        '''
+         - strs - list of str acceptable to `StackItem.of()`.
+        '''
+        return StackPicture([StackItem.of(s) for s in strs])
+
+
 class StackEffect:
     '''
     Represents the effect of an instruction on the stack, in the form of
@@ -234,74 +271,63 @@ class StackEffect:
     be at the same position relative to the bottom of the stack as in
     'args'.
 
-    'args' and 'results' are augmented with an extra field 'depth' (a Size),
-    which gives the stack position of their top-most word.
-
     Public fields:
 
-     - items - a dict of str: StackItem
-     - args - list of StackItem
-     - results - list of StackItem
-     - args_size - total size of `args`.
-     - results_size - total size of `results`.
+     - args - StackPicture
+     - results - StackPicture
     '''
-    def __init__(self, args_str, results_str):
+    def __init__(self, args, results):
         '''
-         - args_str, results_str - list of str
-
         Items with the same name are the same item, so their type must be
         the same.
         '''
-        if 'ITEMS:' in args_str and 'ITEMS:' in results_str:
-            # FIXME: Assert the stack address is the same, not the index.
-            assert args_str.index('ITEMS:') == results_str.index('ITEMS:')
-        self.args = [StackItem.of(arg_str) for arg_str in args_str]
-        self.results = [StackItem.of(result_str) for result_str in results_str]
-        self.items = {}
-        for item in self.args + self.results:
-            if item.name not in self.items:
-                self.items[item.name] = item
-            else: # Check repeated item is consistent
-                assert item == self.items[item.name]
-        if type_sizes is not None:
-            self.args_size = self._set_depths(self.args)
-            self.results_size = self._set_depths(self.results)
-
-    @staticmethod
-    def _set_depths(items):
-        depth = Size(0)
-        for item in reversed(items):
-            item.depth = depth
-            if item.name == 'ITEMS':
-                item.size = Size(0, count=1)
-            depth += item.size
-        return depth
+        # Check that `args` is duplicate-free.
+        assert len(args.by_name) == len(args.items)
+        # Check that 'ITEMS' does not move.
+        if 'ITEMS' in args.by_name and 'ITEMS' in results.by_name:
+            if type_sizes is not None:
+                arg_pos = args.size - args.by_name['ITEMS'].depth
+                result_pos = args.size - args.by_name['ITEMS'].depth
+                assert arg_pos == result_pos
+        # Check that `results` is type-compatible with `args`.
+        for item in results.items:
+            if item.name in args.by_name:
+                assert item == args.by_name[item.name]
+        self.args = args
+        self.results = results
 
     def declare_vars(self):
         '''
         Returns C variable declarations for arguments and results other than
         'ITEMS'.
         '''
-        return '\n'.join(['{} {};'.format(item.type, item.name)
-                          for item in set(self.args + self.results)
-                          if item.name != 'ITEMS'])
+        return '\n'.join([
+            '{} {};'.format(item.type, item.name)
+            for item in set(self.args.items + self.results.items)
+            if item.name != 'ITEMS'
+        ])
 
     def load_args(self):
         '''
         Returns C source code to read the arguments from the stack into C
         variables. `S->STACK_DEPTH` is not modified.
         '''
-        return '\n'.join([item.load()
-                          for item in self.args
-                          if item.name != 'ITEMS' and item.name != 'COUNT'])
+        return '\n'.join([
+            item.load()
+            for item in self.args.items
+            if item.name != 'ITEMS' and item.name != 'COUNT'
+        ])
 
     def store_results(self):
         '''
         Returns C source code to write the results from C variables into the
         stack. `S->STACK_DEPTH` must be modified first.
         '''
-        return '\n'.join([item.store()
-                          for item in self.results if item.name != 'ITEMS'])
+        return '\n'.join([
+            item.store()
+            for item in self.results.items
+            if item.name != 'ITEMS'
+        ])
 
 
 def check_underflow(num_pops):
@@ -349,27 +375,25 @@ def gen_case(instruction):
     code = []
     if effect is not None:
         code.append(effect.declare_vars())
-        if 'COUNT' in effect.items:
+        count = effect.args.by_name.get('COUNT')
+        if count is not None:
             # If we have COUNT, check its stack position is valid, and load it
-            code += [
-                check_underflow(
-                    effect.items['COUNT'].depth +
-                    effect.items['COUNT'].size
-                ),
-                effect.items['COUNT'].load(),
-            ]
-        code += [
-            check_underflow(effect.args_size),
-            check_overflow(effect.args_size, effect.results_size),
+            code.extend([
+                check_underflow(count.depth + count.size),
+                count.load(),
+            ])
+        code.extend([
+            check_underflow(effect.args.size),
+            check_overflow(effect.args.size, effect.results.size),
             effect.load_args(),
-        ]
-    code += [textwrap.dedent(instruction.code.rstrip())]
+        ])
+    code.append(textwrap.dedent(instruction.code.rstrip()))
     if effect is not None:
-        code += [
+        code.extend([
             'S->STACK_DEPTH += {};'.format(
-                effect.results_size - effect.args_size),
+                effect.results.size - effect.args.size),
             effect.store_results(),
-        ]
+        ])
     # Remove newlines resulting from empty strings in the above.
     return re.sub('\n+', '\n', '\n'.join(code), flags=re.MULTILINE).strip('\n')
 
