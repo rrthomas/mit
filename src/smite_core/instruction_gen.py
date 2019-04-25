@@ -339,7 +339,6 @@ class StackEffect:
         ])
 
 
-@functools.total_ordering
 class CacheState:
     '''
     As an optimization, StackItems that have recently been pushed are cached
@@ -357,18 +356,6 @@ class CacheState:
     '''
     def __init__(self, depth):
         self.depth = depth
-
-    def __hash__(self):
-        return hash(self.depth)
-
-    def __eq__(self, other):
-        return self.depth == other.depth
-
-    def __le__(self, other):
-        '''
-        Returns `True` if `self` is no more ambitious than `other`.
-        '''
-        return self.depth <= other.depth
 
     def check_underflow(self, num_pops):
         '''
@@ -481,7 +468,7 @@ if (((S->stack_size - S->STACK_DEPTH) < (smite_UWORD)({depth_change}))) {{
 def gen_case(instruction, cache_state):
     '''
     Generate the code for an Instruction.
-    
+
     In the code, S is the smite_state, and errors are reported by calling
     RAISE(). When calling RAISE(), the C variable `cached_depth` will contain
     the number of stack items cached in C locals.
