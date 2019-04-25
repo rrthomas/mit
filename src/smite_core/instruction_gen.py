@@ -465,7 +465,7 @@ if (((S->stack_size - S->STACK_DEPTH) < (smite_UWORD)({depth_change}))) {{
         return '\n'.join(code)
 
 
-def gen_case(instruction, cache_state):
+def gen_case(instruction, cache_state, exit_depth):
     '''
     Generate the code for an Instruction.
 
@@ -476,6 +476,7 @@ def gen_case(instruction, cache_state):
      - instruction - Instruction.
      - cache_state - CacheState - Which StackItems are cached.
        Updated in place.
+     - exit_depth - int - the `cached_depth` desired on exit.
     '''
     effect = instruction.effect
     code = []
@@ -514,15 +515,19 @@ def gen_case(instruction, cache_state):
     else:
         # Adjust cache_state.
         if effect.results.cache_limit is None:
-            code.append(cache_state.add(int(effect.results.size)))
+            num_pushes = int(effect.results.size)
+            code.append(cache_state.flush(max(0, exit_depth - num_pushes)))
+            code.append(cache_state.add(exit_depth - cache_state.depth))
         else:
             code.append(cache_state.flush())
-            code.append(cache_state.add(effect.results.cache_limit))
+            assert exit_depth <= effect.results.cache_limit
+            code.append(cache_state.add(exit_depth))
         # Store the results from C variables.
         code.extend([
             'S->STACK_DEPTH += {};'.format(effect.results.size),
             effect.store_results(cache_state),
         ])
+    assert cache_state.depth == exit_depth
     # Remove newlines resulting from empty strings in the above.
     return re.sub('\n+', '\n', '\n'.join(code), flags=re.MULTILINE).strip('\n')
 
@@ -534,7 +539,6 @@ def dispatch(instructions, prefix, undefined_case):
     '''
     code = ['    switch (opcode) {']
     for instruction in instructions:
-        cache_state = CacheState(0)
         code.extend([
             '    case {prefix}{instruction}:'.format(
                 prefix=prefix,
@@ -542,11 +546,7 @@ def dispatch(instructions, prefix, undefined_case):
             ),
             '        {',
             textwrap.indent(
-                gen_case(instruction.value, cache_state),
-                '            ',
-            ),
-            textwrap.indent(
-                cache_state.flush(),
+                gen_case(instruction.value, CacheState(0), 0),
                 '            ',
             ),
             '        }''',

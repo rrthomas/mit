@@ -186,11 +186,11 @@ for label in labels:
     cache_state = instruction_gen.CacheState(label.cached_depth)
     label_c = label_by_index(label.if_correct)
     print(textwrap.indent(
-        instruction_gen.gen_case(label.guess.value, cache_state),
-        '            ',
-    ))
-    print(textwrap.indent(
-        cache_state.flush(label_c.cached_depth),
+        instruction_gen.gen_case(
+            label.guess.value,
+            cache_state,
+            label_c.cached_depth,
+        ),
         '            ',
     ))
     print('''\
