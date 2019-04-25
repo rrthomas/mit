@@ -87,7 +87,7 @@ class Size:
             return value
         if type(value) is int:
             return Size(value)
-        return NotImplemented
+        raise TypeError('cannot convert {} to Size'.format(type(value)))
 
     def __int__(self):
         if self.count != 0:
@@ -391,13 +391,13 @@ if ((S->STACK_DEPTH < (smite_UWORD)({num_pops}))) {{
          - num_pops - Size.
          - num_pushes - Size.
         '''
-        delta = num_pushes - num_pops
-        if delta <= 0: return ''
+        depth_change = num_pushes - num_pops
+        if depth_change <= 0: return ''
         return '''\
-if (((S->stack_size - S->STACK_DEPTH) < (smite_UWORD)({delta}))) {{
-    S->BAD = ({delta}) - (S->stack_size - S->STACK_DEPTH);
+if (((S->stack_size - S->STACK_DEPTH) < (smite_UWORD)({depth_change}))) {{
+    S->BAD = ({depth_change}) - (S->stack_size - S->STACK_DEPTH);
     RAISE(SMITE_ERR_STACK_OVERFLOW);
-}}'''.format(delta=delta)
+}}'''.format(depth_change=depth_change)
 
     def load(self, item):
         '''
@@ -429,16 +429,16 @@ if (((S->stack_size - S->STACK_DEPTH) < (smite_UWORD)({delta}))) {{
             # Put it in memory.
             return item.store()
 
-    def add(self, delta):
+    def add(self, depth_change):
         '''
         Returns C source code to update the variable `cached_depth` to reflect
         a change in the stack depth.
 
-         - delta - int (N.B. not Size)
+         - depth_change - int (N.B. not Size)
         '''
-        assert type(delta) is int
-        if delta == 0: return ''
-        self.depth += delta
+        assert type(depth_change) is int
+        if depth_change == 0: return ''
+        self.depth += depth_change
         if self.depth < 0: self.depth = 0
         return 'cached_depth = {};'.format(self.depth)
 
