@@ -42,12 +42,14 @@ class Option(Feature):
      - arg - str - 'no_argument', 'required_argument' or 'optional_argument'
      - arg_name - str - name for the argument, if any
      - top_level_code - str - additional top-level code for the option
-     - init_code - str - code run when the option is parsed
+     - init_code - str - code run on program start-up
+     - parse_code - str - code run when the option is parsed
      - exception_handler - str - cases added to the exception handler
     '''
     def __init__(self, long_name, docstring, short_name=None,
                  arg=None, arg_name=None,
-                 top_level_code=None, init_code=None, exception_handler=None):
+                 top_level_code=None, init_code=None, parse_code=None,
+                 exception_handler=None):
         super().__init__()
         self.long_name = long_name
         self.short_name = short_name
@@ -56,6 +58,7 @@ class Option(Feature):
         self.docstring = docstring
         self.top_level_code = top_level_code
         self.init_code = init_code
+        self.parse_code = parse_code
         self.exception_handler = exception_handler
 
 class Arg(Feature):
@@ -183,6 +186,13 @@ int main(int argc, char *argv[])
     smite_WORD (*run_fn)(smite_state *) = smite_run;
 ''')
 
+index = 0
+for feature in features:
+    if isinstance(feature, Option):
+        if feature.init_code:
+            print(textwrap.indent(feature.init_code, '    '))
+        index += 1
+
 shortopts = ''
 for feature in features:
     if isinstance(feature, Option) and feature.short_name:
@@ -226,9 +236,9 @@ for feature in features:
 index = 0
 for feature in features:
     if isinstance(feature, Option):
-        if feature.init_code:
+        if feature.parse_code:
             print('        if (longindex == {})\n'.format(index) +
-                  textwrap.indent(feature.init_code, '            '))
+                  textwrap.indent(feature.parse_code, '            '))
         index += 1
 
 print ('    }\n')

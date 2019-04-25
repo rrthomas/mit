@@ -13,7 +13,7 @@ static smite_WORD trace_run(smite_state *state)
     } while (ret == 0);
     return ret;
 }''',
-       init_code='''\
+       parse_code='''\
 {
     trace_fp = fopen(optarg, "wb");
     run_fn = trace_run;

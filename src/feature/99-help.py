@@ -2,7 +2,7 @@
 
 Option('help',
        'display this help message and exit',
-       init_code='usage();'
+       parse_code='usage();'
 )
 
 Option('version',
@@ -11,7 +11,7 @@ Option('version',
 #include <stdio.h>
 #include <stdlib.h>
 ''',
-       init_code='''\
+       parse_code='''\
 {
     printf(PACKAGE_NAME " " VERSION " (%d-byte word, %s-endian)\\n"
            "(c) SMite authors 1994-2019\\n"
