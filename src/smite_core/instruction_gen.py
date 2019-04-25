@@ -372,6 +372,7 @@ def gen_case(instruction):
     effect = instruction.effect
     code = []
     if effect is not None:
+        # Load the arguments into C variables.
         code.append(effect.declare_vars())
         count = effect.args.by_name.get('COUNT')
         if count is not None:
@@ -387,6 +388,7 @@ def gen_case(instruction):
         ])
     code.append(textwrap.dedent(instruction.code.rstrip()))
     if effect is not None:
+        # Store the results from C variables.
         code.extend([
             'S->STACK_DEPTH += {};'.format(
                 effect.results.size - effect.args.size),
@@ -396,7 +398,8 @@ def gen_case(instruction):
     return re.sub('\n+', '\n', '\n'.join(code), flags=re.MULTILINE).strip('\n')
 
 def dispatch(instructions, prefix, undefined_case):
-    '''Generate dispatch code for some Instructions.
+    '''
+    Generate dispatch code for some Instructions.
 
     instructions - Enum of Instructions.
     '''
