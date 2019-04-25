@@ -1,17 +1,8 @@
 #!/usr/bin/python3
-'''
-Process an instruction trace, and build a specialised interpreter. Unfinished.
 
-For the purposes of this program, a trace is an (ASCII) text file with one "event" per line. Events are therefore newline-free byte strings, and distinct byte strings are distinct events.
+import sys, pickle, hashlib
 
-The abstraction of events is compatible with traces recorded using "smite --trace". [TODO: Change "smite --trace" behaviour so the values of number literals are suppressed.]
-
-When finished, the program will compute the control-flow structure of an interpreter specialised for the instruction trace. This can be used to compile a version of smite that is fast for programs similar to the instruction trace. (For other programs it is correct and no slower than an unspecialised smite).
-'''
-
-import sys, pickle
-
-from smite_core.events import ALL_EVENTS, EVENT_TRACE_NAMES, EVENT_NAMES
+from smite_core.vm_data import Instructions
 
 if len(sys.argv) != 3:
     print("Usage: gen-predictor TRACE-FILE PREDICTOR-FILE", file=sys.stderr)
@@ -19,83 +10,92 @@ if len(sys.argv) != 3:
 trace_filename = sys.argv[1]
 predictor_filename = sys.argv[2]
 
-# Predictor.
+# Index the instruction set.
 
-def step(history, event):
+# bytes -> Instructions
+# N.B. Instructions not Instruction.
+TRACE_NAMES = {
+    b'%d' % i.value.opcode: i
+    for i in Instructions
+}
+
+class StepFunction:
     '''
-    Given a hash of recent history and an event that occurred, returns the
-    new hash of recent history.
-     - history - a 32-bit hash of history.
-     - event - Event.
+    A callable that updates the history to record that an instruction was
+    executed.
     '''
-    or_mask = event.hash0 & event.hash1
-    and_mask = event.hash0 | event.hash1
-    return (history | or_mask) & and_mask
+    def __init__(self, name):
+        '''
+         - name - bytes - the information about the instruction that will
+           affect the history.
+        '''
+        h = hashlib.md5()
+        h.update(name)
+        h = int.from_bytes(h.digest(), byteorder='little')
+        hash0 = h & 0x7FFFFFFFFFFFFFFF; h >>= 63
+        hash1 = h & 0x7FFFFFFFFFFFFFFF; h >>= 63
+        self._or_mask = hash0 & hash1
+        self._and_mask = hash0 | hash1
+
+    def __call__(self, history):
+        return (history | self._or_mask) & self._and_mask
+
+# Instructions -> HistoryStep
+STEP_FUNCTIONS = {
+    i: StepFunction(name)
+    for name, i in TRACE_NAMES.items()
+}
+
+# Predictor.
 
 class Predictor:
     '''
     Public fields:
-     - predictions - a dict from history value (int) to a dict from event
-       (bytes) to count (int). The new history value arising from an event can
-       be computed using `step()`.
+     - predictions - a dict from history value (int) to a dict from
+       Instructions to count (int).
     '''
 
     def __init__(self):
-        self.predictions = {} # history (int) -> Event -> count (int).
+        self.predictions = {} # history (int) -> Instructions -> count (int).
 
-    def record_event(self, history, event):
+    def record_instruction(self, history, instruction):
         '''
-        Records that `event` occurred at `history`.
+        Records that `instruction` occurred at `history`.
          - history - 63-bit hash of history.
-         - event - Event.
+         - instruction - An Instructions.
         '''
         if history not in self.predictions:
             self.predictions[history] = {}
         counts = self.predictions[history]
-        if event.name not in counts:
-            counts[event.name] = 0
-        counts[event.name] += 1
+        if instruction not in counts:
+            counts[instruction] = 0
+        counts[instruction] += 1
 
-    def event_count(self, history, event):
+    def instruction_count(self, history, instruction):
         if history not in self.predictions:
             return 0
-        return self.predictions[history][event.name]
-
-    def __str__(self):
-        return 'Predictor({\n  %s\n})' % (
-            '\n  '.join(
-                '%08x: {\n    %s\n  }' % (
-                    history,
-                    ',\n    '.join(
-                        '%08x: %d' % (event, count)
-                        for (event, count) in counts.items()
-                    ),
-                )
-                for (history, counts) in self.predictions.items()
-            ),
-        )
+        return self.predictions[history][instruction.name]
 
 # Build a Predictor.
 
 print("Building a predictor")
 
 def open_trace(trace_filename):
-    '''Yields Event objects.'''
+    '''Yields Instructions objects.'''
     with open(trace_filename, 'rb') as trace:
         for line in trace:
             line = line.strip()
-            if line in EVENT_TRACE_NAMES:
-                yield EVENT_TRACE_NAMES[line]
+            if line in TRACE_NAMES:
+                yield TRACE_NAMES[line]
             else:
-                # Ignore undefined instructions, which are occasionally used.
-                pass
+                raise ValueError("Undefined instruction")
 
 predictor = Predictor()
 history = 0
 progress = 0
-for event in open_trace(trace_filename):
-    predictor.record_event(history, event)
-    history = step(history, event)
+for instruction in open_trace(trace_filename):
+    predictor.record_instruction(history, instruction)
+    history = STEP_FUNCTIONS[instruction](history)
     progress += 1
     if progress >= 1000000:
         progress = 0
@@ -117,15 +117,18 @@ history_index = {
 
 state_table = [
     {
-        event: (history_index[step(history, EVENT_NAMES[event])], count)
-        for (event, count) in predictor.predictions[history].items()
-        if step(history, EVENT_NAMES[event]) in history_index
+        instruction.name: (
+            history_index[STEP_FUNCTIONS[instruction](history)],
+            count,
+        )
+        for (instruction, count) in predictor.predictions[history].items()
+        if STEP_FUNCTIONS[instruction](history) in history_index
         if count > 0
     }
     for history in all_histories
 ]
 
 with open(predictor_filename, 'wb') as f:
-    # [{event_name: (new_state, count)]
+    # [{instruction_name: (new_state, count)]
     pickle.dump(state_table, f)
 print('Wrote {}'.format(predictor_filename))

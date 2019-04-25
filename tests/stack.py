@@ -1,6 +1,6 @@
 # Test the stack operators.
 #
-# (c) Reuben Thomas 1994-2019
+# (c) SMite authors 1994-2019
 #
 # The package is distributed under the MIT/X11 License.
 #
@@ -21,17 +21,19 @@ correct = [
     [1, 2, 3],
     [1, 2, 3, 0],
     [1, 2, 3, 3],
+    [1, 2, 3, 3, 1],
     [1, 2, 3],
-    [1, 2, 3, 1],
+    [1, 2, 3, 0],
     [1, 3, 2],
     [1, 3, 2, 1],
     [1, 3, 2, 3],
-    [1, 3, 2, 3, 1],
+    [1, 3, 2, 3, 0],
     [1, 3, 3, 2],
+    [1, 3, 3, 2, 1],
     [1, 3, 3],
     [1, 3, 3, 0],
     [1, 3, 3, 3],
-    [1, 3, 3, 3, 0],
+    [1, 3, 3, 3, 4],
     [],
     [2],
     [2, 1],
@@ -50,18 +52,20 @@ lit(2)
 lit(3)
 lit(0)
 ass(DUP)
-ass(POP)
 lit(1)
+ass(POP)
+lit(0)
 ass(SWAP)
 lit(1)
 ass(DUP)
-lit(1)
+lit(0)
 ass(SWAP)
+lit(1)
 ass(POP)
 lit(0)
 ass(DUP)
-lit(0)
-ass(SET_STACK_DEPTH)
+lit(4)
+ass(POP)
 lit(2)
 lit(1)
 lit(0)

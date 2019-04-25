@@ -1,11 +1,20 @@
-'''SMite assembler/disassembler'''
+'''
+SMite assembler/disassembler
+
+(c) SMite authors 2019
+
+The package is distributed under the MIT/X11 License.
+
+THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
+RISK.
+'''
 
 from .binding import (
     align, is_aligned,
-    word_size, word_bit, word_mask, instruction_bit, instruction_mask, sign_bit,
+    word_bytes, word_bit, word_mask, instruction_bit, instruction_mask, sign_bit,
 )
 from .vm_data import Instructions
-from .vm_data_extra import LibInstructions
+from .ext import LibInstructions
 
 LIT = Instructions.LIT.value.opcode
 LIT_PC_REL = Instructions.LIT_PC_REL.value.opcode
@@ -17,10 +26,11 @@ mnemonic = {
     instruction.value.opcode: instruction.name
     for instruction in Instructions
 }
-mnemonic.update({
-    instruction.value.opcode: instruction.name
-    for instruction in LibInstructions
-})
+# FIXME: Disassemble LibInstructions when the literal directly precedes EXT
+# mnemonic.update({
+#     instruction.value.opcode: instruction.name
+#     for instruction in LibInstructions
+# })
 
 # The set of opcodes which must be the last in a word.
 TERMINAL_OPCODES = frozenset([0, BRANCH, CALL, HALT])
@@ -60,7 +70,7 @@ class Disassembler:
         if self.pc >= self.end:
             raise StopIteration
         word = self.state.M_word[self.pc] & word_mask
-        self.pc += word_size
+        self.pc += word_bytes
         return word
 
     def __iter__(self):
@@ -147,7 +157,7 @@ class Assembler:
         Inserts a word with value `value`.
         '''
         self.state.M_word[self.pc] = value
-        self.pc += word_size
+        self.pc += word_bytes
 
     def bytes(self, bytes):
         assert self.i_addr is None

@@ -1,6 +1,6 @@
 # Test the VM-generated error codes and HALT.
 #
-# (c) Reuben Thomas 1995-2019
+# (c) SMite authors 1995-2019
 #
 # The package is distributed under the MIT/X11 License.
 #
@@ -15,64 +15,75 @@ VM.globalize(globals())
 
 # Test results and data
 result = []
-invalid_address = size * word_size + 1000
+invalid_address = size * word_bytes + 1000
 test = []
 
 # Try to divide by zero
 test.append(label())
-result.append(8)
-print("Test {}: PC = {}".format(len(test), test[len(test) - 1]))
+result.append(9)
+print("Test {}: PC = {}".format(len(test), test[-1]))
 lit(1)
 lit(0)
 ass(DIVMOD)
 
-# Try to set STACK_DEPTH to an invalid stack location
-test.append(label())
-result.append(2)
-print("Test {}: PC = {}".format(len(test), test[len(test) - 1]))
-lit(STACK_SIZE.get())
-ass(SET_STACK_DEPTH)
-ass(GET_STACK_DEPTH)
-
 # Try to read from an invalid stack location
 test.append(label())
 result.append(3)
-print("Test {}: PC = {}".format(len(test), test[len(test) - 1]))
+print("Test {}: PC = {}".format(len(test), test[-1]))
 ass(DUP)
 
 # Try to execute an invalid memory location
 test.append(label())
 result.append(5)
-print("Test {}: PC = {}".format(len(test), test[len(test) - 1]))
-lit(MEMORY.get() + 1)
+print("Test {}: PC = {}".format(len(test), test[-1]))
+lit(VM.memory_size * word_bytes + 1)
 ass(BRANCH)
 
 # Try to load from an invalid address
 test.append(label())
 result.append(5)
-print("Test {}: PC = {}".format(len(test), test[len(test) - 1]))
+print("Test {}: PC = {}".format(len(test), test[-1]))
 lit(invalid_address)
+lit(size_word)
 ass(LOAD)
 
 # Try to store to an invalid address
 test.append(label())
 result.append(6)
-print("Test {}: PC = {}".format(len(test), test[len(test) - 1]))
+print("Test {}: PC = {}".format(len(test), test[-1]))
 lit(0)
 lit(invalid_address)
+lit(size_word)
 ass(STORE)
 
 # Try to load from unaligned address
 test.append(label())
 result.append(7)
-print("Test {}: PC = {}".format(len(test), test[len(test) - 1]))
+print("Test {}: PC = {}".format(len(test), test[-1]))
 lit(1)
+lit(size_word)
 ass(LOAD)
+
+# Try to load with an invalid size
+test.append(label())
+result.append(8)
+print("Test {}: PC = {}".format(len(test), test[-1]))
+lit(0)
+lit(42)
+ass(LOAD)
+
+# Try to store with an invalid size
+test.append(label())
+result.append(8)
+lit(0)
+lit(0)
+lit(42)
+ass(STORE)
 
 # Try to execute invalid opcode
 test.append(label())
 result.append(1)
-print("Test {}: PC = {}".format(len(test), test[len(test) - 1]))
+print("Test {}: PC = {}".format(len(test), test[-1]))
 ass(UNDEFINED)
 
 # Tests

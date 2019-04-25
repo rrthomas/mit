@@ -1,7 +1,6 @@
-// The interface calls load_object(file, address) : integer and
-// save_object(file, address, length) : integer.
+// Load and save object files.
 //
-// (c) Reuben Thomas 1995-2019
+// (c) SMite authors 1995-2019
 //
 // The package is distributed under the MIT/X11 License.
 //
@@ -18,7 +17,7 @@
 
 #define HEADER_LENGTH 8
 
-ptrdiff_t smite_load_object(smite_state *S, smite_UWORD address, int fd)
+ptrdiff_t smite_load_object(smite_state *S, smite_UWORD addr, int fd)
 {
     // Skip any #! header
     char buf[sizeof("#!") - 1];
@@ -41,7 +40,7 @@ ptrdiff_t smite_load_object(smite_state *S, smite_UWORD address, int fd)
     // Read and check header
     char header[HEADER_LENGTH] = {'\0'};
     smite_UWORD endism;
-    smite_UWORD _WORD_SIZE;
+    smite_UWORD _WORD_BYTES;
     memcpy(header, buf, nread);
     if ((res = read(fd, &header[nread], sizeof(header) - nread)) == -1)
         return -1;
@@ -49,44 +48,48 @@ ptrdiff_t smite_load_object(smite_state *S, smite_UWORD address, int fd)
         memcmp(header, PACKAGE_UPPER, sizeof(PACKAGE_UPPER)) ||
         (endism = header[sizeof(PACKAGE_UPPER)]) > 1)
         return -2;
-    if (endism != S->ENDISM ||
-        (_WORD_SIZE = header[sizeof(PACKAGE_UPPER) + 1]) != WORD_SIZE)
+    if (endism != ENDISM ||
+        (_WORD_BYTES = header[sizeof(PACKAGE_UPPER) + 1]) != WORD_BYTES)
         return -3;
 
     // Read and check size, and ensure code will fit in memory
-    smite_UWORD length = 0;
-    if ((res = read(fd, &length, sizeof(length))) == -1)
+    smite_UWORD len = 0;
+    if ((res = read(fd, &len, sizeof(len))) == -1)
         return -1;
-    if (res != sizeof(length))
+    if (ENDISM != DEFAULT_ENDISM)
+        len = reverse_endianness(len);
+    if (res != sizeof(len))
         return -2;
-    uint8_t *ptr = smite_native_address_of_range(S, address, length);
-    if (ptr == NULL || !smite_is_aligned(address))
+    uint8_t *ptr = smite_native_address_of_range(S, addr, len);
+    if (ptr == NULL || !smite_is_aligned(addr, smite_SIZE_WORD))
         return -4;
 
     // Read code
-    if ((res = read(fd, ptr, length)) == -1)
+    if ((res = read(fd, ptr, len)) == -1)
         return -1;
-    else if (res != (ssize_t)length)
+    else if (res != (ssize_t)len)
         return -2;
 
-    return (ssize_t)length;
+    return (ssize_t)len;
 }
 
-int smite_save_object(smite_state *S, smite_UWORD address, smite_UWORD length, int fd)
+int smite_save_object(smite_state *S, smite_UWORD addr, smite_UWORD len, int fd)
 {
-    uint8_t *ptr = smite_native_address_of_range(S, address, length);
-    if (!smite_is_aligned(address) || ptr == NULL)
+    uint8_t *ptr = smite_native_address_of_range(S, addr, len);
+    if (!smite_is_aligned(addr, smite_SIZE_WORD) || ptr == NULL)
         return -2;
 
-    char hashbang[] = "#!/usr/bin/env smite\n";
     smite_BYTE buf[HEADER_LENGTH] = PACKAGE_UPPER;
-    buf[sizeof(PACKAGE_UPPER)] = S->ENDISM;
-    buf[sizeof(PACKAGE_UPPER) + 1] = WORD_SIZE;
+    buf[sizeof(PACKAGE_UPPER)] = ENDISM;
+    buf[sizeof(PACKAGE_UPPER) + 1] = WORD_BYTES;
 
-    if (write(fd, hashbang, sizeof(hashbang) - 1) != sizeof(hashbang) - 1 ||
-        write(fd, &buf[0], HEADER_LENGTH) != HEADER_LENGTH ||
-        write(fd, &length, sizeof(length)) != sizeof(length) ||
-        write(fd, ptr, length) != (ssize_t)length)
+    smite_UWORD len_save = len;
+    if (ENDISM != DEFAULT_ENDISM)
+        len_save = reverse_endianness(len_save);
+
+    if (write(fd, &buf[0], HEADER_LENGTH) != HEADER_LENGTH ||
+        write(fd, &len_save, sizeof(len_save)) != sizeof(len_save) ||
+        write(fd, ptr, len) != (ssize_t)len)
         return -1;
 
     return 0;

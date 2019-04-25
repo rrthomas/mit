@@ -1,6 +1,6 @@
 # Test that run() works.
 #
-# (c) Reuben Thomas 1995-2019
+# (c) SMite authors 1995-2019
 #
 # The package is distributed under the MIT/X11 License.
 #
@@ -16,7 +16,7 @@ if VM == None:
     sys.exit(1)
 
 # Test code
-final_pc = word_size
+final_pc = word_bytes
 ass(HALT)
 
 # Test

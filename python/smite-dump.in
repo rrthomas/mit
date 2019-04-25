@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # Dump @PACKAGE_NAME@ object file as hex and disassembly
-# (c) Reuben Thomas 2018-2019
+# (c) SMite authors 2018-2019
+# This file is in the public domain.
 
 import sys
 import os.path

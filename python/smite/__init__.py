@@ -1,8 +1,16 @@
-'''SMite
+'''
+SMite
 
 This module provides SMite bindings for Python 3, and offers a convenient
 set of functions and variables to interact with SMite in a Python REPL.
-Package smite.assembler provides Assembler and Disassembler.
+Module smite.assembler provides Assembler and Disassembler.
+
+(c) SMite authors 2019
+
+The package is distributed under the MIT/X11 License.
+
+THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
+RISK.
 
 When run as a script (SMite provides 'smite-shell' to do this), the module
 provides a global SMite instance in VM, and defines various globals. See
@@ -21,10 +29,17 @@ import sys
 import collections.abc
 
 from .vm_data import *
-from .vm_data_extra import *
+from .ext import *
 from .binding import *
 from .assembler import *
 
+
+# Set up binary I/O flag
+O_BINARY = 0
+try:
+    O_BINARY = os.O_BINARY
+except:
+    pass
 
 # State
 class State:
@@ -41,13 +56,13 @@ class State:
             for (name, register) in Registers.__members__.items()
         }
         self.M = Memory(self)
+        self.memory_size = memory_size
         self.M_word = WordMemory(self)
         self.S = Stack(
             self.state,
-            self.registers["S0"],
-            self.registers["STACK_SIZE"],
             self.registers["STACK_DEPTH"],
         )
+        self.stack_size = stack_size
 
     def __del__(self):
         libsmite.smite_destroy(self.state)
@@ -188,12 +203,13 @@ class State:
         '''
         Load an object file at the given address. Returns the length.
         '''
-        fd = os.open(file, os.O_RDONLY)
+        fd = os.open(file, os.O_RDONLY | O_BINARY)
         if fd < 0:
             raise Error("cannot open file {}".format(file))
-        ret = libsmite.smite_load_object(self.state, addr, fd)
-        os.close(fd)
-        return ret
+        try:
+            return libsmite.smite_load_object(self.state, addr, fd)
+        finally:
+            os.close(fd)
 
     def save(self, file, address=0, length=None):
         '''
@@ -204,13 +220,13 @@ class State:
         if not is_aligned(address) or ptr == None:
             return -1
 
-        fd = os.open(file, os.O_CREAT | os.O_RDWR)
+        fd = os.open(file, os.O_CREAT | os.O_RDWR | O_BINARY, mode=0o666)
         if fd < 0:
-            fatal("cannot open file {}".format(file))
-        ret = libsmite.smite_save_object(self.state, address, length, fd)
-        os.close(fd)
-        return ret
-
+            raise Error("cannot open file {}".format(file))
+        try:
+            return libsmite.smite_save_object(self.state, address, length, fd)
+        finally:
+            os.close(fd)
 
     # Disassembly
     def disassemble(self, start=None, length=None, end=None, file=sys.stdout):
@@ -224,11 +240,14 @@ class State:
 
     def dump(self, start=None, length=None, end=None, file=sys.stdout):
         '''
-        Dump `length` bytes from `start`, or from `start` to `end`.
-        Defaults to 256 bytes from `start` - 16.
+        Dump `length` bytes from `start` (rounded down to nearest 16),
+        or from `start` to `end`.
+        Defaults to 256 bytes from `start`.
         '''
+        chunk = 16
         if start == None:
-            start = max(0, self.registers["PC"].get() - 16)
+            start = max(0, self.registers["PC"].get())
+        start -= start % chunk
         if length != None:
             end = start + length
         elif end == None:
@@ -237,7 +256,6 @@ class State:
         p = start
         while p < end:
             print("{:#08x} ".format(p), end='', file=file)
-            chunk = 16
             ascii = ""
             i = 0
             while i < chunk and p < end:
@@ -289,10 +307,8 @@ class ActiveRegister:
 # Stacks
 class Stack:
     '''VM stack.'''
-    def __init__(self, state, base, size, depth):
+    def __init__(self, state, depth):
         self.state = state
-        self.base = base
-        self.size = size
         self.depth = depth
 
     # After https://github.com/ipython/ipython/blob/master/IPython/lib/pretty.py
@@ -354,39 +370,28 @@ class AbstractMemory(collections.abc.Sequence):
         raise NotImplementedError
 
     def __len__(self):
-       return self.VM.registers["MEMORY"].get()
+        return self.memory_size * word_bytes
 
 class Memory(AbstractMemory):
     '''A VM memory (byte-accessed).'''
     def load(self, index):
-        byte = c_ubyte()
-        libsmite.smite_load_byte(self.VM.state, index, byref(byte))
-        return byte.value
+        word = c_word()
+        libsmite.smite_load(self.VM.state, index, 0, byref(word))
+        return word.value
 
     def store(self, index, value):
-        libsmite.smite_store_byte(self.VM.state, index, c_ubyte(value))
+        libsmite.smite_store(self.VM.state, index, 0, c_word(value))
 
 class WordMemory(AbstractMemory):
     '''A VM memory (word-accessed).'''
     def __init__(self, VM):
         super().__init__(VM)
-        self.element_size = word_size
+        self.element_size = word_bytes
 
     def load(self, index):
-        if is_aligned(index):
-            word = c_word()
-            libsmite.smite_load_word(self.VM.state, index, byref(word))
-            return word.value
-        else:
-            value = 0
-            for i in reversed(range(word_size)):
-                value = (value << byte_bit) | self.VM.M[index + i]
-            return value
+        word = c_word()
+        libsmite.smite_load(self.VM.state, index, size_word, byref(word))
+        return word.value
 
     def store(self, index, value):
-        if is_aligned(index):
-            libsmite.smite_store_word(self.VM.state, index, c_word(value))
-        else:
-            for i in range(word_size):
-                self.VM.M[index + i] = value & byte_mask
-                value >>= byte_bit
+        libsmite.smite_store(self.VM.state, index, size_word, c_word(value))

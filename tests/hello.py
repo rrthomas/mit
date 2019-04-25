@@ -1,6 +1,6 @@
 # Hello world demo/test.
 #
-# (c) Reuben Thomas 2018-2019
+# (c) SMite authors 2018-2019
 #
 # The package is distributed under the MIT/X11 License.
 #
@@ -14,14 +14,21 @@ VM.globalize(globals())
 
 # Assemble test code
 
-# Address in next line = instructions + word_size × literals
-lit(libsmite.smite_align(7 + 4 * word_size))
-lit(14)
-lit(LIB_C_STDOUT)
-ass(LIB_C)
-lit(LIB_C_WRITE)
-ass(LIB_C)
-ass(HALT)
+# Address in next line = instructions + word_bytes × literals
+code_len = 0
+# Hack: two-pass assembly to calculate code_len
+for i in range(2):
+    goto(0)
+    lit(code_len)
+    lit(14)
+    lit(LIB_C_STDOUT)
+    lit(LIB_C)
+    ass(EXT)
+    lit(LIB_C_WRITE)
+    lit(LIB_C)
+    ass(EXT)
+    ass(HALT)
+    code_len = assembler.pc
 
 bytes(b"Hello, world!\n")
 

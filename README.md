@@ -17,7 +17,7 @@ implementation in ISO C99 using POSIX APIs. Detailed documentation is in the
 `doc` directory; installation instructions follow. Maintainers should read
 `HACKING.md`.
 
-The package is distributed under the MIT/X11 License (see the file `COPYING`).
+The package is distributed under the MIT/X11 License (see the file `COPYING`). Note that some files are in the public domain, notably the specification of SMite; they are marked as such.
 
 THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 RISK.
@@ -61,7 +61,14 @@ PDFs are supplied in release archives.
 ## Use
 
 Run `smite OBJECT-FILE` (see `smite --help` for documentation). To run the
-shell, `python3 -i -m smite`.
+shell, `smite-shell`.
+
+
+## C API
+
+Include `smite/smite.h` (see this file for its documentation), and link with
+`libsmite`. In addition, `smite/opcodes.h` contains an enumeration type of
+SMite’s instruction set.
 
 
 ## Documentation
@@ -71,9 +78,8 @@ The documentation consists of:
 * _[The SMite Virtual Machine](doc/smite.pdf)_  
 The design of the SMite virtual machine is described. Essential reading
 for those programming or implementing the VM.
-* _[An implementation of the SMite virtual machine for POSIX](doc/csmite.pdf)_  
-A portable implementation of SMite is described, with instructions for
-porting, compiling and running it.
+* The comments in `smite.h`.
+* Comments in the Python modules.
 
 SMite is based on [Beetle](https://github.com/rrthomas/beetle), which I
 developed for my BA dissertation project.

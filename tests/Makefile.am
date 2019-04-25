@@ -1,6 +1,6 @@
 # Tests Makefile.am
 #
-# (c) Reuben Thomas 2011-2019
+# (c) SMite authors 2011-2019
 #
 # The package is distributed under the MIT/X11 License.
 #
@@ -15,7 +15,7 @@ TESTS =	\
 	arithmetic.py	\
 	branch.py	\
 	comparison.py	\
-	extra_libc.py	\
+	ext.py		\
 	errors.py	\
 	hello.py	\
 	init.py		\

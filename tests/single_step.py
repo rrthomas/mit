@@ -1,6 +1,6 @@
 # Test single_step and NEXT.
 #
-# (c) Reuben Thomas 1994-2019
+# (c) SMite authors 1994-2019
 #
 # The package is distributed under the MIT/X11 License.
 #
@@ -19,7 +19,7 @@ for i in range(iterations):
 
 # The value of final_pc is caused by step() trying a second instruction each
 # time it hits a NEXT, and hence advancing two words.
-final_pc = (iterations * 2) * word_size
+final_pc = (iterations * 2) * word_bytes
 print("PC should now be {}".format(final_pc))
 if PC.get() != final_pc:
     print("Error in single_step() tests: PC = {:#x}".format(PC.get()))

@@ -1,7 +1,23 @@
+'''
+Python bindings for libsmite.
+
+(c) SMite authors 2019
+
+The package is distributed under the MIT/X11 License.
+
+THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
+RISK.
+'''
+
 from ctypes import *
 from ctypes.util import find_library
 
 library_file = find_library("smite")
+if not library_file:
+    # For Windows
+    # FIXME: Do this portably
+    # FIXME: Substitute version when library is versioned
+    library_file = find_library("libsmite-0")
 assert(library_file)
 libsmite = CDLL(library_file)
 assert(libsmite)
@@ -39,23 +55,24 @@ def errcheck(code_to_message):
 
 # Constants (all of type unsigned)
 vars().update([(c, c_uint.in_dll(libsmite, "smite_{}".format(c)).value)
-               for c in ["word_size", "byte_bit", "byte_mask", "word_bit",
+               for c in ["word_bytes", "endism", "size_word",
+                         "byte_bit", "byte_mask", "word_bit",
                          "instruction_bit", "instruction_mask"]])
 sign_bit = 1 << (word_bit - 1)
 
 
 # Types
-if word_size == sizeof(c_int):
+if word_bytes == sizeof(c_int):
     c_word = c_int
     c_uword = c_uint
-elif word_size == sizeof(c_long):
+elif word_bytes == sizeof(c_long):
     c_word = c_long
     c_uword = c_ulong
-elif word_size == sizeof(c_longlong):
+elif word_bytes == sizeof(c_longlong):
     c_word = c_longlong
     c_uword = c_ulonglong
 else:
-    raise Exception("Could not find Python C type matching WORD (size {})".format(word_size))
+    raise Exception("Could not find Python C type matching WORD (size {})".format(word_bytes))
 
 
 # Constants that require VM types
@@ -70,6 +87,7 @@ vars().update([(c, cty.in_dll(libsmite, "smite_{}".format(c)).value)
 # Functions
 c_ptrdiff_t = c_ssize_t
 
+# FIXME: Generate these from C
 execution_error = errcheck({
     0: None,
     1: "invalid opcode",
@@ -77,9 +95,10 @@ execution_error = errcheck({
     3: "invalid stack read",
     4: "invalid stack write",
     5: "invalid memory read",
-    6: "invalud memory write",
+    6: "invalid memory write",
     7: "unaligned address",
-    8: "division by zero",
+    8: "bad size",
+    9: "division by zero",
     128: "halt",
 })
 
@@ -89,15 +108,10 @@ malloc_error = errcheck({
 })
 
 # smite.h
-libsmite.smite_load_word.argtypes = [c_void_p, c_uword, POINTER(c_word)]
-libsmite.smite_load_word.errcheck = execution_error
-libsmite.smite_store_word.argtypes = [c_void_p, c_uword, c_word]
-libsmite.smite_store_word.errcheck = execution_error
-# N.B. load/store_byte in Python use UBYTE, not BYTE
-libsmite.smite_load_byte.argtypes = [c_void_p, c_uword, POINTER(c_ubyte)]
-libsmite.smite_load_byte.errcheck = execution_error
-libsmite.smite_store_byte.argtypes = [c_void_p, c_uword, c_ubyte]
-libsmite.smite_store_byte.errcheck = execution_error
+libsmite.smite_load.argtypes = [c_void_p, c_uword, c_uint, POINTER(c_word)]
+libsmite.smite_load.errcheck = execution_error
+libsmite.smite_store.argtypes = [c_void_p, c_uword, c_uint, c_word]
+libsmite.smite_store.errcheck = execution_error
 
 libsmite.smite_load_stack.argtypes = [c_void_p, c_uword, POINTER(c_word)]
 libsmite.smite_load_stack.errcheck = execution_error
@@ -124,7 +138,7 @@ libsmite.smite_load_object.argtypes = [c_void_p, c_uword, c_int]
 libsmite.smite_load_object.errcheck = errcheck({
     -1: "file system error",
     -2: "module invalid",
-    -3: "module has wrong ENDISM or WORD_SIZE",
+    -3: "module has wrong ENDISM or WORD_BYTES",
     -4: "address out of range or unaligned, or module too large",
 })
 
@@ -155,8 +169,7 @@ libsmite.smite_align.argtypes = [c_uword]
 libsmite.smite_is_aligned.argtypes = [c_uword]
 
 def align(addr):
-    return libsmite.smite_align(addr)
+    return libsmite.smite_align(addr, size_word)
 
 def is_aligned(addr):
-    return libsmite.smite_is_aligned(addr)
-
+    return libsmite.smite_is_aligned(addr, size_word)
