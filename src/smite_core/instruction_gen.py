@@ -139,28 +139,37 @@ class StackItem:
     Public fields:
 
      - name - str
-     - type - str - C type of the item, or None if unknown
-     - size - Size, or None if unknown - number of words occupied by the item
-     - depth - TODO.
+     - type - str - C type of the item (ignore if `name` is 'ITEMS').
+     - size - Size, or `None` if unknown - The number of words occupied by
+       the item.
+     - depth - If this StackItem is part of a StackEffect, the total size of
+       the StackItems above this one, otherwise `None`.
     '''
-    def __init__(self, name_and_type):
-        '''
-        Each name is optionally followed by ":TYPE" to give the C type of the
-        underlying quantity; the default is smite_WORD.
+    def __init__(self, name, type_):
+        self.name = name
+        self.type = type_
+        if self.name == 'ITEMS':
+            self.size = Size(0, count=1)
+        else:
+            if type_sizes is None:
+                self.size = None
+            else:
+                self.size = Size((type_sizes[self.type] +
+                                  (type_sizes['smite_WORD'] - 1)) //
+                                 type_sizes['smite_WORD'])
+        self.depth = None
 
-        Items of unknown type are indicated by a colon with no type
-        following. The `size` field of such StackItems may be set later.
+    @staticmethod
+    def of(name_and_type):
+        '''
+        The name is optionally followed by ":TYPE" to give the C type of the
+        underlying quantity; the default is smite_WORD.
         '''
         l = name_and_type.split(":")
-        self.name = l[0]
-        self.type = l[1] if len(l) > 1 else 'smite_WORD'
-        self.size = None
-        if self.type == '':
-            self.type = None
-        elif type_sizes is not None:
-            self.size = Size((type_sizes[self.type] +
-                              (type_sizes['smite_WORD'] - 1)) //
-                             type_sizes['smite_WORD'])
+        return StackItem(
+            l[0],
+            l[1] if len(l) > 1 else 'smite_WORD',
+        )
 
     def __eq__(self, item):
         return (self.name == item.name and
@@ -169,6 +178,49 @@ class StackItem:
 
     def __hash__(self):
         return hash((self.name, self.type, self.size))
+
+    # In `load()` & `store()`, casts to size_t avoid warnings when `type` is
+    # a pointer and sizeof(void *) > WORD_BYTES, but the effect is identical.
+    def load(self):
+        '''
+        Returns C source code to load `self` from the stack to its C variable.
+        '''
+        code = [
+            'size_t temp = (smite_UWORD)(*UNCHECKED_STACK({}));'
+            .format(self.depth + (self.size - 1))
+        ]
+        for i in reversed(range(self.size - 1)):
+            code.append('temp <<= smite_WORD_BIT;')
+            code.append(
+                'temp |= (smite_UWORD)(*UNCHECKED_STACK({}));'
+                .format(self.depth + i)
+            )
+        code.append('{} = ({})temp;'.format(self.name, self.type))
+        return '''\
+{{
+{}
+}}'''.format(textwrap.indent('\n'.join(code), '    '))
+
+    def store(self):
+        '''
+        Returns C source code to store `self` to the stack from its C variable.
+        '''
+        code = ['size_t temp = (size_t){};'.format(self.name)]
+        for i in range(self.size - 1):
+            code.append(
+                '*UNCHECKED_STACK({}) = (smite_UWORD)(temp & smite_WORD_MASK);'
+                .format(self.depth + i)
+            )
+            code.append('temp >>= smite_WORD_BIT;')
+        code.append(
+            '*UNCHECKED_STACK({}) = (smite_UWORD)(temp & smite_WORD_MASK);'
+            .format(self.depth + (self.size - 1))
+        )
+        return '''\
+{{
+{}
+}}'''.format(textwrap.indent('\n'.join(code), '    '))
+
 
 class StackEffect:
     '''
@@ -203,8 +255,8 @@ class StackEffect:
         if 'ITEMS:' in args_str and 'ITEMS:' in results_str:
             # FIXME: Assert the stack address is the same, not the index.
             assert args_str.index('ITEMS:') == results_str.index('ITEMS:')
-        self.args = [StackItem(arg_str) for arg_str in args_str]
-        self.results = [StackItem(result_str) for result_str in results_str]
+        self.args = [StackItem.of(arg_str) for arg_str in args_str]
+        self.results = [StackItem.of(result_str) for result_str in results_str]
         self.items = {}
         for item in self.args + self.results:
             if item.name not in self.items:
@@ -225,46 +277,6 @@ class StackEffect:
             depth += item.size
         return depth
 
-    # In load_item & store_item, casts to size_t avoid warnings when `var` is
-    # a pointer and sizeof(void *) > WORD_BYTES, but the effect is identical.
-    def load_item(self, item):
-        '''Load `item` from the stack to its C variable.'''
-        code = [
-            'size_t temp = (smite_UWORD)(*UNCHECKED_STACK({}));'
-            .format(item.depth + (item.size - 1))
-        ]
-        for i in reversed(range(item.size - 1)):
-            code.append('temp <<= smite_WORD_BIT;')
-            code.append(
-                'temp |= (smite_UWORD)(*UNCHECKED_STACK({}));'
-                .format(item.depth + i)
-            )
-        code.append('{} = ({})temp;'.format(item.name, item.type))
-        return '''\
-{{
-{}
-}}'''.format(textwrap.indent('\n'.join(code), '    '))
-
-    def store_item(self, item):
-        '''
-        Store `item` to the stack from its C variable.
-        '''
-        code = ['size_t temp = (size_t){};'.format(item.name)]
-        for i in range(item.size - 1):
-            code.append(
-                '*UNCHECKED_STACK({}) = (smite_UWORD)(temp & smite_WORD_MASK);'
-                .format(item.depth + i)
-            )
-            code.append('temp >>= smite_WORD_BIT;')
-        code.append(
-            '*UNCHECKED_STACK({}) = (smite_UWORD)(temp & smite_WORD_MASK);'
-            .format(item.depth + (item.size - 1))
-        )
-        return '''\
-{{
-{}
-}}'''.format(textwrap.indent('\n'.join(code), '    '))
-
     def declare_vars(self):
         '''
         Returns C variable declarations for arguments and results other than
@@ -279,7 +291,7 @@ class StackEffect:
         Returns C source code to read the arguments from the stack into C
         variables. `S->STACK_DEPTH` is not modified.
         '''
-        return '\n'.join([self.load_item(item)
+        return '\n'.join([item.load()
                           for item in self.args
                           if item.name != 'ITEMS' and item.name != 'COUNT'])
 
@@ -288,7 +300,7 @@ class StackEffect:
         Returns C source code to write the results from C variables into the
         stack. `S->STACK_DEPTH` must be modified first.
         '''
-        return '\n'.join([self.store_item(item)
+        return '\n'.join([item.store()
                           for item in self.results if item.name != 'ITEMS'])
 
 
@@ -344,7 +356,7 @@ def gen_case(instruction):
                     effect.items['COUNT'].depth +
                     effect.items['COUNT'].size
                 ),
-                effect.load_item(effect.items['COUNT']),
+                effect.items['COUNT'].load(),
             ]
         code += [
             check_underflow(effect.args_size),
