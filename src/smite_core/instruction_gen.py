@@ -313,11 +313,12 @@ def gen_case(instruction):
             check_underflow(args_size),
             check_overflow(args_size, results_size),
             effect.load_args(),
+            'S->STACK_DEPTH -= {};'.format(args_size),
         ]
     code += [textwrap.dedent(instruction.code.rstrip())]
     if effect is not None:
         code += [
-            'S->STACK_DEPTH += {};'.format(results_size - args_size),
+            'S->STACK_DEPTH += {};'.format(results_size),
             effect.store_results(),
         ]
     # Remove newlines resulting from empty strings in the above.
