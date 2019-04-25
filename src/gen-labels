@@ -62,7 +62,7 @@ class Path:
                 checked_depth = 0
             else:
                 # Simulate popping arguments.
-                for item in reversed(effect.args):
+                for item in reversed(effect.args.items):
                     if item.name == 'ITEMS':
                         # Conservatively suppose `COUNT` is zero.
                         # We cannot cache items below 'ITEMS'.
@@ -73,7 +73,7 @@ class Path:
                 if cached_depth < 0:
                     cached_depth = 0
                 # Simulate pushing results.
-                for item in reversed(effect.results):
+                for item in reversed(effect.results.items):
                     if item.name == 'ITEMS':
                         # Suppose `COUNT` is zero to match args.
                         # We cannot cache items below 'ITEMS'.
