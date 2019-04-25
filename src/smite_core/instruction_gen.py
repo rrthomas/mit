@@ -403,20 +403,24 @@ def dispatch(instructions, prefix, undefined_case):
 
     instructions - Enum of Instructions.
     '''
-    output = '    switch (opcode) {\n'
+    code = ['    switch (opcode) {']
     for instruction in instructions:
-        output += '''\
+        code.append('''\
     case {prefix}{instruction}:
         {{
 {code}
         }}
-        break;\n'''.format(
+        break;'''.format(
             instruction=instruction.name,
             prefix=prefix,
-            code=textwrap.indent(gen_case(instruction.value), '            '))
-    output += '''
+            code=textwrap.indent(gen_case(instruction.value), '            ')),
+        )
+    code.append('''
     default:
 {}
         break;
     }}'''.format(undefined_case)
-    return output
+    )
+    # Remove newlines resulting from empty strings in the above.
+    return re.sub('\n+', '\n', '\n'.join(code), flags=re.MULTILINE).strip('\n')
+
