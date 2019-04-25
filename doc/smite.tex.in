@@ -121,9 +121,14 @@ The stack is a LIFO stack of words used for passing values to instructions and r
 Execution proceeds as follows:
 
 \begin{tabbing}
-\hspace{0.5in}\=begin\=\+\+ \\*
+\hspace{0.5in}\=begin\=\+\+\hspace{0.5in}\=\hspace{0.5in}\= \\*
 execute the instruction in the \instsize\ least-significant bits of {\tt I} \\*
-shift {\tt I} logically \instsize\ bits to the right \- \\*
+shift {\tt I} logically \instsize\ bits to the right \\*
+if {\tt I} is $0$\+ \\*
+if {\tt PC} is not word-aligned\+ \\*
+set {\tt BAD} to the contents of {\tt PC} and raise error $7$ \- \\*
+load the word pointed to by {\tt PC} into {\tt I} \\*
+add {\tt WORD\_BYTES} to {\tt PC} \-\- \\*
 repeat
 \end{tabbing}
 
@@ -131,7 +136,7 @@ repeat
 \subsection{Errors and termination}
 \label{errors}
 
-When @PACKAGE_NAME@ encounters certain abnormal situations, such as an attempt to access an invalid address, or divide by zero, an {\bf error} is {\bf raised}, and execution terminates; an {\bf error code} is returned to the caller. The instruction has no effect, and {\tt PC} is not advanced to the next instruction. If the error is a stack or memory access error, {\tt BAD} is set to the stack position or address that caused the error.
+When @PACKAGE_NAME@ encounters certain abnormal situations, such as an attempt to access an invalid address, or divide by zero, an {\bf error} is {\bf raised}, and execution terminates; an {\bf error code} is returned to the caller. The instruction has no effect. If the error is a stack or memory access error, {\tt BAD} is set to the stack position or address that caused the error.
 
 Execution can also be terminated explicitly by performing a {\tt HALT} instruction (see section~\ref{haltact}).
 
@@ -193,7 +198,7 @@ are a representation of the top-most items on the stack, and are written
 \begin{center}
 \begin{tabular}{cl} \toprule
 \bf Symbol & \bf Data type \\ \midrule
-\spic{flag} & a Boolean flag, $0$ for false or $1$ for true; other non-zero values are also treated as true \\
+\spic{flag} & a Boolean flag, $0$ for false or non-zero for true \\
 \spic{size} & an integer in the range $0$ to $\log_2{\tt WORD\_BYTES}$ inclusive \\
 \spic{n} & signed number \\
 \spic{u} & unsigned number \\
@@ -240,7 +245,7 @@ Ellipsis is used for indeterminate numbers of specified types of item.
 \subsection{Instruction fetch}
 
 \begin{description}
-\inst{NEXT}{—}{If {\tt I} is not $0$, raise error $1$. If {\tt PC} is not word-aligned, raise error $7$, setting {\tt BAD} to the contents of {\tt PC}. Load the word pointed to by {\tt PC} into {\tt I} then add {\tt WORD\_BYTES} to {\tt PC}.}
+\inst{NOP}{—}{Do nothing.}
 \end{description}
 
 
@@ -252,9 +257,9 @@ call and return (subroutine return is {\tt BRANCH}):
 
 \nopagebreak
 \begin{description}
-\inst{BRANCH}{a-addr —}{Set {\tt PC} to \spic{a-addr}. Perform the action of {\tt NEXT}.}
-\inst{BRANCHZ}{flag a-addr —}{If \spic{flag} is false then set {\tt PC} to \spic{a-addr} and perform the action of {\tt NEXT}.}
-\inst{CALL}{\aaddr1 — \aaddr2}{Exchange {\tt PC} with the top stack value. Perform the action of {\tt NEXT}.}
+\inst{BRANCH}{a-addr —}{Set {\tt PC} to \spic{a-addr}. If {\tt I} is not $0$, raise error $1$.}
+\inst{BRANCHZ}{flag a-addr —}{If \spic{flag} is false then set {\tt PC} to \spic{a-addr} and set {\tt I} to $0$.}
+\inst{CALL}{\aaddr1 — \aaddr2}{Exchange {\tt PC} with the top stack value. If {\tt I} is not $0$, raise error $1$.}
 \end{description}
 
 
@@ -312,9 +317,9 @@ stack, returning a flag:
 
 \nopagebreak
 \begin{description}
-\inst{EQ}{\x1 \x2 — flag}{\spic{flag} is true if and only if \x1 is bit-for-bit the same as \x2.}
-\inst{LT}{\n1 \n2 — flag}{\spic{flag} is true if and only if \n1 is less than \n2.}
-\inst{ULT}{\U1 \U2 — flag}{\spic{flag} is true if and only if \U1 is less than \U2.}
+\inst{EQ}{\x1 \x2 — flag}{\spic{flag} is $1$ if and only if \x1 is bit-for-bit the same as \x2.}
+\inst{LT}{\n1 \n2 — flag}{\spic{flag} is $1$ if and only if \n1 is less than \n2.}
+\inst{ULT}{\U1 \U2 — flag}{\spic{flag} is $1$ if and only if \U1 is less than \U2.}
 \end{description}
 
 
@@ -373,7 +378,7 @@ This instruction terminates execution (see section~\ref{errors}):
 
 \nopagebreak
 \begin{description}
-\inst{HALT}{—}{Terminate execution with error code $128$.}
+\inst{HALT}{—}{If {\tt I} is not $0$, raise error $1$; otherwise, raise error $128$.}
 \end{description}
 
 
@@ -392,7 +397,7 @@ Table~\ref{opcodetable} lists the instruction opcodes in numerical order. Other 
 \begin{center}
 \begin{tabular}{*{2}{cc}} \toprule
 \bf Opcode & \bf Instruction & \bf Opcode & \bf Instruction \\ \midrule
-\opcodetbl{00}{NEXT}		{10}{EQ}
+\opcodetbl{00}{NOP}		{10}{EQ}
 \opcodetbl{01}{BRANCH}		{11}{LT}
 \opcodetbl{02}{BRANCHZ}		{12}{ULT}
 \opcodetbl{03}{CALL}		{13}{NEGATE}

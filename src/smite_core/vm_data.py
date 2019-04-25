@@ -28,26 +28,27 @@ class Registers(Enum):
 @unique
 class Instructions(Enum):
     '''VM instruction instructions.'''
-    NEXT = Instruction(0x00, [], [], '''\
-        NEXT;'''
+    NOP = Instruction(0x00, [], [], ''
     )
 
     BRANCH = Instruction(0x01, ['addr'], [], '''\
+        if (S->I != O_BRANCH)
+            RAISE(SMITE_ERR_INVALID_OPCODE);
         S->PC = (smite_UWORD)addr;
-        NEXT;
     ''')
 
     BRANCHZ = Instruction(0x02, ['flag', 'addr'], [], '''\
         if (flag == 0) {
             S->PC = (smite_UWORD)addr;
-            NEXT;
+            S->I = 0;
         }
     ''')
 
     CALL = Instruction(0x03, ['addr'], ['ret_addr'], '''\
+        if (S->I != O_CALL)
+            RAISE(SMITE_ERR_INVALID_OPCODE);
         ret_addr = S->PC;
         S->PC = (smite_UWORD)addr;
-        NEXT;
     ''')
 
     POP = Instruction(0x04, ['ITEMS:', 'COUNT'], [], '')
@@ -167,5 +168,7 @@ class Instructions(Enum):
     ''')
 
     HALT = Instruction(0x1f, [], [], '''\
+        if (S->I != O_HALT)
+            RAISE(SMITE_ERR_INVALID_OPCODE);
         RAISE(SMITE_ERR_HALT);
     ''')

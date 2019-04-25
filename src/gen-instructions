@@ -24,25 +24,12 @@ print('''\
     do {                                                      \\
         int error = (code);                                   \\
         S->PC = initial_PC;                                   \\
-        S->I = initial_I;                                     \\
         return error;                                         \\
-    } while (0)
-
-#define NEXT                                                  \\
-    do {                                                      \\
-        if (S->I != 0)                                        \\
-            RAISE(SMITE_ERR_INVALID_OPCODE);                  \\
-        int ret = load(S, S->PC, smite_SIZE_WORD, (smite_WORD *)&(S->I)); \\
-        if (ret != 0)                                         \\
-            RAISE(ret);                                       \\
-        S->PC += WORD_BYTES;                                  \\
     } while (0)
 
 smite_WORD smite_single_step(smite_state *S) {
     smite_UWORD initial_PC = S->PC;
-    smite_UWORD initial_I = S->I;
     smite_BYTE opcode = S->I & SMITE_INSTRUCTION_MASK;
-    S->I >>= SMITE_INSTRUCTION_BIT;
 
     // Check STACK_DEPTH is valid
     if (S->STACK_DEPTH > S->stack_size) {
@@ -57,6 +44,14 @@ print(instruction_gen.dispatch(vm_data.Instructions, 'O_', '''\
 '''))
 
 print('''
+    // Instruction fetch
+    S->I >>= SMITE_INSTRUCTION_BIT;
+    if (S->I == 0) {
+        int ret = load(S, S->PC, smite_SIZE_WORD, (smite_WORD *)&(S->I));
+        if (ret != 0)
+            RAISE(ret);
+        S->PC += WORD_BYTES;
+    }
 
     return SMITE_ERR_OK;
 }
