@@ -133,15 +133,18 @@ int smite_is_aligned(smite_UWORD addr, unsigned size);
 /* Return 1 if `addr` is a multiple of 2^`size`, or `0` if not. */
 
 // Inline functions
-_GL_ATTRIBUTE_CONST static inline smite_UWORD align(smite_UWORD addr, unsigned size)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-function"
+_GL_ATTRIBUTE_CONST static smite_UWORD align(smite_UWORD addr, unsigned size)
 {
     return (addr + ((1 << size) - 1)) & -(1 << size);
 }
 
-_GL_ATTRIBUTE_CONST static inline int is_aligned(smite_UWORD addr, unsigned size)
+_GL_ATTRIBUTE_CONST static int is_aligned(smite_UWORD addr, unsigned size)
 {
     return (addr & ((1 << size) - 1)) == 0;
 }
+#pragma GCC diagnostic pop
 
 
 // Memory access
@@ -171,12 +174,15 @@ int smite_store(smite_state *S, smite_UWORD addr, unsigned size, smite_WORD val)
 */
 
 // Inline functions
-_GL_ATTRIBUTE_PURE static inline uint8_t *native_address_of_range(smite_state *S, smite_UWORD addr, smite_UWORD len)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-function"
+_GL_ATTRIBUTE_PURE static uint8_t *native_address_of_range(smite_state *S, smite_UWORD addr, smite_UWORD len)
 {
     if (addr >= S->memory_size || len > S->memory_size - addr)
         return NULL;
     return ((uint8_t *)(S->memory)) + addr;
 }
+#pragma GCC diagnostic pop
 
 #if WORD_BYTES == 4
 #define reverse_endianness bswap_32
@@ -186,7 +192,9 @@ _GL_ATTRIBUTE_PURE static inline uint8_t *native_address_of_range(smite_state *S
 #error "WORD_BYTES must be 4 or 8!"
 #endif
 
-static inline int load(smite_state *S, smite_UWORD addr, unsigned size, smite_WORD *val_ptr)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-function"
+static int load(smite_state *S, smite_UWORD addr, unsigned size, smite_WORD *val_ptr)
 {
     if (addr >= S->memory_size) {
         S->BAD = addr;
@@ -225,7 +233,7 @@ static inline int load(smite_state *S, smite_UWORD addr, unsigned size, smite_WO
     return SMITE_ERR_OK;
 }
 
-static inline int store(smite_state *S, smite_UWORD addr, unsigned size, smite_WORD val)
+static int store(smite_state *S, smite_UWORD addr, unsigned size, smite_WORD val)
 {
     if (addr >= S->memory_size) {
         S->BAD = addr;
@@ -261,6 +269,7 @@ static inline int store(smite_state *S, smite_UWORD addr, unsigned size, smite_W
 
     return SMITE_ERR_OK;
 }
+#pragma GCC diagnostic pop
 
 
 // Stack access
@@ -298,7 +307,9 @@ int smite_push_stack(smite_state *S, smite_WORD val);
     (S->stack + S->STACK_DEPTH - (pos) - 1)
 
 // Inline functions
-static inline int load_stack(smite_state *S, smite_UWORD pos, smite_WORD *vp)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-function"
+static int load_stack(smite_state *S, smite_UWORD pos, smite_WORD *vp)
 {
     if (pos >= S->STACK_DEPTH) {
         S->BAD = pos;
@@ -309,7 +320,7 @@ static inline int load_stack(smite_state *S, smite_UWORD pos, smite_WORD *vp)
     return SMITE_ERR_OK;
 }
 
-static inline int store_stack(smite_state *S, smite_UWORD pos, smite_WORD v)
+static int store_stack(smite_state *S, smite_UWORD pos, smite_WORD v)
 {
     if (pos >= S->STACK_DEPTH) {
         S->BAD = pos;
@@ -320,14 +331,14 @@ static inline int store_stack(smite_state *S, smite_UWORD pos, smite_WORD v)
     return SMITE_ERR_OK;
 }
 
-static inline int pop_stack(smite_state *S, smite_WORD *v)
+static int pop_stack(smite_state *S, smite_WORD *v)
 {
     int ret = load_stack(S, 0, v);
     S->STACK_DEPTH--;
     return ret;
 }
 
-static inline int push_stack(smite_state *S, smite_WORD v)
+static int push_stack(smite_state *S, smite_WORD v)
 {
     if (S->STACK_DEPTH >= S->stack_size) {
         S->BAD = S->stack_size;
@@ -337,6 +348,7 @@ static inline int push_stack(smite_state *S, smite_WORD v)
     (S->STACK_DEPTH)++;
     return store_stack(S, 0, v);
 }
+#pragma GCC diagnostic pop
 
 
 // VM instantiation and control
