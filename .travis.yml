@@ -45,4 +45,4 @@ before_install:
 script:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install help2man ; fi
   - ./bootstrap
-  - for flavour in "CFLAGS=-DWORD_BYTES=4 -DENDISM=0" "CFLAGS=-DWORD_BYTES=4 -DENDISM=1" "CFLAGS=-DWORD_BYTES=8 -DENDISM=0" "CFLAGS=-DWORD_BYTES=8 -DENDISM=1"; do ./configure $GLOBAL_CONFIGURE_OPTS "$flavour" && make && sudo make install && if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then make check ; else make distcheck ; fi; done
+  - for flavour in "CPPFLAGS=-DWORD_BYTES=4 -DENDISM=0" "CPPFLAGS=-DWORD_BYTES=4 -DENDISM=1" "CPPFLAGS=-DWORD_BYTES=8 -DENDISM=0" "CPPFLAGS=-DWORD_BYTES=8 -DENDISM=1"; do ./configure $GLOBAL_CONFIGURE_OPTS "$flavour" && make && sudo make install && if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then make check ; else make distcheck ; fi; done
