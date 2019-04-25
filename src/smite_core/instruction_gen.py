@@ -82,7 +82,7 @@ class Size:
             return value
         if type(value) is int:
             return Size(value)
-        return NotImplemented
+        raise TypeError('cannot convert {} to Size'.format(type(value)))
 
     def __int__(self):
         if self.count != 0:
@@ -114,19 +114,23 @@ class Size:
         else: assert False
         return s.format(self.size)
 
+    def __neg__(self):
+        return Size(-self.size, count=-self.count)
+
     def __add__(self, value):
         value = Size.of(value)
         return Size(self.size + value.size, count=self.count + value.count)
 
     def __radd__(self, value):
-        return Size.of(value).__add__(self)
+        return Size.of(value) + self
 
     def __sub__(self, value):
         value = Size.of(value)
-        return Size(self.size - value.size, count=self.count - value.count)
+        return self + (-value)
 
     def __rsub__(self, value):
-        return Size.of(value).__sub__(self)
+        return Size.of(value) - self
+
 
 class StackItem:
     '''
