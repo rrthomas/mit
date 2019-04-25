@@ -334,32 +334,30 @@ def check_underflow(num_pops):
     '''
     Returns C source code to check that the stack contains enough items to
     pop the specified number of items.
-     - num_pops - a C expression giving the number of items to pop.
+     - num_pops - Size
     '''
-    if not num_pops <= 0:
-        return '''\
+    if num_pops <= 0: return ''
+    return '''\
 if ((S->STACK_DEPTH < (smite_UWORD)({num_pops}))) {{
     S->BAD = {num_pops} - 1;
     RAISE(SMITE_ERR_STACK_READ);
 }}'''.format(num_pops=num_pops)
-    else:
-        return ''
 
 def check_overflow(num_pops, num_pushes):
     '''
     Returns C source code to check that the stack contains enough space to
     push `num_pushes` items, given that `num_pops` items will first be
     popped.
+     - num_pops - Size.
+     - num_pushes - Size.
     '''
     depth_change = num_pushes - num_pops
-    if not depth_change <= 0:
-        return '''\
+    if depth_change <= 0: return ''
+    return '''\
 if (((S->stack_size - S->STACK_DEPTH) < (smite_UWORD)({depth_change}))) {{
     S->BAD = ({depth_change}) - (S->stack_size - S->STACK_DEPTH);
     RAISE(SMITE_ERR_STACK_OVERFLOW);
 }}'''.format(depth_change=depth_change)
-    else:
-        return ''
 
 def gen_case(instruction):
     '''
