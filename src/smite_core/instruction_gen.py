@@ -539,23 +539,25 @@ def dispatch(instructions, prefix, undefined_case):
     '''
     code = ['    switch (opcode) {']
     for instruction in instructions:
-        code.extend([
-            '    case {prefix}{instruction}:'.format(
-                prefix=prefix,
-                instruction=instruction.name,
-            ),
-            '        {',
-            textwrap.indent(
+        code.append('''\
+    case {prefix}{instruction}:
+        {{
+{code}
+        }}
+        break;'''.format(
+            instruction=instruction.name,
+            prefix=prefix,
+            code=textwrap.indent(
                 gen_case(instruction.value, CacheState(0), 0),
                 '            ',
             ),
-            '        }''',
-            '        break;',
-        ])
-    code.extend([
-        '    default:',
-        undefined_case,
-        '        break;',
-        '    }'''
-    ])
+        ))
+    code.append('''
+    default:
+{}
+        break;
+    }}'''.format(undefined_case)
+    )
+    # Remove newlines resulting from empty strings in the above.
     return re.sub('\n+', '\n', '\n'.join(code), flags=re.MULTILINE).strip('\n')
+
