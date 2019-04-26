@@ -20,26 +20,24 @@ VM.globalize(globals())
 correct = []
 
 # Code
-goto(0)
-correct.append(assembler.pc)
 lit(96)
 correct.append(assembler.pc)
 ass(BRANCH)
-
 goto(96)
 correct.append(assembler.pc + word_bytes)
+
 lit_pc_rel(48)
 correct.append(assembler.pc)
 ass(BRANCH)
-
 goto(48)
 correct.append(assembler.pc + word_bytes)
+
 lit_pc_rel(10000)
 correct.append(assembler.pc)
 ass(BRANCH)
-
 goto(10000)
 correct.append(assembler.pc + word_bytes)
+
 lit(1)
 correct.append(assembler.pc)
 lit(9999)
@@ -57,43 +55,43 @@ correct.append(assembler.pc)
 lit_pc_rel(11000)
 correct.append(assembler.pc)
 ass(BRANCHZ)
-
 goto(11000)
 correct.append(assembler.pc + word_bytes)
+
 lit(0)
 correct.append(assembler.pc)
 lit_pc_rel(11000 + word_bytes * 8)
 correct.append(assembler.pc)
 ass(BRANCHZ)
-
 goto(11000 + word_bytes * 8)
 correct.append(assembler.pc + word_bytes)
+
 lit_pc_rel(600)
 correct.append(assembler.pc)
 ass(CALL)
-
 goto(600)
 correct.append(assembler.pc + word_bytes)
+
 lit_pc_rel(200)
 correct.append(assembler.pc)
 ass(CALL)
-
 goto(200)
 correct.append(assembler.pc + word_bytes)
+
 lit(304)
 correct.append(assembler.pc)
 ass(CALL)
-
 goto(304)
 correct.append(assembler.pc + word_bytes)
-ass(BRANCH)
 
+ass(BRANCH)
 goto(200 + word_bytes * 2)
 correct.append(assembler.pc + word_bytes)
-ass(BRANCH)
 
+ass(BRANCH)
 goto(600 + word_bytes * 2)
 correct.append(assembler.pc + word_bytes)
+
 lit(64)
 correct.append(assembler.pc)
 lit(24)
@@ -115,16 +113,15 @@ correct.append(assembler.pc)
 ass(LOAD)
 correct.append(assembler.pc)
 ass(CALL)
-correct.append(64 + word_bytes)
+goto(64)
+correct.append(assembler.pc + word_bytes)
 
 # Test
 for i, pc in enumerate(correct):
     print("Instruction {}: PC = {} should be {}\n".format(i, PC.get(), pc))
+    step(trace=True)
     if pc != PC.get():
         print("Error in branch tests: PC = {:#x}".format(PC.get()))
         sys.exit(1)
-    while registers["I"].get() & instruction_mask == NEXT:
-        step(auto_NEXT=False)
-    step(trace=True, auto_NEXT=False)
 
 print("Branch tests ran OK")

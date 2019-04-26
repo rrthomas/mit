@@ -15,11 +15,9 @@ VM.globalize(globals())
 iterations = 10
 for i in range(iterations):
     print("PC = {:#x}".format(PC.get()))
-    step()
+    step(auto_NEXT=False)
 
-# The value of final_pc is caused by step() trying a second instruction each
-# time it hits a NEXT, and hence advancing two words.
-final_pc = (iterations * 2) * word_bytes
+final_pc = iterations * word_bytes
 print("PC should now be {}".format(final_pc))
 if PC.get() != final_pc:
     print("Error in single_step() tests: PC = {:#x}".format(PC.get()))

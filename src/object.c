@@ -61,7 +61,7 @@ ptrdiff_t smite_load_object(smite_state *S, smite_UWORD addr, int fd)
     if (res != sizeof(len))
         return -2;
     uint8_t *ptr = smite_native_address_of_range(S, addr, len);
-    if (ptr == NULL || !smite_is_aligned(addr, smite_SIZE_WORD))
+    if (ptr == NULL || !is_aligned(addr, smite_SIZE_WORD))
         return -4;
 
     // Read code
@@ -76,7 +76,7 @@ ptrdiff_t smite_load_object(smite_state *S, smite_UWORD addr, int fd)
 int smite_save_object(smite_state *S, smite_UWORD addr, smite_UWORD len, int fd)
 {
     uint8_t *ptr = smite_native_address_of_range(S, addr, len);
-    if (!smite_is_aligned(addr, smite_SIZE_WORD) || ptr == NULL)
+    if (!is_aligned(addr, smite_SIZE_WORD) || ptr == NULL)
         return -2;
 
     smite_BYTE buf[HEADER_LENGTH] = PACKAGE_UPPER;

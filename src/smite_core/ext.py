@@ -232,12 +232,22 @@ smite_lib = {
 
 for register in Register:
     smite_lib['GET_{}'.format(register.name.upper())] = (
-        len(smite_lib), ['inner_state:smite_state *'], ['value'], '''\
-    value = smite_get_{}(inner_state);'''.format(register.name))
+        len(smite_lib), None, None, '''\
+    smite_state *inner_state;
+    POP_STACK_TYPE(S, smite_state *, &inner_state);
+    push_stack(S, smite_get_{}(inner_state));
+'''.format(register.name))
     if not register.read_only:
         smite_lib['SET_{}'.format(register.name.upper())] = (
-            len(smite_lib), ['value', 'inner_state:smite_state *'], [], '''\
-    smite_set_{}(inner_state, value);'''.format(register.name))
+            len(smite_lib), None, None, '''\
+    smite_state *inner_state;
+    POP_STACK_TYPE(S, smite_state *, &inner_state);
+    smite_WORD value;
+    int ret = pop_stack(S, &value);
+    if (ret != 0)
+        RAISE(ret);
+    smite_set_{}(inner_state, value);
+'''.format(register.name))
 
 SMiteLib = AbstractInstruction('SMiteLib', smite_lib)
 
@@ -265,8 +275,9 @@ class Library(AbstractInstruction):
         '''Return a list of all types used in the library.'''
         return list(set(
             [self._item_type(item)
-             for instruction in self.library
-             for item in instruction.args + instruction.results
+             for function in self.library
+             if function.args is not None or function.results is not None
+             for item in function.args + function.results
             ]
         ))
 

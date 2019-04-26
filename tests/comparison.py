@@ -28,7 +28,7 @@ def assemble_tests(inputs, outputs, op):
 
 less_than_pairs = [(3, 1),  (1, 3),  (2, 2),  (-4, 3)]
 equality_pairs = [(237, 237),  (1, -1)]
-correct = [[]]
+correct = []
 
 assemble_tests(less_than_pairs, [0, 1, 0, 1], LT)
 assemble_tests(equality_pairs, [1, 0], EQ)

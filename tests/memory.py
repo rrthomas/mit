@@ -18,7 +18,6 @@ VM.globalize(globals())
 # Test results
 magic_number = 0xf201
 correct = [
-    [],
     [magic_number],
     [magic_number, (size - 1) * word_bytes],
     [magic_number, (size - 1) * word_bytes, size_word],

@@ -5,13 +5,14 @@ static smite_UWORD round_up(smite_UWORD n, smite_UWORD multiple)
 {
     return (n - 1) - (n - 1) % multiple + multiple;
 }
-
+''',
+       init_code='''\
 // getpagesize() is obsolete, but gnulib provides it, and
 // sysconf(_SC_PAGESIZE) does not work on some platforms.
-static smite_UWORD page_size;
+smite_UWORD page_size = getpagesize();
 smite_UWORD memory_size = 0x100000U;
-smite_UWORD stack_size = 16384U;''',
-       init_code='page_size = getpagesize();',
+smite_UWORD stack_size = 16384U;
+''',
        exception_handler='''\
 case 2:
     // Grow stack on demand
