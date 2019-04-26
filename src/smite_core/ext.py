@@ -261,8 +261,8 @@ class Library(Instruction):
             [item.type for instruction in
              [function.value
               for function in self.library]
-             for item in (instruction.effect.args +
-                          instruction.effect.results)
+             for item in (instruction.effect.args.items +
+                          instruction.effect.results.items)
             ]
         ))
 

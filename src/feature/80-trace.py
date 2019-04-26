@@ -1,5 +1,7 @@
 Option('trace',
        'write dynamic instruction trace to FILE',
+       arg='required_argument',
+       arg_name='FILE',
        top_level_code='''\
 #include <stdio.h>
 
