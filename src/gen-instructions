@@ -10,7 +10,7 @@
 
 import sys, pickle, textwrap
 
-from smite_core.vm_data import Instructions
+from smite_core.vm_data import Instruction
 from smite_core.instruction_gen import dispatch, gen_case, CacheState
 
 # Load language.
@@ -25,7 +25,7 @@ class Label:
        variables at this Label.
      - checked_depth - int - the number of empty stack slots that are known to
        exist above the top of the stack at this Label.
-     - guess - Instructions - the most probable next instruction.
+     - guess - Instruction - the most probable next instruction.
      - if_correct - int - the Label index to jump to if `guess` is correct.
      - if_wrong - int - the Label index to jump to if `guess` is wrong.
     '''
@@ -47,7 +47,7 @@ class Label:
 
 with open(sys.argv[1], "rb") as h:
     labels = [
-        Label('A_{}'.format(index), ca, ch, Instructions[gu], ic, iw)
+        Label('A_{}'.format(index), ca, ch, Instruction[gu], ic, iw)
         for index, (ca, ch, gu, ic, iw) in enumerate(pickle.load(h))
     ]
 
@@ -103,7 +103,7 @@ smite_WORD smite_single_step(smite_state *S) {
     }
 ''')
 
-print(dispatch(Instructions, 'O_', '''\
+print(dispatch(Instruction, 'O_', '''\
         /* Undefined instruction. */
         RAISE(SMITE_ERR_INVALID_OPCODE);
 '''))
@@ -186,7 +186,7 @@ for label in labels:
     label_c = label_by_index(label.if_correct)
     print(textwrap.indent(
         gen_case(
-            label.guess.value,
+            label.guess,
             CacheState(label.cached_depth),
             label_c.cached_depth,
         ),
@@ -216,7 +216,7 @@ print('''\
             assert(opcode > {max_opcode});
             RAISE(SMITE_ERR_INVALID_OPCODE);
         }}'''.format(
-    max_opcode=max(i.value.opcode for i in Instructions)
+    max_opcode=max(i.opcode for i in Instruction)
 ))
 print()
 

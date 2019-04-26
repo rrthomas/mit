@@ -8,7 +8,6 @@
 # THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 # RISK.
 
-from smite_core.instruction_gen import print_enum
 from smite_core.ext import *
 
 print('''\
@@ -22,9 +21,9 @@ print('''\
 
 #define INSTRUCTION(name, opcode) name = opcode,
 ''')
-print_enum(LibInstructions, "")
-print_enum(LibcLib, "LIB_C_")
-print_enum(SMiteLib, "LIB_SMITE_")
+LibInstruction.print("")
+LibcLib.print("LIB_C_")
+SMiteLib.print("LIB_SMITE_")
 
 print('''
 #undef INSTRUCTION

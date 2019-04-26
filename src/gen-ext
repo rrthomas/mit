@@ -29,14 +29,14 @@ enum {
 verify(sizeof(int) <= sizeof(smite_WORD));
 ''')
 
-for lib in LibInstructions:
+for lib in LibInstruction:
     print('''\
 static int extra_{}(smite_state *S, smite_WORD opcode)
 {{
     smite_UWORD cached_depth = 0;
 '''.format(str.lower(lib.name)))
     print(dispatch(
-        lib.value.library,
+        lib.library,
         '{}_'.format(lib.name),
         '            RAISE(SMITE_ERR_EXT_INVALID_FUNCTION);'))
     print('''
@@ -58,7 +58,7 @@ int smite_ext(smite_state *S)
 ''')
 
 print(dispatch(
-    LibInstructions,
+    LibInstruction,
     '',
     '\n            return SMITE_ERR_EXT_INVALID_LIBRARY;',
 ))

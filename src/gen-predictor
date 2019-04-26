@@ -2,7 +2,7 @@
 
 import sys, pickle, hashlib
 
-from smite_core.vm_data import Instructions
+from smite_core.vm_data import Instruction
 
 if len(sys.argv) != 3:
     print("Usage: gen-predictor TRACE-FILE PREDICTOR-FILE", file=sys.stderr)
@@ -12,11 +12,10 @@ predictor_filename = sys.argv[2]
 
 # Index the instruction set.
 
-# bytes -> Instructions
-# N.B. Instructions not Instruction.
+# bytes -> Instruction
 TRACE_NAMES = {
-    b'%d' % i.value.opcode: i
-    for i in Instructions
+    b'%d' % i.opcode: i
+    for i in Instruction
 }
 
 class StepFunction:
@@ -40,7 +39,7 @@ class StepFunction:
     def __call__(self, history):
         return (history | self._or_mask) & self._and_mask
 
-# Instructions -> HistoryStep
+# Instruction -> HistoryStep
 STEP_FUNCTIONS = {
     i: StepFunction(name)
     for name, i in TRACE_NAMES.items()
@@ -52,17 +51,17 @@ class Predictor:
     '''
     Public fields:
      - predictions - a dict from history value (int) to a dict from
-       Instructions to count (int).
+       Instruction to count (int).
     '''
 
     def __init__(self):
-        self.predictions = {} # history (int) -> Instructions -> count (int).
+        self.predictions = {} # history (int) -> Instruction -> count (int).
 
     def record_instruction(self, history, instruction):
         '''
         Records that `instruction` occurred at `history`.
          - history - 63-bit hash of history.
-         - instruction - An Instructions.
+         - instruction - An Instruction.
         '''
         if history not in self.predictions:
             self.predictions[history] = {}
@@ -81,7 +80,7 @@ class Predictor:
 print("Building a predictor")
 
 def open_trace(trace_filename):
-    '''Yields Instructions objects.'''
+    '''Yields Instructions.'''
     with open(trace_filename, 'rb') as trace:
         for line in trace:
             line = line.strip()
