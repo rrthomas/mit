@@ -41,21 +41,21 @@ main.o: gen-main registers.h
 		--output=$@ ./@PACKAGE@$(EXEEXT); \
 	fi
 
-registers.h: gen-registers smite_core/vm_data.py smite_core/instruction_gen.py
+registers.h: gen-registers smite_core/vm_data.py smite_core/instruction.py
 	$(PYTHON_WITH_PATH) $(srcdir)/gen-registers > registers.h || ( rm -f registers.h; exit 1 )
 
-ext-opcodes.h: gen-ext-opcodes smite_core/ext.py smite_core/instruction_gen.py
+ext-opcodes.h: gen-ext-opcodes smite_core/ext.py smite_core/instruction.py
 	$(PYTHON_WITH_PATH) $(srcdir)/gen-ext-opcodes > ext-opcodes.h || ( rm -f ext-opcodes.h; exit 1 )
 
-opcodes.h: gen-opcodes smite_core/vm_data.py smite_core/instruction_gen.py
+opcodes.h: gen-opcodes smite_core/vm_data.py smite_core/instruction.py
 	$(PYTHON_WITH_PATH) $(srcdir)/gen-opcodes > opcodes.h || ( rm -f opcodes.h; exit 1 )
 
-instructions.c: gen-instructions smite_core/vm_data.py smite_core/instruction_gen.py smite_core/type_sizes.py
+instructions.c: gen-instructions smite_core/vm_data.py smite_core/instruction.py smite_core/instruction_gen.py smite_core/type_sizes.py
 	$(PYTHON_WITH_PATH) $(srcdir)/gen-instructions > instructions.c || ( rm -f instructions.c; exit 1 )
 
 # Note: we grep config.log because the generated header file has the symbols
 # sorted lexically, and we need the output in the same order as the input.
-smite_core/type_sizes.py: $(top_builddir)/config.status gen-type-sizes collate-type-sizes registers.h smite_core/ext.py smite_core/instruction_gen.py
+smite_core/type_sizes.py: $(top_builddir)/config.status gen-type-sizes collate-type-sizes registers.h smite_core/ext.py smite_core/instruction.py
 	$(PYTHON_WITH_PATH) $(srcdir)/gen-type-sizes > type-sizes.ac && \
 	autoconf type-sizes.ac > type-sizes && \
 	CONFIG_SITE= CPPFLAGS="$(CPPFLAGS) -I$(builddir) -I$(srcdir) -I$(top_builddir) $(AM_CPPFLAGS)" $(SHELL) type-sizes && \
@@ -63,7 +63,7 @@ smite_core/type_sizes.py: $(top_builddir)/config.status gen-type-sizes collate-t
 	$(GREP) "^#define SIZEOF" config.log | cut -d " " -f 3 | \
 		( $(PYTHON_WITH_PATH) $(srcdir)/collate-type-sizes > smite_core/type_sizes.py ) || ( rm -f type-sizes.ac type-sizes smite_core/type_sizes.py; exit 1 )
 
-ext.c: gen-ext smite_core/ext.py smite_core/instruction_gen.py smite_core/type_sizes.py
+ext.c: gen-ext smite_core/ext.py smite_core/instruction.py smite_core/instruction_gen.py smite_core/type_sizes.py
 	$(PYTHON_WITH_PATH) $(srcdir)/gen-ext > ext.c || ( rm -f ext.c; exit 1 )
 
 main.c: $(srcdir)/feature/*.py gen-main

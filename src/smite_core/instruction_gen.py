@@ -15,53 +15,7 @@ import functools
 import re
 import textwrap
 
-try:
-    from .type_sizes import type_sizes
-except ImportError:
-    type_sizes = None # We can't generate code
-
-
-def print_enum(instructions, prefix):
-    '''Utility function to print an instruction enum.'''
-    print('\nenum {')
-    for instruction in instructions:
-        print("    INSTRUCTION({}{}, {:#x})".format(
-            prefix,
-            instruction.name,
-            instruction.value.opcode,
-        ))
-    print('};')
-
-class Instruction:
-    '''
-    VM instruction instruction descriptor.
-
-     - opcode - int - opcode number
-     - effect - StackEffect (or None for arbitrary stack effect)
-     - code - str - C source code
-
-    C variables are created for the arguments and results; the arguments are
-    popped and results pushed.
-
-    The code should RAISE any error before writing any state, so that if an
-    error is raised, the state of the VM is not changed.
-    '''
-    def __init__(self, opcode, args, results, code):
-        '''
-         - args, results - lists of str, acceptable to StackPicture.of().
-           If both are `None`, then the instruction has an arbitrary stack
-           effect, like `EXT`.
-        '''
-        self.opcode = opcode
-        if args is None or results is None:
-            assert args is None and results is None
-            self.effect = None
-        else:
-            self.effect = StackEffect(
-                StackPicture.of(args),
-                StackPicture.of(results),
-            )
-        self.code = code
+from .type_sizes import type_sizes
 
 
 @functools.total_ordering
@@ -156,12 +110,9 @@ class StackItem:
         if self.name == 'ITEMS':
             self.size = Size(0, count=1)
         else:
-            if type_sizes is None:
-                self.size = None
-            else:
-                self.size = Size((type_sizes[self.type] +
-                                  (type_sizes['smite_WORD'] - 1)) //
-                                 type_sizes['smite_WORD'])
+            self.size = Size((type_sizes[self.type] +
+                              (type_sizes['smite_WORD'] - 1)) //
+                             type_sizes['smite_WORD'])
         self.depth = None
 
     @staticmethod
@@ -246,13 +197,10 @@ class StackPicture:
     def __init__(self, items):
         self.items = items
         self.by_name = {i.name: i for i in items}
-        if type_sizes is None:
-            self.size = None
-        else:
-            self.size = Size(0)
-            for item in reversed(items):
-                item.depth = self.size
-                self.size += item.size
+        self.size = Size(0)
+        for item in reversed(items):
+            item.depth = self.size
+            self.size += item.size
 
     @staticmethod
     def of(strs):
@@ -288,10 +236,9 @@ class StackEffect:
         assert len(args.by_name) == len(args.items)
         # Check that 'ITEMS' does not move.
         if 'ITEMS' in args.by_name and 'ITEMS' in results.by_name:
-            if type_sizes is not None:
-                arg_pos = args.size - args.by_name['ITEMS'].depth
-                result_pos = args.size - args.by_name['ITEMS'].depth
-                assert arg_pos == result_pos
+            arg_pos = args.size - args.by_name['ITEMS'].depth
+            result_pos = args.size - args.by_name['ITEMS'].depth
+            assert arg_pos == result_pos
         # Check that `results` is type-compatible with `args`.
         for item in results.items:
             if item.name in args.by_name:
@@ -371,8 +318,13 @@ def gen_case(instruction):
 
      - instruction - Instruction.
     '''
-    # Concatenate the pieces.
-    effect = instruction.effect
+    if instruction.args is None and instruction.results is None:
+        effect = None
+    else:
+        effect = StackEffect(
+            StackPicture.of(instruction.args),
+            StackPicture.of(instruction.results),
+        )
     code = []
     if effect is not None:
         # Load the arguments into C variables.
@@ -416,8 +368,11 @@ def dispatch(instructions, prefix, undefined_case):
         break;'''.format(
             instruction=instruction.name,
             prefix=prefix,
-            code=textwrap.indent(gen_case(instruction.value), '            ')),
-        )
+            code=textwrap.indent(
+                gen_case(instruction),
+                '            ',
+            ),
+        ))
     code.append('''
     default:
 {}
