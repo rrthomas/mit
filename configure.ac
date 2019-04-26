@@ -110,7 +110,6 @@ AC_CONFIG_FILES([
         doc/Makefile
         doc/smite.tex
 ])
-AC_CONFIG_FILES([src/gen-main], [chmod +x src/gen-main])
 AC_CONFIG_FILES([python/smite-dump], [chmod +x python/smite-dump])
 AC_CONFIG_FILES([python/smite-shell], [chmod +x python/smite-shell])
 AC_OUTPUT

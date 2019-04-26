@@ -75,8 +75,8 @@ class Arg(Feature):
 
 # Build feature list
 dir = sys.argv[1]
-for file in sorted(os.listdir(sys.argv[1])):
-    exec(open(os.path.join(dir, file)).read())
+for feature_dir in sorted(os.listdir(sys.argv[1])):
+    exec(open(os.path.join(dir, feature_dir, 'feature.py')).read())
 
 
 # Generate output

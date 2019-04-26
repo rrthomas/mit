@@ -27,7 +27,7 @@ pkginclude_HEADERS = include/@PACKAGE@/@PACKAGE@.h
 
 step.lo: instructions.c
 object.lo step.lo storage.lo main.o: include/@PACKAGE@/registers.h include/@PACKAGE@/opcodes.h include/@PACKAGE@/ext-opcodes.h
-main.o: gen-main include/@PACKAGE@/registers.h
+main.o: main.c include/@PACKAGE@/registers.h
 
 # Depend on @PACKAGE@$(EXEEXT) rather than explicitly make-ing it, as otherwise
 # we break parallel builds, as lib@PACKAGE@.la can be built twice in parallel,
@@ -67,7 +67,7 @@ smite_core/type_sizes.py: $(top_builddir)/config.status gen-type-sizes collate-t
 ext.c: gen-ext smite_core/ext.py smite_core/instruction.py smite_core/instruction_gen.py smite_core/type_sizes.py
 	$(PYTHON_WITH_PATH) $(srcdir)/gen-ext > ext.c || ( rm -f ext.c; exit 1 )
 
-main.c: $(srcdir)/feature/*.py gen-main
+main.c: $(srcdir)/feature/*/feature.py gen-main
 	$(PYTHON_WITH_PATH) $(builddir)/gen-main $(srcdir)/feature > main.c || ( rm -f main.c; exit 1 )
 
 loc:
@@ -75,7 +75,7 @@ loc:
 		$(C_SRCS) \
 		$(@PACKAGE@_SOURCES) \
 		$(LIB_CORE_SRCS) \
-		gen-registers gen-opcodes gen-ext-opcodes gen-instructions gen-ext gen-main.in
+		gen-registers gen-opcodes gen-ext-opcodes gen-instructions gen-ext gen-main
 
 EXTRA_DIST = \
 	$(LIB_CORE_SRCS) \
@@ -83,7 +83,7 @@ EXTRA_DIST = \
 	gen-registers \
 	gen-opcodes \
 	gen-instructions \
-	gen-main.in \
+	gen-main \
 	gen-ext-opcodes \
 	gen-ext \
 	gen-type-sizes \
