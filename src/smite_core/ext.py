@@ -267,8 +267,8 @@ class Library(Instruction):
             [item.type
              for function in self.library
              if function.value.effect is not None
-             for item in (function.value.effect.args +
-                          function.value.effect.results)
+             for item in (function.value.effect.args.items +
+                          function.value.effect.results.items)
             ]
         ))
 
