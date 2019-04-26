@@ -174,20 +174,10 @@ class Assembler:
         self.word(0)
         self.i_shift = 0
 
-    def effective_pc(self):
-        '''
-        Return address PC will have after executing the most recently assembled
-        instruction.
-        '''
-        pc = self.pc
-        if self.i_addr is None:
-            pc += word_bytes
-        return pc
-
     def instruction(self, opcode):
         '''
-        Appends an instruction opcode into the current word, and advance pc if
-        the current word is filled up.
+        Appends an instruction opcode. If possible, this will be put in the
+        same word as the previous opcode, otherwise it will start a new word.
         '''
         assert 0 <= opcode <= instruction_mask
         if self.i_addr is None:
@@ -195,13 +185,15 @@ class Assembler:
             assert self.i_shift is None
             self._fetch()
         i = self.state.M_word[self.i_addr]
-        i = (i | (opcode << self.i_shift)) & word_mask
+        i |= opcode << self.i_shift
+        i &= word_mask
+        if (i >> self.i_shift) != opcode:
+            # Doesn't fit in the current word.
+            self._fetch()
+            i = opcode
         self.state.M_word[self.i_addr] = i
         self.i_shift += instruction_bit
-        # If current word is full or we’ve assembled a terminal instruction,
-        # advance pc
-        if (self.i_shift > word_bit - instruction_bit or
-            opcode in TERMINAL_OPCODES):
+        if opcode in TERMINAL_OPCODES:
             self.label()
 
     def lit(self, value):

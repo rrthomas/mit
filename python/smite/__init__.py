@@ -162,9 +162,10 @@ class State:
         ))
         print(str(self.S))
 
-    def step(self, n=1, addr=None, trace=False):
+    def step(self, n=1, addr=None, trace=False, auto_NEXT=True):
         '''
         Single-step for n steps, or until PC=addr.
+        Does not count NEXT as a step, but always stops when PC changes.
         '''
         try:
             done = 0
@@ -172,6 +173,12 @@ class State:
             while True:
                 if trace: self._print_trace_info()
                 libsmite.smite_single_step(self.state)
+                if (auto_NEXT and
+                    self.registers["I"].get() & instruction_mask ==
+                        Instructions.NEXT.value.opcode
+                ):
+                    if trace: self._print_trace_info()
+                    ret = libsmite.smite_single_step(self.state)
                 done += 1
                 if (self.registers["PC"].get() == addr or
                     (addr == None and done == n)
