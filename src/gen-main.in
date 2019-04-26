@@ -42,12 +42,14 @@ class Option(Feature):
      - arg - str - 'no_argument', 'required_argument' or 'optional_argument'
      - arg_name - str - name for the argument, if any
      - top_level_code - str - additional top-level code for the option
-     - init_code - str - code run when the option is parsed
+     - init_code - str - code run on program start-up
+     - parse_code - str - code run when the option is parsed
      - exception_handler - str - cases added to the exception handler
     '''
     def __init__(self, long_name, docstring, short_name=None,
                  arg=None, arg_name=None,
-                 top_level_code=None, init_code=None, exception_handler=None):
+                 top_level_code=None, init_code=None, parse_code=None,
+                 exception_handler=None):
         super().__init__()
         self.long_name = long_name
         self.short_name = short_name
@@ -56,6 +58,7 @@ class Option(Feature):
         self.docstring = docstring
         self.top_level_code = top_level_code
         self.init_code = init_code
+        self.parse_code = parse_code
         self.exception_handler = exception_handler
 
 class Arg(Feature):
@@ -127,7 +130,7 @@ print('''\
 // Options table
 struct option longopts[] = {''')
 for feature in features:
-    if type(feature) == Option:
+    if isinstance(feature, Option):
         print('    {{"{long_name}", {arg}, NULL, \'{short_name}\'}},'.format(
             long_name=feature.long_name, arg=feature.arg or '""',
             short_name=feature.short_name or "\\0"))
@@ -145,19 +148,19 @@ static void usage(void)
            program_name);''')
 
 for feature in features:
-    if type(feature) == Option:
+    if isinstance(feature, Option):
         print('    printf("  %-26s%s\\n", "--{long_name}{short_opt} {arg_name}", "{docstring}");'.format(
             long_name=feature.long_name,
             short_opt=', -{}'.format(feature.short_name) if feature.short_name else '',
             arg_name=feature.arg_name or '',
             docstring=feature.docstring,
         ))
-    elif type(feature) == Arg:
+    elif isinstance(feature, Arg):
         print('printf("  %-26s%s\\n", {arg}, {docstring});'.format(
             arg=feature.arg,
             docstring=feature.docstring
         ))
-    elif type(feature) == Doc:
+    elif isinstance(feature, Doc):
         print('    printf("{}\\n");'.format(feature.text))
 
 print('''
@@ -172,7 +175,7 @@ static void exit_function(void)
 }''')
 
 for feature in features:
-    if type(feature) == Option and feature.top_level_code:
+    if isinstance(feature, Option) and feature.top_level_code:
         print(feature.top_level_code)
 
 print('''
@@ -183,9 +186,16 @@ int main(int argc, char *argv[])
     smite_WORD (*run_fn)(smite_state *) = smite_run;
 ''')
 
+index = 0
+for feature in features:
+    if isinstance(feature, Option):
+        if feature.init_code:
+            print(textwrap.indent(feature.init_code, '    '))
+        index += 1
+
 shortopts = ''
 for feature in features:
-    if type(feature) == Option and feature.short_name:
+    if isinstance(feature, Option) and feature.short_name:
         shortopts += feature.short_name
         if feature.arg == 'required_argument':
             shortopts += ':'
@@ -212,7 +222,7 @@ print('''
 
 index = 0
 for feature in features:
-    if type(feature) == Option:
+    if isinstance(feature, Option):
         if feature.short_name:
             print('''\
         if (c == '{short_name}')
@@ -225,10 +235,10 @@ for feature in features:
 
 index = 0
 for feature in features:
-    if type(feature) == Option:
-        if feature.init_code:
+    if isinstance(feature, Option):
+        if feature.parse_code:
             print('        if (longindex == {})\n'.format(index) +
-                  textwrap.indent(feature.init_code, '            '))
+                  textwrap.indent(feature.parse_code, '            '))
         index += 1
 
 print ('    }\n')
@@ -284,7 +294,7 @@ print('''\
         switch (res) {''')
 
 for feature in features:
-    if type(feature) == Option and feature.exception_handler:
+    if isinstance(feature, Option) and feature.exception_handler:
         print(textwrap.indent(feature.exception_handler, '        '))
 
 print('''\

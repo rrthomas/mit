@@ -8,9 +8,9 @@ Option('core-dump',
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/stat.h>
-
-bool core_dump = false;''',
-       init_code='core_dump = true;',
+''',
+       init_code='bool core_dump = false;',
+       parse_code='core_dump = true;',
        exception_handler='''\
 default:
     // Core dump on error

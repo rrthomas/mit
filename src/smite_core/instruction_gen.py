@@ -69,7 +69,7 @@ class Size:
     '''
     Represents the size of some stack items.
 
-     - size - int or Size.
+     - size - int.
      - count - int - ±1 if the size includes variadic 'ITEMS'
     '''
     def __init__(self, size, count=0):
@@ -180,6 +180,9 @@ class StackItem:
         return (self.name == item.name and
                 self.type == item.type and
                 self.size == item.size)
+
+    def __repr__(self):
+        return "{}:{}".format(self.name, self.type)
 
     def __hash__(self):
         return hash((self.name, self.type, self.size))

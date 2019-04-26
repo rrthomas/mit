@@ -29,6 +29,6 @@ for n, v in enumerate(values):
         ass(LIT_1)
     else:
         lit(v)
-    correct.append([values[i] for i in range(n)])
+    correct.append(values[:n+1])
 
 run_test("literals", VM, correct)

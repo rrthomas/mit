@@ -73,11 +73,11 @@ class Instructions(Enum):
     ''')
 
     LSHIFT = Instruction(0x0c, ['x', 'n'], ['r'], '''\
-        r = n < (smite_WORD)smite_word_bit ? x << n : 0;
+        r = n < (smite_WORD)smite_WORD_BIT ? x << n : 0;
     ''')
 
     RSHIFT = Instruction(0x0d, ['x', 'n'], ['r'], '''\
-        r = n < (smite_WORD)smite_word_bit ? (smite_WORD)((smite_UWORD)x >> n) : 0;
+        r = n < (smite_WORD)smite_WORD_BIT ? (smite_WORD)((smite_UWORD)x >> n) : 0;
     ''')
 
     ARSHIFT = Instruction(0x0e, ['x', 'n'], ['r'], '''\

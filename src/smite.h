@@ -302,6 +302,26 @@ int smite_push_stack(smite_state *S, smite_WORD val);
    to `S->stack_size`.
 */
 
+
+// Convenience macros for native types
+#define PUSH_STACK_TYPE(S, ty, v)                                       \
+    for (unsigned i = 0; i < align(sizeof(ty), smite_SIZE_WORD); i++) { \
+        int ret = push_stack(S, (smite_UWORD)((size_t)(v) & smite_word_mask)); \
+        if (ret != 0)                                                   \
+            RAISE(ret);                                                 \
+        v = (ty)((size_t)(v) >> smite_word_bit);                        \
+    }
+#define POP_STACK_TYPE(S, ty, v)                                        \
+    *(v) = 0;                                                           \
+    for (unsigned i = 0; i < align(sizeof(ty), smite_SIZE_WORD); i++) { \
+        smite_WORD w;                                                   \
+        int ret = pop_stack(S, &w);                                     \
+        if (ret != 0)                                                   \
+            RAISE(ret);                                                 \
+        *(v) = (ty)(((size_t)(*v) << smite_word_bit) | (smite_UWORD)w); \
+    }
+
+
 // Unchecked macro: UNSAFE!
 #define UNCHECKED_STACK(pos)                    \
     (S->stack + S->STACK_DEPTH - (pos) - 1)
@@ -453,7 +473,7 @@ int smite_register_args(smite_state *S, int argc, char *argv[]);
     ((smite_WORD)(n) >> (p))
 #else
 #define ARSHIFT(n, p) \
-    (((n) >> (p)) | ((smite_UWORD)(-((smite_WORD)(n) < 0)) << (smite_word_bit - (p))))
+    (((n) >> (p)) | ((smite_UWORD)(-((smite_WORD)(n) < 0)) << (smite_WORD_BIT - (p))))
 #endif
 /* Arithmetic right shift `n` by `p` places (the behaviour of >> on signed
    quantities is implementation-defined in C99).
