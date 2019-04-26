@@ -231,12 +231,22 @@ smite_lib = {
 
 for (name, register) in Registers.__members__.items():
     smite_lib['GET_{}'.format(name.upper())] = Instruction(
-        len(smite_lib), ['inner_state:smite_state *'], ['value'], '''\
-    value = smite_get_{}(inner_state);'''.format(name))
+        len(smite_lib), None, None, '''\
+    smite_state *inner_state;
+    POP_STACK_TYPE(S, smite_state *, &inner_state);
+    push_stack(S, smite_get_{}(inner_state));
+'''.format(name))
     if not register.value.read_only:
         smite_lib['SET_{}'.format(name.upper())] = Instruction(
-            len(smite_lib), ['value', 'inner_state:smite_state *'], [], '''\
-    smite_set_{}(inner_state, value);'''.format(name))
+            len(smite_lib), None, None, '''\
+    smite_state *inner_state;
+    POP_STACK_TYPE(S, smite_state *, &inner_state);
+    smite_WORD value;
+    int ret = pop_stack(S, &value);
+    if (ret != 0)
+        RAISE(ret);
+    smite_set_{}(inner_state, value);
+'''.format(name))
 
 SMiteLib = Enum('SMiteLib', smite_lib)
 
@@ -254,11 +264,11 @@ class Library(Instruction):
     def types(self):
         '''Return a list of all types used in the library.'''
         return list(set(
-            [item.type for instruction in
-             [function.value
-              for function in self.library]
-             for item in (instruction.effect.args +
-                          instruction.effect.results)
+            [item.type
+             for function in self.library
+             if function.value.effect is not None
+             for item in (function.value.effect.args +
+                          function.value.effect.results)
             ]
         ))
 

@@ -293,6 +293,26 @@ int smite_push_stack(smite_state *S, smite_WORD val);
    to `S->stack_size`.
 */
 
+
+// Convenience macros for native types
+#define PUSH_STACK_TYPE(S, ty, v)                                       \
+    for (unsigned i = 0; i < align(sizeof(ty), smite_SIZE_WORD); i++) { \
+        int ret = push_stack(S, (smite_UWORD)((size_t)(v) & smite_word_mask)); \
+        if (ret != 0)                                                   \
+            RAISE(ret);                                                 \
+        v = (ty)((size_t)(v) >> smite_word_bit);                        \
+    }
+#define POP_STACK_TYPE(S, ty, v)                                        \
+    *(v) = 0;                                                           \
+    for (unsigned i = 0; i < align(sizeof(ty), smite_SIZE_WORD); i++) { \
+        smite_WORD w;                                                   \
+        int ret = pop_stack(S, &w);                                     \
+        if (ret != 0)                                                   \
+            RAISE(ret);                                                 \
+        *(v) = (ty)(((size_t)(*v) << smite_word_bit) | (smite_UWORD)w); \
+    }
+
+
 // Unchecked macro: UNSAFE!
 #define UNCHECKED_STACK(pos)                    \
     (S->stack + S->STACK_DEPTH - (pos) - 1)

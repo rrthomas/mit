@@ -146,6 +146,9 @@ class StackItem:
                 self.type == item.type and
                 self.size == item.size)
 
+    def __repr__(self):
+        return "{}:{}".format(self.name, self.type)
+
 class StackEffect:
     '''
     Represents the effect of an instruction on the stack, in the form of
