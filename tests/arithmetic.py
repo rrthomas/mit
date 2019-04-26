@@ -19,7 +19,6 @@ VM.globalize(globals())
 
 # Test results
 correct = [
-    [],
     [0],
     [0, 1],
     [0, 1, word_bytes],

@@ -23,7 +23,6 @@ penultimate_byte_set = 0xff << byte_bit
 
 # Test results
 correct = [
-     [byte_bit, top_byte_set, 0xff, byte_bit],
      [byte_bit, top_byte_set, penultimate_byte_set],
      [byte_bit, top_byte_set, penultimate_byte_set, 1],
      [penultimate_byte_set, top_byte_set, byte_bit],

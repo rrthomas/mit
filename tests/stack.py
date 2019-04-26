@@ -15,7 +15,6 @@ VM.globalize(globals())
 
 # Test results
 correct = [
-    [],
     [1],
     [1, 2],
     [1, 2, 3],
