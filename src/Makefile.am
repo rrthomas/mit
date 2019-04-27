@@ -42,6 +42,7 @@ main.o: gen-main include/@PACKAGE@/registers.h
 	fi
 
 include/@PACKAGE@/registers.h: gen-registers smite_core/vm_data.py smite_core/instruction.py
+	$(MKDIR_P) include/@PACKAGE@
 	$(PYTHON_WITH_PATH) $(srcdir)/gen-registers > include/@PACKAGE@/registers.h || ( rm -f include/@PACKAGE@/registers.h; exit 1 )
 
 include/@PACKAGE@/ext-opcodes.h: gen-ext-opcodes smite_core/ext.py smite_core/instruction.py
