@@ -14,114 +14,8 @@ The main entry point is dispatch().
 import re, textwrap
 
 from smite_core.type_sizes import type_sizes
-from smite_core.instruction_gen import Size, StackItem
-
-
-class StackPicture:
-    '''
-    Represents the top few items on the stack.
-
-    Each of `items` is augmented with an extra field 'depth' (a Size),
-    which gives the stack position of its top-most word.
-
-    Public fields:
-
-     - items - [StackItem] - the StackItems, ending with the topmost.
-     - by_name - {str: StackItem} - `items` indexed by `name`.
-     - size - Size - the total size of `items`, or `None` if unknown.
-     - cache_limit - the depth of the shallowest uncacheable item, or `None`
-       if unknown. An item is cacheable if its size is exactly 1.
-    '''
-    def __init__(self, items):
-        self.items = items
-        self.by_name = {i.name: i for i in items}
-        self.size = Size(0)
-        for item in reversed(items):
-            item.depth = self.size
-            self.size += item.size
-        for i, item in enumerate(reversed(items)):
-            if item.size != 1:
-                self.cache_limit = i
-                break
-        else:
-            self.cache_limit = None
-
-    @staticmethod
-    def of(strs):
-        '''
-         - strs - list of str acceptable to `StackItem.of()`.
-        '''
-        return StackPicture([StackItem.of(s) for s in strs])
-
-
-class StackEffect:
-    '''
-    Represents the effect of an instruction on the stack, in the form of
-    'args' and 'results' stack pictures, which describe the topmost items on
-    the stack.
-
-    If the instruction is variadic, a pseudo-item 'ITEMS' represents the
-    unnamed items; one of the arguments above that must be 'COUNT', which is
-    the number of words in 'ITEMS'. If 'ITEMS' appears in 'results', it must
-    be at the same position relative to the bottom of the stack as in
-    'args'.
-
-    Public fields:
-
-     - args - StackPicture
-     - results - StackPicture
-    '''
-    def __init__(self, args, results):
-        '''
-        Items with the same name are the same item, so their type must be
-        the same.
-        '''
-        # Check that `args` is duplicate-free.
-        assert len(args.by_name) == len(args.items)
-        # Check that 'ITEMS' does not move.
-        if 'ITEMS' in args.by_name and 'ITEMS' in results.by_name:
-            arg_pos = args.size - args.by_name['ITEMS'].depth
-            result_pos = args.size - args.by_name['ITEMS'].depth
-            assert arg_pos == result_pos
-        # Check that `results` is type-compatible with `args`.
-        for item in results.items:
-            if item.name in args.by_name:
-                assert item == args.by_name[item.name]
-        self.args = args
-        self.results = results
-
-    def declare_vars(self):
-        '''
-        Returns C variable declarations for arguments and results other than
-        'ITEMS'.
-        '''
-        return '\n'.join([
-            '{} {};'.format(item.type, item.name)
-            for item in set(self.args.items + self.results.items)
-            if item.name != 'ITEMS'
-        ])
-
-    def load_args(self, cache_state):
-        '''
-        Returns C source code to read the arguments from the stack into C
-        variables. `S->STACK_DEPTH` is not modified.
-        '''
-        return '\n'.join([
-            cache_state.load(item)
-            for item in self.args.items
-            if item.name != 'ITEMS' and item.name != 'COUNT'
-        ])
-
-    def store_results(self, cache_state):
-        '''
-        Returns C source code to write the results from C variables into the
-        stack. `S->STACK_DEPTH` must be modified first.
-        '''
-        return '\n'.join([
-            cache_state.store(item)
-            for item in self.results.items
-            if item.name != 'ITEMS'
-        ])
+from smite_core.instruction_gen import (
+    Size, StackItem, StackPicture, StackEffect)
 
 
 class CacheState:
@@ -174,6 +68,8 @@ if (((S->stack_size - S->STACK_DEPTH) < (smite_UWORD)({depth_change}))) {{
     def load(self, item):
         '''
         Returns C source code to load `item` into the C variable `item.name`.
+
+         - item - StackItem.
         '''
         if item.depth < self.depth:
             # The item is cached.
@@ -189,6 +85,8 @@ if (((S->stack_size - S->STACK_DEPTH) < (smite_UWORD)({depth_change}))) {{
     def store(self, item):
         '''
         Returns C source code to store `item` from the C variable `item.name`.
+
+         - item - StackItem.
         '''
         if item.depth < self.depth:
             # The item is cached.
@@ -200,6 +98,32 @@ if (((S->stack_size - S->STACK_DEPTH) < (smite_UWORD)({depth_change}))) {{
         else:
             # Put it in memory.
             return item.store()
+
+    def load_args(self, args):
+        '''
+        Returns C source code to read the arguments from the stack into C
+        variables. `S->STACK_DEPTH` is not modified.
+
+         - args - StackPicture.
+        '''
+        return '\n'.join([
+            self.load(item)
+            for item in args.items
+            if item.name != 'ITEMS' and item.name != 'COUNT'
+        ])
+
+    def store_results(self, results):
+        '''
+        Returns C source code to write the results from C variables into the
+        stack. `S->STACK_DEPTH` must be modified first.
+
+         - results - StackPicture.
+        '''
+        return '\n'.join([
+            self.store(item)
+            for item in results.items
+            if item.name != 'ITEMS'
+        ])
 
     def add(self, depth_change):
         '''
@@ -250,6 +174,18 @@ if (((S->stack_size - S->STACK_DEPTH) < (smite_UWORD)({depth_change}))) {{
         return '\n'.join(code)
 
 
+def cache_limit(picture):
+    '''
+    Computes the depth of the shallowest uncacheable item, or `None` if
+    unknown. An item is cacheable if its size is exactly 1.
+
+     - picture - StackPicture.
+    '''
+    for i, item in enumerate(reversed(picture.items)):
+        if item.size != 1:
+            return i
+    return None
+
 def gen_case(instruction, cache_state, exit_depth):
     '''
     Generate the code for an Instruction.
@@ -275,8 +211,9 @@ def gen_case(instruction, cache_state, exit_depth):
         code.append(cache_state.flush())
     else:
         # Flush cached items, if necessary.
-        if effect.args.cache_limit is not None:
-            code.append(cache_state.flush(effect.args.cache_limit))
+        args_limit = cache_limit(effect.args)
+        if args_limit is not None:
+            code.append(cache_state.flush(args_limit))
         # Load the arguments into C variables.
         code.append(effect.declare_vars())
         count = effect.args.by_name.get('COUNT')
@@ -289,14 +226,14 @@ def gen_case(instruction, cache_state, exit_depth):
         code.extend([
             cache_state.check_underflow(effect.args.size),
             cache_state.check_overflow(effect.args.size, effect.results.size),
-            effect.load_args(cache_state),
+            cache_state.load_args(effect.args),
             'S->STACK_DEPTH -= {};'.format(effect.args.size),
         ])
         # Adjust cache_state.
-        if effect.args.cache_limit is None:
+        if args_limit is None:
             code.append(cache_state.add(-int(effect.args.size)))
         else:
-            code.append(cache_state.add(-effect.args.cache_limit))
+            code.append(cache_state.add(-args_limit))
             assert cache_state.depth == 0
     # Inline `instruction.code`.
     # Note: `S->STACK_DEPTH` and `cached_depth` must be correct for RAISE().
@@ -305,18 +242,19 @@ def gen_case(instruction, cache_state, exit_depth):
         assert cache_state.depth == 0
     else:
         # Adjust cache_state.
-        if effect.results.cache_limit is None:
+        results_limit = cache_limit(effect.args)
+        if results_limit is None:
             num_pushes = int(effect.results.size)
             code.append(cache_state.flush(max(0, exit_depth - num_pushes)))
             code.append(cache_state.add(exit_depth - cache_state.depth))
         else:
             code.append(cache_state.flush())
-            assert exit_depth <= effect.results.cache_limit
+            assert exit_depth <= results_limit
             code.append(cache_state.add(exit_depth))
         # Store the results from C variables.
         code.extend([
             'S->STACK_DEPTH += {};'.format(effect.results.size),
-            effect.store_results(cache_state),
+            cache_state.store_results(effect.results),
         ])
     assert cache_state.depth == exit_depth
     # Remove newlines resulting from empty strings in the above.
