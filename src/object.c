@@ -12,7 +12,7 @@
 #include <unistd.h>
 #include <string.h>
 
-#include "smite.h"
+#include "smite/smite.h"
 
 
 #define HEADER_LENGTH 8

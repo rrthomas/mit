@@ -13,7 +13,7 @@
 #include <string.h>
 #include <limits.h>
 
-#include "smite.h"
+#include "smite/smite.h"
 
 
 // Constants
@@ -151,7 +151,7 @@ void smite_destroy(smite_state *S)
     void smite_set_ ## reg(smite_state *S, type val) {        \
         S->reg = val;                                         \
     }
-#include "registers.h"
+#include "smite/registers.h"
 #undef R
 #undef R_RO
 

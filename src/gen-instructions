@@ -21,8 +21,8 @@ print('''\
 
 #include "config.h"
 
-#include "smite.h"
-#include "opcodes.h"
+#include "smite/smite.h"
+#include "smite/opcodes.h"
 
 #define RAISE(code)                                           \\
     do {                                                      \\
