@@ -486,33 +486,3 @@ def gen_case(instruction, cache_state=CacheState(0), exit_depth=0):
     # Remove newlines resulting from empty strings in the above.
     return re.sub('\n+', '\n', '\n'.join(code), flags=re.MULTILINE).strip('\n')
 
-def dispatch(instructions, prefix, undefined_case):
-    '''
-    Generate dispatch code for some Instructions.
-
-    instructions - Enum of Instructions.
-    '''
-    code = ['    switch (opcode) {']
-    for instruction in instructions:
-        code.append('''\
-    case {prefix}{instruction}:
-        {{
-{code}
-        }}
-        break;'''.format(
-            instruction=instruction.name,
-            prefix=prefix,
-            code=textwrap.indent(
-                gen_case(instruction),
-                '            ',
-            ),
-        ))
-    code.append('''
-    default:
-{}
-        break;
-    }}'''.format(undefined_case)
-    )
-    # Remove newlines resulting from empty strings in the above.
-    return re.sub('\n+', '\n', '\n'.join(code), flags=re.MULTILINE).strip('\n')
-

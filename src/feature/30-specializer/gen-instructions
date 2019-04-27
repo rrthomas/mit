@@ -11,7 +11,7 @@
 import sys, pickle, textwrap
 
 from smite_core.vm_data import Instruction
-from instruction_gen import dispatch, gen_case, CacheState
+from instruction_gen import gen_case, CacheState
 
 # Load language.
 if len(sys.argv) != 2:
@@ -86,45 +86,13 @@ print('''\
             RAISE(ret);                                       \\
         S->PC += WORD_BYTES;                                  \\
     } while (0)
-''')
 
-print('''\
-smite_WORD smite_single_step(smite_state *S) {
-    smite_UWORD initial_PC = S->PC;
-    smite_UWORD initial_I = S->I;
-    smite_UWORD cached_depth = 0; // Always zero.
-    int res = SMITE_ERR_OK;
-    smite_BYTE opcode = S->I & SMITE_INSTRUCTION_MASK;
-    S->I >>= SMITE_INSTRUCTION_BIT;
-
-    // Check STACK_DEPTH is valid
-    if (S->STACK_DEPTH > S->stack_size) {
-        S->BAD = S->STACK_DEPTH - S->stack_size;
-        RAISE(SMITE_ERR_STACK_OVERFLOW);
-    }
-''')
-
-print(dispatch(Instruction, 'O_', '''\
-        /* Undefined instruction. */
-        RAISE(SMITE_ERR_INVALID_OPCODE);
-'''))
-
-print('''
-    return SMITE_ERR_OK;
-
-RET:
-    assert(cached_depth == 0);
-    return res;
-}
-''')
-
-print('''\
-#define FETCH                                       \\
-    do {                                            \\
-        initial_PC = S->PC;                         \\
-        initial_I = S->I;                           \\
-        opcode = S->I & SMITE_INSTRUCTION_MASK;     \\
-        S->I >>= SMITE_INSTRUCTION_BIT;             \\
+#define FETCH                                                 \\
+    do {                                                      \\
+        initial_PC = S->PC;                                   \\
+        initial_I = S->I;                                     \\
+        opcode = S->I & SMITE_INSTRUCTION_MASK;               \\
+        S->I >>= SMITE_INSTRUCTION_BIT;                       \\
     } while (0)
 
 smite_WORD smite_run(smite_state *S) {
