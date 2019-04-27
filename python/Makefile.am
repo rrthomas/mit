@@ -16,7 +16,7 @@ pkgpython_PYTHON =			\
 	@PACKAGE@/binding.py		\
 	@PACKAGE@/vm_data.py		\
 	@PACKAGE@/ext.py	\
-	@PACKAGE@/instruction_gen.py
+	@PACKAGE@/instruction.py
 
 loc:
 	$(SLOCCOUNT) $(bin_SCRIPTS) @PACKAGE@/__init__.py @PACKAGE@/__main__.py

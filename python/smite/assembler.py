@@ -13,23 +13,23 @@ from .binding import (
     align, is_aligned,
     word_bytes, word_bit, word_mask, instruction_bit, instruction_mask, sign_bit,
 )
-from .vm_data import Instructions
-from .ext import LibInstructions
+from .vm_data import Instruction
+from .ext import LibInstruction
 
-LIT = Instructions.LIT.value.opcode
-LIT_PC_REL = Instructions.LIT_PC_REL.value.opcode
-BRANCH = Instructions.BRANCH.value.opcode
-CALL = Instructions.CALL.value.opcode
-HALT = Instructions.HALT.value.opcode
+LIT = Instruction.LIT.opcode
+LIT_PC_REL = Instruction.LIT_PC_REL.opcode
+BRANCH = Instruction.BRANCH.opcode
+CALL = Instruction.CALL.opcode
+HALT = Instruction.HALT.opcode
 
 mnemonic = {
-    instruction.value.opcode: instruction.name
-    for instruction in Instructions
+    instruction.opcode: instruction.name
+    for instruction in Instruction
 }
-# FIXME: Disassemble LibInstructions when the literal directly precedes EXT
+# FIXME: Disassemble LibInstruction when the literal directly precedes EXT
 # mnemonic.update({
-#     instruction.value.opcode: instruction.name
-#     for instruction in LibInstructions
+#     instruction.opcode: instruction.name
+#     for instruction in LibInstruction
 # })
 
 # The set of opcodes which must be the last in a word.

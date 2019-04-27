@@ -52,8 +52,8 @@ class State:
             raise Error("error creating virtual machine state")
 
         self.registers = {
-            name: ActiveRegister(self.state, name, register.value)
-            for (name, register) in Registers.__members__.items()
+            register.name: ActiveRegister(self.state, register.name, register)
+            for register in Register
         }
         self.M = Memory(self)
         self.memory_size = memory_size
@@ -109,19 +109,19 @@ class State:
 
         # Opcodes
         globals_dict.update({
-            instruction.name: instruction.value.opcode
-            for instruction in Instructions
+            instruction.name: instruction.opcode
+            for instruction in Instruction
         })
         globals_dict["UNDEFINED"] = 1 + max([
-            instruction.value.opcode for instruction in Instructions])
+            instruction.opcode for instruction in Instruction])
         globals_dict.update({
-            instruction.name: instruction.value.opcode
-            for instruction in LibInstructions
+            instruction.name: instruction.opcode
+            for instruction in LibInstruction
         })
-        for (name, instruction) in LibInstructions.__members__.items():
+        for instruction in LibInstruction:
             globals_dict.update({
-                '{}_{}'.format(name, function.name): function.value.opcode
-                for function in instruction.value.library
+                '{}_{}'.format(instruction.name, function.name): function.opcode
+                for function in instruction.library
             })
 
     def register_args(self, *args):
