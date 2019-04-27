@@ -11,7 +11,7 @@
 import sys, pickle, textwrap
 
 from smite_core.vm_data import Instruction
-from instruction_gen import gen_case, CacheState
+from specializer import gen_case, CacheState
 
 # Load language.
 if len(sys.argv) != 2:
@@ -95,7 +95,7 @@ print('''\
         S->I >>= SMITE_INSTRUCTION_BIT;                       \\
     } while (0)
 
-smite_WORD smite_run(smite_state *S) {
+smite_WORD smite_run_specialized(smite_state *S) {
     int res = SMITE_ERR_OK;''')
 
 # Declare stack cache variables.

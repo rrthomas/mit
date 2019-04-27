@@ -11,174 +11,10 @@ RISK.
 The main entry point is dispatch().
 '''
 
-import functools
-import re
-import textwrap
+import re, textwrap
 
 from smite_core.type_sizes import type_sizes
-
-
-@functools.total_ordering
-class Size:
-    '''
-    Represents the size of some stack items.
-
-     - size - int.
-     - count - int - ±1 if the size includes variadic 'ITEMS'
-    '''
-    def __init__(self, size, count=0):
-        assert type(size) is int
-        assert type(count) is int
-        self.size = size
-        if not(-1 <= count <= 1):
-            raise ValueError
-        self.count = count
-
-    @staticmethod
-    def of(value):
-        '''Convert `value` to a Size or raise NotImplemented.'''
-        if isinstance(value, Size):
-            return value
-        if type(value) is int:
-            return Size(value)
-        raise TypeError('cannot convert {} to Size'.format(type(value)))
-
-    def __int__(self):
-        if self.count != 0:
-            raise ValueError('{} cannot be represented as an integer'.format(
-                self))
-        return self.size
-
-    def __index__(self):
-        return self.__int__()
-
-    def __hash__(self):
-        if self.count == 0:
-            # In this case we must match `int.__hash__()`.
-            return hash(self.size)
-        return hash((self.size, self.count))
-
-    def __eq__(self, value):
-        value = Size.of(value)
-        return self.size == value.size and self.count == value.count
-
-    def __le__(self, value):
-        value = Size.of(value)
-        return self.size <= value.size and self.count <= value.count
-
-    def __str__(self):
-        if self.count == 0: s = '{}'
-        elif self.count == 1: s = '{} + COUNT'
-        elif self.count == -1: s = '{} - COUNT'
-        else: assert False
-        return s.format(self.size)
-
-    def __neg__(self):
-        return Size(-self.size, count=-self.count)
-
-    def __add__(self, value):
-        value = Size.of(value)
-        return Size(self.size + value.size, count=self.count + value.count)
-
-    def __radd__(self, value):
-        return Size.of(value) + self
-
-    def __sub__(self, value):
-        value = Size.of(value)
-        return self + (-value)
-
-    def __rsub__(self, value):
-        return Size.of(value) - self
-
-
-class StackItem:
-    '''
-    Represents a stack item, which may occupy more than one word.
-
-    Public fields:
-
-     - name - str
-     - type - str - C type of the item (ignore if `name` is 'ITEMS').
-     - size - Size, or `None` if unknown - The number of words occupied by
-       the item.
-     - depth - If this StackItem is part of a StackPicture, the total size of
-       the StackItems above this one, otherwise `None`.
-    '''
-    def __init__(self, name, type_):
-        self.name = name
-        self.type = type_
-        if self.name == 'ITEMS':
-            self.size = Size(0, count=1)
-        else:
-            self.size = Size((type_sizes[self.type] +
-                              (type_sizes['smite_WORD'] - 1)) //
-                             type_sizes['smite_WORD'])
-        self.depth = None
-
-    @staticmethod
-    def of(name_and_type):
-        '''
-        The name is optionally followed by ":TYPE" to give the C type of the
-        underlying quantity; the default is smite_WORD.
-        '''
-        l = name_and_type.split(":")
-        return StackItem(
-            l[0],
-            l[1] if len(l) > 1 else 'smite_WORD',
-        )
-
-    def __eq__(self, item):
-        return (self.name == item.name and
-                self.type == item.type and
-                self.size == item.size)
-
-    def __repr__(self):
-        return "{}:{}".format(self.name, self.type)
-
-    def __hash__(self):
-        return hash((self.name, self.type, self.size))
-
-    # In `load()` & `store()`, casts to size_t avoid warnings when `type` is
-    # a pointer and sizeof(void *) > WORD_BYTES, but the effect is identical.
-    def load(self):
-        '''
-        Returns C source code to load `self` from the stack to its C variable.
-        '''
-        code = [
-            'size_t temp = (smite_UWORD)(*UNCHECKED_STACK({}));'
-            .format(self.depth + (self.size - 1))
-        ]
-        for i in reversed(range(self.size - 1)):
-            code.append('temp <<= smite_WORD_BIT;')
-            code.append(
-                'temp |= (smite_UWORD)(*UNCHECKED_STACK({}));'
-                .format(self.depth + i)
-            )
-        code.append('{} = ({})temp;'.format(self.name, self.type))
-        return '''\
-{{
-{}
-}}'''.format(textwrap.indent('\n'.join(code), '    '))
-
-    def store(self):
-        '''
-        Returns C source code to store `self` to the stack from its C variable.
-        '''
-        code = ['size_t temp = (size_t){};'.format(self.name)]
-        for i in range(self.size - 1):
-            code.append(
-                '*UNCHECKED_STACK({}) = (smite_UWORD)(temp & smite_WORD_MASK);'
-                .format(self.depth + i)
-            )
-            code.append('temp >>= smite_WORD_BIT;')
-        code.append(
-            '*UNCHECKED_STACK({}) = (smite_UWORD)(temp & smite_WORD_MASK);'
-            .format(self.depth + (self.size - 1))
-        )
-        return '''\
-{{
-{}
-}}'''.format(textwrap.indent('\n'.join(code), '    '))
+from smite_core.instruction_gen import Size, StackItem
 
 
 class StackPicture:
@@ -414,7 +250,7 @@ if (((S->stack_size - S->STACK_DEPTH) < (smite_UWORD)({depth_change}))) {{
         return '\n'.join(code)
 
 
-def gen_case(instruction, cache_state=CacheState(0), exit_depth=0):
+def gen_case(instruction, cache_state, exit_depth):
     '''
     Generate the code for an Instruction.
 
