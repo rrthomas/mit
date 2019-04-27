@@ -13,7 +13,7 @@ PYTHON_WITH_PATH = export PYTHONPATH=$(top_srcdir)/python:$(top_builddir)/src; $
 lib_LTLIBRARIES = libsmite.la
 C_SRCS = storage.c object.c
 nodist_LIB_SRCS = registers.h opcodes.h ext-opcodes.h instructions.c ext.c
-LIB_CORE_SRCS = smite_core/vm_data.py smite_core/ext.py smite_core/instruction_gen.py
+LIB_CORE_SRCS = smite_core/instruction.py smite_core/vm_data.py smite_core/ext.py smite_core/instruction_gen.py
 nodist_libsmite_la_SOURCES = $(C_SRCS) $(nodist_LIB_SRCS)
 libsmite_la_LIBADD = $(top_builddir)/lib/libgnu.la
 libsmite_la_LDFLAGS = -no-undefined -export-symbols-regex '^smite_.*'
