@@ -1,0 +1,300 @@
+#!/usr/bin/python3
+
+import sys, pickle
+
+from smite_core.vm_data import Instruction
+
+if len(sys.argv) != 3:
+    print("Usage: gen-labels PREDICTOR-FILENAME LABELS-FILENAME", file=sys.stderr)
+    sys.exit(1)
+predictor_filename = sys.argv[1]
+labels_filename = sys.argv[2]
+
+with open(predictor_filename, 'rb') as f:
+    # [{instruction_name: (new_state, count)]
+    predictor = pickle.load(f)
+
+# Find all paths through the predictor.
+
+print("Finding paths")
+
+# Total visit count of each state.
+# [int]
+state_counts = [
+    sum(count for _, count in transitions.values())
+    for transitions in predictor
+]
+
+# Estimated probability distribution over instructions for each state.
+# [{Instruction: (new_state (int), probability (float))}]
+state_probabilities = [
+    {
+        Instruction[name]: (
+            new_state,
+            float(count + 1) / float(state_counts[state] + 64),
+        )
+        for name, (new_state, count) in transitions.items()
+    }
+    for state, transitions in enumerate(predictor)
+]
+
+class Path:
+    '''
+    Represents a sequence of instructions that has just been executed.
+
+     - instructions - tuple of Instructions.
+     - cached_depth - int - The number of topmost stack items that are cached
+       at the end of this Path.
+     - checked_depth - int - the number of empty stack slots that are known
+       to exist above the topmost item at the end of this Path.
+    '''
+    def __init__(self, instructions):
+        assert type(instructions) is tuple
+        # Compute `cached_depth`, `checked_depth`.
+        cached_depth = 0
+        checked_depth = 0
+        for instruction in instructions:
+            assert isinstance(instruction, Instruction)
+            if instruction.args is None and instruction.results is None:
+                # We know nothing after this instruction.
+                cached_depth = 0
+                checked_depth = 0
+            else:
+                # Simulate popping arguments.
+                for item in reversed(instruction.args):
+                    if item == 'ITEMS':
+                        # Conservatively suppose `COUNT` is zero.
+                        # We cannot cache items below 'ITEMS'.
+                        cached_depth = 0
+                    else:
+                        cached_depth -= 1
+                        checked_depth += 1
+                if cached_depth < 0:
+                    cached_depth = 0
+                # Simulate pushing results.
+                for item in reversed(instruction.results):
+                    if item == 'ITEMS':
+                        # Suppose `COUNT` is zero to match args.
+                        # We cannot cache items below 'ITEMS'.
+                        cached_depth = 0
+                    else:
+                        cached_depth += 1
+                        checked_depth -= 1
+                if checked_depth < 0:
+                    checked_depth = 0
+        # Initialise `self`.
+        self.instructions = instructions
+        self.cached_depth = cached_depth
+        self.checked_depth = checked_depth
+
+    def __repr__(self):
+        return 'Path(({}))'.format(
+            ', '.join(i.name for i in self.instructions)
+        )
+
+    def __eq__(self, other):
+        return self.instructions == other.instructions
+
+    def __hash__(self):
+        return hash(self.instructions)
+
+    def __len__(self):
+        return len(self.instructions)
+
+    def __getitem__(self, index_or_slice):
+        if isinstance(index_or_slice, slice):
+            return Path(self.instructions[index_or_slice])
+        elif isinstance(index_or_slice, int):
+            return self.instructions[index_or_slice]
+        else:
+            raise TypeError('Path indices must be integers or slices')
+
+    def __add__(self, sequence):
+        return Path(self.instructions + sequence)
+
+    def remove_repeating_part(self):
+        '''
+        If this Path ends with two repeats of some "loop body", and if we know
+        at least as much about the stack now as we did before the last repeat,
+        returns the Path before the last repeat, otherwise returns `self`.
+        '''
+        for n in range(1, len(self)//2+1):
+            if self.instructions[-n:] == self.instructions[-2*n:-n]:
+                shorter = self[:-n]
+                if (self.cached_depth >= shorter.cached_depth and
+                    self.checked_depth >= shorter.checked_depth
+                ):
+                    return shorter
+        return self
+        
+
+# Common instruction sequences.
+# Path -> estimated_count (float)
+language = {}
+
+def walk(path, distribution):
+    '''
+     - path - a Path.
+     - distribution - list of float - For each predictor state, the estimated
+       number of times we reached that state via `path`.
+    '''
+    # Check for statistical irrelevance (but keep singleton paths).
+    estimated_count = sum(distribution)
+    if len(path) > 1 and estimated_count < 1000000.: return
+    # Check for repetition.
+    if path in language: return
+    # Okay, we'll keep it.
+    language[path] = estimated_count
+    # For all (state, action) pairs, propagate count to the successor state.
+    successors = {
+        instruction: [0.] * len(predictor)
+        for instruction in Instruction
+    }
+    for state, estimated_count in enumerate(distribution):
+        if estimated_count > 1.:
+            probabilities = state_probabilities[state]
+            for instruction, (new_state, probability) in probabilities.items():
+                additional_count = estimated_count * probability
+                if additional_count >= 1.:
+                    successors[instruction][new_state] += additional_count
+    # Recurse down the tree.
+    for instruction, new_distribution in successors.items():
+        new_path = (path + (instruction,)).remove_repeating_part()
+        walk(new_path, new_distribution)
+
+walk(Path(()), [float(x) for x in state_counts])
+
+# Sanity checks.
+
+for instruction in Instruction:
+    assert Path((instruction,)) in language
+
+for path in language:
+    assert path[1:].remove_repeating_part() in language
+    assert path[:-1] in language
+
+# For each path, sort the possible next instructions by decreasing probability.
+
+print("Choosing guesses")
+
+# Path -> Instruction -> Path
+successors = {
+    path: {
+        instruction: (path + (instruction,)).remove_repeating_part()
+        for instruction in Instruction
+    }
+    for path in language
+}
+
+# Path -> [Instruction]
+path_guesses = {
+    path: sorted(
+        [
+            instruction
+            for instruction, successor in successors[path].items()
+            if successor in language
+        ],
+        key=lambda instruction: language[successors[path][instruction]],
+        reverse=True,
+    )
+    for path in language
+}
+
+# Generate state space of (path × rejects) with flood fill.
+
+print("Generating control flow graph")
+
+states = [] # List of (Path, rejects)
+state_index = {} # Inverse of `states`.
+
+# For each state in `states`, there is a transition in `transitions`.
+# It can be:
+#  - None - return;
+#  - int g - goto g;
+#  - (Instruction i, int c, int w) - if (next==i) { e; goto c; } else goto w;
+transitions = []
+
+def enqueue(path, rejects):
+    '''
+    Adds a state if it has not been seen before.
+     - path - Path.
+     - rejects - frozenset of Instructions.
+    '''
+    assert isinstance(path, Path)
+    assert isinstance(rejects, frozenset)
+    state = (path, rejects)
+    if state not in state_index:
+        state_index[state] = len(state_index)
+        states.append(state)
+    return state_index[state]
+
+assert enqueue(Path(()), frozenset()) == 0 # Root state.
+
+# The work queue is the suffix of `states` that does not yet have transitions.
+while len(transitions) < len(states):
+    path, rejects = states[len(transitions)]
+    for guess in path_guesses[path]:
+        if guess not in rejects:
+            # We have a guess.
+            transitions.append((
+                guess,
+                enqueue(successors[path][guess], frozenset()),
+                enqueue(path, rejects.union({guess})),
+            ))
+            break
+    else:
+        # There is no good guess.
+        if len(path) > 0:
+            new_path = path[1:].remove_repeating_part()
+            transitions.append(enqueue(new_path, rejects))
+        else:
+            # We have eliminated all possible Instructions.
+            # It's an illegal instruction.
+            transitions.append(None)
+
+assert len(states) == len(state_index) == len(transitions)
+
+# Tension branches.
+
+print("Tensioning branches")
+
+# We only need labels for the states in which we make a guess.
+label_map = {} # state -> label
+for state, transition in enumerate(transitions):
+    if isinstance(transition, tuple):
+        label_map[state] = len(label_map)
+
+def short_circuit(state):
+    # Follows gotos, and maps `state` to a label or `None`.
+    while isinstance(transitions[state], int):
+        state = transitions[state]
+    return label_map.get(state)
+
+# List of (guess, label or None, label or None).
+labels = [
+    (
+        path.cached_depth,
+        path.checked_depth,
+        guess.name,
+        short_circuit(c),
+        short_circuit(w)
+    )
+    for (path, _), t in zip(states, transitions)
+    if isinstance(t, tuple)
+    for (guess, c, w) in [t]
+]
+
+assert len(label_map) == len(labels)
+
+# Dump to a file.
+
+with open(labels_filename, 'wb') as f:
+    # [(
+    #     cached_depth (int),
+    #     checked_depth (int),
+    #     instruction_name (str),
+    #     if_correct (int?),
+    #     if_wrong (int?)
+    # )]
+    pickle.dump(labels, file=f)
+print('Wrote {}'.format(labels_filename))
