@@ -7,7 +7,7 @@
 # THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 # RISK.
 
-from enum import Enum, unique, auto
+from enum import Enum, unique
 
 from .instruction import AbstractInstruction
 
@@ -24,10 +24,10 @@ class AbstractRegister(Enum):
 
 class Register(AbstractRegister):
     '''A VM register.'''
-    PC = auto()
-    I = auto()
-    BAD = auto()
-    STACK_DEPTH = auto()
+    PC = object()
+    I = object()
+    BAD = object()
+    STACK_DEPTH = object()
 
 @unique
 class Instruction(AbstractInstruction):
