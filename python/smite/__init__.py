@@ -55,7 +55,6 @@ class State:
             register.name: ActiveRegister(self.state, register.name, register)
             for register in Register
         }
-        print(self.registers)
         self.M = Memory(self)
         self.memory_size = memory_size
         self.M_word = WordMemory(self)
