@@ -15,7 +15,7 @@ from smite_core.instruction_gen import *
 print(includes)
 
 print('''
-#include "ext-opcodes.h"
+#include "smite/ext-opcodes.h"
 
 enum {
     SMITE_ERR_EXT_INVALID_LIBRARY = 16,

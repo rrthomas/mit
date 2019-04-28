@@ -27,7 +27,7 @@ includes = '''\
 #include "binary-io.h"
 #include "verify.h"
 
-#include "smite.h"
+#include "smite/smite.h"
 '''
 
 @unique

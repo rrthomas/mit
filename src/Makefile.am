@@ -7,12 +7,12 @@
 # THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 # RISK.
 
-AM_CPPFLAGS = -I$(top_builddir)/lib -I$(top_srcdir)/lib $(WARN_CFLAGS)
+AM_CPPFLAGS = -I$(top_builddir)/lib -I$(top_srcdir)/lib $(ISYSTEM)$(builddir)/include $(ISYSTEM)$(srcdir)/include $(WARN_CFLAGS)
 PYTHON_WITH_PATH = export PYTHONPATH=$(top_srcdir)/python:$(top_builddir)/src; $(PYTHON)
 
 lib_LTLIBRARIES = libsmite.la
 C_SRCS = storage.c object.c
-nodist_LIB_SRCS = registers.h opcodes.h ext-opcodes.h instructions.c ext.c
+nodist_LIB_SRCS = include/@PACKAGE@/registers.h include/@PACKAGE@/opcodes.h include/@PACKAGE@/ext-opcodes.h instructions.c ext.c
 LIB_CORE_SRCS = smite_core/instruction.py smite_core/vm_data.py smite_core/ext.py smite_core/instruction_gen.py
 nodist_libsmite_la_SOURCES = $(C_SRCS) $(nodist_LIB_SRCS)
 libsmite_la_LIBADD = $(top_builddir)/lib/libgnu.la
@@ -22,12 +22,12 @@ bin_PROGRAMS = smite$(EXEEXT)
 man_MANS = @PACKAGE@.1
 smite_LDADD = lib@PACKAGE@.la $(top_builddir)/lib/libgnu.la
 nodist_smite_SOURCES = main.c
-nodist_pkginclude_HEADERS = opcodes.h ext-opcodes.h
-pkginclude_HEADERS = @PACKAGE@.h
+nodist_pkginclude_HEADERS = include/@PACKAGE@/opcodes.h include/@PACKAGE@/ext-opcodes.h include/@PACKAGE@/registers.h
+pkginclude_HEADERS = include/@PACKAGE@/@PACKAGE@.h
 
 step.lo: instructions.c
-object.lo step.lo storage.lo main.o: registers.h opcodes.h ext-opcodes.h
-main.o: gen-main registers.h
+object.lo step.lo storage.lo main.o: include/@PACKAGE@/registers.h include/@PACKAGE@/opcodes.h include/@PACKAGE@/ext-opcodes.h
+main.o: gen-main include/@PACKAGE@/registers.h
 
 # Depend on @PACKAGE@$(EXEEXT) rather than explicitly make-ing it, as otherwise
 # we break parallel builds, as lib@PACKAGE@.la can be built twice in parallel,
@@ -41,21 +41,22 @@ main.o: gen-main registers.h
 		--output=$@ ./@PACKAGE@$(EXEEXT); \
 	fi
 
-registers.h: gen-registers smite_core/vm_data.py smite_core/instruction.py
-	$(PYTHON_WITH_PATH) $(srcdir)/gen-registers > registers.h || ( rm -f registers.h; exit 1 )
+include/@PACKAGE@/registers.h: gen-registers smite_core/vm_data.py smite_core/instruction.py
+	$(MKDIR_P) include/@PACKAGE@
+	$(PYTHON_WITH_PATH) $(srcdir)/gen-registers > include/@PACKAGE@/registers.h || ( rm -f include/@PACKAGE@/registers.h; exit 1 )
 
-ext-opcodes.h: gen-ext-opcodes smite_core/ext.py smite_core/instruction.py
-	$(PYTHON_WITH_PATH) $(srcdir)/gen-ext-opcodes > ext-opcodes.h || ( rm -f ext-opcodes.h; exit 1 )
+include/@PACKAGE@/ext-opcodes.h: gen-ext-opcodes smite_core/ext.py smite_core/instruction.py
+	$(PYTHON_WITH_PATH) $(srcdir)/gen-ext-opcodes > include/@PACKAGE@/ext-opcodes.h || ( rm -f include/@PACKAGE@/ext-opcodes.h; exit 1 )
 
-opcodes.h: gen-opcodes smite_core/vm_data.py smite_core/instruction.py
-	$(PYTHON_WITH_PATH) $(srcdir)/gen-opcodes > opcodes.h || ( rm -f opcodes.h; exit 1 )
+include/@PACKAGE@/opcodes.h: gen-opcodes smite_core/vm_data.py smite_core/instruction.py
+	$(PYTHON_WITH_PATH) $(srcdir)/gen-opcodes > include/@PACKAGE@/opcodes.h || ( rm -f include/@PACKAGE@/opcodes.h; exit 1 )
 
 instructions.c: gen-instructions smite_core/vm_data.py smite_core/instruction.py smite_core/instruction_gen.py smite_core/type_sizes.py
 	$(PYTHON_WITH_PATH) $(srcdir)/gen-instructions > instructions.c || ( rm -f instructions.c; exit 1 )
 
 # Note: we grep config.log because the generated header file has the symbols
 # sorted lexically, and we need the output in the same order as the input.
-smite_core/type_sizes.py: $(top_builddir)/config.status gen-type-sizes collate-type-sizes registers.h smite_core/ext.py smite_core/instruction.py
+smite_core/type_sizes.py: $(top_builddir)/config.status gen-type-sizes collate-type-sizes include/@PACKAGE@/registers.h smite_core/ext.py smite_core/instruction.py
 	$(PYTHON_WITH_PATH) $(srcdir)/gen-type-sizes > type-sizes.ac && \
 	autoconf type-sizes.ac > type-sizes && \
 	CONFIG_SITE= CPPFLAGS="$(CPPFLAGS) -I$(builddir) -I$(srcdir) -I$(top_builddir) $(AM_CPPFLAGS)" $(SHELL) type-sizes && \

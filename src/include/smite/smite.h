@@ -82,7 +82,7 @@ extern const smite_WORD smite_word_max;
 typedef struct {
 #define R(reg, type, utype) type reg;
 #define R_RO(reg, type, utype) R(reg, type, utype)
-#include "registers.h"
+#include <smite/registers.h>
 #undef R
 #undef R_RO
     smite_WORD *memory;
@@ -98,7 +98,7 @@ typedef struct {
 #define R(reg, type, utype)                     \
     R_RO(reg, type, utype)                      \
     void smite_set_ ## reg(smite_state *S, type val);
-#include "registers.h"
+#include <smite/registers.h>
 #undef R
 #undef R_RO
 

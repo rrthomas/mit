@@ -14,9 +14,6 @@
 /instructions.c
 /main.c
 /ext.c
-/opcodes.h
-/ext-opcodes.h
-/registers.h
 /gen-main
 /type-sizes
 /type-sizes.ac
