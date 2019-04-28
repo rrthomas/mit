@@ -7,7 +7,7 @@
 # THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 # RISK.
 
-AM_CPPFLAGS = -I$(top_builddir)/lib -I$(top_srcdir)/lib $(ISYSTEM)$(builddir)/include $(ISYSTEM)$(srcdir)/include $(WARN_CFLAGS)
+AM_CPPFLAGS = -I$(top_builddir)/lib -I$(top_srcdir)/lib -I$(builddir)/include -I$(srcdir)/include $(WARN_CFLAGS)
 PYTHON_WITH_PATH = export PYTHONPATH=$(top_srcdir)/python:$(top_builddir)/src; $(PYTHON)
 
 lib_LTLIBRARIES = libsmite.la
