@@ -305,20 +305,25 @@ int smite_push_stack(smite_state *S, smite_WORD val);
 
 // Convenience macros for native types
 #define PUSH_STACK_TYPE(S, ty, v)                                       \
-    for (unsigned i = 0; i < align(sizeof(ty), smite_SIZE_WORD); i++) { \
-        int ret = push_stack(S, (smite_UWORD)((size_t)(v) & smite_word_mask)); \
-        if (ret != 0)                                                   \
-            RAISE(ret);                                                 \
-        v = (ty)((size_t)(v) >> smite_word_bit);                        \
+    {                                                                   \
+        size_t temp = v;                                                \
+        for (unsigned i = 0; i < align(sizeof(ty), smite_SIZE_WORD) / WORD_BYTES; i++) { \
+            int ret = push_stack(S, (smite_UWORD)(temp & smite_WORD_MASK)); \
+            if (ret != 0)                                               \
+                RAISE(ret);                                             \
+            temp >>= smite_WORD_BIT;                                    \
     }
 #define POP_STACK_TYPE(S, ty, v)                                        \
-    *(v) = 0;                                                           \
-    for (unsigned i = 0; i < align(sizeof(ty), smite_SIZE_WORD); i++) { \
-        smite_WORD w;                                                   \
-        int ret = pop_stack(S, &w);                                     \
-        if (ret != 0)                                                   \
-            RAISE(ret);                                                 \
-        *(v) = (ty)(((size_t)(*v) << smite_word_bit) | (smite_UWORD)w); \
+    {                                                                   \
+        size_t temp = 0;                                                \
+        for (unsigned i = 0; i < align(sizeof(ty), smite_SIZE_WORD) / WORD_BYTES; i++) { \
+            smite_WORD w;                                               \
+            int ret = pop_stack(S, &w);                                 \
+            if (ret != 0)                                               \
+                RAISE(ret);                                             \
+            temp = (temp << smite_WORD_BIT) | (smite_UWORD)w;           \
+        }                                                               \
+        *(v) = (ty)temp;                                                \
     }
 
 
