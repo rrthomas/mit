@@ -138,21 +138,20 @@ class StackItem:
     def __hash__(self):
         return hash((self.name, self.type, self.size))
 
-    # In `load()` & `store()`, casts to size_t avoid warnings when `type` is
-    # a pointer and sizeof(void *) > WORD_BYTES, but the effect is identical.
+    # Cf. smite.h PUSH/POP_STACK_TYPE macros.
     def load(self):
         '''
         Returns C source code to load `self` from the stack to its C variable.
         '''
         code = [
             'size_t temp = (smite_UWORD)(*UNCHECKED_STACK({}));'
-            .format(self.depth + (self.size - 1))
+            .format(self.depth)
         ]
-        for i in reversed(range(self.size - 1)):
+        for i in range(self.size - 1):
             code.append('temp <<= smite_WORD_BIT;')
             code.append(
                 'temp |= (smite_UWORD)(*UNCHECKED_STACK({}));'
-                .format(self.depth + i)
+                .format(self.depth + i + 1)
             )
         code.append('{} = ({})temp;'.format(self.name, self.type))
         return '''\
@@ -165,15 +164,15 @@ class StackItem:
         Returns C source code to store `self` to the stack from its C variable.
         '''
         code = ['size_t temp = (size_t){};'.format(self.name)]
-        for i in range(self.size - 1):
+        for i in reversed(range(self.size - 1)):
             code.append(
                 '*UNCHECKED_STACK({}) = (smite_UWORD)(temp & smite_WORD_MASK);'
-                .format(self.depth + i)
+                .format(self.depth + i + 1)
             )
             code.append('temp >>= smite_WORD_BIT;')
         code.append(
             '*UNCHECKED_STACK({}) = (smite_UWORD)(temp & smite_WORD_MASK);'
-            .format(self.depth + (self.size - 1))
+            .format(self.depth)
         )
         return '''\
 {{
@@ -381,4 +380,3 @@ def dispatch(instructions, prefix, undefined_case):
     )
     # Remove newlines resulting from empty strings in the above.
     return re.sub('\n+', '\n', '\n'.join(code), flags=re.MULTILINE).strip('\n')
-

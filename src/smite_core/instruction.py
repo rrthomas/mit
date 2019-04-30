@@ -49,4 +49,3 @@ class AbstractInstruction(Enum):
                 instruction.opcode,
             ))
         print('};')
-
