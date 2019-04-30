@@ -27,9 +27,6 @@ matrix:
     - compiler: gcc
       env:
         - MATRIX_EVAL="CC=gcc-8 GLOBAL_CONFIGURE_OPTS=--enable-silent-rules"
-        # - CFLAGS="-g3 -fsanitize=address -fsanitize=undefined"
-        # - LDFLAGS="-fsanitize=address -fsanitize=undefined"
-        # - PY_LOG_ENV="LD_PRELOAD=/usr/lib/gcc/x86_64-linux-gnu/7/libasan.so PYTHONMALLOC=malloc"
       addons:
         apt:
           sources:

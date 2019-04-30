@@ -1,0 +1,30 @@
+version: "{build}"
+
+# FIXME: currently does not work with IPython: get error "stdin is not a tty"
+# when trying to test version of IPython in configure
+
+environment:
+  global:
+    VERBOSE: 1 # Get test logs in output
+  matrix:
+    - APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu1804
+      CFLAGS: "-g3 -fsanitize=address -fsanitize=undefined"
+      LDFLAGS: "-fsanitize=address -fsanitize=undefined"
+      PY_LOG_ENV: "LD_PRELOAD=/usr/lib/gcc/x86_64-linux-gnu/7/libasan.so PYTHONMALLOC=malloc"
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
+      MSYSTEM: MSYS
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
+      MSYSTEM: MINGW64
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
+      MSYSTEM: MINGW32
+
+init:
+  - cmd: git config --global core.autocrlf input
+
+install:
+  - cmd: C:\msys64\usr\bin\bash.exe -lc "cd c:/projects/smite && ./build-aux/appveyor-install.sh"
+  - sh: sudo apt-get update && sudo apt-get install -y texlive-latex-extra texlive-science texlive-fonts-recommended texlive-fonts-extra tex-gyre help2man latexmk hevea
+
+build_script:
+  - cmd: C:\msys64\usr\bin\bash.exe -lc "cd c:/projects/smite && ./bootstrap && ./configure --enable-silent-rules && make && make install && make check"
+  - sh: ./bootstrap && ./configure && make && make distcheck
