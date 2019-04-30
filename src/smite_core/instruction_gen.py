@@ -381,4 +381,3 @@ def dispatch(instructions, prefix, undefined_case):
     )
     # Remove newlines resulting from empty strings in the above.
     return re.sub('\n+', '\n', '\n'.join(code), flags=re.MULTILINE).strip('\n')
-
