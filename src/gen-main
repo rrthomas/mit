@@ -29,7 +29,9 @@ class Doc(Feature):
     '''
     Free-form documentation.
 
-     - text - str
+     - text - str - if the string starts and ends with a double quote, it is
+       printed literally and may thus contain interpolations. Otherwise, it is
+       output in quotes.
     '''
     def __init__(self, text):
         super().__init__()
@@ -165,7 +167,10 @@ for feature in features:
             docstring=feature.docstring
         ))
     elif isinstance(feature, Doc):
-        print('    printf("{}\\n");'.format(feature.text))
+        text = feature.text
+        if len(text) > 1 and not(text[0] == '"' and text[-1] == '"'):
+            text = '"{}"'.format(text)
+        print('    printf({}"\\n");'.format(text))
 
 print('''
     exit(EXIT_SUCCESS);

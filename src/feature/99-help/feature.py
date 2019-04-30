@@ -25,9 +25,9 @@ Option('version',
 
 Arg('OBJECT-FILE', 'load and run object OBJECT-FILE')
 Doc('')
-Doc('The ARGUMENTS are available to @PACKAGE_NAME@.')
+Doc('"The ARGUMENTS are available to "PACKAGE_NAME"."')
 Doc('')
 Doc('If an error occurs during execution, the exit status is the error code; if')
 Doc('execution HALTs normally, the exit status is the top-most stack value.')
 Doc('')
-Doc('Report bugs to @PACKAGE_BUGREPORT@.')
+Doc('"Report bugs to "PACKAGE_BUGREPORT"."')
