@@ -16,6 +16,7 @@
 #include <stdint.h>
 #include <inttypes.h>
 #include <byteswap.h>
+#include <limits.h>
 
 
 // Build-time parameters
@@ -304,17 +305,19 @@ int smite_push_stack(smite_state *S, smite_WORD val);
 
 
 // Convenience macros for native types
+// Second version avoids undefined behaviour (shift >= type size)
+#if SIZEOF_SIZE_T > WORD_BYTES
 #define PUSH_STACK_TYPE(S, ty, v)                                       \
-    {                                                                   \
+    do {                                                                \
         size_t temp = v;                                                \
         for (unsigned i = 0; i < align(sizeof(ty), smite_SIZE_WORD) / WORD_BYTES; i++) { \
             int ret = push_stack(S, (smite_UWORD)(temp & smite_WORD_MASK)); \
             if (ret != 0)                                               \
                 RAISE(ret);                                             \
             temp >>= smite_WORD_BIT;                                    \
-    }
+    } while (0)
 #define POP_STACK_TYPE(S, ty, v)                                        \
-    {                                                                   \
+    do {                                                                \
         size_t temp = 0;                                                \
         for (unsigned i = 0; i < align(sizeof(ty), smite_SIZE_WORD) / WORD_BYTES; i++) { \
             smite_WORD w;                                               \
@@ -324,7 +327,23 @@ int smite_push_stack(smite_state *S, smite_WORD val);
             temp = (temp << smite_WORD_BIT) | (smite_UWORD)w;           \
         }                                                               \
         *(v) = (ty)temp;                                                \
-    }
+    } while (0)
+#else
+#define PUSH_STACK_TYPE(S, ty, v)                                       \
+    do {                                                                \
+        int ret = push_stack(S, (smite_UWORD)(temp & smite_WORD_MASK)); \
+        if (ret != 0)                                                   \
+            RAISE(ret);                                                 \
+    } while (0)
+#define POP_STACK_TYPE(S, ty, v)                                        \
+    do {                                                                \
+        smite_WORD w;                                                   \
+        int ret = pop_stack(S, &w);                                     \
+        if (ret != 0)                                                   \
+            RAISE(ret);                                                 \
+        *(v) = (ty)(smite_UWORD)w;                                      \
+    } while (0)
+#endif
 
 
 // Unchecked macro: UNSAFE!

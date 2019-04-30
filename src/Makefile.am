@@ -8,7 +8,7 @@
 # RISK.
 
 AM_CPPFLAGS = -I$(top_builddir)/lib -I$(top_srcdir)/lib -I$(builddir)/include -I$(srcdir)/include $(WARN_CFLAGS)
-PYTHON_WITH_PATH = export PYTHONPATH=$(top_srcdir)/python:$(top_builddir)/src; $(PYTHON)
+PYTHON_WITH_PATH = export PYTHONPATH=$(top_srcdir)/python:$(top_srcdir)/src:$(top_builddir)/src; $(PYTHON)
 
 lib_LTLIBRARIES = libsmite.la
 C_SRCS = storage.c object.c
@@ -27,7 +27,7 @@ pkginclude_HEADERS = include/@PACKAGE@/@PACKAGE@.h
 
 step.lo: instructions.c
 object.lo step.lo storage.lo main.o: include/@PACKAGE@/registers.h include/@PACKAGE@/opcodes.h include/@PACKAGE@/ext-opcodes.h
-main.o: gen-main include/@PACKAGE@/registers.h
+main.o: main.c include/@PACKAGE@/registers.h
 
 # Depend on @PACKAGE@$(EXEEXT) rather than explicitly make-ing it, as otherwise
 # we break parallel builds, as lib@PACKAGE@.la can be built twice in parallel,
@@ -46,9 +46,11 @@ include/@PACKAGE@/registers.h: gen-registers smite_core/vm_data.py smite_core/in
 	$(PYTHON_WITH_PATH) $(srcdir)/gen-registers > include/@PACKAGE@/registers.h || ( rm -f include/@PACKAGE@/registers.h; exit 1 )
 
 include/@PACKAGE@/ext-opcodes.h: gen-ext-opcodes smite_core/ext.py smite_core/instruction.py
+	$(MKDIR_P) include/@PACKAGE@
 	$(PYTHON_WITH_PATH) $(srcdir)/gen-ext-opcodes > include/@PACKAGE@/ext-opcodes.h || ( rm -f include/@PACKAGE@/ext-opcodes.h; exit 1 )
 
 include/@PACKAGE@/opcodes.h: gen-opcodes smite_core/vm_data.py smite_core/instruction.py
+	$(MKDIR_P) include/@PACKAGE@
 	$(PYTHON_WITH_PATH) $(srcdir)/gen-opcodes > include/@PACKAGE@/opcodes.h || ( rm -f include/@PACKAGE@/opcodes.h; exit 1 )
 
 instructions.c: gen-instructions smite_core/vm_data.py smite_core/instruction.py smite_core/instruction_gen.py smite_core/type_sizes.py
@@ -67,15 +69,15 @@ smite_core/type_sizes.py: $(top_builddir)/config.status gen-type-sizes collate-t
 ext.c: gen-ext smite_core/ext.py smite_core/instruction.py smite_core/instruction_gen.py smite_core/type_sizes.py
 	$(PYTHON_WITH_PATH) $(srcdir)/gen-ext > ext.c || ( rm -f ext.c; exit 1 )
 
-main.c: $(srcdir)/feature/*.py gen-main
-	$(PYTHON_WITH_PATH) $(builddir)/gen-main $(srcdir)/feature > main.c || ( rm -f main.c; exit 1 )
+main.c: $(srcdir)/feature/*/feature.py gen-main
+	$(PYTHON_WITH_PATH) $(srcdir)/gen-main $(srcdir)/feature > main.c || ( rm -f main.c; exit 1 )
 
 loc:
 	$(SLOCCOUNT) \
 		$(C_SRCS) \
 		$(@PACKAGE@_SOURCES) \
 		$(LIB_CORE_SRCS) \
-		gen-registers gen-opcodes gen-ext-opcodes gen-instructions gen-ext gen-main.in
+		gen-registers gen-opcodes gen-ext-opcodes gen-instructions gen-ext gen-main
 
 EXTRA_DIST = \
 	$(LIB_CORE_SRCS) \
@@ -83,12 +85,11 @@ EXTRA_DIST = \
 	gen-registers \
 	gen-opcodes \
 	gen-instructions \
-	gen-main.in \
+	gen-main \
 	gen-ext-opcodes \
 	gen-ext \
 	gen-type-sizes \
-	collate-type-sizes \
-	$(srcdir)/feature/*.py
+	collate-type-sizes
 
 distclean-local:
 	rm -rf autom4te.cache smite_core/__pycache__
@@ -102,3 +103,6 @@ DISTCLEANFILES = @PACKAGE@.1 \
 distcleancheck_listfiles = \
        find . -type f -exec sh -c 'test -f $(srcdir)/$$1 || echo $$1' \
 	    sh '{}' ';'
+
+# Include feature makefile fragments
+include $(srcdir)/feature/features.am

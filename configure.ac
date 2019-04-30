@@ -10,7 +10,7 @@
 
 AC_INIT(SMite, 0.1, rrt@sc3d.org)
 AC_CONFIG_AUX_DIR([build-aux])
-AM_INIT_AUTOMAKE([-Wall -Werror foreign])
+AM_INIT_AUTOMAKE([-Wall -Werror foreign subdir-objects])
 package_upper=`echo ${PACKAGE} | tr '[[:lower:]]' '[[:upper:]]'`
 AC_SUBST([PACKAGE_UPPER], [$package_upper])
 AC_DEFINE_UNQUOTED([PACKAGE_UPPER], ["$package_upper"], [PACKAGE upper-cased])
@@ -110,7 +110,6 @@ AC_CONFIG_FILES([
         doc/Makefile
         doc/smite.tex
 ])
-AC_CONFIG_FILES([src/gen-main], [chmod +x src/gen-main])
 AC_CONFIG_FILES([python/smite-dump], [chmod +x python/smite-dump])
 AC_CONFIG_FILES([python/smite-shell], [chmod +x python/smite-shell])
 AC_OUTPUT
