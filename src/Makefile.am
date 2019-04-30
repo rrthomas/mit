@@ -8,7 +8,7 @@
 # RISK.
 
 AM_CPPFLAGS = -I$(top_builddir)/lib -I$(top_srcdir)/lib -I$(builddir)/include -I$(srcdir)/include $(WARN_CFLAGS)
-PYTHON_WITH_PATH = export PYTHONPATH=$(top_srcdir)/python:$(top_builddir)/src; $(PYTHON)
+PYTHON_WITH_PATH = export PYTHONPATH=$(top_srcdir)/python:$(top_srcdir)/src:$(top_builddir)/src; $(PYTHON)
 
 lib_LTLIBRARIES = libsmite.la
 C_SRCS = storage.c object.c
@@ -46,9 +46,11 @@ include/@PACKAGE@/registers.h: gen-registers smite_core/vm_data.py smite_core/in
 	$(PYTHON_WITH_PATH) $(srcdir)/gen-registers > include/@PACKAGE@/registers.h || ( rm -f include/@PACKAGE@/registers.h; exit 1 )
 
 include/@PACKAGE@/ext-opcodes.h: gen-ext-opcodes smite_core/ext.py smite_core/instruction.py
+	$(MKDIR_P) include/@PACKAGE@
 	$(PYTHON_WITH_PATH) $(srcdir)/gen-ext-opcodes > include/@PACKAGE@/ext-opcodes.h || ( rm -f include/@PACKAGE@/ext-opcodes.h; exit 1 )
 
 include/@PACKAGE@/opcodes.h: gen-opcodes smite_core/vm_data.py smite_core/instruction.py
+	$(MKDIR_P) include/@PACKAGE@
 	$(PYTHON_WITH_PATH) $(srcdir)/gen-opcodes > include/@PACKAGE@/opcodes.h || ( rm -f include/@PACKAGE@/opcodes.h; exit 1 )
 
 instructions.c: gen-instructions smite_core/vm_data.py smite_core/instruction.py smite_core/instruction_gen.py smite_core/type_sizes.py
@@ -68,7 +70,7 @@ ext.c: gen-ext smite_core/ext.py smite_core/instruction.py smite_core/instructio
 	$(PYTHON_WITH_PATH) $(srcdir)/gen-ext > ext.c || ( rm -f ext.c; exit 1 )
 
 main.c: $(srcdir)/feature/*/feature.py gen-main
-	$(PYTHON_WITH_PATH) $(builddir)/gen-main $(srcdir)/feature > main.c || ( rm -f main.c; exit 1 )
+	$(PYTHON_WITH_PATH) $(srcdir)/gen-main $(srcdir)/feature > main.c || ( rm -f main.c; exit 1 )
 
 loc:
 	$(SLOCCOUNT) \

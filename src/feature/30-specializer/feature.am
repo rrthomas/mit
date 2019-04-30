@@ -13,7 +13,7 @@ nodist_LIB_SRCS += %D%/specializer.c
 pkginclude_HEADERS += %D%/smite/specializer.h
 
 %D%/instructions.predictor_pickle: smite_core/instruction.py smite_core/vm_data.py %D%/gen-predictor %D%/instructions.trace %D%/specializer.py
-	$(PYTHON_WITH_PATH) $(srcdir)/%D%/gen-predictor %D%/instructions.trace $@
+	$(PYTHON_WITH_PATH) $(srcdir)/%D%/gen-predictor $(srcdir)/%D%/instructions.trace $@
 
 %D%/instructions.labels_pickle: smite_core/instruction.py smite_core/vm_data.py %D%/instructions.predictor_pickle %D%/gen-labels %D%/specializer.py
 	$(PYTHON_WITH_PATH) $(srcdir)/%D%/gen-labels %D%/instructions.predictor_pickle $@
@@ -22,6 +22,7 @@ pkginclude_HEADERS += %D%/smite/specializer.h
 	$(PYTHON_WITH_PATH) $(srcdir)/%D%/gen-instructions %D%/instructions.labels_pickle > %D%/specializer.c || ( rm -f %D%/specializer.c; exit 1 )
 
 EXTRA_DIST += \
+	%D%/feature.py \
 	%D%/specializer.py \
 	%D%/gen-labels \
 	%D%/gen-predictor \
