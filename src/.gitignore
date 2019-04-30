@@ -1,6 +1,6 @@
-/.deps
-/.libs
-/smite_core/__pycache__
+.deps/
+.libs/
+__pycache__/
 *.lo
 *.o
 /autom4te.cache

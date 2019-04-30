@@ -1,7 +1,7 @@
 How to compile a specialized interpreter
 ========================================
 
-PYTHONPATH must include "$(top_srcdir)/src".
+`PYTHONPATH` must include `$(top_srcdir)/src"`
 
 
 Step 1: Trace

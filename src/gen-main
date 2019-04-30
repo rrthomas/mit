@@ -10,6 +10,8 @@
 
 import os
 import sys
+import pathlib
+import glob
 import textwrap
 
 
@@ -74,9 +76,11 @@ class Arg(Feature):
 
 
 # Build feature list
-dir = sys.argv[1]
-for feature_dir in sorted(os.listdir(sys.argv[1])):
-    exec(open(os.path.join(dir, feature_dir, 'feature.py')).read())
+for feature_dir in sorted([
+    file for file in glob.glob(os.path.join(sys.argv[1], '*'))
+    if pathlib.Path(file).is_dir()
+]):
+    exec(open(os.path.join(feature_dir, 'feature.py')).read())
 
 
 # Generate output

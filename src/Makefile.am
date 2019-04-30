@@ -87,8 +87,7 @@ EXTRA_DIST = \
 	gen-ext-opcodes \
 	gen-ext \
 	gen-type-sizes \
-	collate-type-sizes \
-	$(srcdir)/feature/*.py
+	collate-type-sizes
 
 distclean-local:
 	rm -rf autom4te.cache smite_core/__pycache__
@@ -102,3 +101,6 @@ DISTCLEANFILES = @PACKAGE@.1 \
 distcleancheck_listfiles = \
        find . -type f -exec sh -c 'test -f $(srcdir)/$$1 || echo $$1' \
 	    sh '{}' ';'
+
+# Include feature makefile fragments
+include $(srcdir)/feature/features.am

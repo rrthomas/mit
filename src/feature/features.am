@@ -1,0 +1,5 @@
+include %D%/30-specializer/feature.am
+# include %D%/50-auto-extend/feature.am
+# include %D%/80-trace/feature.am
+# include %D%/90-core-dump/feature.am
+# include %D%/99-help/feature.am

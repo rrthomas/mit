@@ -66,8 +66,9 @@ print('''\
 
 #include <assert.h>
 
-#include "smite.h"
-#include "opcodes.h"
+#include "smite/smite.h"
+#include "smite/opcodes.h"
+#include "smite/specializer.h"
 
 #define RAISE(code)                                           \\
     do {                                                      \\

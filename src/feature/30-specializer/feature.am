@@ -1,0 +1,34 @@
+# Specializer Makefile.am fragment
+#
+# (c) SMite authors 2011-2019
+#
+# The package is distributed under the MIT/X11 License.
+#
+# THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
+# RISK.
+
+AM_CPPFLAGS += -I$(srcdir)/%D%
+
+nodist_LIB_SRCS += %D%/specializer.c
+pkginclude_HEADERS += %D%/smite/specializer.h
+
+%D%/instructions.predictor_pickle: smite_core/instruction.py smite_core/vm_data.py %D%/gen-predictor %D%/instructions.trace %D%/specializer.py
+	$(PYTHON_WITH_PATH) $(srcdir)/%D%/gen-predictor %D%/instructions.trace $@
+
+%D%/instructions.labels_pickle: smite_core/instruction.py smite_core/vm_data.py %D%/instructions.predictor_pickle %D%/gen-labels %D%/specializer.py
+	$(PYTHON_WITH_PATH) $(srcdir)/%D%/gen-labels %D%/instructions.predictor_pickle $@
+
+%D%/specializer.c: smite_core/instruction.py smite_core/vm_data.py smite_core/type_sizes.py smite_core/instruction_gen.py %D%/gen-instructions %D%/instructions.labels_pickle
+	$(PYTHON_WITH_PATH) $(srcdir)/%D%/gen-instructions %D%/instructions.labels_pickle > %D%/specializer.c || ( rm -f %D%/specializer.c; exit 1 )
+
+EXTRA_DIST += \
+	%D%/specializer.py \
+	%D%/gen-labels \
+	%D%/gen-predictor \
+	%D%/gen-instructions \
+	%D%/instructions.trace
+
+DISTCLEANFILES += \
+	%D%/instructions.predictor_pickle \
+	%D%/instructions.labels_pickle \
+	%D%/specializer.c
