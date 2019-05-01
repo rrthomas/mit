@@ -65,6 +65,7 @@ print('''\
 #include "config.h"
 
 #include <assert.h>
+#include <stdio.h>
 
 #include "smite/smite.h"
 #include "smite/opcodes.h"

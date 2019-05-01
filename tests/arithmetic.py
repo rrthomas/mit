@@ -48,8 +48,8 @@ correct = [
     [-word_bytes],
     [-word_bytes, 1],
     [],
-    [-word_bytes],
-    [-word_bytes, word_bytes - 1],
+    [-8],
+    [-8, 7],
     [-1, -1],
     [-1, -1, 1],
     [-1],
@@ -92,8 +92,8 @@ lit(word_bytes)
 ass(NEGATE)
 lit(1)
 ass(POP)
-lit(-word_bytes)
-lit(word_bytes - 1)
+lit(-8)
+lit(7)
 ass(DIVMOD)
 lit(1)
 ass(POP)

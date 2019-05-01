@@ -10,9 +10,12 @@
 import sys
 
 from smite.assembler import Disassembler
+from smite.binding import word_bit, uword_max
 
 def cast_to_word(stack):
-    return [n if n <= (1 << word_bit) - 1 else smite_uword_maxfor n in stack]
+    return [n if 0 <= n < (1 << (word_bit - 1)) else
+            ((n | ~uword_max) if n > -uword_max else 0)
+            for n in stack]
 
 def run_test(name, state, correct):
     for i, stack in enumerate(correct):

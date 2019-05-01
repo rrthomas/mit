@@ -62,7 +62,10 @@ sign_bit = 1 << (word_bit - 1)
 
 
 # Types
-if word_bytes == sizeof(c_int):
+if word_bytes == sizeof(c_short):
+    c_word = c_short
+    c_uword = c_ushort
+elif word_bytes == sizeof(c_int):
     c_word = c_int
     c_uword = c_uint
 elif word_bytes == sizeof(c_long):

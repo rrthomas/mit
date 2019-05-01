@@ -25,7 +25,6 @@ includes = '''\
 #include <sys/stat.h>
 #include <string.h>
 #include "binary-io.h"
-#include "verify.h"
 
 #include "smite/smite.h"
 '''
@@ -52,15 +51,15 @@ class LibcLib(AbstractInstruction):
         ret = strncpy(dest, src, (size_t)n);
     ''')
 
-    STDIN = (0x5, [], ['fd'], '''\
+    STDIN = (0x5, [], ['fd:int'], '''\
         fd = (smite_WORD)STDIN_FILENO;
     ''')
 
-    STDOUT = (0x6, [], ['fd'], '''\
+    STDOUT = (0x6, [], ['fd:int'], '''\
         fd = (smite_WORD)STDOUT_FILENO;
     ''')
 
-    STDERR = (0x7, [], ['fd'], '''\
+    STDERR = (0x7, [], ['fd:int'], '''\
         fd = (smite_WORD)STDERR_FILENO;
     ''')
 
@@ -84,7 +83,7 @@ class LibcLib(AbstractInstruction):
         flag = (smite_WORD)O_TRUNC;
     ''')
 
-    OPEN = (0xd, ['str', 'flags'], ['fd'], '''\
+    OPEN = (0xd, ['str', 'flags'], ['fd:int'], '''\
         {
             char *s = (char *)smite_native_address_of_range(S, str, 0);
             fd = s ? open(s, flags, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH) : -1;
@@ -92,25 +91,25 @@ class LibcLib(AbstractInstruction):
         }
     ''')
 
-    CLOSE = (0xe, ['fd'], ['ret'], '''\
+    CLOSE = (0xe, ['fd:int'], ['ret:int'], '''\
         ret = (smite_WORD)close(fd);
     ''')
 
-    READ = (0xf, ['buf', 'nbytes', 'fd'], ['nread'], '''\
+    READ = (0xf, ['buf', 'nbytes', 'fd:int'], ['nread:int'], '''\
         {
             nread = -1;
             uint8_t *ptr = smite_native_address_of_range(S, buf, nbytes);
             if (ptr)
-                nread = read((int)fd, ptr, nbytes);
+                nread = read(fd, ptr, nbytes);
         }
     ''')
 
-    WRITE = (0x10, ['buf', 'nbytes', 'fd'], ['nwritten'], '''\
+    WRITE = (0x10, ['buf', 'nbytes', 'fd:int'], ['nwritten'], '''\
         {
             nwritten = -1;
             uint8_t *ptr = smite_native_address_of_range(S, buf, nbytes);
             if (ptr)
-                nwritten = write((int)fd, ptr, nbytes);
+                nwritten = write(fd, ptr, nbytes);
         }
     ''')
 
@@ -126,15 +125,15 @@ class LibcLib(AbstractInstruction):
         whence = (smite_WORD)SEEK_END;
     ''')
 
-    LSEEK = (0x14, ['fd', 'offset:off_t', 'whence'], ['pos:off_t'], '''\
-        pos = lseek((int)fd, offset, whence);
+    LSEEK = (0x14, ['fd:int', 'offset:off_t', 'whence'], ['pos:off_t'], '''\
+        pos = lseek(fd, offset, whence);
     ''')
 
-    FDATASYNC = (0x15, ['fd'], ['ret'], '''\
-        ret = fdatasync((int)fd);
+    FDATASYNC = (0x15, ['fd:int'], ['ret:int'], '''\
+        ret = fdatasync(fd);
     ''')
 
-    RENAME = (0x16, ['old_name', 'new_name'], ['ret'], '''\
+    RENAME = (0x16, ['old_name', 'new_name'], ['ret:int'], '''\
         {
             char *s1 = (char *)smite_native_address_of_range(S, old_name, 0);
             char *s2 = (char *)smite_native_address_of_range(S, new_name, 0);
@@ -144,7 +143,7 @@ class LibcLib(AbstractInstruction):
         }
     ''')
 
-    REMOVE = (0x17, ['name'], ['ret'], '''\
+    REMOVE = (0x17, ['name'], ['ret:int'], '''\
         {
             char *s = (char *)smite_native_address_of_range(S, name, 0);
             if (s == NULL)
@@ -154,22 +153,22 @@ class LibcLib(AbstractInstruction):
     ''')
 
     # FIXME: Expose stat(2). This requires struct mapping!
-    FILE_SIZE = (0x18, ['fd'], ['size:off_t', 'ret'], '''\
+    FILE_SIZE = (0x18, ['fd:int'], ['size:off_t', 'ret:int'], '''\
         {
             struct stat st;
-            ret = fstat((int)fd, &st);
+            ret = fstat(fd, &st);
             size = st.st_size;
         }
     ''')
 
-    RESIZE_FILE = (0x19, ['size:off_t', 'fd'], ['ret'], '''\
-        ret = ftruncate((int)fd, size);
+    RESIZE_FILE = (0x19, ['size:off_t', 'fd:int'], ['ret:int'], '''\
+        ret = ftruncate(fd, size);
     ''')
 
-    FILE_STATUS = (0x1a, ['fd'], ['mode:mode_t', 'ret'], '''\
+    FILE_STATUS = (0x1a, ['fd:int'], ['mode:mode_t', 'ret:int'], '''\
         {
             struct stat st;
-            ret = fstat((int)fd, &st);
+            ret = fstat(fd, &st);
             mode = st.st_mode;
         }
     ''')
@@ -183,12 +182,12 @@ smite_lib = {
         ptr = smite_native_address_of_range(inner_state, addr, len);
     '''),
 
-    'LOAD': (0x2, ['addr', 'size', 'inner_state:smite_state *'], ['value', 'ret'], '''\
+    'LOAD': (0x2, ['addr', 'size', 'inner_state:smite_state *'], ['value', 'ret:int'], '''\
         value = 0;
         ret = load(inner_state, addr, size, &value);
     '''),
 
-    'STORE': (0x3, ['value', 'addr', 'size', 'inner_state:smite_state *'], ['ret'], '''\
+    'STORE': (0x3, ['value', 'addr', 'size', 'inner_state:smite_state *'], ['ret:int'], '''\
         ret = store(inner_state, addr, size, value);
     '''),
 
@@ -196,11 +195,11 @@ smite_lib = {
         new_state = smite_init((size_t)memory_size, (size_t)stack_size);
     '''),
 
-    'REALLOC_MEMORY': (0x5, ['u', 'inner_state:smite_state *'], ['ret'], '''\
+    'REALLOC_MEMORY': (0x5, ['u', 'inner_state:smite_state *'], ['ret:int'], '''\
         ret = smite_realloc_memory(inner_state, (size_t)u);
     '''),
 
-    'REALLOC_STACK': (0x6, ['u', 'inner_state:smite_state *'], ['ret'], '''\
+    'REALLOC_STACK': (0x6, ['u', 'inner_state:smite_state *'], ['ret:int'], '''\
         ret = smite_realloc_stack(inner_state, (size_t)u);
     '''),
 
@@ -216,16 +215,16 @@ smite_lib = {
         ret = smite_single_step(inner_state);
     '''),
 
-    'LOAD_OBJECT': (0xa, ['fd', 'addr', 'inner_state:smite_state *'], ['ret'], '''\
-        ret = smite_load_object(inner_state, addr, (int)fd);
+    'LOAD_OBJECT': (0xa, ['fd:int', 'addr', 'inner_state:smite_state *'], ['ret:int'], '''\
+        ret = smite_load_object(inner_state, addr, fd);
     '''),
 
-    'SAVE_OBJECT': (0xb, ['fd', 'addr', 'len', 'inner_state:smite_state *'], ['ret'], '''\
-        ret = smite_save_object(inner_state, addr, len, (int)fd);
+    'SAVE_OBJECT': (0xb, ['fd:int', 'addr', 'len', 'inner_state:smite_state *'], ['ret:int'], '''\
+        ret = smite_save_object(inner_state, addr, len, fd);
     '''),
 
-    'REGISTER_ARGS': (0xc, ['argv:char **', 'argc', 'inner_state:smite_state *'], ['ret'], '''\
-        ret = smite_register_args(inner_state, (int)argc, argv);
+    'REGISTER_ARGS': (0xc, ['argv:char **', 'argc:int', 'inner_state:smite_state *'], ['ret:int'], '''\
+        ret = smite_register_args(inner_state, argc, argv);
     '''),
 }
 

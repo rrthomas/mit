@@ -43,6 +43,7 @@ EXTRA_DIST = \
 	$(man_MANS)		\
 	@PACKAGE@/binding.py.in	\
 	@PACKAGE@-dump.in	\
-	@PACKAGE@-shell.in
+	@PACKAGE@-shell.in	\
+	@PACKAGE@/binding.py.in
 
 DISTCLEANFILES = $(bin_SCRIPTS) $(man_MANS)

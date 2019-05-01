@@ -26,7 +26,19 @@
 
 // Types and printf formats
 typedef uint8_t smite_BYTE;
-#if WORD_BYTES == 4
+#if WORD_BYTES == 2
+typedef int16_t smite_WORD;
+typedef uint16_t smite_UWORD;
+#define smite_SIZE_WORD 1
+#define smite_WORD_MASK UINT16_MAX
+#define smite_UWORD_MAX UINT16_MAX
+#define smite_WORD_MIN INT16_MIN
+#define smite_WORD_MAX INT16_MAX
+#define PRI_WORD PRId16
+#define PRI_UWORD PRIu16
+#define PRI_XWORD "#"PRIx16
+#define reverse_endianness bswap_16
+#elif WORD_BYTES == 4
 typedef int32_t smite_WORD;
 typedef uint32_t smite_UWORD;
 #define smite_SIZE_WORD 2
@@ -37,6 +49,7 @@ typedef uint32_t smite_UWORD;
 #define PRI_WORD PRId32
 #define PRI_UWORD PRIu32
 #define PRI_XWORD "#"PRIx32
+#define reverse_endianness bswap_32
 #elif WORD_BYTES == 8
 typedef int64_t smite_WORD;
 typedef uint64_t smite_UWORD;
@@ -48,8 +61,9 @@ typedef uint64_t smite_UWORD;
 #define PRI_WORD PRId64
 #define PRI_UWORD PRIu64
 #define PRI_XWORD "#"PRIx64
+#define reverse_endianness bswap_64
 #else
-#error "WORD_BYTES must be 4 or 8!"
+#error "WORD_BYTES must be 2, 4 or 8!"
 #endif
 typedef smite_WORD * smite_WORDP;
 #define PRI_XWORDP "p"
@@ -173,18 +187,7 @@ _GL_ATTRIBUTE_PURE static uint8_t *native_address_of_range(smite_state *S, smite
         return NULL;
     return ((uint8_t *)(S->memory)) + addr;
 }
-#pragma GCC diagnostic pop
 
-#if WORD_BYTES == 4
-#define reverse_endianness bswap_32
-#elif WORD_BYTES == 8
-#define reverse_endianness bswap_64
-#else
-#error "WORD_BYTES must be 4 or 8!"
-#endif
-
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-function"
 static int load(smite_state *S, smite_UWORD addr, unsigned size, smite_WORD *val_ptr)
 {
     if (addr >= S->memory_size) {
