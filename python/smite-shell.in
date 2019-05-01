@@ -1,2 +1,2 @@
 #!/bin/sh
-@IPYTHON@ -i @IPYTHON_OPTS@ -m smite
+@IPYTHON@ -i @IPYTHON_OPTS@ -m @PACKAGE@@PACKAGE_SUFFIX@

@@ -10,10 +10,9 @@
 #ifndef SMITE_SPECIALIZER
 #define SMITE_SPECIALIZER
 
-#include <smite/smite.h>
+#include <@PACKAGE@@PACKAGE_SUFFIX@/smite.h>
 
 
 smite_WORD smite_run_specialized(smite_state *S);
 
 #endif
-

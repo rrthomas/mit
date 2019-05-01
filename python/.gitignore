@@ -1,5 +1,10 @@
 /smite/__pycache__
+/smite/binding.py
 /smite-dump
-/smite-dump.1
-/smite-shell
-/smite-shell.1
+/smite-[bl]e-[48]-dump
+/smite-*dump.1
+/smite-[bl]e-[48]-dump.1
+/smite-*shell
+/smite-[bl]e-[48]-shell
+/smite-*shell.1
+/smite-[bl]e-[48]-shell.1

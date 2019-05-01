@@ -31,9 +31,14 @@ TESTS =	\
 TESTS_ENVIRONMENT = \
 	export LD_LIBRARY_PATH=$(top_builddir)/src/@objdir@:$$LD_LIBRARY_PATH; \
 	export PYTHON=$(PYTHON); \
-	export PYTHONPATH=$(top_srcdir)/python; \
+	export PYTHONPATH=$(top_builddir)/python; \
+	$(MKDIR_P) $(top_builddir)/python/@PACKAGE@; \
+	cp -fL $(top_srcdir)/python/@PACKAGE@/*.py $(top_builddir)/python/@PACKAGE@/; \
 	export srcdir=$(srcdir); \
 	export builddir=$(builddir);
+
+distclean-local:
+	rm -rf $(top_builddir)/python/@PACKAGE@/*.py $(top_builddir)/python/@PACKAGE@/__pycache__
 
 EXTRA_DIST = \
 	$(TESTS) \

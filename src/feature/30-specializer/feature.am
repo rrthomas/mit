@@ -7,10 +7,10 @@
 # THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 # RISK.
 
-AM_CPPFLAGS += -I$(srcdir)/%D%
+AM_CPPFLAGS += -I$(builddir)/%D%
 
 nodist_LIB_SRCS += %D%/specializer.c
-pkginclude_HEADERS += %D%/smite/specializer.h
+nodist_smite_pkginclude_HEADERS += %D%/smite/specializer.h
 
 %D%/instructions.predictor_pickle: smite_core/instruction.py smite_core/vm_data.py %D%/gen-predictor %D%/instructions.trace %D%/specializer.py
 	$(PYTHON_WITH_PATH) $(srcdir)/%D%/gen-predictor $(srcdir)/%D%/instructions.trace $@
