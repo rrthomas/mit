@@ -81,10 +81,11 @@ lit(42)
 ass(STORE)
 
 # Try to execute invalid opcode
-test.append(label())
-result.append(1)
-print("Test {}: PC = {}".format(len(test), test[-1]))
-ass(UNDEFINED)
+if UNDEFINED < (1 << instruction_bit):
+    test.append(label())
+    result.append(1)
+    print("Test {}: PC = {}".format(len(test), test[-1]))
+    ass(UNDEFINED)
 
 # Tests
 assert(len(test) == len(result))

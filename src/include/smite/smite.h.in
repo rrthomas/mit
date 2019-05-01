@@ -108,7 +108,12 @@ typedef struct {
 #undef R_RO
 
 // Instructions
+#ifndef SMITE_INSTRUCTION_BIT
 #define SMITE_INSTRUCTION_BIT 8
+#endif
+#if SMITE_INSTRUCTION_BIT < 5 || SMITE_INSTRUCTION_BIT > 8
+#error "SMITE_INSTRUCTION_BIT must be in the range 5 to 8 inclusive!"
+#endif
 #define SMITE_INSTRUCTION_MASK ((1 << SMITE_INSTRUCTION_BIT) - 1)
 extern const unsigned smite_instruction_bit;
 extern const unsigned smite_instruction_mask;
