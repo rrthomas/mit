@@ -13,6 +13,7 @@ from smite.assembler import Disassembler
 
 def run_test(name, state, correct):
     for i, stack in enumerate(correct):
+        print(Disassembler(state).__next__())
         state.step()
         print("Data stack: {}".format(state.S))
         print("Correct stack: {}\n".format(stack))
@@ -22,6 +23,5 @@ def run_test(name, state, correct):
                 state.registers["PC"].get()
             ))
             sys.exit(1)
-        print("I = {}".format(Disassembler(state).disassemble()))
 
     print("{} tests ran OK".format(name.upper()))
