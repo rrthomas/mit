@@ -11,8 +11,12 @@ import sys
 
 from smite.assembler import Disassembler
 
+def cast_to_word(stack):
+    return [n if n <= (1 << word_bit) - 1 else smite_uword_maxfor n in stack]
+
 def run_test(name, state, correct):
     for i, stack in enumerate(correct):
+        stack = cast_to_word(stack)
         print(Disassembler(state).__next__())
         state.step()
         print("Data stack: {}".format(state.S))
@@ -24,4 +28,4 @@ def run_test(name, state, correct):
             ))
             sys.exit(1)
 
-    print("{} tests ran OK".format(name.upper()))
+    print("{} tests ran OK".format(name.capitalize()))
