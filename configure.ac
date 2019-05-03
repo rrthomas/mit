@@ -127,7 +127,7 @@ if test "$gl_package_suffix" = yes; then
   PACKAGE_SUFFIX=-$endism_text-$WORD_BYTES
 fi
 AC_SUBST([PACKAGE_SUFFIX])
-AM_CONDITIONAL([USING_SUFFIX], [test "$gl_package_suffix" = "yes"])
+AM_CONDITIONAL([USING_PACKAGE_SUFFIX], [test "$gl_package_suffix" = "yes"])
 
 # Generate output files
 AC_CONFIG_HEADERS([config.h])

@@ -7,8 +7,8 @@
 # THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 # RISK.
 
-bin_SCRIPTS = @PACKAGE@-dump @PACKAGE@-shell
-man_MANS = @PACKAGE@-dump.1 @PACKAGE@-shell.1
+bin_SCRIPTS = @PACKAGE@@PACKAGE_SUFFIX@-dump @PACKAGE@@PACKAGE_SUFFIX@-shell
+man_MANS = @PACKAGE@@PACKAGE_SUFFIX@-dump.1 @PACKAGE@@PACKAGE_SUFFIX@-shell.1
 smite_pkgpythondir = $(pkgpythondir)@PACKAGE_SUFFIX@
 smite_pkgpython_PYTHON =		\
 	@PACKAGE@/__init__.py		\
@@ -23,7 +23,7 @@ nodist_smite_pkgpython_PYTHON = @PACKAGE@/binding.py
 loc:
 	$(SLOCCOUNT) $(bin_SCRIPTS) @PACKAGE@/__init__.py @PACKAGE@/__main__.py
 
-if USING_SUFFIX
+if USING_PACKAGE_SUFFIX
 @PACKAGE@@PACKAGE_SUFFIX@-dump: @PACKAGE@-dump
 	cp @PACKAGE@-dump $@
 	chmod +x $@
