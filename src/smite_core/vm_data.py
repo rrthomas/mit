@@ -122,6 +122,7 @@ class Instruction(AbstractInstruction):
           RAISE(SMITE_ERR_DIVISION_BY_ZERO);
         q = a / b;
         r = a % b;
+        fprintf(stderr, "a %d b %d q %d r %d\\n", (int)a, (int)b, (int)q, (int)r);
     ''')
 
     UDIVMOD = (0x17, ['a', 'b'], ['q', 'r'], '''\

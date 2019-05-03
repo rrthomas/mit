@@ -16,7 +16,7 @@ VM.globalize(globals())
 # Test results
 values = [
     0, 1,
-    -257, 12345678, 4, -1 << (word_bit - 1),
+    -257, 12345, 4, -1 << (word_bit - 1),
     1 << (word_bit - 2), -1 << (word_bit - byte_bit)
 ]
 

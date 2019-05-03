@@ -45,7 +45,7 @@ except:
 class State:
     '''A VM state.'''
 
-    def __init__(self, memory_size=1024*1024, stack_size=1024):
+    def __init__(self, memory_size=1024*1024 if word_bytes > 2 else 16*1024, stack_size=1024):
         '''Initialise the VM state.'''
         self.state = libsmite.smite_init(memory_size, stack_size)
         if self.state == None:

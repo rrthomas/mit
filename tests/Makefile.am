@@ -28,14 +28,25 @@ TESTS =	\
 	single_step.py	\
 	stack.py
 
+# Python will not try a relative import from a different directory, so copy
+# modules from srcdir to builddir.
+check_DATA = $(top_builddir)/copied-python-module-to-build
+
+$(top_builddir)/copied-python-module-to-build:
+	if ! test -e $(top_builddir)/python/@PACKAGE@/__init__.py; then \
+	    $(MKDIR_P) $(top_builddir)/python/@PACKAGE@ && \
+	    cp -fL $(top_srcdir)/python/@PACKAGE@/*.py $(top_builddir)/python/@PACKAGE@/ && \
+	    touch $@; \
+	fi
+
 TESTS_ENVIRONMENT = \
 	export LD_LIBRARY_PATH=$(top_builddir)/src/@objdir@:$$LD_LIBRARY_PATH; \
 	export PYTHON=$(PYTHON); \
 	export PYTHONPATH=$(top_builddir)/python; \
-	$(MKDIR_P) $(top_builddir)/python/@PACKAGE@; \
-	cp -fL $(top_srcdir)/python/@PACKAGE@/*.py $(top_builddir)/python/@PACKAGE@/; \
 	export srcdir=$(srcdir); \
 	export builddir=$(builddir);
+
+DISTCLEANFILES = $(top_builddir)/copied-python-module-to-build
 
 distclean-local:
 	rm -rf $(top_builddir)/python/@PACKAGE@/*.py $(top_builddir)/python/@PACKAGE@/__pycache__

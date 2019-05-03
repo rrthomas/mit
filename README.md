@@ -13,11 +13,11 @@ An I/O library is implemented; access to native code routines is also
 possible, allowing SMite and C programs to call each other.
 
 This package comprises the definition of the SMite virtual machine and an
-implementation in ISO C99 using POSIX APIs. Detailed documentation is in the
-`doc` directory; installation instructions follow. Maintainers should read
-`HACKING.md`.
+implementation in ISO C99 using POSIX APIs.
 
-The package is distributed under the MIT/X11 License (see the file `COPYING`). Note that some files are in the public domain, notably the specification of SMite; they are marked as such.
+The package is distributed under the MIT/X11 License (see the file
+`COPYING`). Note that some files are in the public domain, notably the
+specification of SMite; they are marked as such.
 
 THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 RISK.
@@ -39,6 +39,10 @@ see below.
 To build SMite from a release tarball, run
 
 `./configure && make && make check`
+
+See `./configure --help` for build options; note in particular the
+environment variables `ENDISM` and `WORD_BYTES`, and the flag
+`--enable-package-suffix`.
 
 For the bibliographies in the documentation to be built correctly, GNU Make
 should be used.
@@ -80,6 +84,7 @@ The design of the SMite virtual machine is described. Essential reading
 for those programming or implementing the VM.
 * The comments in `smite.h`.
 * Comments in the Python modules.
+* `HACKING.md` contains further information for maintainers.
 
 SMite is based on [Beetle](https://github.com/rrthomas/beetle), which I
 developed for my BA dissertation project.
@@ -93,7 +98,8 @@ targets SMite.
 
 ## Running SMite object files
 
-The C implementation of SMite allows a hash-bang line to be prepended to an object file, so that they can be run directly. A suggested line is:
+The C implementation of SMite allows a hash-bang line to be prepended to an
+object file, so that they can be run directly. A suggested line is:
 
 ```
 #!/usr/bin/env smite

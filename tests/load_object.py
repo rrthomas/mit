@@ -47,8 +47,9 @@ for good_file in good_files:
     s = obj_name(src_dir, good_file, word_bytes)
     res = try_load(s)
     print(" should be {}".format(0))
-    print("Word 0 of memory is {:#x}; should be 0x01020304".format(M_word[0]))
-    if M_word[0] != 0x1020304:
+    correct = 0x1020304 & word_mask
+    print("Word 0 of memory is {:#x}; should be {:#x}".format(M_word[0], correct))
+    if M_word[0] != correct:
         print("Error in load_object() tests: file {}".format(good_file))
         sys.exit(1)
     if res != 0:
@@ -58,7 +59,7 @@ for good_file in good_files:
 
 # Generate test object file
 number_file = "numbers.obj"
-correct = [-128, 12345678]
+correct = [-128, 12345]
 for n in correct:
     lit(n)
 ass(HALT)
@@ -86,7 +87,7 @@ os.remove(number_file)
 
 # Check we get an error trying to load an object file of the wrong
 # WORD_BYTES.
-assert(word_bytes == 4 or word_bytes == 8)
+assert(word_bytes == 2 or word_bytes == 4 or word_bytes == 8)
 wrong_word_bytes = 8 if word_bytes == 4 else 4
 s = obj_name(src_dir, good_files[0], wrong_word_bytes, use_endism=True)
 res = try_load(s)

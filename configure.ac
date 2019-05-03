@@ -115,7 +115,7 @@ AC_ARG_VAR([WORD_BYTES],
 # Package suffix for side-by-side installation of multiple builds
 AC_ARG_ENABLE([package-suffix],
   [AS_HELP_STRING([--enable-package-suffix],
-                  [add package suffix containing values of WORD_BYTES and ENDISM])],
+                  [add suffix containing values of ENDISM and WORD_BYTES, e.g. "-le-8", to binaries, libraries, include directories etc., enabling side-by-side installation of multiple builds.])],
   [case $enableval in
      yes|no) ;;
      *)      AC_MSG_ERROR([bad value $enableval for package-suffix option]) ;;
@@ -127,7 +127,7 @@ if test "$gl_package_suffix" = yes; then
   PACKAGE_SUFFIX=-$endism_text-$WORD_BYTES
 fi
 AC_SUBST([PACKAGE_SUFFIX])
-AM_CONDITIONAL([USING_SUFFIX], [test "$gl_package_suffix" = "yes"])
+AM_CONDITIONAL([USING_PACKAGE_SUFFIX], [test "$gl_package_suffix" = "yes"])
 
 # Generate output files
 AC_CONFIG_HEADERS([config.h])

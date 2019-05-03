@@ -14,7 +14,7 @@ predictor_filename = sys.argv[2]
 
 # bytes -> Instruction
 TRACE_NAMES = {
-    b'%d' % i.opcode: i
+    str(i.opcode).encode(): i
     for i in Instruction
 }
 

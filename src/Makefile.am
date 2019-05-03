@@ -30,6 +30,12 @@ step.lo: instructions.c
 object.lo step.lo storage.lo main.o: include/@PACKAGE@/registers.h include/@PACKAGE@/opcodes.h include/@PACKAGE@/ext-opcodes.h
 main.o: main.c include/@PACKAGE@/registers.h
 
+.c.s:
+	$(COMPILE) -c -S $<
+
+include/@PACKAGE@/@PACKAGE@.h: $(top_builddir)/config.status $(srcdir)/include/@PACKAGE@/@PACKAGE@.h.in
+	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
+
 # Depend on @PACKAGE@@PACKAGE_SUFFIX@$(EXEEXT) rather than explicitly make-ing it, as otherwise
 # we break parallel builds, as lib@PACKAGE@@PACKAGE_SUFFIX@.la can be built twice in parallel,
 # which can fail. Set distcleancheck_listfiles below to fix distcheck.
@@ -67,7 +73,7 @@ instructions.c: gen-instructions smite_core/vm_data.py smite_core/instruction.py
 smite_core/type_sizes.py: $(top_builddir)/config.status gen-type-sizes collate-type-sizes include/@PACKAGE@/registers.h smite_core/ext.py smite_core/instruction.py
 	$(PYTHON_WITH_PATH) $(srcdir)/gen-type-sizes > type-sizes.ac && \
 	autoconf type-sizes.ac > type-sizes && \
-	CONFIG_SITE= CPPFLAGS="$(CPPFLAGS) -I$(builddir) -I$(srcdir) -I$(top_builddir) $(AM_CPPFLAGS)" $(SHELL) type-sizes && \
+	CONFIG_SITE= CC="$(CC)" CPPFLAGS="$(CPPFLAGS) -I$(builddir) -I$(srcdir) -I$(top_builddir) $(AM_CPPFLAGS)" $(SHELL) type-sizes && \
 	$(MKDIR_P) smite_core && \
 	$(GREP) "^#define SIZEOF" config.log | cut -d " " -f 3 | \
 		( $(PYTHON_WITH_PATH) $(srcdir)/collate-type-sizes > smite_core/type_sizes.py ) || ( rm -f type-sizes.ac type-sizes smite_core/type_sizes.py; exit 1 )

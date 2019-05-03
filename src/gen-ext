@@ -24,9 +24,6 @@ enum {
 
 #define RAISE(code)                         \\
     return (code);                          \\
-
-// Assumption for file functions
-verify(sizeof(int) <= sizeof(smite_WORD));
 ''')
 
 for lib in LibInstruction:

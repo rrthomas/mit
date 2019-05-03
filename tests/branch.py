@@ -12,7 +12,7 @@
 # RISK.
 
 from smite import *
-VM = State(4096)
+VM = State(16384)
 VM.globalize(globals())
 
 
