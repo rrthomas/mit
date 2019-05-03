@@ -3,6 +3,7 @@
 __pycache__/
 *.lo
 *.o
+*.s
 /autom4te.cache
 /config.log
 /config.status

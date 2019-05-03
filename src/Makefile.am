@@ -30,6 +30,9 @@ step.lo: instructions.c
 object.lo step.lo storage.lo main.o: include/@PACKAGE@/registers.h include/@PACKAGE@/opcodes.h include/@PACKAGE@/ext-opcodes.h
 main.o: main.c include/@PACKAGE@/registers.h
 
+.c.s:
+	$(COMPILE) -c -S $<
+
 include/@PACKAGE@/@PACKAGE@.h: $(top_builddir)/config.status $(srcdir)/include/@PACKAGE@/@PACKAGE@.h.in
 	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
 
