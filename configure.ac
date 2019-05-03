@@ -87,14 +87,47 @@ AC_SUBST([PY_LOG_ENV])
 AC_SUBST([objdir])
 
 # Check features
-AC_C_BIGENDIAN
 AX_C_ARITHMETIC_RSHIFT
+
+# Set endianness
+AC_C_BIGENDIAN
+AC_SUBST([WORDS_BIGENDIAN])
+AC_ARG_VAR([ENDISM],
+  [value of ENDISM register [default: native endianness]])
+if test "$ac_cv_c_bigendian" = "yes"; then
+  WORDS_BIGENDIAN=1
+else
+  WORDS_BIGENDIAN=0
+fi
+: "${ENDISM=$WORDS_BIGENDIAN}"
+case $ENDISM in
+     0) endism_text=le ;;
+     1) endism_text=be ;;
+     *) AC_MSG_ERROR([bad value $ENDISM for ENDISM]) ;;
+esac
 
 # Set size of word
 AC_CHECK_SIZEOF([size_t])
-AC_ARG_VAR([DEFAULT_WORD_BYTES],
-  [default value of WORD_BYTES register [default: sizeof(size_t)]])
-: "${DEFAULT_WORD_BYTES=SIZEOF_SIZE_T}"
+AC_ARG_VAR([WORD_BYTES],
+  [value of WORD_BYTES register [default: sizeof(size_t)]])
+: "${WORD_BYTES=$ac_cv_sizeof_size_t}"
+
+# Package suffix for side-by-side installation of multiple builds
+AC_ARG_ENABLE([package-suffix],
+  [AS_HELP_STRING([--enable-package-suffix],
+                  [add package suffix containing values of WORD_BYTES and ENDISM])],
+  [case $enableval in
+     yes|no) ;;
+     *)      AC_MSG_ERROR([bad value $enableval for package-suffix option]) ;;
+   esac
+   gl_package_suffix=$enableval],
+  [gl_package_suffix=no]
+)
+if test "$gl_package_suffix" = yes; then
+  PACKAGE_SUFFIX=-$endism_text-$WORD_BYTES
+fi
+AC_SUBST([PACKAGE_SUFFIX])
+AM_CONDITIONAL([USING_SUFFIX], [test "$gl_package_suffix" = "yes"])
 
 # Generate output files
 AC_CONFIG_HEADERS([config.h])
@@ -102,9 +135,12 @@ AC_CONFIG_FILES([
         Makefile
         lib/Makefile
         src/Makefile
+        src/include/smite/smite.h
+        src/feature/30-specializer/smite/specializer.h
         src/smite-include.man
         tests/Makefile
         python/Makefile
+        python/smite/binding.py
         python/smite-dump.1
         python/smite-shell.1
         doc/Makefile

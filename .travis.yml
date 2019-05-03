@@ -16,9 +16,9 @@ addons:
       - latexmk
       - hevea
 
-# env:
-#   global:
-#     - VERBOSE=1
+env:
+  global:
+    - VERBOSE=1
 
 matrix:
   include:
@@ -26,7 +26,7 @@ matrix:
     - os: osx
     - compiler: gcc
       env:
-        - MATRIX_EVAL="CC=gcc-8 GLOBAL_CONFIGURE_OPTS=--enable-silent-rules"
+        - MATRIX_EVAL="CC=gcc-8"
       addons:
         apt:
           sources:
@@ -38,8 +38,9 @@ matrix:
 before_install:
   - eval "${MATRIX_EVAL}"
 
-# Run make install so that Python's ctypes.util.find_library works on Python < 3.6
+# Run make install so that Python's ctypes.util.find_library works on Python < 3.6; hence don't use --enable-package-suffix,
+# as otherwise the installed libraries will have the wrong name for make distcheck.
 script:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install help2man ; fi
   - ./bootstrap
-  - for flavour in "CPPFLAGS=-DWORD_BYTES=4 -DENDISM=0" "CPPFLAGS=-DWORD_BYTES=4 -DENDISM=1" "CPPFLAGS=-DWORD_BYTES=8 -DENDISM=0" "CPPFLAGS=-DWORD_BYTES=8 -DENDISM=1"; do ./configure $GLOBAL_CONFIGURE_OPTS "$flavour" && make && sudo make install && if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then make check ; else make distcheck ; fi; done
+  - for flavour in "WORD_BYTES=4 ENDISM=0" "WORD_BYTES=4 ENDISM=1" "WORD_BYTES=8 ENDISM=0" "WORD_BYTES=8 ENDISM=1"; do ./configure --enable-silent-rules $flavour && make && sudo make install && if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then make check ; else make distcheck ; fi; done

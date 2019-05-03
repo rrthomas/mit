@@ -7,9 +7,13 @@ __pycache__/
 /config.log
 /config.status
 /libsmite.la
+/libsmite-[bl]e-[48].la
 /smite
+/smite-[bl]e-[48]
 /smite.exe
+/smite-[bl]e-[48].exe
 /smite.1
+/smite-[bl]e-[48].1
 /smite-include.man
 /instructions.c
 /main.c
@@ -17,4 +21,6 @@ __pycache__/
 /gen-main
 /type-sizes
 /type-sizes.ac
+/include/smite/smite.h
+/include/smite-[bl]e-[48]
 /smite_core/type_sizes.py

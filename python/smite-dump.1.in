@@ -1,13 +1,13 @@
 .TH @PACKAGE@-dump "1" "July 2018" "@PACKAGE_NAME@" "User Commands"
 .SH NAME
-@PACKAGE@-dump \- Dump @PACKAGE_NAME@ object files as hex and disassembly
+@PACKAGE@-dump@PACKAGE_SUFFIX@ \- Dump @PACKAGE_NAME@ object files as hex and disassembly
 .SH SYNOPSIS
-.B @PACKAGE@-dump
+.B @PACKAGE@-dump@PACKAGE_SUFFIX@
 OBJECT\-FILE
 .SH DESCRIPTION
 Dump the given file, typically \fIfoo.obj\fR, as hex (\fIfoo.hex\fR) and disassembly (\fIfoo.asm\fR).
 .SH "SEE ALSO"
-.BR @PACKAGE@ (1)
+.BR @PACKAGE@@PACKAGE_SUFFIX@ (1)
 .SH "REPORTING BUGS"
 Report bugs to rrt@sc3d.org.
 .SH "COPYRIGHT"

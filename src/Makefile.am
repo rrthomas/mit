@@ -10,36 +10,42 @@
 AM_CPPFLAGS = -I$(top_builddir)/lib -I$(top_srcdir)/lib -I$(builddir)/include -I$(srcdir)/include $(WARN_CFLAGS)
 PYTHON_WITH_PATH = export PYTHONPATH=$(top_srcdir)/python:$(top_srcdir)/src:$(top_builddir)/src; $(PYTHON)
 
-lib_LTLIBRARIES = libsmite.la
+lib_LTLIBRARIES = lib@PACKAGE@@PACKAGE_SUFFIX@.la
 C_SRCS = storage.c object.c
 nodist_LIB_SRCS = include/@PACKAGE@/registers.h include/@PACKAGE@/opcodes.h include/@PACKAGE@/ext-opcodes.h instructions.c ext.c
 LIB_CORE_SRCS = smite_core/instruction.py smite_core/vm_data.py smite_core/ext.py smite_core/instruction_gen.py
-nodist_libsmite_la_SOURCES = $(C_SRCS) $(nodist_LIB_SRCS)
-libsmite_la_LIBADD = $(top_builddir)/lib/libgnu.la
-libsmite_la_LDFLAGS = -no-undefined -export-symbols-regex '^smite_.*'
+nodist_lib@PACKAGE@@PACKAGE_SUFFIX@_la_SOURCES = $(C_SRCS) $(nodist_LIB_SRCS)
+lib@PACKAGE@@PACKAGE_SUFFIX@_la_LIBADD = $(top_builddir)/lib/libgnu.la
+lib@PACKAGE@@PACKAGE_SUFFIX@_la_LDFLAGS = -no-undefined -export-symbols-regex '^smite_.*'
 
-bin_PROGRAMS = smite$(EXEEXT)
-man_MANS = @PACKAGE@.1
-smite_LDADD = lib@PACKAGE@.la $(top_builddir)/lib/libgnu.la
-nodist_smite_SOURCES = main.c
-nodist_pkginclude_HEADERS = include/@PACKAGE@/opcodes.h include/@PACKAGE@/ext-opcodes.h include/@PACKAGE@/registers.h
-pkginclude_HEADERS = include/@PACKAGE@/@PACKAGE@.h
+bin_PROGRAMS = @PACKAGE@@PACKAGE_SUFFIX@$(EXEEXT)
+man_MANS = @PACKAGE@@PACKAGE_SUFFIX@.1
+@PACKAGE@@PACKAGE_SUFFIX@_LDADD = lib@PACKAGE@@PACKAGE_SUFFIX@.la $(top_builddir)/lib/libgnu.la
+nodist_@PACKAGE@@PACKAGE_SUFFIX@_SOURCES = main.c
+smite_pkgincludedir = $(pkgincludedir)@PACKAGE_SUFFIX@
+nodist_smite_pkginclude_HEADERS = include/@PACKAGE@/opcodes.h include/@PACKAGE@/ext-opcodes.h include/@PACKAGE@/registers.h
+smite_pkginclude_HEADERS = include/@PACKAGE@/@PACKAGE@.h
 
 step.lo: instructions.c
 object.lo step.lo storage.lo main.o: include/@PACKAGE@/registers.h include/@PACKAGE@/opcodes.h include/@PACKAGE@/ext-opcodes.h
 main.o: main.c include/@PACKAGE@/registers.h
 
-# Depend on @PACKAGE@$(EXEEXT) rather than explicitly make-ing it, as otherwise
-# we break parallel builds, as lib@PACKAGE@.la can be built twice in parallel,
+# Depend on @PACKAGE@@PACKAGE_SUFFIX@$(EXEEXT) rather than explicitly make-ing it, as otherwise
+# we break parallel builds, as lib@PACKAGE@@PACKAGE_SUFFIX@.la can be built twice in parallel,
 # which can fail. Set distcleancheck_listfiles below to fix distcheck.
-@PACKAGE@.1: @PACKAGE@$(EXEEXT) @PACKAGE@-include.man
+@PACKAGE@@PACKAGE_SUFFIX@.1: @PACKAGE@@PACKAGE_SUFFIX@$(EXEEXT) @PACKAGE@-include.man
 ## Exit gracefully if @PACKAGE@.1 is not writeable, such as during distcheck!
 	$(AM_V_GEN)if ( touch $@.w && rm -f $@.w; ) >/dev/null 2>&1; then \
 	  $(top_srcdir)/build-aux/missing --run $(HELP2MAN) --no-info \
 		--name="Virtual machine" \
 		--include=@PACKAGE@-include.man \
-		--output=$@ ./@PACKAGE@$(EXEEXT); \
+		--output=$@ ./@PACKAGE@@PACKAGE_SUFFIX@$(EXEEXT); \
 	fi
+
+include/@PACKAGE@/registers.h: include/@PACKAGE@@PACKAGE_SUFFIX@
+
+include/@PACKAGE@@PACKAGE_SUFFIX@:
+	cd include && if test ! -e @PACKAGE@@PACKAGE_SUFFIX@; then $(LN_S) @PACKAGE@ @PACKAGE@@PACKAGE_SUFFIX@; fi
 
 include/@PACKAGE@/registers.h: gen-registers smite_core/vm_data.py smite_core/instruction.py
 	$(MKDIR_P) include/@PACKAGE@
@@ -94,9 +100,10 @@ EXTRA_DIST = \
 distclean-local:
 	rm -rf autom4te.cache smite_core/__pycache__
 
-DISTCLEANFILES = @PACKAGE@.1 \
+DISTCLEANFILES = @PACKAGE@@PACKAGE_SUFFIX@.1 \
 	$(nodist_LIB_SRCS) \
-	$(nodist_smite_SOURCES) \
+	$(nodist_@PACKAGE@@PACKAGE_SUFFIX@_SOURCES) \
+	include/@PACKAGE@@PACKAGE_SUFFIX@ \
 	type-sizes.ac type-sizes config.log smite_core/type_sizes.py
 # Ignore built files that are part of the distribution (specifically,
 # @PACKAGE@.1)

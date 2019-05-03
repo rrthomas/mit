@@ -20,19 +20,9 @@
 
 
 // Build-time parameters
-#define DEFAULT_WORD_BYTES SIZEOF_SIZE_T
-#ifndef WORD_BYTES
-#define WORD_BYTES DEFAULT_WORD_BYTES
-#endif
-
-#ifndef WORDS_BIGENDIAN
-#define DEFAULT_ENDISM 0
-#else
-#define DEFAULT_ENDISM 1
-#endif
-#ifndef ENDISM
-#define ENDISM DEFAULT_ENDISM
-#endif
+#define WORD_BYTES @WORD_BYTES@
+#define ENDISM @ENDISM@
+#define HOST_ENDISM @WORDS_BIGENDIAN@
 
 // Types and printf formats
 typedef uint8_t smite_BYTE;
@@ -83,7 +73,7 @@ extern const smite_WORD smite_word_max;
 typedef struct {
 #define R(reg, type, utype) type reg;
 #define R_RO(reg, type, utype) R(reg, type, utype)
-#include <smite/registers.h>
+#include <@PACKAGE@@PACKAGE_SUFFIX@/registers.h>
 #undef R
 #undef R_RO
     smite_WORD *memory;
@@ -99,7 +89,7 @@ typedef struct {
 #define R(reg, type, utype)                     \
     R_RO(reg, type, utype)                      \
     void smite_set_ ## reg(smite_state *S, type val);
-#include <smite/registers.h>
+#include <@PACKAGE@@PACKAGE_SUFFIX@/registers.h>
 #undef R
 #undef R_RO
 
@@ -213,17 +203,17 @@ static int load(smite_state *S, smite_UWORD addr, unsigned size, smite_WORD *val
         break;
     case 1:
         val = (smite_UWORD)((uint16_t *)S->memory)[addr / 2];
-        if (ENDISM != DEFAULT_ENDISM)
+        if (ENDISM != HOST_ENDISM)
             val = bswap_16(val);
         break;
     case 2:
         val = (smite_UWORD)((uint32_t *)S->memory)[addr / 4];
-        if (ENDISM != DEFAULT_ENDISM)
+        if (ENDISM != HOST_ENDISM)
             val = bswap_32(val);
         break;
     case 3:
         val = (smite_UWORD)((uint64_t *)S->memory)[addr / 8];
-        if (ENDISM != DEFAULT_ENDISM)
+        if (ENDISM != HOST_ENDISM)
             val = bswap_64(val);
         break;
     default:
@@ -250,17 +240,17 @@ static int store(smite_state *S, smite_UWORD addr, unsigned size, smite_WORD val
         ((uint8_t *)S->memory)[addr] = (uint8_t)val;
         break;
     case 1:
-        if (ENDISM != DEFAULT_ENDISM)
+        if (ENDISM != HOST_ENDISM)
             val = bswap_16(val);
         ((uint16_t *)S->memory)[addr / 2] = (uint16_t)val;
         break;
     case 2:
-        if (ENDISM != DEFAULT_ENDISM)
+        if (ENDISM != HOST_ENDISM)
             val = bswap_32(val);
         ((uint32_t *)S->memory)[addr / 4] = (uint32_t)val;
         break;
     case 3:
-        if (ENDISM != DEFAULT_ENDISM)
+        if (ENDISM != HOST_ENDISM)
             val = bswap_64(val);
         ((uint64_t *)S->memory)[addr / 8] = (uint64_t)val;
         break;
