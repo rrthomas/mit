@@ -44,4 +44,4 @@ before_install:
 script:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install help2man ; fi
   - ./bootstrap
-  - for flavour in "WORD_BYTES=4 ENDISM=0" "WORD_BYTES=4 ENDISM=1" "WORD_BYTES=8 ENDISM=0" "WORD_BYTES=8 ENDISM=1"; do ./configure --enable-silent-rules $flavour && make && sudo make install && if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then make check ; else make distcheck ; fi; done
+  - for flavour in "WORD_BYTES=4 ENDISM=0" "WORD_BYTES=4 ENDISM=1" "WORD_BYTES=8 ENDISM=0" "WORD_BYTES=8 ENDISM=1" "WORD_BYTES=2" "CPPFLAGS=-DSMITE_INSTRUCTION_BIT=6"; do ./configure --enable-silent-rules $flavour && make && sudo make install && if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then make check ; else make distcheck ; fi; done
