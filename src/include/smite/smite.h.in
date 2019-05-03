@@ -207,23 +207,30 @@ static int load(smite_state *S, smite_UWORD addr, unsigned size, smite_WORD *val
     smite_WORD val;
     switch (size) {
     case 0:
-        val = (smite_UWORD)((uint8_t *)S->memory)[addr];
+        val = (smite_UWORD)*((uint8_t *)S->memory + addr);
         break;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wcast-align"
     case 1:
-        val = (smite_UWORD)((uint16_t *)S->memory)[addr / 2];
+        val = (smite_UWORD)*((uint16_t *)((uint8_t *)S->memory + addr));
         if (ENDISM != HOST_ENDISM)
             val = bswap_16(val);
         break;
+#if smite_SIZE_WORD >= 2
     case 2:
-        val = (smite_UWORD)((uint32_t *)S->memory)[addr / 4];
+        val = (smite_UWORD)*((uint32_t *)((uint8_t *)S->memory + addr));
         if (ENDISM != HOST_ENDISM)
             val = bswap_32(val);
         break;
+#endif
+#if smite_SIZE_WORD >= 3
     case 3:
-        val = (smite_UWORD)((uint64_t *)S->memory)[addr / 8];
+        val = (smite_UWORD)*((uint64_t *)((uint8_t *)S->memory + addr));
         if (ENDISM != HOST_ENDISM)
             val = bswap_64(val);
         break;
+#endif
+#pragma GCC diagnostic pop
     default:
         return SMITE_ERR_BAD_SIZE;
     }
@@ -247,21 +254,28 @@ static int store(smite_state *S, smite_UWORD addr, unsigned size, smite_WORD val
     case 0:
         ((uint8_t *)S->memory)[addr] = (uint8_t)val;
         break;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wcast-align"
     case 1:
         if (ENDISM != HOST_ENDISM)
             val = bswap_16(val);
-        ((uint16_t *)S->memory)[addr / 2] = (uint16_t)val;
+        *((uint16_t *)((uint8_t *)S->memory + addr)) = (uint16_t)val;
         break;
+#if smite_SIZE_WORD >= 2
     case 2:
         if (ENDISM != HOST_ENDISM)
             val = bswap_32(val);
-        ((uint32_t *)S->memory)[addr / 4] = (uint32_t)val;
+        *((uint32_t *)((uint8_t *)S->memory + addr)) = (uint32_t)val;
         break;
+#endif
+#if smite_SIZE_WORD >= 3
     case 3:
         if (ENDISM != HOST_ENDISM)
             val = bswap_64(val);
-        ((uint64_t *)S->memory)[addr / 8] = (uint64_t)val;
+        *((uint64_t *)((uint8_t *)S->memory + addr)) = (uint64_t)val;
         break;
+#endif
+#pragma GCC diagnostic pop
     default:
         return SMITE_ERR_BAD_SIZE;
     }
