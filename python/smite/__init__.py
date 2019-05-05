@@ -99,11 +99,13 @@ class State:
             name: assembler.__getattribute__(name)
             for name in [
                 "instruction", "lit", "lit_pc_rel",
-                "word", "bytes", "label", "goto"
+                "label", "goto"
             ]
         })
 
-        # Abbreviations
+        # Abbreviations and diambiguations
+        globals_dict["ass_word"] = assembler.__getattribute__("word")
+        globals_dict["ass_bytes"] = assembler.__getattribute__("bytes")
         globals_dict["ass"] = assembler.__getattribute__("instruction")
         globals_dict["dis"] = self.__getattribute__("disassemble")
 

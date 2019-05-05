@@ -30,7 +30,7 @@ for i in range(2):
     ass(HALT)
     code_len = assembler.pc
 
-bytes(b"Hello, world!\n")
+ass_bytes(b"Hello, world!\n")
 
 
 # Test
