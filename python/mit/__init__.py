@@ -291,7 +291,7 @@ class ActiveRegister:
         return str(self.get())
 
     def get(self):
-        return self.getter(self.state)
+        return int(self.getter(self.state))
 
     def set(self, v):
         if self.register.read_only:
@@ -307,7 +307,6 @@ class Stack:
         self.state = state
         self.depth = depth
 
-    # After https://github.com/ipython/ipython/blob/master/IPython/lib/pretty.py
     def __str__(self):
         l = []
         for i in range(self.depth.get(), 0, -1):
@@ -376,7 +375,7 @@ class Memory(AbstractMemory):
         return word.value
 
     def store(self, index, value):
-        libmit.mit_store(self.VM.state, index, 0, c_word(value))
+        libmit.mit_store(self.VM.state, index, 0, value)
 
 class WordMemory(AbstractMemory):
     '''A VM memory (word-accessed).'''
@@ -390,4 +389,4 @@ class WordMemory(AbstractMemory):
         return word.value
 
     def store(self, index, value):
-        libmit.mit_store(self.VM.state, index, size_word, c_word(value))
+        libmit.mit_store(self.VM.state, index, size_word, value)

@@ -100,7 +100,6 @@ test += 1
 load_test(object_file()[0:2], -2)
 
 # Incorrect WORD_BYTES
-assert(word_bytes == 2 or word_bytes == 4 or word_bytes == 8)
 wrong_word_bytes = 8 if word_bytes == 4 else 4
 load_test(object_file(wrong_word_bytes), -3)
 

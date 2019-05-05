@@ -62,11 +62,48 @@ typedef uint64_t mit_UWORD;
 #define PRI_UWORD PRIu64
 #define PRI_XWORD "#"PRIx64
 #define reverse_endianness bswap_64
+#elif WORD_BYTES == 16
+/* Given an unsigned 128-bit argument X, return the value corresponding to
+   X with reversed byte order.  */
+#define bswap_128(x) ((((x) & (((unsigned __int128)0xFF << 0)))   << 120) | \
+                      (((x) & (((unsigned __int128)0xFF << 8)))   << 104) | \
+                      (((x) & (((unsigned __int128)0xFF << 16)))  << 88) | \
+                      (((x) & (((unsigned __int128)0xFF << 24)))  << 72) | \
+                      (((x) & (((unsigned __int128)0xFF << 32)))  << 56) | \
+                      (((x) & (((unsigned __int128)0xFF << 40)))  << 40) | \
+                      (((x) & (((unsigned __int128)0xFF << 48)))  << 24) | \
+                      (((x) & (((unsigned __int128)0xFF << 56)))  << 8) | \
+                      (((x) & (((unsigned __int128)0xFF << 64)))  >> 8) | \
+                      (((x) & (((unsigned __int128)0xFF << 72)))  >> 24) | \
+                      (((x) & (((unsigned __int128)0xFF << 80)))  >> 40) | \
+                      (((x) & (((unsigned __int128)0xFF << 88)))  >> 56) | \
+                      (((x) & (((unsigned __int128)0xFF << 96)))  >> 72) | \
+                      (((x) & (((unsigned __int128)0xFF << 104))) >> 88) | \
+                      (((x) & (((unsigned __int128)0xFF << 112))) >> 104) | \
+                      (((x) & (((unsigned __int128)0xFF << 120))) >> 120))
+
+typedef __int128 mit_WORD;
+typedef unsigned __int128 mit_UWORD;
+#define mit_SIZE_WORD 4
+#define mit_WORD_MASK ((__int128)-1)
+#define mit_UWORD_MAX mit_WORD_MASK
+#define mit_WORD_MIN (((unsigned __int128)1) << 127)
+#define mit_WORD_MAX ((((__int128)0x7fffffffffffffff) << 64) | 0xffffffffffffffff)
+#define PRI_WORD PRId64
+#define PRI_UWORD PRIu64
+#define PRI_XWORD "#"PRIx64
+#define reverse_endianness bswap_128
 #else
-#error "WORD_BYTES must be 2, 4 or 8!"
+#error "WORD_BYTES must be 2, 4, 8 or 16!"
 #endif
 typedef mit_WORD * mit_WORDP;
 #define PRI_XWORDP "p"
+
+#if SIZEOF_SIZE_T > WORD_BYTES
+typedef size_t mit_max_stack_item_t;
+#else
+typedef mit_UWORD mit_max_stack_item_t;
+#endif
 
 // Constants
 extern const unsigned mit_word_bytes;
@@ -222,13 +259,20 @@ static int load(mit_state *S, mit_UWORD addr, unsigned size, mit_WORD *val_ptr)
         if (ENDISM != HOST_ENDISM)
             val = bswap_32(val);
         break;
-#endif
 #if mit_SIZE_WORD >= 3
     case 3:
         val = (mit_UWORD)*((uint64_t *)((uint8_t *)S->memory + addr));
         if (ENDISM != HOST_ENDISM)
             val = bswap_64(val);
         break;
+#if mit_SIZE_WORD >= 4
+    case 4:
+        val = (mit_UWORD)*((unsigned __int128 *)((uint8_t *)S->memory + addr));
+        if (ENDISM != HOST_ENDISM)
+            val = bswap_128(val);
+        break;
+#endif
+#endif
 #endif
 #pragma GCC diagnostic pop
     default:
@@ -267,13 +311,20 @@ static int store(mit_state *S, mit_UWORD addr, unsigned size, mit_WORD val)
             val = bswap_32(val);
         *((uint32_t *)((uint8_t *)S->memory + addr)) = (uint32_t)val;
         break;
-#endif
 #if mit_SIZE_WORD >= 3
     case 3:
         if (ENDISM != HOST_ENDISM)
             val = bswap_64(val);
         *((uint64_t *)((uint8_t *)S->memory + addr)) = (uint64_t)val;
         break;
+#if mit_SIZE_WORD >= 4
+    case 4:
+        if (ENDISM != HOST_ENDISM)
+            val = bswap_128(val);
+        *((unsigned __int128 *)((uint8_t *)S->memory + addr)) = (unsigned __int128)val;
+        break;
+#endif
+#endif
 #endif
 #pragma GCC diagnostic pop
     default:
@@ -316,7 +367,8 @@ int mit_push_stack(mit_state *S, mit_WORD val);
 */
 
 
-// Convenience macros for native types
+// Convenience macros for native types (up to size_t)
+// FIXME: find largest type: bigger of long double and maxint_t?
 // Second version avoids undefined behaviour (shift >= type size)
 #if SIZEOF_SIZE_T > WORD_BYTES
 #define PUSH_STACK_TYPE(S, ty, v)                                       \

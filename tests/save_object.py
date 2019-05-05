@@ -19,7 +19,7 @@ M_word[word_bytes] = 0x05060708
 
 # Test results
 addr = [(size + 1) * word_bytes, 0, 0]
-length = [16, 3000, 16]
+length = [32, 5000, 32]
 correct = [-2, -2, 0]
 
 # Test

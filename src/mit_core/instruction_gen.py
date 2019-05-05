@@ -144,7 +144,7 @@ class StackItem:
         Returns C source code to load `self` from the stack to its C variable.
         '''
         code = [
-            'size_t temp = (mit_UWORD)(*UNCHECKED_STACK({}));'
+            'mit_max_stack_item_t temp = (mit_UWORD)(*UNCHECKED_STACK({}));'
             .format(self.depth)
         ]
         for i in range(self.size - 1):
@@ -163,7 +163,7 @@ class StackItem:
         '''
         Returns C source code to store `self` to the stack from its C variable.
         '''
-        code = ['size_t temp = (size_t){};'.format(self.name)]
+        code = ['mit_max_stack_item_t temp = (mit_max_stack_item_t){};'.format(self.name)]
         for i in reversed(range(self.size - 1)):
             code.append(
                 '*UNCHECKED_STACK({}) = (mit_UWORD)(temp & mit_WORD_MASK);'
@@ -171,8 +171,8 @@ class StackItem:
             )
             code.append('temp >>= mit_WORD_BIT;')
         code.append(
-            '*UNCHECKED_STACK({}) = (mit_UWORD)(temp & mit_WORD_MASK);'
-            .format(self.depth)
+            '*UNCHECKED_STACK({}) = (mit_UWORD)({});'
+            .format(self.depth, 'temp & mit_WORD_MASK' if self.size > 1 else 'temp')
         )
         return '''\
 {{

@@ -2,9 +2,13 @@
 /mit/binding.py
 /mit-dump
 /mit-[bl]e-[248]-dump
+/mit-[bl]e-16-dump
 /mit-*dump.1
 /mit-[bl]e-[248]-dump.1
+/mit-[bl]e-16-dump.1
 /mit-*shell
 /mit-[bl]e-[248]-shell
+/mit-[bl]e-16-shell
 /mit-*shell.1
 /mit-[bl]e-[248]-shell.1
+/mit-[bl]e-16-shell.1

@@ -9,12 +9,16 @@ __pycache__/
 /config.status
 /libmit.la
 /libmit-[bl]e-[248].la
+/libmit-[bl]e-16.la
 /mit
 /mit-[bl]e-[248]
+/mit-[bl]e-16
 /mit.exe
 /mit-[bl]e-[248].exe
+/mit-[bl]e-16.exe
 /mit.1
 /mit-[bl]e-[248].1
+/mit-[bl]e-16.1
 /instructions.c
 /main.c
 /ext.c
@@ -23,4 +27,5 @@ __pycache__/
 /type-sizes.ac
 /include/mit/mit.h
 /include/mit-[bl]e-[248]
+/include/mit-[bl]e-16
 /mit_core/type_sizes.py

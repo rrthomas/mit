@@ -118,6 +118,10 @@ AC_CHECK_SIZEOF([size_t])
 AC_ARG_VAR([WORD_BYTES],
   [value of WORD_BYTES register [default: sizeof(size_t)]])
 : "${WORD_BYTES=$ac_cv_sizeof_size_t}"
+AS_IF([test "$WORD_BYTES" = 16], [
+  AX_HAVE_INT128
+  AS_IF([test "$ax_cv_int128" != yes],
+    AC_MSG_ERROR([Cannot find 128-bit support for WORD_BYTES=16]))])
 
 # Package suffix for side-by-side installation of multiple builds
 AC_ARG_ENABLE([package-suffix],

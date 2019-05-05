@@ -33,7 +33,7 @@ main.o: main.c include/mit/registers.h
 .c.s:
 	$(COMPILE) -c -S $<
 
-include/mit/mit.h: $(top_builddir)/config.status $(srcdir)/include/mit/mit.h.in
+include/mit/mit.h: $(top_builddir)/config.status include/mit/mit.h.in
 	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
 
 # Depend on mit@PACKAGE_SUFFIX@$(EXEEXT) rather than explicitly make-ing it, as otherwise
