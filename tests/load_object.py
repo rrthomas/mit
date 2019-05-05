@@ -7,6 +7,8 @@
 # THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 # RISK.
 
+import os.path
+
 from smite import *
 VM = State()
 VM.globalize(globals())
@@ -21,20 +23,19 @@ def try_load(file):
     print("load_object(\"{}\", 0) returns {}".format(file, ret), end='')
     return ret
 
-def obj_name(prefix, file, word_bytes=None, use_endism=True):
+def obj_name(file, word_bytes=None, use_endism=True):
     endism_str = "-{}".format("le" if endism == 0 else "be")
     suffix = "-{}".format(word_bytes) if word_bytes else ""
-    name = "{}/{}{}{}".format(prefix, file, endism_str if use_endism else "", suffix)
+    name = "{}{}{}".format(file, endism_str if use_endism else "", suffix)
     return name
 
 src_dir = os.environ['srcdir']
-build_dir = os.environ['builddir']
 
 
 bad_files = ["badobj1", "badobj2", "badobj3", "badobj4"]
 error_code = [-2, -2, -4, -2]
 for i, bad_file in enumerate(bad_files):
-    s = obj_name(src_dir, bad_file, word_bytes)
+    s = os.path.join(src_dir, obj_name(bad_file, word_bytes))
     res = try_load(s)
     print(" should be {}".format(error_code[i]))
     if res != error_code[i]:
@@ -44,7 +45,7 @@ for i, bad_file in enumerate(bad_files):
 
 good_files = ["testobj1", "testobj2"]
 for good_file in good_files:
-    s = obj_name(src_dir, good_file, word_bytes)
+    s = os.path.join(src_dir, obj_name(good_file, word_bytes))
     res = try_load(s)
     print(" should be {}".format(0))
     correct = 0x1020304 & word_mask
@@ -65,7 +66,7 @@ for n in correct:
 ass(HALT)
 save(number_file, length=assembler.label())
 
-s = obj_name(build_dir, number_file, use_endism=False)
+s = obj_name(number_file, use_endism=False)
 res = try_load(s)
 print(" should be {}".format(0))
 if res != 0:
@@ -89,7 +90,7 @@ os.remove(number_file)
 # WORD_BYTES.
 assert(word_bytes == 2 or word_bytes == 4 or word_bytes == 8)
 wrong_word_bytes = 8 if word_bytes == 4 else 4
-s = obj_name(src_dir, good_files[0], wrong_word_bytes, use_endism=True)
+s = os.path.join(src_dir, obj_name(good_files[0], wrong_word_bytes, use_endism=True))
 res = try_load(s)
 incorrect_word_bytes_res = -3
 print(" should be {}".format(incorrect_word_bytes_res))
