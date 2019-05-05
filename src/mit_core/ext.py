@@ -9,7 +9,7 @@
 
 from enum import Enum, unique
 
-from .instruction import AbstractInstruction
+from .instruction import AbstractInstruction, disable_warnings
 from .vm_data import Register
 
 
@@ -232,20 +232,22 @@ for register in Register:
     mit_lib['GET_{}'.format(register.name.upper())] = (
         len(mit_lib), None, None, '''\
     mit_state *inner_state;
-    POP_STACK_TYPE(S, mit_state *, &inner_state);
+    {}
     push_stack(S, mit_get_{}(inner_state));
-'''.format(register.name))
+'''.format(disable_warnings(['-Wint-to-pointer-cast'], 'POP_STACK_TYPE(S, mit_state *, &inner_state);'),
+           register.name))
     if not register.read_only:
         mit_lib['SET_{}'.format(register.name.upper())] = (
             len(mit_lib), None, None, '''\
     mit_state *inner_state;
-    POP_STACK_TYPE(S, mit_state *, &inner_state);
+    {}
     mit_WORD value;
     int ret = pop_stack(S, &value);
     if (ret != 0)
         RAISE(ret);
     mit_set_{}(inner_state, value);
-'''.format(register.name))
+'''.format(disable_warnings(['-Wint-to-pointer-cast'], 'POP_STACK_TYPE(S, mit_state *, &inner_state);'),
+           register.name))
 
 MitLib = AbstractInstruction('MitLib', mit_lib)
 

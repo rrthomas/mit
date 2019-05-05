@@ -16,6 +16,7 @@ import re
 import textwrap
 
 from .type_sizes import type_sizes
+from .instruction import disable_warnings
 
 
 @functools.total_ordering
@@ -153,7 +154,7 @@ class StackItem:
                 'temp |= (mit_UWORD)(*UNCHECKED_STACK({}));'
                 .format(self.depth + i + 1)
             )
-        code.append('{} = ({})temp;'.format(self.name, self.type))
+        code.append(disable_warnings(['-Wint-to-pointer-cast'], '{} = ({})temp;'.format(self.name, self.type)))
         return '''\
 {{
 {}
@@ -163,7 +164,8 @@ class StackItem:
         '''
         Returns C source code to store `self` to the stack from its C variable.
         '''
-        code = ['mit_max_stack_item_t temp = (mit_max_stack_item_t){};'.format(self.name)]
+        code = [disable_warnings(['-Wpointer-to-int-cast'],
+                                 'mit_max_stack_item_t temp = (mit_max_stack_item_t){};'.format(self.name))]
         for i in reversed(range(self.size - 1)):
             code.append(
                 '*UNCHECKED_STACK({}) = (mit_UWORD)(temp & mit_WORD_MASK);'
