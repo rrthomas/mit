@@ -34,9 +34,6 @@ typedef uint16_t mit_UWORD;
 #define mit_UWORD_MAX UINT16_MAX
 #define mit_WORD_MIN INT16_MIN
 #define mit_WORD_MAX INT16_MAX
-#define PRI_WORD PRId16
-#define PRI_UWORD PRIu16
-#define PRI_XWORD "#"PRIx16
 #define reverse_endianness bswap_16
 #elif WORD_BYTES == 4
 typedef int32_t mit_WORD;
@@ -46,9 +43,6 @@ typedef uint32_t mit_UWORD;
 #define mit_UWORD_MAX UINT32_MAX
 #define mit_WORD_MIN INT32_MIN
 #define mit_WORD_MAX INT32_MAX
-#define PRI_WORD PRId32
-#define PRI_UWORD PRIu32
-#define PRI_XWORD "#"PRIx32
 #define reverse_endianness bswap_32
 #elif WORD_BYTES == 8
 typedef int64_t mit_WORD;
@@ -58,9 +52,6 @@ typedef uint64_t mit_UWORD;
 #define mit_UWORD_MAX UINT64_MAX
 #define mit_WORD_MIN INT64_MIN
 #define mit_WORD_MAX INT64_MAX
-#define PRI_WORD PRId64
-#define PRI_UWORD PRIu64
-#define PRI_XWORD "#"PRIx64
 #define reverse_endianness bswap_64
 #elif WORD_BYTES == 16
 /* Given an unsigned 128-bit argument X, return the value corresponding to
@@ -89,15 +80,10 @@ typedef unsigned __int128 mit_UWORD;
 #define mit_UWORD_MAX mit_WORD_MASK
 #define mit_WORD_MIN (((unsigned __int128)1) << 127)
 #define mit_WORD_MAX ((((__int128)0x7fffffffffffffff) << 64) | 0xffffffffffffffff)
-#define PRI_WORD PRId64
-#define PRI_UWORD PRIu64
-#define PRI_XWORD "#"PRIx64
 #define reverse_endianness bswap_128
 #else
 #error "WORD_BYTES must be 2, 4, 8 or 16!"
 #endif
-typedef mit_WORD * mit_WORDP;
-#define PRI_XWORDP "p"
 
 #if SIZEOF_SIZE_T > WORD_BYTES
 typedef size_t mit_max_stack_item_t;

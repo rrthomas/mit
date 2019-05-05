@@ -270,7 +270,6 @@ class State:
 type_equivalents = {
     "mit_WORD": c_word,
     "mit_UWORD": c_uword,
-    "mit_WORDP": POINTER(c_word),
 }
 class ActiveRegister:
     '''A VM register.'''

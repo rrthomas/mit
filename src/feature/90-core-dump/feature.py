@@ -8,6 +8,18 @@ Option('core-dump',
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/stat.h>
+
+#define REGISTER_STRLEN (WORD_BYTES * 2)
+
+static char hex[] = "0123456789abcdef";
+
+static void register_to_str(mit_WORD reg, char *s)
+{
+    for (unsigned i = 0; i < REGISTER_STRLEN; i++) {
+        s[REGISTER_STRLEN - i - 1] = hex[reg & 0xf];
+        reg >>= 4;
+    }
+}
 ''',
        init_code='bool core_dump = false;',
        parse_code='core_dump = true;',
@@ -15,8 +27,12 @@ Option('core-dump',
 default:
     // Core dump on error
     if (core_dump) {
-        warn("error %d raised at PC=%"PRI_XWORD"; BAD=%"PRI_XWORD,
-             res, S->PC, S->BAD);
+        char pc_str[REGISTER_STRLEN];
+        char bad_str[REGISTER_STRLEN];
+        register_to_str(S->PC, &pc_str[0]);
+        register_to_str(S->BAD, &bad_str[0]);
+        warn("error %d raised at PC=0x%.*s; BAD=0x%.*s", res,
+            REGISTER_STRLEN, pc_str, REGISTER_STRLEN, bad_str);
 
         // Ignore errors; best effort only, in the middle of an error exit
         char file_format[] = "mit-core.%lu";
