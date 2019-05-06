@@ -19,6 +19,11 @@ smite_pkgpython_PYTHON =		\
 	@PACKAGE@/instruction.py
 nodist_smite_pkgpython_PYTHON = @PACKAGE@/binding.py
 
+all-local: @PACKAGE@/binding.py
+
+@PACKAGE@/binding.py: $(top_builddir)/config.status @PACKAGE@/binding.py.in
+	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
+
 
 loc:
 	$(SLOCCOUNT) $(bin_SCRIPTS) @PACKAGE@/__init__.py @PACKAGE@/__main__.py
