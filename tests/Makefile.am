@@ -43,8 +43,7 @@ TESTS_ENVIRONMENT = \
 	export LD_LIBRARY_PATH=$(top_builddir)/src/@objdir@:$$LD_LIBRARY_PATH; \
 	export PYTHON=$(PYTHON); \
 	export PYTHONPATH=$(top_builddir)/python; \
-	export srcdir=$(srcdir); \
-	export builddir=$(builddir);
+	export srcdir=$(srcdir);
 
 DISTCLEANFILES = $(top_builddir)/copied-python-module-to-build
 
@@ -55,16 +54,4 @@ EXTRA_DIST = \
 	$(TESTS) \
 	smite_test.py	\
 	redirect_stdout.py \
-	hello.correct \
-	badobj1-le-4 badobj1-be-4 \
-	badobj1-le-8 badobj1-be-8 \
-	badobj2-le-4 badobj2-be-4 \
-	badobj2-le-8 badobj2-be-8 \
-	badobj3-le-4 badobj3-be-4 \
-	badobj3-le-8 badobj3-be-8 \
-	badobj4-le-4 badobj4-be-4 \
-	badobj4-le-8 badobj4-be-8 \
-	testobj1-be-4 testobj1-le-4 \
-	testobj1-be-8 testobj1-le-8 \
-	testobj2-be-4 testobj2-le-4 \
-	testobj2-be-8 testobj2-le-8
+	hello.correct

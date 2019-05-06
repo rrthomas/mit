@@ -7,6 +7,8 @@
 # THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 # RISK.
 
+import os.path
+
 from smite import *
 VM = State()
 VM.globalize(globals())
@@ -21,60 +23,114 @@ def try_load(file):
     print("load_object(\"{}\", 0) returns {}".format(file, ret), end='')
     return ret
 
-def obj_name(prefix, file, word_bytes=None, use_endism=True):
-    endism_str = "-{}".format("le" if endism == 0 else "be")
-    suffix = "-{}".format(word_bytes) if word_bytes else ""
-    name = "{}/{}{}{}".format(prefix, file, endism_str if use_endism else "", suffix)
-    return name
+def word_to_bytes(w):
+    l = []
+    for i in range(word_bytes):
+        l.append(w & byte_mask)
+        w >>= byte_bit
+    if endism == 1:
+        l.reverse()
+    return bytes(l)
+
+def test_word():
+    w = 0
+    for i in range(word_bytes):
+        w = w << byte_bit | (i + 1)
+    return w
+
+def object_file(word_bytes=word_bytes):
+    '''
+    Generate a dummy object file containing the single word 0102..{word_bytes}.
+    '''
+    return bytearray(b'SMITE\0' + bytes([endism]) + bytes([word_bytes]) +
+                     word_to_bytes(word_bytes) + word_to_bytes(test_word()))
+
+test_file_name = 'testobj'
+
+def write_test_file(contents):
+    with open(test_file_name, 'wb') as h: h.write(contents)
+
+def load_test(obj, error_code=0):
+    '''
+    Write the given binary data to a file, try to load it, and check that
+    the error code is as given.
+    '''
+    write_test_file(obj)
+    res = try_load(test_file_name)
+    print(" should be {}".format(error_code))
+    if res != error_code:
+        print("Error in load_object() test {}".format(test))
+        sys.exit(1)
+    if error_code == 0:
+        print("Word 0 of memory is {:#x}; should be {:#x}".format(M_word[0], test_word()))
+        if M_word[0] != test_word():
+            print("Error in load_object() test {}".format(test))
+            sys.exit(1)
+
 
 src_dir = os.environ['srcdir']
-build_dir = os.environ['builddir']
 
 
-bad_files = ["badobj1", "badobj2", "badobj3", "badobj4"]
-error_code = [-2, -2, -4, -2]
-for i, bad_file in enumerate(bad_files):
-    s = obj_name(src_dir, bad_file, word_bytes)
-    res = try_load(s)
-    print(" should be {}".format(error_code[i]))
-    if res != error_code[i]:
-        print("Error in load_object() tests: file {}".format(bad_file))
-        sys.exit(1)
+# Tests
+test = 0
 
 
-good_files = ["testobj1", "testobj2"]
-for good_file in good_files:
-    s = obj_name(src_dir, good_file, word_bytes)
-    res = try_load(s)
-    print(" should be {}".format(0))
-    correct = 0x1020304 & word_mask
-    print("Word 0 of memory is {:#x}; should be {:#x}".format(M_word[0], correct))
-    if M_word[0] != correct:
-        print("Error in load_object() tests: file {}".format(good_file))
-        sys.exit(1)
-    if res != 0:
-        print("Error in load_object() tests: file {}".format(good_file))
-        sys.exit(1)
+# Test errors when trying to load invalid object files
+
+# Invalid magic
+test += 1
+obj = object_file()
+obj[5] = ord('\n')
+load_test(obj, -2)
+
+# Invalid ENDISM
+test += 1
+obj = object_file()
+obj[6] = 4
+load_test(obj, -2)
+
+# Insufficient data for given length
+test += 1
+obj = object_file()
+obj[8:8 + word_bytes] = word_to_bytes(-1)
+load_test(obj, -4)
+
+# Only a few bytes of header
+test += 1
+load_test(object_file()[0:2], -2)
+
+# Incorrect WORD_BYTES
+assert(word_bytes == 2 or word_bytes == 4 or word_bytes == 8)
+wrong_word_bytes = 8 if word_bytes == 4 else 4
+load_test(object_file(wrong_word_bytes), -3)
 
 
-# Generate test object file
-number_file = "numbers.obj"
+# Test ability to load valid object files
+
+# Vanilla file
+test += 1
+load_test(object_file())
+
+# File with #! line
+test += 1
+load_test(obj = b'#!/usr/bin/smite\n' + object_file())
+
+
+# Test ability to load & run saved file with assembler-generated contents
 correct = [-128, 12345]
 for n in correct:
     lit(n)
 ass(HALT)
-save(number_file, length=assembler.label())
-
-s = obj_name(build_dir, number_file, use_endism=False)
-res = try_load(s)
+save(test_file_name, length=assembler.label())
+res = try_load(test_file_name)
 print(" should be {}".format(0))
 if res != 0:
-    print("Error in load_object() tests: file {}".format(number_file))
+    print("Error in load_object() tests: file {}".format(test_file_name))
     sys.exit(1)
 try:
     run()
 except ErrorCode:
-    print("Error in load_object() tests: file {}".format(number_file))
+    print("Error in load_object() tests: file {}".format(test_file_name))
     sys.exit(1)
 print("Data stack: {}".format(S))
 print("Correct stack: {}".format(correct))
@@ -82,19 +138,9 @@ if str(correct) != str(S):
     print("Error in load_object() tests: PC = {:#x}".format(PC.get()))
     sys.exit(1)
 
-os.remove(number_file)
 
+# Remove test file
+os.remove(test_file_name)
 
-# Check we get an error trying to load an object file of the wrong
-# WORD_BYTES.
-assert(word_bytes == 2 or word_bytes == 4 or word_bytes == 8)
-wrong_word_bytes = 8 if word_bytes == 4 else 4
-s = obj_name(src_dir, good_files[0], wrong_word_bytes, use_endism=True)
-res = try_load(s)
-incorrect_word_bytes_res = -3
-print(" should be {}".format(incorrect_word_bytes_res))
-if res != incorrect_word_bytes_res:
-    print("Error in load_object() tests: file {}".format(good_files[0]))
-    sys.exit(1)
 
 print("load_object() tests ran OK")
