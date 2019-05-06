@@ -7,48 +7,48 @@
 # THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 # RISK.
 
-bin_SCRIPTS = @PACKAGE@@PACKAGE_SUFFIX@-dump @PACKAGE@@PACKAGE_SUFFIX@-shell
-man_MANS = @PACKAGE@@PACKAGE_SUFFIX@-dump.1 @PACKAGE@@PACKAGE_SUFFIX@-shell.1
+bin_SCRIPTS = mit@PACKAGE_SUFFIX@-dump mit@PACKAGE_SUFFIX@-shell
+man_MANS = mit@PACKAGE_SUFFIX@-dump.1 mit@PACKAGE_SUFFIX@-shell.1
 mit_pkgpythondir = $(pkgpythondir)@PACKAGE_SUFFIX@
 mit_pkgpython_PYTHON =		\
-	@PACKAGE@/__init__.py		\
-	@PACKAGE@/__main__.py		\
-	@PACKAGE@/assembler.py		\
-	@PACKAGE@/vm_data.py		\
-	@PACKAGE@/ext.py		\
-	@PACKAGE@/instruction.py
-nodist_mit_pkgpython_PYTHON = @PACKAGE@/binding.py
+	mit/__init__.py		\
+	mit/__main__.py		\
+	mit/assembler.py		\
+	mit/vm_data.py		\
+	mit/ext.py		\
+	mit/instruction.py
+nodist_mit_pkgpython_PYTHON = mit/binding.py
 
-all-local: @PACKAGE@/binding.py
+all-local: mit/binding.py
 
-@PACKAGE@/binding.py: $(top_builddir)/config.status @PACKAGE@/binding.py.in
+mit/binding.py: $(top_builddir)/config.status mit/binding.py.in
 	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
 
 
 loc:
-	$(SLOCCOUNT) $(bin_SCRIPTS) @PACKAGE@/__init__.py @PACKAGE@/__main__.py
+	$(SLOCCOUNT) $(bin_SCRIPTS) mit/__init__.py mit/__main__.py
 
 if USING_PACKAGE_SUFFIX
-@PACKAGE@@PACKAGE_SUFFIX@-dump: @PACKAGE@-dump
-	cp @PACKAGE@-dump $@
+mit@PACKAGE_SUFFIX@-dump: mit-dump
+	cp mit-dump $@
 	chmod +x $@
 
-@PACKAGE@@PACKAGE_SUFFIX@-shell: @PACKAGE@-shell
-	cp @PACKAGE@-shell $@
+mit@PACKAGE_SUFFIX@-shell: mit-shell
+	cp mit-shell $@
 	chmod +x $@
 
-@PACKAGE@@PACKAGE_SUFFIX@-dump.1: @PACKAGE@-dump.1
-	cp @PACKAGE@-dump $@
+mit@PACKAGE_SUFFIX@-dump.1: mit-dump.1
+	cp mit-dump $@
 
-@PACKAGE@@PACKAGE_SUFFIX@-shell.1: @PACKAGE@-shell.1
-	cp @PACKAGE@-shell $@
+mit@PACKAGE_SUFFIX@-shell.1: mit-shell.1
+	cp mit-shell $@
 endif
 
 EXTRA_DIST = \
 	$(man_MANS)		\
-	@PACKAGE@/binding.py.in	\
-	@PACKAGE@-dump.in	\
-	@PACKAGE@-shell.in	\
-	@PACKAGE@/binding.py.in
+	mit/binding.py.in	\
+	mit-dump.in	\
+	mit-shell.in	\
+	mit/binding.py.in
 
 DISTCLEANFILES = $(bin_SCRIPTS) $(man_MANS)

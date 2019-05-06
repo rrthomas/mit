@@ -6,6 +6,4 @@
 *.log
 *.out
 *.synctex.gz
-/mit.tex
-/cmit.tex
 /primes

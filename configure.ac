@@ -1,6 +1,6 @@
 # configure.ac for Mit
 # Process this file with autoconf to produce a configure script
-
+#
 # (c) Mit authors 2011-2019
 #
 # The package is distributed under the MIT/X11 License.
@@ -11,9 +11,6 @@
 AC_INIT(Mit, 0.1, rrt@sc3d.org)
 AC_CONFIG_AUX_DIR([build-aux])
 AM_INIT_AUTOMAKE([-Wall -Werror foreign subdir-objects])
-package_upper=`echo ${PACKAGE} | tr '[[:lower:]]' '[[:upper:]]'`
-AC_SUBST([PACKAGE_UPPER], [$package_upper])
-AC_DEFINE_UNQUOTED([PACKAGE_UPPER], ["$package_upper"], [PACKAGE upper-cased])
 
 # Check for programs
 AC_PROG_CC_C99
@@ -137,14 +134,12 @@ AC_CONFIG_FILES([
         src/Makefile
         src/include/mit/mit.h
         src/feature/30-specializer/mit/specializer.h
-        src/mit-include.man
         tests/Makefile
         python/Makefile
         python/mit/binding.py
         python/mit-dump.1
         python/mit-shell.1
         doc/Makefile
-        doc/mit.tex
 ])
 AC_CONFIG_FILES([python/mit-dump], [chmod +x python/mit-dump])
 AC_CONFIG_FILES([python/mit-shell], [chmod +x python/mit-shell])

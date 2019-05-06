@@ -1,19 +1,19 @@
-.TH @PACKAGE@-shell "1" "January 2019" "@PACKAGE_NAME@" "User Commands"
+.TH mit-shell "1" "January 2019" "Mit" "User Commands"
 .SH NAME
-@PACKAGE@-shell@PACKAGE_SUFFIX@ \- Run @PACKAGE_NAME@@PACKAGE_SUFFIX@ in a Python REPL with debugging facilities
+mit-shell@PACKAGE_SUFFIX@ \- Run Mit@PACKAGE_SUFFIX@ in a Python REPL with debugging facilities
 .SH SYNOPSIS
-.B @PACKAGE@-shell@PACKAGE_SUFFIX@
+.B mit-shell@PACKAGE_SUFFIX@
 .SH DESCRIPTION
-Run @PACKAGE_NAME@@PACKAGE_SUFFIX@ in a Python REPL, with debugging facilities and
-convenient access to the @PACKAGE_NAME@ Mit.
+Run mit@PACKAGE_SUFFIX@ in a Python REPL, with debugging facilities and
+convenient access to the Mit VM.
 .SH "SEE ALSO"
-.BR @PACKAGE@@PACKAGE_SUFFIX@ (1)
+.BR mit@PACKAGE_SUFFIX@ (1)
 .SH "REPORTING BUGS"
 Report bugs to rrt@sc3d.org.
 .SH "COPYRIGHT"
 \(co Mit authors 2019
 .br
-@PACKAGE_NAME@ comes with ABSOLUTELY NO WARRANTY.
+Mit comes with ABSOLUTELY NO WARRANTY.
 .br
-You may redistribute copies of @PACKAGE_NAME@
+You may redistribute copies of Mit
 under the terms of the MIT/X11 License.

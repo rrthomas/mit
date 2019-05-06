@@ -87,7 +87,7 @@ extern const mit_WORD mit_word_max;
 typedef struct {
 #define R(reg, type, utype) type reg;
 #define R_RO(reg, type, utype) R(reg, type, utype)
-#include <@PACKAGE@@PACKAGE_SUFFIX@/registers.h>
+#include <mit@PACKAGE_SUFFIX@/registers.h>
 #undef R
 #undef R_RO
     mit_WORD *memory;
@@ -103,7 +103,7 @@ typedef struct {
 #define R(reg, type, utype)                     \
     R_RO(reg, type, utype)                      \
     void mit_set_ ## reg(mit_state *S, type val);
-#include <@PACKAGE@@PACKAGE_SUFFIX@/registers.h>
+#include <mit@PACKAGE_SUFFIX@/registers.h>
 #undef R
 #undef R_RO
 

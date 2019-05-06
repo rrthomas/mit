@@ -10,7 +10,7 @@
 #ifndef MIT_SPECIALIZER
 #define MIT_SPECIALIZER
 
-#include <@PACKAGE@@PACKAGE_SUFFIX@/mit.h>
+#include <mit@PACKAGE_SUFFIX@/mit.h>
 
 
 mit_WORD mit_run_specialized(mit_state *S);
