@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # Generate code for instructions.
 #
-# (c) SMite authors 1994-2019
+# (c) Mit authors 1994-2019
 #
 # The package is distributed under the MIT/X11 License.
 #
@@ -10,7 +10,7 @@
 
 import sys, pickle, textwrap
 
-from smite_core.vm_data import Instruction
+from mit_core.vm_data import Instruction
 from specializer import gen_case, CacheState
 
 # Load language.
@@ -67,9 +67,9 @@ print('''\
 #include <assert.h>
 #include <stdio.h>
 
-#include "smite/smite.h"
-#include "smite/opcodes.h"
-#include "smite/specializer.h"
+#include "mit/mit.h"
+#include "mit/opcodes.h"
+#include "mit/specializer.h"
 
 #define RAISE(code)                                           \\
     do {                                                      \\
@@ -82,8 +82,8 @@ print('''\
 #define NEXT                                                  \\
     do {                                                      \\
         if (S->I != 0)                                        \\
-            RAISE(SMITE_ERR_INVALID_OPCODE);                  \\
-        int ret = load(S, S->PC, smite_SIZE_WORD, (smite_WORD *)&(S->I)); \\
+            RAISE(MIT_ERR_INVALID_OPCODE);                  \\
+        int ret = load(S, S->PC, mit_SIZE_WORD, (mit_WORD *)&(S->I)); \\
         if (ret != 0)                                         \\
             RAISE(ret);                                       \\
         S->PC += WORD_BYTES;                                  \\
@@ -93,18 +93,18 @@ print('''\
     do {                                                      \\
         initial_PC = S->PC;                                   \\
         initial_I = S->I;                                     \\
-        opcode = S->I & SMITE_INSTRUCTION_MASK;               \\
-        S->I >>= SMITE_INSTRUCTION_BIT;                       \\
+        opcode = S->I & MIT_INSTRUCTION_MASK;               \\
+        S->I >>= MIT_INSTRUCTION_BIT;                       \\
     } while (0)
 
-smite_WORD smite_run_specialized(smite_state *S) {
-    int res = SMITE_ERR_OK;''')
+mit_WORD mit_run_specialized(mit_state *S) {
+    int res = MIT_ERR_OK;''')
 
 # Declare stack cache variables.
 max_cached_depth = max(label.cached_depth for label in labels)
 if max_cached_depth > 0:
     print('''\
-    smite_WORD {};'''.format(
+    mit_WORD {};'''.format(
         ', '.join(
             CacheState.var_for_depth(pos, max_cached_depth)
             for pos in reversed(range(max_cached_depth))
@@ -113,10 +113,10 @@ if max_cached_depth > 0:
 
 print('''\
     do {
-        smite_UWORD initial_PC, initial_I;
+        mit_UWORD initial_PC, initial_I;
         // The number of stack items cached in C variables.
-        smite_UWORD cached_depth = 0;
-        smite_BYTE opcode;
+        mit_UWORD cached_depth = 0;
+        mit_BYTE opcode;
 
         FETCH;
         goto A_0;
@@ -129,15 +129,15 @@ print('''\
         //
         // The calling convention at each A_XXX label is as follows:
         //
-        //  - On entry, `res` is `SMITE_ERR_OK`, `opcode` is the next opcode,
+        //  - On entry, `res` is `MIT_ERR_OK`, `opcode` is the next opcode,
         //    and `I` has been right-shifted.
         //  - When an error occurs, call `RAISE(code)`.
         //    It sets `res` to the return code; then it resets PC and
         //    I to their initial values, and does "goto RET".
         //  - "goto RET" (but do not "return") at any time after completely
         //    executing at least one instruction, or never.
-        //  - On exit, whether by `RAISE` or otherwise, all SMite
-        //    registers must be set according to the SMite spec. In particular,
+        //  - On exit, whether by `RAISE` or otherwise, all Mit
+        //    registers must be set according to the Mit spec. In particular,
         //    there must be no side effects before a RAISE, except for the
         //    effects on STACK_DEPTH and PC described above.
         //    In addition, `cached_depth` must be set correctly.
@@ -146,7 +146,7 @@ print('''\
 for label in labels:
     print('''\
     {label_name}:
-        assert(res == SMITE_ERR_OK);
+        assert(res == MIT_ERR_OK);
         assert(cached_depth == {cached_depth});
         if (opcode == O_{guess_name}) {{'''.format(
         label_name=label.name,
@@ -182,10 +182,10 @@ for label in labels:
 print('''\
     A_ILLEGAL:
         {{
-            assert(res == SMITE_ERR_OK);
+            assert(res == MIT_ERR_OK);
             assert(cached_depth == 0);
             assert(opcode > {max_opcode});
-            RAISE(SMITE_ERR_INVALID_OPCODE);
+            RAISE(MIT_ERR_INVALID_OPCODE);
         }}'''.format(
     max_opcode=max(i.opcode for i in Instruction)
 ))
@@ -215,6 +215,6 @@ print('''\
                 assert(0); // Unreachable.
             }
         }
-    } while (res == SMITE_ERR_OK);
+    } while (res == MIT_ERR_OK);
     return res;
 }''')

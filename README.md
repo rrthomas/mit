@@ -1,23 +1,23 @@
-# SMite
+# Mit
 
 by Reuben Thomas <rrt@sc3d.org>  
-https://github.com/rrthomas/smite  
+https://github.com/rrthomas/mit  
 
-SMite is a simple virtual machine designed for study and experiment. It uses
+Mit is a simple virtual machine designed for study and experiment. It uses
 a byte-stream code designed for efficient execution which is binary portable
 between implementations. It has been implemented in C for POSIX systems.
-SMite is designed to be embedded in other programs; Python 3 bindings are
+Mit is designed to be embedded in other programs; Python 3 bindings are
 provided that demonstrate this ability and provide a convenient REPL and
 debugger. In the C implementation, all memory references are bounds checked.
 An I/O library is implemented; access to native code routines is also
-possible, allowing SMite and C programs to call each other.
+possible, allowing Mit and C programs to call each other.
 
-This package comprises the definition of the SMite virtual machine and an
+This package comprises the definition of the Mit virtual machine and an
 implementation in ISO C99 using POSIX APIs.
 
 The package is distributed under the MIT/X11 License (see the file
 `COPYING`). Note that some files are in the public domain, notably the
-specification of SMite; they are marked as such.
+specification of Mit; they are marked as such.
 
 THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 RISK.
@@ -25,7 +25,7 @@ RISK.
 
 ## Compatibility
 
-SMite should work on any POSIX-1.2001-compatible system. SMite has been
+Mit should work on any POSIX-1.2001-compatible system. Mit has been
 tested on x86_64 GNU/Linux with GNU C.
 
 Reports on compatibility, whether positive or negative, are welcomed.
@@ -36,7 +36,7 @@ Reports on compatibility, whether positive or negative, are welcomed.
 Perl and help2man are required to build from source. For building from git,
 see below.
 
-To build SMite from a release tarball, run
+To build Mit from a release tarball, run
 
 `./configure && make && make check`
 
@@ -48,7 +48,7 @@ For the bibliographies in the documentation to be built correctly, GNU Make
 should be used.
 
 
-### Building SMite from git
+### Building Mit from git
 
 The GNU autotools are required: automake, autoconf and libtool.
 [Gnulib](https://www.gnu.org/software/gnulib/) is also used, with a
@@ -64,51 +64,51 @@ PDFs are supplied in release archives.
 
 ## Use
 
-Run `smite OBJECT-FILE` (see `smite --help` for documentation). To run the
-shell, `smite-shell`.
+Run `mit OBJECT-FILE` (see `mit --help` for documentation). To run the
+shell, `mit-shell`.
 
 
 ## C API
 
-Include `smite/smite.h` (see this file for its documentation), and link with
-`libsmite`. In addition, `smite/opcodes.h` contains an enumeration type of
-SMite’s instruction set.
+Include `mit/mit.h` (see this file for its documentation), and link with
+`libmit`. In addition, `mit/opcodes.h` contains an enumeration type of
+Mit’s instruction set.
 
 
 ## Documentation
 
 The documentation consists of:
 
-* _[The SMite Virtual Machine](doc/smite.pdf)_  
-The design of the SMite virtual machine is described. Essential reading
+* _[The Mit Virtual Machine](doc/mit.pdf)_  
+The design of the Mit virtual machine is described. Essential reading
 for those programming or implementing the VM.
-* The comments in `smite.h`.
+* The comments in `mit.h`.
 * Comments in the Python modules.
 * `HACKING.md` contains further information for maintainers.
 
-SMite is based on [Beetle](https://github.com/rrthomas/beetle), which I
+Mit is based on [Beetle](https://github.com/rrthomas/beetle), which I
 developed for my BA dissertation project.
 
 
 ## pForth
 
 [pForth](https://github.com/rrthomas/pforth) is an ANSI Forth compiler that
-targets SMite.
+targets Mit.
 
 
-## Running SMite object files
+## Running Mit object files
 
-The C implementation of SMite allows a hash-bang line to be prepended to an
+The C implementation of Mit allows a hash-bang line to be prepended to an
 object file, so that they can be run directly. A suggested line is:
 
 ```
-#!/usr/bin/env smite
+#!/usr/bin/env mit
 ```
 
-A magic file for the file(1) command is also provided: smite.magic.
+A magic file for the file(1) command is also provided: mit.magic.
 
 
 ## Bugs and comments
 
-Please send bug reports (preferably as [GitHub issues](https://github.com/rrthomas/smite/issues))
+Please send bug reports (preferably as [GitHub issues](https://github.com/rrthomas/mit/issues))
 and comments. I’m especially interested to know of portability bugs.

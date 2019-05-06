@@ -3,15 +3,15 @@
 # one case, it will work in all (if the C compiler doesn't implement it
 # correctly, we're in trouble anyway!).
 #
-# (c) SMite authors 1994-2019
+# (c) Mit authors 1994-2019
 #
 # The package is distributed under the MIT/X11 License.
 #
 # THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 # RISK.
 
-from smite import *
-from smite_test import *
+from mit import *
+from mit_test import *
 VM = State()
 VM.globalize(globals())
 

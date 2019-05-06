@@ -1,6 +1,6 @@
 # VM definition
 #
-# (c) SMite authors 1994-2019
+# (c) Mit authors 1994-2019
 #
 # The package is distributed under the MIT/X11 License.
 #
@@ -14,7 +14,7 @@ from .instruction import AbstractInstruction
 
 class AbstractRegister(Enum):
     @property
-    def ty(self): return "smite_UWORD"
+    def ty(self): return "mit_UWORD"
 
     @property
     def uty(self): return self.ty
@@ -37,20 +37,20 @@ class Instruction(AbstractInstruction):
     )
 
     BRANCH = (0x01, ['addr'], [], '''\
-        S->PC = (smite_UWORD)addr;
+        S->PC = (mit_UWORD)addr;
         NEXT;
     ''')
 
     BRANCHZ = (0x02, ['flag', 'addr'], [], '''\
         if (flag == 0) {
-            S->PC = (smite_UWORD)addr;
+            S->PC = (mit_UWORD)addr;
             NEXT;
         }
     ''')
 
     CALL = (0x03, ['addr'], ['ret_addr'], '''\
         ret_addr = S->PC;
-        S->PC = (smite_UWORD)addr;
+        S->PC = (mit_UWORD)addr;
         NEXT;
     ''')
 
@@ -77,11 +77,11 @@ class Instruction(AbstractInstruction):
     ''')
 
     LSHIFT = (0x0c, ['x', 'n'], ['r'], '''\
-        r = n < (smite_WORD)smite_WORD_BIT ? x << n : 0;
+        r = n < (mit_WORD)mit_WORD_BIT ? x << n : 0;
     ''')
 
     RSHIFT = (0x0d, ['x', 'n'], ['r'], '''\
-        r = n < (smite_WORD)smite_WORD_BIT ? (smite_WORD)((smite_UWORD)x >> n) : 0;
+        r = n < (mit_WORD)mit_WORD_BIT ? (mit_WORD)((mit_UWORD)x >> n) : 0;
     ''')
 
     ARSHIFT = (0x0e, ['x', 'n'], ['r'], '''\
@@ -89,8 +89,8 @@ class Instruction(AbstractInstruction):
     ''')
 
     SIGN_EXTEND = (0x0f, ['n1', 'size'], ['n2'], '''\
-        n2 = n1 << (WORD_BYTES - (1 << size)) * smite_BYTE_BIT;
-        n2 = ARSHIFT(n2, (WORD_BYTES - (1 << size)) * smite_BYTE_BIT);
+        n2 = n1 << (WORD_BYTES - (1 << size)) * mit_BYTE_BIT;
+        n2 = ARSHIFT(n2, (WORD_BYTES - (1 << size)) * mit_BYTE_BIT);
     ''')
 
     EQ = (0x10, ['a', 'b'], ['flag'], '''\
@@ -102,7 +102,7 @@ class Instruction(AbstractInstruction):
     ''')
 
     ULT = (0x12, ['a', 'b'], ['flag'], '''\
-        flag = (smite_UWORD)a < (smite_UWORD)b;
+        flag = (mit_UWORD)a < (mit_UWORD)b;
     ''')
 
     NEGATE = (0x13, ['a'], ['r'], '''\
@@ -119,7 +119,7 @@ class Instruction(AbstractInstruction):
 
     DIVMOD = (0x16, ['a', 'b'], ['q', 'r'], '''\
         if (b == 0)
-          RAISE(SMITE_ERR_DIVISION_BY_ZERO);
+          RAISE(MIT_ERR_DIVISION_BY_ZERO);
         q = a / b;
         r = a % b;
         fprintf(stderr, "a %d b %d q %d r %d\\n", (int)a, (int)b, (int)q, (int)r);
@@ -127,9 +127,9 @@ class Instruction(AbstractInstruction):
 
     UDIVMOD = (0x17, ['a', 'b'], ['q', 'r'], '''\
         if (b == 0)
-          RAISE(SMITE_ERR_DIVISION_BY_ZERO);
-        q = (smite_WORD)((smite_UWORD)a / (smite_UWORD)b);
-        r = (smite_WORD)((smite_UWORD)a % (smite_UWORD)b);
+          RAISE(MIT_ERR_DIVISION_BY_ZERO);
+        q = (mit_WORD)((mit_UWORD)a / (mit_UWORD)b);
+        r = (mit_WORD)((mit_UWORD)a % (mit_UWORD)b);
     ''')
 
     LOAD = (0x18, ['addr', 'size'], ['x'], '''\
@@ -145,14 +145,14 @@ class Instruction(AbstractInstruction):
     ''')
 
     LIT = (0x1a, [], ['n'], '''\
-        int ret = load(S, S->PC, smite_SIZE_WORD, &n);
+        int ret = load(S, S->PC, mit_SIZE_WORD, &n);
         if (ret != 0)
             RAISE(ret);
         S->PC += WORD_BYTES;
     ''')
 
     LIT_PC_REL = (0x1b, [], ['n'], '''\
-        int ret = load(S, S->PC, smite_SIZE_WORD, &n);
+        int ret = load(S, S->PC, mit_SIZE_WORD, &n);
         if (ret != 0)
             RAISE(ret);
         n += S->PC;
@@ -168,9 +168,9 @@ class Instruction(AbstractInstruction):
     ''')
 
     EXT = (0x1e, None, None, '''\
-        smite_ext(S);
+        mit_ext(S);
     ''')
 
     HALT = (0x1f, [], [], '''\
-        RAISE(SMITE_ERR_HALT);
+        RAISE(MIT_ERR_HALT);
     ''')

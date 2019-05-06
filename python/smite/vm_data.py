@@ -1,1 +1,0 @@
-../../src/smite_core/vm_data.py

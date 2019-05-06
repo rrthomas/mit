@@ -5,13 +5,13 @@
 .B @PACKAGE@-shell@PACKAGE_SUFFIX@
 .SH DESCRIPTION
 Run @PACKAGE_NAME@@PACKAGE_SUFFIX@ in a Python REPL, with debugging facilities and
-convenient access to the @PACKAGE_NAME@ SMite.
+convenient access to the @PACKAGE_NAME@ Mit.
 .SH "SEE ALSO"
 .BR @PACKAGE@@PACKAGE_SUFFIX@ (1)
 .SH "REPORTING BUGS"
 Report bugs to rrt@sc3d.org.
 .SH "COPYRIGHT"
-\(co SMite authors 2019
+\(co Mit authors 2019
 .br
 @PACKAGE_NAME@ comes with ABSOLUTELY NO WARRANTY.
 .br

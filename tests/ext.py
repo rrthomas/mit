@@ -1,14 +1,14 @@
-# Test EXT (libc and smite functions).
+# Test EXT (libc and mit functions).
 # FIXME: test file routines.
 #
-# (c) SMite authors 1994-2019
+# (c) Mit authors 1994-2019
 #
 # The package is distributed under the MIT/X11 License.
 #
 # THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 # RISK.
 
-from smite import *
+from mit import *
 VM = State()
 VM.globalize(globals())
 
@@ -24,11 +24,11 @@ breaks = []
 # Put address of buffer on stack for later
 lit(buffer)
 lit(16) # arbitary number > strlen(args[1])
-lit(LIB_SMITE_CURRENT_STATE)
-lit(LIB_SMITE)
+lit(LIB_MIT_CURRENT_STATE)
+lit(LIB_MIT)
 ass(EXT)
-lit(LIB_SMITE_NATIVE_ADDRESS_OF_RANGE)
-lit(LIB_SMITE)
+lit(LIB_MIT_NATIVE_ADDRESS_OF_RANGE)
+lit(LIB_MIT)
 ass(EXT)
 
 # Test LIB_C_ARGC
@@ -75,7 +75,7 @@ S.push(arg1len) # push length back for next test
 
 # Run LIB_C_STRNCPY test
 step(addr=breaks[2])
-c_str = string_at(libsmite.smite_native_address_of_range(VM.state, buffer, 0))
+c_str = string_at(libmit.mit_native_address_of_range(VM.state, buffer, 0))
 print("arg 1 is {}, and should be {}".format(c_str, args[1]))
 if c_str != args[1]:
     print("Error in EXT tests: PC = {:#x}".format(PC.get()))

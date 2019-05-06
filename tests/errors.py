@@ -1,13 +1,13 @@
 # Test the VM-generated error codes and HALT.
 #
-# (c) SMite authors 1995-2019
+# (c) Mit authors 1995-2019
 #
 # The package is distributed under the MIT/X11 License.
 #
 # THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 # RISK.
 
-from smite import *
+from mit import *
 size = 4096
 VM = State(memory_size=size, stack_size=3)
 VM.globalize(globals())
@@ -112,7 +112,7 @@ for i, pc in enumerate(test):
 
 # Try to write to an invalid stack location (can't do this with virtual code)
 try:
-    libsmite.smite_store_stack(VM.state, 4, 0)
+    libmit.mit_store_stack(VM.state, 4, 0)
     ret = 0
 except ErrorCode as e:
     ret = e.args[0]

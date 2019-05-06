@@ -1,15 +1,15 @@
 // Public data structures and interface calls.
-// This is the header file to include in programs using SMite.
+// This is the header file to include in programs using Mit.
 //
-// (c) SMite authors 1994-2019
+// (c) Mit authors 1994-2019
 //
 // The package is distributed under the MIT/X11 License.
 //
 // THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 // RISK.
 
-#ifndef SMITE_SMITE
-#define SMITE_SMITE
+#ifndef MIT_MIT
+#define MIT_MIT
 
 
 #include <stddef.h>
@@ -25,39 +25,39 @@
 #define HOST_ENDISM @WORDS_BIGENDIAN@
 
 // Types and printf formats
-typedef uint8_t smite_BYTE;
+typedef uint8_t mit_BYTE;
 #if WORD_BYTES == 2
-typedef int16_t smite_WORD;
-typedef uint16_t smite_UWORD;
-#define smite_SIZE_WORD 1
-#define smite_WORD_MASK UINT16_MAX
-#define smite_UWORD_MAX UINT16_MAX
-#define smite_WORD_MIN INT16_MIN
-#define smite_WORD_MAX INT16_MAX
+typedef int16_t mit_WORD;
+typedef uint16_t mit_UWORD;
+#define mit_SIZE_WORD 1
+#define mit_WORD_MASK UINT16_MAX
+#define mit_UWORD_MAX UINT16_MAX
+#define mit_WORD_MIN INT16_MIN
+#define mit_WORD_MAX INT16_MAX
 #define PRI_WORD PRId16
 #define PRI_UWORD PRIu16
 #define PRI_XWORD "#"PRIx16
 #define reverse_endianness bswap_16
 #elif WORD_BYTES == 4
-typedef int32_t smite_WORD;
-typedef uint32_t smite_UWORD;
-#define smite_SIZE_WORD 2
-#define smite_WORD_MASK UINT32_MAX
-#define smite_UWORD_MAX UINT32_MAX
-#define smite_WORD_MIN INT32_MIN
-#define smite_WORD_MAX INT32_MAX
+typedef int32_t mit_WORD;
+typedef uint32_t mit_UWORD;
+#define mit_SIZE_WORD 2
+#define mit_WORD_MASK UINT32_MAX
+#define mit_UWORD_MAX UINT32_MAX
+#define mit_WORD_MIN INT32_MIN
+#define mit_WORD_MAX INT32_MAX
 #define PRI_WORD PRId32
 #define PRI_UWORD PRIu32
 #define PRI_XWORD "#"PRIx32
 #define reverse_endianness bswap_32
 #elif WORD_BYTES == 8
-typedef int64_t smite_WORD;
-typedef uint64_t smite_UWORD;
-#define smite_SIZE_WORD 3
-#define smite_WORD_MASK UINT64_MAX
-#define smite_UWORD_MAX UINT64_MAX
-#define smite_WORD_MIN INT64_MIN
-#define smite_WORD_MAX INT64_MAX
+typedef int64_t mit_WORD;
+typedef uint64_t mit_UWORD;
+#define mit_SIZE_WORD 3
+#define mit_WORD_MASK UINT64_MAX
+#define mit_UWORD_MAX UINT64_MAX
+#define mit_WORD_MIN INT64_MIN
+#define mit_WORD_MAX INT64_MAX
 #define PRI_WORD PRId64
 #define PRI_UWORD PRIu64
 #define PRI_XWORD "#"PRIx64
@@ -65,23 +65,23 @@ typedef uint64_t smite_UWORD;
 #else
 #error "WORD_BYTES must be 2, 4 or 8!"
 #endif
-typedef smite_WORD * smite_WORDP;
+typedef mit_WORD * mit_WORDP;
 #define PRI_XWORDP "p"
 
 // Constants
-extern const unsigned smite_word_bytes;
-extern const unsigned smite_endism;
-extern const unsigned smite_size_word;
-#define smite_BYTE_BIT 8
-extern const unsigned smite_byte_bit;
-extern const unsigned smite_byte_mask;
-#define smite_BYTE_MASK ((1 << smite_BYTE_BIT) - 1)
-extern const unsigned smite_word_bit;
-#define smite_WORD_BIT (WORD_BYTES * smite_BYTE_BIT)
-extern const smite_UWORD smite_word_mask;
-extern const smite_UWORD smite_uword_max;
-extern const smite_WORD smite_word_min;
-extern const smite_WORD smite_word_max;
+extern const unsigned mit_word_bytes;
+extern const unsigned mit_endism;
+extern const unsigned mit_size_word;
+#define mit_BYTE_BIT 8
+extern const unsigned mit_byte_bit;
+extern const unsigned mit_byte_mask;
+#define mit_BYTE_MASK ((1 << mit_BYTE_BIT) - 1)
+extern const unsigned mit_word_bit;
+#define mit_WORD_BIT (WORD_BYTES * mit_BYTE_BIT)
+extern const mit_UWORD mit_word_mask;
+extern const mit_UWORD mit_uword_max;
+extern const mit_WORD mit_word_min;
+extern const mit_WORD mit_word_max;
 
 // VM registers
 typedef struct {
@@ -90,67 +90,67 @@ typedef struct {
 #include <@PACKAGE@@PACKAGE_SUFFIX@/registers.h>
 #undef R
 #undef R_RO
-    smite_WORD *memory;
-    smite_UWORD memory_size;
-    smite_WORD *stack;
-    smite_UWORD stack_size;
+    mit_WORD *memory;
+    mit_UWORD memory_size;
+    mit_WORD *stack;
+    mit_UWORD stack_size;
     int main_argc;
     char **main_argv;
-} smite_state;
+} mit_state;
 
 #define R_RO(reg, type, utype)                  \
-    type smite_get_ ## reg(smite_state *S);
+    type mit_get_ ## reg(mit_state *S);
 #define R(reg, type, utype)                     \
     R_RO(reg, type, utype)                      \
-    void smite_set_ ## reg(smite_state *S, type val);
+    void mit_set_ ## reg(mit_state *S, type val);
 #include <@PACKAGE@@PACKAGE_SUFFIX@/registers.h>
 #undef R
 #undef R_RO
 
 // Instructions
-#ifndef SMITE_INSTRUCTION_BIT
-#define SMITE_INSTRUCTION_BIT 8
+#ifndef MIT_INSTRUCTION_BIT
+#define MIT_INSTRUCTION_BIT 8
 #endif
-#if SMITE_INSTRUCTION_BIT < 5 || SMITE_INSTRUCTION_BIT > 8
-#error "SMITE_INSTRUCTION_BIT must be in the range 5 to 8 inclusive!"
+#if MIT_INSTRUCTION_BIT < 5 || MIT_INSTRUCTION_BIT > 8
+#error "MIT_INSTRUCTION_BIT must be in the range 5 to 8 inclusive!"
 #endif
-#define SMITE_INSTRUCTION_MASK ((1 << SMITE_INSTRUCTION_BIT) - 1)
-extern const unsigned smite_instruction_bit;
-extern const unsigned smite_instruction_mask;
+#define MIT_INSTRUCTION_MASK ((1 << MIT_INSTRUCTION_BIT) - 1)
+extern const unsigned mit_instruction_bit;
+extern const unsigned mit_instruction_mask;
 
 // Errors
 enum {
-    SMITE_ERR_OK = 0,
-    SMITE_ERR_INVALID_OPCODE = 1,
-    SMITE_ERR_STACK_OVERFLOW = 2,
-    SMITE_ERR_STACK_READ = 3,
-    SMITE_ERR_STACK_WRITE = 4,
-    SMITE_ERR_MEMORY_READ = 5,
-    SMITE_ERR_MEMORY_WRITE = 6,
-    SMITE_ERR_MEMORY_UNALIGNED = 7,
-    SMITE_ERR_BAD_SIZE = 8,
-    SMITE_ERR_DIVISION_BY_ZERO = 9,
-    SMITE_ERR_HALT = 128,
+    MIT_ERR_OK = 0,
+    MIT_ERR_INVALID_OPCODE = 1,
+    MIT_ERR_STACK_OVERFLOW = 2,
+    MIT_ERR_STACK_READ = 3,
+    MIT_ERR_STACK_WRITE = 4,
+    MIT_ERR_MEMORY_READ = 5,
+    MIT_ERR_MEMORY_WRITE = 6,
+    MIT_ERR_MEMORY_UNALIGNED = 7,
+    MIT_ERR_BAD_SIZE = 8,
+    MIT_ERR_DIVISION_BY_ZERO = 9,
+    MIT_ERR_HALT = 128,
 };
 
 
 // Utility functions
 
-smite_UWORD smite_align(smite_UWORD addr, unsigned size);
+mit_UWORD mit_align(mit_UWORD addr, unsigned size);
 /* Return `addr` aligned to the next 2^`size`-byte boundary. */
 
-int smite_is_aligned(smite_UWORD addr, unsigned size);
+int mit_is_aligned(mit_UWORD addr, unsigned size);
 /* Return 1 if `addr` is a multiple of 2^`size`, or `0` if not. */
 
 // Inline functions
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-function"
-_GL_ATTRIBUTE_CONST static smite_UWORD align(smite_UWORD addr, unsigned size)
+_GL_ATTRIBUTE_CONST static mit_UWORD align(mit_UWORD addr, unsigned size)
 {
     return (addr + ((1 << size) - 1)) & -(1 << size);
 }
 
-_GL_ATTRIBUTE_CONST static int is_aligned(smite_UWORD addr, unsigned size)
+_GL_ATTRIBUTE_CONST static int is_aligned(mit_UWORD addr, unsigned size)
 {
     return (addr & ((1 << size) - 1)) == 0;
 }
@@ -159,12 +159,12 @@ _GL_ATTRIBUTE_CONST static int is_aligned(smite_UWORD addr, unsigned size)
 
 // Memory access
 
-uint8_t *smite_native_address_of_range(smite_state *S, smite_UWORD addr, smite_UWORD len);
+uint8_t *mit_native_address_of_range(mit_state *S, mit_UWORD addr, mit_UWORD len);
 /* Return a host pointer to the VM address `addr`, or `NULL` if any address
    in the range [addr, addr+len] is invalid.
 */
 
-int smite_load(smite_state *S, smite_UWORD addr, unsigned size, smite_WORD *val_ptr);
+int mit_load(mit_state *S, mit_UWORD addr, unsigned size, mit_WORD *val_ptr);
 /* Copy 1 << `size` bytes from `addr` to `val_ptr`.
 
    `size` must be between 0 and log2(WORD_BYTES) inclusive.
@@ -173,7 +173,7 @@ int smite_load(smite_state *S, smite_UWORD addr, unsigned size, smite_WORD *val_
    Return 0 if OK, or error code if `addr` is invalid or unaligned.
 */
 
-int smite_store(smite_state *S, smite_UWORD addr, unsigned size, smite_WORD val);
+int mit_store(mit_state *S, mit_UWORD addr, unsigned size, mit_WORD val);
 /* Store the 1 << `size` least-significant bytes of `val` at virtual address
    `addr`.
 
@@ -186,68 +186,68 @@ int smite_store(smite_state *S, smite_UWORD addr, unsigned size, smite_WORD val)
 // Inline functions
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-function"
-_GL_ATTRIBUTE_PURE static uint8_t *native_address_of_range(smite_state *S, smite_UWORD addr, smite_UWORD len)
+_GL_ATTRIBUTE_PURE static uint8_t *native_address_of_range(mit_state *S, mit_UWORD addr, mit_UWORD len)
 {
     if (addr >= S->memory_size || len > S->memory_size - addr)
         return NULL;
     return ((uint8_t *)(S->memory)) + addr;
 }
 
-static int load(smite_state *S, smite_UWORD addr, unsigned size, smite_WORD *val_ptr)
+static int load(mit_state *S, mit_UWORD addr, unsigned size, mit_WORD *val_ptr)
 {
     if (addr >= S->memory_size) {
         S->BAD = addr;
-        return SMITE_ERR_MEMORY_READ;
+        return MIT_ERR_MEMORY_READ;
     }
     if (!is_aligned(addr, size)) {
         S->BAD = addr;
-        return SMITE_ERR_MEMORY_UNALIGNED;
+        return MIT_ERR_MEMORY_UNALIGNED;
     }
 
-    smite_WORD val;
+    mit_WORD val;
     switch (size) {
     case 0:
-        val = (smite_UWORD)*((uint8_t *)S->memory + addr);
+        val = (mit_UWORD)*((uint8_t *)S->memory + addr);
         break;
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wcast-align"
     case 1:
-        val = (smite_UWORD)*((uint16_t *)((uint8_t *)S->memory + addr));
+        val = (mit_UWORD)*((uint16_t *)((uint8_t *)S->memory + addr));
         if (ENDISM != HOST_ENDISM)
             val = bswap_16(val);
         break;
-#if smite_SIZE_WORD >= 2
+#if mit_SIZE_WORD >= 2
     case 2:
-        val = (smite_UWORD)*((uint32_t *)((uint8_t *)S->memory + addr));
+        val = (mit_UWORD)*((uint32_t *)((uint8_t *)S->memory + addr));
         if (ENDISM != HOST_ENDISM)
             val = bswap_32(val);
         break;
 #endif
-#if smite_SIZE_WORD >= 3
+#if mit_SIZE_WORD >= 3
     case 3:
-        val = (smite_UWORD)*((uint64_t *)((uint8_t *)S->memory + addr));
+        val = (mit_UWORD)*((uint64_t *)((uint8_t *)S->memory + addr));
         if (ENDISM != HOST_ENDISM)
             val = bswap_64(val);
         break;
 #endif
 #pragma GCC diagnostic pop
     default:
-        return SMITE_ERR_BAD_SIZE;
+        return MIT_ERR_BAD_SIZE;
     }
 
     *val_ptr = val;
-    return SMITE_ERR_OK;
+    return MIT_ERR_OK;
 }
 
-static int store(smite_state *S, smite_UWORD addr, unsigned size, smite_WORD val)
+static int store(mit_state *S, mit_UWORD addr, unsigned size, mit_WORD val)
 {
     if (addr >= S->memory_size) {
         S->BAD = addr;
-        return SMITE_ERR_MEMORY_WRITE;
+        return MIT_ERR_MEMORY_WRITE;
     }
     if (!is_aligned(addr, size)) {
         S->BAD = addr;
-        return SMITE_ERR_MEMORY_UNALIGNED;
+        return MIT_ERR_MEMORY_UNALIGNED;
     }
 
     switch (size) {
@@ -261,14 +261,14 @@ static int store(smite_state *S, smite_UWORD addr, unsigned size, smite_WORD val
             val = bswap_16(val);
         *((uint16_t *)((uint8_t *)S->memory + addr)) = (uint16_t)val;
         break;
-#if smite_SIZE_WORD >= 2
+#if mit_SIZE_WORD >= 2
     case 2:
         if (ENDISM != HOST_ENDISM)
             val = bswap_32(val);
         *((uint32_t *)((uint8_t *)S->memory + addr)) = (uint32_t)val;
         break;
 #endif
-#if smite_SIZE_WORD >= 3
+#if mit_SIZE_WORD >= 3
     case 3:
         if (ENDISM != HOST_ENDISM)
             val = bswap_64(val);
@@ -277,37 +277,37 @@ static int store(smite_state *S, smite_UWORD addr, unsigned size, smite_WORD val
 #endif
 #pragma GCC diagnostic pop
     default:
-        return SMITE_ERR_BAD_SIZE;
+        return MIT_ERR_BAD_SIZE;
     }
 
-    return SMITE_ERR_OK;
+    return MIT_ERR_OK;
 }
 #pragma GCC diagnostic pop
 
 
 // Stack access
 
-int smite_load_stack(smite_state *S, smite_UWORD pos, smite_WORD *val_ptr);
+int mit_load_stack(mit_state *S, mit_UWORD pos, mit_WORD *val_ptr);
 /* Load the word position `pos` on the stack into the word pointed to by
    `val_ptr`.
 
    Return 0 if OK, or error code if `pos` is invalid.
 */
 
-int smite_store_stack(smite_state *S, smite_UWORD pos, smite_WORD val);
+int mit_store_stack(mit_state *S, mit_UWORD pos, mit_WORD val);
 /* Store the word `val` into the word at position `pos` on the stack.
 
    Return 0 if OK, or error code if `addr` is invalid.
 */
 
-int smite_pop_stack(smite_state *S, smite_WORD *val_ptr);
+int mit_pop_stack(mit_state *S, mit_WORD *val_ptr);
 /* Load the word at position `0` on the stack into the word pointed to by
    `val_ptr`, and decrement `STACK_DEPTH`.
 
    Return 0 if OK, or error code if position `0` is invalid.
  */
 
-int smite_push_stack(smite_state *S, smite_WORD val);
+int mit_push_stack(mit_state *S, mit_WORD val);
 /* Increment `STACK_DEPTH`, then store the word `val` value at position 0 on
    the stack.
 
@@ -322,38 +322,38 @@ int smite_push_stack(smite_state *S, smite_WORD val);
 #define PUSH_STACK_TYPE(S, ty, v)                                       \
     do {                                                                \
         size_t temp = v;                                                \
-        for (unsigned i = 0; i < align(sizeof(ty), smite_SIZE_WORD) / WORD_BYTES; i++) { \
-            int ret = push_stack(S, (smite_UWORD)(temp & smite_WORD_MASK)); \
+        for (unsigned i = 0; i < align(sizeof(ty), mit_SIZE_WORD) / WORD_BYTES; i++) { \
+            int ret = push_stack(S, (mit_UWORD)(temp & mit_WORD_MASK)); \
             if (ret != 0)                                               \
                 RAISE(ret);                                             \
-            temp >>= smite_WORD_BIT;                                    \
+            temp >>= mit_WORD_BIT;                                    \
     } while (0)
 #define POP_STACK_TYPE(S, ty, v)                                        \
     do {                                                                \
         size_t temp = 0;                                                \
-        for (unsigned i = 0; i < align(sizeof(ty), smite_SIZE_WORD) / WORD_BYTES; i++) { \
-            smite_WORD w;                                               \
+        for (unsigned i = 0; i < align(sizeof(ty), mit_SIZE_WORD) / WORD_BYTES; i++) { \
+            mit_WORD w;                                               \
             int ret = pop_stack(S, &w);                                 \
             if (ret != 0)                                               \
                 RAISE(ret);                                             \
-            temp = (temp << smite_WORD_BIT) | (smite_UWORD)w;           \
+            temp = (temp << mit_WORD_BIT) | (mit_UWORD)w;           \
         }                                                               \
         *(v) = (ty)temp;                                                \
     } while (0)
 #else
 #define PUSH_STACK_TYPE(S, ty, v)                                       \
     do {                                                                \
-        int ret = push_stack(S, (smite_UWORD)(temp & smite_WORD_MASK)); \
+        int ret = push_stack(S, (mit_UWORD)(temp & mit_WORD_MASK)); \
         if (ret != 0)                                                   \
             RAISE(ret);                                                 \
     } while (0)
 #define POP_STACK_TYPE(S, ty, v)                                        \
     do {                                                                \
-        smite_WORD w;                                                   \
+        mit_WORD w;                                                   \
         int ret = pop_stack(S, &w);                                     \
         if (ret != 0)                                                   \
             RAISE(ret);                                                 \
-        *(v) = (ty)(smite_UWORD)w;                                      \
+        *(v) = (ty)(mit_UWORD)w;                                      \
     } while (0)
 #endif
 
@@ -365,40 +365,40 @@ int smite_push_stack(smite_state *S, smite_WORD val);
 // Inline functions
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-function"
-static int load_stack(smite_state *S, smite_UWORD pos, smite_WORD *vp)
+static int load_stack(mit_state *S, mit_UWORD pos, mit_WORD *vp)
 {
     if (pos >= S->STACK_DEPTH) {
         S->BAD = pos;
-        return SMITE_ERR_STACK_READ;
+        return MIT_ERR_STACK_READ;
     }
 
     *vp = *UNCHECKED_STACK(pos);
-    return SMITE_ERR_OK;
+    return MIT_ERR_OK;
 }
 
-static int store_stack(smite_state *S, smite_UWORD pos, smite_WORD v)
+static int store_stack(mit_state *S, mit_UWORD pos, mit_WORD v)
 {
     if (pos >= S->STACK_DEPTH) {
         S->BAD = pos;
-        return SMITE_ERR_STACK_WRITE;
+        return MIT_ERR_STACK_WRITE;
     }
 
     *UNCHECKED_STACK(pos) = v;
-    return SMITE_ERR_OK;
+    return MIT_ERR_OK;
 }
 
-static int pop_stack(smite_state *S, smite_WORD *v)
+static int pop_stack(mit_state *S, mit_WORD *v)
 {
     int ret = load_stack(S, 0, v);
     S->STACK_DEPTH--;
     return ret;
 }
 
-static int push_stack(smite_state *S, smite_WORD v)
+static int push_stack(mit_state *S, mit_WORD v)
 {
     if (S->STACK_DEPTH >= S->stack_size) {
         S->BAD = S->stack_size;
-        return SMITE_ERR_STACK_OVERFLOW;
+        return MIT_ERR_STACK_OVERFLOW;
     }
 
     (S->STACK_DEPTH)++;
@@ -409,20 +409,20 @@ static int push_stack(smite_state *S, smite_WORD v)
 
 // VM instantiation and control
 
-smite_state *smite_init(size_t memory_size, size_t stack_size);
+mit_state *mit_init(size_t memory_size, size_t stack_size);
 /* Create and initialize a virtual machine state.
 
    - memory_size - number of words of memory required
    - stack_size - number of words of stack space required
 
    Return a pointer to a new state, or `NULL` if memory cannot be
-   allocated, or if any requested size is larger than `smite_UWORD_MAX`.
+   allocated, or if any requested size is larger than `mit_UWORD_MAX`.
 
    The memory and stack are zeroed, and the registers are initialized as per
    the spec.
 */
 
-int smite_realloc_memory(smite_state *S, smite_UWORD memory_size);
+int mit_realloc_memory(mit_state *S, mit_UWORD memory_size);
 /* Resize the memory of a state.
 
    - state - the state to change
@@ -433,7 +433,7 @@ int smite_realloc_memory(smite_state *S, smite_UWORD memory_size);
    Any new memory is zeroed.
 */
 
-int smite_realloc_stack(smite_state *S, smite_UWORD stack_size);
+int mit_realloc_stack(mit_state *S, mit_UWORD stack_size);
 /* Resize the stack of a state.
 
    - state - the state to change
@@ -444,20 +444,20 @@ int smite_realloc_stack(smite_state *S, smite_UWORD stack_size);
    Any new memory is zeroed.
 */
 
-void smite_destroy(smite_state *S);
+void mit_destroy(mit_state *S);
 /* Destroy the given state, deallocating its memory. */
 
-smite_WORD smite_run(smite_state *S);
+mit_WORD mit_run(mit_state *S);
 /* Start the execution cycle in the given state as described in the spec.
    If an error is raised, the code is returned.
 */
 
-smite_WORD smite_single_step(smite_state *S);
+mit_WORD mit_single_step(mit_state *S);
 /* Execute a single pass of the execution cycle in the given state.
    Return 128 if execution completes without error, or the error code.
 */
 
-ptrdiff_t smite_load_object(smite_state *S, smite_UWORD addr, int fd);
+ptrdiff_t mit_load_object(mit_state *S, mit_UWORD addr, int fd);
 /* Load an object file into a state.
 
    - state - the state to load into
@@ -480,7 +480,7 @@ ptrdiff_t smite_load_object(smite_state *S, smite_UWORD addr, int fd);
    newline character is ignored.
 */
 
-int smite_save_object(smite_state *S, smite_UWORD addr, smite_UWORD len, int fd);
+int mit_save_object(mit_state *S, mit_UWORD addr, mit_UWORD len, int fd);
 /* Save some memory as an object file.
 
    - state - the state to save from
@@ -493,10 +493,10 @@ int smite_save_object(smite_state *S, smite_UWORD addr, smite_UWORD len, int fd)
    -2: `addr` or `len` is invalid
 */
 
-int smite_register_args(smite_state *S, int argc, char *argv[]);
+int mit_register_args(mit_state *S, int argc, char *argv[]);
 /* Register command-line arguments in the given state, which can be
    retrieved using the `ARGC` and `ARG` functions of the `LIBC` extra
-   instruction (see `smite_core/ext.py`).
+   instruction (see `mit_core/ext.py`).
 
    - state - the state in which to register the arguments
    - argc, argv - as for `main`.
@@ -506,16 +506,16 @@ int smite_register_args(smite_state *S, int argc, char *argv[]);
 
 #if HAVE_ARITHMETIC_RSHIFT
 #define ARSHIFT(n, p) \
-    ((smite_WORD)(n) >> (p))
+    ((mit_WORD)(n) >> (p))
 #else
 #define ARSHIFT(n, p) \
-    (((n) >> (p)) | ((smite_UWORD)(-((smite_WORD)(n) < 0)) << (smite_WORD_BIT - (p))))
+    (((n) >> (p)) | ((mit_UWORD)(-((mit_WORD)(n) < 0)) << (mit_WORD_BIT - (p))))
 #endif
 /* Arithmetic right shift `n` by `p` places (the behaviour of >> on signed
    quantities is implementation-defined in C99).
 */
 
-int smite_ext(smite_state *S);
+int mit_ext(mit_state *S);
 /* Implement the EXT instruction. */
 
 #endif

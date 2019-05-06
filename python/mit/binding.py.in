@@ -1,7 +1,7 @@
 '''
-Python bindings for libsmite.
+Python bindings for libmit.
 
-(c) SMite authors 2019
+(c) Mit authors 2019
 
 The package is distributed under the MIT/X11 License.
 
@@ -19,8 +19,8 @@ if not library_file:
     # FIXME: Substitute version when library is versioned
     library_file = find_library("lib@PACKAGE@@PACKAGE_SUFFIX@-0")
 assert(library_file)
-libsmite = CDLL(library_file)
-assert(libsmite)
+libmit = CDLL(library_file)
+assert(libmit)
 
 # Errors
 class Error(Exception):
@@ -54,7 +54,7 @@ def errcheck(code_to_message):
 
 
 # Constants (all of type unsigned)
-vars().update([(c, c_uint.in_dll(libsmite, "smite_{}".format(c)).value)
+vars().update([(c, c_uint.in_dll(libmit, "mit_{}".format(c)).value)
                for c in ["word_bytes", "endism", "size_word",
                          "byte_bit", "byte_mask", "word_bit",
                          "instruction_bit", "instruction_mask"]])
@@ -79,7 +79,7 @@ else:
 
 
 # Constants that require VM types
-vars().update([(c, cty.in_dll(libsmite, "smite_{}".format(c)).value)
+vars().update([(c, cty.in_dll(libmit, "mit_{}".format(c)).value)
                for (c, cty) in [
                        ("word_mask", c_uword),
                        ("uword_max", c_uword),
@@ -110,69 +110,69 @@ malloc_error = errcheck({
     1: "memory allocation error",
 })
 
-# smite.h
-libsmite.smite_load.argtypes = [c_void_p, c_uword, c_uint, POINTER(c_word)]
-libsmite.smite_load.errcheck = execution_error
-libsmite.smite_store.argtypes = [c_void_p, c_uword, c_uint, c_word]
-libsmite.smite_store.errcheck = execution_error
+# mit.h
+libmit.mit_load.argtypes = [c_void_p, c_uword, c_uint, POINTER(c_word)]
+libmit.mit_load.errcheck = execution_error
+libmit.mit_store.argtypes = [c_void_p, c_uword, c_uint, c_word]
+libmit.mit_store.errcheck = execution_error
 
-libsmite.smite_load_stack.argtypes = [c_void_p, c_uword, POINTER(c_word)]
-libsmite.smite_load_stack.errcheck = execution_error
-libsmite.smite_store_stack.argtypes = [c_void_p, c_uword, c_word]
-libsmite.smite_store_stack.errcheck = execution_error
-libsmite.smite_pop_stack.argtypes = [c_void_p, POINTER(c_word)]
-libsmite.smite_pop_stack.errcheck = execution_error
-libsmite.smite_push_stack.argtypes = [c_void_p, c_word]
-libsmite.smite_push_stack.errcheck = execution_error
+libmit.mit_load_stack.argtypes = [c_void_p, c_uword, POINTER(c_word)]
+libmit.mit_load_stack.errcheck = execution_error
+libmit.mit_store_stack.argtypes = [c_void_p, c_uword, c_word]
+libmit.mit_store_stack.errcheck = execution_error
+libmit.mit_pop_stack.argtypes = [c_void_p, POINTER(c_word)]
+libmit.mit_pop_stack.errcheck = execution_error
+libmit.mit_push_stack.argtypes = [c_void_p, c_word]
+libmit.mit_push_stack.errcheck = execution_error
 
-libsmite.smite_native_address_of_range.restype = POINTER(c_ubyte)
-libsmite.smite_native_address_of_range.argtypes = [c_void_p, c_uword, c_uword]
+libmit.mit_native_address_of_range.restype = POINTER(c_ubyte)
+libmit.mit_native_address_of_range.argtypes = [c_void_p, c_uword, c_uword]
 
-libsmite.smite_run.restype = c_word
-libsmite.smite_run.argtypes = [c_void_p]
-libsmite.smite_run.errcheck = execution_error
+libmit.mit_run.restype = c_word
+libmit.mit_run.argtypes = [c_void_p]
+libmit.mit_run.errcheck = execution_error
 
-libsmite.smite_single_step.restype = c_word
-libsmite.smite_single_step.argtypes = [c_void_p]
-libsmite.smite_single_step.errcheck = execution_error
+libmit.mit_single_step.restype = c_word
+libmit.mit_single_step.argtypes = [c_void_p]
+libmit.mit_single_step.errcheck = execution_error
 
-libsmite.smite_load_object.restype = c_ptrdiff_t
-libsmite.smite_load_object.argtypes = [c_void_p, c_uword, c_int]
-libsmite.smite_load_object.errcheck = errcheck({
+libmit.mit_load_object.restype = c_ptrdiff_t
+libmit.mit_load_object.argtypes = [c_void_p, c_uword, c_int]
+libmit.mit_load_object.errcheck = errcheck({
     -1: "file system error",
     -2: "module invalid",
     -3: "module has wrong ENDISM or WORD_BYTES",
     -4: "address out of range or unaligned, or module too large",
 })
 
-libsmite.smite_save_object.argtypes = [c_void_p, c_uword, c_uword, c_int]
-libsmite.smite_save_object.errcheck = errcheck({
+libmit.mit_save_object.argtypes = [c_void_p, c_uword, c_uword, c_int]
+libmit.mit_save_object.errcheck = errcheck({
     0: None,
     -1: "file system error",
     -2: "address out of range or unaligned",
 })
 
-libsmite.smite_init.restype = c_void_p
-libsmite.smite_init.argtypes = [c_size_t, c_size_t]
+libmit.mit_init.restype = c_void_p
+libmit.mit_init.argtypes = [c_size_t, c_size_t]
 
-libsmite.smite_realloc_memory.argtypes = [c_void_p, c_int]
-libsmite.smite_realloc_memory.errcheck = malloc_error
+libmit.mit_realloc_memory.argtypes = [c_void_p, c_int]
+libmit.mit_realloc_memory.errcheck = malloc_error
 
-libsmite.smite_realloc_stack.argtypes = [c_void_p, c_int]
-libsmite.smite_realloc_stack.errcheck = malloc_error
+libmit.mit_realloc_stack.argtypes = [c_void_p, c_int]
+libmit.mit_realloc_stack.errcheck = malloc_error
 
-libsmite.smite_destroy.restype = None
-libsmite.smite_destroy.argtypes = [c_void_p]
+libmit.mit_destroy.restype = None
+libmit.mit_destroy.argtypes = [c_void_p]
 
-libsmite.smite_register_args.argtypes = [c_void_p, c_int, c_void_p]
+libmit.mit_register_args.argtypes = [c_void_p, c_int, c_void_p]
 
-libsmite.smite_align.restype = c_uword
-libsmite.smite_align.argtypes = [c_uword]
+libmit.mit_align.restype = c_uword
+libmit.mit_align.argtypes = [c_uword]
 
-libsmite.smite_is_aligned.argtypes = [c_uword]
+libmit.mit_is_aligned.argtypes = [c_uword]
 
 def align(addr):
-    return libsmite.smite_align(addr, size_word)
+    return libmit.mit_align(addr, size_word)
 
 def is_aligned(addr):
-    return libsmite.smite_is_aligned(addr, size_word)
+    return libmit.mit_is_aligned(addr, size_word)

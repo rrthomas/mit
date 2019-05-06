@@ -1,6 +1,6 @@
 # EXT instruction.
 #
-# (c) SMite authors 1994-2019
+# (c) Mit authors 1994-2019
 #
 # The package is distributed under the MIT/X11 License.
 #
@@ -26,7 +26,7 @@ includes = '''\
 #include <string.h>
 #include "binary-io.h"
 
-#include "smite/smite.h"
+#include "mit/mit.h"
 '''
 
 @unique
@@ -44,7 +44,7 @@ class LibcLib(AbstractInstruction):
     ''')
 
     STRLEN = (0x3, ['s:const char *'], ['len'], '''\
-        len = (smite_WORD)(smite_UWORD)strlen(s);
+        len = (mit_WORD)(mit_UWORD)strlen(s);
     ''')
 
     STRNCPY = (0x4, ['dest:char *', 'src:const char *', 'n'], ['ret:char *'], '''\
@@ -52,53 +52,53 @@ class LibcLib(AbstractInstruction):
     ''')
 
     STDIN = (0x5, [], ['fd:int'], '''\
-        fd = (smite_WORD)STDIN_FILENO;
+        fd = (mit_WORD)STDIN_FILENO;
     ''')
 
     STDOUT = (0x6, [], ['fd:int'], '''\
-        fd = (smite_WORD)STDOUT_FILENO;
+        fd = (mit_WORD)STDOUT_FILENO;
     ''')
 
     STDERR = (0x7, [], ['fd:int'], '''\
-        fd = (smite_WORD)STDERR_FILENO;
+        fd = (mit_WORD)STDERR_FILENO;
     ''')
 
     O_RDONLY = (0x8, [], ['flag'], '''\
-        flag = (smite_WORD)O_RDONLY;
+        flag = (mit_WORD)O_RDONLY;
     ''')
 
     O_WRONLY = (0x9, [], ['flag'], '''\
-        flag = (smite_WORD)O_WRONLY;
+        flag = (mit_WORD)O_WRONLY;
     ''')
 
     O_RDWR = (0xa, [], ['flag'], '''\
-        flag = (smite_WORD)O_RDWR;
+        flag = (mit_WORD)O_RDWR;
     ''')
 
     O_CREAT = (0xb, [], ['flag'], '''\
-        flag = (smite_WORD)O_CREAT;
+        flag = (mit_WORD)O_CREAT;
     ''')
 
     O_TRUNC = (0xc, [], ['flag'], '''\
-        flag = (smite_WORD)O_TRUNC;
+        flag = (mit_WORD)O_TRUNC;
     ''')
 
     OPEN = (0xd, ['str', 'flags'], ['fd:int'], '''\
         {
-            char *s = (char *)smite_native_address_of_range(S, str, 0);
+            char *s = (char *)mit_native_address_of_range(S, str, 0);
             fd = s ? open(s, flags, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH) : -1;
             set_binary_mode(fd, O_BINARY); // Best effort
         }
     ''')
 
     CLOSE = (0xe, ['fd:int'], ['ret:int'], '''\
-        ret = (smite_WORD)close(fd);
+        ret = (mit_WORD)close(fd);
     ''')
 
     READ = (0xf, ['buf', 'nbytes', 'fd:int'], ['nread:int'], '''\
         {
             nread = -1;
-            uint8_t *ptr = smite_native_address_of_range(S, buf, nbytes);
+            uint8_t *ptr = mit_native_address_of_range(S, buf, nbytes);
             if (ptr)
                 nread = read(fd, ptr, nbytes);
         }
@@ -107,22 +107,22 @@ class LibcLib(AbstractInstruction):
     WRITE = (0x10, ['buf', 'nbytes', 'fd:int'], ['nwritten'], '''\
         {
             nwritten = -1;
-            uint8_t *ptr = smite_native_address_of_range(S, buf, nbytes);
+            uint8_t *ptr = mit_native_address_of_range(S, buf, nbytes);
             if (ptr)
                 nwritten = write(fd, ptr, nbytes);
         }
     ''')
 
     SEEK_SET = (0x11, [], ['whence'], '''\
-        whence = (smite_WORD)SEEK_SET;
+        whence = (mit_WORD)SEEK_SET;
     ''')
 
     SEEK_CUR = (0x12, [], ['whence'], '''\
-        whence = (smite_WORD)SEEK_CUR;
+        whence = (mit_WORD)SEEK_CUR;
     ''')
 
     SEEK_END = (0x13, [], ['whence'], '''\
-        whence = (smite_WORD)SEEK_END;
+        whence = (mit_WORD)SEEK_END;
     ''')
 
     LSEEK = (0x14, ['fd:int', 'offset:off_t', 'whence'], ['pos:off_t'], '''\
@@ -135,19 +135,19 @@ class LibcLib(AbstractInstruction):
 
     RENAME = (0x16, ['old_name', 'new_name'], ['ret:int'], '''\
         {
-            char *s1 = (char *)smite_native_address_of_range(S, old_name, 0);
-            char *s2 = (char *)smite_native_address_of_range(S, new_name, 0);
+            char *s1 = (char *)mit_native_address_of_range(S, old_name, 0);
+            char *s2 = (char *)mit_native_address_of_range(S, new_name, 0);
             if (s1 == NULL || s2 == NULL)
-                RAISE(SMITE_ERR_MEMORY_READ);
+                RAISE(MIT_ERR_MEMORY_READ);
             ret = rename(s1, s2);
         }
     ''')
 
     REMOVE = (0x17, ['name'], ['ret:int'], '''\
         {
-            char *s = (char *)smite_native_address_of_range(S, name, 0);
+            char *s = (char *)mit_native_address_of_range(S, name, 0);
             if (s == NULL)
-                RAISE(SMITE_ERR_MEMORY_READ);
+                RAISE(MIT_ERR_MEMORY_READ);
             ret = remove(s);
         }
     ''')
@@ -173,88 +173,88 @@ class LibcLib(AbstractInstruction):
         }
     ''')
 
-smite_lib = {
-    'CURRENT_STATE': (0x0, [], ['state:smite_state *'], '''\
+mit_lib = {
+    'CURRENT_STATE': (0x0, [], ['state:mit_state *'], '''\
         state = S;
     '''),
 
-    'NATIVE_ADDRESS_OF_RANGE': (0x1, ['addr', 'len', 'inner_state:smite_state *'], ['ptr:uint8_t *'], '''\
-        ptr = smite_native_address_of_range(inner_state, addr, len);
+    'NATIVE_ADDRESS_OF_RANGE': (0x1, ['addr', 'len', 'inner_state:mit_state *'], ['ptr:uint8_t *'], '''\
+        ptr = mit_native_address_of_range(inner_state, addr, len);
     '''),
 
-    'LOAD': (0x2, ['addr', 'size', 'inner_state:smite_state *'], ['value', 'ret:int'], '''\
+    'LOAD': (0x2, ['addr', 'size', 'inner_state:mit_state *'], ['value', 'ret:int'], '''\
         value = 0;
         ret = load(inner_state, addr, size, &value);
     '''),
 
-    'STORE': (0x3, ['value', 'addr', 'size', 'inner_state:smite_state *'], ['ret:int'], '''\
+    'STORE': (0x3, ['value', 'addr', 'size', 'inner_state:mit_state *'], ['ret:int'], '''\
         ret = store(inner_state, addr, size, value);
     '''),
 
-    'INIT': (0x4, ['memory_size', 'stack_size'], ['new_state:smite_state *'], '''\
-        new_state = smite_init((size_t)memory_size, (size_t)stack_size);
+    'INIT': (0x4, ['memory_size', 'stack_size'], ['new_state:mit_state *'], '''\
+        new_state = mit_init((size_t)memory_size, (size_t)stack_size);
     '''),
 
-    'REALLOC_MEMORY': (0x5, ['u', 'inner_state:smite_state *'], ['ret:int'], '''\
-        ret = smite_realloc_memory(inner_state, (size_t)u);
+    'REALLOC_MEMORY': (0x5, ['u', 'inner_state:mit_state *'], ['ret:int'], '''\
+        ret = mit_realloc_memory(inner_state, (size_t)u);
     '''),
 
-    'REALLOC_STACK': (0x6, ['u', 'inner_state:smite_state *'], ['ret:int'], '''\
-        ret = smite_realloc_stack(inner_state, (size_t)u);
+    'REALLOC_STACK': (0x6, ['u', 'inner_state:mit_state *'], ['ret:int'], '''\
+        ret = mit_realloc_stack(inner_state, (size_t)u);
     '''),
 
-    'DESTROY': (0x7, ['inner_state:smite_state *'], [], '''\
-        smite_destroy(inner_state);
+    'DESTROY': (0x7, ['inner_state:mit_state *'], [], '''\
+        mit_destroy(inner_state);
     '''),
 
-    'RUN': (0x8, ['inner_state:smite_state *'], ['ret'], '''\
-        ret = smite_run(inner_state);
+    'RUN': (0x8, ['inner_state:mit_state *'], ['ret'], '''\
+        ret = mit_run(inner_state);
     '''),
 
-    'SINGLE_STEP': (0x9, ['inner_state:smite_state *'], ['ret'], '''\
-        ret = smite_single_step(inner_state);
+    'SINGLE_STEP': (0x9, ['inner_state:mit_state *'], ['ret'], '''\
+        ret = mit_single_step(inner_state);
     '''),
 
-    'LOAD_OBJECT': (0xa, ['fd:int', 'addr', 'inner_state:smite_state *'], ['ret:int'], '''\
-        ret = smite_load_object(inner_state, addr, fd);
+    'LOAD_OBJECT': (0xa, ['fd:int', 'addr', 'inner_state:mit_state *'], ['ret:int'], '''\
+        ret = mit_load_object(inner_state, addr, fd);
     '''),
 
-    'SAVE_OBJECT': (0xb, ['fd:int', 'addr', 'len', 'inner_state:smite_state *'], ['ret:int'], '''\
-        ret = smite_save_object(inner_state, addr, len, fd);
+    'SAVE_OBJECT': (0xb, ['fd:int', 'addr', 'len', 'inner_state:mit_state *'], ['ret:int'], '''\
+        ret = mit_save_object(inner_state, addr, len, fd);
     '''),
 
-    'REGISTER_ARGS': (0xc, ['argv:char **', 'argc:int', 'inner_state:smite_state *'], ['ret:int'], '''\
-        ret = smite_register_args(inner_state, argc, argv);
+    'REGISTER_ARGS': (0xc, ['argv:char **', 'argc:int', 'inner_state:mit_state *'], ['ret:int'], '''\
+        ret = mit_register_args(inner_state, argc, argv);
     '''),
 }
 
 for register in Register:
-    smite_lib['GET_{}'.format(register.name.upper())] = (
-        len(smite_lib), None, None, '''\
-    smite_state *inner_state;
-    POP_STACK_TYPE(S, smite_state *, &inner_state);
-    push_stack(S, smite_get_{}(inner_state));
+    mit_lib['GET_{}'.format(register.name.upper())] = (
+        len(mit_lib), None, None, '''\
+    mit_state *inner_state;
+    POP_STACK_TYPE(S, mit_state *, &inner_state);
+    push_stack(S, mit_get_{}(inner_state));
 '''.format(register.name))
     if not register.read_only:
-        smite_lib['SET_{}'.format(register.name.upper())] = (
-            len(smite_lib), None, None, '''\
-    smite_state *inner_state;
-    POP_STACK_TYPE(S, smite_state *, &inner_state);
-    smite_WORD value;
+        mit_lib['SET_{}'.format(register.name.upper())] = (
+            len(mit_lib), None, None, '''\
+    mit_state *inner_state;
+    POP_STACK_TYPE(S, mit_state *, &inner_state);
+    mit_WORD value;
     int ret = pop_stack(S, &value);
     if (ret != 0)
         RAISE(ret);
-    smite_set_{}(inner_state, value);
+    mit_set_{}(inner_state, value);
 '''.format(register.name))
 
-SMiteLib = AbstractInstruction('SMiteLib', smite_lib)
+MitLib = AbstractInstruction('MitLib', mit_lib)
 
 class Library(AbstractInstruction):
     '''Wrap an Instruction enumeration as a library.'''
     def __init__(self, opcode, library):
         super().__init__(opcode, None, None, '''\
 {{
-    smite_WORD function;
+    mit_WORD function;
     int ret = pop_stack(S, &function);
     if (ret != 0)
         RAISE(ret);
@@ -267,7 +267,7 @@ class Library(AbstractInstruction):
     @staticmethod
     def _item_type(name_and_type):
         l = name_and_type.split(':')
-        return l[1] if len(l) > 1 else 'smite_WORD'
+        return l[1] if len(l) > 1 else 'mit_WORD'
 
     def types(self):
         '''Return a list of all types used in the library.'''
@@ -282,7 +282,7 @@ class Library(AbstractInstruction):
 @unique
 class LibInstruction(Library):
     '''VM instruction instructions to access external libraries.'''
-    LIB_SMITE = (0x00, SMiteLib)
+    LIB_MIT = (0x00, MitLib)
     LIB_C = (0x01, LibcLib)
 
 # Inject name into each library's code

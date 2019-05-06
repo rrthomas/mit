@@ -1,6 +1,6 @@
 # Docs Makefile.am
 #
-# (c) SMite authors 2011-2019
+# (c) Mit authors 2011-2019
 #
 # The package is distributed under the MIT/X11 License.
 #

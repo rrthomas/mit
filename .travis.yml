@@ -54,7 +54,7 @@ matrix:
       - ENDISM=1
       - WORD_BYTES=8
     - env:
-      - CPPFLAGS="-DSMITE_INSTRUCTION_BIT=6"
+      - CPPFLAGS="-DMIT_INSTRUCTION_BIT=6"
 
 
 before_install:

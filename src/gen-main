@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # Generate front-end.
 #
-# Copyright (c) 1995-2019 SMite authors
+# Copyright (c) 1995-2019 Mit authors
 #
 # The package is distributed under the MIT/X11 License.
 #
@@ -104,7 +104,7 @@ print('''\
 
 #include "progname.h"
 
-#include "smite/smite.h"
+#include "mit/mit.h"
 
 
 static _GL_ATTRIBUTE_FORMAT_PRINTF(1, 0) void verror(const char *format, va_list args)
@@ -176,11 +176,11 @@ print('''
     exit(EXIT_SUCCESS);
 }
 
-static smite_state *S;
+static mit_state *S;
 
 static void exit_function(void)
 {
-    smite_destroy(S);
+    mit_destroy(S);
 }''')
 
 for feature in features:
@@ -192,7 +192,7 @@ print('''
 int main(int argc, char *argv[])
 {
     set_program_name(argv[0]);
-    smite_WORD (*run_fn)(smite_state *) = smite_run;
+    mit_WORD (*run_fn)(mit_state *) = mit_run;
 ''')
 
 index = 0
@@ -259,19 +259,19 @@ print('''\
         usage();
 
     // Set up VM
-    S = smite_init(memory_size, stack_size);
+    S = mit_init(memory_size, stack_size);
     if (S == NULL)
         die("could not allocate virtual machine state");
     if (atexit(exit_function) != 0)
         die("could not register atexit handler");
-    if (smite_register_args(S, argc, argv + optind) != 0)
+    if (mit_register_args(S, argc, argv + optind) != 0)
         die("could not register command-line arguments");
 
     // Load object file and report any error
     int fd = open(argv[optind], O_RDONLY);
     if (fd < 0)
         die("cannot not open file %s", argv[optind]);
-    int ret = smite_load_object(S, 0, fd);
+    int ret = mit_load_object(S, 0, fd);
     close(fd);
     const char *err = NULL;
     if (ret < 0)

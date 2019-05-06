@@ -1,6 +1,6 @@
 # Python bindings Makefile.am
 #
-# (c) SMite authors 2019
+# (c) Mit authors 2019
 #
 # The package is distributed under the MIT/X11 License.
 #
@@ -9,15 +9,15 @@
 
 bin_SCRIPTS = @PACKAGE@@PACKAGE_SUFFIX@-dump @PACKAGE@@PACKAGE_SUFFIX@-shell
 man_MANS = @PACKAGE@@PACKAGE_SUFFIX@-dump.1 @PACKAGE@@PACKAGE_SUFFIX@-shell.1
-smite_pkgpythondir = $(pkgpythondir)@PACKAGE_SUFFIX@
-smite_pkgpython_PYTHON =		\
+mit_pkgpythondir = $(pkgpythondir)@PACKAGE_SUFFIX@
+mit_pkgpython_PYTHON =		\
 	@PACKAGE@/__init__.py		\
 	@PACKAGE@/__main__.py		\
 	@PACKAGE@/assembler.py		\
 	@PACKAGE@/vm_data.py		\
 	@PACKAGE@/ext.py		\
 	@PACKAGE@/instruction.py
-nodist_smite_pkgpython_PYTHON = @PACKAGE@/binding.py
+nodist_mit_pkgpython_PYTHON = @PACKAGE@/binding.py
 
 all-local: @PACKAGE@/binding.py
 

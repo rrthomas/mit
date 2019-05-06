@@ -1,6 +1,6 @@
 # Tests Makefile.am
 #
-# (c) SMite authors 2011-2019
+# (c) Mit authors 2011-2019
 #
 # The package is distributed under the MIT/X11 License.
 #
@@ -52,6 +52,6 @@ distclean-local:
 
 EXTRA_DIST = \
 	$(TESTS) \
-	smite_test.py	\
+	mit_test.py	\
 	redirect_stdout.py \
 	hello.correct

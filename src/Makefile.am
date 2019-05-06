@@ -1,6 +1,6 @@
 # Source Makefile.am
 #
-# (c) SMite authors 2011-2019
+# (c) Mit authors 2011-2019
 #
 # The package is distributed under the MIT/X11 License.
 #
@@ -13,18 +13,18 @@ PYTHON_WITH_PATH = export PYTHONPATH=$(top_srcdir)/python:$(top_srcdir)/src:$(to
 lib_LTLIBRARIES = lib@PACKAGE@@PACKAGE_SUFFIX@.la
 C_SRCS = storage.c object.c
 nodist_LIB_SRCS = include/@PACKAGE@/registers.h include/@PACKAGE@/opcodes.h include/@PACKAGE@/ext-opcodes.h instructions.c ext.c
-LIB_CORE_SRCS = smite_core/instruction.py smite_core/vm_data.py smite_core/ext.py smite_core/instruction_gen.py
+LIB_CORE_SRCS = mit_core/instruction.py mit_core/vm_data.py mit_core/ext.py mit_core/instruction_gen.py
 nodist_lib@PACKAGE@@PACKAGE_SUFFIX@_la_SOURCES = $(C_SRCS) $(nodist_LIB_SRCS)
 lib@PACKAGE@@PACKAGE_SUFFIX@_la_LIBADD = $(top_builddir)/lib/libgnu.la
-lib@PACKAGE@@PACKAGE_SUFFIX@_la_LDFLAGS = -no-undefined -export-symbols-regex '^smite_.*'
+lib@PACKAGE@@PACKAGE_SUFFIX@_la_LDFLAGS = -no-undefined -export-symbols-regex '^mit_.*'
 
 bin_PROGRAMS = @PACKAGE@@PACKAGE_SUFFIX@$(EXEEXT)
 man_MANS = @PACKAGE@@PACKAGE_SUFFIX@.1
 @PACKAGE@@PACKAGE_SUFFIX@_LDADD = lib@PACKAGE@@PACKAGE_SUFFIX@.la $(top_builddir)/lib/libgnu.la
 nodist_@PACKAGE@@PACKAGE_SUFFIX@_SOURCES = main.c
-smite_pkgincludedir = $(pkgincludedir)@PACKAGE_SUFFIX@
-nodist_smite_pkginclude_HEADERS = include/@PACKAGE@/opcodes.h include/@PACKAGE@/ext-opcodes.h include/@PACKAGE@/registers.h
-smite_pkginclude_HEADERS = include/@PACKAGE@/@PACKAGE@.h
+mit_pkgincludedir = $(pkgincludedir)@PACKAGE_SUFFIX@
+nodist_mit_pkginclude_HEADERS = include/@PACKAGE@/opcodes.h include/@PACKAGE@/ext-opcodes.h include/@PACKAGE@/registers.h
+mit_pkginclude_HEADERS = include/@PACKAGE@/@PACKAGE@.h
 
 step.lo: instructions.c
 object.lo step.lo storage.lo main.o: include/@PACKAGE@/registers.h include/@PACKAGE@/opcodes.h include/@PACKAGE@/ext-opcodes.h
@@ -53,32 +53,32 @@ include/@PACKAGE@/registers.h: include/@PACKAGE@@PACKAGE_SUFFIX@
 include/@PACKAGE@@PACKAGE_SUFFIX@:
 	cd include && if test ! -e @PACKAGE@@PACKAGE_SUFFIX@; then $(LN_S) @PACKAGE@ @PACKAGE@@PACKAGE_SUFFIX@; fi
 
-include/@PACKAGE@/registers.h: gen-registers smite_core/vm_data.py smite_core/instruction.py
+include/@PACKAGE@/registers.h: gen-registers mit_core/vm_data.py mit_core/instruction.py
 	$(MKDIR_P) include/@PACKAGE@
 	$(PYTHON_WITH_PATH) $(srcdir)/gen-registers > include/@PACKAGE@/registers.h || ( rm -f include/@PACKAGE@/registers.h; exit 1 )
 
-include/@PACKAGE@/ext-opcodes.h: gen-ext-opcodes smite_core/ext.py smite_core/instruction.py
+include/@PACKAGE@/ext-opcodes.h: gen-ext-opcodes mit_core/ext.py mit_core/instruction.py
 	$(MKDIR_P) include/@PACKAGE@
 	$(PYTHON_WITH_PATH) $(srcdir)/gen-ext-opcodes > include/@PACKAGE@/ext-opcodes.h || ( rm -f include/@PACKAGE@/ext-opcodes.h; exit 1 )
 
-include/@PACKAGE@/opcodes.h: gen-opcodes smite_core/vm_data.py smite_core/instruction.py
+include/@PACKAGE@/opcodes.h: gen-opcodes mit_core/vm_data.py mit_core/instruction.py
 	$(MKDIR_P) include/@PACKAGE@
 	$(PYTHON_WITH_PATH) $(srcdir)/gen-opcodes > include/@PACKAGE@/opcodes.h || ( rm -f include/@PACKAGE@/opcodes.h; exit 1 )
 
-instructions.c: gen-instructions smite_core/vm_data.py smite_core/instruction.py smite_core/instruction_gen.py smite_core/type_sizes.py
+instructions.c: gen-instructions mit_core/vm_data.py mit_core/instruction.py mit_core/instruction_gen.py mit_core/type_sizes.py
 	$(PYTHON_WITH_PATH) $(srcdir)/gen-instructions > instructions.c || ( rm -f instructions.c; exit 1 )
 
 # Note: we grep config.log because the generated header file has the symbols
 # sorted lexically, and we need the output in the same order as the input.
-smite_core/type_sizes.py: $(top_builddir)/config.status gen-type-sizes collate-type-sizes include/@PACKAGE@/registers.h smite_core/ext.py smite_core/instruction.py
+mit_core/type_sizes.py: $(top_builddir)/config.status gen-type-sizes collate-type-sizes include/@PACKAGE@/registers.h mit_core/ext.py mit_core/instruction.py
 	$(PYTHON_WITH_PATH) $(srcdir)/gen-type-sizes > type-sizes.ac && \
 	autoconf type-sizes.ac > type-sizes && \
 	CONFIG_SITE= CC="$(CC)" CPPFLAGS="$(CPPFLAGS) -I$(builddir) -I$(srcdir) -I$(top_builddir) $(AM_CPPFLAGS)" $(SHELL) type-sizes && \
-	$(MKDIR_P) smite_core && \
+	$(MKDIR_P) mit_core && \
 	$(GREP) "^#define SIZEOF" config.log | cut -d " " -f 3 | \
-		( $(PYTHON_WITH_PATH) $(srcdir)/collate-type-sizes > smite_core/type_sizes.py ) || ( rm -f type-sizes.ac type-sizes smite_core/type_sizes.py; exit 1 )
+		( $(PYTHON_WITH_PATH) $(srcdir)/collate-type-sizes > mit_core/type_sizes.py ) || ( rm -f type-sizes.ac type-sizes mit_core/type_sizes.py; exit 1 )
 
-ext.c: gen-ext smite_core/ext.py smite_core/instruction.py smite_core/instruction_gen.py smite_core/type_sizes.py
+ext.c: gen-ext mit_core/ext.py mit_core/instruction.py mit_core/instruction_gen.py mit_core/type_sizes.py
 	$(PYTHON_WITH_PATH) $(srcdir)/gen-ext > ext.c || ( rm -f ext.c; exit 1 )
 
 main.c: $(srcdir)/feature/*/feature.py gen-main
@@ -104,13 +104,13 @@ EXTRA_DIST = \
 	collate-type-sizes
 
 distclean-local:
-	rm -rf autom4te.cache smite_core/__pycache__
+	rm -rf autom4te.cache mit_core/__pycache__
 
 DISTCLEANFILES = @PACKAGE@@PACKAGE_SUFFIX@.1 \
 	$(nodist_LIB_SRCS) \
 	$(nodist_@PACKAGE@@PACKAGE_SUFFIX@_SOURCES) \
 	include/@PACKAGE@@PACKAGE_SUFFIX@ \
-	type-sizes.ac type-sizes config.log smite_core/type_sizes.py
+	type-sizes.ac type-sizes config.log mit_core/type_sizes.py
 # Ignore built files that are part of the distribution (specifically,
 # @PACKAGE@.1)
 distcleancheck_listfiles = \

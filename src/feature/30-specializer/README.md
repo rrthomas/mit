@@ -8,10 +8,10 @@ Step 1: Trace
 -------------
 
 First, make a trace file for the program you want to run fast. Currently, this
-requires using another version of SMite, e.g. the "master" branch. Run it like
+requires using another version of Mit, e.g. the "master" branch. Run it like
 this:
 
-    $ smite --trace /tmp/myprog.trace myprog [arguments]
+    $ mit --trace /tmp/myprog.trace myprog [arguments]
 
 An empty file is also acceptable as a trace file. Of course it won't make a
 very fast interpreter. However, the option of using an empty trace file is

@@ -68,7 +68,7 @@ stated. Addresses are written in hexadecimal; hex numbers are prefixed with
 
 \section{Introduction}
 
-@PACKAGE_NAME@ is a simple virtual machine for study and experiment. It is a stack machine, based on the more complex register machine~\cite{mite0}.
+@PACKAGE_NAME@ is a simple virtual machine for study and experiment. It is a stack machine, based on the more complex register machine Mite~\cite{mite0}.
 This paper gives a full description of @PACKAGE_NAME@.
 
 @PACKAGE_NAME@ is conceptually (and usually in fact) a library, embedded in other programs; it supports a simple object module format.
@@ -433,7 +433,7 @@ Table~\ref{opcodetable} lists the instruction opcodes in numerical order. Other 
 \label{object}
 
 The object module starts with the ASCII codes of the letters
-``@PACKAGE@'' followed by ASCII NUL (0x00), then the one-byte values of
+``@PACKAGE@'', followed by three zero bytes, then the one-byte values of
 the {\tt ENDISM} and {\tt WORD\_BYTES} registers of the system which saved the module, then a word (of the given endianness and size) containing the number of bytes the code occupies. Then follows the code.
 
 Object modules have a simple structure, as they are only intended for loading an
