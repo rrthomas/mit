@@ -19,12 +19,12 @@ default:
              res, S->PC, S->BAD);
 
         // Ignore errors; best effort only, in the middle of an error exit
-        char file_format[] = "smite-core.%lu";
+        char file_format[] = "mit-core.%lu";
         char file[sizeof(file_format) + sizeof(unsigned long) * CHAR_BIT];
-        sprintf(file, "smite-core.%lu", (unsigned long)getpid());
+        sprintf(file, "mit-core.%lu", (unsigned long)getpid());
         if (file != NULL) {
             if ((fd = creat(file, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH)) >= 0) {
-                (void)smite_save_object(S, 0, S->memory_size, fd);
+                (void)mit_save_object(S, 0, S->memory_size, fd);
                 close(fd);
                 warn("core dumped to %s", file);
             } else

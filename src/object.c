@@ -1,6 +1,6 @@
 // Load and save object files.
 //
-// (c) SMite authors 1995-2019
+// (c) Mit authors 1995-2019
 //
 // The package is distributed under the MIT/X11 License.
 //
@@ -12,12 +12,13 @@
 #include <unistd.h>
 #include <string.h>
 
-#include "smite/smite.h"
+#include "mit/mit.h"
 
 
 #define HEADER_LENGTH 8
+#define HEADER_MAGIC "MIT\0\0"
 
-ptrdiff_t smite_load_object(smite_state *S, smite_UWORD addr, int fd)
+ptrdiff_t mit_load_object(mit_state *S, mit_UWORD addr, int fd)
 {
     // Skip any #! header
     char buf[sizeof("#!") - 1];
@@ -39,29 +40,29 @@ ptrdiff_t smite_load_object(smite_state *S, smite_UWORD addr, int fd)
 
     // Read and check header
     char header[HEADER_LENGTH] = {'\0'};
-    smite_UWORD endism;
-    smite_UWORD _WORD_BYTES;
+    mit_UWORD endism;
+    mit_UWORD _WORD_BYTES;
     memcpy(header, buf, nread);
     if ((res = read(fd, &header[nread], sizeof(header) - nread)) == -1)
         return -1;
     if (res != (ssize_t)(sizeof(header) - nread) ||
-        memcmp(header, PACKAGE_UPPER, sizeof(PACKAGE_UPPER)) ||
-        (endism = header[sizeof(PACKAGE_UPPER)]) > 1)
+        memcmp(header, HEADER_MAGIC, sizeof(HEADER_MAGIC)) ||
+        (endism = header[sizeof(HEADER_MAGIC)]) > 1)
         return -2;
     if (endism != ENDISM ||
-        (_WORD_BYTES = header[sizeof(PACKAGE_UPPER) + 1]) != WORD_BYTES)
+        (_WORD_BYTES = header[sizeof(HEADER_MAGIC) + 1]) != WORD_BYTES)
         return -3;
 
     // Read and check size, and ensure code will fit in memory
-    smite_UWORD len = 0;
+    mit_UWORD len = 0;
     if ((res = read(fd, &len, sizeof(len))) == -1)
         return -1;
     if (ENDISM != HOST_ENDISM)
         len = reverse_endianness(len);
     if (res != sizeof(len))
         return -2;
-    uint8_t *ptr = smite_native_address_of_range(S, addr, len);
-    if (ptr == NULL || !is_aligned(addr, smite_SIZE_WORD))
+    uint8_t *ptr = mit_native_address_of_range(S, addr, len);
+    if (ptr == NULL || !is_aligned(addr, mit_SIZE_WORD))
         return -4;
 
     // Read code
@@ -73,17 +74,17 @@ ptrdiff_t smite_load_object(smite_state *S, smite_UWORD addr, int fd)
     return (ssize_t)len;
 }
 
-int smite_save_object(smite_state *S, smite_UWORD addr, smite_UWORD len, int fd)
+int mit_save_object(mit_state *S, mit_UWORD addr, mit_UWORD len, int fd)
 {
-    uint8_t *ptr = smite_native_address_of_range(S, addr, len);
-    if (!is_aligned(addr, smite_SIZE_WORD) || ptr == NULL)
+    uint8_t *ptr = mit_native_address_of_range(S, addr, len);
+    if (!is_aligned(addr, mit_SIZE_WORD) || ptr == NULL)
         return -2;
 
-    smite_BYTE buf[HEADER_LENGTH] = PACKAGE_UPPER;
-    buf[sizeof(PACKAGE_UPPER)] = ENDISM;
-    buf[sizeof(PACKAGE_UPPER) + 1] = WORD_BYTES;
+    mit_BYTE buf[HEADER_LENGTH] = HEADER_MAGIC;
+    buf[sizeof(HEADER_MAGIC)] = ENDISM;
+    buf[sizeof(HEADER_MAGIC) + 1] = WORD_BYTES;
 
-    smite_UWORD len_save = len;
+    mit_UWORD len_save = len;
     if (ENDISM != HOST_ENDISM)
         len_save = reverse_endianness(len_save);
 

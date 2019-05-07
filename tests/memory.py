@@ -1,15 +1,15 @@
 # Test the memory operators. Also uses previously tested instructions.
 # See errors.py for address error handling tests.
 #
-# (c) SMite authors 1994-2019
+# (c) Mit authors 1994-2019
 #
 # The package is distributed under the MIT/X11 License.
 #
 # THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 # RISK.
 
-from smite import *
-from smite_test import *
+from mit import *
+from mit_test import *
 size = 4096
 VM = State(size)
 VM.globalize(globals())

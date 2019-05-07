@@ -6,6 +6,4 @@
 *.log
 *.out
 *.synctex.gz
-/smite.tex
-/csmite.tex
 /primes

@@ -1,7 +1,7 @@
 '''
 Class for instructions.
 
-Copyright (c) 2009-2019 SMite authors
+Copyright (c) 2009-2019 Mit authors
 
 The package is distributed under the MIT/X11 License.
 

@@ -1,25 +1,25 @@
 #!/usr/bin/env python3
 # Generate code for extra instructions.
 #
-# (c) SMite authors 1994-2019
+# (c) Mit authors 1994-2019
 #
 # The package is distributed under the MIT/X11 License.
 #
 # THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 # RISK.
 
-from smite_core.ext import *
-from smite_core.instruction_gen import *
+from mit_core.ext import *
+from mit_core.instruction_gen import *
 
 # Write the output file
 print(includes)
 
 print('''
-#include "smite/ext-opcodes.h"
+#include "mit/ext-opcodes.h"
 
 enum {
-    SMITE_ERR_EXT_INVALID_LIBRARY = 16,
-    SMITE_ERR_EXT_INVALID_FUNCTION = 17,
+    MIT_ERR_EXT_INVALID_LIBRARY = 16,
+    MIT_ERR_EXT_INVALID_FUNCTION = 17,
 };
 
 #define RAISE(code)                         \\
@@ -28,21 +28,21 @@ enum {
 
 for lib in LibInstruction:
     print('''\
-static int extra_{}(smite_state *S, smite_WORD opcode)
+static int extra_{}(mit_state *S, mit_WORD opcode)
 {{'''.format(str.lower(lib.name)))
     print(dispatch(
         lib.library,
         '{}_'.format(lib.name),
-        '            RAISE(SMITE_ERR_EXT_INVALID_FUNCTION);'))
+        '            RAISE(MIT_ERR_EXT_INVALID_FUNCTION);'))
     print('''
-    return SMITE_ERR_OK;
+    return MIT_ERR_OK;
 }
 ''')
 
 print('''
-int smite_ext(smite_state *S)
+int mit_ext(mit_state *S)
 {
-    smite_WORD opcode;
+    mit_WORD opcode;
     {
         int ret = pop_stack(S, &opcode);
         if (ret != 0)
@@ -53,9 +53,9 @@ int smite_ext(smite_state *S)
 print(dispatch(
     LibInstruction,
     '',
-    '\n            return SMITE_ERR_EXT_INVALID_LIBRARY;',
+    '\n            return MIT_ERR_EXT_INVALID_LIBRARY;',
 ))
 
 print('''
-    return SMITE_ERR_OK;
+    return MIT_ERR_OK;
 }''')

@@ -1,6 +1,6 @@
 # Top-level Makefile.am
 #
-# (c) SMite authors 2011-2018
+# (c) Mit authors 2011-2018
 #
 # The package is distributed under the MIT/X11 License.
 #

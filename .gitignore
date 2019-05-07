@@ -1,6 +1,6 @@
 *~
 /.gitmodules
-/smite*.tar.gz
+/mit*.tar.gz
 Makefile
 Makefile.in
 TAGS

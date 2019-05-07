@@ -1,6 +1,6 @@
 # Test load_object().
 #
-# (c) SMite authors 1995-2019
+# (c) Mit authors 1995-2019
 #
 # The package is distributed under the MIT/X11 License.
 #
@@ -9,7 +9,7 @@
 
 import os.path
 
-from smite import *
+from mit import *
 VM = State()
 VM.globalize(globals())
 
@@ -42,7 +42,7 @@ def object_file(word_bytes=word_bytes):
     '''
     Generate a dummy object file containing the single word 0102..{word_bytes}.
     '''
-    return bytearray(b'SMITE\0' + bytes([endism]) + bytes([word_bytes]) +
+    return bytearray(b'MIT\0\0\0' + bytes([endism]) + bytes([word_bytes]) +
                      word_to_bytes(word_bytes) + word_to_bytes(test_word()))
 
 test_file_name = 'testobj'
@@ -113,7 +113,7 @@ load_test(object_file())
 
 # File with #! line
 test += 1
-load_test(obj = b'#!/usr/bin/smite\n' + object_file())
+load_test(obj = b'#!/usr/bin/mit\n' + object_file())
 
 
 # Test ability to load & run saved file with assembler-generated contents

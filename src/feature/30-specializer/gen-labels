@@ -2,7 +2,7 @@
 
 import sys, pickle
 
-from smite_core.vm_data import Instruction
+from mit_core.vm_data import Instruction
 
 if len(sys.argv) != 3:
     print("Usage: gen-labels PREDICTOR-FILENAME LABELS-FILENAME", file=sys.stderr)

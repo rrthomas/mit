@@ -1,7 +1,7 @@
 '''
 Generate code for instructions.
 
-Copyright (c) 2009-2019 SMite authors
+Copyright (c) 2009-2019 Mit authors
 
 The package is distributed under the MIT/X11 License.
 
@@ -13,8 +13,8 @@ The main entry point is dispatch().
 
 import re, textwrap
 
-from smite_core.type_sizes import type_sizes
-from smite_core.instruction_gen import (
+from mit_core.type_sizes import type_sizes
+from mit_core.instruction_gen import (
     Size, StackItem, StackPicture, StackEffect)
 
 
@@ -44,9 +44,9 @@ class CacheState:
         '''
         if num_pops <= self.depth: return ''
         return '''\
-if ((S->STACK_DEPTH < (smite_UWORD)({num_pops}))) {{
+if ((S->STACK_DEPTH < (mit_UWORD)({num_pops}))) {{
     S->BAD = {num_pops} - 1;
-    RAISE(SMITE_ERR_STACK_READ);
+    RAISE(MIT_ERR_STACK_READ);
 }}'''.format(num_pops=num_pops)
 
     def check_overflow(self, num_pops, num_pushes):
@@ -60,9 +60,9 @@ if ((S->STACK_DEPTH < (smite_UWORD)({num_pops}))) {{
         depth_change = num_pushes - num_pops
         if depth_change <= 0: return ''
         return '''\
-if (((S->stack_size - S->STACK_DEPTH) < (smite_UWORD)({depth_change}))) {{
+if (((S->stack_size - S->STACK_DEPTH) < (mit_UWORD)({depth_change}))) {{
     S->BAD = ({depth_change}) - (S->stack_size - S->STACK_DEPTH);
-    RAISE(SMITE_ERR_STACK_OVERFLOW);
+    RAISE(MIT_ERR_STACK_OVERFLOW);
 }}'''.format(depth_change=depth_change)
 
     def load(self, item):
@@ -190,7 +190,7 @@ def gen_case(instruction, cache_state, exit_depth):
     '''
     Generate the code for an Instruction.
 
-    In the code, S is the smite_state, and errors are reported by calling
+    In the code, S is the mit_state, and errors are reported by calling
     RAISE(). When calling RAISE(), the C variable `cached_depth` will contain
     the number of stack items cached in C locals.
 

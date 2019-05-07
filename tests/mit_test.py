@@ -1,6 +1,6 @@
-# Helper module for SMite tests.
+# Helper module for Mit tests.
 #
-# (c) SMite authors 1994-2019
+# (c) Mit authors 1994-2019
 #
 # The package is distributed under the MIT/X11 License.
 #
@@ -9,8 +9,8 @@
 
 import sys
 
-from smite.assembler import Disassembler
-from smite.binding import word_bit, uword_max
+from mit.assembler import Disassembler
+from mit.binding import word_bit, uword_max
 
 def cast_to_word(stack):
     return [n if 0 <= n < (1 << (word_bit - 1)) else

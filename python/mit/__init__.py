@@ -1,19 +1,19 @@
 '''
-SMite
+Mit
 
-This module provides SMite bindings for Python 3, and offers a convenient
-set of functions and variables to interact with SMite in a Python REPL.
-Module smite.assembler provides Assembler and Disassembler.
+This module provides Mit bindings for Python 3, and offers a convenient
+set of functions and variables to interact with Mit in a Python REPL.
+Module mit.assembler provides Assembler and Disassembler.
 
-(c) SMite authors 2019
+(c) Mit authors 2019
 
 The package is distributed under the MIT/X11 License.
 
 THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 RISK.
 
-When run as a script (SMite provides 'smite-shell' to do this), the module
-provides a global SMite instance in VM, and defines various globals. See
+When run as a script (Mit provides 'mit-shell' to do this), the module
+provides a global Mit instance in VM, and defines various globals. See
 `globalize()` for details.
 
 Registers: a variable for each register; also a list, 'registers'
@@ -47,7 +47,7 @@ class State:
 
     def __init__(self, memory_size=1024*1024 if word_bytes > 2 else 16*1024, stack_size=1024):
         '''Initialise the VM state.'''
-        self.state = libsmite.smite_init(memory_size, stack_size)
+        self.state = libmit.mit_init(memory_size, stack_size)
         if self.state == None:
             raise Error("error creating virtual machine state")
 
@@ -65,7 +65,7 @@ class State:
         self.stack_size = stack_size
 
     def __del__(self):
-        libsmite.smite_destroy(self.state)
+        libmit.mit_destroy(self.state)
 
     def globalize(self, globals_dict):
         '''
@@ -137,7 +137,7 @@ class State:
                 arg = bytes(arg)
             bargs.append(arg)
         self.argv = arg_strings(*bargs)
-        assert(libsmite.smite_register_args(self.state, argc, self.argv) == 0)
+        assert(libmit.mit_register_args(self.state, argc, self.argv) == 0)
 
     def run(self, args=None):
         '''
@@ -145,10 +145,10 @@ class State:
         '''
         if args == None:
             args = []
-        args.insert(0, b"smite-shell")
+        args.insert(0, b"mit-shell")
         self.register_args(*args)
         try:
-            libsmite.smite_run(self.state)
+            libmit.mit_run(self.state)
         except ErrorCode as e:
             if e.args[0] == 128:
                 # Halt.
@@ -175,10 +175,10 @@ class State:
             while addr is not None or done < n:
                 if auto_NEXT and self.registers["I"].get() == 0:
                     if trace: self._print_trace_info()
-                    ret = libsmite.smite_single_step(self.state)
+                    ret = libmit.mit_single_step(self.state)
                 if self.registers["PC"].get() == addr: break
                 if trace: self._print_trace_info()
-                libsmite.smite_single_step(self.state)
+                libmit.mit_single_step(self.state)
                 done += 1
         except ErrorCode as e:
             ret = e.args[0]
@@ -203,7 +203,7 @@ class State:
         if fd < 0:
             raise Error("cannot open file {}".format(file))
         try:
-            return libsmite.smite_load_object(self.state, addr, fd)
+            return libmit.mit_load_object(self.state, addr, fd)
         finally:
             os.close(fd)
 
@@ -212,7 +212,7 @@ class State:
         Save an object file from the given address and length.
         '''
         assert length is not None
-        ptr = libsmite.smite_native_address_of_range(self.state, address, length)
+        ptr = libmit.mit_native_address_of_range(self.state, address, length)
         if not is_aligned(address) or ptr == None:
             return -1
 
@@ -220,7 +220,7 @@ class State:
         if fd < 0:
             raise Error("cannot open file {}".format(file))
         try:
-            return libsmite.smite_save_object(self.state, address, length, fd)
+            return libmit.mit_save_object(self.state, address, length, fd)
         finally:
             os.close(fd)
 
@@ -268,9 +268,9 @@ class State:
 
 # Registers
 type_equivalents = {
-    "smite_WORD": c_word,
-    "smite_UWORD": c_uword,
-    "smite_WORDP": POINTER(c_word),
+    "mit_WORD": c_word,
+    "mit_UWORD": c_uword,
+    "mit_WORDP": POINTER(c_word),
 }
 class ActiveRegister:
     '''A VM register.'''
@@ -278,11 +278,11 @@ class ActiveRegister:
         self.state = state
         self.register = register
         self.name = name
-        self.getter = libsmite["smite_get_{}".format(name)]
+        self.getter = libmit["mit_get_{}".format(name)]
         self.getter.restype = type_equivalents[register.ty]
         self.getter.argtypes = [c_void_p]
         if not register.read_only:
-            self.setter = libsmite["smite_set_{}".format(name)]
+            self.setter = libmit["mit_set_{}".format(name)]
             self.setter.restype = None
             self.setter.argtypes = [c_void_p, type_equivalents[register.ty]]
 
@@ -312,18 +312,18 @@ class Stack:
         l = []
         for i in range(self.depth.get(), 0, -1):
             v = c_word()
-            libsmite.smite_load_stack(self.state, i - 1, byref(v))
+            libmit.mit_load_stack(self.state, i - 1, byref(v))
             l.append(v.value)
         return str(l)
 
     def push(self, v):
         '''Push a word on to the stack.'''
-        ret = libsmite.smite_push_stack(self.state, v)
+        ret = libmit.mit_push_stack(self.state, v)
 
     def pop(self):
         '''Pop a word off the stack.'''
         v = c_word()
-        ret = libsmite.smite_pop_stack(self.state, byref(v))
+        ret = libmit.mit_pop_stack(self.state, byref(v))
         return v.value
 
 
@@ -372,11 +372,11 @@ class Memory(AbstractMemory):
     '''A VM memory (byte-accessed).'''
     def load(self, index):
         word = c_word()
-        libsmite.smite_load(self.VM.state, index, 0, byref(word))
+        libmit.mit_load(self.VM.state, index, 0, byref(word))
         return word.value
 
     def store(self, index, value):
-        libsmite.smite_store(self.VM.state, index, 0, c_word(value))
+        libmit.mit_store(self.VM.state, index, 0, c_word(value))
 
 class WordMemory(AbstractMemory):
     '''A VM memory (word-accessed).'''
@@ -386,8 +386,8 @@ class WordMemory(AbstractMemory):
 
     def load(self, index):
         word = c_word()
-        libsmite.smite_load(self.VM.state, index, size_word, byref(word))
+        libmit.mit_load(self.VM.state, index, size_word, byref(word))
         return word.value
 
     def store(self, index, value):
-        libsmite.smite_store(self.VM.state, index, size_word, c_word(value))
+        libmit.mit_store(self.VM.state, index, size_word, c_word(value))

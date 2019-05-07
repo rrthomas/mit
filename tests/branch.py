@@ -4,14 +4,14 @@
 # The test program contains an infinite loop, but this is only executed
 # once.
 #
-# (c) SMite authors 1994-2019
+# (c) Mit authors 1994-2019
 #
 # The package is distributed under the MIT/X11 License.
 #
 # THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 # RISK.
 
-from smite import *
+from mit import *
 VM = State(16384)
 VM.globalize(globals())
 

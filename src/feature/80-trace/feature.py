@@ -6,12 +6,12 @@ Option('trace',
 #include <stdio.h>
 
 FILE *trace_fp = NULL;
-static smite_WORD trace_run(smite_state *state)
+static mit_WORD trace_run(mit_state *state)
 {
     int ret = 0;
     do {
-        fprintf(trace_fp, "%d\\n", (int)(state->I & SMITE_INSTRUCTION_MASK));
-        ret = smite_single_step(state);
+        fprintf(trace_fp, "%d\\n", (int)(state->I & MIT_INSTRUCTION_MASK));
+        ret = mit_single_step(state);
     } while (ret == 0);
     return ret;
 }''',

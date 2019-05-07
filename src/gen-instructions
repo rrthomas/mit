@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 # Generate code for instructions.
 #
-# (c) SMite authors 1994-2019
+# (c) Mit authors 1994-2019
 #
 # The package is distributed under the MIT/X11 License.
 #
 # THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 # RISK.
 
-from smite_core import vm_data, instruction_gen
+from mit_core import vm_data, instruction_gen
 
-from smite_core.vm_data import Instruction
-from smite_core.instruction_gen import dispatch, gen_case
+from mit_core.vm_data import Instruction
+from mit_core.instruction_gen import dispatch, gen_case
 
 
 # Write the output file
@@ -21,8 +21,8 @@ print('''\
 
 #include "config.h"
 #include <stdio.h>
-#include "smite/smite.h"
-#include "smite/opcodes.h"
+#include "mit/mit.h"
+#include "mit/opcodes.h"
 
 #define RAISE(code)                                           \\
     do {                                                      \\
@@ -35,41 +35,41 @@ print('''\
 #define NEXT                                                  \\
     do {                                                      \\
         if (S->I != 0)                                        \\
-            RAISE(SMITE_ERR_INVALID_OPCODE);                  \\
-        int ret = load(S, S->PC, smite_SIZE_WORD, (smite_WORD *)&(S->I)); \\
+            RAISE(MIT_ERR_INVALID_OPCODE);                  \\
+        int ret = load(S, S->PC, mit_SIZE_WORD, (mit_WORD *)&(S->I)); \\
         if (ret != 0)                                         \\
             RAISE(ret);                                       \\
         S->PC += WORD_BYTES;                                  \\
     } while (0)
 
-smite_WORD smite_single_step(smite_state *S) {
-    smite_UWORD initial_PC = S->PC;
-    smite_UWORD initial_I = S->I;
-    smite_BYTE opcode = S->I & SMITE_INSTRUCTION_MASK;
-    S->I >>= SMITE_INSTRUCTION_BIT;
+mit_WORD mit_single_step(mit_state *S) {
+    mit_UWORD initial_PC = S->PC;
+    mit_UWORD initial_I = S->I;
+    mit_BYTE opcode = S->I & MIT_INSTRUCTION_MASK;
+    S->I >>= MIT_INSTRUCTION_BIT;
 
     // Check STACK_DEPTH is valid
     if (S->STACK_DEPTH > S->stack_size) {
         S->BAD = S->STACK_DEPTH - S->stack_size;
-        RAISE(SMITE_ERR_STACK_OVERFLOW);
+        RAISE(MIT_ERR_STACK_OVERFLOW);
     }
 ''')
 
 print(dispatch(Instruction, 'O_', '''\
         /* Undefined instruction. */
-        RAISE(SMITE_ERR_INVALID_OPCODE);
+        RAISE(MIT_ERR_INVALID_OPCODE);
 '''))
 
 print('''
 
-    return SMITE_ERR_OK;
+    return MIT_ERR_OK;
 }
 
 
-smite_WORD smite_run(smite_state *S)
+mit_WORD mit_run(mit_state *S)
 {
-    smite_WORD ret;
-    while ((ret = smite_single_step(S)) == 0)
+    mit_WORD ret;
+    while ((ret = mit_single_step(S)) == 0)
         ;
     return ret;
 }''')

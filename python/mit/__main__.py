@@ -1,7 +1,7 @@
 '''
-Python shell for SMite.
+Python shell for Mit.
 
-(c) SMite authors 2019
+(c) Mit authors 2019
 
 The package is distributed under the MIT/X11 License.
 

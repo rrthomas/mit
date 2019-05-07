@@ -2,7 +2,7 @@
 
 import sys, pickle, hashlib
 
-from smite_core.vm_data import Instruction
+from mit_core.vm_data import Instruction
 
 if len(sys.argv) != 3:
     print("Usage: gen-predictor TRACE-FILE PREDICTOR-FILE", file=sys.stderr)

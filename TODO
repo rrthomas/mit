@@ -1,4 +1,4 @@
-See GitHub issues: https://github.com/rrthomas/smite/issues/
+See GitHub issues: https://github.com/rrthomas/mit/issues/
 
 To support object files of the other endism, have a per-memory-area flag that indicates that word loads and stores must be reversed.
 

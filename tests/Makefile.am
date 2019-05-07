@@ -1,6 +1,6 @@
 # Tests Makefile.am
 #
-# (c) SMite authors 2011-2019
+# (c) Mit authors 2011-2019
 #
 # The package is distributed under the MIT/X11 License.
 #
@@ -33,9 +33,9 @@ TESTS =	\
 check_DATA = $(top_builddir)/copied-python-module-to-build
 
 $(top_builddir)/copied-python-module-to-build:
-	if ! test -e $(top_builddir)/python/@PACKAGE@/__init__.py; then \
-	    $(MKDIR_P) $(top_builddir)/python/@PACKAGE@ && \
-	    cp -fL $(top_srcdir)/python/@PACKAGE@/*.py $(top_builddir)/python/@PACKAGE@/ && \
+	if ! test -e $(top_builddir)/python/mit/__init__.py; then \
+	    $(MKDIR_P) $(top_builddir)/python/mit && \
+	    cp -fL $(top_srcdir)/python/mit/*.py $(top_builddir)/python/mit/ && \
 	    touch $@; \
 	fi
 
@@ -48,10 +48,10 @@ TESTS_ENVIRONMENT = \
 DISTCLEANFILES = $(top_builddir)/copied-python-module-to-build
 
 distclean-local:
-	rm -rf $(top_builddir)/python/@PACKAGE@/*.py $(top_builddir)/python/@PACKAGE@/__pycache__
+	rm -rf $(top_builddir)/python/mit/*.py $(top_builddir)/python/mit/__pycache__
 
 EXTRA_DIST = \
 	$(TESTS) \
-	smite_test.py	\
+	mit_test.py	\
 	redirect_stdout.py \
 	hello.correct

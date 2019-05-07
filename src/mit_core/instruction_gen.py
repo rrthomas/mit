@@ -1,7 +1,7 @@
 '''
 Generate code for instructions.
 
-Copyright (c) 2009-2019 SMite authors
+Copyright (c) 2009-2019 Mit authors
 
 The package is distributed under the MIT/X11 License.
 
@@ -111,20 +111,20 @@ class StackItem:
             self.size = Size(0, count=1)
         else:
             self.size = Size((type_sizes[self.type] +
-                              (type_sizes['smite_WORD'] - 1)) //
-                             type_sizes['smite_WORD'])
+                              (type_sizes['mit_WORD'] - 1)) //
+                             type_sizes['mit_WORD'])
         self.depth = None
 
     @staticmethod
     def of(name_and_type):
         '''
         The name is optionally followed by ":TYPE" to give the C type of the
-        underlying quantity; the default is smite_WORD.
+        underlying quantity; the default is mit_WORD.
         '''
         l = name_and_type.split(":")
         return StackItem(
             l[0],
-            l[1] if len(l) > 1 else 'smite_WORD',
+            l[1] if len(l) > 1 else 'mit_WORD',
         )
 
     def __eq__(self, item):
@@ -138,19 +138,19 @@ class StackItem:
     def __hash__(self):
         return hash((self.name, self.type, self.size))
 
-    # Cf. smite.h PUSH/POP_STACK_TYPE macros.
+    # Cf. mit.h PUSH/POP_STACK_TYPE macros.
     def load(self):
         '''
         Returns C source code to load `self` from the stack to its C variable.
         '''
         code = [
-            'size_t temp = (smite_UWORD)(*UNCHECKED_STACK({}));'
+            'size_t temp = (mit_UWORD)(*UNCHECKED_STACK({}));'
             .format(self.depth)
         ]
         for i in range(self.size - 1):
-            code.append('temp <<= smite_WORD_BIT;')
+            code.append('temp <<= mit_WORD_BIT;')
             code.append(
-                'temp |= (smite_UWORD)(*UNCHECKED_STACK({}));'
+                'temp |= (mit_UWORD)(*UNCHECKED_STACK({}));'
                 .format(self.depth + i + 1)
             )
         code.append('{} = ({})temp;'.format(self.name, self.type))
@@ -166,12 +166,12 @@ class StackItem:
         code = ['size_t temp = (size_t){};'.format(self.name)]
         for i in reversed(range(self.size - 1)):
             code.append(
-                '*UNCHECKED_STACK({}) = (smite_UWORD)(temp & smite_WORD_MASK);'
+                '*UNCHECKED_STACK({}) = (mit_UWORD)(temp & mit_WORD_MASK);'
                 .format(self.depth + i + 1)
             )
-            code.append('temp >>= smite_WORD_BIT;')
+            code.append('temp >>= mit_WORD_BIT;')
         code.append(
-            '*UNCHECKED_STACK({}) = (smite_UWORD)(temp & smite_WORD_MASK);'
+            '*UNCHECKED_STACK({}) = (mit_UWORD)(temp & mit_WORD_MASK);'
             .format(self.depth)
         )
         return '''\
@@ -287,9 +287,9 @@ def check_underflow(num_pops):
     '''
     if num_pops <= 0: return ''
     return '''\
-if ((S->STACK_DEPTH < (smite_UWORD)({num_pops}))) {{
+if ((S->STACK_DEPTH < (mit_UWORD)({num_pops}))) {{
     S->BAD = {num_pops} - 1;
-    RAISE(SMITE_ERR_STACK_READ);
+    RAISE(MIT_ERR_STACK_READ);
 }}'''.format(num_pops=num_pops)
 
 def check_overflow(num_pops, num_pushes):
@@ -303,16 +303,16 @@ def check_overflow(num_pops, num_pushes):
     depth_change = num_pushes - num_pops
     if depth_change <= 0: return ''
     return '''\
-if (((S->stack_size - S->STACK_DEPTH) < (smite_UWORD)({depth_change}))) {{
+if (((S->stack_size - S->STACK_DEPTH) < (mit_UWORD)({depth_change}))) {{
     S->BAD = ({depth_change}) - (S->stack_size - S->STACK_DEPTH);
-    RAISE(SMITE_ERR_STACK_OVERFLOW);
+    RAISE(MIT_ERR_STACK_OVERFLOW);
 }}'''.format(depth_change=depth_change)
 
 def gen_case(instruction):
     '''
     Generate the code for an Instruction.
 
-    In the code, S is the smite_state, and errors are reported by calling
+    In the code, S is the mit_state, and errors are reported by calling
     RAISE().
 
      - instruction - Instruction.

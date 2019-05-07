@@ -1,0 +1,19 @@
+.TH mit-dump "1" "July 2018" "Mit" "User Commands"
+.SH NAME
+mit-dump@PACKAGE_SUFFIX@ \- Dump Mit object files as hex and disassembly
+.SH SYNOPSIS
+.B mit-dump@PACKAGE_SUFFIX@
+OBJECT\-FILE
+.SH DESCRIPTION
+Dump the given file, typically \fIfoo.obj\fR, as hex (\fIfoo.hex\fR) and disassembly (\fIfoo.asm\fR).
+.SH "SEE ALSO"
+.BR mit@PACKAGE_SUFFIX@ (1)
+.SH "REPORTING BUGS"
+Report bugs to rrt@sc3d.org.
+.SH "COPYRIGHT"
+\(co Mit authors 1995\-2019
+.br
+Mit comes with ABSOLUTELY NO WARRANTY.
+.br
+You may redistribute copies of Mit
+under the terms of the MIT/X11 License.

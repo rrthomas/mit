@@ -1,4 +1,4 @@
-# SMite: Information for maintainers
+# Mit: Information for maintainers
 
 See `README.md` for instructions on building from git.
 
