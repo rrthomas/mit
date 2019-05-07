@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-import sys, pickle, hashlib
+import sys, pickle, hashlib, gzip
 
 from mit_core.vm_data import Instruction
 
@@ -81,7 +81,7 @@ print("Building a predictor")
 
 def open_trace(trace_filename):
     '''Yields Instructions.'''
-    with open(trace_filename, 'rb') as trace:
+    with gzip.open(trace_filename, 'rb') as trace:
         for line in trace:
             line = line.strip()
             if line in TRACE_NAMES:
