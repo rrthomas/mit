@@ -12,10 +12,10 @@ AM_CPPFLAGS += -I$(builddir)/%D%
 nodist_LIB_SRCS += %D%/specializer.c
 nodist_mit_pkginclude_HEADERS += %D%/mit/specializer.h
 
-%D%/instructions.predictor_pickle: mit_core/instruction.py mit_core/vm_data.py %D%/gen-predictor %D%/instructions.trace.gz %D%/specializer.py
+%D%/instructions.predictor_pickle: mit_core/instruction.py mit_core/vm_data.py %D%/gen-predictor %D%/instructions.trace.gz
 	$(PYTHON_WITH_PATH) $(srcdir)/%D%/gen-predictor $(srcdir)/%D%/instructions.trace.gz $@
 
-%D%/instructions.labels_pickle: mit_core/instruction.py mit_core/vm_data.py %D%/instructions.predictor_pickle %D%/gen-labels %D%/specializer.py
+%D%/instructions.labels_pickle: mit_core/instruction.py mit_core/vm_data.py %D%/instructions.predictor_pickle %D%/gen-labels
 	$(PYTHON_WITH_PATH) $(srcdir)/%D%/gen-labels %D%/instructions.predictor_pickle $@
 
 %D%/specializer.c: mit_core/instruction.py mit_core/vm_data.py mit_core/type_sizes.py mit_core/instruction_gen.py %D%/gen-specializer %D%/instructions.labels_pickle
