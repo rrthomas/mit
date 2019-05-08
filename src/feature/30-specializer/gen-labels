@@ -118,7 +118,7 @@ class Path:
         at least as much about the stack now as we did before the last repeat,
         returns the Path before the last repeat, otherwise returns `self`.
         '''
-        for n in range(1, len(self)//2+1):
+        for n in range(2, len(self)//2+1):
             if self.instructions[-n:] == self.instructions[-2*n:-n]:
                 shorter = self[:-n]
                 if (self.cached_depth >= shorter.cached_depth and
@@ -140,7 +140,7 @@ def walk(path, distribution):
     '''
     # Check for statistical irrelevance (but keep singleton paths).
     estimated_count = sum(distribution)
-    if len(path) > 1 and estimated_count < 1000000.: return
+    if len(path) > 1 and estimated_count < 300000.: return
     # Check for repetition.
     if path in language: return
     # Okay, we'll keep it.
