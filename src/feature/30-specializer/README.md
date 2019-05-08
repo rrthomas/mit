@@ -58,7 +58,7 @@ other ways, if desired, or to distribute them.
 Step 4: Instructions
 --------------------
 
-The script "gen-instructions" reads a labels file and writes out a C source
+The script "gen-specializer" reads a labels file and writes out a C source
 file. Run it like this:
 
-    $ ./gen-instructions my_prog.labels_pickle >instructions.c
+    $ ./gen-specializer my_prog.labels_pickle >instructions.c

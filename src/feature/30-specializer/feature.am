@@ -18,15 +18,15 @@ nodist_mit_pkginclude_HEADERS += %D%/mit/specializer.h
 %D%/instructions.labels_pickle: mit_core/instruction.py mit_core/vm_data.py %D%/instructions.predictor_pickle %D%/gen-labels %D%/specializer.py
 	$(PYTHON_WITH_PATH) $(srcdir)/%D%/gen-labels %D%/instructions.predictor_pickle $@
 
-%D%/specializer.c: mit_core/instruction.py mit_core/vm_data.py mit_core/type_sizes.py mit_core/instruction_gen.py %D%/gen-instructions %D%/instructions.labels_pickle
-	$(PYTHON_WITH_PATH) $(srcdir)/%D%/gen-instructions %D%/instructions.labels_pickle > %D%/specializer.c || ( rm -f %D%/specializer.c; exit 1 )
+%D%/specializer.c: mit_core/instruction.py mit_core/vm_data.py mit_core/type_sizes.py mit_core/instruction_gen.py %D%/gen-specializer %D%/instructions.labels_pickle
+	$(PYTHON_WITH_PATH) $(srcdir)/%D%/gen-specializer %D%/instructions.labels_pickle > %D%/specializer.c || ( rm -f %D%/specializer.c; exit 1 )
 
 EXTRA_DIST += \
 	%D%/feature.py \
 	%D%/specializer.py \
 	%D%/gen-labels \
 	%D%/gen-predictor \
-	%D%/gen-instructions \
+	%D%/gen-specializer \
 	%D%/instructions.trace.gz
 
 DISTCLEANFILES += \
