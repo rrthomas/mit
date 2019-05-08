@@ -182,6 +182,7 @@ successors = {
     path: {
         instruction: (path + (instruction,)).remove_repeating_part()
         for instruction in Instruction
+        if instruction.args is not None # Don't bother to guess EXT.
     }
     for path in language
 }

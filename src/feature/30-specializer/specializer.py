@@ -199,64 +199,55 @@ def gen_case(instruction, cache_state, exit_depth):
        Updated in place.
      - exit_depth - int - the `cached_depth` desired on exit.
     '''
-    if instruction.args is None and instruction.results is None:
-        effect = None
-    else:
-        effect = StackEffect(
-            StackPicture.of(instruction.args),
-            StackPicture.of(instruction.results),
-        )
+    assert instruction.args is not None and instruction.results is not None
+    effect = StackEffect(
+        StackPicture.of(instruction.args),
+        StackPicture.of(instruction.results),
+    )
     code = []
-    if effect is None:
-        code.append(cache_state.flush())
-    else:
-        # Flush cached items, if necessary.
-        args_limit = cache_limit(effect.args)
-        if args_limit is not None:
-            code.append(cache_state.flush(args_limit))
-        # Load the arguments into C variables.
-        code.append(effect.declare_vars())
-        count = effect.args.by_name.get('COUNT')
-        if count is not None:
-            # If we have COUNT, check its stack position is valid, and load it
-            code.extend([
-                cache_state.check_underflow(count.depth + count.size),
-                cache_state.load(count),
-            ])
+    # Flush cached items, if necessary.
+    args_limit = cache_limit(effect.args)
+    if args_limit is not None:
+        code.append(cache_state.flush(args_limit))
+    # Load the arguments into C variables.
+    code.append(effect.declare_vars())
+    count = effect.args.by_name.get('COUNT')
+    if count is not None:
+        # If we have COUNT, check its stack position is valid, and load it
         code.extend([
-            cache_state.check_underflow(effect.args.size),
-            cache_state.check_overflow(effect.args.size, effect.results.size),
-            cache_state.load_args(effect.args),
-            'S->STACK_DEPTH -= {};'.format(effect.args.size),
+            cache_state.check_underflow(count.depth + count.size),
+            cache_state.load(count),
         ])
-        # Adjust cache_state.
-        if args_limit is None:
-            code.append(cache_state.add(-int(effect.args.size)))
-        else:
-            code.append(cache_state.add(-args_limit))
-            assert cache_state.depth == 0
+    code.extend([
+        cache_state.check_underflow(effect.args.size),
+        cache_state.check_overflow(effect.args.size, effect.results.size),
+        cache_state.load_args(effect.args),
+        'S->STACK_DEPTH -= {};'.format(effect.args.size),
+    ])
+    # Adjust cache_state.
+    if args_limit is None:
+        code.append(cache_state.add(-int(effect.args.size)))
+    else:
+        code.append(cache_state.add(-args_limit))
+        assert cache_state.depth == 0
     # Inline `instruction.code`.
     # Note: `S->STACK_DEPTH` and `cached_depth` must be correct for RAISE().
     code.append(textwrap.dedent(instruction.code.rstrip()))
-    if effect is None:
-        assert cache_state.depth == 0
+    # Adjust cache_state.
+    results_limit = cache_limit(effect.args)
+    if results_limit is None:
+        num_pushes = int(effect.results.size)
+        code.append(cache_state.flush(max(0, exit_depth - num_pushes)))
+        code.append(cache_state.add(exit_depth - cache_state.depth))
     else:
-        # Adjust cache_state.
-        results_limit = cache_limit(effect.args)
-        if results_limit is None:
-            num_pushes = int(effect.results.size)
-            code.append(cache_state.flush(max(0, exit_depth - num_pushes)))
-            code.append(cache_state.add(exit_depth - cache_state.depth))
-        else:
-            code.append(cache_state.flush())
-            assert exit_depth <= results_limit
-            code.append(cache_state.add(exit_depth))
-        # Store the results from C variables.
-        code.extend([
-            'S->STACK_DEPTH += {};'.format(effect.results.size),
-            cache_state.store_results(effect.results),
-        ])
+        code.append(cache_state.flush())
+        assert exit_depth <= results_limit
+        code.append(cache_state.add(exit_depth))
+    # Store the results from C variables.
+    code.extend([
+        'S->STACK_DEPTH += {};'.format(effect.results.size),
+        cache_state.store_results(effect.results),
+    ])
     assert cache_state.depth == exit_depth
     # Remove newlines resulting from empty strings in the above.
     return re.sub('\n+', '\n', '\n'.join(code), flags=re.MULTILINE).strip('\n')
-
