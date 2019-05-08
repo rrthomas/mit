@@ -209,7 +209,7 @@ state_index = {} # Inverse of `states`.
 
 # For each state in `states`, there is a transition in `transitions`.
 # It can be:
-#  - None - return;
+#  - None - goto fallback;
 #  - int g - goto g;
 #  - (Instruction i, int c, int w) - if (next==i) { e; goto c; } else goto w;
 transitions = []
@@ -244,12 +244,11 @@ while len(transitions) < len(states):
             break
     else:
         # There is no good guess.
-        if len(path) > 0:
+        if len(path) > 1:
             new_path = path[1:].remove_repeating_part()
             transitions.append(enqueue(new_path, rejects))
         else:
-            # We have eliminated all possible Instructions.
-            # It's an illegal instruction.
+            # There is no useful history. Use the fallback executor.
             transitions.append(None)
 
 assert len(states) == len(state_index) == len(transitions)
