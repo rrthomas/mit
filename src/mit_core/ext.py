@@ -9,9 +9,9 @@
 
 from enum import Enum, unique
 
-from .c_util import disable_warnings
 from .instruction import AbstractInstruction
 from .vm_data import Register
+from .c_util import pop_stack_type
 
 
 # FIXME: this should be a per-library attribute
@@ -235,7 +235,7 @@ for register in Register:
     mit_state *inner_state;
     {}
     push_stack(S, mit_get_{}(inner_state));
-'''.format(disable_warnings(['-Wint-to-pointer-cast'], 'POP_STACK_TYPE(S, mit_state *, &inner_state);'),
+'''.format(pop_stack_type('inner_state', 'mit_state *'),
            register.name))
     if not register.read_only:
         mit_lib['SET_{}'.format(register.name.upper())] = (
@@ -247,7 +247,7 @@ for register in Register:
     if (ret != 0)
         RAISE(ret);
     mit_set_{}(inner_state, value);
-'''.format(disable_warnings(['-Wint-to-pointer-cast'], 'POP_STACK_TYPE(S, mit_state *, &inner_state);'),
+'''.format(pop_stack_type('inner_state', 'mit_state *'),
            register.name))
 
 MitLib = AbstractInstruction('MitLib', mit_lib)

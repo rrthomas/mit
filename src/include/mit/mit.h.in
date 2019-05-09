@@ -66,6 +66,8 @@ typedef uint8_t mit_BYTE;
 typedef bits_type_name(int, mit_WORD_BIT) mit_WORD;
 typedef bits_type_name(uint, mit_WORD_BIT) mit_UWORD;
 #endif
+
+// FIXME: find largest type: bigger of long double and maxint_t?
 #if SIZEOF_SIZE_T > WORD_BYTES
 typedef size_t mit_max_stack_item_t;
 #else
@@ -329,49 +331,6 @@ int mit_push_stack(mit_state *S, mit_WORD val);
    Return 0 if OK, or error code if `STACK_DEPTH` is greater than or equal
    to `S->stack_size`.
 */
-
-
-// Convenience macros for native types (up to size_t)
-// FIXME: find largest type: bigger of long double and maxint_t?
-// Second version avoids undefined behaviour (shift >= type size)
-#if SIZEOF_SIZE_T > WORD_BYTES
-#define PUSH_STACK_TYPE(S, ty, v)                                       \
-    do {                                                                \
-        size_t temp = v;                                                \
-        for (unsigned i = 0; i < align(sizeof(ty), mit_SIZE_WORD) / WORD_BYTES; i++) { \
-            int ret = push_stack(S, (mit_UWORD)(temp & mit_WORD_MASK)); \
-            if (ret != 0)                                               \
-                RAISE(ret);                                             \
-            temp >>= mit_WORD_BIT;                                      \
-    } while (0)
-#define POP_STACK_TYPE(S, ty, v)                                        \
-    do {                                                                \
-        size_t temp = 0;                                                \
-        for (unsigned i = 0; i < align(sizeof(ty), mit_SIZE_WORD) / WORD_BYTES; i++) { \
-            mit_WORD w;                                                 \
-            int ret = pop_stack(S, &w);                                 \
-            if (ret != 0)                                               \
-                RAISE(ret);                                             \
-            temp = (temp << mit_WORD_BIT) | (mit_UWORD)w;               \
-        }                                                               \
-        *(v) = (ty)temp;                                                \
-    } while (0)
-#else
-#define PUSH_STACK_TYPE(S, ty, v)                                       \
-    do {                                                                \
-        int ret = push_stack(S, (mit_UWORD)(temp & mit_WORD_MASK));     \
-        if (ret != 0)                                                   \
-            RAISE(ret);                                                 \
-    } while (0)
-#define POP_STACK_TYPE(S, ty, v)                                        \
-    do {                                                                \
-        mit_WORD w;                                                     \
-        int ret = pop_stack(S, &w);                                     \
-        if (ret != 0)                                                   \
-            RAISE(ret);                                                 \
-        *(v) = (ty)(mit_UWORD)w;                                        \
-    } while (0)
-#endif
 
 
 // Unchecked macro: UNSAFE!
