@@ -13,7 +13,7 @@ PYTHON_WITH_PATH = export PYTHONPATH=$(top_srcdir)/python:$(top_srcdir)/src:$(to
 lib_LTLIBRARIES = libmit@PACKAGE_SUFFIX@.la
 C_SRCS = storage.c object.c
 nodist_LIB_SRCS = include/mit/registers.h include/mit/opcodes.h include/mit/ext-opcodes.h instructions.c ext.c
-LIB_CORE_SRCS = mit_core/instruction.py mit_core/vm_data.py mit_core/ext.py mit_core/instruction_gen.py
+LIB_CORE_SRCS = mit_core/instruction.py mit_core/vm_data.py mit_core/ext.py mit_core/instruction_gen.py mit_core/c_util.py
 nodist_libmit@PACKAGE_SUFFIX@_la_SOURCES = $(C_SRCS) $(nodist_LIB_SRCS)
 libmit@PACKAGE_SUFFIX@_la_LIBADD = $(top_builddir)/lib/libgnu.la
 libmit@PACKAGE_SUFFIX@_la_LDFLAGS = -no-undefined -export-symbols-regex '^mit_.*'

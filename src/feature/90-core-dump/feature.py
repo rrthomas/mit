@@ -13,7 +13,7 @@ Option('core-dump',
 
 static char hex[] = "0123456789abcdef";
 
-static void register_to_str(mit_WORD reg, char *s)
+static void register_to_str(mit_WORD reg, char s[REGISTER_STRLEN])
 {
     for (unsigned i = 0; i < REGISTER_STRLEN; i++) {
         s[REGISTER_STRLEN - i - 1] = hex[reg & 0xf];

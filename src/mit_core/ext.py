@@ -9,7 +9,8 @@
 
 from enum import Enum, unique
 
-from .instruction import AbstractInstruction, disable_warnings
+from .c_util import disable_warnings
+from .instruction import AbstractInstruction
 from .vm_data import Register
 
 

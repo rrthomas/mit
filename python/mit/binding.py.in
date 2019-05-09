@@ -68,8 +68,8 @@ class c_int128(Structure):
                 ('high', c_int64)]
 
     def __init__(self, n=0):
-        self.low = n & ((1 << 64) - 1)
-        self.high = n >> 64
+        self.low = int(n) & ((1 << 64) - 1)
+        self.high = int(n) >> 64
 
     @classmethod
     def from_param(cls, value):

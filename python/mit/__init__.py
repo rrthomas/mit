@@ -285,7 +285,6 @@ class ActiveRegister:
             self.setter.restype = None
             self.setter.argtypes = [c_void_p, type_equivalents[register.ty]]
 
-    # After https://github.com/ipython/ipython/blob/master/IPython/lib/pretty.py
     def __str__(self):
         return str(self.get())
 

@@ -16,7 +16,8 @@ mit_pkgpython_PYTHON =		\
 	mit/assembler.py	\
 	mit/vm_data.py		\
 	mit/ext.py		\
-	mit/instruction.py
+	mit/instruction.py	\
+	mit/c_util.py
 nodist_mit_pkgpython_PYTHON = mit/binding.py
 
 all-local: mit/binding.py

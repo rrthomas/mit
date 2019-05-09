@@ -16,7 +16,7 @@ import re
 import textwrap
 
 from .type_sizes import type_sizes
-from .instruction import disable_warnings
+from .c_util import disable_warnings
 
 
 @functools.total_ordering
