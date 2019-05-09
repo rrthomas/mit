@@ -364,34 +364,34 @@ int mit_push_stack(mit_state *S, mit_WORD val);
             int ret = push_stack(S, (mit_UWORD)(temp & mit_WORD_MASK)); \
             if (ret != 0)                                               \
                 RAISE(ret);                                             \
-            temp >>= mit_WORD_BIT;                                    \
+            temp >>= mit_WORD_BIT;                                      \
     } while (0)
 #define POP_STACK_TYPE(S, ty, v)                                        \
     do {                                                                \
         size_t temp = 0;                                                \
         for (unsigned i = 0; i < align(sizeof(ty), mit_SIZE_WORD) / WORD_BYTES; i++) { \
-            mit_WORD w;                                               \
+            mit_WORD w;                                                 \
             int ret = pop_stack(S, &w);                                 \
             if (ret != 0)                                               \
                 RAISE(ret);                                             \
-            temp = (temp << mit_WORD_BIT) | (mit_UWORD)w;           \
+            temp = (temp << mit_WORD_BIT) | (mit_UWORD)w;               \
         }                                                               \
         *(v) = (ty)temp;                                                \
     } while (0)
 #else
 #define PUSH_STACK_TYPE(S, ty, v)                                       \
     do {                                                                \
-        int ret = push_stack(S, (mit_UWORD)(temp & mit_WORD_MASK)); \
+        int ret = push_stack(S, (mit_UWORD)(temp & mit_WORD_MASK));     \
         if (ret != 0)                                                   \
             RAISE(ret);                                                 \
     } while (0)
 #define POP_STACK_TYPE(S, ty, v)                                        \
     do {                                                                \
-        mit_WORD w;                                                   \
+        mit_WORD w;                                                     \
         int ret = pop_stack(S, &w);                                     \
         if (ret != 0)                                                   \
             RAISE(ret);                                                 \
-        *(v) = (ty)(mit_UWORD)w;                                      \
+        *(v) = (ty)(mit_UWORD)w;                                        \
     } while (0)
 #endif
 

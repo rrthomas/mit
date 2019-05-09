@@ -13,7 +13,7 @@ mit_pkgpythondir = $(pkgpythondir)@PACKAGE_SUFFIX@
 mit_pkgpython_PYTHON =		\
 	mit/__init__.py		\
 	mit/__main__.py		\
-	mit/assembler.py		\
+	mit/assembler.py	\
 	mit/vm_data.py		\
 	mit/ext.py		\
 	mit/instruction.py
@@ -47,8 +47,8 @@ endif
 EXTRA_DIST = \
 	$(man_MANS)		\
 	mit/binding.py.in	\
-	mit-dump.in	\
-	mit-shell.in	\
+	mit-dump.in		\
+	mit-shell.in		\
 	mit/binding.py.in
 
 DISTCLEANFILES = $(bin_SCRIPTS) $(man_MANS)
