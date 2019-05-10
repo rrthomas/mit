@@ -58,7 +58,7 @@ ptrdiff_t mit_load_object(mit_state *S, mit_UWORD addr, int fd)
     if ((res = read(fd, &len, sizeof(len))) == -1)
         return -1;
     if (ENDISM != HOST_ENDISM)
-        len = reverse_endianness(len);
+        len = reverse_endianness(mit_WORD_BIT, len);
     if (res != sizeof(len))
         return -2;
     uint8_t *ptr = mit_native_address_of_range(S, addr, len);
@@ -86,7 +86,7 @@ int mit_save_object(mit_state *S, mit_UWORD addr, mit_UWORD len, int fd)
 
     mit_UWORD len_save = len;
     if (ENDISM != HOST_ENDISM)
-        len_save = reverse_endianness(len_save);
+        len_save = reverse_endianness(mit_WORD_BIT, len_save);
 
     if (write(fd, &buf[0], HEADER_LENGTH) != HEADER_LENGTH ||
         write(fd, &len_save, sizeof(len_save)) != sizeof(len_save) ||

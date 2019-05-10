@@ -13,7 +13,7 @@ PYTHON_WITH_PATH = export PYTHONPATH=$(top_srcdir)/python:$(top_srcdir)/src:$(to
 lib_LTLIBRARIES = libmit@PACKAGE_SUFFIX@.la
 C_SRCS = storage.c object.c
 nodist_LIB_SRCS = include/mit/registers.h include/mit/opcodes.h include/mit/ext-opcodes.h instructions.c ext.c
-LIB_CORE_SRCS = mit_core/instruction.py mit_core/vm_data.py mit_core/ext.py mit_core/instruction_gen.py
+LIB_CORE_SRCS = mit_core/instruction.py mit_core/vm_data.py mit_core/ext.py mit_core/instruction_gen.py mit_core/c_util.py
 nodist_libmit@PACKAGE_SUFFIX@_la_SOURCES = $(C_SRCS) $(nodist_LIB_SRCS)
 libmit@PACKAGE_SUFFIX@_la_LIBADD = $(top_builddir)/lib/libgnu.la
 libmit@PACKAGE_SUFFIX@_la_LDFLAGS = -no-undefined -export-symbols-regex '^mit_.*'
@@ -33,7 +33,7 @@ main.o: main.c include/mit/registers.h
 .c.s:
 	$(COMPILE) -c -S $<
 
-include/mit/mit.h: $(top_builddir)/config.status $(srcdir)/include/mit/mit.h.in
+include/mit/mit.h: $(top_builddir)/config.status include/mit/mit.h.in
 	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
 
 # Depend on mit@PACKAGE_SUFFIX@$(EXEEXT) rather than explicitly make-ing it, as otherwise
@@ -57,7 +57,7 @@ include/mit/registers.h: gen-registers mit_core/vm_data.py mit_core/instruction.
 	$(MKDIR_P) include/mit
 	$(PYTHON_WITH_PATH) $(srcdir)/gen-registers > include/mit/registers.h || ( rm -f include/mit/registers.h; exit 1 )
 
-include/mit/ext-opcodes.h: gen-ext-opcodes mit_core/ext.py mit_core/instruction.py
+include/mit/ext-opcodes.h: gen-ext-opcodes mit_core/ext.py mit_core/instruction.py mit_core/c_util.py
 	$(MKDIR_P) include/mit
 	$(PYTHON_WITH_PATH) $(srcdir)/gen-ext-opcodes > include/mit/ext-opcodes.h || ( rm -f include/mit/ext-opcodes.h; exit 1 )
 
@@ -65,12 +65,12 @@ include/mit/opcodes.h: gen-opcodes mit_core/vm_data.py mit_core/instruction.py
 	$(MKDIR_P) include/mit
 	$(PYTHON_WITH_PATH) $(srcdir)/gen-opcodes > include/mit/opcodes.h || ( rm -f include/mit/opcodes.h; exit 1 )
 
-instructions.c: gen-instructions mit_core/vm_data.py mit_core/instruction.py mit_core/instruction_gen.py mit_core/type_sizes.py
+instructions.c: gen-instructions mit_core/vm_data.py mit_core/instruction.py mit_core/instruction_gen.py mit_core/type_sizes.py mit_core/c_util.py
 	$(PYTHON_WITH_PATH) $(srcdir)/gen-instructions > instructions.c || ( rm -f instructions.c; exit 1 )
 
 # Note: we grep config.log because the generated header file has the symbols
 # sorted lexically, and we need the output in the same order as the input.
-mit_core/type_sizes.py: $(top_builddir)/config.status gen-type-sizes collate-type-sizes include/mit/registers.h mit_core/ext.py mit_core/instruction.py
+mit_core/type_sizes.py: $(top_builddir)/config.status gen-type-sizes collate-type-sizes include/mit/registers.h mit_core/ext.py mit_core/instruction.py mit_core/c_util.py
 	$(PYTHON_WITH_PATH) $(srcdir)/gen-type-sizes > type-sizes.ac && \
 	autoconf type-sizes.ac > type-sizes && \
 	CONFIG_SITE= CC="$(CC)" CPPFLAGS="$(CPPFLAGS) -I$(builddir) -I$(srcdir) -I$(top_builddir) $(AM_CPPFLAGS)" $(SHELL) type-sizes && \
@@ -78,7 +78,7 @@ mit_core/type_sizes.py: $(top_builddir)/config.status gen-type-sizes collate-typ
 	$(GREP) "^#define SIZEOF" config.log | cut -d " " -f 3 | \
 		( $(PYTHON_WITH_PATH) $(srcdir)/collate-type-sizes > mit_core/type_sizes.py ) || ( rm -f type-sizes.ac type-sizes mit_core/type_sizes.py; exit 1 )
 
-ext.c: gen-ext mit_core/ext.py mit_core/instruction.py mit_core/instruction_gen.py mit_core/type_sizes.py
+ext.c: gen-ext mit_core/ext.py mit_core/instruction.py mit_core/instruction_gen.py mit_core/type_sizes.py mit_core/c_util.py
 	$(PYTHON_WITH_PATH) $(srcdir)/gen-ext > ext.c || ( rm -f ext.c; exit 1 )
 
 main.c: $(srcdir)/feature/*/feature.py gen-main

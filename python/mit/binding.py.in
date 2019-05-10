@@ -41,6 +41,7 @@ def errcheck(code_to_message):
     '''
     require_match = None in code_to_message.values()
     def callback(result, _func, _args):
+        result = int(result)
         if result in code_to_message:
             message = code_to_message[result]
             if message is None:
@@ -62,20 +63,47 @@ sign_bit = 1 << (word_bit - 1)
 
 
 # Types
-if word_bytes == sizeof(c_short):
-    c_word = c_short
-    c_uword = c_ushort
-elif word_bytes == sizeof(c_int):
-    c_word = c_int
-    c_uword = c_uint
-elif word_bytes == sizeof(c_long):
-    c_word = c_long
-    c_uword = c_ulong
-elif word_bytes == sizeof(c_longlong):
-    c_word = c_longlong
-    c_uword = c_ulonglong
+class c_int128(Structure):
+    _fields_ = [('low', c_uint64),
+                ('high', c_int64)]
+
+    def __init__(self, n=0):
+        self.low = int(n) & ((1 << 64) - 1)
+        self.high = int(n) >> 64
+
+    @classmethod
+    def from_param(cls, value):
+        return cls(value)
+
+    @property
+    def value(self):
+        return self.low | (self.high << 64)
+
+    def __int__(self):
+        return self.value
+
+    def __hash__(self):
+        return int.__hash__(self.value)
+
+class c_uint128(c_int128):
+    @property
+    def value(self):
+        return (self.low | (self.high << 64)) & ((1 << 128) - 1)
+
+if word_bytes == 2:
+    c_word = c_int16
+    c_uword = c_uint16
+elif word_bytes == 4:
+    c_word = c_int32
+    c_uword = c_uint32
+elif word_bytes == 8:
+    c_word = c_int64
+    c_uword = c_uint64
+elif word_bytes == 16:
+    c_word = c_int128
+    c_uword = c_uint128
 else:
-    raise Exception("Could not find Python C type matching WORD (size {})".format(word_bytes))
+    raise Exception("Could not make Python C type matching WORD (size {})".format(word_bytes))
 
 
 # Constants that require VM types
@@ -167,12 +195,12 @@ libmit.mit_destroy.argtypes = [c_void_p]
 libmit.mit_register_args.argtypes = [c_void_p, c_int, c_void_p]
 
 libmit.mit_align.restype = c_uword
-libmit.mit_align.argtypes = [c_uword]
+libmit.mit_align.argtypes = [c_uword, c_uint]
 
-libmit.mit_is_aligned.argtypes = [c_uword]
+libmit.mit_is_aligned.argtypes = [c_uword, c_uint]
 
 def align(addr):
-    return libmit.mit_align(addr, size_word)
+    return int(libmit.mit_align(addr, size_word))
 
 def is_aligned(addr):
     return libmit.mit_is_aligned(addr, size_word)

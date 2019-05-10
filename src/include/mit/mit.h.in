@@ -24,60 +24,63 @@
 #define ENDISM @ENDISM@
 #define HOST_ENDISM @WORDS_BIGENDIAN@
 
-// Types and printf formats
-typedef uint8_t mit_BYTE;
+// Types and constants
 #if WORD_BYTES == 2
-typedef int16_t mit_WORD;
-typedef uint16_t mit_UWORD;
+#define mit_WORD_BIT 16
 #define mit_SIZE_WORD 1
-#define mit_WORD_MASK UINT16_MAX
-#define mit_UWORD_MAX UINT16_MAX
-#define mit_WORD_MIN INT16_MIN
-#define mit_WORD_MAX INT16_MAX
-#define PRI_WORD PRId16
-#define PRI_UWORD PRIu16
-#define PRI_XWORD "#"PRIx16
-#define reverse_endianness bswap_16
 #elif WORD_BYTES == 4
-typedef int32_t mit_WORD;
-typedef uint32_t mit_UWORD;
+#define mit_WORD_BIT 32
 #define mit_SIZE_WORD 2
-#define mit_WORD_MASK UINT32_MAX
-#define mit_UWORD_MAX UINT32_MAX
-#define mit_WORD_MIN INT32_MIN
-#define mit_WORD_MAX INT32_MAX
-#define PRI_WORD PRId32
-#define PRI_UWORD PRIu32
-#define PRI_XWORD "#"PRIx32
-#define reverse_endianness bswap_32
 #elif WORD_BYTES == 8
-typedef int64_t mit_WORD;
-typedef uint64_t mit_UWORD;
+#define mit_WORD_BIT 64
 #define mit_SIZE_WORD 3
-#define mit_WORD_MASK UINT64_MAX
-#define mit_UWORD_MAX UINT64_MAX
-#define mit_WORD_MIN INT64_MIN
-#define mit_WORD_MAX INT64_MAX
-#define PRI_WORD PRId64
-#define PRI_UWORD PRIu64
-#define PRI_XWORD "#"PRIx64
-#define reverse_endianness bswap_64
-#else
-#error "WORD_BYTES must be 2, 4 or 8!"
-#endif
-typedef mit_WORD * mit_WORDP;
-#define PRI_XWORDP "p"
+#elif WORD_BYTES == 16
+#define mit_WORD_BIT 128
+#define mit_SIZE_WORD 4
+/* Given an unsigned 128-bit argument X, return the value corresponding to
+   X with reversed byte order.  */
+#define bswap_128(x)                                                    \
+    (((unsigned __int128)(bswap_64((uint64_t)(x))) << 64) |             \
+     ((unsigned __int128)(bswap_64((uint64_t)((x) >> 64)))))
 
-// Constants
+typedef __int128 mit_WORD;
+typedef unsigned __int128 mit_UWORD;
+#else
+#error "WORD_BYTES must be 2, 4, 8 or 16!"
+#endif
+
+typedef uint8_t mit_BYTE;
+#define mit_BYTE_BIT 8
+#define mit_BYTE_MASK ((1 << mit_BYTE_BIT) - 1)
+
+#define mit_WORD_MASK ((mit_UWORD)((mit_WORD)-1))
+#define mit_UWORD_MAX mit_WORD_MASK
+#define mit_WORD_MIN ((mit_WORD)(mit_UWORD_MAX << (mit_WORD_BIT - 1)))
+#define mit_WORD_MAX ((mit_WORD)(mit_UWORD_MAX >> 1))
+#define _reverse_endianness(bits, n) bswap_ ## bits(n)
+#define reverse_endianness(bits, n) _reverse_endianness(bits, n)
+
+#if WORD_BYTES != 16
+#define _bits_type_name(prefix, bits) prefix ## bits ## _t
+#define bits_type_name(prefix, bits) _bits_type_name(prefix, bits)
+typedef bits_type_name(int, mit_WORD_BIT) mit_WORD;
+typedef bits_type_name(uint, mit_WORD_BIT) mit_UWORD;
+#endif
+
+// FIXME: find largest type: bigger of long double and maxint_t?
+#if SIZEOF_SIZE_T > WORD_BYTES
+typedef size_t mit_max_stack_item_t;
+#else
+typedef mit_UWORD mit_max_stack_item_t;
+#endif
+
+// Constants (for easy FFI binding)
 extern const unsigned mit_word_bytes;
 extern const unsigned mit_endism;
 extern const unsigned mit_size_word;
-#define mit_BYTE_BIT 8
 extern const unsigned mit_byte_bit;
 extern const unsigned mit_byte_mask;
-#define mit_BYTE_MASK ((1 << mit_BYTE_BIT) - 1)
 extern const unsigned mit_word_bit;
-#define mit_WORD_BIT (WORD_BYTES * mit_BYTE_BIT)
 extern const mit_UWORD mit_word_mask;
 extern const mit_UWORD mit_uword_max;
 extern const mit_WORD mit_word_min;
@@ -222,13 +225,20 @@ static int load(mit_state *S, mit_UWORD addr, unsigned size, mit_WORD *val_ptr)
         if (ENDISM != HOST_ENDISM)
             val = bswap_32(val);
         break;
-#endif
 #if mit_SIZE_WORD >= 3
     case 3:
         val = (mit_UWORD)*((uint64_t *)((uint8_t *)S->memory + addr));
         if (ENDISM != HOST_ENDISM)
             val = bswap_64(val);
         break;
+#if mit_SIZE_WORD >= 4
+    case 4:
+        val = (mit_UWORD)*((unsigned __int128 *)((uint8_t *)S->memory + addr));
+        if (ENDISM != HOST_ENDISM)
+            val = bswap_128(val);
+        break;
+#endif
+#endif
 #endif
 #pragma GCC diagnostic pop
     default:
@@ -267,13 +277,20 @@ static int store(mit_state *S, mit_UWORD addr, unsigned size, mit_WORD val)
             val = bswap_32(val);
         *((uint32_t *)((uint8_t *)S->memory + addr)) = (uint32_t)val;
         break;
-#endif
 #if mit_SIZE_WORD >= 3
     case 3:
         if (ENDISM != HOST_ENDISM)
             val = bswap_64(val);
         *((uint64_t *)((uint8_t *)S->memory + addr)) = (uint64_t)val;
         break;
+#if mit_SIZE_WORD >= 4
+    case 4:
+        if (ENDISM != HOST_ENDISM)
+            val = bswap_128(val);
+        *((unsigned __int128 *)((uint8_t *)S->memory + addr)) = (unsigned __int128)val;
+        break;
+#endif
+#endif
 #endif
 #pragma GCC diagnostic pop
     default:
@@ -314,48 +331,6 @@ int mit_push_stack(mit_state *S, mit_WORD val);
    Return 0 if OK, or error code if `STACK_DEPTH` is greater than or equal
    to `S->stack_size`.
 */
-
-
-// Convenience macros for native types
-// Second version avoids undefined behaviour (shift >= type size)
-#if SIZEOF_SIZE_T > WORD_BYTES
-#define PUSH_STACK_TYPE(S, ty, v)                                       \
-    do {                                                                \
-        size_t temp = v;                                                \
-        for (unsigned i = 0; i < align(sizeof(ty), mit_SIZE_WORD) / WORD_BYTES; i++) { \
-            int ret = push_stack(S, (mit_UWORD)(temp & mit_WORD_MASK)); \
-            if (ret != 0)                                               \
-                RAISE(ret);                                             \
-            temp >>= mit_WORD_BIT;                                    \
-    } while (0)
-#define POP_STACK_TYPE(S, ty, v)                                        \
-    do {                                                                \
-        size_t temp = 0;                                                \
-        for (unsigned i = 0; i < align(sizeof(ty), mit_SIZE_WORD) / WORD_BYTES; i++) { \
-            mit_WORD w;                                               \
-            int ret = pop_stack(S, &w);                                 \
-            if (ret != 0)                                               \
-                RAISE(ret);                                             \
-            temp = (temp << mit_WORD_BIT) | (mit_UWORD)w;           \
-        }                                                               \
-        *(v) = (ty)temp;                                                \
-    } while (0)
-#else
-#define PUSH_STACK_TYPE(S, ty, v)                                       \
-    do {                                                                \
-        int ret = push_stack(S, (mit_UWORD)(temp & mit_WORD_MASK)); \
-        if (ret != 0)                                                   \
-            RAISE(ret);                                                 \
-    } while (0)
-#define POP_STACK_TYPE(S, ty, v)                                        \
-    do {                                                                \
-        mit_WORD w;                                                   \
-        int ret = pop_stack(S, &w);                                     \
-        if (ret != 0)                                                   \
-            RAISE(ret);                                                 \
-        *(v) = (ty)(mit_UWORD)w;                                      \
-    } while (0)
-#endif
 
 
 // Unchecked macro: UNSAFE!

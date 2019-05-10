@@ -143,12 +143,12 @@ void mit_destroy(mit_state *S)
 }
 
 #define R_RO(reg, type, utype)                                      \
-    _GL_ATTRIBUTE_PURE type mit_get_ ## reg(mit_state *S) {     \
+    _GL_ATTRIBUTE_PURE type mit_get_ ## reg(mit_state *S) {         \
         return S->reg;                                              \
     }
 #define R(reg, type, utype)                                   \
     R_RO(reg, type, utype)                                    \
-    void mit_set_ ## reg(mit_state *S, type val) {        \
+    void mit_set_ ## reg(mit_state *S, type val) {            \
         S->reg = val;                                         \
     }
 #include "mit/registers.h"

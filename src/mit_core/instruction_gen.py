@@ -16,6 +16,7 @@ import re
 import textwrap
 
 from .type_sizes import type_sizes
+from .c_util import load_stack_type, store_stack_type
 
 
 @functools.total_ordering
@@ -138,46 +139,17 @@ class StackItem:
     def __hash__(self):
         return hash((self.name, self.type, self.size))
 
-    # Cf. mit.h PUSH/POP_STACK_TYPE macros.
     def load(self):
         '''
         Returns C source code to load `self` from the stack to its C variable.
         '''
-        code = [
-            'size_t temp = (mit_UWORD)(*UNCHECKED_STACK({}));'
-            .format(self.depth)
-        ]
-        for i in range(self.size - 1):
-            code.append('temp <<= mit_WORD_BIT;')
-            code.append(
-                'temp |= (mit_UWORD)(*UNCHECKED_STACK({}));'
-                .format(self.depth + i + 1)
-            )
-        code.append('{} = ({})temp;'.format(self.name, self.type))
-        return '''\
-{{
-{}
-}}'''.format(textwrap.indent('\n'.join(code), '    '))
+        return load_stack_type(self.name, self.type, self.depth)
 
     def store(self):
         '''
         Returns C source code to store `self` to the stack from its C variable.
         '''
-        code = ['size_t temp = (size_t){};'.format(self.name)]
-        for i in reversed(range(self.size - 1)):
-            code.append(
-                '*UNCHECKED_STACK({}) = (mit_UWORD)(temp & mit_WORD_MASK);'
-                .format(self.depth + i + 1)
-            )
-            code.append('temp >>= mit_WORD_BIT;')
-        code.append(
-            '*UNCHECKED_STACK({}) = (mit_UWORD)(temp & mit_WORD_MASK);'
-            .format(self.depth)
-        )
-        return '''\
-{{
-{}
-}}'''.format(textwrap.indent('\n'.join(code), '    '))
+        return store_stack_type(self.name, self.type, self.depth)
 
 
 class StackPicture:

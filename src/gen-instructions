@@ -35,7 +35,7 @@ print('''\
 #define NEXT                                                  \\
     do {                                                      \\
         if (S->I != 0)                                        \\
-            RAISE(MIT_ERR_INVALID_OPCODE);                  \\
+            RAISE(MIT_ERR_INVALID_OPCODE);                    \\
         int ret = load(S, S->PC, mit_SIZE_WORD, (mit_WORD *)&(S->I)); \\
         if (ret != 0)                                         \\
             RAISE(ret);                                       \\
