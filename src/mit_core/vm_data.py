@@ -60,6 +60,10 @@ class Instruction(AbstractInstruction):
 
     SWAP = (0x06, ['x', 'ITEMS', 'y', 'COUNT'], ['y', 'ITEMS', 'x'], '')
 
+    PUSH_STACK_DEPTH = (0x07, [], ['n'], '''\
+        n = S->STACK_DEPTH;
+    ''')
+
     NOT = (0x08, ['x'], ['r'], '''\
         r = ~x;
     ''')

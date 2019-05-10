@@ -51,7 +51,7 @@
 
 \title{The Mit Virtual Machine}
 \author{Reuben Thomas}
-\date{7th April 2019}
+\date{7th May 2019}
 
 \begin{document}
 \maketitle
@@ -272,8 +272,7 @@ These instructions manage the stack:
 \inst{POP}{x —}{Remove \spic{x} from the stack.}
 \inst{DUP}{\x{u}\dots\x0 u — \x{u}\dots\x0 \x{u}}{Remove \spic{u}. Copy \x{u} to the top of the stack.}
 \inst{SWAP}{\x{u+1}\dots\x0 u — \x0 \x{u}\dots\x1 \x{u+1}}{Exchange the top stack word with the \spic{u+1}th.}
-\inst{GET\_STACK\_DEPTH}{— u}{\spic{u} is the value of {\tt STACK\_DEPTH}, the number of words on the stack.}
-\inst{SET\_STACK\_DEPTH}{u —}{Set {\tt STACK\_DEPTH} to \spic{u}.}
+\inst{PUSH\_STACK\_DEPTH}{— u}{\spic{u} is the value of {\tt STACK\_DEPTH}, the number of words on the stack.}
 \end{description}
 
 
@@ -403,7 +402,7 @@ Table~\ref{opcodetable} lists the instruction opcodes in numerical order. Other 
 \opcodetbl{04}{POP}		{14}{ADD}
 \opcodetbl{05}{DUP}		{15}{MUL}
 \opcodetbl{06}{SWAP}		{16}{DIVMOD}
-\opcodetbl{07}{undefined}	{17}{UDIVMOD}
+\opcodetbl{07}{PUSH\_STACK\_DEPTH}	{17}{UDIVMOD}
 \opcodetbl{08}{NOT}		{18}{LOAD}
 \opcodetbl{09}{AND}		{19}{STORE}
 \opcodetbl{0a}{OR}		{1a}{LIT}
