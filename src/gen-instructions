@@ -20,7 +20,7 @@ print('''\
 // Run the virtual machine.
 
 #include "config.h"
-#include <stdio.h>
+
 #include "mit/mit.h"
 #include "mit/opcodes.h"
 
