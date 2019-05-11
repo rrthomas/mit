@@ -196,12 +196,12 @@ print('''\
         switch (cached_depth) {'''
 )
 cache_state = CacheState(max_cached_depth)
-while cache_state.depth > 0:
+while cache_state.cached_depth > 0:
     print('''\
-        case {}:'''.format(cache_state.depth)
+        case {}:'''.format(cache_state.cached_depth)
     )
     print(textwrap.indent(
-        cache_state.flush(cache_state.depth - 1),
+        cache_state.flush(cache_state.cached_depth - 1),
         '            ',
     ))
     print('''\

@@ -23,16 +23,16 @@ class CacheState:
     This class represents the current cacheing situation.
 
     Caching items does not affect `S->STACK_DEPTH`.
-    If `item.depth < self.depth`, then `item` is cached in variable
+    If `item.depth < self.cached_depth`, then `item` is cached in variable
     `self.var(item.depth)`.
 
     Public fields:
-     - depth - the number of items that are cached. Usually we ensure that a
-       C variable `cached_depth` equals `self.depth`. Usually it is a
-       compile-time constant.
+     - cached_depth - the number of items that are cached. Usually we ensure
+       that a C variable `cached_depth` equals `self.cached_depth`. Usually
+       it is a compile-time constant.
     '''
-    def __init__(self, depth):
-        self.depth = depth
+    def __init__(self, cached_depth):
+        self.cached_depth = cached_depth
 
     def check_underflow(self, num_pops):
         '''
@@ -40,7 +40,7 @@ class CacheState:
         pop the specified number of items.
          - num_pops - Size
         '''
-        if num_pops <= self.depth: return ''
+        if num_pops <= self.cached_depth: return ''
         return '''\
 if ((S->STACK_DEPTH < (mit_uword)({num_pops}))) {{
     S->BAD = {num_pops} - 1;
@@ -69,7 +69,7 @@ if (((S->stack_size - S->STACK_DEPTH) < (mit_uword)({depth_change}))) {{
 
          - item - StackItem.
         '''
-        if item.depth < self.depth:
+        if item.depth < self.cached_depth:
             # The item is cached.
             assert item.size == 1
             return '{var} = {cache_var};'.format(
@@ -86,7 +86,7 @@ if (((S->stack_size - S->STACK_DEPTH) < (mit_uword)({depth_change}))) {{
 
          - item - StackItem.
         '''
-        if item.depth < self.depth:
+        if item.depth < self.cached_depth:
             # The item is cached.
             assert item.size == 1
             return '{cache_var} = {var};'.format(
@@ -132,14 +132,14 @@ if (((S->stack_size - S->STACK_DEPTH) < (mit_uword)({depth_change}))) {{
         '''
         assert type(depth_change) is int
         if depth_change == 0: return ''
-        self.depth += depth_change
-        if self.depth < 0: self.depth = 0
-        return 'cached_depth = {};'.format(self.depth)
+        self.cached_depth += depth_change
+        if self.cached_depth < 0: self.cached_depth = 0
+        return 'cached_depth = {};'.format(self.cached_depth)
 
     @staticmethod
-    def var_for_depth(pos, depth):
-        assert 0 <= pos < depth
-        return 'stack_{}'.format(depth - 1 - pos)
+    def var_for_depth(pos, cached_depth):
+        assert 0 <= pos < cached_depth
+        return 'stack_{}'.format(cached_depth - 1 - pos)
 
     def var(self, pos):
         '''
@@ -147,7 +147,7 @@ if (((S->stack_size - S->STACK_DEPTH) < (mit_uword)({depth_change}))) {{
         This is chosen so that `pop()` and `push()` do not require moving
         values between variables.
         '''
-        return self.var_for_depth(pos, self.depth)
+        return self.var_for_depth(pos, self.cached_depth)
 
     def flush(self, depth_limit=0):
         '''
@@ -155,9 +155,9 @@ if (((S->stack_size - S->STACK_DEPTH) < (mit_uword)({depth_change}))) {{
         if necessary. Returns C source code to move values between variables
         and to memory. Also updates the C variable `cached_depth`.
         '''
-        if self.depth <= depth_limit: return ''
+        if self.cached_depth <= depth_limit: return ''
         code = []
-        for pos in reversed(range(depth_limit, self.depth)):
+        for pos in reversed(range(depth_limit, self.cached_depth)):
             code.append('*UNCHECKED_STACK({pos}) = {var};'.format(
                 pos=pos,
                 var=self.var(pos),
@@ -167,8 +167,8 @@ if (((S->stack_size - S->STACK_DEPTH) < (mit_uword)({depth_change}))) {{
                 self.var_for_depth(pos, depth_limit),
                 self.var(pos),
             ))
-        self.depth = depth_limit
-        code.append('cached_depth = {};'.format(self.depth))
+        self.cached_depth = depth_limit
+        code.append('cached_depth = {};'.format(self.cached_depth))
         return '\n'.join(code)
 
 
@@ -227,7 +227,7 @@ def gen_case(instruction, cache_state, exit_depth):
         code.append(cache_state.add(-int(effect.args.size)))
     else:
         code.append(cache_state.add(-args_limit))
-        assert cache_state.depth == 0
+        assert cache_state.cached_depth == 0
     # Inline `instruction.code`.
     # Note: `S->STACK_DEPTH` and `cached_depth` must be correct for RAISE().
     code.append(textwrap.dedent(instruction.code.rstrip()))
@@ -236,7 +236,7 @@ def gen_case(instruction, cache_state, exit_depth):
     if results_limit is None:
         num_pushes = int(effect.results.size)
         code.append(cache_state.flush(max(0, exit_depth - num_pushes)))
-        code.append(cache_state.add(exit_depth - cache_state.depth))
+        code.append(cache_state.add(exit_depth - cache_state.cached_depth))
     else:
         code.append(cache_state.flush())
         assert exit_depth <= results_limit
@@ -246,6 +246,6 @@ def gen_case(instruction, cache_state, exit_depth):
         'S->STACK_DEPTH += {};'.format(effect.results.size),
         cache_state.store_results(effect.results),
     ])
-    assert cache_state.depth == exit_depth
+    assert cache_state.cached_depth == exit_depth
     # Remove newlines resulting from empty strings in the above.
     return re.sub('\n+', '\n', '\n'.join(code), flags=re.MULTILINE).strip('\n')
