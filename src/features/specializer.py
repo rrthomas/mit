@@ -30,12 +30,18 @@ class CacheState:
      - cached_depth - the number of items that are cached. Usually we ensure
        that a C variable `cached_depth` equals `self.cached_depth`. Usually
        it is a compile-time constant.
+     - checked_depth - the number of items that we know we can push without
+       checking for stack overflow.
     '''
-    def __init__(self, cached_depth):
+    def __init__(self, cached_depth, checked_depth):
         self.cached_depth = cached_depth
+        self.checked_depth = checked_depth
 
     def __repr__(self):
-        return 'CacheState({})'.format(self.cached_depth)
+        return 'CacheState({}, {})'.format(
+            self.cached_depth,
+            self.checked_depth,
+        )
 
     def check_underflow(self, num_pops):
         '''
@@ -54,12 +60,13 @@ if ((S->STACK_DEPTH < (mit_uword)({num_pops}))) {{
         '''
         Returns C source code to check that the stack contains enough space to
         push `num_pushes` items, given that `num_pops` items will first be
-        popped.
+        popped. Updates `checked_depth`.
          - num_pops - Size.
          - num_pushes - Size.
         '''
         depth_change = num_pushes - num_pops
-        if depth_change <= 0: return ''
+        if depth_change <= self.checked_depth: return ''
+        self.checked_depth = depth_change
         return '''\
 if (((S->stack_size - S->STACK_DEPTH) < (mit_uword)({depth_change}))) {{
     S->BAD = ({depth_change}) - (S->stack_size - S->STACK_DEPTH);
@@ -129,7 +136,8 @@ if (((S->stack_size - S->STACK_DEPTH) < (mit_uword)({depth_change}))) {{
     def add(self, depth_change):
         '''
         Returns C source code to update the variable `cached_depth` to reflect
-        a change in the stack depth.
+        a change in the stack depth, e.g. by pushing or popping some items.
+        Also updates `self`.
 
          - depth_change - int (N.B. not Size)
         '''
@@ -137,6 +145,8 @@ if (((S->stack_size - S->STACK_DEPTH) < (mit_uword)({depth_change}))) {{
         if depth_change == 0: return ''
         self.cached_depth += depth_change
         if self.cached_depth < 0: self.cached_depth = 0
+        self.checked_depth -= depth_change
+        if self.checked_depth < 0: self.checked_depth = 0
         return 'cached_depth = {};'.format(self.cached_depth)
 
     @staticmethod
@@ -162,8 +172,10 @@ if (((S->stack_size - S->STACK_DEPTH) < (mit_uword)({depth_change}))) {{
            `cache_depth`. Default is `0`.
         '''
         if type(goal) is int:
-            goal = CacheState(goal)
+            goal = CacheState(goal, self.checked_depth)
         assert goal.cached_depth <= self.cached_depth, (goal, self)
+        assert goal.checked_depth <= self.checked_depth, (goal, self)
+        self.checked_depth = goal.checked_depth
         if goal.cached_depth == self.cached_depth: return ''
         code = []
         for pos in reversed(range(goal.cached_depth, self.cached_depth)):

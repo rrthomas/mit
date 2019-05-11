@@ -51,7 +51,7 @@ class Label:
 
     def cache_state(self):
         '''Returns a fresh CacheState describing this Label.'''
-        return CacheState(self.cached_depth)
+        return CacheState(self.cached_depth, self.checked_depth)
 
     def goto(self, cache_state):
         '''
@@ -208,7 +208,7 @@ print('''\
     RET:
         switch (cached_depth) {'''
 )
-cache_state = CacheState(max_cached_depth)
+cache_state = CacheState(max_cached_depth, 0)
 while cache_state.cached_depth > 0:
     print('''\
         case {}:'''.format(cache_state.cached_depth)
