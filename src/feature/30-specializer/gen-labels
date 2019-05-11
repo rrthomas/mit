@@ -118,7 +118,7 @@ class Path:
         at least as much about the stack now as we did before the last repeat,
         returns the Path before the last repeat, otherwise returns `self`.
         '''
-        for n in range(1, len(self)//2+1):
+        for n in range(2, len(self)//2+1):
             if self.instructions[-n:] == self.instructions[-2*n:-n]:
                 shorter = self[:-n]
                 if (self.cached_depth >= shorter.cached_depth and
@@ -140,7 +140,7 @@ def walk(path, distribution):
     '''
     # Check for statistical irrelevance (but keep singleton paths).
     estimated_count = sum(distribution)
-    if len(path) > 1 and estimated_count < 1000000.: return
+    if len(path) > 1 and estimated_count < 300000.: return
     # Check for repetition.
     if path in language: return
     # Okay, we'll keep it.
@@ -182,6 +182,7 @@ successors = {
     path: {
         instruction: (path + (instruction,)).remove_repeating_part()
         for instruction in Instruction
+        if instruction.args is not None # Don't bother to guess EXT.
     }
     for path in language
 }
@@ -209,7 +210,7 @@ state_index = {} # Inverse of `states`.
 
 # For each state in `states`, there is a transition in `transitions`.
 # It can be:
-#  - None - return;
+#  - None - goto fallback;
 #  - int g - goto g;
 #  - (Instruction i, int c, int w) - if (next==i) { e; goto c; } else goto w;
 transitions = []
@@ -244,12 +245,11 @@ while len(transitions) < len(states):
             break
     else:
         # There is no good guess.
-        if len(path) > 0:
+        if len(path) > 1:
             new_path = path[1:].remove_repeating_part()
             transitions.append(enqueue(new_path, rejects))
         else:
-            # We have eliminated all possible Instructions.
-            # It's an illegal instruction.
+            # There is no useful history. Use the fallback executor.
             transitions.append(None)
 
 assert len(states) == len(state_index) == len(transitions)

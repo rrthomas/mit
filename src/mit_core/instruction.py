@@ -16,7 +16,9 @@ class AbstractInstruction(Enum):
     VM instruction instruction descriptor.
 
      - opcode - int - opcode number
-     - effect - StackEffect (or None for arbitrary stack effect)
+     - args, results - lists of str, acceptable to StackPicture.of().
+       If both are `None`, then the instruction has an arbitrary stack
+       effect, like `EXT`.
      - code - str - C source code
 
     C variables are created for the arguments and results; the arguments are
@@ -26,11 +28,6 @@ class AbstractInstruction(Enum):
     error is raised, the state of the VM is not changed.
     '''
     def __init__(self, opcode, args, results, code):
-        '''
-         - args, results - lists of str, acceptable to StackPicture.of().
-           If both are `None`, then the instruction has an arbitrary stack
-           effect, like `EXT`.
-        '''
         self.opcode = opcode
         if args is None or results is None:
             assert args is None and results is None
