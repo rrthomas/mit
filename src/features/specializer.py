@@ -34,6 +34,9 @@ class CacheState:
     def __init__(self, cached_depth):
         self.cached_depth = cached_depth
 
+    def __repr__(self):
+        return 'CacheState({})'.format(self.cached_depth)
+
     def check_underflow(self, num_pops):
         '''
         Returns C source code to check that the stack contains enough items to
@@ -149,25 +152,31 @@ if (((S->stack_size - S->STACK_DEPTH) < (mit_uword)({depth_change}))) {{
         '''
         return self.var_for_depth(pos, self.cached_depth)
 
-    def flush(self, depth_limit=0):
+    def flush(self, goal=0):
         '''
         Decrease the number of stack items that are cached in C variables,
         if necessary. Returns C source code to move values between variables
         and to memory. Also updates the C variable `cached_depth`.
+
+         - goal - a CacheState to match, or an int to specify a desired
+           `cache_depth`. Default is `0`.
         '''
-        if self.cached_depth <= depth_limit: return ''
+        if type(goal) is int:
+            goal = CacheState(goal)
+        assert goal.cached_depth <= self.cached_depth, (goal, self)
+        if goal.cached_depth == self.cached_depth: return ''
         code = []
-        for pos in reversed(range(depth_limit, self.cached_depth)):
+        for pos in reversed(range(goal.cached_depth, self.cached_depth)):
             code.append('*UNCHECKED_STACK({pos}) = {var};'.format(
                 pos=pos,
                 var=self.var(pos),
             ))
-        for pos in reversed(range(depth_limit)):
+        for pos in reversed(range(goal.cached_depth)):
             code.append('{} = {};'.format(
-                self.var_for_depth(pos, depth_limit),
+                goal.var(pos),
                 self.var(pos),
             ))
-        self.cached_depth = depth_limit
+        self.cached_depth = goal.cached_depth
         code.append('cached_depth = {};'.format(self.cached_depth))
         return '\n'.join(code)
 
@@ -184,7 +193,7 @@ def cache_limit(picture):
             return i
     return None
 
-def gen_case(instruction, cache_state, exit_depth):
+def gen_case(instruction, cache_state):
     '''
     Generate the code for an Instruction.
 
@@ -195,7 +204,6 @@ def gen_case(instruction, cache_state, exit_depth):
      - instruction - Instruction.
      - cache_state - CacheState - Which StackItems are cached.
        Updated in place.
-     - exit_depth - int - the `cached_depth` desired on exit.
     '''
     assert instruction.args is not None and instruction.results is not None
     effect = StackEffect(
@@ -205,7 +213,7 @@ def gen_case(instruction, cache_state, exit_depth):
     code = []
     # Flush cached items, if necessary.
     args_limit = cache_limit(effect.args)
-    if args_limit is not None:
+    if args_limit is not None and args_limit < cache_state.cached_depth:
         code.append(cache_state.flush(args_limit))
     # Load the arguments into C variables.
     code.append(effect.declare_vars())
@@ -232,20 +240,16 @@ def gen_case(instruction, cache_state, exit_depth):
     # Note: `S->STACK_DEPTH` and `cached_depth` must be correct for RAISE().
     code.append(textwrap.dedent(instruction.code.rstrip()))
     # Adjust cache_state.
-    results_limit = cache_limit(effect.args)
+    results_limit = cache_limit(effect.results)
     if results_limit is None:
-        num_pushes = int(effect.results.size)
-        code.append(cache_state.flush(max(0, exit_depth - num_pushes)))
-        code.append(cache_state.add(exit_depth - cache_state.cached_depth))
+        code.append(cache_state.add(int(effect.results.size)))
     else:
         code.append(cache_state.flush())
-        assert exit_depth <= results_limit
-        code.append(cache_state.add(exit_depth))
+        code.append(cache_state.add(results_limit))
     # Store the results from C variables.
     code.extend([
         'S->STACK_DEPTH += {};'.format(effect.results.size),
         cache_state.store_results(effect.results),
     ])
-    assert cache_state.cached_depth == exit_depth
     # Remove newlines resulting from empty strings in the above.
     return re.sub('\n+', '\n', '\n'.join(code), flags=re.MULTILINE).strip('\n')

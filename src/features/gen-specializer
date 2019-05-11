@@ -49,6 +49,21 @@ class Label:
         self.if_correct = if_correct
         self.if_wrong = if_wrong
 
+    def cache_state(self):
+        '''Returns a fresh CacheState describing this Label.'''
+        return CacheState(self.cached_depth)
+
+    def goto(self, cache_state):
+        '''
+        Returns C source code to jump to this Label.
+         - cache_state - The CacheState before the goto. This method generates
+           code to flush the cache to meet the expectations at this Label.
+        '''
+        return '\n'.join([
+            cache_state.flush(self.cache_state()),
+            'goto {};'.format(self.name),
+        ])
+
 with open(sys.argv[1], "rb") as h:
     labels = [
         Label('A_{}'.format(index), tos, ca, ch, Instruction[gu], ic, iw)
@@ -84,7 +99,10 @@ print('''\
 
 #define NEXT                                                  \\
     do {                                                      \\
+        if (S->I != 0)                                        \\
+            RAISE(MIT_ERR_INVALID_OPCODE);                    \\
         int ret = load(S, S->PC, MIT_SIZE_WORD, (mit_word *)&(S->I)); \\
+specializer".:src/feature/30-specializer/gen-specializer
         if (ret != 0)                                         \\
             RAISE(ret);                                       \\
         S->PC += MIT_WORD_BYTES;                              \\
@@ -102,7 +120,8 @@ mit_word mit_specializer_run(mit_state * restrict S) {
     int res = MIT_ERROR_OK;''')
 
 # Declare stack cache variables.
-max_cached_depth = max(label.cached_depth for label in labels)
+# max_cached_depth = max(label.cached_depth for label in labels)
+max_cached_depth = 3 # TODO: Compute this correctly.
 if max_cached_depth > 0:
     print('''\
     mit_word {};'''.format(
@@ -158,29 +177,23 @@ for label in labels:
     if label.guess.terminal:
         print('    if (S->I != 0) goto A_FALLBACK;')
     # If correct.
-    label_c = label_by_index(label.if_correct)
+    cache_state = label.cache_state()
     print(textwrap.indent(
-        gen_case(
-            label.guess,
-            CacheState(label.cached_depth),
-            label_c.cached_depth,
-        ),
+        '\n'.join([
+            gen_case(label.guess, cache_state),
+            'FETCH;',
+            label_by_index(label.if_correct).goto(cache_state),
+        ]),
         '            ',
     ))
     print('''\
-            FETCH;
-            goto {};
-        }}'''.format(label_c.name)
-    )
+        }''')
     # If wrong.
-    label_w = label_by_index(label.if_wrong)
+    cache_state = label.cache_state()
     print(textwrap.indent(
-        CacheState(label.cached_depth).flush(label_w.cached_depth),
+        label_by_index(label.if_wrong).goto(cache_state),
         '        ',
     ))
-    print('''\
-        goto {};'''.format(label_w.name)
-    )
     print()
 
 print('''\
