@@ -22,7 +22,6 @@ __pycache__/
 /instructions.c
 /main.c
 /ext.c
-/gen-main
 /type-sizes
 /type-sizes.ac
 /include/mit/mit.h
