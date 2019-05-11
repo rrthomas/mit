@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-import sys, pickle
+import sys, pickle, re
 
 from mit_core.vm_data import Instruction
 
@@ -43,6 +43,8 @@ class Path:
     Represents a sequence of instructions that has just been executed.
 
      - instructions - tuple of Instructions.
+     - tos_constant - int - the constant value on the top of the stack, or
+       `None` if unknown.
      - cached_depth - int - The number of topmost stack items that are cached
        at the end of this Path.
      - checked_depth - int - the number of empty stack slots that are known
@@ -50,6 +52,14 @@ class Path:
     '''
     def __init__(self, instructions):
         assert type(instructions) is tuple
+        self.instructions = instructions
+        # Compute `tos_constant`.
+        self.tos_constant = None
+        if len(instructions) > 0:
+            m = re.match('LIT_(\d+)', instructions[-1].name)
+            if m:
+                # The last instruction exists and pushes a constant.
+                self.tos_constant = int(m.group(1))
         # Compute `cached_depth`, `checked_depth`.
         cached_depth = 0
         checked_depth = 0
@@ -82,8 +92,6 @@ class Path:
                         checked_depth -= 1
                 if checked_depth < 0:
                     checked_depth = 0
-        # Initialise `self`.
-        self.instructions = instructions
         self.cached_depth = cached_depth
         self.checked_depth = checked_depth
 
@@ -273,6 +281,7 @@ def short_circuit(state):
 # List of (guess, label or None, label or None).
 labels = [
     (
+        path.tos_constant,
         path.cached_depth,
         path.checked_depth,
         guess.name,
@@ -290,6 +299,7 @@ assert len(label_map) == len(labels)
 
 with open(labels_filename, 'wb') as f:
     # [(
+    #     tos_constant (int?),
     #     cached_depth (int),
     #     checked_depth (int),
     #     instruction_name (str),
