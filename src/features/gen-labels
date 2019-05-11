@@ -82,9 +82,10 @@ class Path:
                 if cached_depth < 0:
                     cached_depth = 0
                 # Simulate pushing results.
-                for item in reversed(instruction.results):
+                for item in instruction.results:
                     if item == 'ITEMS':
-                        # Suppose `COUNT` is zero to match args.
+                        # Conservatively suppose `COUNT` is large.
+                        checked_depth = 0
                         # We cannot cache items below 'ITEMS'.
                         cached_depth = 0
                     else:
