@@ -149,7 +149,7 @@ def walk(path, distribution):
     '''
     # Check for statistical irrelevance (but keep singleton paths).
     estimated_count = sum(distribution)
-    if len(path) > 1 and estimated_count < 300000.: return
+    if estimated_count < 300000.: return
     # Check for repetition.
     if path in language: return
     # Okay, we'll keep it.
@@ -174,9 +174,6 @@ def walk(path, distribution):
 walk(Path(()), [float(x) for x in state_counts])
 
 # Sanity checks.
-
-for instruction in Instruction:
-    assert Path((instruction,)) in language
 
 for path in language:
     assert path[1:].remove_repeating_part() in language
