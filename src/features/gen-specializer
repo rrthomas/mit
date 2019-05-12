@@ -69,7 +69,7 @@ print('''\
 
 #include "mit/mit.h"
 #include "mit/opcodes.h"
-#include "mit/specializer.h"
+#include "mit/features.h"
 
 #define RAISE(code)                                           \\
     do {                                                      \\
@@ -82,22 +82,22 @@ print('''\
 #define NEXT                                                  \\
     do {                                                      \\
         if (S->I != 0)                                        \\
-            RAISE(MIT_ERR_INVALID_OPCODE);                  \\
+            RAISE(MIT_ERR_INVALID_OPCODE);                    \\
         int ret = load(S, S->PC, mit_SIZE_WORD, (mit_WORD *)&(S->I)); \\
         if (ret != 0)                                         \\
             RAISE(ret);                                       \\
-        S->PC += WORD_BYTES;                                  \\
+        S->PC += mit_WORD_BYTES;                              \\
     } while (0)
 
 #define FETCH                                                 \\
     do {                                                      \\
         initial_PC = S->PC;                                   \\
         initial_I = S->I;                                     \\
-        opcode = S->I & MIT_INSTRUCTION_MASK;               \\
-        S->I >>= MIT_INSTRUCTION_BIT;                       \\
+        opcode = S->I & MIT_INSTRUCTION_MASK;                 \\
+        S->I >>= MIT_INSTRUCTION_BIT;                         \\
     } while (0)
 
-mit_WORD mit_run_specialized(mit_state *S) {
+mit_WORD mit_specializer_run(mit_state *S) {
     int res = MIT_ERR_OK;''')
 
 # Declare stack cache variables.

@@ -41,7 +41,7 @@ ptrdiff_t mit_load_object(mit_state *S, mit_UWORD addr, int fd)
     // Read and check header
     char header[HEADER_LENGTH] = {'\0'};
     mit_UWORD endism;
-    mit_UWORD _WORD_BYTES;
+    mit_UWORD file_word_bytes;
     memcpy(header, buf, nread);
     if ((res = read(fd, &header[nread], sizeof(header) - nread)) == -1)
         return -1;
@@ -49,15 +49,15 @@ ptrdiff_t mit_load_object(mit_state *S, mit_UWORD addr, int fd)
         memcmp(header, HEADER_MAGIC, sizeof(HEADER_MAGIC)) ||
         (endism = header[sizeof(HEADER_MAGIC)]) > 1)
         return -2;
-    if (endism != ENDISM ||
-        (_WORD_BYTES = header[sizeof(HEADER_MAGIC) + 1]) != WORD_BYTES)
+    if (endism != mit_ENDISM ||
+        (file_word_bytes = header[sizeof(HEADER_MAGIC) + 1]) != mit_WORD_BYTES)
         return -3;
 
     // Read and check size, and ensure code will fit in memory
     mit_UWORD len = 0;
     if ((res = read(fd, &len, sizeof(len))) == -1)
         return -1;
-    if (ENDISM != HOST_ENDISM)
+    if (mit_ENDISM != mit_HOST_ENDISM)
         len = reverse_endianness(mit_WORD_BIT, len);
     if (res != sizeof(len))
         return -2;
@@ -81,11 +81,11 @@ int mit_save_object(mit_state *S, mit_UWORD addr, mit_UWORD len, int fd)
         return -2;
 
     mit_BYTE buf[HEADER_LENGTH] = HEADER_MAGIC;
-    buf[sizeof(HEADER_MAGIC)] = ENDISM;
-    buf[sizeof(HEADER_MAGIC) + 1] = WORD_BYTES;
+    buf[sizeof(HEADER_MAGIC)] = mit_ENDISM;
+    buf[sizeof(HEADER_MAGIC) + 1] = mit_WORD_BYTES;
 
     mit_UWORD len_save = len;
-    if (ENDISM != HOST_ENDISM)
+    if (mit_ENDISM != mit_HOST_ENDISM)
         len_save = reverse_endianness(mit_WORD_BIT, len_save);
 
     if (write(fd, &buf[0], HEADER_LENGTH) != HEADER_LENGTH ||

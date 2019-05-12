@@ -1,16 +1,25 @@
-# Specializer Makefile.am fragment
+# Features Makefile.am
 #
-# (c) Mit authors 2011-2019
+# (c) Mit authors 2019
 #
 # The package is distributed under the MIT/X11 License.
 #
 # THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 # RISK.
 
-AM_CPPFLAGS += -I$(builddir)/%D%
+lib_LTLIBRARIES += libmitfeatures@PACKAGE_SUFFIX@.la
+libmitfeatures@PACKAGE_SUFFIX@_la_SOURCES = \
+	%D%/auto-extend.c \
+	%D%/trace.c \
+	%D%/core-dump.c
+libmitfeatures@PACKAGE_SUFFIX@_la_LIBADD = libmit@PACKAGE_SUFFIX@.la $(top_builddir)/lib/libgnu.la
+libmitfeatures@PACKAGE_SUFFIX@_la_LDFLAGS = -no-undefined -export-symbols-regex '^mit_.*'
+nodist_libmitfeatures@PACKAGE_SUFFIX@_la_SOURCES = %D%/specializer.c
 
-nodist_LIB_SRCS += %D%/specializer.c
-nodist_mit_pkginclude_HEADERS += %D%/mit/specializer.h
+mit_pkginclude_HEADERS += %D%/mit/features.h
+
+%D%/mit/features.h: $(top_builddir)/config.status %D%/mit/features.h.in
+	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
 
 %D%/instructions.predictor_pickle: mit_core/instruction.py mit_core/vm_data.py %D%/gen-predictor %D%/instructions.trace.gz
 	$(PYTHON_WITH_PATH) $(srcdir)/%D%/gen-predictor $(srcdir)/%D%/instructions.trace.gz $@
@@ -22,7 +31,6 @@ nodist_mit_pkginclude_HEADERS += %D%/mit/specializer.h
 	$(PYTHON_WITH_PATH) $(srcdir)/%D%/gen-specializer %D%/instructions.labels_pickle > %D%/specializer.c || ( rm -f %D%/specializer.c; exit 1 )
 
 EXTRA_DIST += \
-	%D%/feature.py \
 	%D%/specializer.py \
 	%D%/gen-labels \
 	%D%/gen-predictor \

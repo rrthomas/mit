@@ -115,6 +115,8 @@ esac
 
 # Set size of word
 AC_CHECK_SIZEOF([size_t])
+SIZEOF_SIZE_T=$ac_cv_sizeof_size_t
+AC_SUBST([SIZEOF_SIZE_T])
 AC_ARG_VAR([WORD_BYTES],
   [value of WORD_BYTES register [default: sizeof(size_t)]])
 : "${WORD_BYTES=$ac_cv_sizeof_size_t}"
@@ -147,7 +149,7 @@ AC_CONFIG_FILES([
         lib/Makefile
         src/Makefile
         src/include/mit/mit.h
-        src/feature/30-specializer/mit/specializer.h
+        src/features/mit/features.h
         tests/Makefile
         python/Makefile
         python/mit/binding.py

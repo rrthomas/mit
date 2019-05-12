@@ -20,21 +20,21 @@
 
 
 // Build-time parameters
-#define WORD_BYTES @WORD_BYTES@
-#define ENDISM @ENDISM@
-#define HOST_ENDISM @WORDS_BIGENDIAN@
+#define mit_WORD_BYTES @WORD_BYTES@
+#define mit_ENDISM @ENDISM@
+#define mit_HOST_ENDISM @WORDS_BIGENDIAN@
 
 // Types and constants
-#if WORD_BYTES == 2
+#if mit_WORD_BYTES == 2
 #define mit_WORD_BIT 16
 #define mit_SIZE_WORD 1
-#elif WORD_BYTES == 4
+#elif mit_WORD_BYTES == 4
 #define mit_WORD_BIT 32
 #define mit_SIZE_WORD 2
-#elif WORD_BYTES == 8
+#elif mit_WORD_BYTES == 8
 #define mit_WORD_BIT 64
 #define mit_SIZE_WORD 3
-#elif WORD_BYTES == 16
+#elif mit_WORD_BYTES == 16
 #define mit_WORD_BIT 128
 #define mit_SIZE_WORD 4
 /* Given an unsigned 128-bit argument X, return the value corresponding to
@@ -46,7 +46,7 @@
 typedef __int128 mit_WORD;
 typedef unsigned __int128 mit_UWORD;
 #else
-#error "WORD_BYTES must be 2, 4, 8 or 16!"
+#error "mit_WORD_BYTES must be 2, 4, 8 or 16!"
 #endif
 
 typedef uint8_t mit_BYTE;
@@ -60,7 +60,7 @@ typedef uint8_t mit_BYTE;
 #define _reverse_endianness(bits, n) bswap_ ## bits(n)
 #define reverse_endianness(bits, n) _reverse_endianness(bits, n)
 
-#if WORD_BYTES != 16
+#if mit_WORD_BYTES != 16
 #define _bits_type_name(prefix, bits) prefix ## bits ## _t
 #define bits_type_name(prefix, bits) _bits_type_name(prefix, bits)
 typedef bits_type_name(int, mit_WORD_BIT) mit_WORD;
@@ -68,7 +68,8 @@ typedef bits_type_name(uint, mit_WORD_BIT) mit_UWORD;
 #endif
 
 // FIXME: find largest type: bigger of long double and maxint_t?
-#if SIZEOF_SIZE_T > WORD_BYTES
+// Number in next line is sizeof(size_t)
+#if mit_WORD_BYTES < @SIZEOF_SIZE_T@
 typedef size_t mit_max_stack_item_t;
 #else
 typedef mit_UWORD mit_max_stack_item_t;
@@ -170,7 +171,7 @@ uint8_t *mit_native_address_of_range(mit_state *S, mit_UWORD addr, mit_UWORD len
 int mit_load(mit_state *S, mit_UWORD addr, unsigned size, mit_WORD *val_ptr);
 /* Copy 1 << `size` bytes from `addr` to `val_ptr`.
 
-   `size` must be between 0 and log2(WORD_BYTES) inclusive.
+   `size` must be between 0 and log2(mit_WORD_BYTES) inclusive.
    `addr` must be 1 << `size`-aligned.
 
    Return 0 if OK, or error code if `addr` is invalid or unaligned.
@@ -180,7 +181,7 @@ int mit_store(mit_state *S, mit_UWORD addr, unsigned size, mit_WORD val);
 /* Store the 1 << `size` least-significant bytes of `val` at virtual address
    `addr`.
 
-   `size` must be between 0 and log2(WORD_BYTES) inclusive.
+   `size` must be between 0 and log2(mit_WORD_BYTES) inclusive.
    `addr` must be 1 << `size`-aligned.
 
    Return 0 if OK, or error code if `addr` is invalid or unaligned.
@@ -216,25 +217,25 @@ static int load(mit_state *S, mit_UWORD addr, unsigned size, mit_WORD *val_ptr)
 #pragma GCC diagnostic ignored "-Wcast-align"
     case 1:
         val = (mit_UWORD)*((uint16_t *)((uint8_t *)S->memory + addr));
-        if (ENDISM != HOST_ENDISM)
+        if (mit_ENDISM != mit_HOST_ENDISM)
             val = bswap_16(val);
         break;
 #if mit_SIZE_WORD >= 2
     case 2:
         val = (mit_UWORD)*((uint32_t *)((uint8_t *)S->memory + addr));
-        if (ENDISM != HOST_ENDISM)
+        if (mit_ENDISM != mit_HOST_ENDISM)
             val = bswap_32(val);
         break;
 #if mit_SIZE_WORD >= 3
     case 3:
         val = (mit_UWORD)*((uint64_t *)((uint8_t *)S->memory + addr));
-        if (ENDISM != HOST_ENDISM)
+        if (mit_ENDISM != mit_HOST_ENDISM)
             val = bswap_64(val);
         break;
 #if mit_SIZE_WORD >= 4
     case 4:
         val = (mit_UWORD)*((unsigned __int128 *)((uint8_t *)S->memory + addr));
-        if (ENDISM != HOST_ENDISM)
+        if (mit_ENDISM != mit_HOST_ENDISM)
             val = bswap_128(val);
         break;
 #endif
@@ -267,25 +268,25 @@ static int store(mit_state *S, mit_UWORD addr, unsigned size, mit_WORD val)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wcast-align"
     case 1:
-        if (ENDISM != HOST_ENDISM)
+        if (mit_ENDISM != mit_HOST_ENDISM)
             val = bswap_16(val);
         *((uint16_t *)((uint8_t *)S->memory + addr)) = (uint16_t)val;
         break;
 #if mit_SIZE_WORD >= 2
     case 2:
-        if (ENDISM != HOST_ENDISM)
+        if (mit_ENDISM != mit_HOST_ENDISM)
             val = bswap_32(val);
         *((uint32_t *)((uint8_t *)S->memory + addr)) = (uint32_t)val;
         break;
 #if mit_SIZE_WORD >= 3
     case 3:
-        if (ENDISM != HOST_ENDISM)
+        if (mit_ENDISM != mit_HOST_ENDISM)
             val = bswap_64(val);
         *((uint64_t *)((uint8_t *)S->memory + addr)) = (uint64_t)val;
         break;
 #if mit_SIZE_WORD >= 4
     case 4:
-        if (ENDISM != HOST_ENDISM)
+        if (mit_ENDISM != mit_HOST_ENDISM)
             val = bswap_128(val);
         *((unsigned __int128 *)((uint8_t *)S->memory + addr)) = (unsigned __int128)val;
         break;
@@ -445,7 +446,7 @@ ptrdiff_t mit_load_object(mit_state *S, mit_UWORD addr, int fd);
    -1: error reading the object file
    -2: module is invalid
    -3: current implementation is incompatible with the module (for example,
-       the word size or `ENDISM` is incompatible)
+       the word size or `mit_ENDISM` is incompatible)
    -4: the code will not fit into memory at the address given, or the
        address is out of range or unaligned.
 

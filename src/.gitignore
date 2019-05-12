@@ -4,12 +4,10 @@ __pycache__/
 *.lo
 *.o
 *.s
+*.la
 /autom4te.cache
 /config.log
 /config.status
-/libmit.la
-/libmit-[bl]e-[248].la
-/libmit-[bl]e-16.la
 /mit
 /mit-[bl]e-[248]
 /mit-[bl]e-16
@@ -22,7 +20,6 @@ __pycache__/
 /instructions.c
 /main.c
 /ext.c
-/gen-main
 /type-sizes
 /type-sizes.ac
 /include/mit/mit.h

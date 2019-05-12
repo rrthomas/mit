@@ -9,7 +9,6 @@
 # RISK.
 
 import os
-import sys
 import pathlib
 import glob
 import textwrap
@@ -77,12 +76,79 @@ class Arg(Feature):
         self.docstring = docstring
 
 
-# Build feature list
-for feature_dir in sorted([
-    file for file in glob.glob(os.path.join(sys.argv[1], '*'))
-    if pathlib.Path(file).is_dir()
-]):
-    exec(open(os.path.join(feature_dir, 'feature.py')).read())
+# Features
+Option('specializer',
+       'use specializing interpreter',
+       short_name='O',
+       parse_code='run_fn = mit_specializer_run;',
+)
+Option('no-auto-extend',
+       'do not automatically extend stack or memory',
+       exception_handler='''\
+case MIT_ERR_STACK_OVERFLOW:
+case MIT_ERR_MEMORY_READ:
+case MIT_ERR_MEMORY_WRITE:
+    if (mit_auto_extend_handler(S, error) == 0)
+        continue;
+    break;''')
+Option('trace',
+       'write dynamic instruction trace to FILE',
+       arg='required_argument',
+       arg_name='FILE',
+       top_level_code='''\
+FILE *trace_fp;
+static mit_WORD trace_run(mit_state *state)
+{
+    return mit_trace_run(state, trace_fp);
+}
+''',
+       parse_code='''\
+{
+    trace_fp = fopen(optarg, "wb");
+    run_fn = trace_run;
+    if (trace_fp == NULL)
+        die("cannot not open file %s", optarg);
+    warn("trace will be written to %s\\n", optarg);
+}
+''')
+Option('core-dump',
+       'dump core on memory exception',
+       short_name='c', arg='no_argument',
+       top_level_code='#include <stdbool.h>',
+       init_code='bool core_dump = false;',
+       parse_code='core_dump = true;',
+       exception_handler='''\
+default:
+    if (core_dump)
+        mit_core_dump(S);
+    break;''')
+Option('help',
+       'display this help message and exit',
+       parse_code='usage();'
+)
+
+Option('version',
+       'display version information and exit',
+       parse_code='''\
+{
+    printf(PACKAGE_NAME " " VERSION " (%d-byte word, %s-endian)\\n"
+           "(c) Mit authors 1994-2019\\n"
+           PACKAGE_NAME " comes with ABSOLUTELY NO WARRANTY.\\n"
+           "You may redistribute copies of " PACKAGE_NAME "\\n"
+           "under the terms of the MIT/X11 License.\\n",
+           mit_WORD_BYTES, mit_ENDISM ? "big" : "little");
+    exit(EXIT_SUCCESS);
+}
+''')
+
+Arg('OBJECT-FILE', 'load and run object OBJECT-FILE')
+Doc('')
+Doc('"The ARGUMENTS are available to "PACKAGE_NAME"."')
+Doc('')
+Doc('If an error occurs during execution, the exit status is the error code; if')
+Doc('execution HALTs normally, the exit status is the top-most stack value.')
+Doc('')
+Doc('"Report bugs to "PACKAGE_BUGREPORT"."')
 
 
 # Generate output
@@ -105,6 +171,7 @@ print('''\
 #include "progname.h"
 
 #include "mit/mit.h"
+#include "mit/features.h"
 
 
 static _GL_ATTRIBUTE_FORMAT_PRINTF(1, 0) void verror(const char *format, va_list args)
@@ -259,7 +326,7 @@ print('''\
         usage();
 
     // Set up VM
-    S = mit_init(memory_size, stack_size);
+    S = mit_auto_extend_init();
     if (S == NULL)
         die("could not allocate virtual machine state");
     if (atexit(exit_function) != 0)
@@ -299,8 +366,8 @@ print('''\
 print('''\
     // Run
     for (;;) {
-        int res = run_fn(S);
-        switch (res) {''')
+        int error = run_fn(S);
+        switch (error) {''')
 
 for feature in features:
     if isinstance(feature, Option) and feature.exception_handler:
@@ -308,6 +375,6 @@ for feature in features:
 
 print('''\
         }
-        return res == 128 ? 0 : res;
+        return error == 128 ? 0 : error;
     }
 }''')
