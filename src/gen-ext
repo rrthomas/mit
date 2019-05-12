@@ -15,7 +15,15 @@ from mit_core.instruction_gen import *
 print(includes)
 
 print('''
-#include "mit/ext-opcodes.h"
+
+#define INSTRUCTION(name, opcode) name = opcode,
+''')
+LibInstruction.print("")
+LibcLib.print("LIB_C_")
+MitLib.print("LIB_MIT_")
+
+print('''
+#undef INSTRUCTION
 
 enum {
     MIT_ERR_EXT_INVALID_LIBRARY = 16,
