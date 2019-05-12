@@ -7,7 +7,7 @@
 # THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 # RISK.
 
-AM_CPPFLAGS = -I$(top_builddir)/lib -I$(top_srcdir)/lib -I$(builddir)/include -I$(srcdir)/include $(WARN_CFLAGS)
+AM_CPPFLAGS = -I$(top_builddir)/lib -I$(top_srcdir)/lib -I$(builddir)/include -I$(srcdir)/include -I$(builddir)/features $(WARN_CFLAGS)
 PYTHON_WITH_PATH = export PYTHONPATH=$(top_srcdir)/python:$(top_srcdir)/src:$(top_builddir)/src; $(PYTHON)
 
 lib_LTLIBRARIES = libmit@PACKAGE_SUFFIX@.la
@@ -20,7 +20,7 @@ libmit@PACKAGE_SUFFIX@_la_LDFLAGS = -no-undefined -export-symbols-regex '^mit_.*
 
 bin_PROGRAMS = mit@PACKAGE_SUFFIX@$(EXEEXT)
 man_MANS = mit@PACKAGE_SUFFIX@.1
-mit@PACKAGE_SUFFIX@_LDADD = libmit@PACKAGE_SUFFIX@.la $(top_builddir)/lib/libgnu.la
+mit@PACKAGE_SUFFIX@_LDADD = libmit@PACKAGE_SUFFIX@.la libmitfeatures@PACKAGE_SUFFIX@.la $(top_builddir)/lib/libgnu.la
 nodist_mit@PACKAGE_SUFFIX@_SOURCES = main.c
 mit_pkgincludedir = $(pkgincludedir)@PACKAGE_SUFFIX@
 nodist_mit_pkginclude_HEADERS = include/mit/opcodes.h include/mit/ext-opcodes.h include/mit/registers.h
@@ -81,8 +81,8 @@ mit_core/type_sizes.py: $(top_builddir)/config.status gen-type-sizes collate-typ
 ext.c: gen-ext mit_core/ext.py mit_core/instruction.py mit_core/instruction_gen.py mit_core/type_sizes.py mit_core/c_util.py
 	$(PYTHON_WITH_PATH) $(srcdir)/gen-ext > ext.c || ( rm -f ext.c; exit 1 )
 
-main.c: $(srcdir)/feature/*/feature.py gen-main
-	$(PYTHON_WITH_PATH) $(srcdir)/gen-main $(srcdir)/feature > main.c || ( rm -f main.c; exit 1 )
+main.c: gen-main
+	$(PYTHON_WITH_PATH) $(srcdir)/gen-main > main.c || ( rm -f main.c; exit 1 )
 
 loc:
 	$(SLOCCOUNT) \
@@ -118,5 +118,5 @@ distcleancheck_listfiles = \
        find . -type f -exec sh -c 'test -f $(srcdir)/$$1 || echo $$1' \
 	    sh '{}' ';'
 
-# Include feature makefile fragments
-include $(srcdir)/feature/features.am
+# Features
+include features/features.am

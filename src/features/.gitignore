@@ -1,3 +1,4 @@
+.dirstamp
 *.predictor_pickle
 *.labels_pickle
 specializer.c

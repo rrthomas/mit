@@ -147,7 +147,7 @@ AC_CONFIG_FILES([
         lib/Makefile
         src/Makefile
         src/include/mit/mit.h
-        src/feature/30-specializer/mit/specializer.h
+        src/features/mit/features.h
         tests/Makefile
         python/Makefile
         python/mit/binding.py
