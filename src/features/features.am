@@ -9,6 +9,7 @@
 
 lib_LTLIBRARIES += libmitfeatures@PACKAGE_SUFFIX@.la
 libmitfeatures@PACKAGE_SUFFIX@_la_SOURCES = \
+	%D%/extra-instructions.c \
 	%D%/auto-extend.c \
 	%D%/trace.c \
 	%D%/core-dump.c
@@ -21,6 +22,9 @@ mit_pkginclude_HEADERS += %D%/mit/features.h
 %D%/mit/features.h: $(top_builddir)/config.status %D%/mit/features.h.in
 	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
 
+%D%/extra-instructions.c: %D%/gen-extra-instructions %D%/mit/features.h mit_core/ext.py mit_core/instruction.py mit_core/instruction_gen.py mit_core/type_sizes.py mit_core/c_util.py
+	$(PYTHON_WITH_PATH) $(srcdir)/%D%/gen-extra-instructions > %D%/extra-instructions.c || ( rm -f %D%/extra-instructions.c; exit 1 )
+
 %D%/instructions.predictor_pickle: mit_core/instruction.py mit_core/vm_data.py %D%/gen-predictor %D%/instructions.trace.gz
 	$(PYTHON_WITH_PATH) $(srcdir)/%D%/gen-predictor $(srcdir)/%D%/instructions.trace.gz $@
 
@@ -31,6 +35,7 @@ mit_pkginclude_HEADERS += %D%/mit/features.h
 	$(PYTHON_WITH_PATH) $(srcdir)/%D%/gen-specializer %D%/instructions.labels_pickle > %D%/specializer.c || ( rm -f %D%/specializer.c; exit 1 )
 
 EXTRA_DIST += \
+	%D%/gen-extra-instructions \
 	%D%/specializer.py \
 	%D%/gen-labels \
 	%D%/gen-predictor \
@@ -38,6 +43,7 @@ EXTRA_DIST += \
 	%D%/instructions.trace.gz
 
 DISTCLEANFILES += \
+	%D%/extra-instructions.c \
 	%D%/instructions.predictor_pickle \
 	%D%/instructions.labels_pickle \
 	%D%/specializer.c

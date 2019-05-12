@@ -22,11 +22,9 @@ for i in range(2):
     lit(code_len)
     lit(14)
     lit(LIB_C_STDOUT)
-    lit(LIB_C)
-    ass(EXT)
+    ass_call_extra(LIB_C)
     lit(LIB_C_WRITE)
-    lit(LIB_C)
-    ass(EXT)
+    ass_call_extra(LIB_C)
     ass(HALT)
     code_len = assembler.pc
 

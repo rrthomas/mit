@@ -13,14 +13,20 @@ from ctypes import *
 from ctypes.util import find_library
 
 library_file = find_library("mit@PACKAGE_SUFFIX@")
+features_library_file = find_library("mitfeatures@PACKAGE_SUFFIX@")
 if not library_file:
     # For Windows
     # FIXME: Do this portably
     # FIXME: Substitute version when library is versioned
     library_file = find_library("libmit@PACKAGE_SUFFIX@-0")
+    features_library_file = find_library("libmitfeatures@PACKAGE_SUFFIX@-0")
 assert(library_file)
+assert(features_library_file)
 libmit = CDLL(library_file)
 assert(libmit)
+libmitfeatures = CDLL(features_library_file)
+assert(libmitfeatures)
+
 
 # Errors
 class Error(Exception):
@@ -204,3 +210,21 @@ def align(addr):
 
 def is_aligned(addr):
     return libmit.mit_is_aligned(addr, size_word)
+
+# features.h
+libmitfeatures.mit_extra_instruction.argtypes = [c_void_p, c_uword]
+libmitfeatures.mit_extra_instruction.restype = c_word
+libmitfeatures.mit_extra_instruction.errcheck = execution_error
+
+libmitfeatures.mit_auto_extend_init.argtypes = None
+libmitfeatures.mit_auto_extend_init.restype = c_void_p
+
+libmitfeatures.mit_auto_extend_handler.argtypes = [c_void_p, c_int]
+
+libmitfeatures.mit_core_dump.argtypes = [c_void_p]
+
+libmitfeatures.mit_specializer_run.argtypes = [c_void_p]
+libmitfeatures.mit_specializer_run.restype = c_word
+
+libmitfeatures.mit_trace_run.argtypes = [c_void_p, c_void_p]
+libmitfeatures.mit_trace_run.restype = c_word

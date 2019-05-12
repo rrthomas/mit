@@ -263,6 +263,13 @@ call and return (subroutine return is {\tt BRANCH}):
 \end{description}
 
 
+\subsection{Extra instructions}
+
+Since {\tt I} must be $0$ when {\tt NEXT} is performed, the rest of an instruction word following {\tt BRANCH} and {\tt CALL} must normally be all zero bits.
+
+Non-zero values following {\tt CALL} are reserved for the Mit specification; non-zero values following {\tt BRANCH} may be used by implementations to implement extra functionality.
+
+
 \subsection{Stack manipulation}
 
 These instructions manage the stack:
@@ -354,18 +361,8 @@ These instructions fetch and store quantities to and from memory. If an invalid 
 
 \nopagebreak
 \begin{description}
-\inst{LOAD}{addr size — x}{Load the $2^{\spic{size}}$-byte quantity \spic{x} stored at \spic{addr}, which must be a multiple of $2^{\spic{size}}$. Any unused high-order bits are set to zero.}
+\inst{LOAD}{addr sie — x}{Load the $2^{\spic{size}}$-byte quantity \spic{x} stored at \spic{addr}, which must be a multiple of $2^{\spic{size}}$. Any unused high-order bits are set to zero.}
 \inst{STORE}{x addr size —}{Store the $2^{\spic{size}}$ least-significant bytes of \spic{x} at \spic{addr}, which must be a multiple of $2^{\spic{size}}$.}
-\end{description}
-
-
-\subsection{External access}
-
-This instruction is a general-purpose escape. In contrast to extra instructions, which are intended to be frequently used and potentially optimized, {\tt EXT}’s behaviour is not defined; in particular, it has an arbitrary stack effect.
-
-\nopagebreak
-\begin{description}
-\inst{EXT}{}{Perform arbitrary actions.}
 \end{description}
 
 
@@ -409,7 +406,7 @@ Table~\ref{opcodetable} lists the instruction opcodes in numerical order. Other 
 \opcodetbl{0b}{XOR}		{1b}{LIT\_PC\_REL}
 \opcodetbl{0c}{LSHIFT}		{1c}{LIT\_0}
 \opcodetbl{0d}{RSHIFT}		{1d}{LIT\_1}
-\opcodetbl{0e}{ARSHIFT}		{1e}{EXT}
+\opcodetbl{0e}{ARSHIFT}		{1e}{undefined}
 \opcodetbl{0f}{SIGN\_EXTEND}	{1f}{HALT}
  \bottomrule
 \end{tabular}

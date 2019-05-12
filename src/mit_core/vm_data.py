@@ -170,10 +170,6 @@ class Instruction(AbstractInstruction):
         one = 1;
     ''')
 
-    EXT = (0x1e, None, None, '''\
-        mit_ext(S);
-    ''')
-
     HALT = (0x1f, [], [], '''\
         RAISE(MIT_ERR_HALT);
     ''')
