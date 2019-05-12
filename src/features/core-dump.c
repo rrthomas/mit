@@ -18,7 +18,7 @@
 #include "mit/features.h"
 
 
-#define REGISTER_STRLEN (WORD_BYTES * 2)
+#define REGISTER_STRLEN (mit_WORD_BYTES * 2)
 
 static char hex[] = "0123456789abcdef";
 

@@ -93,8 +93,8 @@ class Instruction(AbstractInstruction):
     ''')
 
     SIGN_EXTEND = (0x0f, ['n1', 'size'], ['n2'], '''\
-        n2 = n1 << (WORD_BYTES - (1 << size)) * mit_BYTE_BIT;
-        n2 = ARSHIFT(n2, (WORD_BYTES - (1 << size)) * mit_BYTE_BIT);
+        n2 = n1 << (mit_WORD_BYTES - (1 << size)) * mit_BYTE_BIT;
+        n2 = ARSHIFT(n2, (mit_WORD_BYTES - (1 << size)) * mit_BYTE_BIT);
     ''')
 
     EQ = (0x10, ['a', 'b'], ['flag'], '''\
@@ -151,7 +151,7 @@ class Instruction(AbstractInstruction):
         int ret = load(S, S->PC, mit_SIZE_WORD, &n);
         if (ret != 0)
             RAISE(ret);
-        S->PC += WORD_BYTES;
+        S->PC += mit_WORD_BYTES;
     ''')
 
     LIT_PC_REL = (0x1b, [], ['n'], '''\
@@ -159,7 +159,7 @@ class Instruction(AbstractInstruction):
         if (ret != 0)
             RAISE(ret);
         n += S->PC;
-        S->PC += WORD_BYTES;
+        S->PC += mit_WORD_BYTES;
     ''')
 
     LIT_0 = (0x1c, [], ['zero'], '''\

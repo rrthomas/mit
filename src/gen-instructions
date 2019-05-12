@@ -39,7 +39,7 @@ print('''\
         int ret = load(S, S->PC, mit_SIZE_WORD, (mit_WORD *)&(S->I)); \\
         if (ret != 0)                                         \\
             RAISE(ret);                                       \\
-        S->PC += WORD_BYTES;                                  \\
+        S->PC += mit_WORD_BYTES;                              \\
     } while (0)
 
 mit_WORD mit_single_step(mit_state *S) {

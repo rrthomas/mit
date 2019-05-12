@@ -17,8 +17,8 @@
 
 
 // Constants
-const unsigned mit_word_bytes = WORD_BYTES;
-const unsigned mit_endism = ENDISM;
+const unsigned mit_word_bytes = mit_WORD_BYTES;
+const unsigned mit_endism = mit_ENDISM;
 const unsigned mit_size_word = mit_SIZE_WORD;
 const unsigned mit_byte_bit = 8;
 const unsigned mit_byte_mask = mit_BYTE_MASK;
@@ -89,22 +89,22 @@ int mit_push_stack(mit_state *S, mit_WORD val)
 
 static int mit_realloc(mit_WORD **ptr, mit_UWORD old_size, mit_UWORD new_size)
 {
-    mit_WORD *new_ptr = realloc(*ptr, new_size * WORD_BYTES);
+    mit_WORD *new_ptr = realloc(*ptr, new_size * mit_WORD_BYTES);
     if (new_ptr == NULL && new_size > 0)
         return -1;
     *ptr = new_ptr;
 
     if (old_size < new_size)
-        memset(*ptr + old_size, 0, (new_size - old_size) * WORD_BYTES);
+        memset(*ptr + old_size, 0, (new_size - old_size) * mit_WORD_BYTES);
 
     return MIT_ERR_OK;
 }
 
 int mit_realloc_memory(mit_state *S, mit_UWORD memory_size)
 {
-    int ret = mit_realloc(&S->memory, S->memory_size / WORD_BYTES, memory_size);
+    int ret = mit_realloc(&S->memory, S->memory_size / mit_WORD_BYTES, memory_size);
     if (ret == 0)
-        S->memory_size = memory_size * WORD_BYTES;
+        S->memory_size = memory_size * mit_WORD_BYTES;
     return ret;
 }
 

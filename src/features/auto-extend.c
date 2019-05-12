@@ -29,8 +29,8 @@ mit_state *mit_auto_extend_init(void)
     // getpagesize() is obsolete, but gnulib provides it, and
     // sysconf(_SC_PAGESIZE) does not work on some platforms.
     page_size = getpagesize();
-    memory_size = WORD_BYTES == 2 ? 0x1000U : 0x100000U;
-    stack_size = WORD_BYTES == 2 ? 1024U : 16384U;
+    memory_size = mit_WORD_BYTES == 2 ? 0x1000U : 0x100000U;
+    stack_size = mit_WORD_BYTES == 2 ? 1024U : 16384U;
 
     return mit_init(memory_size, stack_size);
 }

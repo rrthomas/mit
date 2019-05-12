@@ -136,7 +136,7 @@ Option('version',
            PACKAGE_NAME " comes with ABSOLUTELY NO WARRANTY.\\n"
            "You may redistribute copies of " PACKAGE_NAME "\\n"
            "under the terms of the MIT/X11 License.\\n",
-           WORD_BYTES, ENDISM ? "big" : "little");
+           mit_WORD_BYTES, mit_ENDISM ? "big" : "little");
     exit(EXIT_SUCCESS);
 }
 ''')
