@@ -68,7 +68,8 @@ typedef bits_type_name(uint, mit_WORD_BIT) mit_UWORD;
 #endif
 
 // FIXME: find largest type: bigger of long double and maxint_t?
-#if SIZEOF_SIZE_T > mit_WORD_BYTES
+// Number in next line is sizeof(size_t)
+#if mit_WORD_BYTES < @SIZEOF_SIZE_T@
 typedef size_t mit_max_stack_item_t;
 #else
 typedef mit_UWORD mit_max_stack_item_t;
