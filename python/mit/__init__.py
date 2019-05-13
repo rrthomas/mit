@@ -107,7 +107,7 @@ class State:
         globals_dict["ass_word"] = assembler.__getattribute__("word")
         globals_dict["ass_bytes"] = assembler.__getattribute__("bytes")
         globals_dict["ass"] = assembler.__getattribute__("instruction")
-        globals_dict["ass_call_extra"] = assembler.__getattribute__("call_extra_instruction")
+        globals_dict["ass_extra"] = assembler.__getattribute__("extra_instruction")
         globals_dict["dis"] = self.__getattribute__("disassemble")
 
         # Opcodes
@@ -120,6 +120,10 @@ class State:
         globals_dict.update({
             instruction.name: instruction.opcode
             for instruction in LibInstruction
+        })
+        globals_dict.update({
+            'EXTRA_{}'.format(instruction.name): instruction.opcode
+            for instruction in InternalExtraInstruction
         })
         for instruction in LibInstruction:
             globals_dict.update({

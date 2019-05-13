@@ -25,30 +25,30 @@ breaks = []
 lit(buffer)
 lit(16) # arbitary number > strlen(args[1])
 lit(LIB_MIT_CURRENT_STATE)
-ass_call_extra(LIB_MIT)
+ass_extra(LIB_MIT, type=BRANCH)
 lit(LIB_MIT_NATIVE_ADDRESS_OF_RANGE)
-ass_call_extra(LIB_MIT)
+ass_extra(LIB_MIT, type=BRANCH)
 
 # Test LIB_C_ARGC
 lit(LIB_C_ARGC)
 lit(LIB_C)
-ass_call_extra(LIB_C)
+ass_extra(LIB_C, type=BRANCH)
 breaks.append(label() + word_bytes)
 
 # Test LIB_C_ARG
 lit(1)
 lit(LIB_C_ARG)
-ass_call_extra(LIB_C)
+ass_extra(LIB_C, type=BRANCH)
 for i in range(align(sizeof(c_char_p)) // word_bytes):
     lit(align(sizeof(c_char_p)) // word_bytes - 1)
     ass(DUP)
 lit(LIB_C_STRLEN)
-ass_call_extra(LIB_C)
+ass_extra(LIB_C, type=BRANCH)
 breaks.append(label() + word_bytes)
 
 # Test LIB_C_STRNCPY
 lit(LIB_C_STRNCPY)
-ass_call_extra(LIB_C)
+ass_extra(LIB_C, type=BRANCH)
 breaks.append(label() + word_bytes)
 
 # Run LIB_C_ARGC test

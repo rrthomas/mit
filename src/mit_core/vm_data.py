@@ -39,6 +39,10 @@ class Instruction(AbstractInstruction):
     BRANCH = (0x01, ['addr'], [], '''\
         S->PC = (mit_UWORD)addr;
         NEXT;
+    ''',
+              '''\
+        if (S->I != 0)
+            RAISE(MIT_ERR_INVALID_OPCODE);
     ''')
 
     BRANCHZ = (0x02, ['flag', 'addr'], [], '''\
@@ -52,6 +56,13 @@ class Instruction(AbstractInstruction):
         ret_addr = S->PC;
         S->PC = (mit_UWORD)addr;
         NEXT;
+    ''',
+            '''\
+        if (S->I != 0) {
+            mit_WORD ret = mit_internal_extra_instruction(S);
+            if (ret != 0)
+                RAISE(ret);
+        }
     ''')
 
     POP = (0x04, ['ITEMS', 'COUNT'], [], '')
@@ -170,6 +181,8 @@ class Instruction(AbstractInstruction):
         one = 1;
     ''')
 
-    HALT = (0x1f, [], [], '''\
+@unique
+class InternalExtraInstruction(AbstractInstruction):
+    HALT = (0x1, [], [], '''\
         RAISE(MIT_ERR_HALT);
     ''')

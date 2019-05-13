@@ -119,7 +119,7 @@ load_test(obj = b'#!/usr/bin/mit\n' + object_file())
 correct = [-128, 12345]
 for n in correct:
     lit(n)
-ass(HALT)
+ass_extra(EXTRA_HALT)
 save(test_file_name, length=assembler.label())
 res = try_load(test_file_name)
 print(" should be {}".format(0))

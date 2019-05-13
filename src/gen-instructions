@@ -10,7 +10,7 @@
 
 from mit_core import vm_data, instruction_gen
 
-from mit_core.vm_data import Instruction
+from mit_core.vm_data import Instruction, InternalExtraInstruction
 from mit_core.instruction_gen import dispatch, gen_case
 
 
@@ -24,6 +24,29 @@ print('''\
 #include "mit/mit.h"
 #include "mit/opcodes.h"
 
+#define NEXT                                                  \\
+    do {                                                      \\
+        int ret = load(S, S->PC, mit_SIZE_WORD, (mit_WORD *)&(S->I)); \\
+        if (ret != 0)                                         \\
+            RAISE(ret);                                       \\
+        S->PC += mit_WORD_BYTES;                              \\
+    } while (0)
+
+#define RAISE(code)                         \\
+    return (code);                          \\
+
+_GL_ATTRIBUTE_PURE mit_WORD mit_internal_extra_instruction(mit_state *S)
+{
+    mit_UWORD opcode = S->I;
+''')
+
+print(dispatch(InternalExtraInstruction, 'O_EXTRA_', ''))
+
+print('''\
+    return MIT_ERR_OK;
+}
+
+#undef RAISE
 #define RAISE(code)                                           \\
     do {                                                      \\
         int error = (code);                                   \\
@@ -32,17 +55,8 @@ print('''\
         return error;                                         \\
     } while (0)
 
-#define NEXT                                                  \\
-    do {                                                      \\
-        if (S->I != 0)                                        \\
-            RAISE(MIT_ERR_INVALID_OPCODE);                    \\
-        int ret = load(S, S->PC, mit_SIZE_WORD, (mit_WORD *)&(S->I)); \\
-        if (ret != 0)                                         \\
-            RAISE(ret);                                       \\
-        S->PC += mit_WORD_BYTES;                              \\
-    } while (0)
-
-mit_WORD mit_single_step(mit_state * restrict S) {
+mit_WORD mit_single_step(mit_state * restrict S)
+{
     mit_UWORD initial_PC = S->PC;
     mit_UWORD initial_I = S->I;
     mit_BYTE opcode = S->I & MIT_INSTRUCTION_MASK;
