@@ -17,7 +17,7 @@
 
 #include <stdio.h>
 
-mit_WORD mit_extra_instruction(mit_state * restrict S, mit_UWORD opcode);
+mit_WORD mit_extra_instruction(mit_state * restrict S);
 mit_state *mit_auto_extend_init(void);
 int mit_auto_extend_handler(mit_state * restrict S, int error);
 int mit_core_dump(mit_state *S);

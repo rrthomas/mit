@@ -53,8 +53,10 @@ static mit_WORD extra_{}(mit_state * restrict S, mit_WORD opcode)
 ''')
 
 print('''
-mit_WORD mit_extra_instruction(mit_state * restrict S, mit_UWORD opcode)
-{''')
+mit_WORD mit_extra_instruction(mit_state * restrict S)
+{
+    mit_UWORD opcode = S->I >> mit_instruction_bit;
+''')
 
 print(dispatch(
     LibInstruction,

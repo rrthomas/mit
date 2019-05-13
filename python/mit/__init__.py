@@ -107,7 +107,7 @@ class State:
         globals_dict["ass_word"] = assembler.__getattribute__("word")
         globals_dict["ass_bytes"] = assembler.__getattribute__("bytes")
         globals_dict["ass"] = assembler.__getattribute__("instruction")
-        globals_dict["ass_call_extra"] = assembler.__getattribute__("call_extra_instruction")
+        globals_dict["ass_extra"] = assembler.__getattribute__("extra_instruction")
         globals_dict["dis"] = self.__getattribute__("disassemble")
 
         # Opcodes
@@ -120,6 +120,10 @@ class State:
         globals_dict.update({
             instruction.name: instruction.opcode
             for instruction in LibInstruction
+        })
+        globals_dict.update({
+            'EXTRA_{}'.format(instruction.name): instruction.opcode
+            for instruction in InternalExtraInstruction
         })
         for instruction in LibInstruction:
             globals_dict.update({
@@ -141,8 +145,7 @@ class State:
         assert(libmit.mit_register_args(self.state, argc, self.argv) == 0)
 
     def do_extra_instruction(self):
-        extra_opcode = self.registers["I"].get() >> instruction_bit
-        libmitfeatures.mit_extra_instruction(self.state, extra_opcode)
+        libmitfeatures.mit_extra_instruction(self.state)
         self.registers["I"].set(0) # Skip to next instruction
 
     def run(self, args=None):
@@ -160,7 +163,7 @@ class State:
                 if e.args[0] == 128:
                     # Halt.
                     return
-                elif e.args[0] == 1 and self.registers["I"].get() & instruction_mask == CALL:
+                elif e.args[0] == 1 and self.registers["I"].get() & instruction_mask == BRANCH:
                     self.do_extra_instruction()
                 else:
                     raise
@@ -190,7 +193,7 @@ class State:
                 libmit.mit_single_step(self.state)
             except ErrorCode as e:
                 ret = e.args[0]
-                if ret == 1 and self.registers["I"].get() & instruction_mask == CALL:
+                if ret == 1 and self.registers["I"].get() & instruction_mask == BRANCH:
                     self.do_extra_instruction()
                     ret = 0
                 if ret != 0:

@@ -17,7 +17,7 @@ if VM == None:
 
 # Test code
 final_pc = word_bytes
-ass(HALT)
+ass_extra(EXTRA_HALT)
 
 # Test
 ret = run() # will raise an exception on error

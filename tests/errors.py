@@ -1,4 +1,4 @@
-# Test the VM-generated error codes and HALT.
+# Test the VM-generated error codes.
 #
 # (c) Mit authors 1995-2019
 #

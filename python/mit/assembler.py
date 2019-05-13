@@ -20,7 +20,6 @@ LIT = Instruction.LIT.opcode
 LIT_PC_REL = Instruction.LIT_PC_REL.opcode
 BRANCH = Instruction.BRANCH.opcode
 CALL = Instruction.CALL.opcode
-HALT = Instruction.HALT.opcode
 
 mnemonic = {
     instruction.opcode: instruction.name
@@ -28,7 +27,7 @@ mnemonic = {
 }
 
 # The set of opcodes which must be the last in a word.
-TERMINAL_OPCODES = frozenset([0, BRANCH, CALL, HALT])
+TERMINAL_OPCODES = frozenset([0, BRANCH, CALL])
 
 class Disassembler:
     '''
@@ -198,12 +197,15 @@ class Assembler:
         if self.i_shift is not None:
             self.i_shift += instruction_bit
 
-    def call_extra_instruction(self, opcode):
+    def extra_instruction(self, opcode, type=CALL):
         '''
-        Appends an extra instruction opcode consisting of a CALL with a code in
-        the remainder of the instruction word.
+        Appends an extra instruction opcode consisting of a CALL or BRANCH with
+        a code in the remainder of the instruction word.
+
+         - opcode - int - extra instruction opcode
+         - type - int - extra instruction type (`CALL` [default] or `BRANCH`)
         '''
-        self.extended_instruction((opcode << instruction_bit) | CALL)
+        self.extended_instruction((opcode << instruction_bit) | type)
 
     def lit(self, value):
         self.instruction(LIT)
