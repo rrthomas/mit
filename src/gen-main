@@ -145,6 +145,18 @@ class Feature:
         self.init_code = init_code
         self.exception_handler = exception_handler
 
+Feature(# Extra instructions
+    exception_handler='''\
+case MIT_ERR_INVALID_OPCODE:
+    if ((S->I & MIT_INSTRUCTION_MASK) == O_CALL) {
+        error = mit_extra_instruction(S, S->I >> mit_instruction_bit);
+        if (error == 0) {
+            S->I = 0;
+            continue;
+        }
+    }
+    break;''')
+
 Feature(# Auto-extend stack and memory
     init_code='bool auto_extend = true;',
     exception_handler='''\
@@ -195,6 +207,7 @@ print('''\
 #include "progname.h"
 
 #include "mit/mit.h"
+#include "mit/opcodes.h"
 #include "mit/features.h"
 
 
@@ -381,7 +394,7 @@ print('''\
 print('''\
     // Run
     for (;;) {
-        int error = run_fn(S);
+        mit_WORD error = run_fn(S);
         switch (error) {''')
 
 for feature in Feature.features:
