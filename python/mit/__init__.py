@@ -145,8 +145,7 @@ class State:
         assert(libmit.mit_register_args(self.state, argc, self.argv) == 0)
 
     def do_extra_instruction(self):
-        extra_opcode = self.registers["I"].get() >> instruction_bit
-        libmitfeatures.mit_extra_instruction(self.state, extra_opcode)
+        libmitfeatures.mit_extra_instruction(self.state)
         self.registers["I"].set(0) # Skip to next instruction
 
     def run(self, args=None):

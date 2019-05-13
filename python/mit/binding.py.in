@@ -212,7 +212,7 @@ def is_aligned(addr):
     return libmit.mit_is_aligned(addr, size_word)
 
 # features.h
-libmitfeatures.mit_extra_instruction.argtypes = [c_void_p, c_uword]
+libmitfeatures.mit_extra_instruction.argtypes = [c_void_p]
 libmitfeatures.mit_extra_instruction.restype = c_word
 libmitfeatures.mit_extra_instruction.errcheck = execution_error
 
