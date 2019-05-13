@@ -200,10 +200,10 @@ class Assembler:
 
     def call_extra_instruction(self, opcode):
         '''
-        Appends an extra instruction opcode consisting of a CALL with a code in
+        Appends an extra instruction opcode consisting of a BRANCH with a code in
         the remainder of the instruction word.
         '''
-        self.extended_instruction((opcode << instruction_bit) | CALL)
+        self.extended_instruction((opcode << instruction_bit) | BRANCH)
 
     def lit(self, value):
         self.instruction(LIT)

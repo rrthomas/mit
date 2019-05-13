@@ -148,7 +148,7 @@ class Feature:
 Feature(# Extra instructions
     exception_handler='''\
 case MIT_ERR_INVALID_OPCODE:
-    if ((S->I & MIT_INSTRUCTION_MASK) == O_CALL) {
+    if ((S->I & MIT_INSTRUCTION_MASK) == O_BRANCH) {
         error = mit_extra_instruction(S, S->I >> mit_instruction_bit);
         if (error == 0) {
             S->I = 0;
