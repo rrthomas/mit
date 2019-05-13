@@ -35,7 +35,7 @@ mit_state *mit_auto_extend_init(void)
     return mit_init(memory_size, stack_size);
 }
 
-int mit_auto_extend_handler(mit_state *S, int error)
+int mit_auto_extend_handler(mit_state * restrict S, int error)
 {
     switch (error) {
     case 2:
