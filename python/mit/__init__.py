@@ -89,11 +89,16 @@ class State:
             name: self.__getattribute__(name)
             for name in [
                 "M", "M_word", "S", "registers",
-                "load", "save", "run", "step",
+                "load", "run", "step",
                 "dump", "disassemble",
             ]
         })
         assembler = Assembler(self)
+        def _save(file, address=0, length=None):
+            if length is None:
+                length = assembler.pc - address
+            self.save(file, address, length)
+        globals_dict['save'] = _save
         globals_dict['assembler'] = assembler
         globals_dict.update({
             name: assembler.__getattribute__(name)
