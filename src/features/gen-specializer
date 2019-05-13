@@ -97,7 +97,7 @@ print('''\
         S->I >>= MIT_INSTRUCTION_BIT;                         \\
     } while (0)
 
-mit_WORD mit_specializer_run(mit_state *S) {
+mit_WORD mit_specializer_run(mit_state * restrict S) {
     int res = MIT_ERR_OK;''')
 
 # Declare stack cache variables.

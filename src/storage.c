@@ -87,9 +87,9 @@ int mit_push_stack(mit_state *S, mit_WORD val)
 
 // Initialisation and memory management
 
-static int mit_realloc(mit_WORD **ptr, mit_UWORD old_size, mit_UWORD new_size)
+static int mit_realloc(mit_WORD * restrict *ptr, mit_UWORD old_size, mit_UWORD new_size)
 {
-    mit_WORD *new_ptr = realloc(*ptr, new_size * mit_WORD_BYTES);
+    mit_WORD * restrict new_ptr = realloc(*ptr, new_size * mit_WORD_BYTES);
     if (new_ptr == NULL && new_size > 0)
         return -1;
     *ptr = new_ptr;

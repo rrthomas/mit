@@ -94,9 +94,9 @@ typedef struct {
 #include <mit@PACKAGE_SUFFIX@/registers.h>
 #undef R
 #undef R_RO
-    mit_WORD *memory;
+    mit_WORD * restrict memory;
     mit_UWORD memory_size;
-    mit_WORD *stack;
+    mit_WORD * restrict stack;
     mit_UWORD stack_size;
     int main_argc;
     char **main_argv;
@@ -423,12 +423,12 @@ int mit_realloc_stack(mit_state *S, mit_UWORD stack_size);
 void mit_destroy(mit_state *S);
 /* Destroy the given state, deallocating its memory. */
 
-mit_WORD mit_run(mit_state *S);
+mit_WORD mit_run(mit_state * restrict S);
 /* Start the execution cycle in the given state as described in the spec.
    If an error is raised, the code is returned.
 */
 
-mit_WORD mit_single_step(mit_state *S);
+mit_WORD mit_single_step(mit_state * restrict S);
 /* Execute a single pass of the execution cycle in the given state.
    Return 128 if execution completes without error, or the error code.
 */
