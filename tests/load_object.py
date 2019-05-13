@@ -128,8 +128,8 @@ if res != 0:
     sys.exit(1)
 try:
     run()
-except ErrorCode:
-    print("Error in load_object() tests: file {}".format(test_file_name))
+except ErrorCode as e:
+    print("Error in load_object() tests: file {}; error: {}".format(test_file_name, e.args[1]))
     sys.exit(1)
 print("Data stack: {}".format(S))
 print("Correct stack: {}".format(correct))

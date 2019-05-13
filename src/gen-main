@@ -122,7 +122,8 @@ Doc('')
 Doc('"The ARGUMENTS are available to "PACKAGE_NAME"."')
 Doc('''
 If an error occurs during execution, the exit status is the error code; if
-execution HALTs normally, the exit status is the top-most stack value.
+execution halts normally, the exit status is 0. Note that the VM code may
+cause an exit with a different status.
 ''')
 Doc('"Report bugs to "PACKAGE_BUGREPORT"."')
 
@@ -168,7 +169,7 @@ case MIT_ERR_MEMORY_WRITE:
     break;''')
 
 Feature(# Output instruction opcode trace
-    top_level_code='''\
+    top_level_code='''
 FILE *trace_fp;
 static mit_WORD trace_run(mit_state *state)
 {

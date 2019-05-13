@@ -374,7 +374,7 @@ These instructions fetch and store quantities to and from memory. If an invalid 
 
 \nopagebreak
 \begin{description}
-\inst{LOAD}{addr sie — x}{Load the $2^{\spic{size}}$-byte quantity \spic{x} stored at \spic{addr}, which must be a multiple of $2^{\spic{size}}$. Any unused high-order bits are set to zero.}
+\inst{LOAD}{addr size — x}{Load the $2^{\spic{size}}$-byte quantity \spic{x} stored at \spic{addr}, which must be a multiple of $2^{\spic{size}}$. Any unused high-order bits are set to zero.}
 \inst{STORE}{x addr size —}{Store the $2^{\spic{size}}$ least-significant bytes of \spic{x} at \spic{addr}, which must be a multiple of $2^{\spic{size}}$.}
 \end{description}
 
@@ -444,14 +444,11 @@ The object module starts with the ASCII codes of the letters
 ``mit'', followed by three zero bytes, then the one-byte values of
 the {\tt ENDISM} and {\tt WORD\_BYTES} registers of the system which saved the module, then a word (of the given endianness and size) containing the number of bytes the code occupies. Then follows the code.
 
-Object modules have a simple structure, as they are only intended for loading an
-initial memory image into Mit.
-
 
 \section*{Acknowledgements}
 
 Martin Richards's demonstration of his BCPL-oriented Cintcode virtual machine~\cite{cintweb}
-convinced me it was going to be fun working on virtual machines. He also supervised my BA dissertation project, Beetle~\cite{beetledis}, on which Mit is based.
+convinced me it was going to be fun working on virtual machines. He also supervised my BA dissertation project, Beetle~\cite{beetledis}, and my PhD project, Mite~\cite{mite0}, on which Mit is based.
 
 \bibliographystyle{plain}
 \bibliography{vm,rrt}
@@ -459,4 +456,4 @@ convinced me it was going to be fun working on virtual machines. He also supervi
 
 \end{document}
 
-% LocalWords:  Richards's addr
+% LocalWords:  Richards's addr Mit
