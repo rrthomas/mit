@@ -26,11 +26,6 @@ mnemonic = {
     instruction.opcode: instruction.name
     for instruction in Instruction
 }
-# FIXME: Disassemble LibInstruction when the literal directly precedes EXT
-# mnemonic.update({
-#     instruction.opcode: instruction.name
-#     for instruction in LibInstruction
-# })
 
 # The set of opcodes which must be the last in a word.
 TERMINAL_OPCODES = frozenset([0, BRANCH, CALL, HALT])
@@ -174,12 +169,11 @@ class Assembler:
         self.word(0)
         self.i_shift = 0
 
-    def instruction(self, opcode):
+    def extended_instruction(self, opcode):
         '''
-        Appends an instruction opcode. If possible, this will be put in the
+        Appends an arbitrary opcode. If possible, this will be put in the
         same word as the previous opcode, otherwise it will start a new word.
         '''
-        assert 0 <= opcode <= instruction_mask
         if self.i_addr is None:
             # Start of a new word.
             assert self.i_shift is None
@@ -192,9 +186,24 @@ class Assembler:
             self._fetch()
             i = opcode
         self.state.M_word[self.i_addr] = i
-        self.i_shift += instruction_bit
-        if opcode in TERMINAL_OPCODES:
+        if (opcode & instruction_mask) in TERMINAL_OPCODES:
             self.label()
+
+    def instruction(self, opcode):
+        '''
+        Appends an instruction opcode.
+        '''
+        assert 0 <= opcode <= instruction_mask
+        self.extended_instruction(opcode)
+        if self.i_shift is not None:
+            self.i_shift += instruction_bit
+
+    def call_extra_instruction(self, opcode):
+        '''
+        Appends an extra instruction opcode consisting of a CALL with a code in
+        the remainder of the instruction word.
+        '''
+        self.extended_instruction((opcode << instruction_bit) | CALL)
 
     def lit(self, value):
         self.instruction(LIT)

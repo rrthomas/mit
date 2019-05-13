@@ -12,7 +12,7 @@ PYTHON_WITH_PATH = export PYTHONPATH=$(top_srcdir)/python:$(top_srcdir)/src:$(to
 
 lib_LTLIBRARIES = libmit@PACKAGE_SUFFIX@.la
 C_SRCS = storage.c object.c
-nodist_LIB_SRCS = include/mit/registers.h include/mit/opcodes.h include/mit/ext-opcodes.h instructions.c ext.c
+nodist_LIB_SRCS = include/mit/registers.h include/mit/opcodes.h instructions.c
 LIB_CORE_SRCS = mit_core/instruction.py mit_core/vm_data.py mit_core/ext.py mit_core/instruction_gen.py mit_core/c_util.py
 nodist_libmit@PACKAGE_SUFFIX@_la_SOURCES = $(C_SRCS) $(nodist_LIB_SRCS)
 libmit@PACKAGE_SUFFIX@_la_LIBADD = $(top_builddir)/lib/libgnu.la
@@ -23,11 +23,12 @@ man_MANS = mit@PACKAGE_SUFFIX@.1
 mit@PACKAGE_SUFFIX@_LDADD = libmit@PACKAGE_SUFFIX@.la libmitfeatures@PACKAGE_SUFFIX@.la $(top_builddir)/lib/libgnu.la
 nodist_mit@PACKAGE_SUFFIX@_SOURCES = main.c
 mit_pkgincludedir = $(pkgincludedir)@PACKAGE_SUFFIX@
-nodist_mit_pkginclude_HEADERS = include/mit/opcodes.h include/mit/ext-opcodes.h include/mit/registers.h
+nodist_mit_pkginclude_HEADERS = include/mit/opcodes.h include/mit/registers.h
 mit_pkginclude_HEADERS = include/mit/mit.h
 
 step.lo: instructions.c
-object.lo step.lo storage.lo main.o: include/mit/registers.h include/mit/opcodes.h include/mit/ext-opcodes.h
+object.lo step.lo storage.lo: include/mit/registers.h
+object.lo step.lo storage.lo main.o: include/mit/opcodes.h
 main.o: main.c include/mit/registers.h
 
 .c.s:
@@ -57,10 +58,6 @@ include/mit/registers.h: gen-registers mit_core/vm_data.py mit_core/instruction.
 	$(MKDIR_P) include/mit
 	$(PYTHON_WITH_PATH) $(srcdir)/gen-registers > include/mit/registers.h || ( rm -f include/mit/registers.h; exit 1 )
 
-include/mit/ext-opcodes.h: gen-ext-opcodes mit_core/ext.py mit_core/instruction.py mit_core/c_util.py
-	$(MKDIR_P) include/mit
-	$(PYTHON_WITH_PATH) $(srcdir)/gen-ext-opcodes > include/mit/ext-opcodes.h || ( rm -f include/mit/ext-opcodes.h; exit 1 )
-
 include/mit/opcodes.h: gen-opcodes mit_core/vm_data.py mit_core/instruction.py
 	$(MKDIR_P) include/mit
 	$(PYTHON_WITH_PATH) $(srcdir)/gen-opcodes > include/mit/opcodes.h || ( rm -f include/mit/opcodes.h; exit 1 )
@@ -78,9 +75,6 @@ mit_core/type_sizes.py: $(top_builddir)/config.status gen-type-sizes collate-typ
 	$(GREP) "^#define SIZEOF" config.log | cut -d " " -f 3 | \
 		( $(PYTHON_WITH_PATH) $(srcdir)/collate-type-sizes > mit_core/type_sizes.py ) || ( rm -f type-sizes.ac type-sizes mit_core/type_sizes.py; exit 1 )
 
-ext.c: gen-ext mit_core/ext.py mit_core/instruction.py mit_core/instruction_gen.py mit_core/type_sizes.py mit_core/c_util.py
-	$(PYTHON_WITH_PATH) $(srcdir)/gen-ext > ext.c || ( rm -f ext.c; exit 1 )
-
 main.c: gen-main
 	$(PYTHON_WITH_PATH) $(srcdir)/gen-main > main.c || ( rm -f main.c; exit 1 )
 
@@ -89,7 +83,7 @@ loc:
 		$(C_SRCS) \
 		$(mit_SOURCES) \
 		$(LIB_CORE_SRCS) \
-		gen-registers gen-opcodes gen-ext-opcodes gen-instructions gen-ext gen-main
+		gen-registers gen-opcodes gen-instructions gen-main
 
 EXTRA_DIST = \
 	$(LIB_CORE_SRCS) \
@@ -98,8 +92,6 @@ EXTRA_DIST = \
 	gen-opcodes \
 	gen-instructions \
 	gen-main \
-	gen-ext-opcodes \
-	gen-ext \
 	gen-type-sizes \
 	collate-type-sizes \
 	mit-include.man

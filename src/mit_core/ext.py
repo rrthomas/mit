@@ -28,6 +28,7 @@ includes = '''\
 #include "binary-io.h"
 
 #include "mit/mit.h"
+#include "mit/features.h"
 '''
 
 @unique
@@ -285,8 +286,8 @@ class Library(AbstractInstruction):
 @unique
 class LibInstruction(Library):
     '''VM instruction instructions to access external libraries.'''
-    LIB_MIT = (0x00, MitLib)
-    LIB_C = (0x01, LibcLib)
+    LIB_MIT = (0x01, MitLib)
+    LIB_C = (0x02, LibcLib)
 
 # Inject name into each library's code
 for instruction in LibInstruction:

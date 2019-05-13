@@ -14,17 +14,14 @@ import glob
 import textwrap
 
 
-# Command-line options
+# Command line
 
-features = []
-class Feature:
+class CommandLineElement:
+    elements = []
     def __init__(self):
-        features.append(self)
+        self.elements.append(self)
     
-# These are processed in the order given. The files under feature/
-# start with a two-digit number to allow them to be ordered.
-
-class Doc(Feature):
+class Doc(CommandLineElement):
     '''
     Free-form documentation.
 
@@ -36,35 +33,30 @@ class Doc(Feature):
         super().__init__()
         self.text = text
 
-class Option(Feature):
+class Option(CommandLineElement):
     '''
-    A command-line option/feature.
+    A command-line option.
     
      - long_name - str - long option name
+     - docstring - str - argument docstring
      - short_name - str - short option char
      - arg - str - 'no_argument', 'required_argument' or 'optional_argument'
      - arg_name - str - name for the argument, if any
-     - top_level_code - str - additional top-level code for the option
-     - init_code - str - code run on program start-up
      - parse_code - str - code run when the option is parsed
-     - exception_handler - str - cases added to the exception handler
     '''
+    options = []
     def __init__(self, long_name, docstring, short_name=None,
-                 arg=None, arg_name=None,
-                 top_level_code=None, init_code=None, parse_code=None,
-                 exception_handler=None):
+                 arg=None, arg_name=None, parse_code=None):
         super().__init__()
+        self.options.append(self)
         self.long_name = long_name
+        self.docstring = docstring
         self.short_name = short_name
         self.arg = arg or 'no_argument'
         self.arg_name = arg_name
-        self.docstring = docstring
-        self.top_level_code = top_level_code
-        self.init_code = init_code
         self.parse_code = parse_code
-        self.exception_handler = exception_handler
 
-class Arg(Feature):
+class Arg(CommandLineElement):
     '''
     A command-line argument.
 
@@ -75,33 +67,21 @@ class Arg(Feature):
         self.arg = arg
         self.docstring = docstring
 
-
-# Features
 Option('specializer',
        'use specializing interpreter',
        short_name='O',
        parse_code='run_fn = mit_specializer_run;',
 )
+
 Option('no-auto-extend',
        'do not automatically extend stack or memory',
-       exception_handler='''\
-case MIT_ERR_STACK_OVERFLOW:
-case MIT_ERR_MEMORY_READ:
-case MIT_ERR_MEMORY_WRITE:
-    if (mit_auto_extend_handler(S, error) == 0)
-        continue;
-    break;''')
+       parse_code='auto_extend = false;',
+)
+
 Option('trace',
        'write dynamic instruction trace to FILE',
        arg='required_argument',
        arg_name='FILE',
-       top_level_code='''\
-FILE *trace_fp;
-static mit_WORD trace_run(mit_state *state)
-{
-    return mit_trace_run(state, trace_fp);
-}
-''',
        parse_code='''\
 {
     trace_fp = fopen(optarg, "wb");
@@ -111,17 +91,13 @@ static mit_WORD trace_run(mit_state *state)
     warn("trace will be written to %s\\n", optarg);
 }
 ''')
+
 Option('core-dump',
        'dump core on memory exception',
        short_name='c', arg='no_argument',
-       top_level_code='#include <stdbool.h>',
-       init_code='bool core_dump = false;',
        parse_code='core_dump = true;',
-       exception_handler='''\
-default:
-    if (core_dump)
-        mit_core_dump(S);
-    break;''')
+)
+
 Option('help',
        'display this help message and exit',
        parse_code='usage();'
@@ -144,11 +120,70 @@ Option('version',
 Arg('OBJECT-FILE', 'load and run object OBJECT-FILE')
 Doc('')
 Doc('"The ARGUMENTS are available to "PACKAGE_NAME"."')
-Doc('')
-Doc('If an error occurs during execution, the exit status is the error code; if')
-Doc('execution HALTs normally, the exit status is the top-most stack value.')
-Doc('')
+Doc('''
+If an error occurs during execution, the exit status is the error code; if
+execution HALTs normally, the exit status is the top-most stack value.
+''')
 Doc('"Report bugs to "PACKAGE_BUGREPORT"."')
+
+
+# Features
+
+class Feature:
+    '''
+    A command-line option.
+
+     - top_level_code - str - additional top-level code for the option
+     - init_code - str - declarations inside main, and initialisation
+     - exception_handler - str - cases added to the exception handler
+    '''
+    features = []
+    def __init__(self, top_level_code=None, init_code=None,
+                 exception_handler=None):
+        self.features.append(self)
+        self.top_level_code = top_level_code
+        self.init_code = init_code
+        self.exception_handler = exception_handler
+
+Feature(# Extra instructions
+    exception_handler='''\
+case MIT_ERR_INVALID_OPCODE:
+    if ((S->I & MIT_INSTRUCTION_MASK) == O_CALL) {
+        error = mit_extra_instruction(S, S->I >> mit_instruction_bit);
+        if (error == 0) {
+            S->I = 0;
+            continue;
+        }
+    }
+    break;''')
+
+Feature(# Auto-extend stack and memory
+    init_code='bool auto_extend = true;',
+    exception_handler='''\
+case MIT_ERR_STACK_OVERFLOW:
+case MIT_ERR_MEMORY_READ:
+case MIT_ERR_MEMORY_WRITE:
+    if (auto_extend == true && mit_auto_extend_handler(S, error) == 0)
+        continue;
+    break;''')
+
+Feature(# Output instruction opcode trace
+    top_level_code='''\
+FILE *trace_fp;
+static mit_WORD trace_run(mit_state *state)
+{
+    return mit_trace_run(state, trace_fp);
+}
+''',
+)
+
+Feature(# VM core dump
+    init_code='bool core_dump = false;',
+    exception_handler='''\
+default:
+    if (core_dump)
+        mit_core_dump(S);
+    break;''')
 
 
 # Generate output
@@ -163,6 +198,7 @@ print('''\
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <getopt.h>
 #include <unistd.h>
 #include <fcntl.h>
@@ -171,6 +207,7 @@ print('''\
 #include "progname.h"
 
 #include "mit/mit.h"
+#include "mit/opcodes.h"
 #include "mit/features.h"
 
 
@@ -202,11 +239,11 @@ static _GL_ATTRIBUTE_FORMAT_PRINTF(1, 2) void die(const char *format, ...)
 print('''\
 // Options table
 struct option longopts[] = {''')
-for feature in features:
-    if isinstance(feature, Option):
+for element in CommandLineElement.elements:
+    if isinstance(element, Option):
         print('    {{"{long_name}", {arg}, NULL, \'{short_name}\'}},'.format(
-            long_name=feature.long_name, arg=feature.arg or '""',
-            short_name=feature.short_name or "\\0"))
+            long_name=element.long_name, arg=element.arg or '""',
+            short_name=element.short_name or "\\0"))
 print('''\
     {0, 0, 0, 0}
 };''')
@@ -220,23 +257,23 @@ static void usage(void)
            "\\n",
            program_name);''')
 
-for feature in features:
-    if isinstance(feature, Option):
+for element in CommandLineElement.elements:
+    if isinstance(element, Option):
         print('    printf("  %-26s%s\\n", "--{long_name}{short_opt} {arg_name}", "{docstring}");'.format(
-            long_name=feature.long_name,
-            short_opt=', -{}'.format(feature.short_name) if feature.short_name else '',
-            arg_name=feature.arg_name or '',
-            docstring=feature.docstring,
+            long_name=element.long_name,
+            short_opt=', -{}'.format(element.short_name) if element.short_name else '',
+            arg_name=element.arg_name or '',
+            docstring=element.docstring,
         ))
-    elif isinstance(feature, Arg):
+    elif isinstance(element, Arg):
         print('printf("  %-26s%s\\n", {arg}, {docstring});'.format(
-            arg=feature.arg,
-            docstring=feature.docstring
+            arg=element.arg,
+            docstring=element.docstring
         ))
-    elif isinstance(feature, Doc):
-        text = feature.text
+    elif isinstance(element, Doc):
+        text = element.text
         if len(text) > 1 and not(text[0] == '"' and text[-1] == '"'):
-            text = '"{}"'.format(text)
+            text = '"{}"'.format(repr(text)[1:-1])
         print('    printf({}"\\n");'.format(text))
 
 print('''
@@ -250,8 +287,8 @@ static void exit_function(void)
     mit_destroy(S);
 }''')
 
-for feature in features:
-    if isinstance(feature, Option) and feature.top_level_code:
+for feature in Feature.features:
+    if feature.top_level_code:
         print(feature.top_level_code)
 
 print('''
@@ -262,20 +299,17 @@ int main(int argc, char *argv[])
     mit_WORD (*run_fn)(mit_state *) = mit_run;
 ''')
 
-index = 0
-for feature in features:
-    if isinstance(feature, Option):
-        if feature.init_code:
-            print(textwrap.indent(feature.init_code, '    '))
-        index += 1
+for feature in Feature.features:
+    if feature.init_code:
+        print(textwrap.indent(feature.init_code, '    '))
 
 shortopts = ''
-for feature in features:
-    if isinstance(feature, Option) and feature.short_name:
-        shortopts += feature.short_name
-        if feature.arg == 'required_argument':
+for element in CommandLineElement.elements:
+    if isinstance(element, Option) and element.short_name:
+        shortopts += element.short_name
+        if element.arg == 'required_argument':
             shortopts += ':'
-        elif feature.arg == 'optional_argument':
+        elif element.arg == 'optional_argument':
             shortopts += '::'
 print('''\
     // Options string starts with '+' to stop option processing at first
@@ -296,26 +330,20 @@ print('''
             die("unrecognised option '%s'\\nTry '%s --help' for more information.", argv[this_optind], program_name);
 ''')
 
-index = 0
-for feature in features:
-    if isinstance(feature, Option):
-        if feature.short_name:
-            print('''\
+for i, option in enumerate(Option.options):
+    if option.short_name:
+        print('''\
         if (c == '{short_name}')
             longindex = {index};
 '''.format(
-    short_name = feature.short_name,
-    index = index
+    short_name = option.short_name,
+    index = i
 ))
-        index += 1
 
-index = 0
-for feature in features:
-    if isinstance(feature, Option):
-        if feature.parse_code:
-            print('        if (longindex == {})\n'.format(index) +
-                  textwrap.indent(feature.parse_code, '            '))
-        index += 1
+for i, option in enumerate(Option.options):
+    if option.parse_code:
+        print('        if (longindex == {})\n'.format(i) +
+              textwrap.indent(option.parse_code, '            '))
 
 print ('    }\n')
         
@@ -366,11 +394,11 @@ print('''\
 print('''\
     // Run
     for (;;) {
-        int error = run_fn(S);
+        mit_WORD error = run_fn(S);
         switch (error) {''')
 
-for feature in features:
-    if isinstance(feature, Option) and feature.exception_handler:
+for feature in Feature.features:
+    if feature.exception_handler:
         print(textwrap.indent(feature.exception_handler, '        '))
 
 print('''\

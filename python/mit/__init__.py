@@ -107,6 +107,7 @@ class State:
         globals_dict["ass_word"] = assembler.__getattribute__("word")
         globals_dict["ass_bytes"] = assembler.__getattribute__("bytes")
         globals_dict["ass"] = assembler.__getattribute__("instruction")
+        globals_dict["ass_call_extra"] = assembler.__getattribute__("call_extra_instruction")
         globals_dict["dis"] = self.__getattribute__("disassemble")
 
         # Opcodes
@@ -139,6 +140,11 @@ class State:
         self.argv = arg_strings(*bargs)
         assert(libmit.mit_register_args(self.state, argc, self.argv) == 0)
 
+    def do_extra_instruction(self):
+        extra_opcode = self.registers["I"].get() >> instruction_bit
+        libmitfeatures.mit_extra_instruction(self.state, extra_opcode)
+        self.registers["I"].set(0) # Skip to next instruction
+
     def run(self, args=None):
         '''
         Run until HALT or error. Register any given command-line `args`.
@@ -147,14 +153,17 @@ class State:
             args = []
         args.insert(0, b"mit-shell")
         self.register_args(*args)
-        try:
-            libmit.mit_run(self.state)
-        except ErrorCode as e:
-            if e.args[0] == 128:
-                # Halt.
-                return
-            else:
-                raise
+        while True:
+            try:
+                libmit.mit_run(self.state)
+            except ErrorCode as e:
+                if e.args[0] == 128:
+                    # Halt.
+                    return
+                elif e.args[0] == 1 and self.registers["I"].get() & instruction_mask == CALL:
+                    self.do_extra_instruction()
+                else:
+                    raise
 
     def _print_trace_info(self):
         print("step: PC={} I={:#x} instruction={}".format(
@@ -169,31 +178,33 @@ class State:
         Single-step for n steps, or until PC=addr.
         Does not count NEXT as a step, but always stops when PC changes.
         '''
-        try:
-            done = 0
-            ret = 0
-            while addr is not None or done < n:
-                if auto_NEXT and self.registers["I"].get() == 0:
-                    if trace: self._print_trace_info()
-                    ret = libmit.mit_single_step(self.state)
-                if self.registers["PC"].get() == addr: break
+        done = 0
+        ret = 0
+        while addr is not None or done < n:
+            if auto_NEXT and self.registers["I"].get() == 0:
                 if trace: self._print_trace_info()
+                ret = libmit.mit_single_step(self.state)
+            if self.registers["PC"].get() == addr: break
+            if trace: self._print_trace_info()
+            try:
                 libmit.mit_single_step(self.state)
-                done += 1
-        except ErrorCode as e:
-            ret = e.args[0]
-
-            if ret != 0:
-                print("Error code {} was returned".format(ret), end='')
-                if n > 1:
-                    print(" after {} steps".format(done), end='')
-                if addr != None:
-                    print(" at PC = {:#x}".format(
-                        self.registers["PC"].get()),
-                        end='',
-                    )
-                print("")
-            raise
+            except ErrorCode as e:
+                ret = e.args[0]
+                if ret == 1 and self.registers["I"].get() & instruction_mask == CALL:
+                    self.do_extra_instruction()
+                    ret = 0
+                if ret != 0:
+                    print("Error code {} was returned".format(ret), end='')
+                    if n > 1:
+                        print(" after {} steps".format(done), end='')
+                    if addr != None:
+                        print(" at PC = {:#x}".format(
+                            self.registers["PC"].get()),
+                            end='',
+                        )
+                    print("")
+                    raise
+            done += 1
 
     def load(self, file, addr=0):
         '''

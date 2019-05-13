@@ -491,7 +491,4 @@ int mit_register_args(mit_state *S, int argc, char *argv[]);
    quantities is implementation-defined in C99).
 */
 
-int mit_ext(mit_state *S);
-/* Implement the EXT instruction. */
-
 #endif
