@@ -303,6 +303,8 @@ These instructions manage the stack:
 \inst{LIT\_PC\_REL}{— n}{Like {\tt LIT}, except that the initial value of {\tt PC} is added to the value pushed on to the stack.}
 \inst{LIT\_0}{— $0$}{Push $0$ on to the stack.}
 \inst{LIT\_1}{— $1$}{Push $1$ on to the stack.}
+\inst{LIT\_0}{— $2$}{Push $2$ on to the stack.}
+\inst{LIT\_1}{— $3$}{Push $3$ on to the stack.}
 \end{description}
 
 
@@ -408,8 +410,8 @@ Table~\ref{opcodetable} lists the instruction opcodes in numerical order. Table~
 \opcodetbl{0b}{XOR}		{1b}{LIT\_PC\_REL}
 \opcodetbl{0c}{LSHIFT}		{1c}{LIT\_0}
 \opcodetbl{0d}{RSHIFT}		{1d}{LIT\_1}
-\opcodetbl{0e}{ARSHIFT}		{1e}{undefined}
-\opcodetbl{0f}{SIGN\_EXTEND}	{1f}{undefined}
+\opcodetbl{0e}{ARSHIFT}		{1e}{LIT\_2}
+\opcodetbl{0f}{SIGN\_EXTEND}	{1f}{LIT\_3}
  \bottomrule
 \end{tabular}
 \caption{\label{opcodetable}Instruction opcodes}

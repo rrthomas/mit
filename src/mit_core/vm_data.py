@@ -181,6 +181,14 @@ class Instruction(AbstractInstruction):
         one = 1;
     ''')
 
+    LIT_2 = (0x1e, [], ['two'], '''\
+        two = 2;
+    ''')
+
+    LIT_3 = (0x1f, [], ['three'], '''\
+        three = 3;
+    ''')
+
 @unique
 class InternalExtraInstruction(AbstractInstruction):
     HALT = (0x1, [], [], '''\
