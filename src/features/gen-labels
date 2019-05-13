@@ -121,6 +121,27 @@ class Path:
     def __add__(self, sequence):
         return Path(self.instructions + sequence)
 
+    def is_useful_guess(self, instruction):
+        '''
+        Returns `True` if the implementation of `instruction` is significantly
+        more efficient after executing this Path than from a standing start.
+        '''
+        if instruction.name == 'HALT':
+            # We will execute the interpreter. No optimizations are possible.
+            return True #False
+        elif instruction.args is None or instruction.results is None:
+            # Arbitrary stack effect. No optmizations are possible.
+            return False
+        elif 'ITEMS' in instruction.args or 'ITEMS' in instruction.results:
+            # Variadic instruction. We can optimize only if we know `COUNT`.
+            return (
+                instruction.args[-1] == 'COUNT' and
+                self.tos_constant is not None
+            )
+        else:
+            # Ordinary instruction.
+            return True
+
     def remove_repeating_part(self):
         '''
         If this Path ends with two repeats of some "loop body", and if we know
@@ -163,9 +184,10 @@ def walk(path, distribution):
         if estimated_count > 1.:
             probabilities = state_probabilities[state]
             for instruction, (new_state, probability) in probabilities.items():
-                additional_count = estimated_count * probability
-                if additional_count >= 1.:
-                    successors[instruction][new_state] += additional_count
+                if path.is_useful_guess(instruction):
+                    additional_count = estimated_count * probability
+                    if additional_count >= 1.:
+                        successors[instruction][new_state] += additional_count
     # Recurse down the tree.
     for instruction, new_distribution in successors.items():
         new_path = (path + (instruction,)).remove_repeating_part()
@@ -188,7 +210,7 @@ successors = {
     path: {
         instruction: (path + (instruction,)).remove_repeating_part()
         for instruction in Instruction
-        if instruction.args is not None # Don't bother to guess.
+specializer/gen-labels
     }
     for path in language
 }
