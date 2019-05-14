@@ -23,15 +23,15 @@ try:
 
         Returns a str.
         '''
-        words = type_sizes[type] // type_sizes['mit_WORD']
+        words = type_sizes[type] // type_sizes['mit_word']
         code = [
-            'mit_max_stack_item_t temp = (mit_UWORD)(*UNCHECKED_STACK({}));'
+            'mit_max_stack_item_t temp = (mit_uword)(*UNCHECKED_STACK({}));'
             .format(depth)
         ]
         for i in range(words - 1):
-            code.append('temp <<= mit_WORD_BIT;')
+            code.append('temp <<= MIT_WORD_BIT;')
             code.append(
-                'temp |= (mit_UWORD)(*UNCHECKED_STACK({}));'
+                'temp |= (mit_uword)(*UNCHECKED_STACK({}));'
                 .format(depth + i + 1)
             )
         code.append(disable_warnings(['-Wint-to-pointer-cast'], '{} = ({})temp;'.format(name, type)))
@@ -48,18 +48,18 @@ try:
 
         Returns a str.
         '''
-        words = type_sizes[type] // type_sizes['mit_WORD']
+        words = type_sizes[type] // type_sizes['mit_word']
         code = [disable_warnings(['-Wpointer-to-int-cast'],
                                  'mit_max_stack_item_t temp = (mit_max_stack_item_t){};'.format(name))]
         for i in reversed(range(words - 1)):
             code.append(
-                '*UNCHECKED_STACK({}) = (mit_UWORD)(temp & mit_WORD_MASK);'
+                '*UNCHECKED_STACK({}) = (mit_uword)(temp & MIT_WORD_MASK);'
                 .format(depth + i + 1)
             )
-            code.append('temp >>= mit_WORD_BIT;')
+            code.append('temp >>= MIT_WORD_BIT;')
         code.append(
-            '*UNCHECKED_STACK({}) = (mit_UWORD)({});'
-            .format(depth, 'temp & mit_WORD_MASK' if words > 1 else 'temp')
+            '*UNCHECKED_STACK({}) = (mit_uword)({});'
+            .format(depth, 'temp & MIT_WORD_MASK' if words > 1 else 'temp')
         )
         return '''\
 {{
@@ -67,7 +67,7 @@ try:
 }}'''.format(textwrap.indent('\n'.join(code), '    '))
 
     def pop_stack_type(name, type):
-        words = type_sizes[type] // type_sizes['mit_WORD']
+        words = type_sizes[type] // type_sizes['mit_word']
         code = [
             'if (S->STACK_DEPTH < {}) RAISE(MIT_ERR_STACK_OVERFLOW);'
             .format(words),
@@ -77,7 +77,7 @@ try:
         return '{}'.format(textwrap.indent('\n'.join(code), '    '))
 
     def push_stack_type(name, type):
-        words = type_sizes[type] // type_sizes['mit_WORD']
+        words = type_sizes[type] // type_sizes['mit_word']
         code = [
             'if (S->stack_size - S->STACK_DEPTH < {}) RAISE(MIT_ERR_STACK_WRITE);'
             .format(words),

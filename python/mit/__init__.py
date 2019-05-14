@@ -287,8 +287,8 @@ class State:
 
 # Registers
 type_equivalents = {
-    "mit_WORD": c_word,
-    "mit_UWORD": c_uword,
+    "mit_word": c_word,
+    "mit_uword": c_uword,
 }
 class ActiveRegister:
     '''A VM register.'''

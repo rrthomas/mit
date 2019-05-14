@@ -7,7 +7,7 @@
 // THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 // RISK.
 
-#ifndef mit_WORD_BYTES
+#ifndef MIT_WORD_BYTES
 #error "mit/mit.h must be included before this header file"
 #endif
 
@@ -17,11 +17,11 @@
 
 #include <stdio.h>
 
-mit_WORD mit_extra_instruction(mit_state * restrict S);
+mit_word mit_extra_instruction(mit_state * restrict S);
 mit_state *mit_auto_extend_init(void);
 int mit_auto_extend_handler(mit_state * restrict S, int error);
 int mit_core_dump(mit_state *S);
-mit_WORD mit_specializer_run(mit_state * restrict S);
-mit_WORD mit_trace_run(mit_state *state, FILE * restrict trace_fp);
+mit_word mit_specializer_run(mit_state * restrict S);
+mit_word mit_trace_run(mit_state *state, FILE * restrict trace_fp);
 
 #endif

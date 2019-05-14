@@ -14,7 +14,7 @@ from .instruction import AbstractInstruction
 
 class AbstractRegister(Enum):
     @property
-    def ty(self): return "mit_UWORD"
+    def ty(self): return "mit_uword"
 
     @property
     def uty(self): return self.ty
@@ -37,7 +37,7 @@ class Instruction(AbstractInstruction):
     )
 
     BRANCH = (0x1, ['addr'], [], '''\
-        S->PC = (mit_UWORD)addr;
+        S->PC = (mit_uword)addr;
         NEXT;
     ''',
               '''\
@@ -47,19 +47,19 @@ class Instruction(AbstractInstruction):
 
     BRANCHZ = (0x2, ['flag', 'addr'], [], '''\
         if (flag == 0) {
-            S->PC = (mit_UWORD)addr;
+            S->PC = (mit_uword)addr;
             NEXT;
         }
     ''')
 
     CALL = (0x3, ['addr'], ['ret_addr'], '''\
         ret_addr = S->PC;
-        S->PC = (mit_UWORD)addr;
+        S->PC = (mit_uword)addr;
         NEXT;
     ''',
             '''\
         if (S->I != 0) {
-            mit_WORD ret = mit_internal_extra_instruction(S);
+            mit_word ret = mit_internal_extra_instruction(S);
             if (ret != 0)
                 RAISE(ret);
         }
@@ -88,18 +88,18 @@ class Instruction(AbstractInstruction):
     ''')
 
     LIT = (0xa, [], ['n'], '''\
-        int ret = load(S, S->PC, mit_SIZE_WORD, &n);
+        int ret = load(S, S->PC, MIT_SIZE_WORD, &n);
         if (ret != 0)
             RAISE(ret);
-        S->PC += mit_WORD_BYTES;
+        S->PC += MIT_WORD_BYTES;
     ''')
 
     LIT_PC_REL = (0xb, [], ['n'], '''\
-        int ret = load(S, S->PC, mit_SIZE_WORD, &n);
+        int ret = load(S, S->PC, MIT_SIZE_WORD, &n);
         if (ret != 0)
             RAISE(ret);
         n += S->PC;
-        S->PC += mit_WORD_BYTES;
+        S->PC += MIT_WORD_BYTES;
     ''')
 
     LIT_0 = (0xc, [], ['zero'], '''\
@@ -127,7 +127,7 @@ class Instruction(AbstractInstruction):
     ''')
 
     ULT = (0x12, ['a', 'b'], ['flag'], '''\
-        flag = (mit_UWORD)a < (mit_UWORD)b;
+        flag = (mit_uword)a < (mit_uword)b;
     ''')
 
     NEGATE = (0x13, ['a'], ['r'], '''\
@@ -152,8 +152,8 @@ class Instruction(AbstractInstruction):
     UDIVMOD = (0x17, ['a', 'b'], ['q', 'r'], '''\
         if (b == 0)
           RAISE(MIT_ERR_DIVISION_BY_ZERO);
-        q = (mit_WORD)((mit_UWORD)a / (mit_UWORD)b);
-        r = (mit_WORD)((mit_UWORD)a % (mit_UWORD)b);
+        q = (mit_word)((mit_uword)a / (mit_uword)b);
+        r = (mit_word)((mit_uword)a % (mit_uword)b);
     ''')
 
     NOT = (0x18, ['x'], ['r'], '''\
@@ -173,11 +173,11 @@ class Instruction(AbstractInstruction):
     ''')
 
     LSHIFT = (0x1c, ['x', 'n'], ['r'], '''\
-        r = n < (mit_WORD)mit_WORD_BIT ? x << n : 0;
+        r = n < (mit_word)MIT_WORD_BIT ? x << n : 0;
     ''')
 
     RSHIFT = (0x1d, ['x', 'n'], ['r'], '''\
-        r = n < (mit_WORD)mit_WORD_BIT ? (mit_WORD)((mit_UWORD)x >> n) : 0;
+        r = n < (mit_word)MIT_WORD_BIT ? (mit_word)((mit_uword)x >> n) : 0;
     ''')
 
     ARSHIFT = (0x1e, ['x', 'n'], ['r'], '''\
@@ -185,8 +185,8 @@ class Instruction(AbstractInstruction):
     ''')
 
     SIGN_EXTEND = (0x1f, ['n1', 'size'], ['n2'], '''\
-        n2 = n1 << (mit_WORD_BYTES - (1 << size)) * mit_BYTE_BIT;
-        n2 = ARSHIFT(n2, (mit_WORD_BYTES - (1 << size)) * mit_BYTE_BIT);
+        n2 = n1 << (MIT_WORD_BYTES - (1 << size)) * MIT_BYTE_BIT;
+        n2 = ARSHIFT(n2, (MIT_WORD_BYTES - (1 << size)) * MIT_BYTE_BIT);
     ''')
 
 @unique

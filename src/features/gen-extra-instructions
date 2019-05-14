@@ -41,7 +41,7 @@ enum {
 
 for lib in LibInstruction:
     print('''\
-static mit_WORD extra_{}(mit_state * restrict S, mit_WORD opcode)
+static mit_word extra_{}(mit_state * restrict S, mit_word opcode)
 {{'''.format(str.lower(lib.name)))
     print(dispatch(
         lib.library,
@@ -53,9 +53,9 @@ static mit_WORD extra_{}(mit_state * restrict S, mit_WORD opcode)
 ''')
 
 print('''
-mit_WORD mit_extra_instruction(mit_state * restrict S)
+mit_word mit_extra_instruction(mit_state * restrict S)
 {
-    mit_UWORD opcode = S->I >> mit_instruction_bit;
+    mit_uword opcode = S->I >> mit_instruction_bit;
 ''')
 
 print(dispatch(

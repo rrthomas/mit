@@ -112,7 +112,7 @@ Option('version',
            PACKAGE_NAME " comes with ABSOLUTELY NO WARRANTY.\\n"
            "You may redistribute copies of " PACKAGE_NAME "\\n"
            "under the terms of the MIT/X11 License.\\n",
-           mit_WORD_BYTES, mit_ENDISM ? "big" : "little");
+           MIT_WORD_BYTES, MIT_ENDISM ? "big" : "little");
     exit(EXIT_SUCCESS);
 }
 ''')
@@ -171,7 +171,7 @@ case MIT_ERR_MEMORY_WRITE:
 Feature(# Output instruction opcode trace
     top_level_code='''
 FILE *trace_fp;
-static mit_WORD trace_run(mit_state *state)
+static mit_word trace_run(mit_state *state)
 {
     return mit_trace_run(state, trace_fp);
 }
@@ -180,11 +180,11 @@ static mit_WORD trace_run(mit_state *state)
 
 Feature(# VM core dump
     top_level_code='''\
-#define REGISTER_STRLEN (mit_WORD_BYTES * 2)
+#define REGISTER_STRLEN (MIT_WORD_BYTES * 2)
 
 static char hex[] = "0123456789abcdef";
 
-static void register_to_str(mit_WORD reg, char s[REGISTER_STRLEN])
+static void register_to_str(mit_word reg, char s[REGISTER_STRLEN])
 {
     for (unsigned i = 0; i < REGISTER_STRLEN; i++) {
         s[REGISTER_STRLEN - i - 1] = hex[reg & 0xf];
@@ -317,7 +317,7 @@ print('''
 int main(int argc, char *argv[])
 {
     set_program_name(argv[0]);
-    mit_WORD (*run_fn)(mit_state *) = mit_run;
+    mit_word (*run_fn)(mit_state *) = mit_run;
 ''')
 
 for feature in Feature.features:
@@ -415,7 +415,7 @@ print('''\
 print('''\
     // Run
     for (;;) {
-        mit_WORD error = run_fn(S);
+        mit_word error = run_fn(S);
         switch (error) {''')
 
 for feature in Feature.features:

@@ -15,11 +15,11 @@
 #include "mit/features.h"
 
 
-static mit_UWORD page_size;
-static mit_UWORD memory_size;
-static mit_UWORD stack_size;
+static mit_uword page_size;
+static mit_uword memory_size;
+static mit_uword stack_size;
 
-static mit_UWORD round_up(mit_UWORD n, mit_UWORD multiple)
+static mit_uword round_up(mit_uword n, mit_uword multiple)
 {
     return (n - 1) - (n - 1) % multiple + multiple;
 }
@@ -29,8 +29,8 @@ mit_state *mit_auto_extend_init(void)
     // getpagesize() is obsolete, but gnulib provides it, and
     // sysconf(_SC_PAGESIZE) does not work on some platforms.
     page_size = getpagesize();
-    memory_size = mit_WORD_BYTES == 2 ? 0x1000U : 0x100000U;
-    stack_size = mit_WORD_BYTES == 2 ? 1024U : 16384U;
+    memory_size = MIT_WORD_BYTES == 2 ? 0x1000U : 0x100000U;
+    stack_size = MIT_WORD_BYTES == 2 ? 1024U : 16384U;
 
     return mit_init(memory_size, stack_size);
 }

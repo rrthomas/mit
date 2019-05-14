@@ -26,18 +26,18 @@ print('''\
 
 #define NEXT                                                  \\
     do {                                                      \\
-        int ret = load(S, S->PC, mit_SIZE_WORD, (mit_WORD *)&(S->I)); \\
+        int ret = load(S, S->PC, MIT_SIZE_WORD, (mit_word *)&(S->I)); \\
         if (ret != 0)                                         \\
             RAISE(ret);                                       \\
-        S->PC += mit_WORD_BYTES;                              \\
+        S->PC += MIT_WORD_BYTES;                              \\
     } while (0)
 
 #define RAISE(code)                         \\
     return (code);                          \\
 
-_GL_ATTRIBUTE_PURE mit_WORD mit_internal_extra_instruction(mit_state *S)
+_GL_ATTRIBUTE_PURE mit_word mit_internal_extra_instruction(mit_state *S)
 {
-    mit_UWORD opcode = S->I;
+    mit_uword opcode = S->I;
 ''')
 
 print(dispatch(InternalExtraInstruction, 'O_EXTRA_', ''))
@@ -55,11 +55,11 @@ print('''\
         return error;                                         \\
     } while (0)
 
-mit_WORD mit_single_step(mit_state * restrict S)
+mit_word mit_single_step(mit_state * restrict S)
 {
-    mit_UWORD initial_PC = S->PC;
-    mit_UWORD initial_I = S->I;
-    mit_BYTE opcode = S->I & MIT_INSTRUCTION_MASK;
+    mit_uword initial_PC = S->PC;
+    mit_uword initial_I = S->I;
+    mit_byte opcode = S->I & MIT_INSTRUCTION_MASK;
     S->I >>= MIT_INSTRUCTION_BIT;
 
     // Check STACK_DEPTH is valid
@@ -80,9 +80,9 @@ print('''
 }
 
 
-mit_WORD mit_run(mit_state * restrict S)
+mit_word mit_run(mit_state * restrict S)
 {
-    mit_WORD ret;
+    mit_word ret;
     while ((ret = mit_single_step(S)) == 0)
         ;
     return ret;

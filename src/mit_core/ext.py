@@ -46,7 +46,7 @@ class LibcLib(AbstractInstruction):
     ''')
 
     STRLEN = (0x3, ['s:const char *'], ['len'], '''\
-        len = (mit_WORD)(mit_UWORD)strlen(s);
+        len = (mit_word)(mit_uword)strlen(s);
     ''')
 
     STRNCPY = (0x4, ['dest:char *', 'src:const char *', 'n'], ['ret:char *'], '''\
@@ -54,35 +54,35 @@ class LibcLib(AbstractInstruction):
     ''')
 
     STDIN = (0x5, [], ['fd:int'], '''\
-        fd = (mit_WORD)STDIN_FILENO;
+        fd = (mit_word)STDIN_FILENO;
     ''')
 
     STDOUT = (0x6, [], ['fd:int'], '''\
-        fd = (mit_WORD)STDOUT_FILENO;
+        fd = (mit_word)STDOUT_FILENO;
     ''')
 
     STDERR = (0x7, [], ['fd:int'], '''\
-        fd = (mit_WORD)STDERR_FILENO;
+        fd = (mit_word)STDERR_FILENO;
     ''')
 
     O_RDONLY = (0x8, [], ['flag'], '''\
-        flag = (mit_WORD)O_RDONLY;
+        flag = (mit_word)O_RDONLY;
     ''')
 
     O_WRONLY = (0x9, [], ['flag'], '''\
-        flag = (mit_WORD)O_WRONLY;
+        flag = (mit_word)O_WRONLY;
     ''')
 
     O_RDWR = (0xa, [], ['flag'], '''\
-        flag = (mit_WORD)O_RDWR;
+        flag = (mit_word)O_RDWR;
     ''')
 
     O_CREAT = (0xb, [], ['flag'], '''\
-        flag = (mit_WORD)O_CREAT;
+        flag = (mit_word)O_CREAT;
     ''')
 
     O_TRUNC = (0xc, [], ['flag'], '''\
-        flag = (mit_WORD)O_TRUNC;
+        flag = (mit_word)O_TRUNC;
     ''')
 
     OPEN = (0xd, ['str', 'flags'], ['fd:int'], '''\
@@ -94,7 +94,7 @@ class LibcLib(AbstractInstruction):
     ''')
 
     CLOSE = (0xe, ['fd:int'], ['ret:int'], '''\
-        ret = (mit_WORD)close(fd);
+        ret = (mit_word)close(fd);
     ''')
 
     READ = (0xf, ['buf', 'nbytes', 'fd:int'], ['nread:int'], '''\
@@ -116,15 +116,15 @@ class LibcLib(AbstractInstruction):
     ''')
 
     SEEK_SET = (0x11, [], ['whence'], '''\
-        whence = (mit_WORD)SEEK_SET;
+        whence = (mit_word)SEEK_SET;
     ''')
 
     SEEK_CUR = (0x12, [], ['whence'], '''\
-        whence = (mit_WORD)SEEK_CUR;
+        whence = (mit_word)SEEK_CUR;
     ''')
 
     SEEK_END = (0x13, [], ['whence'], '''\
-        whence = (mit_WORD)SEEK_END;
+        whence = (mit_word)SEEK_END;
     ''')
 
     LSEEK = (0x14, ['fd:int', 'offset:off_t', 'whence'], ['pos:off_t'], '''\
@@ -243,7 +243,7 @@ for register in Register:
             len(mit_lib), None, None, '''\
     mit_state *inner_state;
     {}
-    mit_WORD value;
+    mit_word value;
     int ret = pop_stack(S, &value);
     if (ret != 0)
         RAISE(ret);
@@ -258,7 +258,7 @@ class Library(AbstractInstruction):
     def __init__(self, opcode, library):
         super().__init__(opcode, None, None, '''\
 {{
-    mit_WORD function;
+    mit_word function;
     int ret = pop_stack(S, &function);
     if (ret != 0)
         RAISE(ret);
@@ -271,7 +271,7 @@ class Library(AbstractInstruction):
     @staticmethod
     def _item_type(name_and_type):
         l = name_and_type.split(':')
-        return l[1] if len(l) > 1 else 'mit_WORD'
+        return l[1] if len(l) > 1 else 'mit_word'
 
     def types(self):
         '''Return a list of all types used in the library.'''
