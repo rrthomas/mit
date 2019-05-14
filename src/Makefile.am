@@ -81,7 +81,6 @@ main.c: gen-main
 loc:
 	$(SLOCCOUNT) \
 		$(C_SRCS) \
-		$(mit_SOURCES) \
 		$(LIB_CORE_SRCS) \
 		gen-registers gen-opcodes gen-instructions gen-main
 
