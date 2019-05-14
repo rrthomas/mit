@@ -31,7 +31,7 @@ mit_pkginclude_HEADERS += %D%/mit/features.h
 %D%/instructions.labels_pickle: mit_core/instruction.py mit_core/vm_data.py %D%/instructions.predictor_pickle %D%/gen-labels
 	$(PYTHON_WITH_PATH) $(srcdir)/%D%/gen-labels %D%/instructions.predictor_pickle $@
 
-%D%/specializer.c: mit_core/instruction.py mit_core/vm_data.py mit_core/type_sizes.py mit_core/instruction_gen.py %D%/gen-specializer %D%/instructions.labels_pickle
+%D%/specializer.c: mit_core/instruction.py mit_core/vm_data.py mit_core/type_sizes.py mit_core/instruction_gen.py %D%/gen-specializer %D%/specializer.py %D%/instructions.labels_pickle
 	$(PYTHON_WITH_PATH) $(srcdir)/%D%/gen-specializer %D%/instructions.labels_pickle > %D%/specializer.c || ( rm -f %D%/specializer.c; exit 1 )
 
 EXTRA_DIST += \

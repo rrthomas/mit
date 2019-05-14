@@ -179,11 +179,32 @@ static mit_WORD trace_run(mit_state *state)
 )
 
 Feature(# VM core dump
+    top_level_code='''\
+#define REGISTER_STRLEN (mit_WORD_BYTES * 2)
+
+static char hex[] = "0123456789abcdef";
+
+static void register_to_str(mit_WORD reg, char s[REGISTER_STRLEN])
+{
+    for (unsigned i = 0; i < REGISTER_STRLEN; i++) {
+        s[REGISTER_STRLEN - i - 1] = hex[reg & 0xf];
+        reg >>= 4;
+    }
+}
+''',
     init_code='bool core_dump = false;',
     exception_handler='''\
 default:
-    if (core_dump)
+    if (core_dump) {
+        char pc_str[REGISTER_STRLEN];
+        char bad_str[REGISTER_STRLEN];
+        register_to_str(S->PC, &pc_str[0]);
+        register_to_str(S->BAD, &bad_str[0]);
+        warn("error %d raised at PC=0x%.*s; BAD=0x%.*s", error,
+            REGISTER_STRLEN, pc_str, REGISTER_STRLEN, bad_str);
+
         mit_core_dump(S);
+    }
     break;''')
 
 
@@ -293,7 +314,6 @@ for feature in Feature.features:
         print(feature.top_level_code)
 
 print('''
-
 int main(int argc, char *argv[])
 {
     set_program_name(argv[0]);
