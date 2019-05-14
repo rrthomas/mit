@@ -200,7 +200,9 @@ default:
         char bad_str[REGISTER_STRLEN];
         register_to_str(S->PC, &pc_str[0]);
         register_to_str(S->BAD, &bad_str[0]);
-        warn("error %d raised at PC=0x%.*s; BAD=0x%.*s", error,
+        // Cast error to size_t for printing because we might not be
+        // able to print mit_uword.
+        warn("error %zu raised at PC=0x%.*s; BAD=0x%.*s", (size_t)error,
             REGISTER_STRLEN, pc_str, REGISTER_STRLEN, bad_str);
 
         mit_core_dump(S);
