@@ -18,25 +18,8 @@
 #include "mit/features.h"
 
 
-#define REGISTER_STRLEN (mit_WORD_BYTES * 2)
-
-static char hex[] = "0123456789abcdef";
-
-static void register_to_str(mit_WORD reg, char s[REGISTER_STRLEN])
-{
-    for (unsigned i = 0; i < REGISTER_STRLEN; i++) {
-        s[REGISTER_STRLEN - i - 1] = hex[reg & 0xf];
-        reg >>= 4;
-    }
-}
-
 int mit_core_dump(mit_state *S)
 {
-    char pc_str[REGISTER_STRLEN];
-    char bad_str[REGISTER_STRLEN];
-    register_to_str(S->PC, &pc_str[0]);
-    register_to_str(S->BAD, &bad_str[0]);
-
     // Ignore errors; best effort only, in the middle of an error exit
     char file_format[] = "mit-core.%lu";
     char file[sizeof(file_format) + sizeof(unsigned long) * CHAR_BIT];
