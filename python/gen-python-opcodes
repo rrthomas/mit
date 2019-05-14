@@ -52,6 +52,7 @@ code.extend(enum_to_python(vm_data.InternalExtraInstruction))
 code.append('')
 
 lib_code = Code('''\
+    @unique
     class LibInstruction(Enum):
         def __init__(self, library, opcode):
             self.library = library

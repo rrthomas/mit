@@ -170,6 +170,7 @@ AC_ARG_ENABLE([optional-tests],
   [gl_optional_tests=no]
 )
 AC_SUBST([OPTIONAL_TESTS], [$gl_optional_tests])
+AM_CONDITIONAL([OPTIONAL_TESTS], [test "$OPTIONAL_TESTS" = "yes"])
 
 # pForth tests, run if the pforth source tree is present and Mit is
 # configured compatibly with pForth.

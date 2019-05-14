@@ -7,9 +7,10 @@
 # THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 # RISK.
 
-TEST_EXTENSIONS = .py
+TEST_EXTENSIONS = .py .bf
 # Use PY_LOG_ENV to set LD_PRELOAD for ASAN
 PY_LOG_COMPILER = env $(PY_LOG_ENV) $(PYTHON)
+BF_LOG_COMPILER = env $(PY_LOG_ENV) time $(PYTHON) $(srcdir)/run-brainfuck-test
 
 TESTS =	\
 	arithmetic.py	\
@@ -26,7 +27,13 @@ TESTS =	\
 	run.py		\
 	save_object.py	\
 	single_step.py	\
-	stack.py
+	stack.py	\
+	hello-world.bf  \
+	cell-size.bf
+
+if OPTIONAL_TESTS
+TESTS += mandelbrot.bf
+endif
 
 # Python will not try a relative import from a different directory, so copy
 # modules from srcdir to builddir.
@@ -54,6 +61,11 @@ distclean-local:
 
 EXTRA_DIST = \
 	$(TESTS) \
-	mit_test.py	\
+	run-brainfuck-test \
+	brainfuck \
+	mit_test.py \
 	redirect_stdout.py \
-	hello.correct
+	hello.correct \
+	hello-world.correct \
+	cell-size.correct \
+	mandelbrot.correct
