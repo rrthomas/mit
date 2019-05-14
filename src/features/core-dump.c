@@ -24,14 +24,11 @@ int mit_core_dump(mit_state *S)
     char file_format[] = "mit-core.%lu";
     char file[sizeof(file_format) + sizeof(unsigned long) * CHAR_BIT];
     sprintf(file, "mit-core.%lu", (unsigned long)getpid());
-    if (file != NULL) {
-        int fd;
-        if ((fd = creat(file, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH)) >= 0) {
-            (void)mit_save_object(S, 0, S->memory_size, fd);
-            close(fd);
-            return 0;
-
-        }
+    int fd = creat(file, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
+    if (fd >= 0) {
+        (void)mit_save_object(S, 0, S->memory_size, fd);
+        close(fd);
+        return 0;
     }
     return -1;
 }

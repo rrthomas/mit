@@ -13,16 +13,15 @@ from .binding import (
     align, is_aligned,
     word_bytes, word_bit, word_mask, instruction_bit, instruction_mask, sign_bit,
 )
-from .vm_data import Instruction
-from .ext import LibInstruction
+from .opcodes import Instruction, LibInstruction
 
-LIT = Instruction.LIT.opcode
-LIT_PC_REL = Instruction.LIT_PC_REL.opcode
-BRANCH = Instruction.BRANCH.opcode
-CALL = Instruction.CALL.opcode
+LIT = Instruction.LIT
+LIT_PC_REL = Instruction.LIT_PC_REL
+BRANCH = Instruction.BRANCH
+CALL = Instruction.CALL
 
 mnemonic = {
-    instruction.opcode: instruction.name
+    instruction.value: instruction.name
     for instruction in Instruction
 }
 

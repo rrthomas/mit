@@ -13,9 +13,7 @@ The main entry point is dispatch().
 
 import re, textwrap
 
-from mit_core.type_sizes import type_sizes
-from mit_core.instruction_gen import (
-    Size, StackItem, StackPicture, StackEffect)
+from mit_core.instruction_gen import Size, StackItem, StackPicture, StackEffect
 
 
 class CacheState:

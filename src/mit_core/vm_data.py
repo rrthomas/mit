@@ -12,17 +12,7 @@ from enum import Enum, unique
 from .instruction import AbstractInstruction
 
 
-class AbstractRegister(Enum):
-    @property
-    def ty(self): return "mit_uword"
-
-    @property
-    def uty(self): return self.ty
-
-    @property
-    def read_only(self): return False
-
-class Register(AbstractRegister):
+class Register(Enum):
     '''A VM register.'''
     PC = object()
     I = object()

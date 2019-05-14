@@ -15,8 +15,94 @@ import functools
 import re
 import textwrap
 
-from .type_sizes import type_sizes
-from .c_util import load_stack_type, store_stack_type
+type_wordses = {'mit_word': 1} # Enough for the core
+
+def type_words(type):
+    '''
+    Return the number of words occupied by 'type', or -1 if unknown: this
+    can be used in numeric calculations to generate C, but will cause
+    compilation errors if it is erroneously compiled.
+    '''
+    return type_wordses.get(type, -1)
+
+def load_stack_type(name, type, depth):
+    '''
+    Generate C code to load the variable `name` of type `type` occupying
+    stack slots starting at position `depth`.
+
+    Returns a str.
+    '''
+    code = [
+        'mit_max_stack_item_t temp = (mit_uword)(*UNCHECKED_STACK({}));'
+        .format(depth)
+    ]
+    for i in range(type_words(type) - 1):
+        code.append('temp <<= MIT_WORD_BIT;')
+        code.append(
+            'temp |= (mit_uword)(*UNCHECKED_STACK({}));'
+            .format(depth + i + 1)
+        )
+    code.append(disable_warnings(['-Wint-to-pointer-cast'], '{} = ({})temp;'.format(name, type)))
+
+    return '''\
+{{
+{}
+}}'''.format(textwrap.indent('\n'.join(code), '    '))
+
+def store_stack_type(name, type, depth):
+    '''
+    Generate C code to store the variable `name` of type `type` occupying
+    stack slots starting at position `depth`.
+
+    Returns a str.
+    '''
+    code = [disable_warnings(['-Wpointer-to-int-cast'],
+                             'mit_max_stack_item_t temp = (mit_max_stack_item_t){};'.format(name))]
+    for i in reversed(range(type_words(type) - 1)):
+        code.append(
+            '*UNCHECKED_STACK({}) = (mit_uword)(temp & MIT_WORD_MASK);'
+            .format(depth + i + 1)
+        )
+        code.append('temp >>= MIT_WORD_BIT;')
+    code.append(
+        '*UNCHECKED_STACK({}) = (mit_uword)({});'
+        .format(depth, 'temp & MIT_WORD_MASK' if type_words(type) > 1 else 'temp')
+    )
+    return '''\
+{{
+{}
+}}'''.format(textwrap.indent('\n'.join(code), '    '))
+
+def pop_stack_type(name, type):
+    code = [
+        'if (S->STACK_DEPTH < {}) RAISE(MIT_ERR_STACK_OVERFLOW);'
+        .format(type_words(type)),
+        load_stack_type(name, type, 0),
+        'S->STACK_DEPTH -= {};'.format(type_words(type)),
+    ]
+    return '{}'.format(textwrap.indent('\n'.join(code), '    '))
+
+def push_stack_type(name, type):
+    code = [
+        'if (S->stack_size - S->STACK_DEPTH < {}) RAISE(MIT_ERR_STACK_WRITE);'
+        .format(type_words(type)),
+        load_stack_type(name, type, 0),
+        'S->STACK_DEPTH += {};'.format(type_words(type)),
+    ]
+    return '{}'.format(textwrap.indent('\n'.join(code), '    '))
+
+def disable_warnings(warnings, c_source):
+    '''
+    Returns `c_source` wrapped in "#pragmas" to suppress the given list
+    `warnings` of warning flags.
+    '''
+    return '''\
+#pragma GCC diagnostic push
+{pragmas}
+{c_source}
+#pragma GCC diagnostic pop'''.format(c_source=c_source,
+                                     pragmas='\n'.join(['#pragma GCC diagnostic ignored "{}"'.format(w)
+                                                        for w in warnings]))
 
 
 @functools.total_ordering
@@ -111,9 +197,7 @@ class StackItem:
         if self.name == 'ITEMS':
             self.size = Size(0, count=1)
         else:
-            self.size = Size((type_sizes[self.type] +
-                              (type_sizes['mit_word'] - 1)) //
-                             type_sizes['mit_word'])
+            self.size = Size(type_words(self.type))
         self.depth = None
 
     @staticmethod

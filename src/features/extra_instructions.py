@@ -1,4 +1,4 @@
-# EXT instruction.
+# External extra instructions.
 #
 # (c) Mit authors 1994-2019
 #
@@ -9,9 +9,9 @@
 
 from enum import Enum, unique
 
-from .instruction import AbstractInstruction
-from .vm_data import Register
-from .c_util import pop_stack_type
+from mit_core.instruction import AbstractInstruction
+from mit_core.vm_data import Register
+from mit_core.instruction_gen import pop_stack_type
 
 
 # FIXME: this should be a per-library attribute
@@ -234,15 +234,14 @@ for register in Register:
     mit_lib['GET_{}'.format(register.name.upper())] = (
         len(mit_lib), None, None, '''\
     mit_state *inner_state;
-    {}
+{}
     push_stack(S, mit_get_{}(inner_state));
 '''.format(pop_stack_type('inner_state', 'mit_state *'),
            register.name))
-    if not register.read_only:
-        mit_lib['SET_{}'.format(register.name.upper())] = (
-            len(mit_lib), None, None, '''\
+    mit_lib['SET_{}'.format(register.name.upper())] = (
+        len(mit_lib), None, None, '''\
     mit_state *inner_state;
-    {}
+{}
     mit_word value;
     int ret = pop_stack(S, &value);
     if (ret != 0)

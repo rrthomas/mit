@@ -10,7 +10,7 @@
 
 import re
 
-from mit_core.ext import *
+from extra_instructions import *
 
 
 print('''\
@@ -20,7 +20,8 @@ ac_includes_default="\\
 {}"
 '''.format(re.sub('"', '\\"', includes)))
 
-for type in list(set([type for lib in LibInstruction
+for type in list(set(['mit_word'] +
+                     [type for lib in LibInstruction
                       for type in lib.types()])):
     print('AC_CHECK_SIZEOF([{}])'.format(type))
 

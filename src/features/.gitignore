@@ -1,6 +1,12 @@
-.dirstamp
+/.dirstamp
+/autom4te.cache
 *.predictor_pickle
 *.labels_pickle
-extra-instructions.c
-specializer.c
-specializer.h
+/config.log
+/config.status
+/type-sizes
+/type-sizes.ac
+/extra-instructions.c
+/specializer.c
+/specializer.h
+/type_sizes.py

@@ -8,8 +8,18 @@
 # THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 # RISK.
 
-from mit_core.ext import *
 from mit_core.instruction_gen import *
+
+# Get type sizes and inject them into instruction_gen
+from type_sizes import type_sizes
+assert 'mit_word' in type_sizes
+word_bytes = type_sizes['mit_word']
+type_wordses = {type: (size + word_bytes - 1) // word_bytes
+                for type, size in type_sizes.items()}
+import mit_core.instruction_gen
+mit_core.instruction_gen.type_wordses = type_wordses
+
+from extra_instructions import *
 
 # Write the output file
 print('''\
@@ -20,15 +30,7 @@ print('''\
 print(includes)
 
 print('''
-
-#define INSTRUCTION(name, opcode) name = opcode,
-''')
-LibInstruction.print("")
-LibcLib.print("LIB_C_")
-MitLib.print("LIB_MIT_")
-
-print('''
-#undef INSTRUCTION
+#include "mit/extra-opcodes.h"
 
 enum {
     MIT_ERR_EXT_INVALID_LIBRARY = 16,
