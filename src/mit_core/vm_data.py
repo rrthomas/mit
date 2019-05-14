@@ -32,11 +32,11 @@ class Register(AbstractRegister):
 @unique
 class Instruction(AbstractInstruction):
     '''VM instruction instructions.'''
-    NEXT = (0x00, [], [], '''\
+    NEXT = (0x0, [], [], '''\
         NEXT;'''
     )
 
-    BRANCH = (0x01, ['addr'], [], '''\
+    BRANCH = (0x1, ['addr'], [], '''\
         S->PC = (mit_UWORD)addr;
         NEXT;
     ''',
@@ -45,14 +45,14 @@ class Instruction(AbstractInstruction):
             RAISE(MIT_ERR_INVALID_OPCODE);
     ''')
 
-    BRANCHZ = (0x02, ['flag', 'addr'], [], '''\
+    BRANCHZ = (0x2, ['flag', 'addr'], [], '''\
         if (flag == 0) {
             S->PC = (mit_UWORD)addr;
             NEXT;
         }
     ''')
 
-    CALL = (0x03, ['addr'], ['ret_addr'], '''\
+    CALL = (0x3, ['addr'], ['ret_addr'], '''\
         ret_addr = S->PC;
         S->PC = (mit_UWORD)addr;
         NEXT;
@@ -65,47 +65,57 @@ class Instruction(AbstractInstruction):
         }
     ''')
 
-    POP = (0x04, ['ITEMS', 'COUNT'], [], '')
+    POP = (0x4, ['ITEMS', 'COUNT'], [], '')
 
-    DUP = (0x05, ['x', 'ITEMS', 'COUNT'], ['x', 'ITEMS', 'x'], '')
+    DUP = (0x5, ['x', 'ITEMS', 'COUNT'], ['x', 'ITEMS', 'x'], '')
 
-    SWAP = (0x06, ['x', 'ITEMS', 'y', 'COUNT'], ['y', 'ITEMS', 'x'], '')
+    SWAP = (0x6, ['x', 'ITEMS', 'y', 'COUNT'], ['y', 'ITEMS', 'x'], '')
 
-    PUSH_STACK_DEPTH = (0x07, [], ['n'], '''\
+    PUSH_STACK_DEPTH = (0x7, [], ['n'], '''\
         n = S->STACK_DEPTH;
     ''')
 
-    NOT = (0x08, ['x'], ['r'], '''\
-        r = ~x;
+    LOAD = (0x8, ['addr', 'size'], ['x'], '''\
+        int ret = load(S, addr, size, &x);
+        if (ret != 0)
+            RAISE(ret);
     ''')
 
-    AND = (0x09, ['x', 'y'], ['r'], '''\
-        r = x & y;
+    STORE = (0x9, ['x', 'addr', 'size'], [], '''\
+        int ret = store(S, addr, size, x);
+        if (ret != 0)
+            RAISE(ret);
     ''')
 
-    OR = (0x0a, ['x', 'y'], ['r'], '''\
-        r = x | y;
+    LIT = (0xa, [], ['n'], '''\
+        int ret = load(S, S->PC, mit_SIZE_WORD, &n);
+        if (ret != 0)
+            RAISE(ret);
+        S->PC += mit_WORD_BYTES;
     ''')
 
-    XOR = (0x0b, ['x', 'y'], ['r'], '''\
-        r = x ^ y;
+    LIT_PC_REL = (0xb, [], ['n'], '''\
+        int ret = load(S, S->PC, mit_SIZE_WORD, &n);
+        if (ret != 0)
+            RAISE(ret);
+        n += S->PC;
+        S->PC += mit_WORD_BYTES;
     ''')
 
-    LSHIFT = (0x0c, ['x', 'n'], ['r'], '''\
-        r = n < (mit_WORD)mit_WORD_BIT ? x << n : 0;
+    LIT_0 = (0xc, [], ['zero'], '''\
+        zero = 0;
     ''')
 
-    RSHIFT = (0x0d, ['x', 'n'], ['r'], '''\
-        r = n < (mit_WORD)mit_WORD_BIT ? (mit_WORD)((mit_UWORD)x >> n) : 0;
+    LIT_1 = (0xd, [], ['one'], '''\
+        one = 1;
     ''')
 
-    ARSHIFT = (0x0e, ['x', 'n'], ['r'], '''\
-        r = ARSHIFT(x, n);
+    LIT_2 = (0xe, [], ['two'], '''\
+        two = 2;
     ''')
 
-    SIGN_EXTEND = (0x0f, ['n1', 'size'], ['n2'], '''\
-        n2 = n1 << (mit_WORD_BYTES - (1 << size)) * mit_BYTE_BIT;
-        n2 = ARSHIFT(n2, (mit_WORD_BYTES - (1 << size)) * mit_BYTE_BIT);
+    LIT_3 = (0xf, [], ['three'], '''\
+        three = 3;
     ''')
 
     EQ = (0x10, ['a', 'b'], ['flag'], '''\
@@ -146,39 +156,37 @@ class Instruction(AbstractInstruction):
         r = (mit_WORD)((mit_UWORD)a % (mit_UWORD)b);
     ''')
 
-    LOAD = (0x18, ['addr', 'size'], ['x'], '''\
-        int ret = load(S, addr, size, &x);
-        if (ret != 0)
-            RAISE(ret);
+    NOT = (0x18, ['x'], ['r'], '''\
+        r = ~x;
     ''')
 
-    STORE = (0x19, ['x', 'addr', 'size'], [], '''\
-        int ret = store(S, addr, size, x);
-        if (ret != 0)
-            RAISE(ret);
+    AND = (0x19, ['x', 'y'], ['r'], '''\
+        r = x & y;
     ''')
 
-    LIT = (0x1a, [], ['n'], '''\
-        int ret = load(S, S->PC, mit_SIZE_WORD, &n);
-        if (ret != 0)
-            RAISE(ret);
-        S->PC += mit_WORD_BYTES;
+    OR = (0x1a, ['x', 'y'], ['r'], '''\
+        r = x | y;
     ''')
 
-    LIT_PC_REL = (0x1b, [], ['n'], '''\
-        int ret = load(S, S->PC, mit_SIZE_WORD, &n);
-        if (ret != 0)
-            RAISE(ret);
-        n += S->PC;
-        S->PC += mit_WORD_BYTES;
+    XOR = (0x1b, ['x', 'y'], ['r'], '''\
+        r = x ^ y;
     ''')
 
-    LIT_0 = (0x1c, [], ['zero'], '''\
-        zero = 0;
+    LSHIFT = (0x1c, ['x', 'n'], ['r'], '''\
+        r = n < (mit_WORD)mit_WORD_BIT ? x << n : 0;
     ''')
 
-    LIT_1 = (0x1d, [], ['one'], '''\
-        one = 1;
+    RSHIFT = (0x1d, ['x', 'n'], ['r'], '''\
+        r = n < (mit_WORD)mit_WORD_BIT ? (mit_WORD)((mit_UWORD)x >> n) : 0;
+    ''')
+
+    ARSHIFT = (0x1e, ['x', 'n'], ['r'], '''\
+        r = ARSHIFT(x, n);
+    ''')
+
+    SIGN_EXTEND = (0x1f, ['n1', 'size'], ['n2'], '''\
+        n2 = n1 << (mit_WORD_BYTES - (1 << size)) * mit_BYTE_BIT;
+        n2 = ARSHIFT(n2, (mit_WORD_BYTES - (1 << size)) * mit_BYTE_BIT);
     ''')
 
 @unique

@@ -303,6 +303,8 @@ These instructions manage the stack:
 \inst{LIT\_PC\_REL}{— n}{Like {\tt LIT}, except that the initial value of {\tt PC} is added to the value pushed on to the stack.}
 \inst{LIT\_0}{— $0$}{Push $0$ on to the stack.}
 \inst{LIT\_1}{— $1$}{Push $1$ on to the stack.}
+\inst{LIT\_2}{— $2$}{Push $2$ on to the stack.}
+\inst{LIT\_3}{— $3$}{Push $3$ on to the stack.}
 \end{description}
 
 
@@ -394,22 +396,22 @@ Table~\ref{opcodetable} lists the instruction opcodes in numerical order. Table~
 \begin{center}
 \begin{tabular}{*{2}{cc}} \toprule
 \bf Opcode & \bf Instruction & \bf Opcode & \bf Instruction \\ \midrule
-\opcodetbl{00}{NEXT}		{10}{EQ}
-\opcodetbl{01}{BRANCH}		{11}{LT}
-\opcodetbl{02}{BRANCHZ}		{12}{ULT}
-\opcodetbl{03}{CALL}		{13}{NEGATE}
-\opcodetbl{04}{POP}		{14}{ADD}
-\opcodetbl{05}{DUP}		{15}{MUL}
-\opcodetbl{06}{SWAP}		{16}{DIVMOD}
-\opcodetbl{07}{PUSH\_STACK\_DEPTH}	{17}{UDIVMOD}
-\opcodetbl{08}{NOT}		{18}{LOAD}
-\opcodetbl{09}{AND}		{19}{STORE}
-\opcodetbl{0a}{OR}		{1a}{LIT}
-\opcodetbl{0b}{XOR}		{1b}{LIT\_PC\_REL}
-\opcodetbl{0c}{LSHIFT}		{1c}{LIT\_0}
-\opcodetbl{0d}{RSHIFT}		{1d}{LIT\_1}
-\opcodetbl{0e}{ARSHIFT}		{1e}{undefined}
-\opcodetbl{0f}{SIGN\_EXTEND}	{1f}{undefined}
+\opcodetbl{0}{NEXT}			{10}{EQ}
+\opcodetbl{1}{BRANCH}			{11}{LT}
+\opcodetbl{2}{BRANCHZ}			{12}{ULT}
+\opcodetbl{3}{CALL}			{13}{NEGATE}
+\opcodetbl{4}{POP}			{14}{ADD}
+\opcodetbl{5}{DUP}			{15}{MUL}
+\opcodetbl{6}{SWAP}			{16}{DIVMOD}
+\opcodetbl{7}{PUSH\_STACK\_DEPTH}	{17}{UDIVMOD}
+\opcodetbl{8}{LOAD}			{18}{NOT}
+\opcodetbl{9}{STORE}			{19}{AND}
+\opcodetbl{a}{LIT}			{1a}{OR}
+\opcodetbl{b}{LIT\_PC\_REL}		{1b}{XOR}
+\opcodetbl{c}{LIT\_0}			{1c}{LSHIFT}
+\opcodetbl{d}{LIT\_1}			{1d}{RSHIFT}
+\opcodetbl{e}{LIT\_2}			{1e}{ARSHIFT}
+\opcodetbl{f}{LIT\_3}			{1f}{SIGN\_EXTEND}
  \bottomrule
 \end{tabular}
 \caption{\label{opcodetable}Instruction opcodes}
