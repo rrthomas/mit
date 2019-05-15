@@ -22,12 +22,11 @@ print('''\
 #define INSTRUCTION(name, opcode) name = opcode,
 ''')
 
-Instruction.print("O_")
-InternalExtraInstruction.print("O_EXTRA_")
+Instruction.print_c('O_')
+InternalExtraInstruction.print_c('O_EXTRA_')
 
 print('''
 #undef INSTRUCTION
 
 
-#endif
-''')
+#endif''')

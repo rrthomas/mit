@@ -20,59 +20,59 @@
 
 
 // Build-time parameters
-#define mit_WORD_BYTES @WORD_BYTES@
-#define mit_ENDISM @ENDISM@
-#define mit_HOST_ENDISM @WORDS_BIGENDIAN@
+#define MIT_WORD_BYTES @WORD_BYTES@
+#define MIT_ENDISM @ENDISM@
+#define MIT_HOST_ENDISM @WORDS_BIGENDIAN@
 
 // Types and constants
-#if mit_WORD_BYTES == 2
-#define mit_WORD_BIT 16
-#define mit_SIZE_WORD 1
-#elif mit_WORD_BYTES == 4
-#define mit_WORD_BIT 32
-#define mit_SIZE_WORD 2
-#elif mit_WORD_BYTES == 8
-#define mit_WORD_BIT 64
-#define mit_SIZE_WORD 3
-#elif mit_WORD_BYTES == 16
-#define mit_WORD_BIT 128
-#define mit_SIZE_WORD 4
+#if MIT_WORD_BYTES == 2
+#define MIT_WORD_BIT 16
+#define MIT_SIZE_WORD 1
+#elif MIT_WORD_BYTES == 4
+#define MIT_WORD_BIT 32
+#define MIT_SIZE_WORD 2
+#elif MIT_WORD_BYTES == 8
+#define MIT_WORD_BIT 64
+#define MIT_SIZE_WORD 3
+#elif MIT_WORD_BYTES == 16
+#define MIT_WORD_BIT 128
+#define MIT_SIZE_WORD 4
 /* Given an unsigned 128-bit argument X, return the value corresponding to
    X with reversed byte order.  */
 #define bswap_128(x)                                                    \
     (((unsigned __int128)(bswap_64((uint64_t)(x))) << 64) |             \
      ((unsigned __int128)(bswap_64((uint64_t)((x) >> 64)))))
 
-typedef __int128 mit_WORD;
-typedef unsigned __int128 mit_UWORD;
+typedef __int128 mit_word;
+typedef unsigned __int128 mit_uword;
 #else
-#error "mit_WORD_BYTES must be 2, 4, 8 or 16!"
+#error "MIT_WORD_BYTES must be 2, 4, 8 or 16!"
 #endif
 
-typedef uint8_t mit_BYTE;
-#define mit_BYTE_BIT 8
-#define mit_BYTE_MASK ((1 << mit_BYTE_BIT) - 1)
+typedef uint8_t mit_byte;
+#define MIT_BYTE_BIT 8
+#define MIT_BYTE_MASK ((1 << MIT_BYTE_BIT) - 1)
 
-#define mit_WORD_MASK ((mit_UWORD)((mit_WORD)-1))
-#define mit_UWORD_MAX mit_WORD_MASK
-#define mit_WORD_MIN ((mit_WORD)(mit_UWORD_MAX << (mit_WORD_BIT - 1)))
-#define mit_WORD_MAX ((mit_WORD)(mit_UWORD_MAX >> 1))
+#define MIT_WORD_MASK ((mit_uword)((mit_word)-1))
+#define MIT_UWORD_MAX MIT_WORD_MASK
+#define MIT_WORD_MIN ((mit_word)(MIT_UWORD_MAX << (MIT_WORD_BIT - 1)))
+#define MIT_WORD_MAX ((mit_word)(MIT_UWORD_MAX >> 1))
 #define _reverse_endianness(bits, n) bswap_ ## bits(n)
 #define reverse_endianness(bits, n) _reverse_endianness(bits, n)
 
-#if mit_WORD_BYTES != 16
+#if MIT_WORD_BYTES != 16
 #define _bits_type_name(prefix, bits) prefix ## bits ## _t
 #define bits_type_name(prefix, bits) _bits_type_name(prefix, bits)
-typedef bits_type_name(int, mit_WORD_BIT) mit_WORD;
-typedef bits_type_name(uint, mit_WORD_BIT) mit_UWORD;
+typedef bits_type_name(int, MIT_WORD_BIT) mit_word;
+typedef bits_type_name(uint, MIT_WORD_BIT) mit_uword;
 #endif
 
 // FIXME: find largest type: bigger of long double and maxint_t?
 // Number in next line is sizeof(size_t)
-#if mit_WORD_BYTES < @SIZEOF_SIZE_T@
+#if MIT_WORD_BYTES < @SIZEOF_SIZE_T@
 typedef size_t mit_max_stack_item_t;
 #else
-typedef mit_UWORD mit_max_stack_item_t;
+typedef mit_uword mit_max_stack_item_t;
 #endif
 
 // Constants (for easy FFI binding)
@@ -82,34 +82,29 @@ extern const unsigned mit_size_word;
 extern const unsigned mit_byte_bit;
 extern const unsigned mit_byte_mask;
 extern const unsigned mit_word_bit;
-extern const mit_UWORD mit_word_mask;
-extern const mit_UWORD mit_uword_max;
-extern const mit_WORD mit_word_min;
-extern const mit_WORD mit_word_max;
+extern const mit_uword mit_word_mask;
+extern const mit_uword mit_uword_max;
+extern const mit_word mit_word_min;
+extern const mit_word mit_word_max;
 
 // VM registers
 typedef struct {
-#define R(reg, type, utype) type reg;
-#define R_RO(reg, type, utype) R(reg, type, utype)
+#define R(reg) mit_uword reg;
 #include <mit@PACKAGE_SUFFIX@/registers.h>
 #undef R
-#undef R_RO
-    mit_WORD * restrict memory;
-    mit_UWORD memory_size;
-    mit_WORD * restrict stack;
-    mit_UWORD stack_size;
+    mit_word * restrict memory;
+    mit_uword memory_size;
+    mit_word * restrict stack;
+    mit_uword stack_size;
     int main_argc;
     char **main_argv;
 } mit_state;
 
-#define R_RO(reg, type, utype)                  \
-    type mit_get_ ## reg(mit_state *S);
-#define R(reg, type, utype)                     \
-    R_RO(reg, type, utype)                      \
-    void mit_set_ ## reg(mit_state *S, type val);
+#define R(reg)                                          \
+    mit_uword mit_get_ ## reg(mit_state *S);            \
+    void mit_set_ ## reg(mit_state *S, mit_uword val);
 #include <mit@PACKAGE_SUFFIX@/registers.h>
 #undef R
-#undef R_RO
 
 // Instructions
 #ifndef MIT_INSTRUCTION_BIT
@@ -127,11 +122,11 @@ enum {
     MIT_ERR_OK = 0,
     MIT_ERR_INVALID_OPCODE = 1,
     MIT_ERR_STACK_OVERFLOW = 2,
-    MIT_ERR_STACK_READ = 3,
-    MIT_ERR_STACK_WRITE = 4,
-    MIT_ERR_MEMORY_READ = 5,
-    MIT_ERR_MEMORY_WRITE = 6,
-    MIT_ERR_MEMORY_UNALIGNED = 7,
+    MIT_ERR_INVALID_STACK_READ = 3,
+    MIT_ERR_INVALID_STACK_WRITE = 4,
+    MIT_ERR_INVALID_MEMORY_READ = 5,
+    MIT_ERR_INVALID_MEMORY_WRITE = 6,
+    MIT_ERR_UNALIGNED_ADDRESS = 7,
     MIT_ERR_BAD_SIZE = 8,
     MIT_ERR_DIVISION_BY_ZERO = 9,
     MIT_ERR_HALT = 128,
@@ -140,21 +135,21 @@ enum {
 
 // Utility functions
 
-mit_UWORD mit_align(mit_UWORD addr, unsigned size);
+mit_uword mit_align(mit_uword addr, unsigned size);
 /* Return `addr` aligned to the next 2^`size`-byte boundary. */
 
-int mit_is_aligned(mit_UWORD addr, unsigned size);
+int mit_is_aligned(mit_uword addr, unsigned size);
 /* Return 1 if `addr` is a multiple of 2^`size`, or `0` if not. */
 
 // Inline functions
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-function"
-_GL_ATTRIBUTE_CONST static mit_UWORD align(mit_UWORD addr, unsigned size)
+_GL_ATTRIBUTE_CONST static mit_uword align(mit_uword addr, unsigned size)
 {
     return (addr + ((1 << size) - 1)) & -(1 << size);
 }
 
-_GL_ATTRIBUTE_CONST static int is_aligned(mit_UWORD addr, unsigned size)
+_GL_ATTRIBUTE_CONST static int is_aligned(mit_uword addr, unsigned size)
 {
     return (addr & ((1 << size) - 1)) == 0;
 }
@@ -163,25 +158,25 @@ _GL_ATTRIBUTE_CONST static int is_aligned(mit_UWORD addr, unsigned size)
 
 // Memory access
 
-uint8_t *mit_native_address_of_range(mit_state *S, mit_UWORD addr, mit_UWORD len);
+uint8_t *mit_native_address_of_range(mit_state *S, mit_uword addr, mit_uword len);
 /* Return a host pointer to the VM address `addr`, or `NULL` if any address
    in the range [addr, addr+len] is invalid.
 */
 
-int mit_load(mit_state *S, mit_UWORD addr, unsigned size, mit_WORD *val_ptr);
+int mit_load(mit_state *S, mit_uword addr, unsigned size, mit_word *val_ptr);
 /* Copy 1 << `size` bytes from `addr` to `val_ptr`.
 
-   `size` must be between 0 and log2(mit_WORD_BYTES) inclusive.
+   `size` must be between 0 and log2(MIT_WORD_BYTES) inclusive.
    `addr` must be 1 << `size`-aligned.
 
    Return 0 if OK, or error code if `addr` is invalid or unaligned.
 */
 
-int mit_store(mit_state *S, mit_UWORD addr, unsigned size, mit_WORD val);
+int mit_store(mit_state *S, mit_uword addr, unsigned size, mit_word val);
 /* Store the 1 << `size` least-significant bytes of `val` at virtual address
    `addr`.
 
-   `size` must be between 0 and log2(mit_WORD_BYTES) inclusive.
+   `size` must be between 0 and log2(MIT_WORD_BYTES) inclusive.
    `addr` must be 1 << `size`-aligned.
 
    Return 0 if OK, or error code if `addr` is invalid or unaligned.
@@ -190,52 +185,52 @@ int mit_store(mit_state *S, mit_UWORD addr, unsigned size, mit_WORD val);
 // Inline functions
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-function"
-_GL_ATTRIBUTE_PURE static uint8_t *native_address_of_range(mit_state *S, mit_UWORD addr, mit_UWORD len)
+_GL_ATTRIBUTE_PURE static uint8_t *native_address_of_range(mit_state *S, mit_uword addr, mit_uword len)
 {
     if (addr >= S->memory_size || len > S->memory_size - addr)
         return NULL;
     return ((uint8_t *)(S->memory)) + addr;
 }
 
-static int load(mit_state *S, mit_UWORD addr, unsigned size, mit_WORD *val_ptr)
+static int load(mit_state *S, mit_uword addr, unsigned size, mit_word *val_ptr)
 {
     if (addr >= S->memory_size) {
         S->BAD = addr;
-        return MIT_ERR_MEMORY_READ;
+        return MIT_ERR_INVALID_MEMORY_READ;
     }
     if (!is_aligned(addr, size)) {
         S->BAD = addr;
-        return MIT_ERR_MEMORY_UNALIGNED;
+        return MIT_ERR_UNALIGNED_ADDRESS;
     }
 
-    mit_WORD val;
+    mit_word val;
     switch (size) {
     case 0:
-        val = (mit_UWORD)*((uint8_t *)S->memory + addr);
+        val = (mit_uword)*((uint8_t *)S->memory + addr);
         break;
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wcast-align"
     case 1:
-        val = (mit_UWORD)*((uint16_t *)((uint8_t *)S->memory + addr));
-        if (mit_ENDISM != mit_HOST_ENDISM)
+        val = (mit_uword)*((uint16_t *)((uint8_t *)S->memory + addr));
+        if (MIT_ENDISM != MIT_HOST_ENDISM)
             val = bswap_16(val);
         break;
-#if mit_SIZE_WORD >= 2
+#if MIT_SIZE_WORD >= 2
     case 2:
-        val = (mit_UWORD)*((uint32_t *)((uint8_t *)S->memory + addr));
-        if (mit_ENDISM != mit_HOST_ENDISM)
+        val = (mit_uword)*((uint32_t *)((uint8_t *)S->memory + addr));
+        if (MIT_ENDISM != MIT_HOST_ENDISM)
             val = bswap_32(val);
         break;
-#if mit_SIZE_WORD >= 3
+#if MIT_SIZE_WORD >= 3
     case 3:
-        val = (mit_UWORD)*((uint64_t *)((uint8_t *)S->memory + addr));
-        if (mit_ENDISM != mit_HOST_ENDISM)
+        val = (mit_uword)*((uint64_t *)((uint8_t *)S->memory + addr));
+        if (MIT_ENDISM != MIT_HOST_ENDISM)
             val = bswap_64(val);
         break;
-#if mit_SIZE_WORD >= 4
+#if MIT_SIZE_WORD >= 4
     case 4:
-        val = (mit_UWORD)*((unsigned __int128 *)((uint8_t *)S->memory + addr));
-        if (mit_ENDISM != mit_HOST_ENDISM)
+        val = (mit_uword)*((unsigned __int128 *)((uint8_t *)S->memory + addr));
+        if (MIT_ENDISM != MIT_HOST_ENDISM)
             val = bswap_128(val);
         break;
 #endif
@@ -250,15 +245,15 @@ static int load(mit_state *S, mit_UWORD addr, unsigned size, mit_WORD *val_ptr)
     return MIT_ERR_OK;
 }
 
-static int store(mit_state *S, mit_UWORD addr, unsigned size, mit_WORD val)
+static int store(mit_state *S, mit_uword addr, unsigned size, mit_word val)
 {
     if (addr >= S->memory_size) {
         S->BAD = addr;
-        return MIT_ERR_MEMORY_WRITE;
+        return MIT_ERR_INVALID_MEMORY_WRITE;
     }
     if (!is_aligned(addr, size)) {
         S->BAD = addr;
-        return MIT_ERR_MEMORY_UNALIGNED;
+        return MIT_ERR_UNALIGNED_ADDRESS;
     }
 
     switch (size) {
@@ -268,25 +263,25 @@ static int store(mit_state *S, mit_UWORD addr, unsigned size, mit_WORD val)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wcast-align"
     case 1:
-        if (mit_ENDISM != mit_HOST_ENDISM)
+        if (MIT_ENDISM != MIT_HOST_ENDISM)
             val = bswap_16(val);
         *((uint16_t *)((uint8_t *)S->memory + addr)) = (uint16_t)val;
         break;
-#if mit_SIZE_WORD >= 2
+#if MIT_SIZE_WORD >= 2
     case 2:
-        if (mit_ENDISM != mit_HOST_ENDISM)
+        if (MIT_ENDISM != MIT_HOST_ENDISM)
             val = bswap_32(val);
         *((uint32_t *)((uint8_t *)S->memory + addr)) = (uint32_t)val;
         break;
-#if mit_SIZE_WORD >= 3
+#if MIT_SIZE_WORD >= 3
     case 3:
-        if (mit_ENDISM != mit_HOST_ENDISM)
+        if (MIT_ENDISM != MIT_HOST_ENDISM)
             val = bswap_64(val);
         *((uint64_t *)((uint8_t *)S->memory + addr)) = (uint64_t)val;
         break;
-#if mit_SIZE_WORD >= 4
+#if MIT_SIZE_WORD >= 4
     case 4:
-        if (mit_ENDISM != mit_HOST_ENDISM)
+        if (MIT_ENDISM != MIT_HOST_ENDISM)
             val = bswap_128(val);
         *((unsigned __int128 *)((uint8_t *)S->memory + addr)) = (unsigned __int128)val;
         break;
@@ -305,27 +300,27 @@ static int store(mit_state *S, mit_UWORD addr, unsigned size, mit_WORD val)
 
 // Stack access
 
-int mit_load_stack(mit_state *S, mit_UWORD pos, mit_WORD *val_ptr);
+int mit_load_stack(mit_state *S, mit_uword pos, mit_word *val_ptr);
 /* Load the word position `pos` on the stack into the word pointed to by
    `val_ptr`.
 
    Return 0 if OK, or error code if `pos` is invalid.
 */
 
-int mit_store_stack(mit_state *S, mit_UWORD pos, mit_WORD val);
+int mit_store_stack(mit_state *S, mit_uword pos, mit_word val);
 /* Store the word `val` into the word at position `pos` on the stack.
 
    Return 0 if OK, or error code if `addr` is invalid.
 */
 
-int mit_pop_stack(mit_state *S, mit_WORD *val_ptr);
+int mit_pop_stack(mit_state *S, mit_word *val_ptr);
 /* Load the word at position `0` on the stack into the word pointed to by
    `val_ptr`, and decrement `STACK_DEPTH`.
 
    Return 0 if OK, or error code if position `0` is invalid.
  */
 
-int mit_push_stack(mit_state *S, mit_WORD val);
+int mit_push_stack(mit_state *S, mit_word val);
 /* Increment `STACK_DEPTH`, then store the word `val` value at position 0 on
    the stack.
 
@@ -341,36 +336,36 @@ int mit_push_stack(mit_state *S, mit_WORD val);
 // Inline functions
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-function"
-static int load_stack(mit_state *S, mit_UWORD pos, mit_WORD *vp)
+static int load_stack(mit_state *S, mit_uword pos, mit_word *vp)
 {
     if (pos >= S->STACK_DEPTH) {
         S->BAD = pos;
-        return MIT_ERR_STACK_READ;
+        return MIT_ERR_INVALID_STACK_READ;
     }
 
     *vp = *UNCHECKED_STACK(pos);
     return MIT_ERR_OK;
 }
 
-static int store_stack(mit_state *S, mit_UWORD pos, mit_WORD v)
+static int store_stack(mit_state *S, mit_uword pos, mit_word v)
 {
     if (pos >= S->STACK_DEPTH) {
         S->BAD = pos;
-        return MIT_ERR_STACK_WRITE;
+        return MIT_ERR_INVALID_STACK_WRITE;
     }
 
     *UNCHECKED_STACK(pos) = v;
     return MIT_ERR_OK;
 }
 
-static int pop_stack(mit_state *S, mit_WORD *v)
+static int pop_stack(mit_state *S, mit_word *v)
 {
     int ret = load_stack(S, 0, v);
     S->STACK_DEPTH--;
     return ret;
 }
 
-static int push_stack(mit_state *S, mit_WORD v)
+static int push_stack(mit_state *S, mit_word v)
 {
     if (S->STACK_DEPTH >= S->stack_size) {
         S->BAD = S->stack_size;
@@ -392,13 +387,13 @@ mit_state *mit_init(size_t memory_size, size_t stack_size);
    - stack_size - number of words of stack space required
 
    Return a pointer to a new state, or `NULL` if memory cannot be
-   allocated, or if any requested size is larger than `mit_UWORD_MAX`.
+   allocated, or if any requested size is larger than `MIT_UWORD_MAX`.
 
    The memory and stack are zeroed, and the registers are initialized as per
    the spec.
 */
 
-int mit_realloc_memory(mit_state *S, mit_UWORD memory_size);
+int mit_realloc_memory(mit_state *S, mit_uword memory_size);
 /* Resize the memory of a state.
 
    - state - the state to change
@@ -409,7 +404,7 @@ int mit_realloc_memory(mit_state *S, mit_UWORD memory_size);
    Any new memory is zeroed.
 */
 
-int mit_realloc_stack(mit_state *S, mit_UWORD stack_size);
+int mit_realloc_stack(mit_state *S, mit_uword stack_size);
 /* Resize the stack of a state.
 
    - state - the state to change
@@ -423,17 +418,17 @@ int mit_realloc_stack(mit_state *S, mit_UWORD stack_size);
 void mit_destroy(mit_state *S);
 /* Destroy the given state, deallocating its memory. */
 
-mit_WORD mit_run(mit_state * restrict S);
+mit_word mit_run(mit_state * restrict S);
 /* Start the execution cycle in the given state as described in the spec.
    If an error is raised, the code is returned.
 */
 
-mit_WORD mit_single_step(mit_state * restrict S);
+mit_word mit_single_step(mit_state * restrict S);
 /* Execute a single pass of the execution cycle in the given state.
    Return 128 if execution completes without error, or the error code.
 */
 
-ptrdiff_t mit_load_object(mit_state *S, mit_UWORD addr, int fd);
+ptrdiff_t mit_load_object(mit_state *S, mit_uword addr, int fd);
 /* Load an object file into a state.
 
    - state - the state to load into
@@ -446,7 +441,7 @@ ptrdiff_t mit_load_object(mit_state *S, mit_UWORD addr, int fd);
    -1: error reading the object file
    -2: module is invalid
    -3: current implementation is incompatible with the module (for example,
-       the word size or `mit_ENDISM` is incompatible)
+       the word size or `MIT_ENDISM` is incompatible)
    -4: the code will not fit into memory at the address given, or the
        address is out of range or unaligned.
 
@@ -456,7 +451,7 @@ ptrdiff_t mit_load_object(mit_state *S, mit_UWORD addr, int fd);
    newline character is ignored.
 */
 
-int mit_save_object(mit_state *S, mit_UWORD addr, mit_UWORD len, int fd);
+int mit_save_object(mit_state *S, mit_uword addr, mit_uword len, int fd);
 /* Save some memory as an object file.
 
    - state - the state to save from
@@ -480,15 +475,15 @@ int mit_register_args(mit_state *S, int argc, char *argv[]);
     Return 0.
 */
 
-mit_WORD mit_internal_extra_instruction(mit_state *S);
+mit_word mit_internal_extra_instruction(mit_state *S);
 /* Execute an internal instruction, given by `S->I`. */
 
 #if HAVE_ARITHMETIC_RSHIFT
 #define ARSHIFT(n, p) \
-    ((mit_WORD)(n) >> (p))
+    ((mit_word)(n) >> (p))
 #else
 #define ARSHIFT(n, p) \
-    (((n) >> (p)) | ((mit_UWORD)(-((mit_WORD)(n) < 0)) << (mit_WORD_BIT - (p))))
+    (((n) >> (p)) | ((mit_uword)(-((mit_word)(n) < 0)) << (MIT_WORD_BIT - (p))))
 #endif
 /* Arithmetic right shift `n` by `p` places (the behaviour of >> on signed
    quantities is implementation-defined in C99).

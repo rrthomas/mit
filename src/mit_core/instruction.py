@@ -18,7 +18,7 @@ class AbstractInstruction(Enum):
      - opcode - int - opcode number
      - args, results - lists of str, acceptable to StackPicture.of().
        If both are `None`, then the instruction has an arbitrary stack
-       effect, like `EXT`.
+       effect.
      - code - str - C source code
      - init_code - str - C source code to run before stack checks; arguments
        are not yet available. This is used to implement internal extra
@@ -40,13 +40,25 @@ class AbstractInstruction(Enum):
         self.init_code = init_code
 
     @classmethod
-    def print(cls, prefix):
+    def print_c(cls, prefix):
         '''Print the instructions as a C enum.'''
         print('\nenum {')
         for instruction in cls:
-            print("    INSTRUCTION({}{}, {:#x})".format(
+            print('    INSTRUCTION({}{}, {:#x})'.format(
                 prefix,
                 instruction.name,
                 instruction.opcode,
             ))
         print('};')
+
+    @classmethod
+    def print_python(cls, name, prefix):
+        '''Print the instructions as a Python Enum.'''
+        print('class {}(IntEnum):'.format(name))
+        for instruction in cls:
+            print('    {}{} = {:#x}'.format(
+                prefix,
+                instruction.name,
+                instruction.opcode,
+            ))
+        print('')

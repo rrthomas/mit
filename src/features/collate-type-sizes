@@ -12,7 +12,7 @@ import sys
 import re
 from pprint import pformat
 
-from mit_core.ext import *
+from extra_instructions import *
 
 
 # Read list of types

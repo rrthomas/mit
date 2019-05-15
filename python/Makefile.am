@@ -7,27 +7,32 @@
 # THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 # RISK.
 
+PYTHON_WITH_PATH = export PYTHONPATH=$(abs_top_srcdir)/python:$(abs_top_srcdir)/src:$(abs_top_builddir)/src:$(abs_top_srcdir)/src/features; $(PYTHON)
+
 bin_SCRIPTS = mit@PACKAGE_SUFFIX@-dump mit@PACKAGE_SUFFIX@-shell
 man_MANS = mit@PACKAGE_SUFFIX@-dump.1 mit@PACKAGE_SUFFIX@-shell.1
 mit_pkgpythondir = $(pkgpythondir)@PACKAGE_SUFFIX@
 mit_pkgpython_PYTHON =		\
 	mit/__init__.py		\
 	mit/__main__.py		\
-	mit/assembler.py	\
-	mit/vm_data.py		\
-	mit/ext.py		\
-	mit/instruction.py	\
-	mit/c_util.py
+	mit/opcodes.py		\
+	mit/assembler.py
 nodist_mit_pkgpython_PYTHON = mit/binding.py
 
-all-local: mit/binding.py
+all-local: mit/binding.py mit/opcodes.py
 
 mit/binding.py: $(top_builddir)/config.status mit/binding.py.in
 	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
 
+mit/opcodes.py: gen-python-opcodes $(top_srcdir)/src/mit_core/instruction.py $(top_srcdir)/src/mit_core/vm_data.py $(top_srcdir)/src/features/extra_instructions.py
+	$(PYTHON_WITH_PATH) $(srcdir)/gen-python-opcodes > mit/opcodes.py || ( rm -f mit/opcodes.py; exit 1 )
 
+# sloccount --autogen doesn't work (Debian bug #929000), so temporarily move
+# binding.py.in during count.
 loc:
-	$(SLOCCOUNT) $(bin_SCRIPTS) mit/__init__.py mit/__main__.py
+	mv mit/binding.py.in mit/binding.py.in.bak && \
+	$(SLOCCOUNT) --autogen $(bin_SCRIPTS) $(mit_pkgpython_PYTHON) $(nodist_mit_pkgpython_PYTHON); \
+	mv mit/binding.py.in.bak mit/binding.py.in
 
 if USING_PACKAGE_SUFFIX
 mit@PACKAGE_SUFFIX@-dump: mit-dump
@@ -46,6 +51,7 @@ mit@PACKAGE_SUFFIX@-shell.1: mit-shell.1
 endif
 
 EXTRA_DIST = \
+	gen-python-opcodes	\
 	$(man_MANS)		\
 	mit/binding.py.in	\
 	mit-dump.in		\

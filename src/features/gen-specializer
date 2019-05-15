@@ -81,10 +81,10 @@ print('''\
 
 #define NEXT                                                  \\
     do {                                                      \\
-        int ret = load(S, S->PC, mit_SIZE_WORD, (mit_WORD *)&(S->I)); \\
+        int ret = load(S, S->PC, MIT_SIZE_WORD, (mit_word *)&(S->I)); \\
         if (ret != 0)                                         \\
             RAISE(ret);                                       \\
-        S->PC += mit_WORD_BYTES;                              \\
+        S->PC += MIT_WORD_BYTES;                              \\
     } while (0)
 
 #define FETCH                                                 \\
@@ -95,14 +95,14 @@ print('''\
         S->I >>= MIT_INSTRUCTION_BIT;                         \\
     } while (0)
 
-mit_WORD mit_specializer_run(mit_state * restrict S) {
+mit_word mit_specializer_run(mit_state * restrict S) {
     int res = MIT_ERR_OK;''')
 
 # Declare stack cache variables.
 max_cached_depth = max(label.cached_depth for label in labels)
 if max_cached_depth > 0:
     print('''\
-    mit_WORD {};'''.format(
+    mit_word {};'''.format(
         ', '.join(
             CacheState.var_for_depth(pos, max_cached_depth)
             for pos in reversed(range(max_cached_depth))
@@ -111,10 +111,10 @@ if max_cached_depth > 0:
 
 print('''\
     do {
-        mit_UWORD initial_PC, initial_I;
+        mit_uword initial_PC, initial_I;
         // The number of stack items cached in C variables.
-        mit_UWORD cached_depth = 0;
-        mit_BYTE opcode;
+        mit_uword cached_depth = 0;
+        mit_byte opcode;
 
         FETCH;
         goto A_0;

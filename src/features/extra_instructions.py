@@ -1,4 +1,4 @@
-# EXT instruction.
+# External extra instructions.
 #
 # (c) Mit authors 1994-2019
 #
@@ -9,27 +9,10 @@
 
 from enum import Enum, unique
 
-from .instruction import AbstractInstruction
-from .vm_data import Register
-from .c_util import pop_stack_type
+from mit_core.instruction import AbstractInstruction
+from mit_core.vm_data import Register
+from mit_core.instruction_gen import pop_stack_type
 
-
-# FIXME: this should be a per-library attribute
-includes = '''\
-#include "config.h"
-
-#include <stdlib.h>
-#include <stdbool.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <string.h>
-#include "binary-io.h"
-
-#include "mit/mit.h"
-#include "mit/features.h"
-'''
 
 @unique
 class LibcLib(AbstractInstruction):
@@ -46,7 +29,7 @@ class LibcLib(AbstractInstruction):
     ''')
 
     STRLEN = (0x3, ['s:const char *'], ['len'], '''\
-        len = (mit_WORD)(mit_UWORD)strlen(s);
+        len = (mit_word)(mit_uword)strlen(s);
     ''')
 
     STRNCPY = (0x4, ['dest:char *', 'src:const char *', 'n'], ['ret:char *'], '''\
@@ -54,35 +37,35 @@ class LibcLib(AbstractInstruction):
     ''')
 
     STDIN = (0x5, [], ['fd:int'], '''\
-        fd = (mit_WORD)STDIN_FILENO;
+        fd = (mit_word)STDIN_FILENO;
     ''')
 
     STDOUT = (0x6, [], ['fd:int'], '''\
-        fd = (mit_WORD)STDOUT_FILENO;
+        fd = (mit_word)STDOUT_FILENO;
     ''')
 
     STDERR = (0x7, [], ['fd:int'], '''\
-        fd = (mit_WORD)STDERR_FILENO;
+        fd = (mit_word)STDERR_FILENO;
     ''')
 
     O_RDONLY = (0x8, [], ['flag'], '''\
-        flag = (mit_WORD)O_RDONLY;
+        flag = (mit_word)O_RDONLY;
     ''')
 
     O_WRONLY = (0x9, [], ['flag'], '''\
-        flag = (mit_WORD)O_WRONLY;
+        flag = (mit_word)O_WRONLY;
     ''')
 
     O_RDWR = (0xa, [], ['flag'], '''\
-        flag = (mit_WORD)O_RDWR;
+        flag = (mit_word)O_RDWR;
     ''')
 
     O_CREAT = (0xb, [], ['flag'], '''\
-        flag = (mit_WORD)O_CREAT;
+        flag = (mit_word)O_CREAT;
     ''')
 
     O_TRUNC = (0xc, [], ['flag'], '''\
-        flag = (mit_WORD)O_TRUNC;
+        flag = (mit_word)O_TRUNC;
     ''')
 
     OPEN = (0xd, ['str', 'flags'], ['fd:int'], '''\
@@ -94,7 +77,7 @@ class LibcLib(AbstractInstruction):
     ''')
 
     CLOSE = (0xe, ['fd:int'], ['ret:int'], '''\
-        ret = (mit_WORD)close(fd);
+        ret = (mit_word)close(fd);
     ''')
 
     READ = (0xf, ['buf', 'nbytes', 'fd:int'], ['nread:int'], '''\
@@ -116,15 +99,15 @@ class LibcLib(AbstractInstruction):
     ''')
 
     SEEK_SET = (0x11, [], ['whence'], '''\
-        whence = (mit_WORD)SEEK_SET;
+        whence = (mit_word)SEEK_SET;
     ''')
 
     SEEK_CUR = (0x12, [], ['whence'], '''\
-        whence = (mit_WORD)SEEK_CUR;
+        whence = (mit_word)SEEK_CUR;
     ''')
 
     SEEK_END = (0x13, [], ['whence'], '''\
-        whence = (mit_WORD)SEEK_END;
+        whence = (mit_word)SEEK_END;
     ''')
 
     LSEEK = (0x14, ['fd:int', 'offset:off_t', 'whence'], ['pos:off_t'], '''\
@@ -140,7 +123,7 @@ class LibcLib(AbstractInstruction):
             char *s1 = (char *)mit_native_address_of_range(S, old_name, 0);
             char *s2 = (char *)mit_native_address_of_range(S, new_name, 0);
             if (s1 == NULL || s2 == NULL)
-                RAISE(MIT_ERR_MEMORY_READ);
+                RAISE(MIT_ERR_INVALID_MEMORY_READ);
             ret = rename(s1, s2);
         }
     ''')
@@ -149,7 +132,7 @@ class LibcLib(AbstractInstruction):
         {
             char *s = (char *)mit_native_address_of_range(S, name, 0);
             if (s == NULL)
-                RAISE(MIT_ERR_MEMORY_READ);
+                RAISE(MIT_ERR_INVALID_MEMORY_READ);
             ret = remove(s);
         }
     ''')
@@ -234,16 +217,15 @@ for register in Register:
     mit_lib['GET_{}'.format(register.name.upper())] = (
         len(mit_lib), None, None, '''\
     mit_state *inner_state;
-    {}
+{}
     push_stack(S, mit_get_{}(inner_state));
 '''.format(pop_stack_type('inner_state', 'mit_state *'),
            register.name))
-    if not register.read_only:
-        mit_lib['SET_{}'.format(register.name.upper())] = (
-            len(mit_lib), None, None, '''\
+    mit_lib['SET_{}'.format(register.name.upper())] = (
+        len(mit_lib), None, None, '''\
     mit_state *inner_state;
-    {}
-    mit_WORD value;
+{}
+    mit_word value;
     int ret = pop_stack(S, &value);
     if (ret != 0)
         RAISE(ret);
@@ -255,10 +237,10 @@ MitLib = AbstractInstruction('MitLib', mit_lib)
 
 class Library(AbstractInstruction):
     '''Wrap an Instruction enumeration as a library.'''
-    def __init__(self, opcode, library):
+    def __init__(self, opcode, library, includes):
         super().__init__(opcode, None, None, '''\
 {{
-    mit_WORD function;
+    mit_word function;
     int ret = pop_stack(S, &function);
     if (ret != 0)
         RAISE(ret);
@@ -267,11 +249,12 @@ class Library(AbstractInstruction):
         RAISE(ret);
 }}''')
         self.library = library
+        self.includes = includes
 
     @staticmethod
     def _item_type(name_and_type):
         l = name_and_type.split(':')
-        return l[1] if len(l) > 1 else 'mit_WORD'
+        return l[1] if len(l) > 1 else 'mit_word'
 
     def types(self):
         '''Return a list of all types used in the library.'''
@@ -286,8 +269,20 @@ class Library(AbstractInstruction):
 @unique
 class LibInstruction(Library):
     '''VM instruction instructions to access external libraries.'''
-    LIB_MIT = (0x01, MitLib)
-    LIB_C = (0x02, LibcLib)
+    LIB_MIT = (0x01, MitLib, '''\
+#include "mit/mit.h"
+#include "mit/features.h"
+''')
+    LIB_C = (0x02, LibcLib, '''\
+#include <stdlib.h>
+#include <stdbool.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <string.h>
+#include "binary-io.h"
+''')
 
 # Inject name into each library's code
 for instruction in LibInstruction:

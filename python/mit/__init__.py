@@ -28,8 +28,7 @@ import os
 import sys
 import collections.abc
 
-from .vm_data import *
-from .ext import *
+from .opcodes import *
 from .binding import *
 from .assembler import *
 
@@ -117,24 +116,26 @@ class State:
 
         # Opcodes
         globals_dict.update({
-            instruction.name: instruction.opcode
+            instruction.name: instruction
             for instruction in Instruction
         })
-        globals_dict["UNDEFINED"] = 1 + max([
-            instruction.opcode for instruction in Instruction])
+        globals_dict["UNDEFINED"] = 1 + max(Instruction)
         globals_dict.update({
-            instruction.name: instruction.opcode
+            instruction.name: instruction
+            for instruction in InternalExtraInstruction
+        })
+        globals_dict.update({
+            instruction.name: instruction
             for instruction in LibInstruction
         })
         globals_dict.update({
-            'EXTRA_{}'.format(instruction.name): instruction.opcode
-            for instruction in InternalExtraInstruction
+            function.name: function
+            for function in LibcLib
         })
-        for instruction in LibInstruction:
-            globals_dict.update({
-                '{}_{}'.format(instruction.name, function.name): function.opcode
-                for function in instruction.library
-            })
+        globals_dict.update({
+            function.name: function
+            for function in MitLib
+        })
 
     def register_args(self, *args):
         argc = len(args)
@@ -286,10 +287,6 @@ class State:
 
 
 # Registers
-type_equivalents = {
-    "mit_WORD": c_word,
-    "mit_UWORD": c_uword,
-}
 class ActiveRegister:
     '''A VM register.'''
     def __init__(self, state, name, register):
@@ -297,12 +294,11 @@ class ActiveRegister:
         self.register = register
         self.name = name
         self.getter = libmit["mit_get_{}".format(name)]
-        self.getter.restype = type_equivalents[register.ty]
+        self.getter.restype = c_uword
         self.getter.argtypes = [c_void_p]
-        if not register.read_only:
-            self.setter = libmit["mit_set_{}".format(name)]
-            self.setter.restype = None
-            self.setter.argtypes = [c_void_p, type_equivalents[register.ty]]
+        self.setter = libmit["mit_set_{}".format(name)]
+        self.setter.restype = None
+        self.setter.argtypes = [c_void_p, c_uword]
 
     def __str__(self):
         return str(self.get())
@@ -311,10 +307,7 @@ class ActiveRegister:
         return int(self.getter(self.state))
 
     def set(self, v):
-        if self.register.read_only:
-            print("{} is read-only!".format(self.name))
-        else:
-            self.setter(self.state, v)
+        self.setter(self.state, v)
 
 
 # Stacks

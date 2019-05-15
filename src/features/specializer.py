@@ -13,9 +13,7 @@ The main entry point is dispatch().
 
 import re, textwrap
 
-from mit_core.type_sizes import type_sizes
-from mit_core.instruction_gen import (
-    Size, StackItem, StackPicture, StackEffect)
+from mit_core.instruction_gen import Size, StackItem, StackPicture, StackEffect
 
 
 class CacheState:
@@ -44,9 +42,9 @@ class CacheState:
         '''
         if num_pops <= self.depth: return ''
         return '''\
-if ((S->STACK_DEPTH < (mit_UWORD)({num_pops}))) {{
+if ((S->STACK_DEPTH < (mit_uword)({num_pops}))) {{
     S->BAD = {num_pops} - 1;
-    RAISE(MIT_ERR_STACK_READ);
+    RAISE(MIT_ERR_INVALID_STACK_READ);
 }}'''.format(num_pops=num_pops)
 
     def check_overflow(self, num_pops, num_pushes):
@@ -60,7 +58,7 @@ if ((S->STACK_DEPTH < (mit_UWORD)({num_pops}))) {{
         depth_change = num_pushes - num_pops
         if depth_change <= 0: return ''
         return '''\
-if (((S->stack_size - S->STACK_DEPTH) < (mit_UWORD)({depth_change}))) {{
+if (((S->stack_size - S->STACK_DEPTH) < (mit_uword)({depth_change}))) {{
     S->BAD = ({depth_change}) - (S->stack_size - S->STACK_DEPTH);
     RAISE(MIT_ERR_STACK_OVERFLOW);
 }}'''.format(depth_change=depth_change)
