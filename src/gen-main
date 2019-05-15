@@ -231,7 +231,6 @@ print('''\
 #include "progname.h"
 
 #include "mit/mit.h"
-#include "mit/opcodes.h"
 #include "mit/features.h"
 
 

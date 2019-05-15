@@ -7,7 +7,7 @@
 # THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 # RISK.
 
-from enum import Enum, unique
+from enum import Enum, IntEnum, unique
 
 from .instruction import AbstractInstruction
 
@@ -18,6 +18,20 @@ class Register(Enum):
     I = object()
     BAD = object()
     STACK_DEPTH = object()
+
+@unique
+class ExecutionError(IntEnum):
+    OK = 0
+    INVALID_OPCODE = 1
+    STACK_OVERFLOW = 2
+    INVALID_STACK_READ = 3
+    INVALID_STACK_WRITE = 4
+    INVALID_MEMORY_READ = 5
+    INVALID_MEMORY_WRITE = 6
+    UNALIGNED_ADDRESS = 7
+    BAD_SIZE = 8
+    DIVISION_BY_ZERO = 9
+    HALT = 128
 
 @unique
 class Instruction(AbstractInstruction):

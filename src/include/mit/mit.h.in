@@ -18,6 +18,8 @@
 #include <byteswap.h>
 #include <limits.h>
 
+#include <mit@PACKAGE_SUFFIX@/opcodes.h>
+
 
 // Build-time parameters
 #define MIT_WORD_BYTES @WORD_BYTES@
@@ -117,24 +119,7 @@ typedef struct {
 extern const unsigned mit_instruction_bit;
 extern const unsigned mit_instruction_mask;
 
-// Errors
-enum {
-    MIT_ERR_OK = 0,
-    MIT_ERR_INVALID_OPCODE = 1,
-    MIT_ERR_STACK_OVERFLOW = 2,
-    MIT_ERR_INVALID_STACK_READ = 3,
-    MIT_ERR_INVALID_STACK_WRITE = 4,
-    MIT_ERR_INVALID_MEMORY_READ = 5,
-    MIT_ERR_INVALID_MEMORY_WRITE = 6,
-    MIT_ERR_UNALIGNED_ADDRESS = 7,
-    MIT_ERR_BAD_SIZE = 8,
-    MIT_ERR_DIVISION_BY_ZERO = 9,
-    MIT_ERR_HALT = 128,
-};
-
-
 // Utility functions
-
 mit_uword mit_align(mit_uword addr, unsigned size);
 /* Return `addr` aligned to the next 2^`size`-byte boundary. */
 

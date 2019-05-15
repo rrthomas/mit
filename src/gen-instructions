@@ -22,7 +22,6 @@ print('''\
 #include "config.h"
 
 #include "mit/mit.h"
-#include "mit/opcodes.h"
 
 #define NEXT                                                  \\
     do {                                                      \\

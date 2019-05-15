@@ -12,6 +12,9 @@ RISK.
 from ctypes import *
 from ctypes.util import find_library
 
+from .opcodes import ExecutionError
+
+
 library_file = find_library("mit@PACKAGE_SUFFIX@")
 features_library_file = find_library("mitfeatures@PACKAGE_SUFFIX@")
 if not library_file:
@@ -42,15 +45,15 @@ def errcheck(code_to_message):
      - code_to_message - a dict from int to message. If the message is `None`
        the code is considered to be a success, and `None` is returned.
        If the code is not found in `code_to_message`:
-        - if a `None` code exists, an "unknown error" is reported.
+        - if an "ok" code exists, an "unknown error" is reported.
         - otherwise the result is returned unchanged.
     '''
-    require_match = None in code_to_message.values()
+    require_match = 'ok' in code_to_message.values()
     def callback(result, _func, _args):
         result = int(result)
         if result in code_to_message:
             message = code_to_message[result]
-            if message is None:
+            if message == 'ok':
                 return
         elif require_match:
             message = "unknown error!"
@@ -124,24 +127,17 @@ vars().update([(c, cty.in_dll(libmit, "mit_{}".format(c)).value)
 # Functions
 c_ptrdiff_t = c_ssize_t
 
-# FIXME: Generate these from C
-execution_error = errcheck({
-    0: None,
-    1: "invalid opcode",
-    2: "bad stack depth",
-    3: "invalid stack read",
-    4: "invalid stack write",
-    5: "invalid memory read",
-    6: "invalid memory write",
-    7: "unaligned address",
-    8: "bad size",
-    9: "division by zero",
-    128: "halt",
-})
+# Errors
+def identifier_to_message(id):
+    'Convert an identifier to an error message'
+    return id.lower().translate({'_': ' '})
+
+execution_error = errcheck({error.value: identifier_to_message(error.name)
+                            for error in ExecutionError})
 
 malloc_error = errcheck({
-    0: None,
-    1: "memory allocation error",
+    0: 'ok',
+    -1: "memory allocation error",
 })
 
 # mit.h
@@ -181,7 +177,7 @@ libmit.mit_load_object.errcheck = errcheck({
 
 libmit.mit_save_object.argtypes = [c_void_p, c_uword, c_uword, c_int]
 libmit.mit_save_object.errcheck = errcheck({
-    0: None,
+    0: 'ok',
     -1: "file system error",
     -2: "address out of range or unaligned",
 })
