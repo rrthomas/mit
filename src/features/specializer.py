@@ -44,7 +44,7 @@ class CacheState:
         return '''\
 if ((S->STACK_DEPTH < (mit_uword)({num_pops}))) {{
     S->BAD = {num_pops} - 1;
-    RAISE(MIT_ERR_STACK_READ);
+    RAISE(MIT_ERR_INVALID_STACK_READ);
 }}'''.format(num_pops=num_pops)
 
     def check_overflow(self, num_pops, num_pushes):

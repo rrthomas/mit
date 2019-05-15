@@ -122,11 +122,11 @@ enum {
     MIT_ERR_OK = 0,
     MIT_ERR_INVALID_OPCODE = 1,
     MIT_ERR_STACK_OVERFLOW = 2,
-    MIT_ERR_STACK_READ = 3,
-    MIT_ERR_STACK_WRITE = 4,
-    MIT_ERR_MEMORY_READ = 5,
-    MIT_ERR_MEMORY_WRITE = 6,
-    MIT_ERR_MEMORY_UNALIGNED = 7,
+    MIT_ERR_INVALID_STACK_READ = 3,
+    MIT_ERR_INVALID_STACK_WRITE = 4,
+    MIT_ERR_INVALID_MEMORY_READ = 5,
+    MIT_ERR_INVALID_MEMORY_WRITE = 6,
+    MIT_ERR_UNALIGNED_ADDRESS = 7,
     MIT_ERR_BAD_SIZE = 8,
     MIT_ERR_DIVISION_BY_ZERO = 9,
     MIT_ERR_HALT = 128,
@@ -196,11 +196,11 @@ static int load(mit_state *S, mit_uword addr, unsigned size, mit_word *val_ptr)
 {
     if (addr >= S->memory_size) {
         S->BAD = addr;
-        return MIT_ERR_MEMORY_READ;
+        return MIT_ERR_INVALID_MEMORY_READ;
     }
     if (!is_aligned(addr, size)) {
         S->BAD = addr;
-        return MIT_ERR_MEMORY_UNALIGNED;
+        return MIT_ERR_UNALIGNED_ADDRESS;
     }
 
     mit_word val;
@@ -249,11 +249,11 @@ static int store(mit_state *S, mit_uword addr, unsigned size, mit_word val)
 {
     if (addr >= S->memory_size) {
         S->BAD = addr;
-        return MIT_ERR_MEMORY_WRITE;
+        return MIT_ERR_INVALID_MEMORY_WRITE;
     }
     if (!is_aligned(addr, size)) {
         S->BAD = addr;
-        return MIT_ERR_MEMORY_UNALIGNED;
+        return MIT_ERR_UNALIGNED_ADDRESS;
     }
 
     switch (size) {
@@ -340,7 +340,7 @@ static int load_stack(mit_state *S, mit_uword pos, mit_word *vp)
 {
     if (pos >= S->STACK_DEPTH) {
         S->BAD = pos;
-        return MIT_ERR_STACK_READ;
+        return MIT_ERR_INVALID_STACK_READ;
     }
 
     *vp = *UNCHECKED_STACK(pos);
@@ -351,7 +351,7 @@ static int store_stack(mit_state *S, mit_uword pos, mit_word v)
 {
     if (pos >= S->STACK_DEPTH) {
         S->BAD = pos;
-        return MIT_ERR_STACK_WRITE;
+        return MIT_ERR_INVALID_STACK_WRITE;
     }
 
     *UNCHECKED_STACK(pos) = v;

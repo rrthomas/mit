@@ -162,8 +162,8 @@ Feature(# Auto-extend stack and memory
     init_code='bool auto_extend = true;',
     exception_handler='''\
 case MIT_ERR_STACK_OVERFLOW:
-case MIT_ERR_MEMORY_READ:
-case MIT_ERR_MEMORY_WRITE:
+case MIT_ERR_INVALID_MEMORY_READ:
+case MIT_ERR_INVALID_MEMORY_WRITE:
     if (auto_extend == true && mit_auto_extend_handler(S, error) == 0)
         continue;
     break;''')
