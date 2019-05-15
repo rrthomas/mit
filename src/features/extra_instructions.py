@@ -14,23 +14,6 @@ from mit_core.vm_data import Register
 from mit_core.instruction_gen import pop_stack_type
 
 
-# FIXME: this should be a per-library attribute
-includes = '''\
-#include "config.h"
-
-#include <stdlib.h>
-#include <stdbool.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <string.h>
-#include "binary-io.h"
-
-#include "mit/mit.h"
-#include "mit/features.h"
-'''
-
 @unique
 class LibcLib(AbstractInstruction):
     ARGC = (0x0, [], ['argc'], '''\
@@ -254,7 +237,7 @@ MitLib = AbstractInstruction('MitLib', mit_lib)
 
 class Library(AbstractInstruction):
     '''Wrap an Instruction enumeration as a library.'''
-    def __init__(self, opcode, library):
+    def __init__(self, opcode, library, includes):
         super().__init__(opcode, None, None, '''\
 {{
     mit_word function;
@@ -266,6 +249,7 @@ class Library(AbstractInstruction):
         RAISE(ret);
 }}''')
         self.library = library
+        self.includes = includes
 
     @staticmethod
     def _item_type(name_and_type):
@@ -285,8 +269,20 @@ class Library(AbstractInstruction):
 @unique
 class LibInstruction(Library):
     '''VM instruction instructions to access external libraries.'''
-    LIB_MIT = (0x01, MitLib)
-    LIB_C = (0x02, LibcLib)
+    LIB_MIT = (0x01, MitLib, '''\
+#include "mit/mit.h"
+#include "mit/features.h"
+''')
+    LIB_C = (0x02, LibcLib, '''\
+#include <stdlib.h>
+#include <stdbool.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <string.h>
+#include "binary-io.h"
+''')
 
 # Inject name into each library's code
 for instruction in LibInstruction:
