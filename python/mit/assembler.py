@@ -11,9 +11,10 @@ RISK.
 
 from .binding import (
     align, is_aligned,
-    word_bytes, word_bit, word_mask, instruction_bit, instruction_mask, sign_bit,
+    word_bytes, word_bit, word_mask, sign_bit,
+    instruction_bit, instruction_mask,
 )
-from .opcodes import Instruction, LibInstruction
+from .opcodes import Instruction, InternalExtraInstruction, LibInstruction
 
 LIT = Instruction.LIT
 LIT_PC_REL = Instruction.LIT_PC_REL
@@ -23,6 +24,14 @@ CALL = Instruction.CALL
 mnemonic = {
     instruction.value: instruction.name
     for instruction in Instruction
+}
+internal_extra_mnemonic = {
+    instruction.value: instruction.name
+    for instruction in InternalExtraInstruction
+}
+external_extra_mnemonic = {
+    instruction.value: instruction.name
+    for instruction in LibInstruction
 }
 
 # The set of opcodes which must be the last in a word.
@@ -90,6 +99,15 @@ class Disassembler:
                     comment = ' ({:#x})'.format(initial_pc + signed_value)
             if opcode in TERMINAL_OPCODES:
                 # Call `self._fetch()` later, not now.
+                if self.i != 0:
+                    if opcode == CALL:
+                        comment = ' ({})'.format(
+                            internal_extra_mnemonic.get(self.i, 'invalid!')
+                        )
+                    elif opcode == BRANCH:
+                        comment = ' ({})'.format(
+                            external_extra_mnemonic.get(self.i, 'invalid!')
+                        )
                 self.i = 0
         except IndexError:
             name = "invalid address!"
