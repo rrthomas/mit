@@ -166,8 +166,7 @@ class State:
             try:
                 libmit.mit_run(self.state)
             except ErrorCode as e:
-                if e.args[0] == 128:
-                    # Halt.
+                if e.args[0] == ExecutionError.HALT:
                     return
                 elif e.args[0] == 1 and self.registers["I"].get() & instruction_mask == BRANCH:
                     self.do_extra_instruction()

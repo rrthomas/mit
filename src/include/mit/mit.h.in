@@ -410,7 +410,8 @@ mit_word mit_run(mit_state * restrict S);
 
 mit_word mit_single_step(mit_state * restrict S);
 /* Execute a single pass of the execution cycle in the given state.
-   Return 128 if execution completes without error, or the error code.
+   Return MIT_ERROR_HALT if execution completes without error, or the error
+   code.
 */
 
 ptrdiff_t mit_load_object(mit_state *S, mit_uword addr, int fd);

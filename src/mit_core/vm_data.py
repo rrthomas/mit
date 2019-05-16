@@ -31,7 +31,7 @@ class ExecutionError(IntEnum):
     UNALIGNED_ADDRESS = 7
     BAD_SIZE = 8
     DIVISION_BY_ZERO = 9
-    HALT = 128
+    HALT = 127
 
 @unique
 class Instruction(AbstractInstruction):

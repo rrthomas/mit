@@ -138,7 +138,7 @@ When Mit encounters certain abnormal situations, such as an attempt to access an
 
 Execution can be terminated explicitly by performing a {\tt HALT} instruction (see section~\ref{halt}).
 
-Error codes are unsigned numbers. $0$ to $128$ are reserved for the specification; other error codes may be used by implementations. The meanings of those that may be raised by Mit are shown in table~\ref{errortable}.
+Error codes are unsigned numbers. $0$ to $127$ are reserved for the specification; other error codes may be used by implementations. The meanings of those that may be raised by Mit are shown in table~\ref{errortable}.
 
 \begin{table}[htbp]
 \begin{center}
@@ -154,7 +154,7 @@ $6$ & Invalid memory write. {\tt BAD} is set to the invalid address. \\
 $7$ & Address alignment error: raised when an instruction is given a valid address, but insufficiently aligned. {\tt BAD} is set to the invalid address. \\
 $8$ & Invalid size (greater than $\log_2{\tt WORD\_BYTES}$). \\
 $9$ & Division by zero attempted (see section~\ref{arithmetic}). \\
-$128$ & A {\tt HALT} instruction was executed. \\
+$127$ & A {\tt HALT} instruction was executed. \\
  \bottomrule
 \end{tabular}
 \caption{\label{errortable}Errors raised by Mit}
@@ -279,7 +279,7 @@ This instruction terminates execution (see section~\ref{errors}):
 
 \nopagebreak
 \begin{description}
-\inst{HALT}{—}{Raise error $128$.}
+\inst{HALT}{—}{Raise error $127$.}
 \end{description}
 
 

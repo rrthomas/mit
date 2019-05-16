@@ -425,6 +425,6 @@ for feature in Feature.features:
 
 print('''\
         }
-        return error == 128 ? 0 : error;
+        return error == MIT_ERROR_HALT ? 0 : error;
     }
 }''')
