@@ -71,7 +71,7 @@ stated. Addresses are written in hexadecimal; hex numbers are prefixed with
 Mit is a simple virtual machine for study and experiment. It is a stack machine, based on the more complex register machine Mite~\cite{mite0}.
 This paper gives a full description of Mit.
 
-Mit is conceptually (and usually in fact) a library, embedded in other programs; it supports a simple object module format.
+Mit is conceptually (and usually in fact) a library, embedded in other programs; it supports a simple object file format.
 
 
 \section{Architecture}
@@ -434,16 +434,16 @@ Table~\ref{opcodetable} lists the instruction opcodes in numerical order. Table~
 \begin{itemize}
 \item Implementations should provide an \textbf{API} to create and run virtual machine instances, and provide access to its registers, stack and memory.
 \item Implementations can add \textbf{extra instructions} to provide extra computational primitives, and to offer access to system facilities, previously written code, native libraries and so on.
-\item The \textbf{object module} format allows compiled code to be saved, reloaded and shared between systems.
+\item The \textbf{object file} format allows compiled code to be saved, reloaded and shared between systems.
 \end{itemize}
 
 
-\subsection{Object module format}
+\subsection{Object file format}
 \label{object}
 
-The object module starts with the ASCII codes of the letters
+The object file starts with the ASCII codes of the letters
 ``mit'', followed by three zero bytes, then the one-byte values of
-the {\tt ENDISM} and {\tt WORD\_BYTES} registers of the system which saved the module, then a word (of the given endianness and size) containing the number of bytes the code occupies. Then follows the code.
+the {\tt ENDISM} and {\tt WORD\_BYTES} registers of the system which saved the file, then a word (of the given endianness and size) containing the number of bytes the code occupies. Then follows the code.
 
 
 \section*{Acknowledgements}
