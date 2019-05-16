@@ -16,7 +16,7 @@ print('''\
 # Instruction opcodes.
 
 
-from enum import Enum, IntEnum
+from enum import Enum, IntEnum, unique
 ''')
 
 print('class Register(Enum):')
@@ -30,7 +30,3 @@ vm_data.InternalExtraInstruction.print_python('InternalExtraInstruction', 'EXTRA
 extra_instructions.LibcLib.print_python('LibcLib', 'LIB_C_')
 extra_instructions.MitLib.print_python('MitLib', 'LIB_MIT_')
 extra_instructions.LibInstruction.print_python('LibInstruction', '')
-
-print('class ExecutionError(IntEnum):')
-for error in vm_data.ExecutionError:
-    print('    {} = {},'.format(error.name, error))

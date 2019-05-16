@@ -95,7 +95,7 @@ print('''\
     } while (0)
 
 mit_word mit_specializer_run(mit_state * restrict S) {
-    int res = MIT_ERR_OK;''')
+    int res = MIT_ERROR_OK;''')
 
 # Declare stack cache variables.
 max_cached_depth = max(label.cached_depth for label in labels)
@@ -126,7 +126,7 @@ print('''\
         //
         // The calling convention at each A_XXX label is as follows:
         //
-        //  - On entry, `res` is `MIT_ERR_OK`, `opcode` is the next opcode,
+        //  - On entry, `res` is `MIT_ERROR_OK`, `opcode` is the next opcode,
         //    and `I` has been right-shifted.
         //  - When an error occurs, call `RAISE(code)`.
         //    It sets `res` to the return code; then it resets PC and
@@ -143,7 +143,7 @@ print('''\
 for label in labels:
     print('''\
     {label_name}:
-        assert(res == MIT_ERR_OK);
+        assert(res == MIT_ERROR_OK);
         assert(cached_depth == {cached_depth});
         if (opcode == O_{guess_name}) {{'''.format(
         label_name=label.name,
@@ -178,7 +178,7 @@ for label in labels:
 
 print('''\
     A_FALLBACK:
-        assert(res == MIT_ERR_OK);
+        assert(res == MIT_ERROR_OK);
         assert(cached_depth == 0);
         S->PC = initial_PC;
         S->I = initial_I;
@@ -206,6 +206,6 @@ print('''\
         default:
             assert(0); // Unreachable.
         }
-    } while (res == MIT_ERR_OK);
+    } while (res == MIT_ERROR_OK);
     return res;
 }''')

@@ -123,7 +123,7 @@ class LibcLib(AbstractInstruction):
             char *s1 = (char *)mit_native_address_of_range(S, old_name, 0);
             char *s2 = (char *)mit_native_address_of_range(S, new_name, 0);
             if (s1 == NULL || s2 == NULL)
-                RAISE(MIT_ERR_INVALID_MEMORY_READ);
+                RAISE(MIT_ERROR_INVALID_MEMORY_READ);
             ret = rename(s1, s2);
         }
     ''')
@@ -132,7 +132,7 @@ class LibcLib(AbstractInstruction):
         {
             char *s = (char *)mit_native_address_of_range(S, name, 0);
             if (s == NULL)
-                RAISE(MIT_ERR_INVALID_MEMORY_READ);
+                RAISE(MIT_ERROR_INVALID_MEMORY_READ);
             ret = remove(s);
         }
     ''')

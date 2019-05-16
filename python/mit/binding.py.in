@@ -12,7 +12,7 @@ RISK.
 from ctypes import *
 from ctypes.util import find_library
 
-from .opcodes import ExecutionError
+from .errors import *
 
 
 library_file = find_library("mit@PACKAGE_SUFFIX@")
@@ -39,7 +39,11 @@ class ErrorCode(Error):
     def __init__(self, error_code, message):
         super().__init__(error_code, message)
 
-def errcheck(code_to_message):
+def identifier_to_message(id):
+    'Convert an identifier to an error message.'
+    return id.lower().translate({'_': ' '})
+
+def errcheck(error_enum):
     '''
     Returns a callback suitable for use as `ctypes._FuncPtr.errcheck`.
      - code_to_message - a dict from int to message. If the message is `None`
@@ -48,6 +52,8 @@ def errcheck(code_to_message):
         - if an "ok" code exists, an "unknown error" is reported.
         - otherwise the result is returned unchanged.
     '''
+    code_to_message = {error.value: identifier_to_message(error.name)
+                       for error in error_enum}
     require_match = 'ok' in code_to_message.values()
     def callback(result, _func, _args):
         result = int(result)
@@ -128,17 +134,8 @@ vars().update([(c, cty.in_dll(libmit, "mit_{}".format(c)).value)
 c_ptrdiff_t = c_ssize_t
 
 # Errors
-def identifier_to_message(id):
-    'Convert an identifier to an error message'
-    return id.lower().translate({'_': ' '})
-
-execution_error = errcheck({error.value: identifier_to_message(error.name)
-                            for error in ExecutionError})
-
-malloc_error = errcheck({
-    0: 'ok',
-    -1: "memory allocation error",
-})
+execution_error = errcheck(ExecutionError)
+malloc_error = errcheck(MallocError)
 
 # mit.h
 libmit.mit_load.argtypes = [c_void_p, c_uword, c_uint, POINTER(c_word)]
@@ -168,19 +165,10 @@ libmit.mit_single_step.errcheck = execution_error
 
 libmit.mit_load_object.restype = c_ptrdiff_t
 libmit.mit_load_object.argtypes = [c_void_p, c_uword, c_int]
-libmit.mit_load_object.errcheck = errcheck({
-    -1: "file system error",
-    -2: "module invalid",
-    -3: "module has wrong ENDISM or WORD_BYTES",
-    -4: "address out of range or unaligned, or module too large",
-})
+libmit.mit_load_object.errcheck = errcheck(LoadError)
 
 libmit.mit_save_object.argtypes = [c_void_p, c_uword, c_uword, c_int]
-libmit.mit_save_object.errcheck = errcheck({
-    0: 'ok',
-    -1: "file system error",
-    -2: "address out of range or unaligned",
-})
+libmit.mit_save_object.errcheck = errcheck(SaveError)
 
 libmit.mit_init.restype = c_void_p
 libmit.mit_init.argtypes = [c_size_t, c_size_t]

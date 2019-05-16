@@ -54,7 +54,9 @@ class AbstractInstruction(Enum):
     @classmethod
     def print_python(cls, name, prefix):
         '''Print the instructions as a Python Enum.'''
-        print('class {}(IntEnum):'.format(name))
+        print('''\
+@unique
+class {}(IntEnum):'''.format(name))
         for instruction in cls:
             print('    {}{} = {:#x}'.format(
                 prefix,

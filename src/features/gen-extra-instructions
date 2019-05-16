@@ -37,8 +37,8 @@ print('''
 #include "mit/extra-opcodes.h"
 
 enum {
-    MIT_ERR_EXT_INVALID_LIBRARY = 16,
-    MIT_ERR_EXT_INVALID_FUNCTION = 17,
+    MIT_ERROR_EXTRA_INVALID_LIBRARY = 16,
+    MIT_ERROR_EXTRA_INVALID_FUNCTION = 17,
 };
 
 #define RAISE(code)                         \\
@@ -52,9 +52,9 @@ static mit_word extra_{}(mit_state * restrict S, mit_word opcode)
     print(dispatch(
         lib.library,
         '{}_'.format(lib.name),
-        '            RAISE(MIT_ERR_EXT_INVALID_FUNCTION);'))
+        '            RAISE(MIT_ERROR_EXTRA_INVALID_FUNCTION);'))
     print('''
-    return MIT_ERR_OK;
+    return MIT_ERROR_OK;
 }
 ''')
 
@@ -67,9 +67,9 @@ mit_word mit_extra_instruction(mit_state * restrict S)
 print(dispatch(
     LibInstruction,
     '',
-    '\n            return MIT_ERR_EXT_INVALID_LIBRARY;',
+    '\n            return MIT_ERROR_EXTRA_INVALID_LIBRARY;',
 ))
 
 print('''
-    return MIT_ERR_OK;
+    return MIT_ERROR_OK;
 }''')

@@ -181,11 +181,11 @@ static int load(mit_state *S, mit_uword addr, unsigned size, mit_word *val_ptr)
 {
     if (addr >= S->memory_size) {
         S->BAD = addr;
-        return MIT_ERR_INVALID_MEMORY_READ;
+        return MIT_ERROR_INVALID_MEMORY_READ;
     }
     if (!is_aligned(addr, size)) {
         S->BAD = addr;
-        return MIT_ERR_UNALIGNED_ADDRESS;
+        return MIT_ERROR_UNALIGNED_ADDRESS;
     }
 
     mit_word val;
@@ -223,22 +223,22 @@ static int load(mit_state *S, mit_uword addr, unsigned size, mit_word *val_ptr)
 #endif
 #pragma GCC diagnostic pop
     default:
-        return MIT_ERR_BAD_SIZE;
+        return MIT_ERROR_BAD_SIZE;
     }
 
     *val_ptr = val;
-    return MIT_ERR_OK;
+    return MIT_ERROR_OK;
 }
 
 static int store(mit_state *S, mit_uword addr, unsigned size, mit_word val)
 {
     if (addr >= S->memory_size) {
         S->BAD = addr;
-        return MIT_ERR_INVALID_MEMORY_WRITE;
+        return MIT_ERROR_INVALID_MEMORY_WRITE;
     }
     if (!is_aligned(addr, size)) {
         S->BAD = addr;
-        return MIT_ERR_UNALIGNED_ADDRESS;
+        return MIT_ERROR_UNALIGNED_ADDRESS;
     }
 
     switch (size) {
@@ -275,10 +275,10 @@ static int store(mit_state *S, mit_uword addr, unsigned size, mit_word val)
 #endif
 #pragma GCC diagnostic pop
     default:
-        return MIT_ERR_BAD_SIZE;
+        return MIT_ERROR_BAD_SIZE;
     }
 
-    return MIT_ERR_OK;
+    return MIT_ERROR_OK;
 }
 #pragma GCC diagnostic pop
 
@@ -325,22 +325,22 @@ static int load_stack(mit_state *S, mit_uword pos, mit_word *vp)
 {
     if (pos >= S->STACK_DEPTH) {
         S->BAD = pos;
-        return MIT_ERR_INVALID_STACK_READ;
+        return MIT_ERROR_INVALID_STACK_READ;
     }
 
     *vp = *UNCHECKED_STACK(pos);
-    return MIT_ERR_OK;
+    return MIT_ERROR_OK;
 }
 
 static int store_stack(mit_state *S, mit_uword pos, mit_word v)
 {
     if (pos >= S->STACK_DEPTH) {
         S->BAD = pos;
-        return MIT_ERR_INVALID_STACK_WRITE;
+        return MIT_ERROR_INVALID_STACK_WRITE;
     }
 
     *UNCHECKED_STACK(pos) = v;
-    return MIT_ERR_OK;
+    return MIT_ERROR_OK;
 }
 
 static int pop_stack(mit_state *S, mit_word *v)
@@ -354,7 +354,7 @@ static int push_stack(mit_state *S, mit_word v)
 {
     if (S->STACK_DEPTH >= S->stack_size) {
         S->BAD = S->stack_size;
-        return MIT_ERR_STACK_OVERFLOW;
+        return MIT_ERROR_STACK_OVERFLOW;
     }
 
     (S->STACK_DEPTH)++;

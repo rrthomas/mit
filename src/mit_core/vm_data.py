@@ -46,7 +46,7 @@ class Instruction(AbstractInstruction):
     ''',
               '''\
         if (S->I != 0)
-            RAISE(MIT_ERR_INVALID_OPCODE);
+            RAISE(MIT_ERROR_INVALID_OPCODE);
     ''')
 
     BRANCHZ = (0x2, ['flag', 'addr'], [], '''\
@@ -148,14 +148,14 @@ class Instruction(AbstractInstruction):
 
     DIVMOD = (0x16, ['a', 'b'], ['q', 'r'], '''\
         if (b == 0)
-          RAISE(MIT_ERR_DIVISION_BY_ZERO);
+          RAISE(MIT_ERROR_DIVISION_BY_ZERO);
         q = a / b;
         r = a % b;
     ''')
 
     UDIVMOD = (0x17, ['a', 'b'], ['q', 'r'], '''\
         if (b == 0)
-          RAISE(MIT_ERR_DIVISION_BY_ZERO);
+          RAISE(MIT_ERROR_DIVISION_BY_ZERO);
         q = (mit_word)((mit_uword)a / (mit_uword)b);
         r = (mit_word)((mit_uword)a % (mit_uword)b);
     ''')
@@ -196,5 +196,5 @@ class Instruction(AbstractInstruction):
 @unique
 class InternalExtraInstruction(AbstractInstruction):
     HALT = (0x1, [], [], '''\
-        RAISE(MIT_ERR_HALT);
+        RAISE(MIT_ERROR_HALT);
     ''')

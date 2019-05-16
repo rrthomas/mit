@@ -42,7 +42,7 @@ _GL_ATTRIBUTE_PURE mit_word mit_internal_extra_instruction(mit_state *S)
 print(dispatch(InternalExtraInstruction, 'O_EXTRA_', ''))
 
 print('''\
-    return MIT_ERR_OK;
+    return MIT_ERROR_OK;
 }
 
 #undef RAISE
@@ -64,18 +64,18 @@ mit_word mit_single_step(mit_state * restrict S)
     // Check STACK_DEPTH is valid
     if (S->STACK_DEPTH > S->stack_size) {
         S->BAD = S->STACK_DEPTH - S->stack_size;
-        RAISE(MIT_ERR_STACK_OVERFLOW);
+        RAISE(MIT_ERROR_STACK_OVERFLOW);
     }
 ''')
 
 print(dispatch(Instruction, 'O_', '''\
         /* Undefined instruction. */
-        RAISE(MIT_ERR_INVALID_OPCODE);
+        RAISE(MIT_ERROR_INVALID_OPCODE);
 '''))
 
 print('''
 
-    return MIT_ERR_OK;
+    return MIT_ERROR_OK;
 }
 
 
