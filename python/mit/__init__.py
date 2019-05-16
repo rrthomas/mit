@@ -156,7 +156,7 @@ class State:
 
     def run(self, args=None):
         '''
-        Run until HALT or error. Register any given command-line `args`.
+        Run until halt or error. Register any given command-line `args`.
         '''
         if args == None:
             args = []
