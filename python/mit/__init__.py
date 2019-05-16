@@ -154,9 +154,13 @@ class State:
         libmitfeatures.mit_extra_instruction(self.state)
         self.registers["I"].set(0) # Skip to next instruction
 
-    def run(self, args=None):
+    def run(self, args=None, trace_file=None):
         '''
-        Run until halt or error. Register any given command-line `args`.
+        Run until `halt` or error.
+
+         - args - list of str - command-line arguments to register.
+         - trace_file - file - if not none, a file object to which to write an
+           instruction trace.
         '''
         if args == None:
             args = []
@@ -164,7 +168,10 @@ class State:
         self.register_args(*args)
         while True:
             try:
-                libmit.mit_run(self.state)
+                if trace_file is not None:
+                    libmitfeatures.mit_trace_run(self.state, trace_file.fileno())
+                else:
+                    libmit.mit_run(self.state)
             except ErrorCode as e:
                 if e.args[0] == ExecutionError.HALT:
                     return

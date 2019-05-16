@@ -145,3 +145,9 @@
 /strings_h.m4
 /getpagesize.m4
 /byteswap.m4
+/dprintf.m4
+/raise.m4
+/safe-read.m4
+/safe-write.m4
+/signal_h.m4
+/write.m4
