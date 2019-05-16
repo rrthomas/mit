@@ -91,13 +91,13 @@ static int mit_realloc(mit_word * restrict *ptr, mit_uword old_size, mit_uword n
 {
     mit_word * restrict new_ptr = realloc(*ptr, new_size * MIT_WORD_BYTES);
     if (new_ptr == NULL && new_size > 0)
-        return -1;
+        return MIT_MALLOC_ERROR_CANNOT_ALLOCATE_MEMORY;
     *ptr = new_ptr;
 
     if (old_size < new_size)
         memset(*ptr + old_size, 0, (new_size - old_size) * MIT_WORD_BYTES);
 
-    return MIT_ERR_OK;
+    return MIT_MALLOC_ERROR_OK;
 }
 
 int mit_realloc_memory(mit_state *S, mit_uword memory_size)
@@ -158,5 +158,5 @@ int mit_register_args(mit_state *S, int argc, char *argv[])
     S->main_argc = argc;
     S->main_argv = argv;
 
-    return MIT_ERR_OK;
+    return MIT_ERROR_OK;
 }

@@ -75,7 +75,7 @@ def store_stack_type(name, type, depth):
 
 def pop_stack_type(name, type):
     code = [
-        'if (S->STACK_DEPTH < {}) RAISE(MIT_ERR_STACK_OVERFLOW);'
+        'if (S->STACK_DEPTH < {}) RAISE(MIT_ERROR_STACK_OVERFLOW);'
         .format(type_words(type)),
         load_stack_type(name, type, 0),
         'S->STACK_DEPTH -= {};'.format(type_words(type)),
@@ -84,7 +84,7 @@ def pop_stack_type(name, type):
 
 def push_stack_type(name, type):
     code = [
-        'if (S->stack_size - S->STACK_DEPTH < {}) RAISE(MIT_ERR_INVALID_STACK_WRITE);'
+        'if (S->stack_size - S->STACK_DEPTH < {}) RAISE(MIT_ERROR_INVALID_STACK_WRITE);'
         .format(type_words(type)),
         load_stack_type(name, type, 0),
         'S->STACK_DEPTH += {};'.format(type_words(type)),
@@ -345,7 +345,7 @@ def check_underflow(num_pops):
     return '''\
 if ((S->STACK_DEPTH < (mit_uword)({num_pops}))) {{
     S->BAD = {num_pops} - 1;
-    RAISE(MIT_ERR_INVALID_STACK_READ);
+    RAISE(MIT_ERROR_INVALID_STACK_READ);
 }}'''.format(num_pops=num_pops)
 
 def check_overflow(num_pops, num_pushes):
@@ -361,7 +361,7 @@ def check_overflow(num_pops, num_pushes):
     return '''\
 if (((S->stack_size - S->STACK_DEPTH) < (mit_uword)({depth_change}))) {{
     S->BAD = ({depth_change}) - (S->stack_size - S->STACK_DEPTH);
-    RAISE(MIT_ERR_STACK_OVERFLOW);
+    RAISE(MIT_ERROR_STACK_OVERFLOW);
 }}'''.format(depth_change=depth_change)
 
 def gen_case(instruction):

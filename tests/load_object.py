@@ -81,27 +81,27 @@ test = 0
 test += 1
 obj = object_file()
 obj[5] = ord('\n')
-load_test(obj, -2)
+load_test(obj, LoadError.INVALID_OBJECT_FILE)
 
 # Invalid ENDISM
 test += 1
 obj = object_file()
 obj[6] = 4
-load_test(obj, -2)
+load_test(obj, LoadError.INVALID_OBJECT_FILE)
 
 # Insufficient data for given length
 test += 1
 obj = object_file()
 obj[8:8 + word_bytes] = word_to_bytes(-1)
-load_test(obj, -4)
+load_test(obj, LoadError.INVALID_ADDRESS_RANGE)
 
 # Only a few bytes of header
 test += 1
-load_test(object_file()[0:2], -2)
+load_test(object_file()[0:2], LoadError.INVALID_OBJECT_FILE)
 
 # Incorrect WORD_BYTES
 wrong_word_bytes = 8 if word_bytes == 4 else 4
-load_test(object_file(wrong_word_bytes), -3)
+load_test(object_file(wrong_word_bytes), LoadError.INCOMPATIBLE_OBJECT_FILE)
 
 
 # Test ability to load valid object files

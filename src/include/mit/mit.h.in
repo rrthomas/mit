@@ -18,6 +18,8 @@
 #include <byteswap.h>
 #include <limits.h>
 
+#include <mit@PACKAGE_SUFFIX@/opcodes.h>
+
 
 // Build-time parameters
 #define MIT_WORD_BYTES @WORD_BYTES@
@@ -117,24 +119,7 @@ typedef struct {
 extern const unsigned mit_instruction_bit;
 extern const unsigned mit_instruction_mask;
 
-// Errors
-enum {
-    MIT_ERR_OK = 0,
-    MIT_ERR_INVALID_OPCODE = 1,
-    MIT_ERR_STACK_OVERFLOW = 2,
-    MIT_ERR_INVALID_STACK_READ = 3,
-    MIT_ERR_INVALID_STACK_WRITE = 4,
-    MIT_ERR_INVALID_MEMORY_READ = 5,
-    MIT_ERR_INVALID_MEMORY_WRITE = 6,
-    MIT_ERR_UNALIGNED_ADDRESS = 7,
-    MIT_ERR_BAD_SIZE = 8,
-    MIT_ERR_DIVISION_BY_ZERO = 9,
-    MIT_ERR_HALT = 128,
-};
-
-
 // Utility functions
-
 mit_uword mit_align(mit_uword addr, unsigned size);
 /* Return `addr` aligned to the next 2^`size`-byte boundary. */
 
@@ -196,11 +181,11 @@ static int load(mit_state *S, mit_uword addr, unsigned size, mit_word *val_ptr)
 {
     if (addr >= S->memory_size) {
         S->BAD = addr;
-        return MIT_ERR_INVALID_MEMORY_READ;
+        return MIT_ERROR_INVALID_MEMORY_READ;
     }
     if (!is_aligned(addr, size)) {
         S->BAD = addr;
-        return MIT_ERR_UNALIGNED_ADDRESS;
+        return MIT_ERROR_UNALIGNED_ADDRESS;
     }
 
     mit_word val;
@@ -238,22 +223,22 @@ static int load(mit_state *S, mit_uword addr, unsigned size, mit_word *val_ptr)
 #endif
 #pragma GCC diagnostic pop
     default:
-        return MIT_ERR_BAD_SIZE;
+        return MIT_ERROR_BAD_SIZE;
     }
 
     *val_ptr = val;
-    return MIT_ERR_OK;
+    return MIT_ERROR_OK;
 }
 
 static int store(mit_state *S, mit_uword addr, unsigned size, mit_word val)
 {
     if (addr >= S->memory_size) {
         S->BAD = addr;
-        return MIT_ERR_INVALID_MEMORY_WRITE;
+        return MIT_ERROR_INVALID_MEMORY_WRITE;
     }
     if (!is_aligned(addr, size)) {
         S->BAD = addr;
-        return MIT_ERR_UNALIGNED_ADDRESS;
+        return MIT_ERROR_UNALIGNED_ADDRESS;
     }
 
     switch (size) {
@@ -290,10 +275,10 @@ static int store(mit_state *S, mit_uword addr, unsigned size, mit_word val)
 #endif
 #pragma GCC diagnostic pop
     default:
-        return MIT_ERR_BAD_SIZE;
+        return MIT_ERROR_BAD_SIZE;
     }
 
-    return MIT_ERR_OK;
+    return MIT_ERROR_OK;
 }
 #pragma GCC diagnostic pop
 
@@ -340,22 +325,22 @@ static int load_stack(mit_state *S, mit_uword pos, mit_word *vp)
 {
     if (pos >= S->STACK_DEPTH) {
         S->BAD = pos;
-        return MIT_ERR_INVALID_STACK_READ;
+        return MIT_ERROR_INVALID_STACK_READ;
     }
 
     *vp = *UNCHECKED_STACK(pos);
-    return MIT_ERR_OK;
+    return MIT_ERROR_OK;
 }
 
 static int store_stack(mit_state *S, mit_uword pos, mit_word v)
 {
     if (pos >= S->STACK_DEPTH) {
         S->BAD = pos;
-        return MIT_ERR_INVALID_STACK_WRITE;
+        return MIT_ERROR_INVALID_STACK_WRITE;
     }
 
     *UNCHECKED_STACK(pos) = v;
-    return MIT_ERR_OK;
+    return MIT_ERROR_OK;
 }
 
 static int pop_stack(mit_state *S, mit_word *v)
@@ -369,7 +354,7 @@ static int push_stack(mit_state *S, mit_word v)
 {
     if (S->STACK_DEPTH >= S->stack_size) {
         S->BAD = S->stack_size;
-        return MIT_ERR_STACK_OVERFLOW;
+        return MIT_ERROR_STACK_OVERFLOW;
     }
 
     (S->STACK_DEPTH)++;
@@ -425,7 +410,8 @@ mit_word mit_run(mit_state * restrict S);
 
 mit_word mit_single_step(mit_state * restrict S);
 /* Execute a single pass of the execution cycle in the given state.
-   Return 128 if execution completes without error, or the error code.
+   Return MIT_ERROR_HALT if execution completes without error, or the error
+   code.
 */
 
 ptrdiff_t mit_load_object(mit_state *S, mit_uword addr, int fd);

@@ -7,7 +7,7 @@
 # THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 # RISK.
 
-from enum import Enum, unique
+from enum import Enum, IntEnum, unique
 
 from .instruction import AbstractInstruction
 
@@ -18,6 +18,20 @@ class Register(Enum):
     I = object()
     BAD = object()
     STACK_DEPTH = object()
+
+@unique
+class ExecutionError(IntEnum):
+    OK = 0
+    INVALID_OPCODE = 1
+    STACK_OVERFLOW = 2
+    INVALID_STACK_READ = 3
+    INVALID_STACK_WRITE = 4
+    INVALID_MEMORY_READ = 5
+    INVALID_MEMORY_WRITE = 6
+    UNALIGNED_ADDRESS = 7
+    BAD_SIZE = 8
+    DIVISION_BY_ZERO = 9
+    HALT = 127
 
 @unique
 class Instruction(AbstractInstruction):
@@ -32,7 +46,7 @@ class Instruction(AbstractInstruction):
     ''',
               '''\
         if (S->I != 0)
-            RAISE(MIT_ERR_INVALID_OPCODE);
+            RAISE(MIT_ERROR_INVALID_OPCODE);
     ''')
 
     BRANCHZ = (0x2, ['flag', 'addr'], [], '''\
@@ -134,14 +148,14 @@ class Instruction(AbstractInstruction):
 
     DIVMOD = (0x16, ['a', 'b'], ['q', 'r'], '''\
         if (b == 0)
-          RAISE(MIT_ERR_DIVISION_BY_ZERO);
+          RAISE(MIT_ERROR_DIVISION_BY_ZERO);
         q = a / b;
         r = a % b;
     ''')
 
     UDIVMOD = (0x17, ['a', 'b'], ['q', 'r'], '''\
         if (b == 0)
-          RAISE(MIT_ERR_DIVISION_BY_ZERO);
+          RAISE(MIT_ERROR_DIVISION_BY_ZERO);
         q = (mit_word)((mit_uword)a / (mit_uword)b);
         r = (mit_word)((mit_uword)a % (mit_uword)b);
     ''')
@@ -182,5 +196,5 @@ class Instruction(AbstractInstruction):
 @unique
 class InternalExtraInstruction(AbstractInstruction):
     HALT = (0x1, [], [], '''\
-        RAISE(MIT_ERR_HALT);
+        RAISE(MIT_ERROR_HALT);
     ''')

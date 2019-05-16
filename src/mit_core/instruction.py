@@ -39,6 +39,10 @@ class AbstractInstruction(Enum):
         self.code = code
         self.init_code = init_code
 
+    @property
+    def value(self):
+        return self.opcode
+
     @classmethod
     def print_c(cls, prefix):
         '''Print the instructions as a C enum.'''
@@ -47,18 +51,6 @@ class AbstractInstruction(Enum):
             print('    INSTRUCTION({}{}, {:#x})'.format(
                 prefix,
                 instruction.name,
-                instruction.opcode,
+                instruction.value,
             ))
         print('};')
-
-    @classmethod
-    def print_python(cls, name, prefix):
-        '''Print the instructions as a Python Enum.'''
-        print('class {}(IntEnum):'.format(name))
-        for instruction in cls:
-            print('    {}{} = {:#x}'.format(
-                prefix,
-                instruction.name,
-                instruction.opcode,
-            ))
-        print('')

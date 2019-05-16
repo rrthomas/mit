@@ -15,17 +15,19 @@ mit_pkgpythondir = $(pkgpythondir)@PACKAGE_SUFFIX@
 mit_pkgpython_PYTHON =		\
 	mit/__init__.py		\
 	mit/__main__.py		\
-	mit/opcodes.py		\
 	mit/assembler.py
-nodist_mit_pkgpython_PYTHON = mit/binding.py
+nodist_mit_pkgpython_PYTHON = mit/binding.py mit/errors.py mit/opcodes.py
 
-all-local: mit/binding.py mit/opcodes.py
+all-local: mit/binding.py mit/errors.py mit/opcodes.py
 
 mit/binding.py: $(top_builddir)/config.status mit/binding.py.in
 	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
 
 mit/opcodes.py: gen-python-opcodes $(top_srcdir)/src/mit_core/instruction.py $(top_srcdir)/src/mit_core/vm_data.py $(top_srcdir)/src/features/extra_instructions.py
 	$(PYTHON_WITH_PATH) $(srcdir)/gen-python-opcodes > mit/opcodes.py || ( rm -f mit/opcodes.py; exit 1 )
+
+mit/errors.py: gen-python-errors $(top_srcdir)/src/mit_core/instruction.py $(top_srcdir)/src/mit_core/vm_data.py $(top_srcdir)/src/features/extra_instructions.py
+	$(PYTHON_WITH_PATH) $(srcdir)/gen-python-errors > mit/errors.py || ( rm -f mit/errors.py; exit 1 )
 
 # sloccount --autogen doesn't work (Debian bug #929000), so temporarily move
 # binding.py.in during count.
@@ -51,11 +53,12 @@ mit@PACKAGE_SUFFIX@-shell.1: mit-shell.1
 endif
 
 EXTRA_DIST = \
+	enum_util.py		\
 	gen-python-opcodes	\
+	gen-python-errors	\
 	$(man_MANS)		\
 	mit/binding.py.in	\
 	mit-dump.in		\
-	mit-shell.in		\
-	mit/binding.py.in
+	mit-shell.in
 
-DISTCLEANFILES = $(bin_SCRIPTS) $(man_MANS)
+DISTCLEANFILES = $(bin_SCRIPTS) $(man_MANS) mit/errors.py mit/opcodes.py

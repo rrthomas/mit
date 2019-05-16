@@ -13,7 +13,7 @@ PYTHON_WITH_PATH = export PYTHONPATH=$(abs_top_srcdir)/python:$(abs_top_srcdir)/
 lib_LTLIBRARIES = libmit@PACKAGE_SUFFIX@.la
 C_SRCS = storage.c object.c
 nodist_LIB_SRCS = include/mit/registers.h include/mit/opcodes.h instructions.c
-LIB_CORE_SRCS = mit_core/instruction.py mit_core/vm_data.py mit_core/instruction_gen.py
+LIB_CORE_SRCS = mit_core/instruction.py mit_core/vm_data.py mit_core/errors.py mit_core/instruction_gen.py
 nodist_libmit@PACKAGE_SUFFIX@_la_SOURCES = $(C_SRCS) $(nodist_LIB_SRCS)
 libmit@PACKAGE_SUFFIX@_la_LIBADD = $(top_builddir)/lib/libgnu.la
 libmit@PACKAGE_SUFFIX@_la_LDFLAGS = -no-undefined -export-symbols-regex '^mit_.*'
@@ -34,7 +34,7 @@ instructions.lo main.o: main.c include/mit/registers.h
 .c.s:
 	$(COMPILE) -c -S $<
 
-include/mit/mit.h: $(top_builddir)/config.status include/mit/mit.h.in include/mit/registers.h
+include/mit/mit.h: $(top_builddir)/config.status include/mit/mit.h.in include/mit/registers.h include/mit/opcodes.h
 	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
 
 # Depend on mit@PACKAGE_SUFFIX@$(EXEEXT) rather than explicitly make-ing it, as otherwise
