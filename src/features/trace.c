@@ -9,18 +9,24 @@
 
 #include "config.h"
 
+#include <unistd.h>
 #include <stdio.h>
 
 #include "mit/mit.h"
 #include "mit/features.h"
 
 
-mit_word mit_trace_run(mit_state * restrict state, FILE *trace_fp)
+mit_word mit_trace_run(mit_state * restrict state, int trace_fd)
 {
     int ret = 0;
+    int dup_fd = dup(trace_fd);
+    if (dup_fd == -1)
+        return -1;
+    FILE *fp = fdopen(dup_fd, "wb");
     do {
-        fprintf(trace_fp, "%d\n", (int)(state->I & MIT_INSTRUCTION_MASK));
+        fprintf(fp, "%d\n", (int)(state->I & MIT_INSTRUCTION_MASK));
         ret = mit_single_step(state);
     } while (ret == 0);
+    fclose(fp);
     return ret;
 }
