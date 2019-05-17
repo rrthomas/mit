@@ -13,6 +13,8 @@ import pathlib
 import glob
 import textwrap
 
+from mit_core.errors import LoadError
+
 
 # Command line
 
@@ -368,19 +370,19 @@ print('''\
     close(fd);
     const char *err = NULL;
     if (ret < 0)
-        switch (ret) {
-        case -1:
-            err = "file system error";
-            break;
-        case -2:
-            err = "module invalid";
-            break;
-        case -3:
-            err = "module has wrong ENDISM or WORD_BYTES";
-            break;
-        case -4:
-            err = "address out of range or unaligned, or module too large";
-            break;
+        switch (ret) {''')
+
+for error in LoadError:
+    print('''\
+        case MIT_LOAD_ERROR_{}:
+            err = "{}";
+            break;'''.format(
+                error.name,
+                error.name.lower().translate(str.maketrans('_', ' '))
+            )
+    )
+
+print('''\
         default:
             err = "unknown error!";
             break;
