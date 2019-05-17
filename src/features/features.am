@@ -73,6 +73,26 @@ DISTCLEANFILES += \
 
 nodist_libmitfeatures@PACKAGE_SUFFIX@_la_SOURCES += %D%/specializer.c
 
+check-local:
+	if test -d features/pforth -a "$(WORD_BYTES)" = "4" -a "$(ENDISM)" = "0"; then \
+	    cd features/pforth && \
+	    autoreconf -i && \
+	    ./configure --build=mit BUILD_EXECUTOR=$(abs_srcdir)/mit@PACKAGE_SUFFIX@$(EXEEXT) && \
+	    cd src/mit && \
+	    $(abs_srcdir)/mit@PACKAGE_SUFFIX@$(EXEEXT) -O pforth-base make-base.fs && \
+	    cmp pforth-base pforth-new; \
+	fi
+
+# Alternative trace-building arguments:
+#   --evaluate BYE
+#   make-base.fs
+#   tests.fs # (needs something on standard input)
+build-trace:
+	export LD_LIBRARY_PATH=$(abs_top_builddir)/src/@objdir@:$$LD_LIBRARY_PATH; \
+	cd %D%/pforth/src/mit && \
+	$(PYTHON_WITH_PATH) $(abs_srcdir)/%D%/gen-trace $(abs_srcdir)/%D%/instructions.trace --evaluate BYE && \
+	gzip -f $(GZIP_ENV) $(abs_srcdir)/%D%/instructions.trace
+
 %D%/instructions.predictor_pickle: mit_core/instruction.py mit_core/vm_data.py %D%/gen-predictor %D%/instructions.trace.gz
 	$(PYTHON_WITH_PATH) $(srcdir)/%D%/gen-predictor $(srcdir)/%D%/instructions.trace.gz $@
 
@@ -84,6 +104,7 @@ nodist_libmitfeatures@PACKAGE_SUFFIX@_la_SOURCES += %D%/specializer.c
 
 EXTRA_DIST += \
 	%D%/specializer.py \
+	%D%/gen-trace \
 	%D%/gen-labels \
 	%D%/gen-predictor \
 	%D%/gen-specializer \
