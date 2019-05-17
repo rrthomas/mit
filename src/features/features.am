@@ -8,20 +8,29 @@
 # RISK.
 
 lib_LTLIBRARIES += libmitfeatures@PACKAGE_SUFFIX@.la
-libmitfeatures@PACKAGE_SUFFIX@_la_SOURCES = \
-	%D%/extra-instructions.c \
-	%D%/auto-extend.c \
-	%D%/trace.c \
-	%D%/core-dump.c
+libmitfeatures@PACKAGE_SUFFIX@_la_SOURCES =
+nodist_libmitfeatures@PACKAGE_SUFFIX@_la_SOURCES =
 libmitfeatures@PACKAGE_SUFFIX@_la_LIBADD = libmit@PACKAGE_SUFFIX@.la $(top_builddir)/lib/libgnu.la
 libmitfeatures@PACKAGE_SUFFIX@_la_LDFLAGS = -no-undefined -export-symbols-regex '^mit_.*'
-nodist_libmitfeatures@PACKAGE_SUFFIX@_la_SOURCES = %D%/specializer.c
-nodist_mit_pkginclude_HEADERS += %D%/mit/extra-opcodes.h
 
 mit_pkginclude_HEADERS += %D%/mit/features.h
 
 %D%/mit/features.h: $(top_builddir)/config.status %D%/mit/features.h.in
 	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
+
+
+# Simple features
+
+libmitfeatures@PACKAGE_SUFFIX@_la_SOURCES += \
+	%D%/auto-extend.c \
+	%D%/trace.c \
+	%D%/core-dump.c
+
+
+# Library extra instructions
+
+nodist_mit_pkginclude_HEADERS += %D%/mit/extra-opcodes.h
+libmitfeatures@PACKAGE_SUFFIX@_la_SOURCES += %D%/extra-instructions.c
 
 # Note: we grep config.log because the generated header file has the symbols
 # sorted lexically, and we need the output in the same order as the input.
@@ -42,6 +51,28 @@ mit_pkginclude_HEADERS += %D%/mit/features.h
 	$(MKDIR_P) mit && \
 	$(PYTHON_WITH_PATH) $(abs_srcdir)/%D%/gen-extra-opcodes > mit/extra-opcodes.h || ( rm -f mit/extra-opcodes.h; exit 1 )
 
+EXTRA_DIST += \
+	%D%/extra_instructions.py \
+	%D%/gen-extra-instructions \
+	%D%/gen-extra-opcodes \
+	%D%/gen-type-sizes \
+	%D%/collate-type-sizes
+
+DISTCLEANLOCALDIRS += %D%/autom4te.cache %D%/__pycache__
+
+DISTCLEANFILES += \
+	%D%/mit/extra-opcodes.h \
+	%D%/extra-instructions.c \
+	%D%/type-sizes.ac \
+	%D%/type-sizes \
+	%D%/config.log \
+	%D%/type_sizes.py
+
+
+# Specializer
+
+nodist_libmitfeatures@PACKAGE_SUFFIX@_la_SOURCES += %D%/specializer.c
+
 %D%/instructions.predictor_pickle: mit_core/instruction.py mit_core/vm_data.py %D%/gen-predictor %D%/instructions.trace.gz
 	$(PYTHON_WITH_PATH) $(srcdir)/%D%/gen-predictor $(srcdir)/%D%/instructions.trace.gz $@
 
@@ -52,26 +83,13 @@ mit_pkginclude_HEADERS += %D%/mit/features.h
 	$(PYTHON_WITH_PATH) $(srcdir)/%D%/gen-specializer %D%/instructions.labels_pickle > %D%/specializer.c || ( rm -f %D%/specializer.c; exit 1 )
 
 EXTRA_DIST += \
-	%D%/extra_instructions.py \
-	%D%/gen-extra-instructions \
-	%D%/gen-extra-opcodes \
-	%D%/gen-type-sizes \
-	%D%/collate-type-sizes \
 	%D%/specializer.py \
 	%D%/gen-labels \
 	%D%/gen-predictor \
 	%D%/gen-specializer \
 	%D%/instructions.trace.gz
 
-DISTCLEANLOCALDIRS += %D%/autom4te.cache %D%/__pycache__
-
 DISTCLEANFILES += \
-	%D%/mit/extra-opcodes.h \
-	%D%/extra-instructions.c \
 	%D%/instructions.predictor_pickle \
 	%D%/instructions.labels_pickle \
-	%D%/specializer.c \
-	%D%/type-sizes.ac \
-	%D%/type-sizes \
-	%D%/config.log \
-	%D%/type_sizes.py
+	%D%/specializer.c
