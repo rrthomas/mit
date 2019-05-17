@@ -13,8 +13,8 @@ predictor_filename = sys.argv[2]
 # Index the instruction set.
 
 # bytes -> Instruction
-TRACE_NAMES = {
-    str(i.opcode).encode(): i
+TRACE_OPCODES = {
+    i.opcode: i
     for i in Instruction
 }
 
@@ -23,13 +23,13 @@ class StepFunction:
     A callable that updates the history to record that an instruction was
     executed.
     '''
-    def __init__(self, name):
+    def __init__(self, opcode):
         '''
          - name - bytes - the information about the instruction that will
            affect the history.
         '''
         h = hashlib.md5()
-        h.update(name)
+        h.update(bytes(opcode))
         h = int.from_bytes(h.digest(), byteorder='little')
         hash0 = h & 0x7FFFFFFFFFFFFFFF; h >>= 63
         hash1 = h & 0x7FFFFFFFFFFFFFFF; h >>= 63
@@ -41,8 +41,8 @@ class StepFunction:
 
 # Instruction -> HistoryStep
 STEP_FUNCTIONS = {
-    i: StepFunction(name)
-    for name, i in TRACE_NAMES.items()
+    i: StepFunction(opcode)
+    for opcode, i in TRACE_OPCODES.items()
 }
 
 # Predictor.
@@ -82,12 +82,14 @@ print("Building a predictor")
 def open_trace(trace_filename):
     '''Yields Instructions.'''
     with gzip.open(trace_filename, 'rb') as trace:
-        for line in trace:
-            line = line.strip()
-            if line in TRACE_NAMES:
-                yield TRACE_NAMES[line]
+        byte = trace.read(1)
+        while byte:
+            byte = byte[0]
+            if byte in TRACE_OPCODES:
+                yield TRACE_OPCODES[byte]
             else:
                 raise ValueError("Undefined instruction")
+            byte = trace.read(1)
 
 predictor = Predictor()
 history = 0
