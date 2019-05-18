@@ -80,18 +80,10 @@ if (((S->stack_size - S->STACK_DEPTH) < (mit_uword)({depth_change}))) {{
          - item - StackItem.
         '''
         assert item.size == 1
-        if item.depth < self.cached_depth:
-            # The item is cached.
-            return '{var} = {cache_var};'.format(
-                var=item.name,
-                cache_var=self.var(item.depth),
-            )
-        else:
-            # Get it from memory.
-            return '{var} = *UNCHECKED_STACK({depth});'.format(
-                var=item.name,
-                depth=item.depth,
-            )
+        return '{var} = {loc};'.format(
+            var=item.name,
+            loc=self.loc(item.depth),
+        )
 
     def store(self, item):
         '''
@@ -100,18 +92,10 @@ if (((S->stack_size - S->STACK_DEPTH) < (mit_uword)({depth_change}))) {{
          - item - StackItem.
         '''
         assert item.size == 1
-        if item.depth < self.cached_depth:
-            # The item is cached.
-            return '{cache_var} = {var};'.format(
-                var=item.name,
-                cache_var=self.var(item.depth),
-            )
-        else:
-            # Put it in memory.
-            return '*UNCHECKED_STACK({depth}) = {var};'.format(
-                var=item.name,
-                depth=item.depth,
-            )
+        return '{loc} = {var};'.format(
+            var=item.name,
+            loc=self.loc(item.depth),
+        )
 
     def load_args(self, args):
         '''
@@ -168,6 +152,18 @@ if (((S->stack_size - S->STACK_DEPTH) < (mit_uword)({depth_change}))) {{
         '''
         return self.var_for_depth(pos, self.cached_depth)
 
+    def loc(self, pos):
+        '''
+        Returns a C L-value representing the current location of stack
+        position `pos`, whether or not it is cached.
+        '''
+        if pos < self.cached_depth:
+            # The item is cached.
+            return self.var(pos)
+        else:
+            # The item is really on the stack.
+            return '*UNCHECKED_STACK({})'.format(pos)
+
     def flush(self, goal=0):
         '''
         Decrease the number of stack items that are cached in C variables,
@@ -183,17 +179,10 @@ if (((S->stack_size - S->STACK_DEPTH) < (mit_uword)({depth_change}))) {{
         assert goal.checked_depth <= self.checked_depth, (goal, self)
         self.checked_depth = goal.checked_depth
         if goal.cached_depth == self.cached_depth: return ''
-        code = []
-        for pos in reversed(range(goal.cached_depth, self.cached_depth)):
-            code.append('*UNCHECKED_STACK({pos}) = {var};'.format(
-                pos=pos,
-                var=self.var(pos),
-            ))
-        for pos in reversed(range(goal.cached_depth)):
-            code.append('{} = {};'.format(
-                goal.var(pos),
-                self.var(pos),
-            ))
+        code = [
+            '{} = {};'.format(goal.loc(pos), self.loc(pos))
+            for pos in reversed(range(self.cached_depth))
+        ]
         self.cached_depth = goal.cached_depth
         code.append('cached_depth = {};'.format(self.cached_depth))
         return '\n'.join(code)
