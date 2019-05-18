@@ -207,6 +207,7 @@ print('''\
 #include <sys/stat.h>
 
 #include "progname.h"
+#include "binary-io.h"
 
 #include "mit/mit.h"
 #include "mit/features.h"
@@ -366,6 +367,8 @@ print('''\
     int fd = open(argv[optind], O_RDONLY);
     if (fd < 0)
         die("cannot not open file %s", argv[optind]);
+    if (set_binary_mode(fd, O_BINARY) == -1)
+        die("cannot read file %s as binary", argv[optind]);
     int ret = mit_load_object(S, 0, fd);
     close(fd);
     const char *err = NULL;

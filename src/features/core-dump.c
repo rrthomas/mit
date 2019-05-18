@@ -14,6 +14,8 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 
+#include "binary-io.h"
+
 #include "mit/mit.h"
 #include "mit/features.h"
 
@@ -25,6 +27,7 @@ int mit_core_dump(mit_state *S)
     char file[sizeof(file_format) + sizeof(unsigned long) * CHAR_BIT];
     sprintf(file, "mit-core.%lu", (unsigned long)getpid());
     int fd = creat(file, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
+    set_binary_mode (fd, O_BINARY); // Best effort
     if (fd >= 0) {
         (void)mit_save_object(S, 0, S->memory_size, fd);
         close(fd);
