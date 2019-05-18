@@ -99,8 +99,6 @@ print('''\
 
 #define NEXT                                                  \\
     do {                                                      \\
-        if (S->I != 0)                                        \\
-            RAISE(MIT_ERROR_INVALID_OPCODE);                    \\
         int ret = load(S, S->PC, MIT_SIZE_WORD, (mit_word *)&(S->I)); \\
         if (ret != 0)                                         \\
             RAISE(ret);                                       \\
