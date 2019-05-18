@@ -36,7 +36,7 @@ print('''\
 
 _GL_ATTRIBUTE_PURE mit_word mit_internal_extra_instruction(mit_state *S)
 {
-    mit_uword opcode = S->I;
+    mit_uword opcode = S->I >> mit_instruction_bit;
 ''')
 
 print(dispatch(InternalExtraInstruction, 'O_EXTRA_', ''))
@@ -77,12 +77,14 @@ print('''
     return MIT_ERROR_OK;
 
 error:
-    if (error == MIT_ERROR_INVALID_OPCODE &&
-        (initial_I & MIT_INSTRUCTION_MASK) == O_CALL &&
-        (error = mit_internal_extra_instruction(S)) == 0)
-        return MIT_ERROR_OK;
     S->PC = initial_PC;
     S->I = initial_I;
+    if (error == MIT_ERROR_INVALID_OPCODE &&
+        (initial_I & MIT_INSTRUCTION_MASK) == O_CALL &&
+        (error = mit_internal_extra_instruction(S)) == 0) {
+        S->I = 0;
+        return MIT_ERROR_OK;
+    }
     return error;
 }
 
