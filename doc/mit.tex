@@ -266,9 +266,9 @@ call and return (subroutine return is {\tt branch}):
 \subsection{Extra instructions}
 \label{extra}
 
-Since {\tt instruction} must be $0$ when {\tt next} is performed, the rest of an instruction word following {\tt branch} and {\tt call} must normally be all zero bits.
+Since {\tt instruction} must be $0$ when {\tt next} is performed, the rest of an instruction word following {\tt next}, {\tt branch} and {\tt call} must normally be all zero bits.
 
-Non-zero values following {\tt call} are reserved for the Mit specification; non-zero values following {\tt branch} may be used by implementations to implement extra functionality.
+Non-zero values following {\tt next} and {\tt call} are reserved for the Mit specification; non-zero values following {\tt branch} may be used by implementations to implement extra functionality.
 
 When an extra instruction is performed, the original instruction is considered to have completed executing.
 
@@ -404,6 +404,7 @@ Table~\ref{opcodetable} lists the instruction opcodes in numerical order. Table~
 \opcodetbl{5}{dup}			{15}{mul}
 \opcodetbl{6}{swap}			{16}{divmod}
 \opcodetbl{7}{push\_stack\_depth}	{17}{udivmod}
+\smallskip
 \opcodetbl{8}{load}			{18}{not}
 \opcodetbl{9}{store}			{19}{and}
 \opcodetbl{a}{lit}			{1a}{or}

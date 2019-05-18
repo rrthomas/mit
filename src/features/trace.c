@@ -24,7 +24,8 @@ mit_word mit_trace_run(mit_state * restrict state, int trace_fd)
         return -1;
     FILE *fp = fdopen(dup_fd, "wb");
     do {
-        fprintf(fp, "%d\n", (int)(state->I & MIT_INSTRUCTION_MASK));
+        uint8_t opcode = (int)(state->I & MIT_INSTRUCTION_MASK);
+        putc(opcode, fp);
         ret = mit_single_step(state);
     } while (ret == 0);
     fclose(fp);

@@ -207,9 +207,6 @@ def gen_case(instruction, cache_state, exit_depth):
     args_limit = cache_limit(effect.args)
     if args_limit is not None:
         code.append(cache_state.flush(args_limit))
-    # Run any init_code.
-    if instruction.init_code:
-        code.append(textwrap.dedent(instruction.init_code.rstrip()))
     # Load the arguments into C variables.
     code.append(effect.declare_vars())
     count = effect.args.by_name.get('COUNT')

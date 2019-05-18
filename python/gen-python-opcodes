@@ -26,6 +26,15 @@ for register in vm_data.Register:
 print('')
 
 print_enum(vm_data.Instruction, 'Instruction', '')
+
+# The set of opcodes which must be the last in a word.
+print('TERMINAL_OPCODES = frozenset({')
+for name in [instruction.name
+             for instruction in vm_data.Instruction
+             if instruction.terminal]:
+    print('    Instruction.{}, '.format(name))
+print('})')
+
 print_enum(vm_data.InternalExtraInstruction, 'InternalExtraInstruction', 'EXTRA_')
 
 print_enum(extra_instructions.LibcLib, 'LibcLib', 'LIB_C_')

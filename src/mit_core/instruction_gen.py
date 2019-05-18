@@ -86,7 +86,7 @@ def push_stack_type(name, type):
     code = [
         'if (S->stack_size - S->STACK_DEPTH < {}) RAISE(MIT_ERROR_INVALID_STACK_WRITE);'
         .format(type_words(type)),
-        load_stack_type(name, type, 0),
+        store_stack_type(name, type, 0),
         'S->STACK_DEPTH += {};'.format(type_words(type)),
     ]
     return '{}'.format(textwrap.indent('\n'.join(code), '    '))
@@ -381,8 +381,8 @@ def gen_case(instruction):
             StackPicture.of(instruction.results),
         )
     code = []
-    if instruction.init_code:
-        code.append(textwrap.dedent(instruction.init_code.rstrip()))
+    if instruction.terminal:
+        code.append('if (S->I != 0) RAISE(MIT_ERROR_INVALID_OPCODE);')
     if effect is not None:
         # Load the arguments into C variables.
         code.append(effect.declare_vars())

@@ -39,10 +39,6 @@ class ErrorCode(Error):
     def __init__(self, error_code, message):
         super().__init__(error_code, message)
 
-def identifier_to_message(id):
-    'Convert an identifier to an error message.'
-    return id.lower().translate({'_': ' '})
-
 def errcheck(error_enum):
     '''
     Returns a callback suitable for use as `ctypes._FuncPtr.errcheck`.
@@ -52,7 +48,7 @@ def errcheck(error_enum):
         - if an "ok" code exists, an "unknown error" is reported.
         - otherwise the result is returned unchanged.
     '''
-    code_to_message = {error.value: identifier_to_message(error.name)
+    code_to_message = {error.value: error.name.lower().translate(str.maketrans('_', ' '))
                        for error in error_enum}
     require_match = 'ok' in code_to_message.values()
     def callback(result, _func, _args):

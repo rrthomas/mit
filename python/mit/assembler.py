@@ -14,8 +14,12 @@ from .binding import (
     word_bytes, word_bit, word_mask, sign_bit,
     instruction_bit, instruction_mask,
 )
-from .opcodes import Instruction, InternalExtraInstruction, LibInstruction
+from .opcodes import (
+    Instruction, InternalExtraInstruction, LibInstruction,
+    TERMINAL_OPCODES,
+)
 
+NEXT = Instruction.NEXT
 LIT = Instruction.LIT
 LIT_PC_REL = Instruction.LIT_PC_REL
 BRANCH = Instruction.BRANCH
@@ -33,9 +37,6 @@ external_extra_mnemonic = {
     instruction.value: instruction.name
     for instruction in LibInstruction
 }
-
-# The set of opcodes which must be the last in a word.
-TERMINAL_OPCODES = frozenset([0, BRANCH, CALL])
 
 class Disassembler:
     '''
