@@ -20,9 +20,8 @@ class AbstractInstruction(Enum):
        If both are `None`, then the instruction has an arbitrary stack
        effect.
      - code - str - C source code
-     - init_code - str - C source code to run before stack checks; arguments
-       are not yet available. This is used to implement internal extra
-       instructions.
+     - terminal - bool - this instruction is terminal: I must be zero on
+       entry.
 
     C variables are created for the arguments and results; the arguments are
     popped and results pushed.
@@ -30,14 +29,14 @@ class AbstractInstruction(Enum):
     The code should RAISE any error before writing any state, so that if an
     error is raised, the state of the VM is not changed.
     '''
-    def __init__(self, opcode, args, results, code, init_code=None):
+    def __init__(self, opcode, args, results, code, terminal=False):
         self.opcode = opcode
         if args is None or results is None:
             assert args is None and results is None
         self.args = args
         self.results = results
         self.code = code
-        self.init_code = init_code
+        self.terminal = terminal
 
     @property
     def value(self):

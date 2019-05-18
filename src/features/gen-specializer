@@ -150,6 +150,9 @@ for label in labels:
         cached_depth=label.cached_depth,
         guess_name=label.guess.name,
     ))
+    # For a terminal instruction, check `I` is 0.
+    if label.guess.terminal:
+        print('    if (S->I != 0) goto A_FALLBACK;')
     # If correct.
     label_c = label_by_index(label.if_correct)
     print(textwrap.indent(

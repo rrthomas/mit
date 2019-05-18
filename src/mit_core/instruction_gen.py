@@ -381,8 +381,8 @@ def gen_case(instruction):
             StackPicture.of(instruction.results),
         )
     code = []
-    if instruction.init_code:
-        code.append(textwrap.dedent(instruction.init_code.rstrip()))
+    if instruction.terminal:
+        code.append('if (S->I != 0) RAISE(MIT_ERROR_INVALID_OPCODE);')
     if effect is not None:
         # Load the arguments into C variables.
         code.append(effect.declare_vars())

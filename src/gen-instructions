@@ -46,16 +46,15 @@ print('''\
 }
 
 #undef RAISE
-#define RAISE(code)                                           \\
-    do {                                                      \\
-        int error = (code);                                   \\
-        S->PC = initial_PC;                                   \\
-        S->I = initial_I;                                     \\
-        return error;                                         \\
+#define RAISE(code)                                               \\
+    do {                                                          \\
+        error = (code);                                           \\
+        goto error;                                               \\
     } while (0)
 
 mit_word mit_single_step(mit_state * restrict S)
 {
+    mit_word error = MIT_ERROR_OK;
     mit_uword initial_PC = S->PC;
     mit_uword initial_I = S->I;
     mit_byte opcode = S->I & MIT_INSTRUCTION_MASK;
@@ -76,6 +75,15 @@ print(dispatch(Instruction, 'O_', '''\
 print('''
 
     return MIT_ERROR_OK;
+
+error:
+    if (error == MIT_ERROR_INVALID_OPCODE &&
+        (initial_I & MIT_INSTRUCTION_MASK) == O_CALL &&
+        (error = mit_internal_extra_instruction(S)) == 0)
+        return MIT_ERROR_OK;
+    S->PC = initial_PC;
+    S->I = initial_I;
+    return error;
 }
 
 
