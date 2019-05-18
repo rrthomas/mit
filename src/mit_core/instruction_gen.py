@@ -42,7 +42,10 @@ def load_stack_type(name, type, depth):
             'temp |= (mit_uword)(*UNCHECKED_STACK({}));'
             .format(depth + i + 1)
         )
-    code.append(disable_warnings(['-Wint-to-pointer-cast'], '{} = ({})temp;'.format(name, type)))
+    code.append(disable_warnings(
+        ['-Wint-to-pointer-cast'],
+        '{} = ({})temp;'.format(name, type)
+    ))
 
     return '''\
 {{
@@ -56,8 +59,10 @@ def store_stack_type(name, type, depth):
 
     Returns a str.
     '''
-    code = [disable_warnings(['-Wpointer-to-int-cast'],
-                             'mit_max_stack_item_t temp = (mit_max_stack_item_t){};'.format(name))]
+    code = [disable_warnings(
+        ['-Wpointer-to-int-cast'],
+        'mit_max_stack_item_t temp = (mit_max_stack_item_t){};'.format(name),
+    )]
     for i in reversed(range(type_words(type) - 1)):
         code.append(
             '*UNCHECKED_STACK({}) = (mit_uword)(temp & MIT_WORD_MASK);'
@@ -66,7 +71,10 @@ def store_stack_type(name, type, depth):
         code.append('temp >>= MIT_WORD_BIT;')
     code.append(
         '*UNCHECKED_STACK({}) = (mit_uword)({});'
-        .format(depth, 'temp & MIT_WORD_MASK' if type_words(type) > 1 else 'temp')
+        .format(
+            depth,
+            'temp & MIT_WORD_MASK' if type_words(type) > 1 else 'temp',
+        )
     )
     return '''\
 {{
@@ -100,9 +108,13 @@ def disable_warnings(warnings, c_source):
 #pragma GCC diagnostic push
 {pragmas}
 {c_source}
-#pragma GCC diagnostic pop'''.format(c_source=c_source,
-                                     pragmas='\n'.join(['#pragma GCC diagnostic ignored "{}"'.format(w)
-                                                        for w in warnings]))
+#pragma GCC diagnostic pop'''.format(
+        c_source=c_source,
+        pragmas='\n'.join([
+            '#pragma GCC diagnostic ignored "{}"'.format(w)
+            for w in warnings
+        ])
+    )
 
 
 @functools.total_ordering
