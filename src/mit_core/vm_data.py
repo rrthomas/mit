@@ -37,7 +37,7 @@ class ExecutionError(IntEnum):
 class Instruction(AbstractInstruction):
     '''VM instruction instructions.'''
     NEXT = (0x0, [], [], '''\
-        NEXT;'''
+        NEXT;''', True
     )
 
     BRANCH = (0x1, ['addr'], [], '''\
