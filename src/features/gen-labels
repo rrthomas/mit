@@ -168,12 +168,12 @@ def walk(path, distribution):
      - distribution - list of float - For each predictor state, the estimated
        number of times we reached that state via `path`.
     '''
-    # Check for statistical irrelevance (but keep singleton paths).
+    # Check for statistical irrelevance (but keep the empty path).
     estimated_count = sum(distribution)
-    if estimated_count < 300000.: return
+    if len(path) > 0 and estimated_count < 300000.: return
     # Check for repetition.
     if path in language: return
-    # Okay, we'll keep it.
+    # Okay, it's common enough, we'll keep it.
     language[path] = estimated_count
     # For all (state, action) pairs, propagate count to the successor state.
     successors = {
@@ -198,7 +198,7 @@ walk(Path(()), [float(x) for x in state_counts])
 # Sanity checks.
 
 for path in language:
-    assert path[1:].remove_repeating_part() in language
+    assert path[1:].remove_repeating_part() in language or not Path(()).is_useful_guess(path[1])
     assert path[:-1] in language
 
 # For each path, sort the possible next instructions by decreasing probability.
@@ -210,7 +210,6 @@ successors = {
     path: {
         instruction: (path + (instruction,)).remove_repeating_part()
         for instruction in Instruction
-specializer/gen-labels
     }
     for path in language
 }
@@ -273,8 +272,11 @@ while len(transitions) < len(states):
             break
     else:
         # There is no good guess.
-        if len(path) > 1:
-            new_path = path[1:].remove_repeating_part()
+        new_path = path[1:]
+        while new_path not in language:
+            # Occurs if not Path(()).is_useful_guess(new_path[0])
+            new_path = new_path[1:]
+        if len(new_path) > 0:
             transitions.append(enqueue(new_path, rejects))
         else:
             # There is no useful history. Use the fallback executor.
