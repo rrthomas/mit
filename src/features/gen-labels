@@ -171,10 +171,12 @@ def walk(path, distribution):
     # Check for statistical irrelevance (but keep the empty path).
     estimated_count = sum(distribution)
     if len(path) > 0 and estimated_count < 300000.: return
-    # Check for repetition.
-    if path in language: return
     # Okay, it's common enough, we'll keep it.
     language[path] = estimated_count
+    # Check for repetition.
+    if path.remove_repeating_part() != path:
+        # This path won't become a state, because we'll loop instead.
+        return
     # For all (state, action) pairs, propagate count to the successor state.
     successors = {
         instruction: [0.] * len(predictor)
@@ -190,7 +192,7 @@ def walk(path, distribution):
                         successors[instruction][new_state] += additional_count
     # Recurse down the tree.
     for instruction, new_distribution in successors.items():
-        new_path = (path + (instruction,)).remove_repeating_part()
+        new_path = (path + (instruction,))
         walk(new_path, new_distribution)
 
 walk(Path(()), [float(x) for x in state_counts])
@@ -198,31 +200,22 @@ walk(Path(()), [float(x) for x in state_counts])
 # Sanity checks.
 
 for path in language:
-    assert path[1:].remove_repeating_part() in language or not Path(()).is_useful_guess(path[1])
+    assert path[1:] in language or not Path(()).is_useful_guess(path[1])
     assert path[:-1] in language
 
 # For each path, sort the possible next instructions by decreasing probability.
 
 print("Choosing guesses")
 
-# Path -> Instruction -> Path
-successors = {
-    path: {
-        instruction: (path + (instruction,)).remove_repeating_part()
-        for instruction in Instruction
-    }
-    for path in language
-}
-
 # Path -> [Instruction]
 path_guesses = {
     path: sorted(
         [
             instruction
-            for instruction, successor in successors[path].items()
-            if successor in language
+            for instruction in Instruction
+            if (path + (instruction,)) in language
         ],
-        key=lambda instruction: language[successors[path][instruction]],
+        key=lambda instruction: language[path + (instruction,)],
         reverse=True,
     )
     for path in language
@@ -264,9 +257,10 @@ while len(transitions) < len(states):
     for guess in path_guesses[path]:
         if guess not in rejects:
             # We have a guess.
+            successor = (path + (guess,)).remove_repeating_part()
             transitions.append((
                 guess,
-                enqueue(successors[path][guess], frozenset()),
+                enqueue(successor, frozenset()),
                 enqueue(path, rejects.union({guess})),
             ))
             break
