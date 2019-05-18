@@ -79,16 +79,19 @@ if (((S->stack_size - S->STACK_DEPTH) < (mit_uword)({depth_change}))) {{
 
          - item - StackItem.
         '''
+        assert item.size == 1
         if item.depth < self.cached_depth:
             # The item is cached.
-            assert item.size == 1
             return '{var} = {cache_var};'.format(
                 var=item.name,
                 cache_var=self.var(item.depth),
             )
         else:
             # Get it from memory.
-            return item.load()
+            return '{var} = *UNCHECKED_STACK({depth});'.format(
+                var=item.name,
+                depth=item.depth,
+            )
 
     def store(self, item):
         '''
@@ -96,16 +99,19 @@ if (((S->stack_size - S->STACK_DEPTH) < (mit_uword)({depth_change}))) {{
 
          - item - StackItem.
         '''
+        assert item.size == 1
         if item.depth < self.cached_depth:
             # The item is cached.
-            assert item.size == 1
             return '{cache_var} = {var};'.format(
                 var=item.name,
                 cache_var=self.var(item.depth),
             )
         else:
             # Put it in memory.
-            return item.store()
+            return '*UNCHECKED_STACK({depth}) = {var};'.format(
+                var=item.name,
+                depth=item.depth,
+            )
 
     def load_args(self, args):
         '''
