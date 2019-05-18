@@ -48,7 +48,10 @@ TESTS_ENVIRONMENT = \
 DISTCLEANFILES = $(top_builddir)/copied-python-module-to-build
 
 distclean-local:
-	rm -rf $(top_builddir)/python/mit/*.py $(top_builddir)/python/mit/__pycache__
+	if test "$(top_builddir)" != "$(top_srcdir)"; then \
+	    rm -rf $(top_builddir)/python/mit/*.py; \
+	fi
+	rm -rf $(top_builddir)/python/mit/__pycache__
 
 EXTRA_DIST = \
 	$(TESTS) \

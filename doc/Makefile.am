@@ -26,7 +26,7 @@ pdf-local: $(LATEX_PDFS)
 MAINTAINERCLEANFILES = $(LATEX_PDFS)
 
 clean-local:
-	$(LATEXMK) -r $(srcdir)/latexmkrc -C -f $(LATEX_SRCS) \
+	$(LATEXMK) -r $(srcdir)/latexmkrc -c -f $(LATEX_SRCS) \
 		$(builddir)/mit.tex
 
 EXTRA_DIST = $(LATEX_SRCS) $(LATEX_PDFS) mit.tex latexmkrc
