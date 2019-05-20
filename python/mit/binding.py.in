@@ -202,6 +202,7 @@ libmitfeatures.mit_auto_extend_init.restype = c_void_p
 libmitfeatures.mit_auto_extend_handler.argtypes = [c_void_p, c_int]
 
 libmitfeatures.mit_core_dump.argtypes = [c_void_p]
+libmitfeatures.mit_core_dump.restype = c_char_p
 
 libmitfeatures.mit_specializer_run.argtypes = [c_void_p]
 libmitfeatures.mit_specializer_run.restype = c_word
