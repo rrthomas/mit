@@ -87,7 +87,7 @@ class Disassembler:
             try:
                 name = mnemonic[opcode]
             except KeyError:
-                name = 'undefined!'
+                name = "undefined opcode {:#x}".format(opcode)
             if opcode == LIT or opcode == LIT_PC_REL:
                 initial_pc = self.pc
                 value = self._fetch()
@@ -101,19 +101,20 @@ class Disassembler:
             if opcode in TERMINAL_OPCODES:
                 # Call `self._fetch()` later, not now.
                 if self.i != 0:
+                    invalid_comment = 'invalid extra instruction'
                     if opcode == CALL:
                         comment = ' ({})'.format(
-                            internal_extra_mnemonic.get(self.i, 'invalid!')
+                            internal_extra_mnemonic.get(self.i, invalid_comment)
                         )
                     elif opcode == BRANCH:
                         comment = ' ({})'.format(
-                            external_extra_mnemonic.get(self.i, 'invalid!')
+                            external_extra_mnemonic.get(self.i, invalid_comment)
                         )
+                    else:
+                        comment = ' ({})'.format(invalid_comment)
                 self.i = 0
         except IndexError:
             name = "invalid address!"
-        except KeyError:
-            name = "undefined opcode {:#x}" % opcode
         return '{}{}'.format(name, comment)
 
     def __next__(self):
