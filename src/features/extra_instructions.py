@@ -137,7 +137,7 @@ class LibcLib(AbstractInstruction):
         }
     ''')
 
-    # FIXME: Expose stat(2). This requires struct mapping!
+    # TODO: Expose stat(2). This requires struct mapping!
     FILE_SIZE = (0x18, ['fd:int'], ['size:off_t', 'ret:int'], '''\
         {
             struct stat st;

@@ -1,5 +1,5 @@
 # Test extra instructions (libc and mit functions).
-# FIXME: test file routines.
+# TODO: test file routines.
 #
 # (c) Mit authors 1994-2019
 #
