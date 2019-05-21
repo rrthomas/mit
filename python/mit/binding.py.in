@@ -19,8 +19,8 @@ library_file = find_library("mit@PACKAGE_SUFFIX@")
 features_library_file = find_library("mitfeatures@PACKAGE_SUFFIX@")
 if not library_file:
     # For Windows
-    # FIXME: Do this portably
-    # FIXME: Substitute version when library is versioned
+    # TODO: Do this portably
+    # TODO: Substitute version when library is versioned
     library_file = find_library("libmit@PACKAGE_SUFFIX@-0")
     features_library_file = find_library("libmitfeatures@PACKAGE_SUFFIX@-0")
 assert(library_file)
@@ -202,6 +202,7 @@ libmitfeatures.mit_auto_extend_init.restype = c_void_p
 libmitfeatures.mit_auto_extend_handler.argtypes = [c_void_p, c_int]
 
 libmitfeatures.mit_core_dump.argtypes = [c_void_p]
+libmitfeatures.mit_core_dump.restype = c_char_p
 
 libmitfeatures.mit_specializer_run.argtypes = [c_void_p]
 libmitfeatures.mit_specializer_run.restype = c_word

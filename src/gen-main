@@ -125,14 +125,16 @@ class Feature:
      - top_level_code - str - additional top-level code for the option
      - init_code - str - declarations inside main, and initialisation
      - exception_handler - str - cases added to the exception handler
+     - exit_code - str - code run immediately before exit
     '''
     features = []
     def __init__(self, top_level_code=None, init_code=None,
-                 exception_handler=None):
+                 exception_handler=None, exit_code=None):
         self.features.append(self)
         self.top_level_code = top_level_code
         self.init_code = init_code
         self.exception_handler = exception_handler
+        self.exit_code = exit_code
 
 Feature(# Extra instructions
     exception_handler='''\
@@ -171,21 +173,21 @@ static void register_to_str(mit_word reg, char s[REGISTER_STRLEN])
 }
 ''',
     init_code='bool core_dump = false;',
-    exception_handler='''\
-default:
-    if (core_dump) {
-        char pc_str[REGISTER_STRLEN];
-        char bad_str[REGISTER_STRLEN];
-        register_to_str(S->PC, &pc_str[0]);
-        register_to_str(S->BAD, &bad_str[0]);
-        // Cast error to size_t for printing because we might not be
-        // able to print mit_uword.
-        warn("error %zu raised at PC=0x%.*s; BAD=0x%.*s", (size_t)error,
-            REGISTER_STRLEN, pc_str, REGISTER_STRLEN, bad_str);
+    exit_code='''\
+if (error != MIT_ERROR_HALT && core_dump) {
+    char pc_str[REGISTER_STRLEN];
+    char bad_str[REGISTER_STRLEN];
+    register_to_str(S->PC, &pc_str[0]);
+    register_to_str(S->BAD, &bad_str[0]);
+    // Cast error to size_t for printing because we might not be
+    // able to print mit_uword.
+    warn("error %zu raised at PC=0x%.*s; BAD=0x%.*s", (size_t)error,
+        REGISTER_STRLEN, pc_str, REGISTER_STRLEN, bad_str);
 
-        mit_core_dump(S);
-    }
-    break;''')
+    const char *filename = mit_core_dump(S);
+    if (filename != NULL)
+        warn("core dumped to %s", filename);
+}''')
 
 
 # Generate output
@@ -398,7 +400,9 @@ print('''\
     // Run
     for (;;) {
         mit_word error = run_fn(S);
-        switch (error) {''')
+        switch (error) {
+        default:
+            break;''')
 
 for feature in Feature.features:
     if feature.exception_handler:
@@ -406,6 +410,13 @@ for feature in Feature.features:
 
 print('''\
         }
+''')
+
+for feature in Feature.features:
+    if feature.exit_code:
+        print(textwrap.indent(feature.exit_code, '        '))
+
+print('''
         return error == MIT_ERROR_HALT ? 0 : error;
     }
 }''')
