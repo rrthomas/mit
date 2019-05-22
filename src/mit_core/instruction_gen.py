@@ -446,9 +446,9 @@ def dispatch(instructions, prefix, undefined_case):
             'break;',
         ))
     code.append('default:')
-    code.append(Code(
-        undefined_case,
-        'break;',
-    ))
+    default_code = Code()
+    default_code.extend(undefined_case)
+    default_code.append('break;')
+    code.append(default_code)
     code.append('}')
     return code
