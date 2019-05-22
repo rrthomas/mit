@@ -24,6 +24,27 @@ class Code:
 
     INDENT = '    '
 
+    def __repr__(self):
+        '''
+        Returns a valid Python expression.
+        '''
+        return 'Code(\n{}\n)'.format(textwrap.indent(
+            ',\n'.join(repr(x) for x in self.buffer),
+            self.INDENT,
+        ))
+
+    def __str__(self):
+        '''
+        Returns this Code as a str, with each line prefixed by `INDENT`.
+        '''
+        return textwrap.indent(self.unindented_str(), self.INDENT)
+
+    def unindented_str(self):
+        '''
+        Returns this Code as a str, without indentation at the top level.
+        '''
+        return '\n'.join(str(x) for x in self.buffer)
+
     def append(self, str_or_code):
         assert isinstance(str_or_code, (Code, str))
         if isinstance(str_or_code, str):
@@ -36,15 +57,3 @@ class Code:
 
     def format(self, *args, **kwargs):
         return Code(*(x.format(*args, **kwargs) for x in self.buffer))
-
-    def __repr__(self):
-        return 'Code(\n{}\n)'.format(textwrap.indent(
-            ',\n'.join(repr(x) for x in self.buffer),
-            self.INDENT,
-        ))
-
-    def __str__(self):
-        return textwrap.indent(
-            '\n'.join(str(x) for x in self.buffer),
-            self.INDENT,
-        )

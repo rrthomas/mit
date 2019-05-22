@@ -80,4 +80,4 @@ code.append(body_code)
 
 code.append('}')
 
-print(code)
+print(code.unindented_str())

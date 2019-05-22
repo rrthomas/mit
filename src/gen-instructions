@@ -105,4 +105,4 @@ code.append('''
     }'''
 )
 
-print(code)
+print(code.unindented_str())
