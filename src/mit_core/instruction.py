@@ -11,6 +11,9 @@ RISK.
 
 from enum import Enum
 
+from mit_core.code_buffer import Code
+
+
 class AbstractInstruction(Enum):
     '''
     VM instruction instruction descriptor.
@@ -19,7 +22,7 @@ class AbstractInstruction(Enum):
      - args, results - lists of str, acceptable to StackPicture.of().
        If both are `None`, then the instruction has an arbitrary stack
        effect.
-     - code - str - C source code
+     - code - Code.
      - terminal - bool - this instruction is terminal: I must be zero on
        entry.
 
@@ -33,6 +36,7 @@ class AbstractInstruction(Enum):
         self.opcode = opcode
         if args is None or results is None:
             assert args is None and results is None
+        assert isinstance(code, Code)
         self.args = args
         self.results = results
         self.code = code

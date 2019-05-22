@@ -245,7 +245,7 @@ def gen_case(instruction, cache_state):
         assert cache_state.cached_depth == 0
     # Inline `instruction.code`.
     # Note: `S->STACK_DEPTH` and `cached_depth` must be correct for RAISE().
-    code.append(instruction.code)
+    code.extend(instruction.code)
     # Adjust cache_state.
     results_limit = cache_limit(effect.results)
     if results_limit is None:
