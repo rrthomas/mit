@@ -13,6 +13,7 @@ import pathlib
 import glob
 import textwrap
 
+from mit_core.vm_data import ExecutionError
 from mit_core.errors import LoadError
 
 
@@ -188,6 +189,20 @@ if (error != MIT_ERROR_HALT && core_dump) {
     if (filename != NULL)
         warn("core dumped to %s", filename);
 }''')
+
+Feature(# Error message on error exit
+    top_level_code='''\
+const char *error_msg[] = {{
+{}
+}};'''.format('\n'.join(
+        '    "{}",'.format(
+            error.name.lower().translate(str.maketrans('_', ' '))
+        )
+        for error in ExecutionError
+    )),
+    exit_code='''\
+if (error != MIT_ERROR_HALT)
+    warn("error: %s", error_msg[error]);''')
 
 
 # Generate output
