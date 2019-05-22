@@ -12,8 +12,9 @@ The main entry point is dispatch().
 '''
 
 import functools
-import re
-import textwrap
+
+from .code_buffer import Code
+
 
 type_wordses = {'mit_word': 1} # Enough for the core
 
@@ -30,24 +31,24 @@ def load_stack_type(name, type, depth):
     Generate C code to load the variable `name` of type `type` occupying
     stack slots starting at position `depth`.
 
-    Returns a str.
+    Returns a Code.
     '''
-    code = [
+    code = Code()
+    code.append(
         'mit_max_stack_item_t temp = (mit_uword)(*UNCHECKED_STACK({}));'
         .format(depth)
-    ]
+    )
     for i in range(type_words(type) - 1):
         code.append('temp <<= MIT_WORD_BIT;')
         code.append(
             'temp |= (mit_uword)(*UNCHECKED_STACK({}));'
             .format(depth + i + 1)
         )
-    code.append(disable_warnings(['-Wint-to-pointer-cast'], '{} = ({})temp;'.format(name, type)))
-
-    return '''\
-{{
-{}
-}}'''.format(textwrap.indent('\n'.join(code), '    '))
+    code.extend(disable_warnings(
+        ['-Wint-to-pointer-cast'],
+        Code('{} = ({})temp;').format(name, type)
+    ))
+    return Code('{', code, '}')
 
 def store_stack_type(name, type, depth):
     '''
@@ -56,8 +57,12 @@ def store_stack_type(name, type, depth):
 
     Returns a str.
     '''
-    code = [disable_warnings(['-Wpointer-to-int-cast'],
-                             'mit_max_stack_item_t temp = (mit_max_stack_item_t){};'.format(name))]
+    code = Code()
+    code.extend(disable_warnings(
+        ['-Wpointer-to-int-cast'],
+        Code('mit_max_stack_item_t temp = (mit_max_stack_item_t){};')
+            .format(name),
+    ))
     for i in reversed(range(type_words(type) - 1)):
         code.append(
             '*UNCHECKED_STACK({}) = (mit_uword)(temp & MIT_WORD_MASK);'
@@ -66,43 +71,52 @@ def store_stack_type(name, type, depth):
         code.append('temp >>= MIT_WORD_BIT;')
     code.append(
         '*UNCHECKED_STACK({}) = (mit_uword)({});'
-        .format(depth, 'temp & MIT_WORD_MASK' if type_words(type) > 1 else 'temp')
+        .format(
+            depth,
+            'temp & MIT_WORD_MASK' if type_words(type) > 1 else 'temp',
+        )
     )
-    return '''\
-{{
-{}
-}}'''.format(textwrap.indent('\n'.join(code), '    '))
+    return Code('{', code, '}')
 
 def pop_stack_type(name, type):
-    code = [
+    code = Code()
+    code.append(
         'if (S->STACK_DEPTH < {}) RAISE(MIT_ERROR_STACK_OVERFLOW);'
-        .format(type_words(type)),
-        load_stack_type(name, type, 0),
+        .format(type_words(type))
+    )
+    code.extend(load_stack_type(name, type, 0))
+    code.append(
         'S->STACK_DEPTH -= {};'.format(type_words(type)),
-    ]
-    return '{}'.format(textwrap.indent('\n'.join(code), '    '))
+    )
+    return code
 
 def push_stack_type(name, type):
-    code = [
+    code = Code()
+    code.append(
         'if (S->stack_size - S->STACK_DEPTH < {}) RAISE(MIT_ERROR_INVALID_STACK_WRITE);'
-        .format(type_words(type)),
-        store_stack_type(name, type, 0),
+        .format(type_words(type))
+    )
+    code.extend(store_stack_type(name, type, 0))
+    code.append(
         'S->STACK_DEPTH += {};'.format(type_words(type)),
-    ]
-    return '{}'.format(textwrap.indent('\n'.join(code), '    '))
+    )
+    return code
 
-def disable_warnings(warnings, c_source):
+def disable_warnings(warnings, code):
     '''
-    Returns `c_source` wrapped in "#pragmas" to suppress the given list
+    Returns `code` wrapped in "#pragmas" to suppress the given list
     `warnings` of warning flags.
+
+     - code - a Code.
     '''
-    return '''\
-#pragma GCC diagnostic push
-{pragmas}
-{c_source}
-#pragma GCC diagnostic pop'''.format(c_source=c_source,
-                                     pragmas='\n'.join(['#pragma GCC diagnostic ignored "{}"'.format(w)
-                                                        for w in warnings]))
+    assert isinstance(code, Code)
+    outer_code = Code()
+    outer_code.append('#pragma GCC diagnostic push')
+    for w in warnings:
+        outer_code.append('#pragma GCC diagnostic ignored "{}"'.format(w))
+    outer_code.extend(code)
+    outer_code.append('#pragma GCC diagnostic pop')
+    return outer_code
 
 
 @functools.total_ordering
@@ -225,13 +239,13 @@ class StackItem:
 
     def load(self):
         '''
-        Returns C source code to load `self` from the stack to its C variable.
+        Returns a Code to load `self` from the stack to its C variable.
         '''
         return load_stack_type(self.name, self.type, self.depth)
 
     def store(self):
         '''
-        Returns C source code to store `self` to the stack from its C variable.
+        Returns a Code to store `self` to the stack from its C variable.
         '''
         return store_stack_type(self.name, self.type, self.depth)
 
@@ -303,10 +317,10 @@ class StackEffect:
 
     def declare_vars(self):
         '''
-        Returns C variable declarations for arguments and results other than
-        'ITEMS'.
+        Returns a Code to declare C variables for arguments and results other
+        than 'ITEMS'.
         '''
-        return '\n'.join([
+        return Code(*[
             '{} {};'.format(item.type, item.name)
             for item in set(self.args.items + self.results.items)
             if item.name != 'ITEMS'
@@ -314,59 +328,65 @@ class StackEffect:
 
     def load_args(self):
         '''
-        Returns C source code to read the arguments from the stack into C
+        Returns a Code to read the arguments from the stack into C
         variables. `S->STACK_DEPTH` is not modified.
         '''
-        return '\n'.join([
-            item.load()
-            for item in self.args.items
-            if item.name != 'ITEMS' and item.name != 'COUNT'
-        ])
+        code = Code()
+        for item in self.args.items:
+            if item.name != 'ITEMS' and item.name != 'COUNT':
+                code.extend(item.load())
+        return code
 
     def store_results(self):
         '''
-        Returns C source code to write the results from C variables into the
+        Returns a Code to write the results from C variables into the
         stack. `S->STACK_DEPTH` must be modified first.
         '''
-        return '\n'.join([
-            item.store()
-            for item in self.results.items
-            if item.name != 'ITEMS'
-        ])
+        code = Code()
+        for item in self.results.items:
+            if item.name != 'ITEMS':
+                code.extend(item.store())
+        return code
 
 
 def check_underflow(num_pops):
     '''
-    Returns C source code to check that the stack contains enough items to
+    Returns a Code to check that the stack contains enough items to
     pop the specified number of items.
      - num_pops - Size
     '''
-    if num_pops <= 0: return ''
-    return '''\
-if ((S->STACK_DEPTH < (mit_uword)({num_pops}))) {{
-    S->BAD = {num_pops} - 1;
-    RAISE(MIT_ERROR_INVALID_STACK_READ);
-}}'''.format(num_pops=num_pops)
+    if num_pops <= 0: return Code()
+    return Code(
+        'if ((S->STACK_DEPTH < (mit_uword)({num_pops}))) {{',
+        Code (
+            'S->BAD = {num_pops} - 1;',
+            'RAISE(MIT_ERROR_INVALID_STACK_READ);',
+        ),
+        '}}',
+    ).format(num_pops=num_pops)
 
 def check_overflow(num_pops, num_pushes):
     '''
-    Returns C source code to check that the stack contains enough space to
+    Returns a Code to check that the stack contains enough space to
     push `num_pushes` items, given that `num_pops` items will first be
     popped.
      - num_pops - Size.
      - num_pushes - Size.
     '''
     depth_change = num_pushes - num_pops
-    if depth_change <= 0: return ''
-    return '''\
-if (((S->stack_size - S->STACK_DEPTH) < (mit_uword)({depth_change}))) {{
-    S->BAD = ({depth_change}) - (S->stack_size - S->STACK_DEPTH);
-    RAISE(MIT_ERROR_STACK_OVERFLOW);
-}}'''.format(depth_change=depth_change)
+    if depth_change <= 0: return Code()
+    return Code(
+        'if (((S->stack_size - S->STACK_DEPTH) < (mit_uword)({depth_change}))) {{',
+        Code(
+            'S->BAD = ({depth_change}) - (S->stack_size - S->STACK_DEPTH);',
+            'RAISE(MIT_ERROR_STACK_OVERFLOW);',
+        ),
+        '}}',
+    ).format(depth_change=depth_change)
 
 def gen_case(instruction):
     '''
-    Generate the code for an Instruction.
+    Generate a Code for an Instruction.
 
     In the code, S is the mit_state, and errors are reported by calling
     RAISE().
@@ -380,61 +400,55 @@ def gen_case(instruction):
             StackPicture.of(instruction.args),
             StackPicture.of(instruction.results),
         )
-    code = []
+    code = Code()
     if instruction.terminal:
         code.append('if (S->I != 0) RAISE(MIT_ERROR_INVALID_OPCODE);')
     if effect is not None:
         # Load the arguments into C variables.
-        code.append(effect.declare_vars())
+        code.extend(effect.declare_vars())
         count = effect.args.by_name.get('COUNT')
         if count is not None:
             # If we have COUNT, check its stack position is valid, and load it
-            code.extend([
-                check_underflow(count.depth + count.size),
-                count.load(),
-            ])
-        code.extend([
-            check_underflow(effect.args.size),
-            check_overflow(effect.args.size, effect.results.size),
-            effect.load_args(),
-        ])
-    code.append(textwrap.dedent(instruction.code.rstrip()))
+            code.extend(check_underflow(count.depth + count.size))
+            code.extend(count.load())
+        code.extend(check_underflow(effect.args.size))
+        code.extend(check_overflow(effect.args.size, effect.results.size))
+        code.extend(effect.load_args())
+    code.append(instruction.code)
     if effect is not None:
         # Store the results from C variables.
-        code.extend([
-            'S->STACK_DEPTH += {};'.format(
-                effect.results.size - effect.args.size),
-            effect.store_results(),
-        ])
-    # Remove newlines resulting from empty strings in the above.
-    return re.sub('\n+', '\n', '\n'.join(code), flags=re.MULTILINE).strip('\n')
+        code.append('S->STACK_DEPTH += {};'.format(
+            effect.results.size - effect.args.size
+        ))
+        code.extend(effect.store_results())
+    return code
 
 def dispatch(instructions, prefix, undefined_case):
     '''
     Generate dispatch code for some Instructions.
 
-    instructions - Enum of Instructions.
+     - instructions - Enum of Instructions.
+     - prefix - opcode name prefix.
+     - undefined_case - a Code defining the fallback behaviour.
     '''
-    code = ['    switch (opcode) {']
+    assert isinstance(undefined_case, Code)
+    code = Code()
+    code.append('switch (opcode) {')
     for instruction in instructions:
-        code.append('''\
-    case {prefix}{instruction}:
-        {{
-{code}
-        }}
-        break;'''.format(
+        code.append('case {prefix}{instruction}:'.format(
             instruction=instruction.name,
             prefix=prefix,
-            code=textwrap.indent(
-                gen_case(instruction),
-                '            ',
-            ),
         ))
-    code.append('''
-    default:
-{}
-        break;
-    }}'''.format(undefined_case)
-    )
-    # Remove newlines resulting from empty strings in the above.
-    return re.sub('\n+', '\n', '\n'.join(code), flags=re.MULTILINE).strip('\n')
+        code.extend(Code(
+            '{',
+            gen_case(instruction),
+            '}',
+            'break;',
+        ))
+    code.append('default:')
+    default_code = Code()
+    default_code.extend(undefined_case)
+    default_code.append('break;')
+    code.append(default_code)
+    code.append('}')
+    return code

@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-import sys, pickle
+import sys, pickle, re
 
 from mit_core.vm_data import Instruction
 
@@ -43,6 +43,8 @@ class Path:
     Represents a sequence of instructions that has just been executed.
 
      - instructions - tuple of Instructions.
+     - tos_constant - int - the constant value on the top of the stack, or
+       `None` if unknown.
      - cached_depth - int - The number of topmost stack items that are cached
        at the end of this Path.
      - checked_depth - int - the number of empty stack slots that are known
@@ -50,6 +52,14 @@ class Path:
     '''
     def __init__(self, instructions):
         assert type(instructions) is tuple
+        self.instructions = instructions
+        # Compute `tos_constant`.
+        self.tos_constant = None
+        if len(instructions) > 0:
+            m = re.match('LIT_(\d+)', instructions[-1].name)
+            if m:
+                # The last instruction exists and pushes a constant.
+                self.tos_constant = int(m.group(1))
         # Compute `cached_depth`, `checked_depth`.
         cached_depth = 0
         checked_depth = 0
@@ -72,9 +82,10 @@ class Path:
                 if cached_depth < 0:
                     cached_depth = 0
                 # Simulate pushing results.
-                for item in reversed(instruction.results):
+                for item in instruction.results:
                     if item == 'ITEMS':
-                        # Suppose `COUNT` is zero to match args.
+                        # Conservatively suppose `COUNT` is large.
+                        checked_depth = 0
                         # We cannot cache items below 'ITEMS'.
                         cached_depth = 0
                     else:
@@ -82,8 +93,6 @@ class Path:
                         checked_depth -= 1
                 if checked_depth < 0:
                     checked_depth = 0
-        # Initialise `self`.
-        self.instructions = instructions
         self.cached_depth = cached_depth
         self.checked_depth = checked_depth
 
@@ -112,6 +121,24 @@ class Path:
     def __add__(self, sequence):
         return Path(self.instructions + sequence)
 
+    def is_useful_guess(self, instruction):
+        '''
+        Returns `True` if the implementation of `instruction` is significantly
+        more efficient after executing this Path than from a standing start.
+        '''
+        if instruction.args is None or instruction.results is None:
+            # Arbitrary stack effect. No optimizations are possible.
+            return False
+        elif 'ITEMS' in instruction.args or 'ITEMS' in instruction.results:
+            # Variadic instruction. We can optimize only if we know `COUNT`.
+            return (
+                instruction.args[-1] == 'COUNT' and
+                self.tos_constant is not None
+            )
+        else:
+            # Ordinary instruction.
+            return True
+
     def remove_repeating_part(self):
         '''
         If this Path ends with two repeats of some "loop body", and if we know
@@ -138,13 +165,15 @@ def walk(path, distribution):
      - distribution - list of float - For each predictor state, the estimated
        number of times we reached that state via `path`.
     '''
-    # Check for statistical irrelevance (but keep singleton paths).
+    # Check for statistical irrelevance (but keep the empty path).
     estimated_count = sum(distribution)
-    if len(path) > 1 and estimated_count < 300000.: return
-    # Check for repetition.
-    if path in language: return
-    # Okay, we'll keep it.
+    if len(path) > 0 and estimated_count < 100000.: return
+    # Okay, it's common enough, we'll keep it.
     language[path] = estimated_count
+    # Check for repetition.
+    if path.remove_repeating_part() != path:
+        # This path won't become a state, because we'll loop instead.
+        return
     # For all (state, action) pairs, propagate count to the successor state.
     successors = {
         instruction: [0.] * len(predictor)
@@ -154,48 +183,36 @@ def walk(path, distribution):
         if estimated_count > 1.:
             probabilities = state_probabilities[state]
             for instruction, (new_state, probability) in probabilities.items():
-                additional_count = estimated_count * probability
-                if additional_count >= 1.:
-                    successors[instruction][new_state] += additional_count
+                if path.is_useful_guess(instruction):
+                    additional_count = estimated_count * probability
+                    if additional_count >= 1.:
+                        successors[instruction][new_state] += additional_count
     # Recurse down the tree.
     for instruction, new_distribution in successors.items():
-        new_path = (path + (instruction,)).remove_repeating_part()
+        new_path = (path + (instruction,))
         walk(new_path, new_distribution)
 
 walk(Path(()), [float(x) for x in state_counts])
 
 # Sanity checks.
 
-for instruction in Instruction:
-    assert Path((instruction,)) in language
-
 for path in language:
-    assert path[1:].remove_repeating_part() in language
+    assert path[1:] in language or not Path(()).is_useful_guess(path[1])
     assert path[:-1] in language
 
 # For each path, sort the possible next instructions by decreasing probability.
 
 print("Choosing guesses")
 
-# Path -> Instruction -> Path
-successors = {
-    path: {
-        instruction: (path + (instruction,)).remove_repeating_part()
-        for instruction in Instruction
-        if instruction.args is not None # Don't bother to guess.
-    }
-    for path in language
-}
-
 # Path -> [Instruction]
 path_guesses = {
     path: sorted(
         [
             instruction
-            for instruction, successor in successors[path].items()
-            if successor in language
+            for instruction in Instruction
+            if (path + (instruction,)) in language
         ],
-        key=lambda instruction: language[successors[path][instruction]],
+        key=lambda instruction: language[path + (instruction,)],
         reverse=True,
     )
     for path in language
@@ -237,16 +254,20 @@ while len(transitions) < len(states):
     for guess in path_guesses[path]:
         if guess not in rejects:
             # We have a guess.
+            successor = (path + (guess,)).remove_repeating_part()
             transitions.append((
                 guess,
-                enqueue(successors[path][guess], frozenset()),
+                enqueue(successor, frozenset()),
                 enqueue(path, rejects.union({guess})),
             ))
             break
     else:
         # There is no good guess.
-        if len(path) > 1:
-            new_path = path[1:].remove_repeating_part()
+        new_path = path[1:]
+        while new_path not in language:
+            # Occurs if not Path(()).is_useful_guess(new_path[0])
+            new_path = new_path[1:]
+        if len(new_path) > 0:
             transitions.append(enqueue(new_path, rejects))
         else:
             # There is no useful history. Use the fallback executor.
@@ -273,6 +294,7 @@ def short_circuit(state):
 # List of (guess, label or None, label or None).
 labels = [
     (
+        path.tos_constant,
         path.cached_depth,
         path.checked_depth,
         guess.name,
@@ -290,6 +312,7 @@ assert len(label_map) == len(labels)
 
 with open(labels_filename, 'wb') as f:
     # [(
+    #     tos_constant (int?),
     #     cached_depth (int),
     #     checked_depth (int),
     #     instruction_name (str),
