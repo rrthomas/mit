@@ -81,8 +81,11 @@ class Label:
                 tos=label.cache_state().var(0),
                 tos_constant=label.tos_constant,
             ))
-        code.append('if ({guess_opcode} == O_{guess_name}) {{'.format(
-            guess_opcode='opcode' if not label.guess.terminal else 'initial_I',
+        opcode = 'initial_I'
+        if not label.guess.terminal:
+            opcode = '({} & MIT_INSTRUCTION_MASK)'.format(opcode)
+        code.append('if ({opcode} == O_{guess_name}) {{'.format(
+            opcode=opcode,
             guess_name=label.guess.name,
         ))
         # If correct.
@@ -165,8 +168,7 @@ body_code.append('do {')
 body_code.append(Code('''\
     mit_uword initial_PC, initial_I;
     // The number of stack items cached in C variables.
-    mit_uword cached_depth = 0;
-    mit_byte opcode;
+    int cached_depth = 0;
 
     FETCH;
     goto A_0;
@@ -179,18 +181,20 @@ body_code.append(Code('''\
     //
     // The calling convention at each A_XXX label is as follows:
     //
-    //  - On entry, `res` is `MIT_ERROR_OK`, `opcode` is the next opcode,
-    //    and `I` has been right-shifted.
+    //  - On entry, `res` is `MIT_ERROR_OK` and `I` has been right-shifted.
+    //    `initial_PC` and `initial_I` record the values of `PC` and `I` to
+    //    restore on error. `cached_depth` is a compile-time constant
+    //    indicating how many top stack items are in C variables.
     //  - When an error occurs, call `RAISE(code)`.
     //    It sets `res` to the return code; then it resets PC and
     //    I to their initial values, and does "goto RET".
     //  - "goto RET" (but do not "return") at any time after completely
-    //    executing at least one instruction, or never.
+    //    executing at least one instruction, or never. `cached_depth` and
+    //    `S->STACK_DEPTH` must be correct at that time.
     //  - On exit, whether by `RAISE` or otherwise, all Mit
     //    registers must be set according to the Mit spec. In particular,
-    //    there must be no side effects before a RAISE, except for the
-    //    effects on STACK_DEPTH and PC described above.
-    //    In addition, `cached_depth` must be set correctly.
+    //    there must be no side effects before a RAISE, except on `I` and
+    //    `PC`, which will be reset as described above.
 '''))
 body_code.extend(labels_code)
 body_code.append('''\
@@ -233,7 +237,6 @@ code.append('''\
         do {                                                      \\
             initial_PC = S->PC;                                   \\
             initial_I = S->I;                                     \\
-            opcode = S->I & MIT_INSTRUCTION_MASK;                 \\
             S->I >>= MIT_INSTRUCTION_BIT;                         \\
         } while (0)
 
