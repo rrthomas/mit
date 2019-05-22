@@ -127,7 +127,7 @@ class Path:
         more efficient after executing this Path than from a standing start.
         '''
         if instruction.args is None or instruction.results is None:
-            # Arbitrary stack effect. No optmizations are possible.
+            # Arbitrary stack effect. No optimizations are possible.
             return False
         elif 'ITEMS' in instruction.args or 'ITEMS' in instruction.results:
             # Variadic instruction. We can optimize only if we know `COUNT`.
