@@ -1,18 +1,15 @@
 '''
-Generate code for instructions.
+Generate code for the specialized interpreter.
 
-Copyright (c) 2009-2019 Mit authors
+Copyright (c) 2018-2019 Mit authors
 
 The package is distributed under the MIT/X11 License.
 
 THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 RISK.
-
-The main entry point is dispatch().
 '''
 
-import re, textwrap
-
+from mit_core.code_buffer import Code
 from mit_core.instruction_gen import Size, StackItem, StackPicture, StackEffect
 
 
@@ -45,99 +42,105 @@ class CacheState:
 
     def check_underflow(self, num_pops):
         '''
-        Returns C source code to check that the stack contains enough items to
+        Returns a Code to check that the stack contains enough items to
         pop the specified number of items.
          - num_pops - Size
         '''
-        if num_pops <= self.cached_depth: return ''
-        return '''\
-if ((S->STACK_DEPTH < (mit_uword)({num_pops}))) {{
-    S->BAD = {num_pops} - 1;
-    RAISE(MIT_ERROR_INVALID_STACK_READ);
-}}'''.format(num_pops=num_pops)
+        if num_pops <= self.cached_depth: return Code()
+        return Code(
+            'if ((S->STACK_DEPTH < (mit_uword)({num_pops}))) {{',
+            Code(
+                'S->BAD = {num_pops} - 1;',
+                'RAISE(MIT_ERROR_INVALID_STACK_READ);',
+            ),
+            '}}',
+        ).format(num_pops=num_pops)
+
 
     def check_overflow(self, num_pops, num_pushes):
         '''
-        Returns C source code to check that the stack contains enough space to
+        Returns a Code to check that the stack contains enough space to
         push `num_pushes` items, given that `num_pops` items will first be
         popped. Updates `checked_depth`.
          - num_pops - Size.
          - num_pushes - Size.
         '''
         depth_change = num_pushes - num_pops
-        if depth_change <= self.checked_depth: return ''
-        self.checked_depth = depth_change
-        return '''\
-if (((S->stack_size - S->STACK_DEPTH) < (mit_uword)({depth_change}))) {{
-    S->BAD = ({depth_change}) - (S->stack_size - S->STACK_DEPTH);
-    RAISE(MIT_ERROR_STACK_OVERFLOW);
-}}'''.format(depth_change=depth_change)
+        if depth_change <= self.checked_depth: return Code()
+        return Code(
+            'if (((S->stack_size - S->STACK_DEPTH) < (mit_uword)({depth_change}))) {{',
+            Code(
+                'S->BAD = ({depth_change}) - (S->stack_size - S->STACK_DEPTH);',
+                'RAISE(MIT_ERROR_STACK_OVERFLOW);',
+            ),
+            '}}',
+        ).format(depth_change=depth_change)
 
     def load(self, item):
         '''
-        Returns C source code to load `item` into the C variable `item.name`.
+        Returns a Code to load `item` into the C variable `item.name`.
 
          - item - StackItem.
         '''
         assert item.size == 1
-        return '{var} = {loc};'.format(
+        return Code('{var} = {loc};').format(
             var=item.name,
-            loc=self.loc(item.depth),
+            loc=self.lvalue(item.depth),
         )
 
     def store(self, item):
         '''
-        Returns C source code to store `item` from the C variable `item.name`.
+        Returns a Code to store `item` from the C variable `item.name`.
 
          - item - StackItem.
         '''
         assert item.size == 1
-        return '{loc} = {var};'.format(
+        return Code('{loc} = {var};').format(
             var=item.name,
-            loc=self.loc(item.depth),
+            loc=self.lvalue(item.depth),
         )
 
     def load_args(self, args):
         '''
-        Returns C source code to read the arguments from the stack into C
+        Returns a Code to read the arguments from the stack into C
         variables. `S->STACK_DEPTH` is not modified.
 
          - args - StackPicture.
         '''
-        return '\n'.join([
-            self.load(item)
-            for item in args.items
-            if item.name != 'ITEMS' and item.name != 'COUNT'
-        ])
+        code = Code()
+        for item in args.items:
+            if item.name != 'ITEMS' and item.name != 'COUNT':
+                code.extend(self.load(item))
+        return code
 
     def store_results(self, results):
         '''
-        Returns C source code to write the results from C variables into the
+        Returns a Code to write the results from C variables into the
         stack. `S->STACK_DEPTH` must be modified first.
 
          - results - StackPicture.
         '''
-        return '\n'.join([
-            self.store(item)
-            for item in results.items
-            if item.name != 'ITEMS'
-        ])
+        code = Code()
+        for item in results.items:
+            if item.name != 'ITEMS':
+                code.extend(self.store(item))
+        return code
 
     def add(self, depth_change):
         '''
-        Returns C source code to update the variable `cached_depth` to reflect
+        Returns a Code to update the variable `cached_depth` to reflect
         a change in the stack depth, e.g. by pushing or popping some items.
         Also updates `self`.
 
          - depth_change - int (N.B. not Size)
         '''
         assert type(depth_change) is int
-        if depth_change == 0: return ''
+        if depth_change == 0: return Code()
         self.cached_depth += depth_change
         if self.cached_depth < 0: self.cached_depth = 0
         self.checked_depth -= depth_change
         if self.checked_depth < 0: self.checked_depth = 0
-        return 'cached_depth = {};'.format(self.cached_depth)
+        return Code('cached_depth = {};').format(self.cached_depth)
 
     @staticmethod
     def var_for_depth(pos, cached_depth):
@@ -152,7 +155,7 @@ if (((S->stack_size - S->STACK_DEPTH) < (mit_uword)({depth_change}))) {{
         '''
         return self.var_for_depth(pos, self.cached_depth)
 
-    def loc(self, pos):
+    def lvalue(self, pos):
         '''
         Returns a C L-value representing the current location of stack
         position `pos`, whether or not it is cached.
@@ -167,7 +170,7 @@ if (((S->stack_size - S->STACK_DEPTH) < (mit_uword)({depth_change}))) {{
     def flush(self, goal=0):
         '''
         Decrease the number of stack items that are cached in C variables,
-        if necessary. Returns C source code to move values between variables
+        if necessary. Returns a Code to move values between variables
         and to memory. Also updates the C variable `cached_depth`.
 
          - goal - a CacheState to match, or an int to specify a desired
@@ -178,14 +181,13 @@ if (((S->stack_size - S->STACK_DEPTH) < (mit_uword)({depth_change}))) {{
         assert goal.cached_depth <= self.cached_depth, (goal, self)
         assert goal.checked_depth <= self.checked_depth, (goal, self)
         self.checked_depth = goal.checked_depth
-        if goal.cached_depth == self.cached_depth: return ''
-        code = [
-            '{} = {};'.format(goal.loc(pos), self.loc(pos))
-            for pos in reversed(range(self.cached_depth))
-        ]
+        if goal.cached_depth == self.cached_depth: return Code()
+        code = Code()
+        for pos in reversed(range(self.cached_depth)):
+            code.append('{} = {};'.format(goal.lvalue(pos), self.lvalue(pos)))
         self.cached_depth = goal.cached_depth
         code.append('cached_depth = {};'.format(self.cached_depth))
-        return '\n'.join(code)
+        return code
 
 
 def cache_limit(picture):
@@ -202,7 +204,7 @@ def cache_limit(picture):
 
 def gen_case(instruction, cache_state):
     '''
-    Generate the code for an Instruction.
+    Generate a Code for an Instruction.
 
     In the code, S is the mit_state, and errors are reported by calling
     RAISE(). When calling RAISE(), the C variable `cached_depth` will contain
@@ -217,46 +219,41 @@ def gen_case(instruction, cache_state):
         StackPicture.of(instruction.args),
         StackPicture.of(instruction.results),
     )
-    code = []
+    code = Code()
     # Flush cached items, if necessary.
     args_limit = cache_limit(effect.args)
     if args_limit is not None and args_limit < cache_state.cached_depth:
-        code.append(cache_state.flush(args_limit))
+        code.extend(cache_state.flush(args_limit))
     # Load the arguments into C variables.
-    code.append(effect.declare_vars())
+    code.extend(effect.declare_vars())
     count = effect.args.by_name.get('COUNT')
     if count is not None:
         # If we have COUNT, check its stack position is valid, and load it
-        code.extend([
-            cache_state.check_underflow(count.depth + count.size),
-            cache_state.load(count),
-        ])
-    code.extend([
-        cache_state.check_underflow(effect.args.size),
+        code.extend(cache_state.check_underflow(count.depth + count.size))
+        code.extend(cache_state.load(count))
+    code.extend(cache_state.check_underflow(effect.args.size))
+    code.extend(
         cache_state.check_overflow(effect.args.size, effect.results.size),
-        cache_state.load_args(effect.args),
-        'S->STACK_DEPTH -= {};'.format(effect.args.size),
-    ])
+    )
+    code.extend(cache_state.load_args(effect.args))
+    code.append('S->STACK_DEPTH -= {};'.format(effect.args.size))
     # Adjust cache_state.
     if args_limit is None:
-        code.append(cache_state.add(-int(effect.args.size)))
+        code.extend(cache_state.add(-int(effect.args.size)))
     else:
-        code.append(cache_state.add(-args_limit))
+        code.extend(cache_state.add(-args_limit))
         assert cache_state.cached_depth == 0
     # Inline `instruction.code`.
     # Note: `S->STACK_DEPTH` and `cached_depth` must be correct for RAISE().
-    code.append(textwrap.dedent(instruction.code.rstrip()))
+    code.append(instruction.code)
     # Adjust cache_state.
     results_limit = cache_limit(effect.results)
     if results_limit is None:
-        code.append(cache_state.add(int(effect.results.size)))
+        code.extend(cache_state.add(int(effect.results.size)))
     else:
-        code.append(cache_state.flush())
-        code.append(cache_state.add(results_limit))
+        code.extend(cache_state.flush())
+        code.extend(cache_state.add(results_limit))
     # Store the results from C variables.
-    code.extend([
-        'S->STACK_DEPTH += {};'.format(effect.results.size),
-        cache_state.store_results(effect.results),
-    ])
-    # Remove newlines resulting from empty strings in the above.
-    return re.sub('\n+', '\n', '\n'.join(code), flags=re.MULTILINE).strip('\n')
+    code.append('S->STACK_DEPTH += {};'.format(effect.results.size))
+    code.extend(cache_state.store_results(effect.results))
+    return code

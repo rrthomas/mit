@@ -16,7 +16,12 @@ PYTHON_WITH_PATH = export PYTHONPATH=$(abs_top_srcdir)/python:$(abs_top_srcdir)/
 lib_LTLIBRARIES = libmit@PACKAGE_SUFFIX@.la
 C_SRCS = storage.c object.c
 nodist_LIB_SRCS = include/mit/registers.h include/mit/opcodes.h instructions.c
-LIB_CORE_SRCS = mit_core/instruction.py mit_core/vm_data.py mit_core/errors.py mit_core/instruction_gen.py
+LIB_CORE_SRCS = \
+	mit_core/instruction.py \
+	mit_core/vm_data.py \
+	mit_core/errors.py \
+	mit_core/code_buffer.py \
+	mit_core/instruction_gen.py
 nodist_libmit@PACKAGE_SUFFIX@_la_SOURCES = $(C_SRCS) $(nodist_LIB_SRCS)
 libmit@PACKAGE_SUFFIX@_la_LIBADD = $(top_builddir)/lib/libgnu.la
 libmit@PACKAGE_SUFFIX@_la_LDFLAGS = -no-undefined -export-symbols-regex '^mit_.*'
@@ -66,7 +71,7 @@ include/mit/opcodes.h: gen-opcodes mit_core/vm_data.py mit_core/instruction.py
 	$(MKDIR_P) include/mit
 	$(PYTHON_WITH_PATH) $(srcdir)/gen-opcodes > include/mit/opcodes.h || ( rm -f include/mit/opcodes.h; exit 1 )
 
-instructions.c: gen-instructions mit_core/vm_data.py mit_core/instruction.py mit_core/instruction_gen.py
+instructions.c: gen-instructions mit_core/vm_data.py mit_core/instruction.py mit_core/code_buffer.py mit_core/instruction_gen.py
 	$(PYTHON_WITH_PATH) $(srcdir)/gen-instructions > instructions.c || ( rm -f instructions.c; exit 1 )
 
 main.c: gen-main

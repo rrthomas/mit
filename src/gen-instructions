@@ -11,6 +11,7 @@
 from mit_core import vm_data, instruction_gen
 
 from mit_core.vm_data import Instruction, InternalExtraInstruction
+from mit_core.code_buffer import Code
 from mit_core.instruction_gen import dispatch, gen_case
 
 
@@ -39,7 +40,7 @@ _GL_ATTRIBUTE_PURE mit_word mit_internal_extra_instruction(mit_state *S)
     mit_uword opcode = S->I >> mit_instruction_bit;
 ''')
 
-print(dispatch(InternalExtraInstruction, 'O_EXTRA_', ''))
+print(dispatch(InternalExtraInstruction, 'O_EXTRA_', Code('/* FIXME */')))
 
 print('''\
     return MIT_ERROR_OK;
@@ -67,10 +68,10 @@ mit_word mit_single_step(mit_state * restrict S)
     }
 ''')
 
-print(dispatch(Instruction, 'O_', '''\
-        /* Undefined instruction. */
-        RAISE(MIT_ERROR_INVALID_OPCODE);
-'''))
+print(dispatch(Instruction, 'O_', Code(
+    '/* Undefined instruction. */',
+    'RAISE(MIT_ERROR_INVALID_OPCODE);',
+)))
 
 print('''
 

@@ -52,7 +52,8 @@ static mit_word extra_{}(mit_state * restrict S, mit_word opcode)
     print(dispatch(
         lib.library,
         '{}_'.format(lib.name),
-        '            RAISE(MIT_ERROR_EXTRA_INVALID_FUNCTION);'))
+        Code('RAISE(MIT_ERROR_EXTRA_INVALID_FUNCTION);'),
+    ))
     print('''
     return MIT_ERROR_OK;
 }
@@ -67,7 +68,7 @@ mit_word mit_extra_instruction(mit_state * restrict S)
 print(dispatch(
     LibInstruction,
     '',
-    '\n            return MIT_ERROR_EXTRA_INVALID_LIBRARY;',
+    Code('return MIT_ERROR_EXTRA_INVALID_LIBRARY;'),
 ))
 
 print('''

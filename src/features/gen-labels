@@ -167,7 +167,7 @@ def walk(path, distribution):
     '''
     # Check for statistical irrelevance (but keep the empty path).
     estimated_count = sum(distribution)
-    if len(path) > 0 and estimated_count < 300000.: return
+    if len(path) > 0 and estimated_count < 100000.: return
     # Okay, it's common enough, we'll keep it.
     language[path] = estimated_count
     # Check for repetition.
