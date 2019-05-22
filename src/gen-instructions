@@ -43,7 +43,7 @@ code.append('''\
 body_code = Code()
 body_code.append('mit_uword opcode = S->I >> mit_instruction_bit;')
 body_code.extend(dispatch(InternalExtraInstruction, 'O_EXTRA_', Code(
-    '/* FIXME */',
+    'RAISE(MIT_ERROR_INVALID_OPCODE);',
 )))
 body_code.append('return MIT_ERROR_OK;')
 code.append(body_code)
