@@ -126,10 +126,7 @@ class Path:
         Returns `True` if the implementation of `instruction` is significantly
         more efficient after executing this Path than from a standing start.
         '''
-        if instruction.name == 'HALT':
-            # We will execute the interpreter. No optimizations are possible.
-            return True #False
-        elif instruction.args is None or instruction.results is None:
+        if instruction.args is None or instruction.results is None:
             # Arbitrary stack effect. No optmizations are possible.
             return False
         elif 'ITEMS' in instruction.args or 'ITEMS' in instruction.results:
