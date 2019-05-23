@@ -223,7 +223,9 @@ class CacheState:
 
 def gen_case(instruction, cache_state):
     '''
-    Generate a Code for an Instruction.
+    Generate a Code for an Instruction. It is the caller's responsibility to
+    ensure that it's the right instruction to execute, and that the stack
+    won't underflow or overflow.
 
     In the code, S is the mit_state, and errors are reported by calling
     RAISE(). When calling RAISE(), the C variable `cached_depth` will contain
@@ -241,10 +243,6 @@ def gen_case(instruction, cache_state):
     ), instruction
     num_args = len(instruction.args)
     num_results = len(instruction.results)
-    # Check for underflow and overflow.
-    # TODO: Move these checks into the caller.
-    code.extend(cache_state.check_underflow(num_args))
-    code.extend(cache_state.check_overflow(num_args, num_results))
     # Declare C variables for args and results.
     code.extend(Code(*[
         'mit_word {};'.format(name)

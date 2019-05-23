@@ -15,7 +15,7 @@ from mit_core.vm_data import Instruction
 from specializer import SpecializedInstruction, CacheState, gen_case
 
 
-# Load language.
+# Load the labels file, which tells us what control-flow graph to generate.
 if len(sys.argv) != 2:
     print("Usage: gen-specializer LABELS-FILE", file=sys.stderr)
     sys.exit(1)
@@ -78,17 +78,22 @@ class Label:
             instruction = Instruction[self.guess]
         code = Code()
         cache_state = self.cache_state()
+        # Assert the entry conditions.
         code.append('assert(res == MIT_ERROR_OK);')
-        code.append('assert(cached_depth == {cached_depth});'.format(
-            cached_depth=cache_state.cached_depth,
+        code.append('assert(cached_depth == {});'.format(
+            cache_state.cached_depth,
         ))
+        # Generate the guess condition.
         opcode = 'initial_I'
         if not instruction.terminal:
             opcode = '({} & MIT_INSTRUCTION_MASK)'.format(opcode)
-        code.append('if ({opcode} == O_{guess_name}) {{'.format(
-            opcode=opcode,
-            guess_name=self.guess,
-        ))
+        tests = [
+            '{} == O_{}'.format(opcode, self.guess),
+            cache_state.underflow_test(len(instruction.args)),
+            cache_state.overflow_test(
+                len(instruction.args), len(instruction.results)),
+        ]
+        code.append('if ({}) {{'.format(' && '.join(tests)))
         # If correct.
         # We use `cache_state` from above.
         if_code = Code()
@@ -99,6 +104,7 @@ class Label:
         code.append(if_code)
         code.append('}')
         # If wrong.
+        # We use a fresh CacheState.
         cache_state = self.cache_state()
         code.extend(label_by_index(self.if_wrong).goto(cache_state))
         return (code, cached_depth)
