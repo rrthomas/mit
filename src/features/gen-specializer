@@ -158,9 +158,10 @@ labels_code.append(switch_code)
 body_code = Code()
 body_code.append('int res = MIT_ERROR_OK;')
 if max_cached_depth > 0:
+    cache_state = CacheState(max_cached_depth, 0)
     body_code.append('mit_word {};'.format(
         ', '.join(
-            CacheState.var_for_depth(pos, max_cached_depth)
+            cache_state.var(pos)
             for pos in reversed(range(max_cached_depth))
         )
     ))
