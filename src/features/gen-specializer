@@ -89,9 +89,10 @@ class Label:
             opcode = '({} & MIT_INSTRUCTION_MASK)'.format(opcode)
         tests = [
             '{} == O_{}'.format(opcode, self.guess),
-            cache_state.underflow_test(len(instruction.args)),
-            cache_state.overflow_test(
-                len(instruction.args), len(instruction.results)),
+            'likely({})'.format(cache_state.underflow_test(
+                len(instruction.args))),
+            'likely({})'.format(cache_state.overflow_test(
+                len(instruction.args), len(instruction.results))),
         ]
         code.append('if ({}) {{'.format(' && '.join(tests)))
         # If correct.
