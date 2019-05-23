@@ -40,7 +40,7 @@ object.lo step.lo storage.lo main.o: include/mit/opcodes.h
 instructions.lo main.o: main.c include/mit/registers.h
 
 .c.s:
-	$(COMPILE) -c -S $<
+	$(COMPILE) -c -S -o $@ $<
 
 include/mit/mit.h: $(top_builddir)/config.status include/mit/mit.h.in include/mit/registers.h include/mit/opcodes.h
 	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@

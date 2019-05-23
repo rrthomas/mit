@@ -9,6 +9,7 @@
 
 from enum import Enum, IntEnum, unique
 
+from .code_buffer import Code
 from .instruction import AbstractInstruction
 
 
@@ -36,154 +37,154 @@ class ExecutionError(IntEnum):
 @unique
 class Instruction(AbstractInstruction):
     '''VM instruction instructions.'''
-    NEXT = (0x0, [], [], '''\
-        NEXT;''', True
-    )
+    NEXT = (0x0, [], [], Code('''\
+        NEXT;'''
+    ), True)
 
-    BRANCH = (0x1, ['addr'], [], '''\
+    BRANCH = (0x1, ['addr'], [], Code('''\
         S->PC = (mit_uword)addr;
-        NEXT;
-    ''', True)
+        NEXT;'''
+    ), True)
 
-    BRANCHZ = (0x2, ['flag', 'addr'], [], '''\
+    BRANCHZ = (0x2, ['flag', 'addr'], [], Code('''\
         if (flag == 0) {
             S->PC = (mit_uword)addr;
             NEXT;
         }
-    ''')
+    '''))
 
-    CALL = (0x3, ['addr'], ['ret_addr'], '''\
+    CALL = (0x3, ['addr'], ['ret_addr'], Code('''\
         ret_addr = S->PC;
         S->PC = (mit_uword)addr;
-        NEXT;
-    ''', True)
+        NEXT;'''
+    ), True)
 
-    POP = (0x4, ['ITEMS', 'COUNT'], [], '')
+    POP = (0x4, ['ITEMS', 'COUNT'], [], Code())
 
-    DUP = (0x5, ['x', 'ITEMS', 'COUNT'], ['x', 'ITEMS', 'x'], '')
+    DUP = (0x5, ['x', 'ITEMS', 'COUNT'], ['x', 'ITEMS', 'x'], Code())
 
-    SWAP = (0x6, ['x', 'ITEMS', 'y', 'COUNT'], ['y', 'ITEMS', 'x'], '')
+    SWAP = (0x6, ['x', 'ITEMS', 'y', 'COUNT'], ['y', 'ITEMS', 'x'], Code())
 
-    PUSH_STACK_DEPTH = (0x7, [], ['n'], '''\
-        n = S->STACK_DEPTH;
-    ''')
+    PUSH_STACK_DEPTH = (0x7, [], ['n'], Code('''\
+        n = S->STACK_DEPTH;'''
+    ))
 
-    LOAD = (0x8, ['addr', 'size'], ['x'], '''\
+    LOAD = (0x8, ['addr', 'size'], ['x'], Code('''\
         int ret = load(S, addr, size, &x);
         if (ret != 0)
-            RAISE(ret);
-    ''')
+            RAISE(ret);'''
+    ))
 
-    STORE = (0x9, ['x', 'addr', 'size'], [], '''\
+    STORE = (0x9, ['x', 'addr', 'size'], [], Code('''\
         int ret = store(S, addr, size, x);
         if (ret != 0)
-            RAISE(ret);
-    ''')
+            RAISE(ret);'''
+    ))
 
-    LIT = (0xa, [], ['n'], '''\
+    LIT = (0xa, [], ['n'], Code('''\
         int ret = load(S, S->PC, MIT_SIZE_WORD, &n);
         if (ret != 0)
             RAISE(ret);
-        S->PC += MIT_WORD_BYTES;
-    ''')
+        S->PC += MIT_WORD_BYTES;'''
+    ))
 
-    LIT_PC_REL = (0xb, [], ['n'], '''\
+    LIT_PC_REL = (0xb, [], ['n'], Code('''\
         int ret = load(S, S->PC, MIT_SIZE_WORD, &n);
         if (ret != 0)
             RAISE(ret);
         n += S->PC;
-        S->PC += MIT_WORD_BYTES;
-    ''')
+        S->PC += MIT_WORD_BYTES;'''
+    ))
 
-    LIT_0 = (0xc, [], ['zero'], '''\
-        zero = 0;
-    ''')
+    LIT_0 = (0xc, [], ['zero'], Code('''\
+        zero = 0;'''
+    ))
 
-    LIT_1 = (0xd, [], ['one'], '''\
-        one = 1;
-    ''')
+    LIT_1 = (0xd, [], ['one'], Code('''\
+        one = 1;'''
+    ))
 
-    LIT_2 = (0xe, [], ['two'], '''\
-        two = 2;
-    ''')
+    LIT_2 = (0xe, [], ['two'], Code('''\
+        two = 2;'''
+    ))
 
-    LIT_3 = (0xf, [], ['three'], '''\
-        three = 3;
-    ''')
+    LIT_3 = (0xf, [], ['three'], Code('''\
+        three = 3;'''
+    ))
 
-    EQ = (0x10, ['a', 'b'], ['flag'], '''\
-        flag = a == b;
-    ''')
+    EQ = (0x10, ['a', 'b'], ['flag'], Code('''\
+        flag = a == b;'''
+    ))
 
-    LT = (0x11, ['a', 'b'], ['flag'], '''\
-        flag = a < b;
-    ''')
+    LT = (0x11, ['a', 'b'], ['flag'], Code('''\
+        flag = a < b;'''
+    ))
 
-    ULT = (0x12, ['a', 'b'], ['flag'], '''\
-        flag = (mit_uword)a < (mit_uword)b;
-    ''')
+    ULT = (0x12, ['a', 'b'], ['flag'], Code('''\
+        flag = (mit_uword)a < (mit_uword)b;'''
+    ))
 
-    NEGATE = (0x13, ['a'], ['r'], '''\
-        r = -a;
-    ''')
+    NEGATE = (0x13, ['a'], ['r'], Code('''\
+        r = -a;'''
+    ))
 
-    ADD = (0x14, ['a', 'b'], ['r'], '''\
-        r = a + b;
-    ''')
+    ADD = (0x14, ['a', 'b'], ['r'], Code('''\
+        r = a + b;'''
+    ))
 
-    MUL = (0x15, ['a', 'b'], ['r'], '''\
-        r = a * b;
-    ''')
+    MUL = (0x15, ['a', 'b'], ['r'], Code('''\
+        r = a * b;'''
+    ))
 
-    DIVMOD = (0x16, ['a', 'b'], ['q', 'r'], '''\
+    DIVMOD = (0x16, ['a', 'b'], ['q', 'r'], Code('''\
         if (b == 0)
           RAISE(MIT_ERROR_DIVISION_BY_ZERO);
         q = a / b;
-        r = a % b;
-    ''')
+        r = a % b;'''
+    ))
 
-    UDIVMOD = (0x17, ['a', 'b'], ['q', 'r'], '''\
+    UDIVMOD = (0x17, ['a', 'b'], ['q', 'r'], Code('''\
         if (b == 0)
           RAISE(MIT_ERROR_DIVISION_BY_ZERO);
         q = (mit_word)((mit_uword)a / (mit_uword)b);
-        r = (mit_word)((mit_uword)a % (mit_uword)b);
-    ''')
+        r = (mit_word)((mit_uword)a % (mit_uword)b);'''
+    ))
 
-    NOT = (0x18, ['x'], ['r'], '''\
-        r = ~x;
-    ''')
+    NOT = (0x18, ['x'], ['r'], Code('''\
+        r = ~x;'''
+    ))
 
-    AND = (0x19, ['x', 'y'], ['r'], '''\
-        r = x & y;
-    ''')
+    AND = (0x19, ['x', 'y'], ['r'], Code('''\
+        r = x & y;'''
+    ))
 
-    OR = (0x1a, ['x', 'y'], ['r'], '''\
-        r = x | y;
-    ''')
+    OR = (0x1a, ['x', 'y'], ['r'], Code('''\
+        r = x | y;'''
+    ))
 
-    XOR = (0x1b, ['x', 'y'], ['r'], '''\
-        r = x ^ y;
-    ''')
+    XOR = (0x1b, ['x', 'y'], ['r'], Code('''\
+        r = x ^ y;'''
+    ))
 
-    LSHIFT = (0x1c, ['x', 'n'], ['r'], '''\
-        r = n < (mit_word)MIT_WORD_BIT ? x << n : 0;
-    ''')
+    LSHIFT = (0x1c, ['x', 'n'], ['r'], Code('''\
+        r = n < (mit_word)MIT_WORD_BIT ? x << n : 0;'''
+    ))
 
-    RSHIFT = (0x1d, ['x', 'n'], ['r'], '''\
-        r = n < (mit_word)MIT_WORD_BIT ? (mit_word)((mit_uword)x >> n) : 0;
-    ''')
+    RSHIFT = (0x1d, ['x', 'n'], ['r'], Code('''\
+        r = n < (mit_word)MIT_WORD_BIT ? (mit_word)((mit_uword)x >> n) : 0;'''
+    ))
 
-    ARSHIFT = (0x1e, ['x', 'n'], ['r'], '''\
-        r = ARSHIFT(x, n);
-    ''')
+    ARSHIFT = (0x1e, ['x', 'n'], ['r'], Code('''\
+        r = ARSHIFT(x, n);'''
+    ))
 
-    SIGN_EXTEND = (0x1f, ['n1', 'size'], ['n2'], '''\
+    SIGN_EXTEND = (0x1f, ['n1', 'size'], ['n2'], Code('''\
         n2 = n1 << (MIT_WORD_BYTES - (1 << size)) * MIT_BYTE_BIT;
-        n2 = ARSHIFT(n2, (MIT_WORD_BYTES - (1 << size)) * MIT_BYTE_BIT);
-    ''')
+        n2 = ARSHIFT(n2, (MIT_WORD_BYTES - (1 << size)) * MIT_BYTE_BIT);'''
+    ))
 
 @unique
 class InternalExtraInstruction(AbstractInstruction):
-    HALT = (0x1, [], [], '''\
-        RAISE(MIT_ERROR_HALT);
-    ''')
+    HALT = (0x1, [], [], Code('''\
+        RAISE(MIT_ERROR_HALT);'''
+    ))

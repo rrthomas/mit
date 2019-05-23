@@ -414,7 +414,7 @@ def gen_case(instruction):
         code.extend(check_underflow(effect.args.size))
         code.extend(check_overflow(effect.args.size, effect.results.size))
         code.extend(effect.load_args())
-    code.append(instruction.code)
+    code.extend(instruction.code)
     if effect is not None:
         # Store the results from C variables.
         code.append('S->STACK_DEPTH += {};'.format(

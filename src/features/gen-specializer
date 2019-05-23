@@ -12,10 +12,10 @@ import sys, pickle, textwrap
 
 from mit_core.code_buffer import Code
 from mit_core.vm_data import Instruction
-from specializer import gen_case, CacheState
+from specializer import SpecializedInstruction, CacheState, gen_case
 
 
-# Load language.
+# Load the labels file, which tells us what control-flow graph to generate.
 if len(sys.argv) != 2:
     print("Usage: gen-specializer LABELS-FILE", file=sys.stderr)
     sys.exit(1)
@@ -29,7 +29,7 @@ class Label:
        variables at this Label.
      - checked_depth - int - the number of empty stack slots that are known to
        exist above the top of the stack at this Label.
-     - guess - Instruction - the most probable next instruction.
+     - guess - str - the most probable next instruction.
      - if_correct - int - the Label index to jump to if `guess` is correct.
      - if_wrong - int - the Label index to jump to if `guess` is wrong.
     '''
@@ -71,41 +71,49 @@ class Label:
         Returns a Code to place at this Label.
         Also returns the peak value of `CacheState.cached_depth`.
         '''
+        try:
+            name = '{}_WITH_{}'.format(self.guess, self.tos_constant)
+            instruction = SpecializedInstruction[name]
+        except KeyError:
+            instruction = Instruction[self.guess]
         code = Code()
+        cache_state = self.cache_state()
+        # Assert the entry conditions.
         code.append('assert(res == MIT_ERROR_OK);')
-        code.append('assert(cached_depth == {cached_depth});'.format(
-            cached_depth=label.cached_depth,
+        code.append('assert(cached_depth == {});'.format(
+            cache_state.cached_depth,
         ))
-        if label.tos_constant is not None:
-            code.append('assert({tos} == {tos_constant});'.format(
-                tos=label.cache_state().var(0),
-                tos_constant=label.tos_constant,
-            ))
+        # Generate the guess condition.
         opcode = 'initial_I'
-        if not label.guess.terminal:
+        if not instruction.terminal:
             opcode = '({} & MIT_INSTRUCTION_MASK)'.format(opcode)
-        code.append('if ({opcode} == O_{guess_name}) {{'.format(
-            opcode=opcode,
-            guess_name=label.guess.name,
-        ))
+        tests = [
+            '{} == O_{}'.format(opcode, self.guess),
+            'likely({})'.format(cache_state.underflow_test(
+                len(instruction.args))),
+            'likely({})'.format(cache_state.overflow_test(
+                len(instruction.args), len(instruction.results))),
+        ]
+        code.append('if ({}) {{'.format(' && '.join(tests)))
         # If correct.
+        # We use `cache_state` from above.
         if_code = Code()
-        cache_state = label.cache_state()
-        if_code.extend(gen_case(label.guess, cache_state))
+        if_code.extend(gen_case(instruction, cache_state))
         cached_depth = cache_state.cached_depth # Returned.
         if_code.append('FETCH;')
-        if_code.extend(label_by_index(label.if_correct).goto(cache_state))
+        if_code.extend(label_by_index(self.if_correct).goto(cache_state))
         code.append(if_code)
         code.append('}')
         # If wrong.
-        cache_state = label.cache_state()
-        code.extend(label_by_index(label.if_wrong).goto(cache_state))
+        # We use a fresh CacheState.
+        cache_state = self.cache_state()
+        code.extend(label_by_index(self.if_wrong).goto(cache_state))
         return (code, cached_depth)
 
 
 with open(sys.argv[1], "rb") as h:
     labels = [
-        Label('A_{}'.format(index), tos, ca, ch, Instruction[gu], ic, iw)
+        Label('A_{}'.format(index), tos, ca, ch, gu, ic, iw)
         for index, (tos, ca, ch, gu, ic, iw) in enumerate(pickle.load(h))
     ]
 
@@ -158,9 +166,10 @@ labels_code.append(switch_code)
 body_code = Code()
 body_code.append('int res = MIT_ERROR_OK;')
 if max_cached_depth > 0:
+    cache_state = CacheState(max_cached_depth, 0)
     body_code.append('mit_word {};'.format(
         ', '.join(
-            CacheState.var_for_depth(pos, max_cached_depth)
+            cache_state.var(pos)
             for pos in reversed(range(max_cached_depth))
         )
     ))
