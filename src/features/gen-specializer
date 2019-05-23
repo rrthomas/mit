@@ -72,34 +72,35 @@ class Label:
         Also returns the peak value of `CacheState.cached_depth`.
         '''
         try:
-            name = '{}_WITH_{}'.format(label.guess, label.tos_constant)
+            name = '{}_WITH_{}'.format(self.guess, self.tos_constant)
             instruction = SpecializedInstruction[name]
         except KeyError:
-            instruction = Instruction[label.guess]
+            instruction = Instruction[self.guess]
         code = Code()
+        cache_state = self.cache_state()
         code.append('assert(res == MIT_ERROR_OK);')
         code.append('assert(cached_depth == {cached_depth});'.format(
-            cached_depth=label.cached_depth,
+            cached_depth=cache_state.cached_depth,
         ))
         opcode = 'initial_I'
         if not instruction.terminal:
             opcode = '({} & MIT_INSTRUCTION_MASK)'.format(opcode)
         code.append('if ({opcode} == O_{guess_name}) {{'.format(
             opcode=opcode,
-            guess_name=label.guess,
+            guess_name=self.guess,
         ))
         # If correct.
+        # We use `cache_state` from above.
         if_code = Code()
-        cache_state = label.cache_state()
         if_code.extend(gen_case(instruction, cache_state))
         cached_depth = cache_state.cached_depth # Returned.
         if_code.append('FETCH;')
-        if_code.extend(label_by_index(label.if_correct).goto(cache_state))
+        if_code.extend(label_by_index(self.if_correct).goto(cache_state))
         code.append(if_code)
         code.append('}')
         # If wrong.
-        cache_state = label.cache_state()
-        code.extend(label_by_index(label.if_wrong).goto(cache_state))
+        cache_state = self.cache_state()
+        code.extend(label_by_index(self.if_wrong).goto(cache_state))
         return (code, cached_depth)
 
 
