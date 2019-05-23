@@ -102,6 +102,8 @@ build-trace:
 %D%/specializer.c: mit_core/code_buffer.py mit_core/instruction.py mit_core/vm_data.py %D%/type_sizes.py mit_core/instruction_gen.py %D%/gen-specializer %D%/specializer.py %D%/instructions.labels_pickle
 	$(PYTHON_WITH_PATH) $(srcdir)/%D%/gen-specializer %D%/instructions.labels_pickle > %D%/specializer.c || ( rm -f %D%/specializer.c; exit 1 )
 
+%D%/specializer.lo: include/mit/mit.h %D%/mit/features.h
+
 EXTRA_DIST += \
 	%D%/specializer.py \
 	%D%/gen-trace \
