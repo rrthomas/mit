@@ -77,23 +77,45 @@ class CacheState:
             self.checked_depth,
         )
 
+    def underflow_test(self, num_pops):
+        '''
+        Returns a C boolean expression (a str) to check that the stack
+        contains enough items to pop the specified number of items.
+         - num_pops - int
+        '''
+        assert type(num_pops) is int
+        if self.cached_depth >= num_pops: return '1'
+        return 'S->STACK_DEPTH >= {}'.format(num_pops)
+
+    def overflow_test(self, num_pops, num_pushes):
+        '''
+        Returns a C boolean expression (a str) to check that the stack
+        contains enough space to push `num_pushes` items, given that
+        `num_pops` items will first be popped. Updates `checked_depth`.
+         - num_pops - int.
+         - num_pushes - int.
+        '''
+        assert type(num_pops) is int
+        assert type(num_pushes) is int
+        depth_change = num_pushes - num_pops
+        if self.checked_depth >= depth_change: return '1'
+        self.checked_depth = depth_change
+        return '(S->stack_size - S->STACK_DEPTH) >= {}'.format(depth_change)
+
     def check_underflow(self, num_pops):
         '''
         Returns a Code to check that the stack contains enough items to
         pop the specified number of items.
          - num_pops - int
         '''
-        assert type(num_pops) is int
-        if num_pops <= self.cached_depth: return Code()
         return Code(
-            'if (S->STACK_DEPTH < {num_pops}) {{',
+            'if (!({test})) {{',
             Code(
                 'S->BAD = {num_pops} - 1;',
                 'RAISE(MIT_ERROR_INVALID_STACK_READ);',
             ),
             '}}',
-        ).format(num_pops=num_pops)
-
+        ).format(test=self.underflow_test(num_pops), num_pops=num_pops)
 
     def check_overflow(self, num_pops, num_pushes):
         '''
@@ -103,18 +125,18 @@ class CacheState:
          - num_pops - Size.
          - num_pushes - Size.
         '''
-        assert type(num_pops) is int
-        assert type(num_pushes) is int
         depth_change = num_pushes - num_pops
-        if depth_change <= self.checked_depth: return Code()
         return Code(
-            'if ((S->stack_size - S->STACK_DEPTH) < {depth_change}) {{',
+            'if (!({test})) {{',
             Code(
                 'S->BAD = {depth_change} - (S->stack_size - S->STACK_DEPTH);',
                 'RAISE(MIT_ERROR_STACK_OVERFLOW);',
             ),
             '}}',
-        ).format(depth_change=depth_change)
+        ).format(
+            test=self.overflow_test(num_pops, num_pushes),
+            depth_change=depth_change,
+        )
 
     def load_args(self, args):
         '''
