@@ -21,6 +21,11 @@
 #include <mit@PACKAGE_SUFFIX@/opcodes.h>
 
 
+// https://gcc.gnu.org/onlinedocs/gcc/Other-Builtins.html
+// Hint that `x` is usually true/false. FIXME: Make this portable.
+#define likely(x) __builtin_expect(!!(x), 1)
+#define unlikely(x) __builtin_expect(!!(x), 0)
+
 // Build-time parameters
 #define MIT_WORD_BYTES @WORD_BYTES@
 #define MIT_ENDISM @ENDISM@
@@ -172,18 +177,18 @@ int mit_store(mit_state *S, mit_uword addr, unsigned size, mit_word val);
 #pragma GCC diagnostic ignored "-Wunused-function"
 _GL_ATTRIBUTE_PURE static uint8_t *native_address_of_range(mit_state *S, mit_uword addr, mit_uword len)
 {
-    if (addr >= S->memory_size || len > S->memory_size - addr)
+    if (unlikely(addr >= S->memory_size || len > S->memory_size - addr))
         return NULL;
     return ((uint8_t *)(S->memory)) + addr;
 }
 
 static int load(mit_state *S, mit_uword addr, unsigned size, mit_word *val_ptr)
 {
-    if (addr >= S->memory_size) {
+    if (unlikely(addr >= S->memory_size)) {
         S->BAD = addr;
         return MIT_ERROR_INVALID_MEMORY_READ;
     }
-    if (!is_aligned(addr, size)) {
+    if (unlikely(!is_aligned(addr, size))) {
         S->BAD = addr;
         return MIT_ERROR_UNALIGNED_ADDRESS;
     }
@@ -232,11 +237,11 @@ static int load(mit_state *S, mit_uword addr, unsigned size, mit_word *val_ptr)
 
 static int store(mit_state *S, mit_uword addr, unsigned size, mit_word val)
 {
-    if (addr >= S->memory_size) {
+    if (unlikely(addr >= S->memory_size)) {
         S->BAD = addr;
         return MIT_ERROR_INVALID_MEMORY_WRITE;
     }
-    if (!is_aligned(addr, size)) {
+    if (unlikely(!is_aligned(addr, size))) {
         S->BAD = addr;
         return MIT_ERROR_UNALIGNED_ADDRESS;
     }
@@ -323,7 +328,7 @@ int mit_push_stack(mit_state *S, mit_word val);
 #pragma GCC diagnostic ignored "-Wunused-function"
 static int load_stack(mit_state *S, mit_uword pos, mit_word *vp)
 {
-    if (pos >= S->STACK_DEPTH) {
+    if (unlikely(pos >= S->STACK_DEPTH)) {
         S->BAD = pos;
         return MIT_ERROR_INVALID_STACK_READ;
     }
@@ -334,7 +339,7 @@ static int load_stack(mit_state *S, mit_uword pos, mit_word *vp)
 
 static int store_stack(mit_state *S, mit_uword pos, mit_word v)
 {
-    if (pos >= S->STACK_DEPTH) {
+    if (unlikely(pos >= S->STACK_DEPTH)) {
         S->BAD = pos;
         return MIT_ERROR_INVALID_STACK_WRITE;
     }
@@ -352,7 +357,7 @@ static int pop_stack(mit_state *S, mit_word *v)
 
 static int push_stack(mit_state *S, mit_word v)
 {
-    if (S->STACK_DEPTH >= S->stack_size) {
+    if (unlikely(S->STACK_DEPTH >= S->stack_size)) {
         S->BAD = S->stack_size;
         return MIT_ERROR_STACK_OVERFLOW;
     }
