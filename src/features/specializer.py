@@ -91,7 +91,7 @@ class CacheState:
         '''
         Returns a C boolean expression (a str) to check that the stack
         contains enough space to push `num_pushes` items, given that
-        `num_pops` items will first be popped. Updates `checked_depth`.
+        `num_pops` items will first be popped.
          - num_pops - int.
          - num_pushes - int.
         '''
@@ -99,7 +99,6 @@ class CacheState:
         assert type(num_pushes) is int
         depth_change = num_pushes - num_pops
         if self.checked_depth >= depth_change: return '1'
-        self.checked_depth = depth_change
         return '(S->stack_size - S->STACK_DEPTH) >= {}'.format(depth_change)
 
     def check_underflow(self, num_pops):
@@ -121,7 +120,7 @@ class CacheState:
         '''
         Returns a Code to check that the stack contains enough space to
         push `num_pushes` items, given that `num_pops` items will first be
-        popped. Updates `checked_depth`.
+        popped.
          - num_pops - Size.
          - num_pushes - Size.
         '''
