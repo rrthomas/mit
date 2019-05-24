@@ -19,7 +19,7 @@ class CommandLineElement:
     elements = []
     def __init__(self):
         self.elements.append(self)
-    
+
 class Doc(CommandLineElement):
     '''
     Free-form documentation.
@@ -35,11 +35,11 @@ class Doc(CommandLineElement):
 class Option(CommandLineElement):
     '''
     A command-line option.
-    
+
      - long_name - str - long option name
      - docstring - str - argument docstring
      - short_name - str - short option char
-     - arg - str - 'no_argument', 'required_argument' or 'optional_argument'
+     - arg - str - 'no_argument' (default), 'required_argument' or 'optional_argument'
      - arg_name - str - name for the argument, if any
      - parse_code - str - code run when the option is parsed
     '''
@@ -77,9 +77,27 @@ Option('no-auto-extend',
        parse_code=Code('auto_extend = false;'),
 )
 
+default_max_backtrace = 16
+Option('backtrace',
+       '''show registers and top N stack items on error\\n\\
+                            [default {}; 0 to show entire stack]'''.format(default_max_backtrace),
+       arg='optional_argument', arg_name='N',
+       parse_code=Code('''\
+       {
+           backtrace = true;
+           if (optarg) {
+               char *endptr;
+               max_backtrace = parse_unsigned(optarg, &endptr);
+               if (*optarg == '\\0' || *endptr != '\\0')
+                   die("invalid maximum backtrace size");
+           }
+       }
+       '''),
+)
+
 Option('core-dump',
        'dump core on memory error',
-       short_name='c', arg='no_argument',
+       short_name='c',
        parse_code=Code('core_dump = true;'),
 )
 
@@ -159,32 +177,70 @@ Feature(# Auto-extend stack and memory
     ''')
 )
 
-Feature(# VM core dump
+Feature(# Error message on error exit
+    exit=Code('''
+        if (error != MIT_ERROR_HALT)
+            // Cast error to size_t for printing because we might not be
+            // able to print mit_uword.
+            warn("error %zu: %s", (size_t)error, error_msg[error]);
+    '''),
+)
+
+Feature(# Register and stack backtrace
     top_level=Code('''
-        #define REGISTER_STRLEN (MIT_WORD_BYTES * 2)
-        
+        #define WORD_STRLEN (MIT_WORD_BYTES * 2)
+
         static char hex[] = "0123456789abcdef";
-        
-        static void register_to_str(mit_word reg, char s[REGISTER_STRLEN])
+
+        static void word_to_str(mit_word w, char s[WORD_STRLEN])
         {
-            for (unsigned i = 0; i < REGISTER_STRLEN; i++) {
-                s[REGISTER_STRLEN - i - 1] = hex[reg & 0xf];
-                reg >>= 4;
+            for (unsigned i = 0; i < WORD_STRLEN; i++) {
+                s[WORD_STRLEN - i - 1] = hex[w & 0xf];
+                w >>= 4;
             }
         }
+
+        static unsigned long parse_unsigned(const char *s, char **endp)
+        {
+            return (s[0] == '0' && (s[1] == 'X' || s[1] == 'x')) ?
+                strtoul(s + 2, endp, 16) : strtoul(s, endp, 10);
+        }
         '''),
+    init=Code('''
+        bool backtrace = false;
+        unsigned long default_max_backtrace = {};
+        unsigned long max_backtrace = default_max_backtrace;
+    '''.format(default_max_backtrace)),
+    exit=Code('''
+        if (backtrace == true) {
+            fprintf(stderr, "\\nRegisters:\\n");
+            char word_str[WORD_STRLEN];
+            #define R(name) \\
+            word_to_str(S->name, &word_str[0]); \\
+            fprintf(stderr, #name "=0x%.*s\\n", WORD_STRLEN, word_str);
+            #include "mit/registers.h"
+            #undef R
+            if (S->STACK_DEPTH <= S->stack_size) {
+                fprintf(stderr, "\\nStack:\\n");
+                mit_uword items = MIN(max_backtrace, S->STACK_DEPTH);
+                if (max_backtrace == 0)
+                    items = S->STACK_DEPTH;
+                for (mit_uword pos = 0; pos < items; pos++) {
+                    mit_word w;
+                    if (load_stack(S, pos, &w) == 0) {
+                        word_to_str(w, &word_str[0]);
+                        fprintf(stderr, "0x%.*s\\n", WORD_STRLEN, word_str);
+                    }
+                }
+            }
+        }
+    ''')
+)
+
+Feature(# VM core dump
     init=Code('bool core_dump = false;'),
     exit=Code('''
         if (error != MIT_ERROR_HALT && core_dump) {
-            char pc_str[REGISTER_STRLEN];
-            char bad_str[REGISTER_STRLEN];
-            register_to_str(S->PC, &pc_str[0]);
-            register_to_str(S->BAD, &bad_str[0]);
-            // Cast error to size_t for printing because we might not be
-            // able to print mit_uword.
-            warn("error %zu raised at PC=0x%.*s; BAD=0x%.*s", (size_t)error,
-                REGISTER_STRLEN, pc_str, REGISTER_STRLEN, bad_str);
-        
             const char *filename = mit_core_dump(S);
             if (filename != NULL)
                 warn("core dumped to %s", filename);
@@ -192,25 +248,15 @@ Feature(# VM core dump
     ''')
 )
 
-Feature(# Error message on error exit
-    top_level=Code('''
-        const char *error_msg[] = {{
-        {}
-        }};'''.format('\n'.join(
-            '    "{}",'.format(
-                error.name.lower().translate(str.maketrans('_', ' '))
-            )
-            for error in ExecutionError
-        ))    
-    ),
-    exit=Code('''
-        if (error != MIT_ERROR_HALT)
-            warn("error: %s", error_msg[error]);
-    '''),   
-)
-
 
 # Generate output
+
+# Errors
+error_enum = Code()
+for error in ExecutionError:
+    error_enum.append('"{}",'.format(
+        error.name.lower().translate(str.maketrans('_', ' '))
+    ))
 
 # Command-line documentation
 help_code = Code()
@@ -298,6 +344,7 @@ print(Code(*['''\
 
 #include "progname.h"
 #include "binary-io.h"
+#include "minmax.h"
 
 #include "mit/mit.h"
 #include "mit/features.h"
@@ -326,6 +373,13 @@ static _GL_ATTRIBUTE_FORMAT_PRINTF(1, 2) void die(const char *format, ...)
     verror(format, args);
     exit(1);
 }
+
+// Error messages
+const char *error_msg[] = {
+''',
+             error_enum,
+             '''\
+};
 
 // Options table
 struct option longopts[] = {''',
