@@ -1,5 +1,6 @@
 language: c
 sudo: true
+dist: xenial
 
 addons:
   apt:
@@ -21,11 +22,8 @@ env:
 
 matrix:
   include:
-    - os: linux
-      dist: trusty # Test with Python 3.4, the earliest version we support
     - os: osx
     - os: linux
-      dist: xenial
       env:
         - MATRIX_EVAL="CC=gcc-8"
       addons:
