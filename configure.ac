@@ -27,7 +27,7 @@ AC_PROG_CC_C99
 gl_EARLY
 AM_PROG_AR
 LT_INIT([win32-dll])
-AM_PATH_PYTHON([3.4])
+AM_PATH_PYTHON([3.5])
 AC_PATH_PROGS([IPYTHON], [ipython3 ipython])
 # Check detected/configured IPython, and set command-line options
 AS_IF([test "$IPYTHON" = ""],

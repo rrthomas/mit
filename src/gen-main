@@ -8,11 +8,7 @@
 # THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 # RISK.
 
-import os
-import pathlib
-import glob
-import textwrap
-
+from mit_core.code_buffer import Code
 from mit_core.vm_data import ExecutionError
 from mit_core.errors import LoadError
 
@@ -73,38 +69,39 @@ class Arg(CommandLineElement):
 Option('specializer',
        'use specializing interpreter',
        short_name='O',
-       parse_code='run_fn = mit_specializer_run;',
+       parse_code=Code('run_fn = mit_specializer_run;'),
 )
 
 Option('no-auto-extend',
        'do not automatically extend stack or memory',
-       parse_code='auto_extend = false;',
+       parse_code=Code('auto_extend = false;'),
 )
 
 Option('core-dump',
-       'dump core on memory exception',
+       'dump core on memory error',
        short_name='c', arg='no_argument',
-       parse_code='core_dump = true;',
+       parse_code=Code('core_dump = true;'),
 )
 
 Option('help',
        'display this help message and exit',
-       parse_code='usage();'
+       parse_code=Code('usage();'),
 )
 
 Option('version',
        'display version information and exit',
-       parse_code='''\
-{
-    printf(PACKAGE_NAME " " VERSION " (%d-byte word, %s-endian)\\n"
-           "(c) Mit authors 1994-2019\\n"
-           PACKAGE_NAME " comes with ABSOLUTELY NO WARRANTY.\\n"
-           "You may redistribute copies of " PACKAGE_NAME "\\n"
-           "under the terms of the MIT/X11 License.\\n",
-           MIT_WORD_BYTES, MIT_ENDISM ? "big" : "little");
-    exit(EXIT_SUCCESS);
-}
-''')
+       parse_code=Code('''\
+           {
+               printf(PACKAGE_NAME " " VERSION " (%d-byte word, %s-endian)\\n"
+                      "(c) Mit authors 1994-2019\\n"
+                      PACKAGE_NAME " comes with ABSOLUTELY NO WARRANTY.\\n"
+                      "You may redistribute copies of " PACKAGE_NAME "\\n"
+                      "under the terms of the MIT/X11 License.\\n",
+                      MIT_WORD_BYTES, MIT_ENDISM ? "big" : "little");
+               exit(EXIT_SUCCESS);
+           }
+       ''')
+)
 
 Arg('OBJECT-FILE', 'load and run object OBJECT-FILE')
 Doc('')
@@ -123,91 +120,167 @@ class Feature:
     '''
     A command-line option.
 
-     - top_level_code - str - additional top-level code for the option
-     - init_code - str - declarations inside main, and initialisation
-     - exception_handler - str - cases added to the exception handler
-     - exit_code - str - code run immediately before exit
+     - top_level - Code - additional top-level code for the option
+     - init - Code - declarations inside main, and initialisation
+     - handler - Code - cases added to the error handler
+     - exit - Code - code run immediately before exit
     '''
     features = []
-    def __init__(self, top_level_code=None, init_code=None,
-                 exception_handler=None, exit_code=None):
+    def __init__(self, top_level=None, init=None, handler=None, exit=None):
         self.features.append(self)
-        self.top_level_code = top_level_code
-        self.init_code = init_code
-        self.exception_handler = exception_handler
-        self.exit_code = exit_code
+        self.top_level = top_level
+        self.init = init
+        self.handler = handler
+        self.exit = exit
 
 Feature(# Extra instructions
-    exception_handler='''\
-case MIT_ERROR_INVALID_OPCODE:
-    if ((S->I & MIT_INSTRUCTION_MASK) == O_BRANCH) {
-        error = mit_extra_instruction(S);
-        if (error == 0) {
-            S->I = 0;
-            continue;
-        }
-    }
-    break;''')
+    handler=Code('''\
+        case MIT_ERROR_INVALID_OPCODE:
+            if ((S->I & MIT_INSTRUCTION_MASK) == O_BRANCH) {
+                error = mit_extra_instruction(S);
+                if (error == 0) {
+                    S->I = 0;
+                    continue;
+                }
+            }
+            break;
+    ''')
+)
 
 Feature(# Auto-extend stack and memory
-    init_code='bool auto_extend = true;',
-    exception_handler='''\
-case MIT_ERROR_STACK_OVERFLOW:
-case MIT_ERROR_INVALID_MEMORY_READ:
-case MIT_ERROR_INVALID_MEMORY_WRITE:
-    if (auto_extend == true && mit_auto_extend_handler(S, error) == 0)
-        continue;
-    break;''')
+    init=Code('bool auto_extend = true;'),
+    handler=Code('''\
+        case MIT_ERROR_STACK_OVERFLOW:
+        case MIT_ERROR_INVALID_MEMORY_READ:
+        case MIT_ERROR_INVALID_MEMORY_WRITE:
+            if (auto_extend == true && mit_auto_extend_handler(S, error) == 0)
+                continue;
+            break;
+    ''')
+)
 
 Feature(# VM core dump
-    top_level_code='''\
-#define REGISTER_STRLEN (MIT_WORD_BYTES * 2)
-
-static char hex[] = "0123456789abcdef";
-
-static void register_to_str(mit_word reg, char s[REGISTER_STRLEN])
-{
-    for (unsigned i = 0; i < REGISTER_STRLEN; i++) {
-        s[REGISTER_STRLEN - i - 1] = hex[reg & 0xf];
-        reg >>= 4;
-    }
-}
-''',
-    init_code='bool core_dump = false;',
-    exit_code='''\
-if (error != MIT_ERROR_HALT && core_dump) {
-    char pc_str[REGISTER_STRLEN];
-    char bad_str[REGISTER_STRLEN];
-    register_to_str(S->PC, &pc_str[0]);
-    register_to_str(S->BAD, &bad_str[0]);
-    // Cast error to size_t for printing because we might not be
-    // able to print mit_uword.
-    warn("error %zu raised at PC=0x%.*s; BAD=0x%.*s", (size_t)error,
-        REGISTER_STRLEN, pc_str, REGISTER_STRLEN, bad_str);
-
-    const char *filename = mit_core_dump(S);
-    if (filename != NULL)
-        warn("core dumped to %s", filename);
-}''')
+    top_level=Code('''
+        #define REGISTER_STRLEN (MIT_WORD_BYTES * 2)
+        
+        static char hex[] = "0123456789abcdef";
+        
+        static void register_to_str(mit_word reg, char s[REGISTER_STRLEN])
+        {
+            for (unsigned i = 0; i < REGISTER_STRLEN; i++) {
+                s[REGISTER_STRLEN - i - 1] = hex[reg & 0xf];
+                reg >>= 4;
+            }
+        }
+        '''),
+    init=Code('bool core_dump = false;'),
+    exit=Code('''
+        if (error != MIT_ERROR_HALT && core_dump) {
+            char pc_str[REGISTER_STRLEN];
+            char bad_str[REGISTER_STRLEN];
+            register_to_str(S->PC, &pc_str[0]);
+            register_to_str(S->BAD, &bad_str[0]);
+            // Cast error to size_t for printing because we might not be
+            // able to print mit_uword.
+            warn("error %zu raised at PC=0x%.*s; BAD=0x%.*s", (size_t)error,
+                REGISTER_STRLEN, pc_str, REGISTER_STRLEN, bad_str);
+        
+            const char *filename = mit_core_dump(S);
+            if (filename != NULL)
+                warn("core dumped to %s", filename);
+        }
+    ''')
+)
 
 Feature(# Error message on error exit
-    top_level_code='''\
-const char *error_msg[] = {{
-{}
-}};'''.format('\n'.join(
-        '    "{}",'.format(
-            error.name.lower().translate(str.maketrans('_', ' '))
-        )
-        for error in ExecutionError
-    )),
-    exit_code='''\
-if (error != MIT_ERROR_HALT)
-    warn("error: %s", error_msg[error]);''')
+    top_level=Code('''
+        const char *error_msg[] = {{
+        {}
+        }};'''.format('\n'.join(
+            '    "{}",'.format(
+                error.name.lower().translate(str.maketrans('_', ' '))
+            )
+            for error in ExecutionError
+        ))    
+    ),
+    exit=Code('''
+        if (error != MIT_ERROR_HALT)
+            warn("error: %s", error_msg[error]);
+    '''),   
+)
 
 
 # Generate output
 
-print('''\
+# Command-line documentation
+help_code = Code()
+for element in CommandLineElement.elements:
+    if isinstance(element, Option):
+        help_code.append('    printf("  %-26s%s\\n", "--{long_name}{short_opt} {arg_name}", "{docstring}");'.format(
+            long_name=element.long_name,
+            short_opt=', -{}'.format(element.short_name) if element.short_name else '',
+            arg_name=element.arg_name or '',
+            docstring=element.docstring,
+        ))
+    elif isinstance(element, Arg):
+        help_code.append('printf("  %-26s%s\\n", {arg}, {docstring});'.format(
+            arg=element.arg,
+            docstring=element.docstring
+        ))
+    elif isinstance(element, Doc):
+        text = element.text
+        if len(text) > 1 and not(text[0] == '"' and text[-1] == '"'):
+            text = '"{}"'.format(repr(text)[1:-1])
+        help_code.append('    printf({}"\\n");'.format(text))
+
+# Command-line options
+getopt_code = Code()
+shortopts = ''
+short_options_code = Code()
+long_options_code = Code()
+else_code = ''
+for i, option in enumerate(Option.options):
+    getopt_code.append('{{"{long_name}", {arg}, NULL, \'{short_name}\'}},'.format(
+        long_name=option.long_name, arg=option.arg or '""',
+        short_name=option.short_name or "\\0"))
+    if option.short_name:
+        shortopts += option.short_name
+        if option.arg == 'required_argument':
+            shortopts += ':'
+        elif option.arg == 'optional_argument':
+            shortopts += '::'
+        short_options_code.append('''\
+            if (c == '{short_name}')
+                longindex = {index};'''.format(
+                    short_name = option.short_name,
+                    index = i
+                ))
+    if option.parse_code:
+        long_options_code.append('{}if (longindex == {})'.format(else_code, i))
+        long_options_code.append(option.parse_code)
+        else_code = 'else '
+getopt_code.append('{0, 0, 0, 0}')
+
+# Features
+top_level_code = Code()
+init_code = Code('''\
+    set_program_name(argv[0]);
+    mit_word (*run_fn)(mit_state *) = mit_run;
+''')
+handlers_code = Code()
+exit_code = Code()
+for feature in Feature.features:
+    if feature.top_level:
+        top_level_code.extend(feature.top_level)
+    if feature.init:
+        init_code.extend(feature.init)
+    if feature.handler:
+        handlers_code.extend(feature.handler)
+    if feature.exit:
+        exit_code.extend(feature.exit)
+
+# main.c
+print(Code(*['''\
 // Auto-generated by gen-main - DO NOT EDIT.
 
 // Front-end.
@@ -253,49 +326,22 @@ static _GL_ATTRIBUTE_FORMAT_PRINTF(1, 2) void die(const char *format, ...)
     verror(format, args);
     exit(1);
 }
-''')
 
-print('''\
 // Options table
-struct option longopts[] = {''')
-for element in CommandLineElement.elements:
-    if isinstance(element, Option):
-        print('    {{"{long_name}", {arg}, NULL, \'{short_name}\'}},'.format(
-            long_name=element.long_name, arg=element.arg or '""',
-            short_name=element.short_name or "\\0"))
-print('''\
-    {0, 0, 0, 0}
-};''')
+struct option longopts[] = {''',
+              getopt_code,
+              '''\
+};
 
-print('''
 static void usage(void)
 {
     printf("Usage: %s [OPTION...] [OBJECT-FILE ARGUMENT...]\\n"
            "\\n"
            "Run " PACKAGE_NAME ".\\n"
            "\\n",
-           program_name);''')
-
-for element in CommandLineElement.elements:
-    if isinstance(element, Option):
-        print('    printf("  %-26s%s\\n", "--{long_name}{short_opt} {arg_name}", "{docstring}");'.format(
-            long_name=element.long_name,
-            short_opt=', -{}'.format(element.short_name) if element.short_name else '',
-            arg_name=element.arg_name or '',
-            docstring=element.docstring,
-        ))
-    elif isinstance(element, Arg):
-        print('printf("  %-26s%s\\n", {arg}, {docstring});'.format(
-            arg=element.arg,
-            docstring=element.docstring
-        ))
-    elif isinstance(element, Doc):
-        text = element.text
-        if len(text) > 1 and not(text[0] == '"' and text[-1] == '"'):
-            text = '"{}"'.format(repr(text)[1:-1])
-        print('    printf({}"\\n");'.format(text))
-
-print('''
+           program_name);''',
+              help_code,
+              '''
     exit(EXIT_SUCCESS);
 }
 
@@ -304,38 +350,19 @@ static mit_state *S;
 static void exit_function(void)
 {
     mit_destroy(S);
-}''')
-
-for feature in Feature.features:
-    if feature.top_level_code:
-        print(feature.top_level_code)
-
-print('''
+}''',
+              top_level_code,
+              '''
 int main(int argc, char *argv[])
 {
-    set_program_name(argv[0]);
-    mit_word (*run_fn)(mit_state *) = mit_run;
-''')
-
-for feature in Feature.features:
-    if feature.init_code:
-        print(textwrap.indent(feature.init_code, '    '))
-
-shortopts = ''
-for element in CommandLineElement.elements:
-    if isinstance(element, Option) and element.short_name:
-        shortopts += element.short_name
-        if element.arg == 'required_argument':
-            shortopts += ':'
-        elif element.arg == 'optional_argument':
-            shortopts += '::'
-print('''\
+''',
+              init_code,
+              Code('''
     // Options string starts with '+' to stop option processing at first
     // non-option, then leading ':' so as to return ':' for a missing arg,
     // not '?'
-    const char *shortopts = "+:{}";'''.format(shortopts))
-
-print('''
+    const char *shortopts = "+:{}";'''.format(shortopts)),
+              Code('''
     for (;;) {
         int this_optind = optind ? optind : 1, longindex = -1;
         int c = getopt_long(argc, argv, shortopts, longopts, &longindex);
@@ -346,31 +373,16 @@ print('''
             die("option '%s' requires an argument", argv[this_optind]);
         else if (c == '?')
             die("unrecognised option '%s'\\nTry '%s --help' for more information.", argv[this_optind], program_name);
-''')
-
-for i, option in enumerate(Option.options):
-    if option.short_name:
-        print('''\
-        if (c == '{short_name}')
-            longindex = {index};
-'''.format(
-    short_name = option.short_name,
-    index = i
-))
-
-for i, option in enumerate(Option.options):
-    if option.parse_code:
-        print('        if (longindex == {})\n'.format(i) +
-              textwrap.indent(option.parse_code, '            '))
-
-print ('    }\n')
-        
-print('''\
+'''),
+              short_options_code,
+              long_options_code,
+              Code('}'),
+              Code('''
     // If invoked without an object file, give usage message and exit
     argc -= optind;
     if (argc < 1)
-        usage();
-
+        usage();'''),
+              Code('''
     // Set up VM
     S = mit_auto_extend_init();
     if (S == NULL)
@@ -379,7 +391,8 @@ print('''\
         die("could not register atexit handler");
     if (mit_register_args(S, argc, argv + optind) != 0)
         die("could not register command-line arguments");
-
+              '''),
+              Code('''
     // Load object file and report any error
     int fd = open(argv[optind], O_RDONLY);
     if (fd < 0)
@@ -390,48 +403,39 @@ print('''\
     close(fd);
     const char *err = NULL;
     if (ret < 0)
-        switch (ret) {''')
-
-for error in LoadError:
-    print('''\
-        case MIT_LOAD_ERROR_{}:
-            err = "{}";
-            break;'''.format(
-                error.name,
-                error.name.lower().translate(str.maketrans('_', ' '))
-            )
-    )
-
-print('''\
-        default:
-            err = "unknown error!";
-            break;
-        }
+        switch (ret) {''',
+                 Code(*[
+                     '''\
+                     case MIT_LOAD_ERROR_{}:
+                         err = "{}";
+                         break;'''.format(
+                         error.name,
+                         error.name.lower().translate(str.maketrans('_', ' '))
+                     ) for error in LoadError
+                 ], '''\
+                 default:
+                     err = "unknown error!";
+                     break;''')
+              ),
+            Code('''
+    }
     if (err != NULL)
         die("%s: %s", argv[optind], err);
-''')
-
-print('''\
+            '''),
+            Code('''
     // Run
     for (;;) {
-        mit_word error = run_fn(S);
-        switch (error) {
-        default:
-            break;''')
-
-for feature in Feature.features:
-    if feature.exception_handler:
-        print(textwrap.indent(feature.exception_handler, '        '))
-
-print('''\
-        }
-''')
-
-for feature in Feature.features:
-    if feature.exit_code:
-        print(textwrap.indent(feature.exit_code, '        '))
-
-print('''
+        mit_word error = run_fn(S);''',
+                 Code('''switch (error) {''',
+                      handlers_code,
+                      Code('''\
+                      default:
+                          break;'''),
+                      '''\
+                      }'''),
+                 exit_code),
+            '''
         return error == MIT_ERROR_HALT ? 0 : error;
     }
-}''')
+}''',
+]).unindented_str())

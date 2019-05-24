@@ -11,7 +11,7 @@ RISK.
 
 from enum import Enum
 
-from mit_core.code_buffer import Code
+from .code_buffer import Code
 
 
 class AbstractInstruction(Enum):
@@ -47,13 +47,15 @@ class AbstractInstruction(Enum):
         return self.opcode
 
     @classmethod
-    def print_c(cls, prefix):
-        '''Print the instructions as a C enum.'''
-        print('\nenum {')
+    def to_c(cls, prefix):
+        '''Return a Code of the instructions as a C enum.'''
+        code = Code()
+        code.append('enum {')
         for instruction in cls:
-            print('    INSTRUCTION({}{}, {:#x})'.format(
+            code.append(Code('    INSTRUCTION({}{}, {:#x})'.format(
                 prefix,
                 instruction.name,
                 instruction.value,
-            ))
-        print('};')
+            )))
+        code.append('};')
+        return code
