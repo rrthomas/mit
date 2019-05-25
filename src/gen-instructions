@@ -8,11 +8,24 @@
 # THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 # RISK.
 
+import sys
+import gzip
+
 from mit_core import vm_data, instruction_gen
 
 from mit_core.vm_data import Instruction, InternalExtraInstruction
 from mit_core.code_buffer import Code
 from mit_core.instruction_gen import dispatch, gen_case
+
+
+if len(sys.argv) != 2:
+    print("Usage: gen-instructions TRACE-FILENAME", file=sys.stderr)
+    sys.exit(1)
+
+
+# Read trace
+trace_filename = sys.argv[1]
+with gzip.open(trace_filename, 'rb') as f: trace = f.read()
 
 
 # Write the output file
@@ -79,7 +92,7 @@ body_code.append('''\
 body_code.extend(dispatch(Instruction, 'O_', Code(
     '/* Undefined instruction. */',
     'RAISE(MIT_ERROR_INVALID_OPCODE);',
-)))
+), trace))
 body_code.append('return MIT_ERROR_OK;')
 code.append(body_code)
 
