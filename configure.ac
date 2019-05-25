@@ -50,6 +50,9 @@ gl_INIT
 # Set a value even if not found, so that an invocation via build-aux/missing works
 AC_PATH_PROG([HELP2MAN], [help2man], [help2man])
 
+# Choose default CFLAGS for higher optimization
+AX_CC_MAXOPT
+
 # Extra warnings with GCC
 AC_ARG_ENABLE([gcc-warnings],
   [AS_HELP_STRING([--disable-gcc-warnings],
