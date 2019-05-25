@@ -14,6 +14,7 @@ The main entry point is dispatch().
 import functools
 
 from .code_buffer import Code
+from .opcode_frequency import counts
 
 
 type_wordses = {'mit_word': 1} # Enough for the core
@@ -423,18 +424,22 @@ def gen_case(instruction):
         code.extend(effect.store_results())
     return code
 
-def dispatch(instructions, prefix, undefined_case):
+def dispatch(Instruction, prefix, undefined_case, trace=None):
     '''
     Generate dispatch code for some Instructions.
 
-     - instructions - Enum of Instructions.
-     - prefix - opcode name prefix.
+     - Instruction - AbstractInstruction.
+     - prefix - instruction name prefix.
      - undefined_case - a Code defining the fallback behaviour.
+     - trace - an opcode trace to use to improve the dispatch code.
     '''
     assert isinstance(undefined_case, Code)
     code = Code()
     else_text = ''
-    for instruction in instructions:
+    order = enumerate(Instruction)
+    if trace is not None:
+        order = counts(Instruction, trace)
+    for (_, instruction) in order:
         code.append('{else_text}if (opcode == {prefix}{instruction}) {{'.format(
             else_text=else_text,
             instruction=instruction.name,

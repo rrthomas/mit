@@ -1,0 +1,48 @@
+#!/usr/bin/env python3
+#
+# Copyright (c) 2018-2019 Mit authors
+#
+# The package is distributed under the MIT/X11 License.
+#
+# THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
+# RISK.
+
+import sys
+import gzip
+import argparse
+from pprint import pprint
+
+from mit_core.vm_data import Instruction
+from mit_core import opcode_frequency
+
+
+# Command-line arguments
+parser = argparse.ArgumentParser(
+    prog='opcode-frequency',
+    description='Count the frequency of opcodes or pairs in a trace.',
+)
+parser.add_argument('-n', '--topmost', type=int,
+                    help='maximum number of opcodes/pairs to print')
+parser.add_argument('-p', '--pairs', action='store_true',
+                    help='''calculate frequency of instruction pairs
+                    (default is single instructions)''')
+parser.add_argument('file', metavar='FILE')
+args = parser.parse_args()
+
+# Read trace
+with gzip.open(args.file, 'rb') as f: trace = f.read()
+
+# Compute instruction counts
+if not args.pairs: # Single instructions
+    counts = [(count, instruction.name)
+              for count, instruction in
+              opcode_frequency.counts(Instruction, trace)]
+else: # Instruction pairs
+    counts = [(count, (instruction1.name, instruction2.name))
+              for count, (instruction1, instruction2) in
+              opcode_frequency.pair_counts(Instruction, trace)]
+if args.topmost is not None:
+    counts = counts[:args.topmost]
+
+# Print results
+pprint(counts)

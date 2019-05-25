@@ -110,7 +110,8 @@ EXTRA_DIST += \
 	%D%/gen-labels \
 	%D%/gen-predictor \
 	%D%/gen-specializer \
-	%D%/instructions.trace.gz
+	%D%/instructions.trace.gz \
+	%D%/opcode-frequency
 
 DISTCLEANFILES += \
 	%D%/instructions.predictor_pickle \
