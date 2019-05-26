@@ -81,10 +81,7 @@ def store_stack_type(name, type, depth):
 
 def pop_stack_type(name, type):
     code = Code()
-    code.append(
-        'if (S->STACK_DEPTH < {}) RAISE(MIT_ERROR_STACK_OVERFLOW);'
-        .format(type_words(type))
-    )
+    code.extend(check_underflow(type_words(type)))
     code.extend(load_stack_type(name, type, 0))
     code.append(
         'S->STACK_DEPTH -= {};'.format(type_words(type)),
@@ -93,10 +90,7 @@ def pop_stack_type(name, type):
 
 def push_stack_type(name, type):
     code = Code()
-    code.append(
-        'if (S->stack_size - S->STACK_DEPTH < {}) RAISE(MIT_ERROR_INVALID_STACK_WRITE);'
-        .format(type_words(type))
-    )
+    code.extend(check_overflow(type_words(type), 0))
     code.extend(store_stack_type(name, type, 0))
     code.append(
         'S->STACK_DEPTH += {};'.format(type_words(type)),
