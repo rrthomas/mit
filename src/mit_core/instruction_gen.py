@@ -27,7 +27,7 @@ def type_words(type):
     '''
     return type_wordses.get(type, -1)
 
-def load_stack_type(name, type, depth):
+def load_stack(name, depth=0, type='mit_word'):
     '''
     Generate C code to load the variable `name` of type `type` occupying
     stack slots starting at position `depth`. Does not check the stack.
@@ -51,9 +51,9 @@ def load_stack_type(name, type, depth):
     ))
     return Code('{', code, '}')
 
-def store_stack_type(name, type, depth):
+def store_stack(value, depth=0, type='mit_word'):
     '''
-    Generate C code to store the variable `name` of type `type` occupying
+    Generate C code to store the value `value` of type `type` occupying
     stack slots starting at position `depth`. Does not check the stack.
 
     Returns a Code.
@@ -62,7 +62,7 @@ def store_stack_type(name, type, depth):
     code.extend(disable_warnings(
         ['-Wpointer-to-int-cast'],
         Code('mit_max_stack_item_t temp = (mit_max_stack_item_t){};')
-            .format(name),
+            .format(value),
     ))
     for i in reversed(range(type_words(type) - 1)):
         code.append(
@@ -79,19 +79,19 @@ def store_stack_type(name, type, depth):
     )
     return Code('{', code, '}')
 
-def pop_stack_type(name, type):
+def pop_stack(name, type='mit_word'):
     code = Code()
     code.extend(check_underflow(type_words(type)))
-    code.extend(load_stack_type(name, type, 0))
+    code.extend(load_stack(name, type=type))
     code.append(
         'S->STACK_DEPTH -= {};'.format(type_words(type)),
     )
     return code
 
-def push_stack_type(name, type):
+def push_stack(value, type='mit_word'):
     code = Code()
     code.extend(check_overflow(type_words(type), 0))
-    code.extend(store_stack_type(name, type, 0))
+    code.extend(store_stack(value, type=type))
     code.append(
         'S->STACK_DEPTH += {};'.format(type_words(type)),
     )
@@ -236,13 +236,13 @@ class StackItem:
         '''
         Returns a Code to load `self` from the stack to its C variable.
         '''
-        return load_stack_type(self.name, self.type, self.depth)
+        return load_stack(self.name, self.depth, self.type)
 
     def store(self):
         '''
         Returns a Code to store `self` to the stack from its C variable.
         '''
-        return store_stack_type(self.name, self.type, self.depth)
+        return store_stack(self.name, self.depth, self.type)
 
 
 class StackPicture:

@@ -12,7 +12,7 @@ from enum import Enum, unique
 from mit_core.code_buffer import Code
 from mit_core.instruction import AbstractInstruction
 from mit_core.vm_data import Register
-from mit_core.instruction_gen import pop_stack_type, push_stack_type
+from mit_core.instruction_gen import pop_stack, push_stack
 
 
 @unique
@@ -222,11 +222,11 @@ mit_lib = {
 for register in Register:
     pop_code = Code()
     pop_code.append('mit_state *inner_state;')
-    pop_code.extend(pop_stack_type('inner_state', 'mit_state *'))
+    pop_code.extend(pop_stack('inner_state', type='mit_state *'))
 
     get_code = Code()
     get_code.extend(pop_code)
-    get_code.extend(push_stack_type(
+    get_code.extend(push_stack(
         'inner_state',
         'mit_get_{}(inner_state)'.format(register.name)
     ))
@@ -237,7 +237,7 @@ for register in Register:
     set_code = Code()
     set_code.extend(pop_code)
     set_code.append('mit_word value;')
-    set_code.extend(pop_stack_type('value', 'mit_word'))
+    set_code.extend(pop_stack('value'))
     set_code.append('''\
         mit_set_{}(inner_state, value);'''.format(register.name),
     )
@@ -254,7 +254,7 @@ class Library(AbstractInstruction):
             '''\
             {
                 mit_word function;''',
-            pop_stack_type('function', 'mit_word'),
+            pop_stack('function'),
             '''
                 int ret = extra_{}(S, function);
                 if (ret != 0)
