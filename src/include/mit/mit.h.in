@@ -341,22 +341,6 @@ static int store_stack(mit_word * restrict stack, mit_uword stack_depth,
     *UNCHECKED_STACK(stack, stack_depth, pos) = v;
     return MIT_ERROR_OK;
 }
-
-static int pop_stack(mit_state *S, mit_word *v)
-{
-    int ret = load_stack(S->stack, S->STACK_DEPTH, 0, v);
-    S->STACK_DEPTH--;
-    return ret;
-}
-
-static int push_stack(mit_state *S, mit_word v)
-{
-    if (unlikely(S->STACK_DEPTH >= S->stack_size))
-        return MIT_ERROR_STACK_OVERFLOW;
-
-    (S->STACK_DEPTH)++;
-    return store_stack(S->stack, S->STACK_DEPTH, 0, v);
-}
 #pragma GCC diagnostic pop
 
 

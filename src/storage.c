@@ -76,12 +76,18 @@ int mit_store_stack(mit_state *S, mit_uword pos, mit_word val)
 
 int mit_pop_stack(mit_state *S, mit_word *val_ptr)
 {
-    return pop_stack(S, val_ptr);
+    int ret = load_stack(S->stack, S->STACK_DEPTH, 0, val_ptr);
+    S->STACK_DEPTH--;
+    return ret;
 }
 
 int mit_push_stack(mit_state *S, mit_word val)
 {
-    return push_stack(S, val);
+    if (unlikely(S->STACK_DEPTH >= S->stack_size))
+        return MIT_ERROR_STACK_OVERFLOW;
+
+    (S->STACK_DEPTH)++;
+    return store_stack(S->stack, S->STACK_DEPTH, 0, val);
 }
 
 

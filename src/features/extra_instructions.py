@@ -12,7 +12,7 @@ from enum import Enum, unique
 from mit_core.code_buffer import Code
 from mit_core.instruction import AbstractInstruction
 from mit_core.vm_data import Register
-from mit_core.instruction_gen import pop_stack_type
+from mit_core.instruction_gen import pop_stack_type, push_stack_type
 
 
 @unique
@@ -226,22 +226,19 @@ for register in Register:
 
     get_code = Code()
     get_code.extend(pop_code)
-    get_code.append(
-        # No need to check return value: we must have room for the result
-        # having popped at least one item above.
-        'push_stack(S, mit_get_{}(inner_state));'.format(register.name),
-    )
+    get_code.extend(push_stack_type(
+        'inner_state',
+        'mit_get_{}(inner_state)'.format(register.name)
+    ))
     mit_lib['GET_{}'.format(register.name.upper())] = (
         len(mit_lib), None, None, get_code,
     )
 
     set_code = Code()
     set_code.extend(pop_code)
+    set_code.append('mit_word value;')
+    set_code.extend(pop_stack_type('value', 'mit_word'))
     set_code.append('''\
-        mit_word value;
-        int ret = pop_stack(S, &value);
-        if (ret != 0)
-            RAISE(ret);
         mit_set_{}(inner_state, value);'''.format(register.name),
     )
     mit_lib['SET_{}'.format(register.name.upper())] = (
@@ -253,17 +250,17 @@ MitLib = AbstractInstruction('MitLib', mit_lib)
 class Library(AbstractInstruction):
     '''Wrap an Instruction enumeration as a library.'''
     def __init__(self, opcode, library, includes):
-        super().__init__(opcode, None, None, Code('''\
-            {{
-                mit_word function;
-                int ret = pop_stack(S, &function);
-                if (ret != 0)
-                    RAISE(ret);
-                ret = extra_{}(S, function);
+        super().__init__(opcode, None, None, Code(*[
+            '''\
+            {
+                mit_word function;''',
+            pop_stack_type('function', 'mit_word'),
+            '''
+                int ret = extra_{}(S, function);
                 if (ret != 0)
                     RAISE(ret);
             }}'''.format(self.name.lower())
-        ))
+        ]))
         self.library = library
         self.includes = includes
 
