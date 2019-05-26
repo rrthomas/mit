@@ -262,7 +262,7 @@ class Library(AbstractInstruction):
                 ret = extra_{}(S, function);
                 if (ret != 0)
                     RAISE(ret);
-            }}'''
+            }}'''.format(self.name.lower())
         ))
         self.library = library
         self.includes = includes
@@ -299,7 +299,3 @@ class LibInstruction(Library):
 #include <string.h>
 #include "binary-io.h"
 ''')
-
-# Inject name into each library's code
-for instruction in LibInstruction:
-    instruction.code = instruction.code.format(str.lower(instruction.name))
