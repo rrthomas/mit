@@ -184,14 +184,10 @@ _GL_ATTRIBUTE_PURE static uint8_t *native_address_of_range(mit_state *S, mit_uwo
 
 static int load(mit_state *S, mit_uword addr, unsigned size, mit_word *val_ptr)
 {
-    if (unlikely(addr >= S->memory_size)) {
-        S->BAD = addr;
+    if (unlikely(addr >= S->memory_size))
         return MIT_ERROR_INVALID_MEMORY_READ;
-    }
-    if (unlikely(!is_aligned(addr, size))) {
-        S->BAD = addr;
+    if (unlikely(!is_aligned(addr, size)))
         return MIT_ERROR_UNALIGNED_ADDRESS;
-    }
 
     mit_word val;
     switch (size) {
@@ -237,14 +233,10 @@ static int load(mit_state *S, mit_uword addr, unsigned size, mit_word *val_ptr)
 
 static int store(mit_state *S, mit_uword addr, unsigned size, mit_word val)
 {
-    if (unlikely(addr >= S->memory_size)) {
-        S->BAD = addr;
+    if (unlikely(addr >= S->memory_size))
         return MIT_ERROR_INVALID_MEMORY_WRITE;
-    }
-    if (unlikely(!is_aligned(addr, size))) {
-        S->BAD = addr;
+    if (unlikely(!is_aligned(addr, size)))
         return MIT_ERROR_UNALIGNED_ADDRESS;
-    }
 
     switch (size) {
     case 0:
@@ -328,10 +320,8 @@ int mit_push_stack(mit_state *S, mit_word val);
 #pragma GCC diagnostic ignored "-Wunused-function"
 static int load_stack(mit_state *S, mit_uword pos, mit_word *vp)
 {
-    if (unlikely(pos >= S->STACK_DEPTH)) {
-        S->BAD = pos;
+    if (unlikely(pos >= S->STACK_DEPTH))
         return MIT_ERROR_INVALID_STACK_READ;
-    }
 
     *vp = *UNCHECKED_STACK(pos);
     return MIT_ERROR_OK;
@@ -339,10 +329,8 @@ static int load_stack(mit_state *S, mit_uword pos, mit_word *vp)
 
 static int store_stack(mit_state *S, mit_uword pos, mit_word v)
 {
-    if (unlikely(pos >= S->STACK_DEPTH)) {
-        S->BAD = pos;
+    if (unlikely(pos >= S->STACK_DEPTH))
         return MIT_ERROR_INVALID_STACK_WRITE;
-    }
 
     *UNCHECKED_STACK(pos) = v;
     return MIT_ERROR_OK;
@@ -357,10 +345,8 @@ static int pop_stack(mit_state *S, mit_word *v)
 
 static int push_stack(mit_state *S, mit_word v)
 {
-    if (unlikely(S->STACK_DEPTH >= S->stack_size)) {
-        S->BAD = S->stack_size;
+    if (unlikely(S->STACK_DEPTH >= S->stack_size))
         return MIT_ERROR_STACK_OVERFLOW;
-    }
 
     (S->STACK_DEPTH)++;
     return store_stack(S, 0, v);

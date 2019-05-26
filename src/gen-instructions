@@ -43,8 +43,10 @@ code.append('''\
     #define NEXT                                                  \\
         do {                                                      \\
             int ret = load(S, S->PC, MIT_SIZE_WORD, (mit_word *)&(S->I)); \\
-            if (ret != 0)                                         \\
+            if (ret != 0) {                                       \\
+                S->BAD = S->PC;                                   \\
                 RAISE(ret);                                       \\
+            }                                                     \\
             S->PC += MIT_WORD_BYTES;                              \\
         } while (0)
 

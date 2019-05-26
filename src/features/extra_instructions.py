@@ -224,6 +224,8 @@ for register in Register:
     get_code = Code()
     get_code.extend(pop_code)
     get_code.append(
+        # No need to check return value: we must have room for the result
+        # having popped at least one item above.
         'push_stack(S, mit_get_{}(inner_state));'.format(register.name),
     )
     mit_lib['GET_{}'.format(register.name.upper())] = (

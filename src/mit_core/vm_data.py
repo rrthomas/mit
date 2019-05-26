@@ -71,27 +71,35 @@ class Instruction(AbstractInstruction):
 
     LOAD = (0x8, ['addr', 'size'], ['x'], Code('''\
         int ret = load(S, addr, size, &x);
-        if (ret != 0)
-            RAISE(ret);'''
+        if (ret != 0) {
+            S->BAD = addr;
+            RAISE(ret);
+        }'''
     ))
 
     STORE = (0x9, ['x', 'addr', 'size'], [], Code('''\
         int ret = store(S, addr, size, x);
-        if (ret != 0)
-            RAISE(ret);'''
+        if (ret != 0) {
+            S->BAD = addr;
+            RAISE(ret);
+        }'''
     ))
 
     LIT = (0xa, [], ['n'], Code('''\
         int ret = load(S, S->PC, MIT_SIZE_WORD, &n);
-        if (ret != 0)
+        if (ret != 0) {
+            S->BAD = S->PC;
             RAISE(ret);
+        }
         S->PC += MIT_WORD_BYTES;'''
     ))
 
     LIT_PC_REL = (0xb, [], ['n'], Code('''\
         int ret = load(S, S->PC, MIT_SIZE_WORD, &n);
-        if (ret != 0)
+        if (ret != 0) {
+            S->BAD = S->PC;
             RAISE(ret);
+        }
         n += S->PC;
         S->PC += MIT_WORD_BYTES;'''
     ))
