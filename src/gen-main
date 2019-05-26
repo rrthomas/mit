@@ -227,7 +227,7 @@ Feature(# Register and stack backtrace
                     items = S->STACK_DEPTH;
                 for (mit_uword pos = 0; pos < items; pos++) {
                     mit_word w;
-                    if (load_stack(S, pos, &w) == 0) {
+                    if (load_stack(S->stack, S->STACK_DEPTH, pos, &w) == 0) {
                         word_to_str(w, &word_str[0]);
                         fprintf(stderr, "0x%.*s\\n", WORD_STRLEN, word_str);
                     }

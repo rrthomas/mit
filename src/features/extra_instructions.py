@@ -171,12 +171,15 @@ mit_lib = {
     'LOAD': (0x2, ['addr', 'size', 'inner_state:mit_state *'], ['value', 'ret:int'],
         Code('''\
             value = 0;
-            ret = load(inner_state, addr, size, &value);
+            ret = load(inner_state->memory, inner_state->memory_size,
+                       addr, size, &value);
         '''),
     ),
 
     'STORE': (0x3, ['value', 'addr', 'size', 'inner_state:mit_state *'], ['ret:int'],
-        Code('ret = store(inner_state, addr, size, value);'),
+        Code('''\
+             ret = store(inner_state->memory, inner_state->memory_size,
+                         addr, size, value);'''),
     ),
 
     'INIT': (0x4, ['memory_size', 'stack_size'], ['new_state:mit_state *'],

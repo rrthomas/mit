@@ -48,17 +48,17 @@ _GL_ATTRIBUTE_CONST int mit_is_aligned(mit_uword addr, unsigned size)
 
 _GL_ATTRIBUTE_PURE uint8_t *mit_native_address_of_range(mit_state *S, mit_uword addr, mit_uword len)
 {
-    return native_address_of_range(S, addr, len);
+    return native_address_of_range(S->memory, S->memory_size, addr, len);
 }
 
 int mit_load(mit_state *S, mit_uword addr, unsigned size, mit_word *val_ptr)
 {
-    return load(S, addr, size, val_ptr);
+    return load(S->memory, S->memory_size, addr, size, val_ptr);
 }
 
 int mit_store(mit_state *S, mit_uword addr, unsigned size, mit_word val)
 {
-    return store(S, addr, size, val);
+    return store(S->memory, S->memory_size, addr, size, val);
 }
 
 
@@ -66,12 +66,12 @@ int mit_store(mit_state *S, mit_uword addr, unsigned size, mit_word val)
 
 int mit_load_stack(mit_state *S, mit_uword pos, mit_word *val_ptr)
 {
-    return load_stack(S, pos, val_ptr);
+    return load_stack(S->stack, S->STACK_DEPTH, pos, val_ptr);
 }
 
 int mit_store_stack(mit_state *S, mit_uword pos, mit_word val)
 {
-    return store_stack(S, pos, val);
+    return store_stack(S->stack, S->STACK_DEPTH, pos, val);
 }
 
 int mit_pop_stack(mit_state *S, mit_word *val_ptr)

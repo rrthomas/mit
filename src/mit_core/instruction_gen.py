@@ -36,13 +36,13 @@ def load_stack_type(name, type, depth):
     '''
     code = Code()
     code.append(
-        'mit_max_stack_item_t temp = (mit_uword)(*UNCHECKED_STACK({}));'
+        'mit_max_stack_item_t temp = (mit_uword)(*UNCHECKED_STACK(S->stack, S->STACK_DEPTH, {}));'
         .format(depth)
     )
     for i in range(type_words(type) - 1):
         code.append('temp <<= MIT_WORD_BIT;')
         code.append(
-            'temp |= (mit_uword)(*UNCHECKED_STACK({}));'
+            'temp |= (mit_uword)(*UNCHECKED_STACK(S->stack, S->STACK_DEPTH, {}));'
             .format(depth + i + 1)
         )
     code.extend(disable_warnings(
@@ -66,12 +66,12 @@ def store_stack_type(name, type, depth):
     ))
     for i in reversed(range(type_words(type) - 1)):
         code.append(
-            '*UNCHECKED_STACK({}) = (mit_uword)(temp & MIT_WORD_MASK);'
+            '*UNCHECKED_STACK(S->stack, S->STACK_DEPTH, {}) = (mit_uword)(temp & MIT_WORD_MASK);'
             .format(depth + i + 1)
         )
         code.append('temp >>= MIT_WORD_BIT;')
     code.append(
-        '*UNCHECKED_STACK({}) = (mit_uword)({});'
+        '*UNCHECKED_STACK(S->stack, S->STACK_DEPTH, {}) = (mit_uword)({});'
         .format(
             depth,
             'temp & MIT_WORD_MASK' if type_words(type) > 1 else 'temp',

@@ -70,7 +70,7 @@ class Instruction(AbstractInstruction):
     ))
 
     LOAD = (0x8, ['addr', 'size'], ['x'], Code('''\
-        int ret = load(S, addr, size, &x);
+        int ret = load(S->memory, S->memory_size, addr, size, &x);
         if (ret != 0) {
             S->BAD = addr;
             RAISE(ret);
@@ -78,7 +78,7 @@ class Instruction(AbstractInstruction):
     ))
 
     STORE = (0x9, ['x', 'addr', 'size'], [], Code('''\
-        int ret = store(S, addr, size, x);
+        int ret = store(S->memory, S->memory_size, addr, size, x);
         if (ret != 0) {
             S->BAD = addr;
             RAISE(ret);
@@ -86,7 +86,7 @@ class Instruction(AbstractInstruction):
     ))
 
     LIT = (0xa, [], ['n'], Code('''\
-        int ret = load(S, S->PC, MIT_SIZE_WORD, &n);
+        int ret = load(S->memory, S->memory_size, S->PC, MIT_SIZE_WORD, &n);
         if (ret != 0) {
             S->BAD = S->PC;
             RAISE(ret);
@@ -95,7 +95,7 @@ class Instruction(AbstractInstruction):
     ))
 
     LIT_PC_REL = (0xb, [], ['n'], Code('''\
-        int ret = load(S, S->PC, MIT_SIZE_WORD, &n);
+        int ret = load(S->memory, S->memory_size, S->PC, MIT_SIZE_WORD, &n);
         if (ret != 0) {
             S->BAD = S->PC;
             RAISE(ret);
