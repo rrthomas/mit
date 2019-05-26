@@ -30,7 +30,7 @@ def type_words(type):
 def load_stack_type(name, type, depth):
     '''
     Generate C code to load the variable `name` of type `type` occupying
-    stack slots starting at position `depth`.
+    stack slots starting at position `depth`. Does not check the stack.
 
     Returns a Code.
     '''
@@ -54,9 +54,9 @@ def load_stack_type(name, type, depth):
 def store_stack_type(name, type, depth):
     '''
     Generate C code to store the variable `name` of type `type` occupying
-    stack slots starting at position `depth`.
+    stack slots starting at position `depth`. Does not check the stack.
 
-    Returns a str.
+    Returns a Code.
     '''
     code = Code()
     code.extend(disable_warnings(
