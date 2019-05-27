@@ -21,10 +21,16 @@
 #include <mit@PACKAGE_SUFFIX@/opcodes.h>
 
 
+// Optimization
+// Hint that `x` is usually true/false.
 // https://gcc.gnu.org/onlinedocs/gcc/Other-Builtins.html
-// Hint that `x` is usually true/false. FIXME: Make this portable.
+#if @HAVE___BUILTIN_EXPECT@ == 1
 #define likely(x) __builtin_expect(!!(x), 1)
 #define unlikely(x) __builtin_expect(!!(x), 0)
+#else
+#define likely(x) (x)
+#define unlikely(x) (x)
+#endif
 
 // Build-time parameters
 #define MIT_WORD_BYTES @WORD_BYTES@
