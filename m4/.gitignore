@@ -151,3 +151,4 @@
 /safe-write.m4
 /signal_h.m4
 /write.m4
+/stdnoreturn.m4
