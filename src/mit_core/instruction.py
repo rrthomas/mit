@@ -45,17 +45,3 @@ class AbstractInstruction(Enum):
     @property
     def value(self):
         return self.opcode
-
-    @classmethod
-    def to_c(cls, prefix):
-        '''Return a Code of the instructions as a C enum.'''
-        code = Code()
-        code.append('enum {')
-        for instruction in cls:
-            code.append(Code('    INSTRUCTION({}{}, {:#x})'.format(
-                prefix,
-                instruction.name,
-                instruction.value,
-            )))
-        code.append('};')
-        return code

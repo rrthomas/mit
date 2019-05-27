@@ -14,15 +14,7 @@ from mit_core.vm_data import (
     ExecutionError,
 )
 from mit_core.errors import MallocError, LoadError, SaveError
-
-
-def enum_to_c(enum, prefix):
-    code = Code()
-    code.append('enum {')
-    for error in enum:
-        code.append(Code('{}{} = {},'.format(prefix, error.name, error)))
-    code.append('};')
-    return code
+from mit_core.enum_util import enum_to_c
 
 
 code = Code()
@@ -42,14 +34,11 @@ code.append('''\
 #define MIT_OPCODES
 
 
-#define INSTRUCTION(name, opcode) name = opcode,
 ''')
 code.append('')
-code.extend(Instruction.to_c('O_'))
+code.extend(enum_to_c(Instruction, 'O_'))
 code.append('')
-code.extend(InternalExtraInstruction.to_c('O_EXTRA_'))
-code.append('')
-code.append('#undef INSTRUCTION')
+code.extend(enum_to_c(InternalExtraInstruction, 'O_EXTRA_'))
 code.append('')
 code.extend(enum_to_c(ExecutionError, 'MIT_ERROR_'))
 code.append('')

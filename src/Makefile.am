@@ -21,6 +21,7 @@ LIB_CORE_SRCS = \
 	mit_core/vm_data.py \
 	mit_core/errors.py \
 	mit_core/code_buffer.py \
+	mit_core/enum_util.py \
 	mit_core/opcode_frequency.py \
 	mit_core/instruction_gen.py
 nodist_libmit@PACKAGE_SUFFIX@_la_SOURCES = $(C_SRCS) $(nodist_LIB_SRCS)
