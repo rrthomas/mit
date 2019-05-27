@@ -30,29 +30,68 @@ with open(predictor_filename, 'rb') as f:
         for state in json.loads(f.read().decode())
     ]
 
+# Probabilities.
+
+class Distribution:
+    '''
+    Represents a frequency distribution over predictor states.
+    Typically this represents some hypothetical situation.
+    `NULL_HYPOTHESIS` is a Distribution covering all situations.
+    The frequency of `state`, written `self[state]`, may be interpreted as
+    the estimated number of times the state is visited and the hypothesis is
+    true.
+
+     - total - the sum of the frequencies of all the states.
+    '''
+    def __init__(self, iterable):
+        '''
+         - iterable - iterable of (state (int), frequency (float)).
+           If a `state` is repeated, its `frequency`s will be summed.
+        '''
+        self.frequencies = {}
+        for state, frequency in iterable:
+            assert type(state) is int and 0 <= state < len(predictor)
+            assert type(frequency) is float and 0 <= frequency
+            if state not in self.frequencies:
+                self.frequencies[state] = 0.
+            self.frequencies[state] += frequency
+        self.total = sum(self.frequencies.values())
+
+    def __repr__(self):
+        return 'Distribution(total={})'.format(self.total)
+
+    def __getitem__(self, state):
+        '''Equivalent to `self.frequencies[state]`.'''
+        assert type(state) is int and 0 <= state < len(predictor)
+        return self.frequencies.get(state, 0.0)
+
+    def predict(self):
+        '''
+        Returns a dict from Instruction to Distribution. Each entry gives
+        a possible next Instruction and the Distribution that would result.
+        The `total`s of the distributions give a frequency distribution over
+        the Instructions.
+        '''
+        successors = {instruction: [] for instruction in Instruction}
+        for state, frequency in self.frequencies.items():
+            for instruction, (new_state, count) in predictor[state].items():
+                probability = count / NULL_HYPOTHESIS[state]
+                successors[instruction].append(
+                    (new_state, frequency * probability)
+                )
+        return {
+            instruction: Distribution(x)
+            for instruction, x in successors.items()
+        }
+
+NULL_HYPOTHESIS = Distribution(
+    (state, float(sum(count for _, count in transitions.values())))
+    for state, transitions in enumerate(predictor)
+)
+
 # Find all paths through the predictor.
 
 print("Finding paths")
-
-# Total visit count of each state.
-# [int]
-state_counts = [
-    sum(count for _, count in transitions.values())
-    for transitions in predictor
-]
-
-# Estimated probability distribution over instructions for each state.
-# [{Instruction: (new_state (int), probability (float))}]
-state_probabilities = [
-    {
-        instruction: (
-            new_state,
-            float(count + 1) / float(state_counts[state] + 64),
-        )
-        for instruction, (new_state, count) in transitions.items()
-    }
-    for state, transitions in enumerate(predictor)
-]
 
 class Path:
     '''
@@ -176,43 +215,29 @@ class Path:
         
 
 # Common instruction sequences.
-# Path -> estimated_count (float)
+# Path -> Distribution
 language = {}
 
 def walk(path, distribution):
     '''
      - path - a Path.
-     - distribution - list of float - For each predictor state, the estimated
-       number of times we reached that state via `path`.
+     - distribution - a Distribution.
     '''
     # Check for statistical irrelevance (but keep the empty path).
-    estimated_count = sum(distribution)
-    if len(path) > 0 and estimated_count < 40000.: return
+    if len(path) > 0 and distribution.total < 40000.: return
     # Okay, it's common enough, we'll keep it.
-    language[path] = estimated_count
+    language[path] = distribution
     # Check for repetition.
     if path.remove_repeating_part() != path:
         # This path won't become a state, because we'll loop instead.
         return
-    # For all (state, action) pairs, propagate count to the successor state.
-    successors = {
-        instruction: [0.] * len(predictor)
-        for instruction in Instruction
-    }
-    for state, estimated_count in enumerate(distribution):
-        if estimated_count > 1.:
-            probabilities = state_probabilities[state]
-            for instruction, (new_state, probability) in probabilities.items():
-                if path.is_useful_guess(instruction):
-                    additional_count = estimated_count * probability
-                    if additional_count >= 1.:
-                        successors[instruction][new_state] += additional_count
     # Recurse down the tree.
-    for instruction, new_distribution in successors.items():
-        new_path = (path + (instruction,))
-        walk(new_path, new_distribution)
+    for instruction, new_distribution in distribution.predict().items():
+        if path.is_useful_guess(instruction):
+            new_path = (path + (instruction,))
+            walk(new_path, new_distribution)
 
-walk(Path(()), [float(x) for x in state_counts])
+walk(Path(()), NULL_HYPOTHESIS)
 
 # Sanity checks.
 
@@ -231,7 +256,7 @@ path_guesses = {
             for instruction in Instruction
             if (path + (instruction,)) in language
         ],
-        key=lambda instruction: language[path + (instruction,)],
+        key=lambda instruction: language[path + (instruction,)].total,
         reverse=True,
     )
     for path in language
