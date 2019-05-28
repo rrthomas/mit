@@ -92,6 +92,15 @@ NULL_HYPOTHESIS = Distribution(
 )
 
 
+# The set of Instructions that might modify the I register.
+# We cannot guess beyond such an instruction.
+GUESS_LIMITING = frozenset([
+    Instruction.NEXT,
+    Instruction.BRANCH,
+    Instruction.BRANCHZ,
+    Instruction.CALL,
+])
+
 class Path:
     '''
     Represents a sequence of instructions that has just been executed.
@@ -199,10 +208,17 @@ class Path:
 
     def remove_repeating_part(self):
         '''
-        If this Path ends with two repeats of some "loop body", and if we know
-        at least as much about the stack now as we did before the last repeat,
+        If all of:
+         - this Path ends with two repeats of some "loop body",
+         - we know at least as much about the stack now as we did before
+           the last repeat,
+         - the last instruction is in `GUESS_LIMITING`,
         returns the Path before the last repeat, otherwise returns `self`.
         '''
+        if len(self.instructions) < 2:
+            return self
+        if self.instructions[-1] not in GUESS_LIMITING:
+            return self
         for n in range(2, len(self)//2+1):
             if self.instructions[-n:] == self.instructions[-2*n:-n]:
                 shorter = self[:-n]
@@ -288,6 +304,12 @@ path_guesses = {
     )
     for path in language
 }
+
+# For each path, find strings of instructions that might come next.
+
+print("Choosing multi-guesses")
+
+
 
 # Generate state space of (path × rejects) with flood fill.
 
