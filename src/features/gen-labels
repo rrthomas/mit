@@ -50,17 +50,20 @@ class Distribution:
         self.frequencies = {}
         for state, frequency in iterable:
             assert type(state) is int and 0 <= state < len(predictor)
-            assert type(frequency) is float and 0 <= frequency
+            assert type(frequency) is float and 0. <= frequency
             if state not in self.frequencies:
                 self.frequencies[state] = 0.
             self.frequencies[state] += frequency
         self.total = sum(self.frequencies.values())
 
     def __repr__(self):
-        return 'Distribution(total={})'.format(self.total)
+        return 'Distribution({} states, total={})'.format(
+            len(self.frequencies),
+            self.total,
+        )
 
     def __getitem__(self, state):
-        '''Equivalent to `self.frequencies[state]`.'''
+        '''Returns the frequency of `state` under this Distribution.'''
         assert type(state) is int and 0 <= state < len(predictor)
         return self.frequencies.get(state, 0.0)
 
@@ -249,7 +252,7 @@ print("Finding paths")
 
 NUM_PATHS = 1500
 
-# Common instruction sequences.
+# The `NUM_PATHS` most common instruction sequences.
 # Path -> frequency
 language = {}
 
@@ -263,7 +266,7 @@ for _ in range(NUM_PATHS):
     for new_item in item.successors():
         heapq.heappush(heap, new_item)
 
-# Sanity checks.
+# Sanity check.
 
 for path in language:
     assert path[:-1] in language
@@ -359,7 +362,7 @@ def short_circuit(state):
         state = transitions[state]
     return label_map.get(state)
 
-# List of (guess, label or None, label or None).
+# List of (path properties... , guess, label or None, label or None).
 labels = [
     (
         path.tos_constant,
