@@ -11,7 +11,7 @@ RISK.
 
 from mit_core.code_buffer import Code
 from mit_core.vm_data import Instruction
-from mit_core.instruction import AbstractInstruction
+from mit_core.instruction import InstructionEnum
 
 
 def _replace_items(picture, replacement):
@@ -39,7 +39,7 @@ def _gen_specialized_instruction(instruction, tos_constant):
         instruction.terminal,
     )
 
-SpecializedInstruction = AbstractInstruction('SpecializedInstruction', {
+SpecializedInstruction = InstructionEnum('SpecializedInstruction', {
     '{name}_WITH_{tos_constant}'.format(
         name=instruction.name,
         tos_constant=tos_constant,

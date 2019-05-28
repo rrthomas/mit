@@ -10,13 +10,13 @@
 from enum import Enum, unique
 
 from mit_core.code_buffer import Code
-from mit_core.instruction import AbstractInstruction
+from mit_core.instruction import InstructionEnum
 from mit_core.vm_data import Register
 from mit_core.instruction_gen import pop_stack, push_stack
 
 
 @unique
-class LibcLib(AbstractInstruction):
+class LibcLib(InstructionEnum):
     ARGC = (0x0, [], ['argc'], Code('''\
         argc = S->main_argc;
     '''))
@@ -245,9 +245,9 @@ for register in Register:
         len(mit_lib), None, None, set_code,
     )
 
-MitLib = AbstractInstruction('MitLib', mit_lib)
+MitLib = InstructionEnum('MitLib', mit_lib)
 
-class Library(AbstractInstruction):
+class Library(InstructionEnum):
     '''Wrap an Instruction enumeration as a library.'''
     def __init__(self, opcode, library, includes):
         super().__init__(opcode, None, None, Code(*[

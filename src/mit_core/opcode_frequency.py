@@ -14,7 +14,7 @@ def counts(Instruction, trace):
     Returns a list of (count, instruction) sorted by descending count for a
     trace.
 
-     - Instruction - AbstractInstruction
+     - Instruction - InstructionEnum
      - trace - bytes - opcode values
     '''
     counts = {instruction.opcode: 0 for instruction in Instruction}
@@ -29,7 +29,7 @@ def pair_counts(Instruction, trace):
     Returns a list of (count, (instruction1, instruction2)) sorted by
     descending count for a trace.
 
-     - Instruction - AbstractInstruction
+     - Instruction - InstructionEnum
      - trace - bytes - opcode values
     '''
     counts = {(instruction1.opcode, instruction2.opcode): 0

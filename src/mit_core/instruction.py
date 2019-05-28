@@ -14,7 +14,7 @@ from enum import Enum
 from .code_buffer import Code
 
 
-class AbstractInstruction(Enum):
+class InstructionEnum(Enum):
     '''
     VM instruction instruction descriptor.
 

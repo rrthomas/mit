@@ -10,12 +10,12 @@
 from enum import Enum, IntEnum, unique
 
 from .code_buffer import Code
-from .instruction import AbstractInstruction
-from .register import AbstractRegister
+from .instruction import InstructionEnum
+from .register import RegisterEnum
 
 
 @unique
-class Register(AbstractRegister):
+class Register(RegisterEnum):
     '''A VM register.'''
     PC = ()
     I = ()
@@ -41,7 +41,7 @@ class ExecutionError(IntEnum):
     HALT = 127
 
 @unique
-class Instruction(AbstractInstruction):
+class Instruction(InstructionEnum):
     '''VM instruction instructions.'''
     NEXT = (0x0, [], [], Code('''\
         NEXT;'''
@@ -198,7 +198,7 @@ class Instruction(AbstractInstruction):
     ))
 
 @unique
-class InternalExtraInstruction(AbstractInstruction):
+class InternalExtraInstruction(InstructionEnum):
     HALT = (0x1, [], [], Code('''\
         RAISE(MIT_ERROR_HALT);'''
     ))

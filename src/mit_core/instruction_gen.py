@@ -407,7 +407,7 @@ def dispatch(Instruction, prefix, undefined_case, trace=None):
     '''
     Generate dispatch code for some Instructions.
 
-     - Instruction - AbstractInstruction.
+     - Instruction - InstructionEnum.
      - prefix - instruction name prefix.
      - undefined_case - a Code defining the fallback behaviour.
      - trace - an opcode trace to use to improve the dispatch code.
