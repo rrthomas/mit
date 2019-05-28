@@ -72,6 +72,8 @@ DISTCLEANFILES += \
 # Specializer
 
 nodist_libmitfeatures@PACKAGE_SUFFIX@_la_SOURCES += %D%/specializer.c
+noinst_PROGRAMS = %D%/gen-predictor
+%D%_gen_predictor_LDADD = $(top_builddir)/lib/libgnu.la libutil.la
 
 check-local:
 	if test -d features/pforth -a "$(WORD_BYTES)" = "4" -a "$(ENDISM)" = "0"; then \
@@ -93,11 +95,14 @@ build-trace:
 	$(PYTHON_WITH_PATH) $(abs_srcdir)/%D%/gen-trace $(abs_srcdir)/%D%/instructions.trace --evaluate BYE && \
 	gzip -f $(GZIP_ENV) $(abs_srcdir)/%D%/instructions.trace
 
-%D%/instructions.predictor_pickle: mit_core/instruction.py mit_core/vm_data.py %D%/gen-predictor %D%/instructions.trace.gz
-	$(PYTHON_WITH_PATH) $(srcdir)/%D%/gen-predictor $(srcdir)/%D%/instructions.trace.gz $@
+%D%/instructions.trace: $(srcdir)/%D%/instructions.trace.gz
+	gunzip --stdout $(srcdir)/%D%/instructions.trace.gz > $@
 
-%D%/instructions.labels_pickle: mit_core/instruction.py mit_core/vm_data.py %D%/instructions.predictor_pickle %D%/gen-labels
-	$(PYTHON_WITH_PATH) $(srcdir)/%D%/gen-labels %D%/instructions.predictor_pickle $@
+%D%/instructions_predictor.json: mit_core/instruction.py mit_core/vm_data.py %D%/gen-predictor$(EXEEXT) %D%/instructions.trace
+	$(builddir)/%D%/gen-predictor$(EXEEXT) %D%/instructions.trace $@
+
+%D%/instructions.labels_pickle: mit_core/instruction.py mit_core/vm_data.py %D%/instructions_predictor.json %D%/gen-labels
+	$(PYTHON_WITH_PATH) $(srcdir)/%D%/gen-labels %D%/instructions_predictor.json $@
 
 %D%/specializer.c: mit_core/code_buffer.py mit_core/instruction.py mit_core/vm_data.py %D%/type_sizes.py mit_core/instruction_gen.py %D%/gen-specializer %D%/specializer.py %D%/instructions.labels_pickle
 	$(PYTHON_WITH_PATH) $(srcdir)/%D%/gen-specializer %D%/instructions.labels_pickle > %D%/specializer.c || ( rm -f %D%/specializer.c; exit 1 )
@@ -108,12 +113,12 @@ EXTRA_DIST += \
 	%D%/specializer.py \
 	%D%/gen-trace \
 	%D%/gen-labels \
-	%D%/gen-predictor \
 	%D%/gen-specializer \
 	%D%/instructions.trace.gz \
 	%D%/opcode-frequency
 
 DISTCLEANFILES += \
-	%D%/instructions.predictor_pickle \
+	%D%/instructions.trace \
+	%D%/instructions_predictor.json \
 	%D%/instructions.labels_pickle \
 	%D%/specializer.c
