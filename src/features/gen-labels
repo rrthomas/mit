@@ -8,7 +8,7 @@
 # THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 # RISK.
 
-import sys, json, pickle, re
+import sys, json, pickle, re, functools, heapq
 
 from mit_core.vm_data import Instruction
 
@@ -30,7 +30,6 @@ with open(predictor_filename, 'rb') as f:
         for state in json.loads(f.read().decode())
     ]
 
-# Probabilities.
 
 class Distribution:
     '''
@@ -89,9 +88,6 @@ NULL_HYPOTHESIS = Distribution(
     for state, transitions in enumerate(predictor)
 )
 
-# Find all paths through the predictor.
-
-print("Finding paths")
 
 class Path:
     '''
@@ -212,32 +208,60 @@ class Path:
                 ):
                     return shorter
         return self
-        
+
+
+@functools.total_ordering
+class QueueItem:
+    '''
+    A potentially interesting Path and its resulting Distribution.
+    Compares by `distribution.total` (reversed).
+    '''
+    def __init__(self, path, distribution):
+        self.path = path
+        self.distribution = distribution
+
+    def __le__(self, other):
+        return self.distribution.total.__ge__(other.distribution.total)
+
+    def __eq__(self, other):
+        return self.distribution.total.__eq__(other.distribution.total)
+
+    def __hash__(self):
+        return self.distribution.total.__hash__()
+
+    def successors(self):
+        '''Yields slightly longer paths.'''
+        # Check for repetition.
+        if self.path.remove_repeating_part() != self.path:
+            # This path won't become a state, because we'll loop instead.
+            return
+        # Add one instruction to the Path in all useful ways.
+        predictions = self.distribution.predict()
+        for instruction, new_distribution in predictions.items():
+            if self.path.is_useful_guess(instruction):
+                yield QueueItem(
+                    self.path + (instruction,),
+                    new_distribution,
+                )
+
+
+print("Finding paths")
+
+NUM_PATHS = 1500
 
 # Common instruction sequences.
-# Path -> Distribution
+# Path -> frequency
 language = {}
 
-def walk(path, distribution):
-    '''
-     - path - a Path.
-     - distribution - a Distribution.
-    '''
-    # Check for statistical irrelevance (but keep the empty path).
-    if len(path) > 0 and distribution.total < 40000.: return
-    # Okay, it's common enough, we'll keep it.
-    language[path] = distribution
-    # Check for repetition.
-    if path.remove_repeating_part() != path:
-        # This path won't become a state, because we'll loop instead.
-        return
-    # Recurse down the tree.
-    for instruction, new_distribution in distribution.predict().items():
-        if path.is_useful_guess(instruction):
-            new_path = (path + (instruction,))
-            walk(new_path, new_distribution)
-
-walk(Path(()), NULL_HYPOTHESIS)
+heap = [QueueItem(Path(()), NULL_HYPOTHESIS)]
+for _ in range(NUM_PATHS):
+    try:
+        item = heapq.heappop(heap)
+    except IndexError:
+        break
+    language[item.path] = item.distribution.total
+    for new_item in item.successors():
+        heapq.heappush(heap, new_item)
 
 # Sanity checks.
 
@@ -256,7 +280,7 @@ path_guesses = {
             for instruction in Instruction
             if (path + (instruction,)) in language
         ],
-        key=lambda instruction: language[path + (instruction,)].total,
+        key=lambda instruction: language[path + (instruction,)],
         reverse=True,
     )
     for path in language
