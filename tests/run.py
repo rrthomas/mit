@@ -11,7 +11,7 @@ from mit import *
 VM = State()
 VM.globalize(globals())
 
-if VM == None:
+if VM is None:
     print("Error in run() tests: init with valid parameters failed")
     sys.exit(1)
 

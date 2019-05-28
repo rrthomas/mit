@@ -64,9 +64,9 @@ class Disassembler:
             self.i = i
         assert is_aligned(self.pc)
         self.end = end
-        if length != None:
+        if length is not None:
             self.end = self.pc + length
-        elif end == None:
+        elif end is None:
             self.end = self.pc + 32
 
     def _fetch(self):
