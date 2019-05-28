@@ -56,7 +56,7 @@ for lib in LibInstruction:
     )
 
     body_code = Code()
-    body_code.extend(dispatch(lib.library, '{}_'.format(lib.name), Code(
+    body_code.extend(dispatch(lib.library, Code(
         'RAISE(MIT_ERROR_EXTRA_INVALID_FUNCTION);'
     )))
     body_code.append('return MIT_ERROR_OK;')
@@ -72,7 +72,7 @@ code.append('''\
 
 body_code = Code()
 body_code.append('mit_uword opcode = S->I >> mit_instruction_bit;')
-body_code.extend(dispatch(LibInstruction, '', Code(
+body_code.extend(dispatch(LibInstruction, Code(
     'return MIT_ERROR_EXTRA_INVALID_LIBRARY;'
 )))
 body_code.append('return MIT_ERROR_OK;')

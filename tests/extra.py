@@ -24,34 +24,34 @@ breaks = []
 # Put address of buffer on stack for later
 lit(buffer)
 lit(16) # arbitary number > strlen(args[1])
-lit(LIB_MIT_CURRENT_STATE)
-ass_extra(LIB_MIT, type=BRANCH)
-lit(LIB_MIT_NATIVE_ADDRESS_OF_RANGE)
-ass_extra(LIB_MIT, type=BRANCH)
+lit(LibMit.CURRENT_STATE)
+ass_extra(LIBMIT, type=BRANCH)
+lit(LibMit.NATIVE_ADDRESS_OF_RANGE)
+ass_extra(LIBMIT, type=BRANCH)
 
-# Test LIB_C_ARGC
-lit(LIB_C_ARGC)
-lit(LIB_C)
-ass_extra(LIB_C, type=BRANCH)
+# Test LibC.ARGC
+lit(LibC.ARGC)
+lit(LIBC)
+ass_extra(LIBC, type=BRANCH)
 breaks.append(label() + word_bytes)
 
-# Test LIB_C_ARG
+# Test LibC.ARG
 lit(1)
-lit(LIB_C_ARG)
-ass_extra(LIB_C, type=BRANCH)
+lit(LibC.ARG)
+ass_extra(LIBC, type=BRANCH)
 for i in range(align(sizeof(c_char_p)) // word_bytes):
     lit(align(sizeof(c_char_p)) // word_bytes - 1)
     ass(DUP)
-lit(LIB_C_STRLEN)
-ass_extra(LIB_C, type=BRANCH)
+lit(LibC.STRLEN)
+ass_extra(LIBC, type=BRANCH)
 breaks.append(label() + word_bytes)
 
-# Test LIB_C_STRNCPY
-lit(LIB_C_STRNCPY)
-ass_extra(LIB_C, type=BRANCH)
+# Test LibC.STRNCPY
+lit(LibC.STRNCPY)
+ass_extra(LIBC, type=BRANCH)
 breaks.append(label() + word_bytes)
 
-# Run LIB_C_ARGC test
+# Run LibC.ARGC test
 step(addr=breaks[0], trace=True)
 argc = S.pop()
 print("argc is {}, and should be {}".format(argc, len(args)))
@@ -59,7 +59,7 @@ if argc != len(args):
     print("Error in extra instruction tests: PC = {:#x}".format(PC.get()))
     sys.exit(1)
 
-# Run LIB_C_ARG test
+# Run LibC.ARG test
 step(addr=breaks[1], trace=True)
 arg1len = S.pop()
 print("arg 1's length is {}, and should be {}".format(arg1len, len(args[1])))
@@ -68,7 +68,7 @@ if arg1len != len(args[1]):
     sys.exit(1)
 S.push(arg1len) # push length back for next test
 
-# Run LIB_C_STRNCPY test
+# Run LibC.STRNCPY test
 step(addr=breaks[2], trace=True)
 print("addr: {}".format(libmit.mit_native_address_of_range(VM.state, buffer, 0)))
 c_str = string_at(libmit.mit_native_address_of_range(VM.state, buffer, 0))

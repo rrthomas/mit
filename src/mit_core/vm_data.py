@@ -27,7 +27,7 @@ class Register(RegisterEnum):
     stack_size = ()
 
 @unique
-class ExecutionError(IntEnum):
+class MitError(IntEnum):
     OK = 0
     INVALID_OPCODE = 1
     STACK_OVERFLOW = 2
@@ -44,25 +44,25 @@ class ExecutionError(IntEnum):
 class Instruction(InstructionEnum):
     '''VM instruction instructions.'''
     NEXT = (0x0, [], [], Code('''\
-        NEXT;'''
+        DO_NEXT;'''
     ), True)
 
     BRANCH = (0x1, ['addr'], [], Code('''\
         S->PC = (mit_uword)addr;
-        NEXT;'''
+        DO_NEXT;'''
     ), True)
 
     BRANCHZ = (0x2, ['flag', 'addr'], [], Code('''\
         if (flag == 0) {
             S->PC = (mit_uword)addr;
-            NEXT;
+            DO_NEXT;
         }
     '''))
 
     CALL = (0x3, ['addr'], ['ret_addr'], Code('''\
         ret_addr = S->PC;
         S->PC = (mit_uword)addr;
-        NEXT;'''
+        DO_NEXT;'''
     ), True)
 
     POP = (0x4, ['ITEMS', 'COUNT'], [], Code())

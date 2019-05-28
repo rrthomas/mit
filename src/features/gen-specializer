@@ -86,9 +86,9 @@ class Label:
         # Generate the guess condition.
         opcode = 'initial_I'
         if not instruction.terminal:
-            opcode = '({} & MIT_INSTRUCTION_MASK)'.format(opcode)
+            opcode = '({} & MIT_OPCODE_MASK)'.format(opcode)
         tests = [
-            '{} == O_{}'.format(opcode, self.guess),
+            '{} == MIT_INSTRUCTION_{}'.format(opcode, self.guess),
             'likely({})'.format(cache_state.underflow_test(
                 len(instruction.args))),
             'likely({})'.format(cache_state.overflow_test(
@@ -234,7 +234,7 @@ code.append('''\
             goto RET;                                             \\
         } while (0)
 
-    #define NEXT                                                  \\
+    #define DO_NEXT                                               \\
         do {                                                      \\
             int ret = load(S->memory, S->memory_size, S->PC,      \\
                            MIT_SIZE_WORD, (mit_word *)&(S->I));   \\
@@ -249,7 +249,7 @@ code.append('''\
         do {                                                      \\
             initial_PC = S->PC;                                   \\
             initial_I = S->I;                                     \\
-            S->I >>= MIT_INSTRUCTION_BIT;                         \\
+            S->I >>= MIT_OPCODE_BIT;                              \\
         } while (0)
 
     mit_word mit_specializer_run(mit_state * restrict S) {

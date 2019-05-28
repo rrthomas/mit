@@ -40,7 +40,7 @@ code.append('''\
 
     #include "mit/mit.h"
 
-    #define NEXT                                                  \\
+    #define DO_NEXT                                               \\
         do {                                                      \\
             int ret = load(S->memory, S->memory_size, S->PC,      \\
                            MIT_SIZE_WORD, (mit_word *)&(S->I));   \\
@@ -60,7 +60,7 @@ code.append('''\
 
 body_code = Code()
 body_code.append('mit_uword opcode = S->I >> mit_instruction_bit;')
-body_code.extend(dispatch(InternalExtraInstruction, 'O_EXTRA_', Code(
+body_code.extend(dispatch(InternalExtraInstruction, Code(
     'RAISE(MIT_ERROR_INVALID_OPCODE);',
 )))
 body_code.append('return MIT_ERROR_OK;')
@@ -85,8 +85,8 @@ body_code.append('''\
     error = MIT_ERROR_OK;
     initial_PC = S->PC;
     initial_I = S->I;
-    mit_byte opcode = S->I & MIT_INSTRUCTION_MASK;
-    S->I >>= MIT_INSTRUCTION_BIT;
+    mit_byte opcode = S->I & MIT_OPCODE_MASK;
+    S->I >>= MIT_OPCODE_BIT;
 
     // Check STACK_DEPTH is valid
     if (S->STACK_DEPTH > S->stack_size) {
@@ -94,7 +94,7 @@ body_code.append('''\
         RAISE(MIT_ERROR_STACK_OVERFLOW);
     }'''
 )
-body_code.extend(dispatch(Instruction, 'O_', Code(
+body_code.extend(dispatch(Instruction, Code(
     '/* Undefined instruction. */',
     'RAISE(MIT_ERROR_INVALID_OPCODE);',
 ), trace))
@@ -113,7 +113,7 @@ code.append('''
             S->PC = initial_PC;
             S->I = initial_I;
             if (error == MIT_ERROR_INVALID_OPCODE &&
-                (initial_I & MIT_INSTRUCTION_MASK) == O_CALL &&
+                (initial_I & MIT_OPCODE_MASK) == MIT_INSTRUCTION_CALL &&
                 (error = mit_internal_extra_instruction(S)) == MIT_ERROR_OK) {
                 S->I = 0;
             }

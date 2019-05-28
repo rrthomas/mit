@@ -10,7 +10,7 @@
 
 import mit_core.vm_data as vm_data
 from mit_core.code_buffer import Code
-from mit_core.enum_util import enum_to_python
+from mit_core.code_util import enum_to_python
 
 import extra_instructions
 
@@ -37,7 +37,7 @@ for register in vm_data.Register:
 code.extend(register_code)
 code.append('')
 
-code.extend(enum_to_python(vm_data.Instruction, 'Instruction', ''))
+code.extend(enum_to_python(vm_data.Instruction))
 code.append('')
 
 # The set of opcodes which must be the last in a word.
@@ -49,14 +49,13 @@ for name in [instruction.name
 code.append('})')
 code.append('')
 
-code.extend(enum_to_python(vm_data.InternalExtraInstruction,
-                           'InternalExtraInstruction', 'EXTRA_'))
+code.extend(enum_to_python(vm_data.InternalExtraInstruction))
 code.append('')
 
-code.extend(enum_to_python(extra_instructions.LibcLib, 'LibcLib', 'LIB_C_'))
+code.extend(enum_to_python(extra_instructions.LibC))
 code.append('')
-code.extend(enum_to_python(extra_instructions.MitLib, 'MitLib', 'LIB_MIT_'))
+code.extend(enum_to_python(extra_instructions.LibMit))
 code.append('')
-code.extend(enum_to_python(extra_instructions.LibInstruction, 'LibInstruction', ''))
+code.extend(enum_to_python(extra_instructions.LibInstruction))
 
 print(code.unindented_str())

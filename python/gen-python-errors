@@ -11,7 +11,7 @@
 import mit_core.vm_data as vm_data
 import mit_core.errors as errors
 from mit_core.code_buffer import Code
-from mit_core.enum_util import enum_to_python
+from mit_core.code_util import enum_to_python
 
 import extra_instructions
 
@@ -31,12 +31,12 @@ code.append('''\
 from enum import IntEnum, unique
 ''')
 code.append('')
-code.extend(enum_to_python(vm_data.ExecutionError, 'ExecutionError', ''))
+code.extend(enum_to_python(vm_data.MitError))
 code.append('')
-code.extend(enum_to_python(errors.MallocError, 'MallocError', ''))
+code.extend(enum_to_python(errors.MallocError))
 code.append('')
-code.extend(enum_to_python(errors.LoadError, 'LoadError', ''))
+code.extend(enum_to_python(errors.LoadError))
 code.append('')
-code.extend(enum_to_python(errors.SaveError, 'SaveError', ''))
+code.extend(enum_to_python(errors.SaveError))
 
 print(code.unindented_str())

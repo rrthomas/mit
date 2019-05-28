@@ -116,13 +116,13 @@ typedef struct {
 #undef R
 
 // Instructions
-#ifndef MIT_INSTRUCTION_BIT
-#define MIT_INSTRUCTION_BIT 8
+#ifndef MIT_OPCODE_BIT
+#define MIT_OPCODE_BIT 8
 #endif
-#if MIT_INSTRUCTION_BIT < 5 || MIT_INSTRUCTION_BIT > 8
-#error "MIT_INSTRUCTION_BIT must be in the range 5 to 8 inclusive!"
+#if MIT_OPCODE_BIT < 5 || MIT_OPCODE_BIT > 8
+#error "MIT_OPCODE_BIT must be in the range 5 to 8 inclusive!"
 #endif
-#define MIT_INSTRUCTION_MASK ((1 << MIT_INSTRUCTION_BIT) - 1)
+#define MIT_OPCODE_MASK ((1 << MIT_OPCODE_BIT) - 1)
 extern const unsigned mit_instruction_bit;
 extern const unsigned mit_instruction_mask;
 

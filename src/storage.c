@@ -27,8 +27,8 @@ const mit_uword mit_word_mask = MIT_WORD_MASK;
 const mit_uword mit_uword_max = MIT_UWORD_MAX;
 const mit_word mit_word_min = MIT_WORD_MIN;
 const mit_word mit_word_max = MIT_WORD_MAX;
-const unsigned mit_instruction_bit = MIT_INSTRUCTION_BIT;
-const unsigned mit_instruction_mask = MIT_INSTRUCTION_MASK;
+const unsigned mit_instruction_bit = MIT_OPCODE_BIT;
+const unsigned mit_instruction_mask = MIT_OPCODE_MASK;
 
 
 // Utility functions

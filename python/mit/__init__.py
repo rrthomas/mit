@@ -128,14 +128,6 @@ class State:
             instruction.name: instruction
             for instruction in LibInstruction
         })
-        globals_dict.update({
-            function.name: function
-            for function in LibcLib
-        })
-        globals_dict.update({
-            function.name: function
-            for function in MitLib
-        })
 
     def register_args(self, *args):
         argc = len(args)
@@ -173,7 +165,7 @@ class State:
                 else:
                     libmit.mit_run(self.state)
             except ErrorCode as e:
-                if e.args[0] == ExecutionError.HALT:
+                if e.args[0] == MitError.HALT:
                     return
                 elif e.args[0] == 1 and self.registers["I"].get() & instruction_mask == BRANCH:
                     self.do_extra_instruction()
