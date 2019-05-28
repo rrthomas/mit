@@ -11,6 +11,7 @@
 from mit_core.code_buffer import Code
 from mit_core.vm_data import ExecutionError
 from mit_core.errors import LoadError
+from mit_core.code_util import disable_warnings
 
 
 # Command line
@@ -211,12 +212,13 @@ Feature(# Register and stack backtrace
         unsigned long default_max_backtrace = {};
         unsigned long max_backtrace = default_max_backtrace;
     '''.format(default_max_backtrace)),
-    exit=Code('''
+    exit=disable_warnings(
+        ['-Wpointer-to-int-cast'], Code('''
         if (backtrace == true) {
             fprintf(stderr, "\\nRegisters:\\n");
             char word_str[WORD_STRLEN];
-            #define R(name) \\
-            word_to_str(S->name, &word_str[0]); \\
+            #define R(name, type, return_type) \\
+            word_to_str((mit_uword)S->name, &word_str[0]); \\
             fprintf(stderr, #name "=0x%.*s\\n", WORD_STRLEN, word_str);
             #include "mit/registers.h"
             #undef R
@@ -234,7 +236,7 @@ Feature(# Register and stack backtrace
                 }
             }
         }
-    ''')
+    '''))
 )
 
 Feature(# VM core dump

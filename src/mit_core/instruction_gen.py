@@ -15,6 +15,7 @@ import functools
 
 from .code_buffer import Code
 from .opcode_frequency import counts
+from .code_util import disable_warnings
 
 
 type_wordses = {'mit_word': 1} # Enough for the core
@@ -60,7 +61,7 @@ def store_stack(value, depth=0, type='mit_word'):
     '''
     code = Code()
     code.extend(disable_warnings(
-        ['-Wpointer-to-int-cast'],
+        ['-Wpointer-to-int-cast', '-Wbad-function-cast'],
         Code('mit_max_stack_item_t temp = (mit_max_stack_item_t){};')
             .format(value),
     ))
@@ -96,22 +97,6 @@ def push_stack(value, type='mit_word'):
         'S->STACK_DEPTH += {};'.format(type_words(type)),
     )
     return code
-
-def disable_warnings(warnings, code):
-    '''
-    Returns `code` wrapped in "#pragmas" to suppress the given list
-    `warnings` of warning flags.
-
-     - code - a Code.
-    '''
-    assert isinstance(code, Code)
-    outer_code = Code()
-    outer_code.append('#pragma GCC diagnostic push')
-    for w in warnings:
-        outer_code.append('#pragma GCC diagnostic ignored "{}"'.format(w))
-    outer_code.extend(code)
-    outer_code.append('#pragma GCC diagnostic pop')
-    return outer_code
 
 
 @functools.total_ordering

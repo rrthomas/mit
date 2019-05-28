@@ -11,14 +11,20 @@ from enum import Enum, IntEnum, unique
 
 from .code_buffer import Code
 from .instruction import AbstractInstruction
+from .register import AbstractRegister
 
 
-class Register(Enum):
+@unique
+class Register(AbstractRegister):
     '''A VM register.'''
-    PC = object()
-    I = object()
-    BAD = object()
-    STACK_DEPTH = object()
+    PC = ()
+    I = ()
+    BAD = ()
+    STACK_DEPTH = ()
+    memory = ('mit_word *')
+    memory_size = ()
+    stack = ('mit_word * restrict')
+    stack_size = ()
 
 @unique
 class ExecutionError(IntEnum):

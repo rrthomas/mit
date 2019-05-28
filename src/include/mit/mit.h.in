@@ -102,20 +102,16 @@ extern const mit_word mit_word_max;
 
 // VM registers
 typedef struct {
-#define R(reg) mit_uword reg;
+#define R(reg, type, return_type) type reg;
 #include <mit@PACKAGE_SUFFIX@/registers.h>
 #undef R
-    mit_word * restrict memory;
-    mit_uword memory_size;
-    mit_word * restrict stack;
-    mit_uword stack_size;
     int main_argc;
     char **main_argv;
 } mit_state;
 
-#define R(reg)                                          \
-    mit_uword mit_get_ ## reg(mit_state *S);            \
-    void mit_set_ ## reg(mit_state *S, mit_uword val);
+#define R(reg, type, return_type)                  \
+    return_type mit_get_ ## reg(mit_state *S);     \
+    void mit_set_ ## reg(mit_state *S, type val);
 #include <mit@PACKAGE_SUFFIX@/registers.h>
 #undef R
 

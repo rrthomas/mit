@@ -227,8 +227,8 @@ for register in Register:
     get_code = Code()
     get_code.extend(pop_code)
     get_code.extend(push_stack(
-        'inner_state',
-        'mit_get_{}(inner_state)'.format(register.name)
+        'mit_get_{}(inner_state)'.format(register.name),
+        type=register.return_type
     ))
     mit_lib['GET_{}'.format(register.name.upper())] = (
         len(mit_lib), None, None, get_code,
@@ -236,8 +236,8 @@ for register in Register:
 
     set_code = Code()
     set_code.extend(pop_code)
-    set_code.append('mit_word value;')
-    set_code.extend(pop_stack('value'))
+    set_code.append('{} value;'.format(register.type))
+    set_code.extend(pop_stack('value', register.type))
     set_code.append('''\
         mit_set_{}(inner_state, value);'''.format(register.name),
     )
