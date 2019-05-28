@@ -349,30 +349,8 @@ print(Code(*['''\
 #include "mit/mit.h"
 #include "mit/features.h"
 
+#include "warn.h"
 
-static _GL_ATTRIBUTE_FORMAT_PRINTF(1, 0) void verror(const char *format, va_list args)
-{
-    fprintf(stderr, PACKAGE ": ");
-    vfprintf(stderr, format, args);
-    fprintf(stderr, "\\n");
-}
-
-static _GL_ATTRIBUTE_FORMAT_PRINTF(1, 2) void warn(const char *format, ...)
-{
-    va_list args;
-
-    va_start(args, format);
-    verror(format, args);
-}
-
-static _GL_ATTRIBUTE_FORMAT_PRINTF(1, 2) void die(const char *format, ...)
-{
-    va_list args;
-
-    va_start(args, format);
-    verror(format, args);
-    exit(1);
-}
 
 // Error messages
 const char *error_msg[] = {

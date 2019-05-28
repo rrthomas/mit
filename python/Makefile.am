@@ -53,7 +53,6 @@ mit@PACKAGE_SUFFIX@-shell.1: mit-shell.1
 endif
 
 EXTRA_DIST = \
-	enum_util.py		\
 	gen-python-opcodes	\
 	gen-python-errors	\
 	$(man_MANS)		\

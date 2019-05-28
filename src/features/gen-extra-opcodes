@@ -9,6 +9,8 @@
 # RISK.
 
 from mit_core.code_buffer import Code
+from mit_core.enum_util import enum_to_c
+
 from extra_instructions import *
 
 
@@ -32,11 +34,11 @@ code.append('''\
 #define INSTRUCTION(name, opcode) name = opcode,
 ''')
 code.append('')
-code.extend(LibInstruction.to_c(''))
+code.extend(enum_to_c(LibInstruction, ''))
 code.append('')
-code.extend(LibcLib.to_c('LIB_C_'))
+code.extend(enum_to_c(LibcLib, 'LIB_C_'))
 code.append('')
-code.extend(MitLib.to_c('LIB_MIT_'))
+code.extend(enum_to_c(MitLib, 'LIB_MIT_'))
 code.append('')
 code.append('#undef INSTRUCTION')
 code.append('')

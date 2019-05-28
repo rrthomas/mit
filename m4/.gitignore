@@ -151,3 +151,6 @@
 /safe-write.m4
 /signal_h.m4
 /write.m4
+/stdnoreturn.m4
+/inttypes-pri.m4
+/inttypes.m4

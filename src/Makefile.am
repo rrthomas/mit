@@ -21,15 +21,19 @@ LIB_CORE_SRCS = \
 	mit_core/vm_data.py \
 	mit_core/errors.py \
 	mit_core/code_buffer.py \
+	mit_core/enum_util.py \
 	mit_core/opcode_frequency.py \
 	mit_core/instruction_gen.py
 nodist_libmit@PACKAGE_SUFFIX@_la_SOURCES = $(C_SRCS) $(nodist_LIB_SRCS)
 libmit@PACKAGE_SUFFIX@_la_LIBADD = $(top_builddir)/lib/libgnu.la
 libmit@PACKAGE_SUFFIX@_la_LDFLAGS = -no-undefined -export-symbols-regex '^mit_.*'
 
+noinst_LTLIBRARIES = libutil.la
+libutil_la_SOURCES = warn.h warn.c
+
 bin_PROGRAMS = mit@PACKAGE_SUFFIX@$(EXEEXT)
 man_MANS = mit@PACKAGE_SUFFIX@.1
-mit@PACKAGE_SUFFIX@_LDADD = libmit@PACKAGE_SUFFIX@.la libmitfeatures@PACKAGE_SUFFIX@.la $(top_builddir)/lib/libgnu.la
+mit@PACKAGE_SUFFIX@_LDADD = libmit@PACKAGE_SUFFIX@.la libmitfeatures@PACKAGE_SUFFIX@.la $(top_builddir)/lib/libgnu.la libutil.la
 nodist_mit@PACKAGE_SUFFIX@_SOURCES = main.c
 mit_pkgincludedir = $(pkgincludedir)@PACKAGE_SUFFIX@
 nodist_mit_pkginclude_HEADERS = include/mit/opcodes.h include/mit/registers.h
@@ -39,6 +43,7 @@ step.lo: instructions.c
 object.lo step.lo storage.lo: include/mit/registers.h
 object.lo step.lo storage.lo main.o: include/mit/opcodes.h
 instructions.lo main.o: main.c include/mit/registers.h
+main.o: warn.h
 
 .c.s:
 	$(COMPILE) -c -S -o $@ $<
