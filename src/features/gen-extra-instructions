@@ -11,6 +11,7 @@
 from mit_core.code_buffer import Code
 from mit_core.instruction_gen import *
 
+
 # Get type sizes and inject them into instruction_gen
 from type_sizes import type_sizes
 assert 'mit_word' in type_sizes
@@ -39,45 +40,55 @@ for lib in LibInstruction:
 code.append('''
     #include "mit/extra-opcodes.h"
 
+    #include "run.h"
+
     enum {
         MIT_ERROR_EXTRA_INVALID_LIBRARY = 16,
         MIT_ERROR_EXTRA_INVALID_FUNCTION = 17,
-    };
-
-    #define RAISE(code)                         \\
-        return (code);'''
+    };'''
 )
 
 for lib in LibInstruction:
     code.append('')
     code.append('''\
         static mit_word extra_{}(mit_state * restrict S, mit_word opcode)
-        {{'''.format(str.lower(lib.name))
+        {{
+            mit_word error = MIT_ERROR_OK;'''.format(str.lower(lib.name))
     )
+    code.append('')
 
     body_code = Code()
     body_code.extend(dispatch(lib.library, Code(
         'RAISE(MIT_ERROR_EXTRA_INVALID_FUNCTION);'
     )))
-    body_code.append('return MIT_ERROR_OK;')
+    body_code.append('')
     code.append(body_code)
 
-    code.append('}')
+    code.append('''
+        error:
+            return error;
+        }''')
 
 code.append('')
 code.append('''\
     mit_word mit_extra_instruction(mit_state * restrict S)
-    {'''
+    {
+        mit_word error = MIT_ERROR_OK;'''
 )
+code.append('')
 
 body_code = Code()
 body_code.append('mit_uword opcode = S->I >> mit_instruction_bit;')
 body_code.extend(dispatch(LibInstruction, Code(
     'return MIT_ERROR_EXTRA_INVALID_LIBRARY;'
 )))
-body_code.append('return MIT_ERROR_OK;')
+body_code.append('return error;')
 code.append(body_code)
 
-code.append('}')
+code.append('')
+code.append('''
+    error:
+        return error;
+    }''')
 
 print(code.unindented_str())

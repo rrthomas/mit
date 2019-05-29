@@ -38,53 +38,36 @@ code.append('''\
 
     #include "mit/mit.h"
 
-    #define DO_NEXT                                               \\
-        do {                                                      \\
-            int ret = load(S->memory, S->memory_size, S->PC,      \\
-                           MIT_SIZE_WORD, (mit_word *)&(S->I));   \\
-            if (ret != 0) {                                       \\
-                S->BAD = S->PC;                                   \\
-                RAISE(ret);                                       \\
-            }                                                     \\
-            S->PC += MIT_WORD_BYTES;                              \\
-        } while (0)
+    #include "run.h"
 
-    #define RAISE(code)                         \\
-        return code;                            \\
 
     _GL_ATTRIBUTE_PURE mit_word mit_internal_extra_instruction(mit_state *S)
     {'''
 )
+code.append('')
 
 body_code = Code()
+body_code.append('mit_word error = MIT_ERROR_OK;')
 body_code.append('mit_uword opcode = S->I >> mit_instruction_bit;')
 body_code.extend(dispatch(InternalExtraInstruction, Code(
     'RAISE(MIT_ERROR_INVALID_OPCODE);',
 )))
-body_code.append('return MIT_ERROR_OK;')
 code.append(body_code)
 
-code.append('''\
+code.append('''
+    error:
+        return error;
     }
 
-    #undef RAISE
-    #define RAISE(code)                                               \\
-        do {                                                          \\
-            error = (code);                                           \\
-            goto error;                                               \\
-        } while (0)
-
     static mit_word run_or_step(mit_state * restrict S, bool run)
-    {'''
+    {;'''
 )
 
 body_code = Code()
 body_code.append('''\
     error = MIT_ERROR_OK;
-    initial_PC = S->PC;
-    initial_I = S->I;
     mit_byte opcode = S->I & MIT_OPCODE_MASK;
-    S->I >>= MIT_OPCODE_BIT;
+    FETCH;
 
     // Check STACK_DEPTH is valid
     if (S->STACK_DEPTH > S->stack_size) {
@@ -96,6 +79,8 @@ body_code.extend(dispatch(Instruction, Code(
     '/* Undefined instruction. */',
     'RAISE(MIT_ERROR_INVALID_OPCODE);',
 ), trace))
+
+code.append('')
 code.append(Code(*['''\
         mit_word error;
         mit_uword initial_PC, initial_I;
@@ -110,12 +95,14 @@ code.append('''
         if (error != 0) {
             S->PC = initial_PC;
             S->I = initial_I;
-            if (error == MIT_ERROR_INVALID_OPCODE &&
-                (initial_I & MIT_OPCODE_MASK) == MIT_INSTRUCTION_CALL &&
-                (error = mit_internal_extra_instruction(S)) == MIT_ERROR_OK) {
-                S->I = 0;
-            }
         }
+
+        if (error == MIT_ERROR_INVALID_OPCODE &&
+            (S->I & MIT_OPCODE_MASK) == MIT_INSTRUCTION_CALL &&
+            (error = mit_internal_extra_instruction(S)) == MIT_ERROR_OK) {
+            S->I = 0;
+        }
+
         return error;
     }
 
