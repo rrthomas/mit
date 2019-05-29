@@ -11,8 +11,6 @@
 import sys
 import gzip
 
-from mit_core import vm_data, instruction_gen
-
 from mit_core.vm_data import Instruction, InternalExtraInstruction
 from mit_core.code_buffer import Code
 from mit_core.instruction_gen import dispatch, gen_case
