@@ -79,16 +79,16 @@ class Label:
         code = Code()
         cache_state = self.cache_state()
         # Assert the entry conditions.
-        code.append('assert(res == MIT_ERROR_OK);')
+        code.append('assert(error == MIT_ERROR_OK);')
         code.append('assert(cached_depth == {});'.format(
             cache_state.cached_depth,
         ))
         # Generate the guess condition.
         opcode = 'initial_I'
         if not instruction.terminal:
-            opcode = '({} & MIT_INSTRUCTION_MASK)'.format(opcode)
+            opcode = '({} & MIT_OPCODE_MASK)'.format(opcode)
         tests = [
-            '{} == O_{}'.format(opcode, self.guess),
+            '{} == MIT_INSTRUCTION_{}'.format(opcode, self.guess),
             'likely({})'.format(cache_state.underflow_test(
                 len(instruction.args))),
             'likely({})'.format(cache_state.overflow_test(
@@ -135,14 +135,16 @@ for label in labels:
 labels_code.append('')
 labels_code.append('''\
     A_FALLBACK:
-        assert(res == MIT_ERROR_OK);
+        assert(error == MIT_ERROR_OK);
         assert(cached_depth == 0);
         S->PC = initial_PC;
         S->I = initial_I;
-        res = mit_single_step(S);
+        error = mit_single_step(S);
         continue;
 
-    RET:
+    error:
+        S->PC = initial_PC;
+        S->I = initial_I;
         switch (cached_depth) {
 ''')
 switch_code = Code()
@@ -164,7 +166,7 @@ labels_code.append(switch_code)
 
 # Construct a Code for the function body, copying `labels_code`.
 body_code = Code()
-body_code.append('int res = MIT_ERROR_OK;')
+body_code.append('int error = MIT_ERROR_OK;')
 if max_cached_depth > 0:
     cache_state = CacheState(max_cached_depth, 0)
     body_code.append('mit_word {};'.format(
@@ -190,16 +192,13 @@ body_code.append(Code('''\
     //
     // The calling convention at each A_XXX label is as follows:
     //
-    //  - On entry, `res` is `MIT_ERROR_OK` and `I` has been right-shifted.
+    //  - On entry, `error` is `MIT_ERROR_OK` and `I` has been right-shifted.
     //    `initial_PC` and `initial_I` record the values of `PC` and `I` to
     //    restore on error. `cached_depth` is a compile-time constant
     //    indicating how many top stack items are in C variables.
     //  - When an error occurs, call `RAISE(code)`.
-    //    It sets `res` to the return code; then it resets PC and
-    //    I to their initial values, and does "goto RET".
-    //  - "goto RET" (but do not "return") at any time after completely
-    //    executing at least one instruction, or never. `cached_depth` and
-    //    `S->STACK_DEPTH` must be correct at that time.
+    //    It sets `error` to the return code; then it resets PC and
+    //    I to their initial values, and does "goto error".
     //  - On exit, whether by `RAISE` or otherwise, all Mit
     //    registers must be set according to the Mit spec. In particular,
     //    there must be no side effects before a RAISE, except on `I` and
@@ -207,8 +206,8 @@ body_code.append(Code('''\
 '''))
 body_code.extend(labels_code)
 body_code.append('''\
-    } while (res == MIT_ERROR_OK);
-    return res;
+    } while (error == MIT_ERROR_OK);
+    return error;
 ''')
 
 
@@ -226,32 +225,12 @@ code.append('''\
     #include "mit/mit.h"
     #include "mit/features.h"
 
-    #define RAISE(code)                                           \\
-        do {                                                      \\
-            res = (code);                                         \\
-            S->PC = initial_PC;                                   \\
-            S->I = initial_I;                                     \\
-            goto RET;                                             \\
-        } while (0)
+    #include "run.h"
 
-    #define NEXT                                                  \\
-        do {                                                      \\
-            int ret = load(S, S->PC, MIT_SIZE_WORD, (mit_word *)&(S->I)); \\
-            if (ret != 0)                                         \\
-                RAISE(ret);                                       \\
-            S->PC += MIT_WORD_BYTES;                              \\
-        } while (0)
-
-    #define FETCH                                                 \\
-        do {                                                      \\
-            initial_PC = S->PC;                                   \\
-            initial_I = S->I;                                     \\
-            S->I >>= MIT_INSTRUCTION_BIT;                         \\
-        } while (0)
 
     mit_word mit_specializer_run(mit_state * restrict S) {
 ''')
 code.append(body_code)
 code.append('}')
 
-print(code.unindented_str())
+print(code)

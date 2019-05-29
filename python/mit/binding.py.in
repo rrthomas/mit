@@ -130,34 +130,34 @@ vars().update([(c, cty.in_dll(libmit, "mit_{}".format(c)).value)
 c_ptrdiff_t = c_ssize_t
 
 # Errors
-execution_error = errcheck(ExecutionError)
+mit_error = errcheck(MitError)
 malloc_error = errcheck(MallocError)
 
 # mit.h
 libmit.mit_load.argtypes = [c_void_p, c_uword, c_uint, POINTER(c_word)]
-libmit.mit_load.errcheck = execution_error
+libmit.mit_load.errcheck = mit_error
 libmit.mit_store.argtypes = [c_void_p, c_uword, c_uint, c_word]
-libmit.mit_store.errcheck = execution_error
+libmit.mit_store.errcheck = mit_error
 
 libmit.mit_load_stack.argtypes = [c_void_p, c_uword, POINTER(c_word)]
-libmit.mit_load_stack.errcheck = execution_error
+libmit.mit_load_stack.errcheck = mit_error
 libmit.mit_store_stack.argtypes = [c_void_p, c_uword, c_word]
-libmit.mit_store_stack.errcheck = execution_error
+libmit.mit_store_stack.errcheck = mit_error
 libmit.mit_pop_stack.argtypes = [c_void_p, POINTER(c_word)]
-libmit.mit_pop_stack.errcheck = execution_error
+libmit.mit_pop_stack.errcheck = mit_error
 libmit.mit_push_stack.argtypes = [c_void_p, c_word]
-libmit.mit_push_stack.errcheck = execution_error
+libmit.mit_push_stack.errcheck = mit_error
 
 libmit.mit_native_address_of_range.restype = POINTER(c_ubyte)
 libmit.mit_native_address_of_range.argtypes = [c_void_p, c_uword, c_uword]
 
 libmit.mit_run.restype = c_word
 libmit.mit_run.argtypes = [c_void_p]
-libmit.mit_run.errcheck = execution_error
+libmit.mit_run.errcheck = mit_error
 
 libmit.mit_single_step.restype = c_word
 libmit.mit_single_step.argtypes = [c_void_p]
-libmit.mit_single_step.errcheck = execution_error
+libmit.mit_single_step.errcheck = mit_error
 
 libmit.mit_load_object.restype = c_ptrdiff_t
 libmit.mit_load_object.argtypes = [c_void_p, c_uword, c_int]
@@ -194,7 +194,7 @@ def is_aligned(addr):
 # features.h
 libmitfeatures.mit_extra_instruction.argtypes = [c_void_p]
 libmitfeatures.mit_extra_instruction.restype = c_word
-libmitfeatures.mit_extra_instruction.errcheck = execution_error
+libmitfeatures.mit_extra_instruction.errcheck = mit_error
 
 libmitfeatures.mit_auto_extend_init.argtypes = None
 libmitfeatures.mit_auto_extend_init.restype = c_void_p
@@ -209,4 +209,4 @@ libmitfeatures.mit_specializer_run.restype = c_word
 
 libmitfeatures.mit_trace_run.argtypes = [c_void_p, c_void_p]
 libmitfeatures.mit_trace_run.restype = c_word
-libmitfeatures.mit_trace_run.errcheck = execution_error
+libmitfeatures.mit_trace_run.errcheck = mit_error

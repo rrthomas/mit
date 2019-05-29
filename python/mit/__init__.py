@@ -18,7 +18,7 @@ provides a global Mit instance in VM, and defines various globals. See
 
 Registers: a variable for each register; also a list, 'registers'
 Memory: M, M_word
-Stacks: S, R
+Stack: S
 Managing the VM state: load, save, initialise
 Controlling and observing execution: run, step
 Examining memory: dump, disassemble
@@ -47,7 +47,7 @@ class State:
     def __init__(self, memory_size=1024*1024 if word_bytes > 2 else 16*1024, stack_size=1024):
         '''Initialise the VM state.'''
         self.state = libmit.mit_init(memory_size, stack_size)
-        if self.state == None:
+        if self.state is None:
             raise Error("error creating virtual machine state")
 
         self.registers = {
@@ -128,14 +128,6 @@ class State:
             instruction.name: instruction
             for instruction in LibInstruction
         })
-        globals_dict.update({
-            function.name: function
-            for function in LibcLib
-        })
-        globals_dict.update({
-            function.name: function
-            for function in MitLib
-        })
 
     def register_args(self, *args):
         argc = len(args)
@@ -162,7 +154,7 @@ class State:
          - trace_file - file - if not none, a file object to which to write an
            instruction trace.
         '''
-        if args == None:
+        if args is None:
             args = []
         args.insert(0, b"mit-shell")
         self.register_args(*args)
@@ -173,7 +165,7 @@ class State:
                 else:
                     libmit.mit_run(self.state)
             except ErrorCode as e:
-                if e.args[0] == ExecutionError.HALT:
+                if e.args[0] == MitError.HALT:
                     return
                 elif e.args[0] == 1 and self.registers["I"].get() & instruction_mask == BRANCH:
                     self.do_extra_instruction()
@@ -212,7 +204,7 @@ class State:
                     print("Error code {} was returned".format(ret), end='')
                     if n > 1:
                         print(" after {} steps".format(done), end='')
-                    if addr != None:
+                    if addr is not None:
                         print(" at PC = {:#x}".format(
                             self.registers["PC"].get()),
                             end='',
@@ -239,7 +231,7 @@ class State:
         '''
         assert length is not None
         ptr = libmit.mit_native_address_of_range(self.state, address, length)
-        if not is_aligned(address) or ptr == None:
+        if not is_aligned(address) or ptr is None:
             return -1
 
         fd = os.open(file, os.O_CREAT | os.O_RDWR | O_BINARY, mode=0o666)
@@ -255,7 +247,7 @@ class State:
         '''
         Disassemble `length` bytes from `start`, or from `start` to `end`.
         '''
-        if length != None:
+        if length is not None:
             end = start + length
         for inst in Disassembler(self, pc=start, end=end, i=0):
             print(inst, file=file)
@@ -267,12 +259,12 @@ class State:
         Defaults to 256 bytes from `start`.
         '''
         chunk = 16
-        if start == None:
+        if start is None:
             start = max(0, self.registers["PC"].get())
         start -= start % chunk
-        if length != None:
+        if length is not None:
             end = start + length
-        elif end == None:
+        elif end is None:
             end = start + 256
 
         p = start

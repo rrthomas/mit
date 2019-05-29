@@ -17,11 +17,12 @@ lib_LTLIBRARIES = libmit@PACKAGE_SUFFIX@.la
 C_SRCS = storage.c object.c
 nodist_LIB_SRCS = include/mit/registers.h include/mit/opcodes.h instructions.c
 LIB_CORE_SRCS = \
+	mit_core/register.py \
 	mit_core/instruction.py \
 	mit_core/vm_data.py \
 	mit_core/errors.py \
 	mit_core/code_buffer.py \
-	mit_core/enum_util.py \
+	mit_core/code_util.py \
 	mit_core/opcode_frequency.py \
 	mit_core/instruction_gen.py
 nodist_libmit@PACKAGE_SUFFIX@_la_SOURCES = $(C_SRCS) $(nodist_LIB_SRCS)
@@ -38,6 +39,7 @@ nodist_mit@PACKAGE_SUFFIX@_SOURCES = main.c
 mit_pkgincludedir = $(pkgincludedir)@PACKAGE_SUFFIX@
 nodist_mit_pkginclude_HEADERS = include/mit/opcodes.h include/mit/registers.h
 mit_pkginclude_HEADERS = include/mit/mit.h
+noinst_HEADERS = run.h
 
 step.lo: instructions.c
 object.lo step.lo storage.lo: include/mit/registers.h

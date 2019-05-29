@@ -11,13 +11,13 @@ from mit import *
 VM = State()
 VM.globalize(globals())
 
-if VM == None:
+if VM is None:
     print("Error in run() tests: init with valid parameters failed")
     sys.exit(1)
 
 # Test code
 final_pc = word_bytes
-ass_extra(EXTRA_HALT)
+ass_extra(HALT)
 
 # Test
 ret = run() # will raise an exception on error

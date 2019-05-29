@@ -1,6 +1,1 @@
 See GitHub issues: https://github.com/rrthomas/mit/issues/
-
-To support object files of the other endism, have a per-memory-area flag that indicates that word loads and stores must be reversed.
-
-Compile at load time using ideas in DDJ article
-(~/notmine/Computer/Language/forth/LoadCompilation).

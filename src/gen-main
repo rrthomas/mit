@@ -9,8 +9,9 @@
 # RISK.
 
 from mit_core.code_buffer import Code
-from mit_core.vm_data import ExecutionError
+from mit_core.vm_data import MitError
 from mit_core.errors import LoadError
+from mit_core.code_util import disable_warnings
 
 
 # Command line
@@ -154,7 +155,7 @@ class Feature:
 Feature(# Extra instructions
     handler=Code('''\
         case MIT_ERROR_INVALID_OPCODE:
-            if ((S->I & MIT_INSTRUCTION_MASK) == O_BRANCH) {
+            if ((S->I & MIT_OPCODE_MASK) == MIT_INSTRUCTION_BRANCH) {
                 error = mit_extra_instruction(S);
                 if (error == 0) {
                     S->I = 0;
@@ -211,12 +212,13 @@ Feature(# Register and stack backtrace
         unsigned long default_max_backtrace = {};
         unsigned long max_backtrace = default_max_backtrace;
     '''.format(default_max_backtrace)),
-    exit=Code('''
+    exit=disable_warnings(
+        ['-Wpointer-to-int-cast'], Code('''
         if (backtrace == true) {
             fprintf(stderr, "\\nRegisters:\\n");
             char word_str[WORD_STRLEN];
-            #define R(name) \\
-            word_to_str(S->name, &word_str[0]); \\
+            #define R(name, type, return_type) \\
+            word_to_str((mit_uword)S->name, &word_str[0]); \\
             fprintf(stderr, #name "=0x%.*s\\n", WORD_STRLEN, word_str);
             #include "mit/registers.h"
             #undef R
@@ -227,14 +229,14 @@ Feature(# Register and stack backtrace
                     items = S->STACK_DEPTH;
                 for (mit_uword pos = 0; pos < items; pos++) {
                     mit_word w;
-                    if (load_stack(S, pos, &w) == 0) {
+                    if (load_stack(S->stack, S->STACK_DEPTH, pos, &w) == 0) {
                         word_to_str(w, &word_str[0]);
                         fprintf(stderr, "0x%.*s\\n", WORD_STRLEN, word_str);
                     }
                 }
             }
         }
-    ''')
+    '''))
 )
 
 Feature(# VM core dump
@@ -253,7 +255,7 @@ Feature(# VM core dump
 
 # Errors
 error_enum = Code()
-for error in ExecutionError:
+for error in MitError:
     error_enum.append('"{}",'.format(
         error.name.lower().translate(str.maketrans('_', ' '))
     ))
@@ -470,4 +472,4 @@ int main(int argc, char *argv[])
         return error == MIT_ERROR_HALT ? 0 : error;
     }
 }''',
-]).unindented_str())
+]))

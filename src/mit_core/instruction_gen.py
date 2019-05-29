@@ -15,6 +15,7 @@ import functools
 
 from .code_buffer import Code
 from .opcode_frequency import counts
+from .code_util import disable_warnings, c_symbol
 
 
 type_wordses = {'mit_word': 1} # Enough for the core
@@ -27,22 +28,22 @@ def type_words(type):
     '''
     return type_wordses.get(type, -1)
 
-def load_stack_type(name, type, depth):
+def load_stack(name, depth=0, type='mit_word'):
     '''
     Generate C code to load the variable `name` of type `type` occupying
-    stack slots starting at position `depth`.
+    stack slots starting at position `depth`. Does not check the stack.
 
     Returns a Code.
     '''
     code = Code()
     code.append(
-        'mit_max_stack_item_t temp = (mit_uword)(*UNCHECKED_STACK({}));'
+        'mit_max_stack_item_t temp = (mit_uword)(*UNCHECKED_STACK(S->stack, S->STACK_DEPTH, {}));'
         .format(depth)
     )
     for i in range(type_words(type) - 1):
         code.append('temp <<= MIT_WORD_BIT;')
         code.append(
-            'temp |= (mit_uword)(*UNCHECKED_STACK({}));'
+            'temp |= (mit_uword)(*UNCHECKED_STACK(S->stack, S->STACK_DEPTH, {}));'
             .format(depth + i + 1)
         )
     code.extend(disable_warnings(
@@ -51,27 +52,27 @@ def load_stack_type(name, type, depth):
     ))
     return Code('{', code, '}')
 
-def store_stack_type(name, type, depth):
+def store_stack(value, depth=0, type='mit_word'):
     '''
-    Generate C code to store the variable `name` of type `type` occupying
-    stack slots starting at position `depth`.
+    Generate C code to store the value `value` of type `type` occupying
+    stack slots starting at position `depth`. Does not check the stack.
 
-    Returns a str.
+    Returns a Code.
     '''
     code = Code()
     code.extend(disable_warnings(
-        ['-Wpointer-to-int-cast'],
+        ['-Wpointer-to-int-cast', '-Wbad-function-cast'],
         Code('mit_max_stack_item_t temp = (mit_max_stack_item_t){};')
-            .format(name),
+            .format(value),
     ))
     for i in reversed(range(type_words(type) - 1)):
         code.append(
-            '*UNCHECKED_STACK({}) = (mit_uword)(temp & MIT_WORD_MASK);'
+            '*UNCHECKED_STACK(S->stack, S->STACK_DEPTH, {}) = (mit_uword)(temp & MIT_WORD_MASK);'
             .format(depth + i + 1)
         )
         code.append('temp >>= MIT_WORD_BIT;')
     code.append(
-        '*UNCHECKED_STACK({}) = (mit_uword)({});'
+        '*UNCHECKED_STACK(S->stack, S->STACK_DEPTH, {}) = (mit_uword)({});'
         .format(
             depth,
             'temp & MIT_WORD_MASK' if type_words(type) > 1 else 'temp',
@@ -79,45 +80,23 @@ def store_stack_type(name, type, depth):
     )
     return Code('{', code, '}')
 
-def pop_stack_type(name, type):
+def pop_stack(name, type='mit_word'):
     code = Code()
-    code.append(
-        'if (S->STACK_DEPTH < {}) RAISE(MIT_ERROR_STACK_OVERFLOW);'
-        .format(type_words(type))
-    )
-    code.extend(load_stack_type(name, type, 0))
+    code.extend(check_underflow(type_words(type)))
+    code.extend(load_stack(name, type=type))
     code.append(
         'S->STACK_DEPTH -= {};'.format(type_words(type)),
     )
     return code
 
-def push_stack_type(name, type):
+def push_stack(value, type='mit_word'):
     code = Code()
-    code.append(
-        'if (S->stack_size - S->STACK_DEPTH < {}) RAISE(MIT_ERROR_INVALID_STACK_WRITE);'
-        .format(type_words(type))
-    )
-    code.extend(store_stack_type(name, type, 0))
+    code.extend(check_overflow(type_words(type), 0))
+    code.extend(store_stack(value, type=type))
     code.append(
         'S->STACK_DEPTH += {};'.format(type_words(type)),
     )
     return code
-
-def disable_warnings(warnings, code):
-    '''
-    Returns `code` wrapped in "#pragmas" to suppress the given list
-    `warnings` of warning flags.
-
-     - code - a Code.
-    '''
-    assert isinstance(code, Code)
-    outer_code = Code()
-    outer_code.append('#pragma GCC diagnostic push')
-    for w in warnings:
-        outer_code.append('#pragma GCC diagnostic ignored "{}"'.format(w))
-    outer_code.extend(code)
-    outer_code.append('#pragma GCC diagnostic pop')
-    return outer_code
 
 
 @functools.total_ordering
@@ -242,13 +221,13 @@ class StackItem:
         '''
         Returns a Code to load `self` from the stack to its C variable.
         '''
-        return load_stack_type(self.name, self.type, self.depth)
+        return load_stack(self.name, self.depth, self.type)
 
     def store(self):
         '''
         Returns a Code to store `self` to the stack from its C variable.
         '''
-        return store_stack_type(self.name, self.type, self.depth)
+        return store_stack(self.name, self.depth, self.type)
 
 
 class StackPicture:
@@ -424,12 +403,11 @@ def gen_case(instruction):
         code.extend(effect.store_results())
     return code
 
-def dispatch(Instruction, prefix, undefined_case, trace=None):
+def dispatch(Instruction, undefined_case, trace=None):
     '''
     Generate dispatch code for some Instructions.
 
-     - Instruction - AbstractInstruction.
-     - prefix - instruction name prefix.
+     - Instruction - InstructionEnum.
      - undefined_case - a Code defining the fallback behaviour.
      - trace - an opcode trace to use to improve the dispatch code.
     '''
@@ -440,10 +418,10 @@ def dispatch(Instruction, prefix, undefined_case, trace=None):
     if trace is not None:
         order = counts(Instruction, trace)
     for (_, instruction) in order:
-        code.append('{else_text}if (opcode == {prefix}{instruction}) {{'.format(
+        code.append('{else_text}if (opcode == {prefix}_{instruction}) {{'.format(
             else_text=else_text,
             instruction=instruction.name,
-            prefix=prefix,
+            prefix=c_symbol(Instruction.__name__),
         ))
         code.append(gen_case(instruction))
         code.append('}')

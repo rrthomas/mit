@@ -10,18 +10,24 @@
 from enum import Enum, IntEnum, unique
 
 from .code_buffer import Code
-from .instruction import AbstractInstruction
+from .instruction import InstructionEnum
+from .register import RegisterEnum
 
-
-class Register(Enum):
-    '''A VM register.'''
-    PC = object()
-    I = object()
-    BAD = object()
-    STACK_DEPTH = object()
 
 @unique
-class ExecutionError(IntEnum):
+class Register(RegisterEnum):
+    '''A VM register.'''
+    PC = ()
+    I = ()
+    BAD = ()
+    STACK_DEPTH = ()
+    memory = ('mit_word *')
+    memory_size = ()
+    stack = ('mit_word * restrict')
+    stack_size = ()
+
+@unique
+class MitError(IntEnum):
     OK = 0
     INVALID_OPCODE = 1
     STACK_OVERFLOW = 2
@@ -35,28 +41,28 @@ class ExecutionError(IntEnum):
     HALT = 127
 
 @unique
-class Instruction(AbstractInstruction):
+class Instruction(InstructionEnum):
     '''VM instruction instructions.'''
     NEXT = (0x0, [], [], Code('''\
-        NEXT;'''
+        DO_NEXT;'''
     ), True)
 
     BRANCH = (0x1, ['addr'], [], Code('''\
         S->PC = (mit_uword)addr;
-        NEXT;'''
+        DO_NEXT;'''
     ), True)
 
     BRANCHZ = (0x2, ['flag', 'addr'], [], Code('''\
         if (flag == 0) {
             S->PC = (mit_uword)addr;
-            NEXT;
+            DO_NEXT;
         }
     '''))
 
     CALL = (0x3, ['addr'], ['ret_addr'], Code('''\
         ret_addr = S->PC;
         S->PC = (mit_uword)addr;
-        NEXT;'''
+        DO_NEXT;'''
     ), True)
 
     POP = (0x4, ['ITEMS', 'COUNT'], [], Code())
@@ -70,28 +76,36 @@ class Instruction(AbstractInstruction):
     ))
 
     LOAD = (0x8, ['addr', 'size'], ['x'], Code('''\
-        int ret = load(S, addr, size, &x);
-        if (ret != 0)
-            RAISE(ret);'''
+        int ret = load(S->memory, S->memory_size, addr, size, &x);
+        if (ret != 0) {
+            S->BAD = addr;
+            RAISE(ret);
+        }'''
     ))
 
     STORE = (0x9, ['x', 'addr', 'size'], [], Code('''\
-        int ret = store(S, addr, size, x);
-        if (ret != 0)
-            RAISE(ret);'''
+        int ret = store(S->memory, S->memory_size, addr, size, x);
+        if (ret != 0) {
+            S->BAD = addr;
+            RAISE(ret);
+        }'''
     ))
 
     LIT = (0xa, [], ['n'], Code('''\
-        int ret = load(S, S->PC, MIT_SIZE_WORD, &n);
-        if (ret != 0)
+        int ret = load(S->memory, S->memory_size, S->PC, MIT_SIZE_WORD, &n);
+        if (ret != 0) {
+            S->BAD = S->PC;
             RAISE(ret);
+        }
         S->PC += MIT_WORD_BYTES;'''
     ))
 
     LIT_PC_REL = (0xb, [], ['n'], Code('''\
-        int ret = load(S, S->PC, MIT_SIZE_WORD, &n);
-        if (ret != 0)
+        int ret = load(S->memory, S->memory_size, S->PC, MIT_SIZE_WORD, &n);
+        if (ret != 0) {
+            S->BAD = S->PC;
             RAISE(ret);
+        }
         n += S->PC;
         S->PC += MIT_WORD_BYTES;'''
     ))
@@ -184,7 +198,7 @@ class Instruction(AbstractInstruction):
     ))
 
 @unique
-class InternalExtraInstruction(AbstractInstruction):
+class InternalExtraInstruction(InstructionEnum):
     HALT = (0x1, [], [], Code('''\
         RAISE(MIT_ERROR_HALT);'''
     ))

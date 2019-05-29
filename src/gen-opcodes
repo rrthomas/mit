@@ -9,12 +9,9 @@
 # RISK.
 
 from mit_core.code_buffer import Code
-from mit_core.vm_data import (
-    Instruction, InternalExtraInstruction,
-    ExecutionError,
-)
+from mit_core.vm_data import Instruction, InternalExtraInstruction, MitError
 from mit_core.errors import MallocError, LoadError, SaveError
-from mit_core.enum_util import enum_to_c
+from mit_core.code_util import enum_to_c
 
 
 code = Code()
@@ -36,18 +33,18 @@ code.append('''\
 
 ''')
 code.append('')
-code.extend(enum_to_c(Instruction, 'O_'))
+code.extend(enum_to_c(Instruction))
 code.append('')
-code.extend(enum_to_c(InternalExtraInstruction, 'O_EXTRA_'))
+code.extend(enum_to_c(InternalExtraInstruction))
 code.append('')
-code.extend(enum_to_c(ExecutionError, 'MIT_ERROR_'))
+code.extend(enum_to_c(MitError))
 code.append('')
-code.extend(enum_to_c(MallocError, 'MIT_MALLOC_ERROR_'))
+code.extend(enum_to_c(MallocError))
 code.append('')
-code.extend(enum_to_c(LoadError, 'MIT_LOAD_ERROR_'))
+code.extend(enum_to_c(LoadError))
 code.append('')
-code.extend(enum_to_c(SaveError, 'MIT_SAVE_ERROR_'))
+code.extend(enum_to_c(SaveError))
 code.append('')
 code.append('#endif')
 
-print(code.unindented_str())
+print(code)

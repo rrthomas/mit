@@ -21,10 +21,16 @@
 #include <mit@PACKAGE_SUFFIX@/opcodes.h>
 
 
+// Optimization
+// Hint that `x` is usually true/false.
 // https://gcc.gnu.org/onlinedocs/gcc/Other-Builtins.html
-// Hint that `x` is usually true/false. FIXME: Make this portable.
+#if @HAVE___BUILTIN_EXPECT@ == 1
 #define likely(x) __builtin_expect(!!(x), 1)
 #define unlikely(x) __builtin_expect(!!(x), 0)
+#else
+#define likely(x) (x)
+#define unlikely(x) (x)
+#endif
 
 // Build-time parameters
 #define MIT_WORD_BYTES @WORD_BYTES@
@@ -96,31 +102,27 @@ extern const mit_word mit_word_max;
 
 // VM registers
 typedef struct {
-#define R(reg) mit_uword reg;
+#define R(reg, type, return_type) type reg;
 #include <mit@PACKAGE_SUFFIX@/registers.h>
 #undef R
-    mit_word * restrict memory;
-    mit_uword memory_size;
-    mit_word * restrict stack;
-    mit_uword stack_size;
     int main_argc;
     char **main_argv;
 } mit_state;
 
-#define R(reg)                                          \
-    mit_uword mit_get_ ## reg(mit_state *S);            \
-    void mit_set_ ## reg(mit_state *S, mit_uword val);
+#define R(reg, type, return_type)                  \
+    return_type mit_get_ ## reg(mit_state *S);     \
+    void mit_set_ ## reg(mit_state *S, type val);
 #include <mit@PACKAGE_SUFFIX@/registers.h>
 #undef R
 
 // Instructions
-#ifndef MIT_INSTRUCTION_BIT
-#define MIT_INSTRUCTION_BIT 8
+#ifndef MIT_OPCODE_BIT
+#define MIT_OPCODE_BIT 8
 #endif
-#if MIT_INSTRUCTION_BIT < 5 || MIT_INSTRUCTION_BIT > 8
-#error "MIT_INSTRUCTION_BIT must be in the range 5 to 8 inclusive!"
+#if MIT_OPCODE_BIT < 5 || MIT_OPCODE_BIT > 8
+#error "MIT_OPCODE_BIT must be in the range 5 to 8 inclusive!"
 #endif
-#define MIT_INSTRUCTION_MASK ((1 << MIT_INSTRUCTION_BIT) - 1)
+#define MIT_OPCODE_MASK ((1 << MIT_OPCODE_BIT) - 1)
 extern const unsigned mit_instruction_bit;
 extern const unsigned mit_instruction_mask;
 
@@ -175,51 +177,50 @@ int mit_store(mit_state *S, mit_uword addr, unsigned size, mit_word val);
 // Inline functions
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-function"
-_GL_ATTRIBUTE_PURE static uint8_t *native_address_of_range(mit_state *S, mit_uword addr, mit_uword len)
+_GL_ATTRIBUTE_PURE static uint8_t *
+native_address_of_range(mit_word * restrict memory, mit_uword memory_size,
+                        mit_uword addr, mit_uword len)
 {
-    if (unlikely(addr >= S->memory_size || len > S->memory_size - addr))
+    if (unlikely(addr >= memory_size || len > memory_size - addr))
         return NULL;
-    return ((uint8_t *)(S->memory)) + addr;
+    return ((uint8_t *)memory) + addr;
 }
 
-static int load(mit_state *S, mit_uword addr, unsigned size, mit_word *val_ptr)
+static int load(mit_word * restrict memory, mit_uword memory_size,
+                mit_uword addr, unsigned size, mit_word *val_ptr)
 {
-    if (unlikely(addr >= S->memory_size)) {
-        S->BAD = addr;
+    if (unlikely(addr >= memory_size))
         return MIT_ERROR_INVALID_MEMORY_READ;
-    }
-    if (unlikely(!is_aligned(addr, size))) {
-        S->BAD = addr;
+    if (unlikely(!is_aligned(addr, size)))
         return MIT_ERROR_UNALIGNED_ADDRESS;
-    }
 
     mit_word val;
     switch (size) {
     case 0:
-        val = (mit_uword)*((uint8_t *)S->memory + addr);
+        val = (mit_uword)*((uint8_t *)memory + addr);
         break;
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wcast-align"
     case 1:
-        val = (mit_uword)*((uint16_t *)((uint8_t *)S->memory + addr));
+        val = (mit_uword)*((uint16_t *)((uint8_t *)memory + addr));
         if (MIT_ENDISM != MIT_HOST_ENDISM)
             val = bswap_16(val);
         break;
 #if MIT_SIZE_WORD >= 2
     case 2:
-        val = (mit_uword)*((uint32_t *)((uint8_t *)S->memory + addr));
+        val = (mit_uword)*((uint32_t *)((uint8_t *)memory + addr));
         if (MIT_ENDISM != MIT_HOST_ENDISM)
             val = bswap_32(val);
         break;
 #if MIT_SIZE_WORD >= 3
     case 3:
-        val = (mit_uword)*((uint64_t *)((uint8_t *)S->memory + addr));
+        val = (mit_uword)*((uint64_t *)((uint8_t *)memory + addr));
         if (MIT_ENDISM != MIT_HOST_ENDISM)
             val = bswap_64(val);
         break;
 #if MIT_SIZE_WORD >= 4
     case 4:
-        val = (mit_uword)*((unsigned __int128 *)((uint8_t *)S->memory + addr));
+        val = (mit_uword)*((unsigned __int128 *)((uint8_t *)memory + addr));
         if (MIT_ENDISM != MIT_HOST_ENDISM)
             val = bswap_128(val);
         break;
@@ -235,45 +236,42 @@ static int load(mit_state *S, mit_uword addr, unsigned size, mit_word *val_ptr)
     return MIT_ERROR_OK;
 }
 
-static int store(mit_state *S, mit_uword addr, unsigned size, mit_word val)
+static int store(mit_word * restrict memory, mit_uword memory_size,
+                 mit_uword addr, unsigned size, mit_word val)
 {
-    if (unlikely(addr >= S->memory_size)) {
-        S->BAD = addr;
+    if (unlikely(addr >= memory_size))
         return MIT_ERROR_INVALID_MEMORY_WRITE;
-    }
-    if (unlikely(!is_aligned(addr, size))) {
-        S->BAD = addr;
+    if (unlikely(!is_aligned(addr, size)))
         return MIT_ERROR_UNALIGNED_ADDRESS;
-    }
 
     switch (size) {
     case 0:
-        ((uint8_t *)S->memory)[addr] = (uint8_t)val;
+        ((uint8_t *)memory)[addr] = (uint8_t)val;
         break;
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wcast-align"
     case 1:
         if (MIT_ENDISM != MIT_HOST_ENDISM)
             val = bswap_16(val);
-        *((uint16_t *)((uint8_t *)S->memory + addr)) = (uint16_t)val;
+        *((uint16_t *)((uint8_t *)memory + addr)) = (uint16_t)val;
         break;
 #if MIT_SIZE_WORD >= 2
     case 2:
         if (MIT_ENDISM != MIT_HOST_ENDISM)
             val = bswap_32(val);
-        *((uint32_t *)((uint8_t *)S->memory + addr)) = (uint32_t)val;
+        *((uint32_t *)((uint8_t *)memory + addr)) = (uint32_t)val;
         break;
 #if MIT_SIZE_WORD >= 3
     case 3:
         if (MIT_ENDISM != MIT_HOST_ENDISM)
             val = bswap_64(val);
-        *((uint64_t *)((uint8_t *)S->memory + addr)) = (uint64_t)val;
+        *((uint64_t *)((uint8_t *)memory + addr)) = (uint64_t)val;
         break;
 #if MIT_SIZE_WORD >= 4
     case 4:
         if (MIT_ENDISM != MIT_HOST_ENDISM)
             val = bswap_128(val);
-        *((unsigned __int128 *)((uint8_t *)S->memory + addr)) = (unsigned __int128)val;
+        *((unsigned __int128 *)((uint8_t *)memory + addr)) = (unsigned __int128)val;
         break;
 #endif
 #endif
@@ -320,50 +318,30 @@ int mit_push_stack(mit_state *S, mit_word val);
 
 
 // Unchecked macro: UNSAFE!
-#define UNCHECKED_STACK(pos)                    \
-    (S->stack + S->STACK_DEPTH - (pos) - 1)
+#define UNCHECKED_STACK(stack, stack_depth, pos) \
+    ((stack) + (stack_depth) - (pos) - 1)
 
 // Inline functions
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-function"
-static int load_stack(mit_state *S, mit_uword pos, mit_word *vp)
+static int load_stack(mit_word * restrict stack, mit_uword stack_depth,
+                      mit_uword pos, mit_word *vp)
 {
-    if (unlikely(pos >= S->STACK_DEPTH)) {
-        S->BAD = pos;
+    if (unlikely(pos >= stack_depth))
         return MIT_ERROR_INVALID_STACK_READ;
-    }
 
-    *vp = *UNCHECKED_STACK(pos);
+    *vp = *UNCHECKED_STACK(stack, stack_depth, pos);
     return MIT_ERROR_OK;
 }
 
-static int store_stack(mit_state *S, mit_uword pos, mit_word v)
+static int store_stack(mit_word * restrict stack, mit_uword stack_depth,
+                       mit_uword pos, mit_word v)
 {
-    if (unlikely(pos >= S->STACK_DEPTH)) {
-        S->BAD = pos;
+    if (unlikely(pos >= stack_depth))
         return MIT_ERROR_INVALID_STACK_WRITE;
-    }
 
-    *UNCHECKED_STACK(pos) = v;
+    *UNCHECKED_STACK(stack, stack_depth, pos) = v;
     return MIT_ERROR_OK;
-}
-
-static int pop_stack(mit_state *S, mit_word *v)
-{
-    int ret = load_stack(S, 0, v);
-    S->STACK_DEPTH--;
-    return ret;
-}
-
-static int push_stack(mit_state *S, mit_word v)
-{
-    if (unlikely(S->STACK_DEPTH >= S->stack_size)) {
-        S->BAD = S->stack_size;
-        return MIT_ERROR_STACK_OVERFLOW;
-    }
-
-    (S->STACK_DEPTH)++;
-    return store_stack(S, 0, v);
 }
 #pragma GCC diagnostic pop
 

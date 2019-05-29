@@ -27,8 +27,8 @@ const mit_uword mit_word_mask = MIT_WORD_MASK;
 const mit_uword mit_uword_max = MIT_UWORD_MAX;
 const mit_word mit_word_min = MIT_WORD_MIN;
 const mit_word mit_word_max = MIT_WORD_MAX;
-const unsigned mit_instruction_bit = MIT_INSTRUCTION_BIT;
-const unsigned mit_instruction_mask = MIT_INSTRUCTION_MASK;
+const unsigned mit_instruction_bit = MIT_OPCODE_BIT;
+const unsigned mit_instruction_mask = MIT_OPCODE_MASK;
 
 
 // Utility functions
@@ -48,17 +48,17 @@ _GL_ATTRIBUTE_CONST int mit_is_aligned(mit_uword addr, unsigned size)
 
 _GL_ATTRIBUTE_PURE uint8_t *mit_native_address_of_range(mit_state *S, mit_uword addr, mit_uword len)
 {
-    return native_address_of_range(S, addr, len);
+    return native_address_of_range(S->memory, S->memory_size, addr, len);
 }
 
 int mit_load(mit_state *S, mit_uword addr, unsigned size, mit_word *val_ptr)
 {
-    return load(S, addr, size, val_ptr);
+    return load(S->memory, S->memory_size, addr, size, val_ptr);
 }
 
 int mit_store(mit_state *S, mit_uword addr, unsigned size, mit_word val)
 {
-    return store(S, addr, size, val);
+    return store(S->memory, S->memory_size, addr, size, val);
 }
 
 
@@ -66,22 +66,28 @@ int mit_store(mit_state *S, mit_uword addr, unsigned size, mit_word val)
 
 int mit_load_stack(mit_state *S, mit_uword pos, mit_word *val_ptr)
 {
-    return load_stack(S, pos, val_ptr);
+    return load_stack(S->stack, S->STACK_DEPTH, pos, val_ptr);
 }
 
 int mit_store_stack(mit_state *S, mit_uword pos, mit_word val)
 {
-    return store_stack(S, pos, val);
+    return store_stack(S->stack, S->STACK_DEPTH, pos, val);
 }
 
 int mit_pop_stack(mit_state *S, mit_word *val_ptr)
 {
-    return pop_stack(S, val_ptr);
+    int ret = load_stack(S->stack, S->STACK_DEPTH, 0, val_ptr);
+    S->STACK_DEPTH--;
+    return ret;
 }
 
 int mit_push_stack(mit_state *S, mit_word val)
 {
-    return push_stack(S, val);
+    if (unlikely(S->STACK_DEPTH >= S->stack_size))
+        return MIT_ERROR_STACK_OVERFLOW;
+
+    (S->STACK_DEPTH)++;
+    return store_stack(S->stack, S->STACK_DEPTH, 0, val);
 }
 
 
@@ -142,11 +148,11 @@ void mit_destroy(mit_state *S)
     free(S);
 }
 
-#define R(reg)                                                      \
-    _GL_ATTRIBUTE_PURE mit_uword mit_get_ ## reg(mit_state *S) {    \
+#define R(reg, type, return_type)                                   \
+    _GL_ATTRIBUTE_PURE return_type mit_get_ ## reg(mit_state *S) {  \
         return S->reg;                                              \
     }                                                               \
-    void mit_set_ ## reg(mit_state *S, mit_uword val) {             \
+    void mit_set_ ## reg(mit_state *S, type val) {                  \
         S->reg = val;                                               \
     }
 #include "mit/registers.h"

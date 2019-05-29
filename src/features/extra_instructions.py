@@ -10,13 +10,13 @@
 from enum import Enum, unique
 
 from mit_core.code_buffer import Code
-from mit_core.instruction import AbstractInstruction
+from mit_core.instruction import InstructionEnum
 from mit_core.vm_data import Register
-from mit_core.instruction_gen import pop_stack_type
+from mit_core.instruction_gen import pop_stack, push_stack
 
 
 @unique
-class LibcLib(AbstractInstruction):
+class LibC(InstructionEnum):
     ARGC = (0x0, [], ['argc'], Code('''\
         argc = S->main_argc;
     '''))
@@ -171,12 +171,15 @@ mit_lib = {
     'LOAD': (0x2, ['addr', 'size', 'inner_state:mit_state *'], ['value', 'ret:int'],
         Code('''\
             value = 0;
-            ret = load(inner_state, addr, size, &value);
+            ret = load(inner_state->memory, inner_state->memory_size,
+                       addr, size, &value);
         '''),
     ),
 
     'STORE': (0x3, ['value', 'addr', 'size', 'inner_state:mit_state *'], ['ret:int'],
-        Code('ret = store(inner_state, addr, size, value);'),
+        Code('''\
+             ret = store(inner_state->memory, inner_state->memory_size,
+                         addr, size, value);'''),
     ),
 
     'INIT': (0x4, ['memory_size', 'stack_size'], ['new_state:mit_state *'],
@@ -219,46 +222,45 @@ mit_lib = {
 for register in Register:
     pop_code = Code()
     pop_code.append('mit_state *inner_state;')
-    pop_code.extend(pop_stack_type('inner_state', 'mit_state *'))
+    pop_code.extend(pop_stack('inner_state', type='mit_state *'))
 
     get_code = Code()
     get_code.extend(pop_code)
-    get_code.append(
-        'push_stack(S, mit_get_{}(inner_state));'.format(register.name),
-    )
+    get_code.extend(push_stack(
+        'mit_get_{}(inner_state)'.format(register.name),
+        type=register.return_type
+    ))
     mit_lib['GET_{}'.format(register.name.upper())] = (
         len(mit_lib), None, None, get_code,
     )
 
     set_code = Code()
     set_code.extend(pop_code)
+    set_code.append('{} value;'.format(register.type))
+    set_code.extend(pop_stack('value', register.type))
     set_code.append('''\
-        mit_word value;
-        int ret = pop_stack(S, &value);
-        if (ret != 0)
-            RAISE(ret);
         mit_set_{}(inner_state, value);'''.format(register.name),
     )
     mit_lib['SET_{}'.format(register.name.upper())] = (
         len(mit_lib), None, None, set_code,
     )
 
-MitLib = AbstractInstruction('MitLib', mit_lib)
+LibMit = InstructionEnum('LibMit', mit_lib)
 
-class Library(AbstractInstruction):
+class Library(InstructionEnum):
     '''Wrap an Instruction enumeration as a library.'''
     def __init__(self, opcode, library, includes):
-        super().__init__(opcode, None, None, Code('''\
-            {{
-                mit_word function;
-                int ret = pop_stack(S, &function);
+        super().__init__(opcode, None, None, Code(*[
+            '''\
+            {
+                mit_word function;''',
+            pop_stack('function'),
+            '''
+                int ret = extra_{}(S, function);
                 if (ret != 0)
                     RAISE(ret);
-                ret = extra_{}(S, function);
-                if (ret != 0)
-                    RAISE(ret);
-            }}'''
-        ))
+            }}'''.format(self.name.lower())
+        ]))
         self.library = library
         self.includes = includes
 
@@ -280,11 +282,11 @@ class Library(AbstractInstruction):
 @unique
 class LibInstruction(Library):
     '''VM instruction instructions to access external libraries.'''
-    LIB_MIT = (0x01, MitLib, '''\
+    LIBMIT = (0x01, LibMit, '''\
 #include "mit/mit.h"
 #include "mit/features.h"
 ''')
-    LIB_C = (0x02, LibcLib, '''\
+    LIBC = (0x02, LibC, '''\
 #include <stdlib.h>
 #include <stdbool.h>
 #include <unistd.h>
@@ -294,7 +296,3 @@ class LibInstruction(Library):
 #include <string.h>
 #include "binary-io.h"
 ''')
-
-# Inject name into each library's code
-for instruction in LibInstruction:
-    instruction.code = instruction.code.format(str.lower(instruction.name))

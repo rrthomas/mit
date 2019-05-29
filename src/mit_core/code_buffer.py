@@ -35,15 +35,13 @@ class Code:
 
     def __str__(self):
         '''
-        Returns this Code as a str, with each line prefixed by `INDENT`.
+        Returns this Code as a str.
         '''
-        return textwrap.indent(self.unindented_str(), self.INDENT)
-
-    def unindented_str(self):
-        '''
-        Returns this Code as a str, without indentation at the top level.
-        '''
-        return '\n'.join(str(x) for x in self.buffer)
+        return '\n'.join(
+            textwrap.indent(str(x), self.INDENT)
+            if isinstance(x, Code) else str(x)
+            for x in self.buffer
+        )
 
     def append(self, str_or_code):
         assert isinstance(str_or_code, (Code, str))

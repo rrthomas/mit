@@ -21,11 +21,11 @@ for i in range(2):
     goto(0)
     lit(code_len)
     lit(14)
-    lit(LIB_C_STDOUT)
-    ass_extra(LIB_C, type=BRANCH)
-    lit(LIB_C_WRITE)
-    ass_extra(LIB_C, type=BRANCH)
-    ass_extra(EXTRA_HALT)
+    lit(LibC.STDOUT)
+    ass_extra(LIBC, type=BRANCH)
+    lit(LibC.WRITE)
+    ass_extra(LIBC, type=BRANCH)
+    ass_extra(HALT)
     code_len = assembler.pc
 
 ass_bytes(b"Hello, world!\n")
