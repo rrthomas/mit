@@ -39,4 +39,4 @@ code.extend(enum_to_python(errors.LoadError))
 code.append('')
 code.extend(enum_to_python(errors.SaveError))
 
-print(code.unindented_str())
+print(code)

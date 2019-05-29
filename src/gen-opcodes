@@ -47,4 +47,4 @@ code.extend(enum_to_c(SaveError))
 code.append('')
 code.append('#endif')
 
-print(code.unindented_str())
+print(code)

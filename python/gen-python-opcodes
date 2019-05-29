@@ -58,4 +58,4 @@ code.extend(enum_to_python(extra_instructions.LibMit))
 code.append('')
 code.extend(enum_to_python(extra_instructions.LibInstruction))
 
-print(code.unindented_str())
+print(code)

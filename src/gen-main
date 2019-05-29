@@ -472,4 +472,4 @@ int main(int argc, char *argv[])
         return error == MIT_ERROR_HALT ? 0 : error;
     }
 }''',
-]).unindented_str())
+]))

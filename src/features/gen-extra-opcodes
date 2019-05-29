@@ -43,5 +43,4 @@ code.append('#undef INSTRUCTION')
 code.append('')
 code.append('#endif')
 
-
-print(code.unindented_str())
+print(code)

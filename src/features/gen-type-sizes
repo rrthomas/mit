@@ -32,4 +32,4 @@ for type in list(set(['mit_word'] +
 # We don't need this header, but autoconf insists we define it.
 code.append('AC_CONFIG_HEADERS([type-sizes.h])')
 
-print(code.unindented_str())
+print(code)
