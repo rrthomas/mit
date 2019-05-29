@@ -18,7 +18,7 @@ provides a global Mit instance in VM, and defines various globals. See
 
 Registers: a variable for each register; also a list, 'registers'
 Memory: M, M_word
-Stacks: S, R
+Stack: S
 Managing the VM state: load, save, initialise
 Controlling and observing execution: run, step
 Examining memory: dump, disassemble
