@@ -300,7 +300,8 @@ state_index = {} # Inverse of `states`.
 # It can be:
 #  - None - goto fallback;
 #  - int g - goto g;
-#  - (Instruction i, int c, int w) - if (next==i) { e; goto c; } else goto w;
+#  - (Instruction guess, int c, int w) -
+#    if (next==guess) { execute guess; goto c; } else goto w;
 transitions = []
 
 def enqueue(path, rejects):
@@ -333,15 +334,14 @@ while len(transitions) < len(states):
             ))
             break
     else:
-        # There is no good guess.
-        new_path = path[1:]
-        while new_path not in language:
-            # Occurs if not Path(()).is_useful_guess(new_path[0])
-            new_path = new_path[1:]
-        if len(new_path) > 0:
-            transitions.append(enqueue(new_path, rejects))
+        # There is no good guess. Try again with a suffix of `path`.
+        while len(path) > 0:
+            path = path[1:]
+            if path in language:
+                transitions.append(enqueue(path, rejects))
+                break
         else:
-            # There is no useful history. Use the fallback executor.
+            # No more suffixes. Use the fallback executor.
             transitions.append(None)
 
 assert len(states) == len(state_index) == len(transitions)
