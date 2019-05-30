@@ -9,7 +9,7 @@ THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 RISK.
 '''
 
-from mit_core.code_buffer import Code
+from mit_core.code_util import Code
 from mit_core.vm_data import Instruction
 from mit_core.instruction import InstructionEnum
 

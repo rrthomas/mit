@@ -9,7 +9,7 @@
 
 from enum import Enum, unique
 
-from mit_core.code_buffer import Code
+from mit_core.code_util import Code
 from mit_core.instruction import InstructionEnum
 from mit_core.vm_data import Register
 from mit_core.instruction_gen import pop_stack, push_stack

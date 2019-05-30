@@ -10,7 +10,7 @@
 
 import re
 
-from mit_core.code_buffer import Code
+from mit_core.code_util import Code
 from extra_instructions import LibInstruction
 
 

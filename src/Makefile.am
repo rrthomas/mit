@@ -21,7 +21,6 @@ LIB_CORE_SRCS = \
 	mit_core/instruction.py \
 	mit_core/vm_data.py \
 	mit_core/errors.py \
-	mit_core/code_buffer.py \
 	mit_core/code_util.py \
 	mit_core/opcode_frequency.py \
 	mit_core/instruction_gen.py
@@ -79,7 +78,7 @@ include/mit/opcodes.h: gen-opcodes mit_core/vm_data.py mit_core/instruction.py
 	$(MKDIR_P) include/mit
 	$(PYTHON_WITH_PATH) $(srcdir)/gen-opcodes > include/mit/opcodes.h || ( rm -f include/mit/opcodes.h; exit 1 )
 
-instructions.c: gen-instructions mit_core/vm_data.py mit_core/instruction.py mit_core/code_buffer.py mit_core/instruction_gen.py features/instructions.trace.gz
+instructions.c: gen-instructions mit_core/vm_data.py mit_core/instruction.py mit_core/code_util.py mit_core/instruction_gen.py features/instructions.trace.gz
 	$(PYTHON_WITH_PATH) $(srcdir)/gen-instructions $(srcdir)/features/instructions.trace.gz > instructions.c || ( rm -f instructions.c; exit 1 )
 
 main.c: gen-main

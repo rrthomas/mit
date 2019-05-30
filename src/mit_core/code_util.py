@@ -10,8 +10,53 @@ RISK.
 '''
 
 import re
+import textwrap
 
-from mit_core.code_buffer import Code
+
+class Code:
+    '''
+    Collect generated code, and indent it correctly.
+    Represents a list of code fragments, each of which is a str or a Code.
+    The latter will be indented on output.
+    '''
+    def __init__(self, *args):
+        self.buffer = []
+        for arg in args:
+            self.append(arg)
+
+    INDENT = '    '
+
+    def __repr__(self):
+        '''
+        Returns a valid Python expression.
+        '''
+        return 'Code(\n{}\n)'.format(textwrap.indent(
+            ',\n'.join(repr(x) for x in self.buffer),
+            self.INDENT,
+        ))
+
+    def __str__(self):
+        '''
+        Returns this Code as a str.
+        '''
+        return '\n'.join(
+            textwrap.indent(str(x), self.INDENT)
+            if isinstance(x, Code) else str(x)
+            for x in self.buffer
+        )
+
+    def append(self, str_or_code):
+        assert isinstance(str_or_code, (Code, str))
+        if isinstance(str_or_code, str):
+            str_or_code = textwrap.dedent(str_or_code.rstrip())
+        self.buffer.append(str_or_code)
+
+    def extend(self, code):
+        assert isinstance(code, Code)
+        self.buffer.extend(code.buffer)
+
+    def format(self, *args, **kwargs):
+        return Code(*(x.format(*args, **kwargs) for x in self.buffer))
 
 
 def disable_warnings(warnings, code):
