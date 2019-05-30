@@ -49,12 +49,14 @@ class Instruction(InstructionEnum):
 
     BRANCH = (0x1, ['addr'], [], Code('''\
         S->PC = (mit_uword)addr;
+        CHECK_ALIGNED(S->PC);
         DO_NEXT;'''
     ), True)
 
     BRANCHZ = (0x2, ['flag', 'addr'], [], Code('''\
         if (flag == 0) {
             S->PC = (mit_uword)addr;
+            CHECK_ALIGNED(S->PC);
             DO_NEXT;
         }
     '''))
@@ -62,6 +64,7 @@ class Instruction(InstructionEnum):
     CALL = (0x3, ['addr'], ['ret_addr'], Code('''\
         ret_addr = S->PC;
         S->PC = (mit_uword)addr;
+        CHECK_ALIGNED(S->PC);
         DO_NEXT;'''
     ), True)
 
@@ -92,20 +95,12 @@ class Instruction(InstructionEnum):
     ))
 
     LIT = (0xa, [], ['n'], Code('''\
-        int ret = load(S->memory, S->memory_size, S->PC, MIT_SIZE_WORD, &n);
-        if (ret != 0) {
-            S->BAD = S->PC;
-            RAISE(ret);
-        }
+        LOAD_WORD(n, S->PC);
         S->PC += MIT_WORD_BYTES;'''
     ))
 
     LIT_PC_REL = (0xb, [], ['n'], Code('''\
-        int ret = load(S->memory, S->memory_size, S->PC, MIT_SIZE_WORD, &n);
-        if (ret != 0) {
-            S->BAD = S->PC;
-            RAISE(ret);
-        }
+        LOAD_WORD(n, S->PC);
         n += S->PC;
         S->PC += MIT_WORD_BYTES;'''
     ))

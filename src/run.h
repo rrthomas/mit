@@ -24,14 +24,37 @@
         S->I >>= MIT_OPCODE_BIT;                              \
     } while (0)
 
+#define CHECK_ALIGNED(addr)                                   \
+    if (!is_aligned((addr), MIT_SIZE_WORD)) {                 \
+        S->BAD = (addr);                                      \
+        RAISE(MIT_ERROR_UNALIGNED_ADDRESS);                   \
+    }
+
+#define CHECK_ADDRESS(addr)                                   \
+        if (unlikely((addr) >= S->memory_size - MIT_WORD_BYTES)) { \
+            S->BAD = (addr);                                  \
+            RAISE(MIT_ERROR_INVALID_MEMORY_READ);             \
+        }                                                     \
+
+#if MIT_ENDISM == MIT_HOST_ENDISM
+#define LOAD_WORD(w, addr)                                    \
+    do {                                                      \
+        CHECK_ADDRESS(addr);                                  \
+        (w) = *(mit_word *)((uint8_t *)S->memory + (addr));   \
+    } while (0)
+#else
+#define LOAD_WORD(w, addr)                                              \
+    do {                                                                \
+        CHECK_ADDRESS(addr);                                            \
+        mit_word p = 0;                                                 \
+        load(S->memory, S->memory_size, (addr), MIT_SIZE_WORD, &p);     \
+        (w) = p;                                                        \
+    } while (0)
+#endif
+
 #define DO_NEXT                                               \
     do {                                                      \
-        int ret = load(S->memory, S->memory_size, S->PC,      \
-                       MIT_SIZE_WORD, (mit_word *)&(S->I));   \
-        if (ret != 0) {                                       \
-            S->BAD = S->PC;                                   \
-            RAISE(ret);                                       \
-        }                                                     \
+        LOAD_WORD(S->I, S->PC);                               \
         S->PC += MIT_WORD_BYTES;                              \
     } while (0)
 
