@@ -12,7 +12,8 @@ import sys, pickle, textwrap
 
 from mit_core.code_util import Code
 from mit_core.vm_data import Instruction
-from specializer import SpecializedInstruction, CacheState, gen_case
+from specializer import CacheState, gen_case
+from special_instruction import SpecializedInstruction
 
 
 # Load the labels file, which tells us what control-flow graph to generate.

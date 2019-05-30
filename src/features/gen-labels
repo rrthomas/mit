@@ -219,8 +219,6 @@ class Path:
         '''
         if len(self.instructions) < 2:
             return self
-        if self.instructions[-1] not in GUESS_LIMITING:
-            return self
         for n in range(2, len(self)//2+1):
             if self.instructions[-n:] == self.instructions[-2*n:-n]:
                 shorter = self[:-n]
@@ -306,7 +304,7 @@ def elaborate_future(distribution, total):
         if distribution.total + new_distribution.total < total:
             # Useless guess.
             pass
-        elif instruction in GUESS_LIMITING:
+        elif instruction in GUESS_LIMITING or True: # FIXME: Temporary hack.
             # Do not guess beyond this one.
             children[instruction] = Future(new_distribution.total, {})
         else:
