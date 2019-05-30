@@ -8,8 +8,7 @@
 # THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 # RISK.
 
-from mit_core.code_buffer import Code
-from mit_core.code_util import enum_to_c
+from mit_core.code_util import Code, enum_to_c
 
 from extra_instructions import *
 

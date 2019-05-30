@@ -11,7 +11,7 @@ RISK.
 
 from enum import Enum
 
-from .code_buffer import Code
+from .code_util import Code
 
 
 class InstructionEnum(Enum):

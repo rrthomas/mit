@@ -9,7 +9,7 @@
 
 from enum import Enum, IntEnum, unique
 
-from .code_buffer import Code
+from .code_util import Code
 from .instruction import InstructionEnum
 from .register import RegisterEnum
 

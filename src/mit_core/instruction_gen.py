@@ -13,9 +13,8 @@ The main entry point is dispatch().
 
 import functools
 
-from .code_buffer import Code
 from .opcode_frequency import counts
-from .code_util import disable_warnings, c_symbol
+from .code_util import Code, disable_warnings, c_symbol
 
 
 type_wordses = {'mit_word': 1} # Enough for the core

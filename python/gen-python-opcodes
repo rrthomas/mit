@@ -9,8 +9,7 @@
 # RISK.
 
 import mit_core.vm_data as vm_data
-from mit_core.code_buffer import Code
-from mit_core.code_util import enum_to_python
+from mit_core.code_util import Code, enum_to_python
 
 import extra_instructions
 
