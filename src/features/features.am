@@ -110,6 +110,8 @@ build-trace:
 %D%/specializer.lo: include/mit/mit.h %D%/mit/features.h
 
 EXTRA_DIST += \
+	%D%/path.py \
+	%D%/futures.py \
 	%D%/specializer.py \
 	%D%/gen-trace \
 	%D%/gen-labels \

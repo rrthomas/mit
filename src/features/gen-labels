@@ -8,9 +8,10 @@
 # THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 # RISK.
 
-import sys, json, pickle, re, functools, heapq
+import sys, json, pickle, functools, heapq
 
 from mit_core.vm_data import Instruction
+from path import State, Path
 from futures import Future
 
 
@@ -53,10 +54,11 @@ class Distribution:
         for state, frequency in iterable:
             assert type(state) is int and 0 <= state < len(predictor)
             assert type(frequency) is float and 0. <= frequency
-            if state not in self.frequencies:
-                self.frequencies[state] = 0.
-            self.frequencies[state] += frequency
-            self.total += frequency
+            if frequency > 0.:
+                if state not in self.frequencies:
+                    self.frequencies[state] = 0.
+                self.frequencies[state] += frequency
+                self.total += frequency
 
     def __repr__(self):
         return 'Distribution({} states, total={})'.format(
@@ -86,147 +88,13 @@ class Distribution:
         return {
             instruction: Distribution(x)
             for instruction, x in successors.items()
+            if len(x) > 0
         }
 
 NULL_HYPOTHESIS = Distribution(
     (state, float(sum(count for _, count in transitions.values())))
     for state, transitions in enumerate(predictor)
 )
-
-
-# The set of Instructions that might modify the I register.
-# We cannot guess beyond such an instruction.
-GUESS_LIMITING = frozenset([
-    Instruction.NEXT,
-    Instruction.BRANCH,
-    Instruction.BRANCHZ,
-    Instruction.CALL,
-])
-
-class Path:
-    '''
-    Represents a sequence of instructions that has just been executed.
-
-     - instructions - tuple of Instructions.
-     - tos_constant - int - the constant value on the top of the stack, or
-       `None` if unknown.
-     - cached_depth - int - The number of topmost stack items that are cached
-       at the end of this Path.
-     - checked_depth - int - the number of empty stack slots that are known
-       to exist above the topmost item at the end of this Path.
-    '''
-    def __init__(self, instructions):
-        assert type(instructions) is tuple
-        self.instructions = instructions
-        self.tos_constant = None
-        # Compute `tos_constant`, `cached_depth`, `checked_depth`.
-        tos_constant = None
-        cached_depth = 0
-        checked_depth = 0
-        for instruction in instructions:
-            assert isinstance(instruction, Instruction)
-            m = re.match('LIT_(\d+)', instruction.name)
-            if m:
-                # The last instruction exists and pushes a constant.
-                tos_constant = int(m.group(1))
-            elif instruction == Instruction.NEXT:
-                pass
-            else:
-                tos_constant = None
-            if instruction.args is None and instruction.results is None:
-                # We know nothing after this instruction.
-                cached_depth = 0
-                checked_depth = 0
-            else:
-                # Simulate popping arguments.
-                for item in reversed(instruction.args):
-                    if item == 'ITEMS':
-                        # Conservatively suppose `COUNT` is zero.
-                        # We cannot cache items below 'ITEMS'.
-                        cached_depth = 0
-                    else:
-                        cached_depth -= 1
-                        checked_depth += 1
-                if cached_depth < 0:
-                    cached_depth = 0
-                # Simulate pushing results.
-                for item in instruction.results:
-                    if item == 'ITEMS':
-                        # Conservatively suppose `COUNT` is large.
-                        checked_depth = 0
-                        # We cannot cache items below 'ITEMS'.
-                        cached_depth = 0
-                    else:
-                        cached_depth += 1
-                        checked_depth -= 1
-                if checked_depth < 0:
-                    checked_depth = 0
-        self.tos_constant = tos_constant
-        self.cached_depth = cached_depth
-        self.checked_depth = checked_depth
-
-    def __repr__(self):
-        return 'Path(({}))'.format(
-            ', '.join(i.name for i in self.instructions)
-        )
-
-    def __eq__(self, other):
-        return self.instructions == other.instructions
-
-    def __hash__(self):
-        return hash(self.instructions)
-
-    def __len__(self):
-        return len(self.instructions)
-
-    def __getitem__(self, index_or_slice):
-        if isinstance(index_or_slice, slice):
-            return Path(self.instructions[index_or_slice])
-        elif isinstance(index_or_slice, int):
-            return self.instructions[index_or_slice]
-        else:
-            raise TypeError('Path indices must be integers or slices')
-
-    def __add__(self, sequence):
-        return Path(self.instructions + sequence)
-
-    def is_useful_guess(self, instruction):
-        '''
-        Returns `True` if the implementation of `instruction` is significantly
-        more efficient after executing this Path than from a standing start.
-        '''
-        if instruction.args is None or instruction.results is None:
-            # Arbitrary stack effect. No optimizations are possible.
-            return False
-        elif 'ITEMS' in instruction.args or 'ITEMS' in instruction.results:
-            # Variadic instruction. We can optimize only if we know `COUNT`.
-            return (
-                instruction.args[-1] == 'COUNT' and
-                self.tos_constant is not None
-            )
-        else:
-            # Ordinary instruction.
-            return True
-
-    def remove_repeating_part(self):
-        '''
-        If all of:
-         - this Path ends with two repeats of some "loop body",
-         - we know at least as much about the stack now as we did before
-           the last repeat,
-         - the last instruction is in `GUESS_LIMITING`,
-        returns the Path before the last repeat, otherwise returns `self`.
-        '''
-        if len(self.instructions) < 2:
-            return self
-        for n in range(2, len(self)//2+1):
-            if self.instructions[-n:] == self.instructions[-2*n:-n]:
-                shorter = self[:-n]
-                if (self.cached_depth >= shorter.cached_depth and
-                    self.checked_depth >= shorter.checked_depth
-                ):
-                    return shorter
-        return self
 
 
 @functools.total_ordering
@@ -257,7 +125,7 @@ class QueueItem:
         # Add one instruction to the Path in all useful ways.
         predictions = self.distribution.predict()
         for instruction, new_distribution in predictions.items():
-            if self.path.is_useful_guess(instruction):
+            if self.path.state.is_worthwhile(instruction):
                 yield QueueItem(
                     self.path + (instruction,),
                     new_distribution,
@@ -291,32 +159,49 @@ for path in language:
 
 print("Choosing multi-guesses")
 
-def elaborate_future(distribution, total):
+# The set of Instructions that might modify the I register.
+# We cannot guess beyond such an instruction.
+GUESS_LIMITING = frozenset([
+    Instruction.NEXT,
+    Instruction.BRANCH,
+    Instruction.BRANCHZ,
+    Instruction.CALL,
+])
+
+def elaborate_future(distribution, state, total):
     '''
     Returns a Future representing the Instructions predicted by
     `distribution`.
      - distribution - Distribution.
+     - state - State.
      - total - the frequency of the root of the decision tree. This is used
        to decide how deeply to elaborate the tree.
     '''
     children = {}
     for instruction, new_distribution in distribution.predict().items():
-        if distribution.total + new_distribution.total < total:
-            # Useless guess.
+        if not state.is_worthwhile(instruction):
+            # Useless guess: we cannot optimize it.
             pass
-        elif instruction in GUESS_LIMITING or True: # FIXME: Temporary hack.
+        elif distribution.total + new_distribution.total < total:
+            # Useless guess: insufficiently probable.
+            pass
+        elif instruction in GUESS_LIMITING:
             # Do not guess beyond this one.
             children[instruction] = Future(new_distribution.total, {})
         else:
             # Recurse.
-            children[instruction] = elaborate_future(new_distribution, total)
+            children[instruction] = elaborate_future(
+                new_distribution,
+                state.step(state.specialize_instruction(instruction)),
+                total,
+            )
     return Future(distribution.total, children)
 
 # Path -> non-empty tuple of Instruction
 path_guesses = {path: [] for path in language}
 
 for path, distribution in language.items():
-    future = elaborate_future(distribution, distribution.total)
+    future = elaborate_future(distribution, path.state, distribution.total)
     while True:
         guess = tuple(future.guess())
         if len(guess) == 0:
@@ -361,22 +246,18 @@ assert enqueue(Path(()), frozenset()) == 0 # Root state.
 while len(transitions) < len(states):
     path, rejects = states[len(transitions)]
     for guess in path_guesses[path]:
-        if guess not in rejects:
+        if all(guess[:l+1] not in rejects for l in range(len(guess))):
             # We have a guess.
             successor = (path + guess).remove_repeating_part()
-            new_rejects = rejects.union(
-                guess[:l+1] for l in range(len(guess))
-            )
             transitions.append((
                 guess,
                 enqueue(successor, frozenset()),
-                enqueue(path, new_rejects),
+                enqueue(path, rejects.union([guess])),
             ))
             break
     else:
         # There is no good guess. Try again with a suffix of `path`.
-        while len(path) > 0:
-            path = path[1:]
+        for path in path.suffixes():
             if path in language:
                 transitions.append(enqueue(path, rejects))
                 break
@@ -405,12 +286,12 @@ def short_circuit(state):
 # List of (path properties... , guess, label or None, label or None).
 labels = [
     (
-        path.tos_constant,
-        path.cached_depth,
-        path.checked_depth,
+        path.state.tos_constant,
+        path.cached_depth(),
+        path.checked_depth(),
         ' '.join(instruction.name for instruction in guess),
         short_circuit(c),
-        short_circuit(w)
+        short_circuit(w),
     )
     for (path, _), t in zip(states, transitions)
     if isinstance(t, tuple)
