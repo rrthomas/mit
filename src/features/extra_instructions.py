@@ -21,7 +21,7 @@ class LibC(InstructionEnum):
         argc = S->main_argc;
     '''))
 
-    ARG = (0x1, ['u'], ['arg:char *'], Code('''\
+    ARG = (0x1, ['u'], ['arg:const char *'], Code('''\
         arg = S->main_argv[u];
     '''))
 
@@ -214,7 +214,7 @@ mit_lib = {
         Code('ret = mit_save_object(inner_state, addr, len, fd);'),
     ),
 
-    'REGISTER_ARGS': (0xc, ['argv:char **', 'argc:int', 'inner_state:mit_state *'], ['ret:int'],
+    'REGISTER_ARGS': (0xc, ['argv:const char **', 'argc:int', 'inner_state:mit_state *'], ['ret:int'],
         Code('ret = mit_register_args(inner_state, argc, argv);'),
     ),
 }

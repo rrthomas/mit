@@ -106,7 +106,7 @@ typedef struct {
 #include <mit@PACKAGE_SUFFIX@/registers.h>
 #undef R
     int main_argc;
-    char **main_argv;
+    const char **main_argv;
 } mit_state;
 
 #define R(reg, type, return_type)                  \
@@ -433,7 +433,7 @@ int mit_save_object(mit_state *S, mit_uword addr, mit_uword len, int fd);
    -2: `addr` or `len` is invalid
 */
 
-int mit_register_args(mit_state *S, int argc, char *argv[]);
+int mit_register_args(mit_state *S, int argc, const char *argv[]);
 /* Register command-line arguments in the given state, which can be
    retrieved using the `ARGC` and `ARG` functions of the `LIBC` extra
    instruction (see `mit_core/ext.py`).

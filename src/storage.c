@@ -159,7 +159,7 @@ void mit_destroy(mit_state *S)
 #undef R
 
 // Register command-line args
-int mit_register_args(mit_state *S, int argc, char *argv[])
+int mit_register_args(mit_state *S, int argc, const char *argv[])
 {
     S->main_argc = argc;
     S->main_argv = argv;
