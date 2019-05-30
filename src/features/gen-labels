@@ -11,6 +11,7 @@
 import sys, json, pickle, re, functools, heapq
 
 from mit_core.vm_data import Instruction
+from futures import Future
 
 
 if len(sys.argv) != 3:
@@ -47,6 +48,7 @@ class Distribution:
          - iterable - iterable of (state (int), frequency (float)).
            If a `state` is repeated, its `frequency`s will be summed.
         '''
+        self.total = 0.
         self.frequencies = {}
         for state, frequency in iterable:
             assert type(state) is int and 0 <= state < len(predictor)
@@ -54,7 +56,7 @@ class Distribution:
             if state not in self.frequencies:
                 self.frequencies[state] = 0.
             self.frequencies[state] += frequency
-        self.total = sum(self.frequencies.values())
+            self.total += frequency
 
     def __repr__(self):
         return 'Distribution({} states, total={})'.format(
@@ -266,7 +268,7 @@ class QueueItem:
 
 print("Finding paths")
 
-NUM_PATHS = 1500
+NUM_PATHS = 500
 
 # The `NUM_PATHS` most common instruction sequences.
 # Path -> frequency
@@ -278,7 +280,7 @@ for _ in range(NUM_PATHS):
         item = heapq.heappop(heap)
     except IndexError:
         break
-    language[item.path] = item.distribution.total
+    language[item.path] = item.distribution
     for new_item in item.successors():
         heapq.heappush(heap, new_item)
 
@@ -287,29 +289,44 @@ for _ in range(NUM_PATHS):
 for path in language:
     assert path[:-1] in language
 
-# For each path, sort the possible next instructions by decreasing probability.
-
-print("Choosing guesses")
-
-# Path -> [Instruction]
-path_guesses = {
-    path: sorted(
-        [
-            instruction
-            for instruction in Instruction
-            if (path + (instruction,)) in language
-        ],
-        key=lambda instruction: language[path + (instruction,)],
-        reverse=True,
-    )
-    for path in language
-}
-
 # For each path, find strings of instructions that might come next.
 
 print("Choosing multi-guesses")
 
+def elaborate_future(distribution, total):
+    '''
+    Returns a Future representing the Instructions predicted by
+    `distribution`.
+     - distribution - Distribution.
+     - total - the frequency of the root of the decision tree. This is used
+       to decide how deeply to elaborate the tree.
+    '''
+    children = {}
+    for instruction, new_distribution in distribution.predict().items():
+        if distribution.total + new_distribution.total < total:
+            # Useless guess.
+            pass
+        elif instruction in GUESS_LIMITING:
+            # Do not guess beyond this one.
+            children[instruction] = Future(new_distribution.total, {})
+        else:
+            # Recurse.
+            children[instruction] = elaborate_future(new_distribution, total)
+    return Future(distribution.total, children)
 
+# Path -> non-empty tuple of Instruction
+path_guesses = {path: [] for path in language}
+
+for path, distribution in language.items():
+    future = elaborate_future(distribution, distribution.total)
+    while True:
+        guess = tuple(future.guess())
+        if len(guess) == 0:
+            break
+        if path + guess not in language:
+            break
+        path_guesses[path].append(guess)
+        future.eliminate(guess)
 
 # Generate state space of (path × rejects) with flood fill.
 
@@ -322,7 +339,7 @@ state_index = {} # Inverse of `states`.
 # It can be:
 #  - None - goto fallback;
 #  - int g - goto g;
-#  - (Instruction guess, int c, int w) -
+#  - (tuple(Instruction) guess, int c, int w) -
 #    if (next==guess) { execute guess; goto c; } else goto w;
 transitions = []
 
@@ -330,7 +347,7 @@ def enqueue(path, rejects):
     '''
     Adds a state if it has not been seen before.
      - path - Path.
-     - rejects - frozenset of Instructions.
+     - rejects - frozenset of tuples of Instructions.
     '''
     assert isinstance(path, Path)
     assert isinstance(rejects, frozenset)
@@ -348,11 +365,14 @@ while len(transitions) < len(states):
     for guess in path_guesses[path]:
         if guess not in rejects:
             # We have a guess.
-            successor = (path + (guess,)).remove_repeating_part()
+            successor = (path + guess).remove_repeating_part()
+            new_rejects = rejects.union(
+                guess[:l+1] for l in range(len(guess))
+            )
             transitions.append((
                 guess,
                 enqueue(successor, frozenset()),
-                enqueue(path, rejects.union({guess})),
+                enqueue(path, new_rejects),
             ))
             break
     else:
@@ -390,7 +410,7 @@ labels = [
         path.tos_constant,
         path.cached_depth,
         path.checked_depth,
-        guess.name,
+        ' '.join(instruction.name for instruction in guess),
         short_circuit(c),
         short_circuit(w)
     )
@@ -408,7 +428,7 @@ with open(labels_filename, 'wb') as f:
     #     tos_constant (int?),
     #     cached_depth (int),
     #     checked_depth (int),
-    #     instruction_name (str),
+    #     instruction_sequence (str, space-separated),
     #     if_correct (int?),
     #     if_wrong (int?)
     # )]
