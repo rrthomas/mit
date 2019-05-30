@@ -60,7 +60,7 @@ code.append('''
     }
 
     static mit_word run_or_step(mit_state * restrict S, bool run)
-    {;'''
+    {'''
 )
 
 body_code = Code()
