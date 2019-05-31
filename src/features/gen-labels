@@ -134,7 +134,7 @@ class QueueItem:
 
 print("Finding paths")
 
-NUM_PATHS = 500
+NUM_PATHS = 1100
 
 # The `NUM_PATHS` most common instruction sequences.
 # Path -> frequency
