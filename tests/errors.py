@@ -36,7 +36,7 @@ ass(DUP)
 test.append(label())
 result.append(5)
 print("Test {}: PC = {}".format(len(test), test[-1]))
-lit(VM.memory_size * word_bytes + 1)
+lit(VM.memory_size * word_bytes + word_bytes)
 ass(BRANCH)
 
 # Try to load from an invalid address
