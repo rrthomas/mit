@@ -51,10 +51,11 @@ code.append('')
 code.extend(enum_to_python(vm_data.InternalExtraInstruction))
 code.append('')
 
-code.extend(enum_to_python(extra_instructions.LibC))
-code.append('')
-code.extend(enum_to_python(extra_instructions.LibMit))
-code.append('')
 code.extend(enum_to_python(extra_instructions.LibInstruction))
+code.append('')
+
+for lib in extra_instructions.LibInstruction:
+    code.extend(enum_to_python(lib.library))
+    code.append('')
 
 print(code)
