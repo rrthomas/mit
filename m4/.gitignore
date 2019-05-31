@@ -154,3 +154,5 @@
 /stdnoreturn.m4
 /inttypes-pri.m4
 /inttypes.m4
+/sigaction.m4
+/signalblocking.m4
