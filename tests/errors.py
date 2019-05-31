@@ -20,7 +20,7 @@ test = []
 
 # Try to divide by zero
 test.append(label())
-result.append(9)
+result.append(MitError.DIVISION_BY_ZERO)
 print("Test {}: PC = {}".format(len(test), test[-1]))
 lit(1)
 lit(0)
@@ -28,20 +28,20 @@ ass(DIVMOD)
 
 # Try to read from an invalid stack location
 test.append(label())
-result.append(3)
+result.append(MitError.INVALID_STACK_READ)
 print("Test {}: PC = {}".format(len(test), test[-1]))
 ass(DUP)
 
 # Try to execute an invalid memory location
 test.append(label())
-result.append(5)
+result.append(MitError.INVALID_MEMORY_READ)
 print("Test {}: PC = {}".format(len(test), test[-1]))
 lit(VM.memory_size * word_bytes + word_bytes)
 ass(BRANCH)
 
 # Try to load from an invalid address
 test.append(label())
-result.append(5)
+result.append(MitError.INVALID_MEMORY_READ)
 print("Test {}: PC = {}".format(len(test), test[-1]))
 lit(invalid_address)
 lit(size_word)
@@ -49,7 +49,7 @@ ass(LOAD)
 
 # Try to store to an invalid address
 test.append(label())
-result.append(6)
+result.append(MitError.INVALID_MEMORY_WRITE)
 print("Test {}: PC = {}".format(len(test), test[-1]))
 lit(0)
 lit(invalid_address)
@@ -58,23 +58,23 @@ ass(STORE)
 
 # Try to load from unaligned address
 test.append(label())
-result.append(7)
+result.append(MitError.UNALIGNED_ADDRESS)
 print("Test {}: PC = {}".format(len(test), test[-1]))
 lit(1)
 lit(size_word)
 ass(LOAD)
 
-# Try to load with an invalid size
+# Try to load with an invalid/unsupported size
 test.append(label())
-result.append(8)
+result.append(MitError.BAD_SIZE)
 print("Test {}: PC = {}".format(len(test), test[-1]))
 lit(0)
 lit(42)
 ass(LOAD)
 
-# Try to store with an invalid size
+# Try to store with an invalid/unsupported size
 test.append(label())
-result.append(8)
+result.append(MitError.BAD_SIZE)
 lit(0)
 lit(0)
 lit(42)
@@ -83,7 +83,7 @@ ass(STORE)
 # Try to execute invalid opcode
 if UNDEFINED < (1 << instruction_bit):
     test.append(label())
-    result.append(1)
+    result.append(MitError.INVALID_OPCODE)
     print("Test {}: PC = {}".format(len(test), test[-1]))
     ass(UNDEFINED)
 
