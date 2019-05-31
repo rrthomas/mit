@@ -50,6 +50,7 @@ SpecializedInstruction = InstructionEnum('SpecializedInstruction', {
 })
 
 
+# TODO: Unify with path.State?
 class CacheState:
     '''
     As an optimization, StackItems that have recently been pushed are cached
@@ -100,42 +101,6 @@ class CacheState:
         depth_change = num_pushes - num_pops
         if self.checked_depth >= depth_change: return '1'
         return '(S->stack_size - S->STACK_DEPTH) >= {}'.format(depth_change)
-
-    def check_underflow(self, num_pops):
-        '''
-        Returns a Code to check that the stack contains enough items to
-        pop the specified number of items.
-         - num_pops - int
-        '''
-        return Code(
-            'if (!({test})) {{',
-            Code(
-                'S->BAD = {num_pops} - 1;',
-                'RAISE(MIT_ERROR_INVALID_STACK_READ);',
-            ),
-            '}}',
-        ).format(test=self.underflow_test(num_pops), num_pops=num_pops)
-
-    def check_overflow(self, num_pops, num_pushes):
-        '''
-        Returns a Code to check that the stack contains enough space to
-        push `num_pushes` items, given that `num_pops` items will first be
-        popped.
-         - num_pops - Size.
-         - num_pushes - Size.
-        '''
-        depth_change = num_pushes - num_pops
-        return Code(
-            'if (!({test})) {{',
-            Code(
-                'S->BAD = {depth_change} - (S->stack_size - S->STACK_DEPTH);',
-                'RAISE(MIT_ERROR_STACK_OVERFLOW);',
-            ),
-            '}}',
-        ).format(
-            test=self.overflow_test(num_pops, num_pushes),
-            depth_change=depth_change,
-        )
 
     def load_args(self, args):
         '''
@@ -250,13 +215,14 @@ def gen_case(instruction, cache_state):
     ]))
     # Load the arguments into their C variables.
     code.extend(cache_state.load_args(instruction.args))
-    code.append('S->STACK_DEPTH -= {};'.format(num_args))
-    code.extend(cache_state.add(-num_args))
     # Inline `instruction.code`.
     # Note: `S->STACK_DEPTH` and `cache_state` must be correct for RAISE().
     code.extend(instruction.code)
-    # Store the results from their C variables.
+    # Update stack pointer and cache_state.
+    code.append('S->STACK_DEPTH -= {};'.format(num_args))
+    code.extend(cache_state.add(-num_args))
     code.extend(cache_state.add(num_results))
     code.append('S->STACK_DEPTH += {};'.format(num_results))
+    # Store the results from their C variables.
     code.extend(cache_state.store_results(instruction.results))
     return code
