@@ -124,7 +124,7 @@ static void write_predictor(FILE *fp) {
                 uint64_t count = counts[history][opcode];
                 history_t new_history = step_function(history, opcode);
                 int new_state = history_index[new_history];
-                if (new_state != -1) {
+                if (count > 0 && new_state != -1) {
                     fprintf(
                         fp,
                         "%s\"%02x\": {\"new_state\": %d, \"count\": %"PRIu64"}",
