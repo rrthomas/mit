@@ -14,6 +14,7 @@
 #include <stdlib.h>
 #include <stdnoreturn.h>
 
+#include "mit/mit.h"
 #include "warn.h"
 
 
@@ -21,7 +22,7 @@ _GL_ATTRIBUTE_FORMAT_PRINTF(1, 0) void verror(const char *format, va_list args)
 {
     fprintf(stderr, PACKAGE ": ");
     vfprintf(stderr, format, args);
-    fprintf(stderr, "\\n");
+    fprintf(stderr, "\n");
 }
 
 _GL_ATTRIBUTE_FORMAT_PRINTF(1, 2) void warn(const char *format, ...)
@@ -38,5 +39,5 @@ noreturn _GL_ATTRIBUTE_FORMAT_PRINTF(1, 2) void die(const char *format, ...)
 
     va_start(args, format);
     verror(format, args);
-    exit(1);
+    exit(MIT_ERROR_STARTUP_ERROR);
 }

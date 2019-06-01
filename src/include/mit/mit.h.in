@@ -100,6 +100,12 @@ extern const mit_uword mit_uword_max;
 extern const mit_word mit_word_min;
 extern const mit_word mit_word_max;
 
+// Implementation-defined errors
+enum {
+    MIT_ERROR_STARTUP_ERROR = 128,
+    MIT_ERROR_DUMPED_CORE_ON_SIGNAL = 129,
+};
+
 // VM registers
 typedef struct {
 #define R(reg, type, return_type) type reg;
