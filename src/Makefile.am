@@ -78,8 +78,8 @@ include/mit/opcodes.h: gen-opcodes mit_core/vm_data.py mit_core/instruction.py
 	$(MKDIR_P) include/mit
 	$(PYTHON_WITH_PATH) $(srcdir)/gen-opcodes > include/mit/opcodes.h || ( rm -f include/mit/opcodes.h; exit 1 )
 
-instructions.c: gen-instructions mit_core/vm_data.py mit_core/instruction.py mit_core/code_util.py mit_core/instruction_gen.py features/instructions.trace.gz
-	$(PYTHON_WITH_PATH) $(srcdir)/gen-instructions $(srcdir)/features/instructions.trace.gz > instructions.c || ( rm -f instructions.c; exit 1 )
+instructions.c: gen-instructions mit_core/vm_data.py mit_core/instruction.py mit_core/code_util.py mit_core/instruction_gen.py features/instructions_trace.gz
+	$(PYTHON_WITH_PATH) $(srcdir)/gen-instructions $(srcdir)/features/instructions_trace.gz > instructions.c || ( rm -f instructions.c; exit 1 )
 
 main.c: gen-main
 	$(PYTHON_WITH_PATH) $(srcdir)/gen-main > main.c || ( rm -f main.c; exit 1 )

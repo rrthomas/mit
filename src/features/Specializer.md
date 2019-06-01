@@ -10,7 +10,7 @@ Some explanatory notes follow.
 The trace
 ---------
 
-The trace file `instructions.trace.gz` is a raw binary dump of instruction
+The trace file `instructions_trace.gz` is a raw binary dump of instruction
 opcodes, one per byte. An gzipped empty file can be used; this is useful to
 bootstrap a new instruction encoding; the trace file is updated by `make build-trace`, a maintainer target that is not normally run.
 
@@ -35,7 +35,7 @@ The script "gen-labels" reads a predictor file and constructs a suitable
 control-flow graph for the specialized interpreter.
 
 The script is fast, but it has nonetheless been separated out from the rest
-of the procedure, so that it is possible to generate a ".labels_pickle" file
+of the procedure, so that it is possible to generate a "_labels.pickle" file
 in other ways, if desired, or to distribute them.
 
 

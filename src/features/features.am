@@ -92,20 +92,20 @@ check-local:
 build-trace:
 	export LD_LIBRARY_PATH=$(abs_top_builddir)/src/@objdir@:$$LD_LIBRARY_PATH; \
 	cd %D%/pforth/src/mit && \
-	$(PYTHON_WITH_PATH) $(abs_srcdir)/%D%/gen-trace $(abs_srcdir)/%D%/instructions.trace --evaluate BYE && \
-	gzip -f $(GZIP_ENV) $(abs_srcdir)/%D%/instructions.trace
+	$(PYTHON_WITH_PATH) $(abs_srcdir)/%D%/gen-trace $(abs_srcdir)/%D%/instructions_trace --evaluate BYE && \
+	gzip -f $(GZIP_ENV) $(abs_srcdir)/%D%/instructions_trace
 
-%D%/instructions.trace: $(srcdir)/%D%/instructions.trace.gz
-	gunzip --stdout $(srcdir)/%D%/instructions.trace.gz > $@
+%D%/instructions_trace: $(srcdir)/%D%/instructions_trace.gz
+	gunzip --stdout $(srcdir)/%D%/instructions_trace.gz > $@
 
-%D%/instructions_predictor.json: mit_core/instruction.py mit_core/vm_data.py %D%/gen-predictor$(EXEEXT) %D%/instructions.trace
-	$(builddir)/%D%/gen-predictor$(EXEEXT) %D%/instructions.trace $@
+%D%/instructions_predictor.json: mit_core/instruction.py mit_core/vm_data.py %D%/gen-predictor$(EXEEXT) %D%/instructions_trace
+	$(builddir)/%D%/gen-predictor$(EXEEXT) %D%/instructions_trace $@
 
-%D%/instructions.labels_pickle: mit_core/instruction.py mit_core/vm_data.py %D%/instructions_predictor.json %D%/gen-labels
+%D%/instructions_labels.pickle: mit_core/instruction.py mit_core/vm_data.py %D%/instructions_predictor.json %D%/gen-labels
 	$(PYTHON_WITH_PATH) $(srcdir)/%D%/gen-labels %D%/instructions_predictor.json $@
 
-%D%/specializer.c: mit_core/code_util.py mit_core/instruction.py mit_core/vm_data.py %D%/type_sizes.py mit_core/instruction_gen.py %D%/gen-specializer %D%/specializer.py %D%/instructions.labels_pickle
-	$(PYTHON_WITH_PATH) $(srcdir)/%D%/gen-specializer %D%/instructions.labels_pickle > %D%/specializer.c || ( rm -f %D%/specializer.c; exit 1 )
+%D%/specializer.c: mit_core/code_util.py mit_core/instruction.py mit_core/vm_data.py %D%/type_sizes.py mit_core/instruction_gen.py %D%/gen-specializer %D%/specializer.py %D%/instructions_labels.pickle
+	$(PYTHON_WITH_PATH) $(srcdir)/%D%/gen-specializer %D%/instructions_labels.pickle > %D%/specializer.c || ( rm -f %D%/specializer.c; exit 1 )
 
 %D%/specializer.lo: include/mit/mit.h %D%/mit/features.h
 
@@ -116,11 +116,11 @@ EXTRA_DIST += \
 	%D%/gen-trace \
 	%D%/gen-labels \
 	%D%/gen-specializer \
-	%D%/instructions.trace.gz \
+	%D%/instructions_trace.gz \
 	%D%/opcode-frequency
 
 DISTCLEANFILES += \
-	%D%/instructions.trace \
+	%D%/instructions_trace \
 	%D%/instructions_predictor.json \
-	%D%/instructions.labels_pickle \
+	%D%/instructions_labels.pickle \
 	%D%/specializer.c

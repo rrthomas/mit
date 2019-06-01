@@ -1,8 +1,8 @@
 /.dirstamp
 /autom4te.cache
-*.trace
-*_predictor.json
-*.labels_pickle
+/instructions_trace
+/instructions_predictor.json
+/instructions_labels.pickle
 /config.log
 /config.status
 /type-sizes
