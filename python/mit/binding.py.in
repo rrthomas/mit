@@ -69,7 +69,7 @@ def errcheck(error_enum):
 vars().update([(c, c_uint.in_dll(libmit, "mit_{}".format(c)).value)
                for c in ["word_bytes", "endism", "size_word",
                          "byte_bit", "byte_mask", "word_bit",
-                         "instruction_bit", "instruction_mask"]])
+                         "opcode_bit", "opcode_mask"]])
 sign_bit = 1 << (word_bit - 1)
 
 

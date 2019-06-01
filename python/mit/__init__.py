@@ -167,7 +167,7 @@ class State:
             except ErrorCode as e:
                 if e.args[0] == MitError.HALT:
                     return
-                elif e.args[0] == 1 and self.registers["I"].get() & instruction_mask == BRANCH:
+                elif e.args[0] == 1 and self.registers["I"].get() & opcode_mask == BRANCH:
                     self.do_extra_instruction()
                 else:
                     raise
@@ -197,7 +197,7 @@ class State:
                 libmit.mit_single_step(self.state)
             except ErrorCode as e:
                 ret = e.args[0]
-                if ret == 1 and self.registers["I"].get() & instruction_mask == BRANCH:
+                if ret == 1 and self.registers["I"].get() & opcode_mask == BRANCH:
                     self.do_extra_instruction()
                     ret = 0
                 if ret != 0:

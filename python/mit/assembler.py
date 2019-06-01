@@ -12,7 +12,7 @@ RISK.
 from .binding import (
     align, is_aligned,
     word_bytes, word_bit, word_mask, sign_bit,
-    instruction_bit, instruction_mask,
+    opcode_bit, opcode_mask,
 )
 from .opcodes import (
     Instruction, InternalExtraInstruction, LibInstruction,
@@ -82,8 +82,8 @@ class Disassembler:
     def disassemble(self):
         try:
             comment = ''
-            opcode = self.i & instruction_mask
-            self.i >>= instruction_bit
+            opcode = self.i & opcode_mask
+            self.i >>= opcode_bit
             try:
                 name = mnemonic[opcode]
             except KeyError:
@@ -204,17 +204,17 @@ class Assembler:
             self._fetch()
             i = opcode
         self.state.M_word[self.i_addr] = i
-        if (opcode & instruction_mask) in TERMINAL_OPCODES:
+        if (opcode & opcode_mask) in TERMINAL_OPCODES:
             self.label()
 
     def instruction(self, opcode):
         '''
         Appends an instruction opcode.
         '''
-        assert 0 <= opcode <= instruction_mask
+        assert 0 <= opcode <= opcode_mask
         self.extended_instruction(opcode)
         if self.i_shift is not None:
-            self.i_shift += instruction_bit
+            self.i_shift += opcode_bit
 
     def extra_instruction(self, opcode, type=CALL):
         '''
@@ -224,7 +224,7 @@ class Assembler:
          - opcode - int - extra instruction opcode
          - type - int - extra instruction type (`CALL` [default] or `BRANCH`)
         '''
-        self.extended_instruction((opcode << instruction_bit) | type)
+        self.extended_instruction((opcode << opcode_bit) | type)
 
     def lit(self, value):
         self.instruction(LIT)

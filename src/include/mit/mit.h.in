@@ -127,8 +127,8 @@ typedef struct {
 #error "MIT_OPCODE_BIT must be in the range 5 to 8 inclusive!"
 #endif
 #define MIT_OPCODE_MASK ((1 << MIT_OPCODE_BIT) - 1)
-extern const unsigned mit_instruction_bit;
-extern const unsigned mit_instruction_mask;
+extern const unsigned mit_opcode_bit;
+extern const unsigned mit_opcode_mask;
 
 // Utility functions
 mit_uword mit_align(mit_uword addr, unsigned size);
