@@ -95,14 +95,12 @@ class Instruction(InstructionEnum):
     ))
 
     LIT = (0xa, [], ['n'], Code('''\
-        LOAD_WORD(n, S->PC);
-        S->PC += MIT_WORD_BYTES;'''
+        FETCH_PC(n);'''
     ))
 
     LIT_PC_REL = (0xb, [], ['n'], Code('''\
-        LOAD_WORD(n, S->PC);
-        n += S->PC;
-        S->PC += MIT_WORD_BYTES;'''
+        FETCH_PC(n);
+        n += S->PC - MIT_WORD_BYTES;'''
     ))
 
     LIT_0 = (0xc, [], ['zero'], Code('''\

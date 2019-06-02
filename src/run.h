@@ -1,4 +1,5 @@
-// Macros for the inner loop.
+// Macros for the inner loop and instruction actions; see
+// mit_core/instruction.py for documentation.
 //
 // (c) Mit authors 1994-2019
 //
@@ -17,45 +18,38 @@
         goto error;                                           \
     } while (0)
 
-#define FETCH                                                 \
-    do {                                                      \
-        initial_PC = S->PC;                                   \
-        initial_I = S->I;                                     \
-        S->I >>= MIT_OPCODE_BIT;                              \
-    } while (0)
-
 #define CHECK_ALIGNED(addr)                                   \
     if (!is_aligned((addr), MIT_SIZE_WORD)) {                 \
         S->BAD = (addr);                                      \
         RAISE(MIT_ERROR_UNALIGNED_ADDRESS);                   \
     }
 
-#define CHECK_ADDRESS(addr)                                   \
-        if (unlikely((addr) >= S->memory_size - MIT_WORD_BYTES)) { \
-            S->BAD = (addr);                                  \
-            RAISE(MIT_ERROR_INVALID_MEMORY_READ);             \
-        }                                                     \
-
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-function"
+static mit_word _fetch_pc(mit_state *S)
+{
 #if MIT_ENDISM == MIT_HOST_ENDISM
-#define LOAD_WORD(w, addr)                                    \
-    do {                                                      \
-        CHECK_ADDRESS(addr);                                  \
-        (w) = *(mit_word *)((uint8_t *)S->memory + (addr));   \
-    } while (0)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wcast-align"
+    mit_word w = *(mit_word *)((uint8_t *)S->memory + S->PC);
+#pragma GCC diagnostic pop
 #else
-#define LOAD_WORD(w, addr)                                              \
-    do {                                                                \
-        CHECK_ADDRESS(addr);                                            \
-        mit_word p = 0;                                                 \
-        load(S->memory, S->memory_size, (addr), MIT_SIZE_WORD, &p);     \
-        (w) = p;                                                        \
-    } while (0)
+    mit_word w = 0;
+    load(S->memory, S->memory_size, S->PC, MIT_SIZE_WORD, &w);
 #endif
+    S->PC += MIT_WORD_BYTES;
+    return w;
+}
+#pragma GCC diagnostic pop
 
-#define DO_NEXT                                               \
-    do {                                                      \
-        LOAD_WORD(S->I, S->PC);                               \
-        S->PC += MIT_WORD_BYTES;                              \
-    } while (0)
+#define FETCH_PC(w)                                             \
+    if (unlikely(S->PC >= S->memory_size - MIT_WORD_BYTES)) {   \
+        S->BAD = S->PC;                                         \
+        RAISE(MIT_ERROR_INVALID_MEMORY_READ);                   \
+    } else {                                                    \
+        (w) = (_fetch_pc(S));                                   \
+    }
+
+#define DO_NEXT  FETCH_PC(S->I)
 
 #endif
