@@ -19,3 +19,4 @@ __pycache__/
 /include/mit/mit.h
 /include/mit-[bl]e-[248]
 /include/mit-[bl]e-16
+/mit_core/params.py

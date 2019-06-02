@@ -135,6 +135,12 @@ AS_IF([test "$WORD_BYTES" = 16], [
   AS_IF([test "$ax_cv_int128" != yes],
     AC_MSG_ERROR([Cannot find 128-bit support for WORD_BYTES=16]))])
 
+# Set instruction opcode size
+default_opcode_bit=8
+AC_ARG_VAR([OPCODE_BIT],
+  [value of MIT_OPCODE_BIT [default: $default_opcode_bit]])
+: "${OPCODE_BIT=$default_opcode_bit}"
+
 # Package suffix for side-by-side installation of multiple builds
 AC_ARG_ENABLE([package-suffix],
   [AS_HELP_STRING([--enable-package-suffix],
@@ -159,6 +165,7 @@ AC_CONFIG_FILES([
         lib/Makefile
         src/Makefile
         src/include/mit/mit.h
+        src/mit_core/params.py
         src/features/mit/features.h
         tests/Makefile
         python/Makefile

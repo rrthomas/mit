@@ -1,0 +1,6 @@
+# Build-time parameters
+
+word_bytes = @WORD_BYTES@
+endism = @ENDISM@
+host_endism = @WORDS_BIGENDIAN@
+opcode_bit = @OPCODE_BIT@

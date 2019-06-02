@@ -81,7 +81,7 @@ lit(42)
 ass(STORE)
 
 # Try to execute invalid opcode
-if UNDEFINED < (1 << instruction_bit):
+if UNDEFINED < (1 << opcode_bit):
     test.append(label())
     result.append(MitError.INVALID_OPCODE)
     print("Test {}: PC = {}".format(len(test), test[-1]))

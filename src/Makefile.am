@@ -23,7 +23,8 @@ LIB_CORE_SRCS = \
 	mit_core/errors.py \
 	mit_core/code_util.py \
 	mit_core/opcode_frequency.py \
-	mit_core/instruction_gen.py
+	mit_core/instruction_gen.py \
+	mit_core/params.py.in
 nodist_libmit@PACKAGE_SUFFIX@_la_SOURCES = $(C_SRCS) $(nodist_LIB_SRCS)
 libmit@PACKAGE_SUFFIX@_la_LIBADD = $(top_builddir)/lib/libgnu.la
 libmit@PACKAGE_SUFFIX@_la_LDFLAGS = -no-undefined -export-symbols-regex '^mit_.*'
