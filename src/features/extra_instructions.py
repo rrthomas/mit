@@ -9,7 +9,7 @@
 
 from enum import Enum, unique
 
-from mit_core.code_util import Code
+from mit_core.code_util import Code, RAISE
 from mit_core.instruction import InstructionEnum
 from mit_core.vm_data import Register
 from mit_core.instruction_gen import pop_stack, push_stack
@@ -119,24 +119,24 @@ class LibC(InstructionEnum):
         ret = fdatasync(fd);
     '''))
 
-    RENAME = (0x16, ['old_name', 'new_name'], ['ret:int'], Code('''\
+    RENAME = (0x16, ['old_name', 'new_name'], ['ret:int'], Code(*['''\
         {
             char *s1 = (char *)mit_native_address_of_range(S, old_name, 0);
             char *s2 = (char *)mit_native_address_of_range(S, new_name, 0);
-            if (s1 == NULL || s2 == NULL)
-                RAISE(MIT_ERROR_INVALID_MEMORY_READ);
+            if (s1 == NULL || s2 == NULL)''',
+                RAISE('MIT_ERROR_INVALID_MEMORY_READ'), '''\
             ret = rename(s1, s2);
         }
-    '''))
+    ''']))
 
-    REMOVE = (0x17, ['name'], ['ret:int'], Code('''\
+    REMOVE = (0x17, ['name'], ['ret:int'], Code(*['''\
         {
             char *s = (char *)mit_native_address_of_range(S, name, 0);
-            if (s == NULL)
-                RAISE(MIT_ERROR_INVALID_MEMORY_READ);
+            if (s == NULL)''',
+                RAISE('MIT_ERROR_INVALID_MEMORY_READ'), '''\
             ret = remove(s);
         }
-    '''))
+    ''']))
 
     # TODO: Expose stat(2). This requires struct mapping!
     FILE_SIZE = (0x18, ['fd:int'], ['size:off_t', 'ret:int'], Code('''\
@@ -257,9 +257,9 @@ class Library(InstructionEnum):
             pop_stack('function'),
             '''
                 int ret = extra_{}(S, function);
-                if (ret != 0)
-                    RAISE(ret);
-            }}'''.format(self.name.lower())
+                if (ret != 0)'''.format(self.name.lower()),
+                    RAISE('ret'),
+            '}'
         ]))
         self.library = library
         self.includes = includes

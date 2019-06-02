@@ -40,7 +40,6 @@ for lib in LibInstruction:
 code.append('''
     #include "mit/extra-opcodes.h"
 
-    #include "run.h"
 
     enum {
         MIT_ERROR_EXTRA_INVALID_LIBRARY = 16,
@@ -58,9 +57,9 @@ for lib in LibInstruction:
     code.append('')
 
     body_code = Code()
-    body_code.extend(dispatch(lib.library, Code(
-        'RAISE(MIT_ERROR_EXTRA_INVALID_FUNCTION);'
-    )))
+    body_code.extend(dispatch(lib.library,
+        RAISE('MIT_ERROR_EXTRA_INVALID_FUNCTION'),
+    ))
     body_code.append('')
     code.append(body_code)
 

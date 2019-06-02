@@ -14,7 +14,7 @@ The main entry point is dispatch().
 import functools
 
 from .opcode_frequency import counts
-from .code_util import Code, disable_warnings, c_symbol
+from .code_util import Code, RAISE, disable_warnings, c_symbol
 
 
 type_wordses = {'mit_word': 1} # Enough for the core
@@ -336,13 +336,13 @@ def check_underflow(num_pops):
     '''
     if num_pops <= 0: return Code()
     return Code(
-        'if ((S->STACK_DEPTH < (mit_uword)({num_pops}))) {{',
+        'if ((S->STACK_DEPTH < (mit_uword)({}))) {{'.format(num_pops),
         Code (
-            'S->BAD = {num_pops} - 1;',
-            'RAISE(MIT_ERROR_INVALID_STACK_READ);',
+            'S->BAD = {} - 1;'.format(num_pops),
+            RAISE('MIT_ERROR_INVALID_STACK_READ'),
         ),
-        '}}',
-    ).format(num_pops=num_pops)
+        '}',
+    )
 
 def check_overflow(num_pops, num_pushes):
     '''
@@ -355,13 +355,15 @@ def check_overflow(num_pops, num_pushes):
     depth_change = num_pushes - num_pops
     if depth_change <= 0: return Code()
     return Code(
-        'if (((S->stack_size - S->STACK_DEPTH) < (mit_uword)({depth_change}))) {{',
+        'if (((S->stack_size - S->STACK_DEPTH) < (mit_uword)({}))) {{'
+        .format(depth_change),
         Code(
-            'S->BAD = ({depth_change}) - (S->stack_size - S->STACK_DEPTH);',
-            'RAISE(MIT_ERROR_STACK_OVERFLOW);',
+            'S->BAD = ({}) - (S->stack_size - S->STACK_DEPTH);'
+            .format(depth_change),
+            RAISE('MIT_ERROR_STACK_OVERFLOW'),
         ),
-        '}}',
-    ).format(depth_change=depth_change)
+        '}',
+    )
 
 def gen_case(instruction):
     '''
@@ -381,7 +383,10 @@ def gen_case(instruction):
         )
     code = Code()
     if instruction.terminal:
-        code.append('if (S->I != 0) RAISE(MIT_ERROR_INVALID_OPCODE);')
+        code.extend(Code(*[
+            'if (S->I != 0)',
+                RAISE('MIT_ERROR_INVALID_OPCODE'),
+        ]))
     if effect is not None:
         # Load the arguments into C variables.
         code.extend(effect.declare_vars())

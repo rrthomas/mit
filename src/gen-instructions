@@ -11,8 +11,8 @@
 import sys
 import gzip
 
+from mit_core.code_util import Code, RAISE, FETCH
 from mit_core.vm_data import Instruction, InternalExtraInstruction
-from mit_core.code_util import Code
 from mit_core.instruction_gen import dispatch, gen_case
 
 
@@ -38,8 +38,6 @@ code.append('''\
 
     #include "mit/mit.h"
 
-    #include "run.h"
-
 
     _GL_ATTRIBUTE_PURE mit_word mit_internal_extra_instruction(mit_state *S)
     {'''
@@ -49,9 +47,8 @@ code.append('')
 body_code = Code()
 body_code.append('mit_word error = MIT_ERROR_OK;')
 body_code.append('mit_uword opcode = S->I >> mit_opcode_bit;')
-body_code.extend(dispatch(InternalExtraInstruction, Code(
-    'RAISE(MIT_ERROR_INVALID_OPCODE);',
-)))
+body_code.extend(dispatch(InternalExtraInstruction,
+                          RAISE('MIT_ERROR_INVALID_OPCODE')))
 code.append(body_code)
 
 code.append('''
@@ -67,17 +64,21 @@ body_code = Code()
 body_code.append('''\
     error = MIT_ERROR_OK;
     mit_byte opcode = S->I & MIT_OPCODE_MASK;
-    FETCH;
+    '''
+)
+body_code.extend(FETCH)
+body_code.extend(Code(*['''\
 
     // Check STACK_DEPTH is valid
     if (S->STACK_DEPTH > S->stack_size) {
         S->BAD = S->STACK_DEPTH - S->stack_size;
-        RAISE(MIT_ERROR_STACK_OVERFLOW);
-    }'''
-)
+''',
+                 RAISE('MIT_ERROR_STACK_OVERFLOW'),
+     '}',
+]))
 body_code.extend(dispatch(Instruction, Code(
     '/* Undefined instruction. */',
-    'RAISE(MIT_ERROR_INVALID_OPCODE);',
+    RAISE('MIT_ERROR_INVALID_OPCODE'),
 ), trace))
 
 code.append('')

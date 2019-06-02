@@ -12,6 +12,8 @@ RISK.
 import re
 import textwrap
 
+from .params import *
+
 
 class Code:
     '''
@@ -112,3 +114,67 @@ class {}(IntEnum):'''.format(class_name))
             value=member.value,
         )))
     return code
+
+
+# Various helper routines for instruction action code
+
+def RAISE(error_code):
+    return Code(*['''\
+        {{
+            error = ({});
+            goto error;
+        }}'''.format(error_code)
+    ])
+
+def CHECK_ALIGNED(addr):
+    return Code(*['''\
+        if (!is_aligned(({addr}), MIT_SIZE_WORD)) {{
+            S->BAD = ({addr});'''.format(addr=addr),
+            RAISE('MIT_ERROR_UNALIGNED_ADDRESS'),
+        '}',
+    ])
+
+def CHECK_ADDRESS(addr):
+    return Code(*['''\
+        if (unlikely(({addr}) >= S->memory_size - MIT_WORD_BYTES)) {{
+            S->BAD = ({addr});'''.format(addr=addr),
+            RAISE('MIT_ERROR_INVALID_MEMORY_READ'),
+        '}'
+    ])
+
+def LOAD_WORD(w, addr):
+    if endism == host_endism:
+        return Code(*[
+            '{',
+                CHECK_ADDRESS(addr), '''\
+                #pragma GCC diagnostic push
+                #pragma GCC diagnostic ignored "-Wcast-align"
+                    ({w}) = *(mit_word *)((uint8_t *)S->memory + ({addr}));
+                #pragma GCC diagnostic pop'''
+                .format(w=w, addr=addr),
+            '}',
+        ])
+    else:
+        return Code(*[
+            '{',
+                CHECK_ADDRESS(addr), '''\
+                mit_word p = 0;
+                load(S->memory, S->memory_size, ({addr}), MIT_SIZE_WORD, &p);
+                ({w}) = p;'''.format(w=w, addr=addr),
+            '}',
+        ])
+
+FETCH = Code(*['''\
+    {
+        initial_PC = S->PC;
+        initial_I = S->I;
+        S->I >>= MIT_OPCODE_BIT;
+    }'''
+])
+
+DO_NEXT = Code(*[
+    '{',
+        LOAD_WORD('S->I', 'S->PC'),
+        'S->PC += MIT_WORD_BYTES;',
+    '}',
+])

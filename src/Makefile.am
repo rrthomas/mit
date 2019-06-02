@@ -39,7 +39,6 @@ nodist_mit@PACKAGE_SUFFIX@_SOURCES = main.c
 mit_pkgincludedir = $(pkgincludedir)@PACKAGE_SUFFIX@
 nodist_mit_pkginclude_HEADERS = include/mit/opcodes.h include/mit/registers.h
 mit_pkginclude_HEADERS = include/mit/mit.h
-noinst_HEADERS = run.h
 
 step.lo: instructions.c
 object.lo step.lo storage.lo: include/mit/registers.h

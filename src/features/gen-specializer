@@ -10,7 +10,7 @@
 
 import sys, pickle, textwrap
 
-from mit_core.code_util import Code
+from mit_core.code_util import Code, FETCH
 from mit_core.vm_data import Instruction
 from specializer import CacheState, gen_case
 from path import SpecializedInstruction, State
@@ -90,8 +90,8 @@ class Label:
             if instruction.terminal:
                 opcode_bits = None # Must match all bits.
             state = state.step(instruction)
+            c_code.extend(FETCH)
             c_code.extend(Code(*[
-                'FETCH;',
                 '{{ // {}'.format(instruction.name),
                 gen_case(instruction, cache_state),
                 '}',
@@ -235,8 +235,6 @@ code.append('''\
 
     #include "mit/mit.h"
     #include "mit/features.h"
-
-    #include "run.h"
 
 
     mit_word mit_specializer_run(mit_state * restrict S) {

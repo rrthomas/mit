@@ -9,7 +9,7 @@
 
 from enum import Enum, IntEnum, unique
 
-from .code_util import Code
+from .code_util import Code, RAISE, DO_NEXT, CHECK_ALIGNED, LOAD_WORD
 from .instruction import InstructionEnum
 from .register import RegisterEnum
 
@@ -43,30 +43,28 @@ class MitError(IntEnum):
 @unique
 class Instruction(InstructionEnum):
     '''VM instruction instructions.'''
-    NEXT = (0x0, [], [], Code('''\
-        DO_NEXT;'''
-    ), True)
+    NEXT = (0x0, [], [], DO_NEXT, True)
 
-    BRANCH = (0x1, ['addr'], [], Code('''\
-        S->PC = (mit_uword)addr;
-        CHECK_ALIGNED(S->PC);
-        DO_NEXT;'''
-    ), True)
+    BRANCH = (0x1, ['addr'], [], Code(*[
+        'S->PC = (mit_uword)addr;',
+        CHECK_ALIGNED('S->PC'),
+        DO_NEXT,
+    ]), True)
 
-    BRANCHZ = (0x2, ['flag', 'addr'], [], Code('''\
+    BRANCHZ = (0x2, ['flag', 'addr'], [], Code(*['''\
         if (flag == 0) {
-            S->PC = (mit_uword)addr;
-            CHECK_ALIGNED(S->PC);
-            DO_NEXT;
-        }
-    '''))
+            S->PC = (mit_uword)addr;''',
+            CHECK_ALIGNED('S->PC'),
+            DO_NEXT,
+            '}'
+    ]))
 
-    CALL = (0x3, ['addr'], ['ret_addr'], Code('''\
+    CALL = (0x3, ['addr'], ['ret_addr'], Code(*['''\
         ret_addr = S->PC;
-        S->PC = (mit_uword)addr;
-        CHECK_ALIGNED(S->PC);
-        DO_NEXT;'''
-    ), True)
+        S->PC = (mit_uword)addr;''',
+        CHECK_ALIGNED('S->PC'),
+        DO_NEXT,
+    ]), True)
 
     POP = (0x4, ['ITEMS', 'COUNT'], [], Code())
 
@@ -81,29 +79,29 @@ class Instruction(InstructionEnum):
     LOAD = (0x8, ['addr', 'size'], ['x'], Code('''\
         int ret = load(S->memory, S->memory_size, addr, size, &x);
         if (ret != 0) {
-            S->BAD = addr;
-            RAISE(ret);
-        }'''
+            S->BAD = addr;''',
+            RAISE('ret'),
+        '}',
     ))
 
     STORE = (0x9, ['x', 'addr', 'size'], [], Code('''\
         int ret = store(S->memory, S->memory_size, addr, size, x);
         if (ret != 0) {
-            S->BAD = addr;
-            RAISE(ret);
-        }'''
+            S->BAD = addr;''',
+            RAISE('ret'),
+        '}',
     ))
 
-    LIT = (0xa, [], ['n'], Code('''\
-        LOAD_WORD(n, S->PC);
-        S->PC += MIT_WORD_BYTES;'''
-    ))
+    LIT = (0xa, [], ['n'], Code(*[
+        LOAD_WORD('n', 'S->PC'),
+        'S->PC += MIT_WORD_BYTES;',
+    ]))
 
-    LIT_PC_REL = (0xb, [], ['n'], Code('''\
-        LOAD_WORD(n, S->PC);
+    LIT_PC_REL = (0xb, [], ['n'], Code(*[
+        LOAD_WORD('n', 'S->PC'), '''
         n += S->PC;
         S->PC += MIT_WORD_BYTES;'''
-    ))
+    ]))
 
     LIT_0 = (0xc, [], ['zero'], Code('''\
         zero = 0;'''
@@ -145,19 +143,19 @@ class Instruction(InstructionEnum):
         r = a * b;'''
     ))
 
-    DIVMOD = (0x16, ['a', 'b'], ['q', 'r'], Code('''\
-        if (b == 0)
-          RAISE(MIT_ERROR_DIVISION_BY_ZERO);
+    DIVMOD = (0x16, ['a', 'b'], ['q', 'r'], Code(*['''\
+        if (b == 0)''',
+            Code(RAISE('MIT_ERROR_DIVISION_BY_ZERO')), '''\
         q = a / b;
         r = a % b;'''
-    ))
+    ]))
 
-    UDIVMOD = (0x17, ['a', 'b'], ['q', 'r'], Code('''\
-        if (b == 0)
-          RAISE(MIT_ERROR_DIVISION_BY_ZERO);
+    UDIVMOD = (0x17, ['a', 'b'], ['q', 'r'], Code(*['''\
+        if (b == 0)''',
+            RAISE('MIT_ERROR_DIVISION_BY_ZERO'), '''\
         q = (mit_word)((mit_uword)a / (mit_uword)b);
         r = (mit_word)((mit_uword)a % (mit_uword)b);'''
-    ))
+    ]))
 
     NOT = (0x18, ['x'], ['r'], Code('''\
         r = ~x;'''
@@ -194,6 +192,4 @@ class Instruction(InstructionEnum):
 
 @unique
 class InternalExtraInstruction(InstructionEnum):
-    HALT = (0x1, [], [], Code('''\
-        RAISE(MIT_ERROR_HALT);'''
-    ))
+    HALT = (0x1, [], [], Code(RAISE('MIT_ERROR_HALT')))
