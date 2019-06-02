@@ -15,6 +15,9 @@ mit_pkgpythondir = $(pkgpythondir)@PACKAGE_SUFFIX@
 mit_pkgpython_PYTHON =		\
 	mit/__init__.py		\
 	mit/__main__.py		\
+	mit/stack.py		\
+	mit/memory.py		\
+	mit/state.py		\
 	mit/assembler.py
 nodist_mit_pkgpython_PYTHON = mit/binding.py mit/errors.py mit/opcodes.py
 
