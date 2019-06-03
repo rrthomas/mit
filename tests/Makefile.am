@@ -42,8 +42,7 @@ $(top_builddir)/copied-python-module-to-build:
 TESTS_ENVIRONMENT = \
 	export LD_LIBRARY_PATH=$(top_builddir)/src/@objdir@:$$LD_LIBRARY_PATH; \
 	export PYTHON=$(PYTHON); \
-	export PYTHONPATH=$(top_builddir)/python; \
-	export srcdir=$(srcdir);
+	export PYTHONPATH=$(top_builddir)/python;
 
 DISTCLEANFILES = $(top_builddir)/copied-python-module-to-build
 
