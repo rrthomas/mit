@@ -75,15 +75,27 @@ nodist_libmitfeatures@PACKAGE_SUFFIX@_la_SOURCES += %D%/specializer.c
 noinst_PROGRAMS = %D%/gen-predictor
 %D%_gen_predictor_LDADD = $(top_builddir)/lib/libgnu.la libutil.la
 
-check-local:
-	if test -d features/pforth -a "$(WORD_BYTES)" = "4" -a "$(ENDISM)" = "0"; then \
-	    cd features/pforth && \
-	    autoreconf -i && \
-	    ./configure --build=mit BUILD_EXECUTOR=$(abs_srcdir)/mit@PACKAGE_SUFFIX@$(EXEEXT) && \
-	    cd src/mit && \
-	    $(abs_srcdir)/mit@PACKAGE_SUFFIX@$(EXEEXT) -O pforth-base make-base.fs && \
-	    cmp pforth-base pforth-new; \
-	fi
+if USING_PFORTH
+features/pforth/config.log:
+	cd features/pforth && \
+	autoreconf -i && \
+	./configure --build=mit BUILD_EXECUTOR=$(MIT_BINARY)
+
+build_pforth = \
+	$(MIT_BINARY) $$MIT_OPTIONS pforth-base make-base.fs
+
+check-local: features/pforth/config.log
+	MIT_OPTIONS=-O && export MIT_OPTIONS && \
+	cd features/pforth/src/mit && \
+	if test "$(OPTIONAL_TESTS)" = "yes"; then \
+		time $(abs_top_srcdir)/build-aux/repeat 10 $(build_pforth) || exit 1; \
+		MIT_OPTIONS= && export MIT_OPTIONS && \
+		time $(abs_top_srcdir)/build-aux/repeat 10 $(build_pforth) || exit 1; \
+	else \
+		$(build_pforth) || exit 1; \
+	fi; \
+	cmp pforth-base pforth-new
+endif
 
 # Alternative trace-building arguments:
 #   --evaluate BYE

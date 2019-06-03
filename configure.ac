@@ -158,6 +158,24 @@ fi
 AC_SUBST([PACKAGE_SUFFIX])
 AM_CONDITIONAL([USING_PACKAGE_SUFFIX], [test "$gl_package_suffix" = "yes"])
 
+# Optional tests (may use too much CPU, RAM etc. to run every time)
+AC_ARG_ENABLE([optional-tests],
+  [AS_HELP_STRING([--enable-optional-tests],
+                  [run extra tests (may be slow, expensive etc.)])],
+  [case $enableval in
+     yes|no) ;;
+     *)      AC_MSG_ERROR([bad value $enableval for optional-tests option]) ;;
+   esac
+   gl_optional_tests=$enableval],
+  [gl_optional_tests=no]
+)
+AC_SUBST([OPTIONAL_TESTS], [$gl_optional_tests])
+
+# pForth tests, run if the pforth source tree is present and Mit is
+# configured compatibly with pForth.
+AM_CONDITIONAL([USING_PFORTH],
+   [test -d src/features/pforth -a "$WORD_BYTES" = 4 -a "$ENDISM" = 0])
+
 # Generate output files
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_FILES([

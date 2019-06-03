@@ -1,0 +1,64 @@
+#!/usr/bin/env perl
+my $version_banner = <<END;
+repeat 7
+Copyright (c) Reuben Thomas 1999-2019
+Released under the GPL version 3, or (at your option) any later version.
+END
+
+use strict;
+use warnings;
+
+use File::Basename;
+use Getopt::Long;
+
+sub usage {
+  my ($exit_code) = @_;
+  print <<END;
+Usage: repeat [OPTION...] N COMMAND ARGUMENT...
+Repeat command N times, optionally with a delay (see also watch(1)).
+
+  --wait DELAY         wait DELAY seconds between each invocation
+  --help               display this help and exit
+  --version            display version information and exit
+
+If the command fails to execute, repeat exits with error 128.
+If the command dies with a signal, repeat exits wtih error 129.
+Otherwise, if the command exits with error, repeat exits with the same
+error.
+END
+  exit $exit_code;
+}
+
+my $prog = basename($0);
+my ($delay, $help_flag, $version_flag);
+Getopt::Long::Configure("require_order");
+my $opts = GetOptions(
+  "wait=i" => \$delay,
+  "help" => \$help_flag,
+  "version" => \$version_flag,
+ ) or usage(1);
+if ($version_flag) {
+  print STDERR $version_banner;
+  exit 0;
+}
+usage(0) if $#ARGV == -1;
+
+for (my $times = shift; $times > 0; $times--) {
+  {
+    local $SIG{__WARN__} = sub { };
+    system(@ARGV);
+  }
+
+  if ($? == -1) {
+    warn "failed to execute command: $!\n";
+    exit(128);
+  } elsif ($? & 127) {
+    printf "child died with signal %d%s\n",
+      ($? & 127), ($? & 128) ? ', and dumped core' : '';
+    exit(129);
+  } elsif ($? != 0) {
+    exit($? >> 8);
+  }
+
+  sleep $delay if defined($delay);
+}
