@@ -1,3 +1,5 @@
 The authors of Mit:
 
 * Reuben Thomas <rrt@sc3d.org> designed and implemented Mit.
+* Alistair Turnbull <apt1002@mupsych.org> contributed to the design and
+  implementation, and wrote the specializing interpreter.
