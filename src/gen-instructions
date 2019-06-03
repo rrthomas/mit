@@ -67,7 +67,9 @@ body_code = Code()
 body_code.append('''\
     error = MIT_ERROR_OK;
     mit_byte opcode = S->I & MIT_OPCODE_MASK;
-    FETCH;
+    initial_PC = S->PC;
+    initial_I = S->I;
+    S->I >>= MIT_OPCODE_BIT;
 
     // Check STACK_DEPTH is valid
     if (S->STACK_DEPTH > S->stack_size) {

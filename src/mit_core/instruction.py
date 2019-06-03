@@ -29,8 +29,18 @@ class InstructionEnum(Enum):
     C variables are created for the arguments and results; the arguments are
     popped and results pushed.
 
-    The code should RAISE any error before writing any state, so that if an
-    error is raised, the state of the VM is not changed.
+    Macros available to instructions (see run.h):
+
+    RAISE(error): the code should RAISE any error before writing any state,
+    so that if an error is raised, the state of the VM is not changed.
+
+    CHECK_ALIGNED(addr): check a VM address is valid, raising an error if
+    not.
+
+    FETCH_PC(w): fetch the word at PC, assign it to `w`, and increment PC by
+    a word.
+
+    DO_NEXT: perform the action of NEXT.
     '''
     def __init__(self, opcode, args, results, code, terminal=False):
         self.opcode = opcode

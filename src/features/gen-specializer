@@ -90,8 +90,10 @@ class Label:
             if instruction.terminal:
                 opcode_bits = None # Must match all bits.
             state = state.step(instruction)
-            c_code.extend(Code(*[
-                'FETCH;',
+            c_code.extend(Code(*['''\
+                initial_PC = S->PC;
+                initial_I = S->I;
+                S->I >>= MIT_OPCODE_BIT;''',
                 '{{ // {}'.format(instruction.name),
                 gen_case(instruction, cache_state),
                 '}',
