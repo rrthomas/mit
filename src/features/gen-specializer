@@ -100,7 +100,8 @@ class Label:
         c_code.extend(label_by_index(self.if_correct).goto(cache_state))
         pops = -state.stack_min
         pushes = state.stack_max - state.stack_min
-        max_cached_depth = self.cached_depth + state.stack_max
+        max_cached_depth = (
+            max(self.cached_depth, -state.stack_min) + state.stack_max)
         # Generate the code for the branch where the guess is wrong.
         cache_state = self.cache_state()
         w_code = label_by_index(self.if_wrong).goto(cache_state)
