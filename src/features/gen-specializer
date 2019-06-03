@@ -150,7 +150,7 @@ labels_code.append(Code('''\
     // probably comes next. If correct, there is a fast path for executing
     // that sequence, otherwise we fall back on a slow path with broader
     // expectations. Ultimately, we fall back to `A_FALLBACK` which calls
-    // `smite_single_step()` to handle corner cases.
+    // `mit_single_step()` to handle corner cases.
     //
     // The calling convention at each A_XXX label is as follows:
     //
@@ -179,7 +179,9 @@ labels_code.append('''\
     A_FALLBACK:
         assert(error == MIT_ERROR_OK);
         assert(cached_depth == 0);
-        error = mit_single_step(S);
+        *real_S = state;
+        error = mit_single_step(real_S);
+        state = *real_S;
         continue;
 
     error:
@@ -206,7 +208,11 @@ labels_code.append(switch_code)
 
 # Construct a Code for the function body, copying `labels_code`.
 body_code = Code()
-body_code.append('int error = MIT_ERROR_OK;')
+body_code.append('''\
+    mit_state state = *real_S;
+    mit_state *const S = &state;
+    int error = MIT_ERROR_OK;
+''')
 if max_cached_depth > 0:
     cache_state = CacheState(max_cached_depth, 0)
     body_code.append('mit_word {};'.format(
@@ -219,6 +225,7 @@ body_code.append('do {')
 body_code.extend(labels_code)
 body_code.append('''\
     } while (error == MIT_ERROR_OK);
+    *real_S = state;
     return error;
 ''')
 
@@ -240,7 +247,7 @@ code.append('''\
     #include "run.h"
 
 
-    mit_word mit_specializer_run(mit_state * restrict S) {
+    mit_word mit_specializer_run(mit_state * restrict real_S) {
 ''')
 code.append(body_code)
 code.append('}')
