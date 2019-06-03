@@ -82,16 +82,11 @@ body_code.extend(dispatch(Instruction, Code(
     'RAISE(MIT_ERROR_INVALID_OPCODE);',
 ), trace))
 
-code.append('')
 code.append(Code(*['''\
         mit_word error;
         mit_uword initial_PC, initial_I;
         do {''',
-            body_code,
-            '''
-        } while (run == true && error == 0);'''
-]))
-
+            body_code]))
 code.append('''
     error:
         if (error != 0) {
@@ -105,18 +100,20 @@ code.append('''
             S->I = 0;
         }
 
-        return error;
-    }
+    } while (run == true && error == 0);
 
-    mit_word mit_single_step(mit_state * restrict S)
-    {
-        return run_or_step(S, false);
-    }
+    return error;
+}
 
-    mit_word mit_run(mit_state * restrict S)
-    {
-        return run_or_step(S, true);
-    }'''
+mit_word mit_single_step(mit_state * restrict S)
+{
+    return run_or_step(S, false);
+}
+
+mit_word mit_run(mit_state * restrict S)
+{
+    return run_or_step(S, true);
+}'''
 )
 
 print(code)
