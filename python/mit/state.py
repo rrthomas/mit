@@ -121,6 +121,10 @@ class State:
             instruction.name: instruction
             for instruction in LibInstruction
         })
+        globals_dict.update({
+            lib.library.__name__: lib.library
+            for lib in LibInstruction
+        })
 
     def register_args(self, *args):
         argc = len(args)
