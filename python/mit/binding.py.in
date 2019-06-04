@@ -192,21 +192,22 @@ def is_aligned(addr):
     return libmit.mit_is_aligned(addr, size_word)
 
 # features.h
-libmitfeatures.mit_extra_instruction.argtypes = [c_void_p]
 libmitfeatures.mit_extra_instruction.restype = c_word
+libmitfeatures.mit_extra_instruction.argtypes = [c_void_p]
 libmitfeatures.mit_extra_instruction.errcheck = mit_error
 
-libmitfeatures.mit_auto_extend_init.argtypes = None
 libmitfeatures.mit_auto_extend_init.restype = c_void_p
+libmitfeatures.mit_auto_extend_init.argtypes = None
 
 libmitfeatures.mit_auto_extend_handler.argtypes = [c_void_p, c_int]
 
-libmitfeatures.mit_core_dump.argtypes = [c_void_p]
 libmitfeatures.mit_core_dump.restype = c_char_p
+libmitfeatures.mit_core_dump.argtypes = [c_void_p]
 
-libmitfeatures.mit_specializer_run.argtypes = [c_void_p]
 libmitfeatures.mit_specializer_run.restype = c_word
+libmitfeatures.mit_specializer_run.argtypes = [c_void_p]
+libmitfeatures.mit_specializer_run.errcheck = mit_error
 
-libmitfeatures.mit_trace_run.argtypes = [c_void_p, c_void_p]
 libmitfeatures.mit_trace_run.restype = c_word
+libmitfeatures.mit_trace_run.argtypes = [c_void_p, c_void_p]
 libmitfeatures.mit_trace_run.errcheck = mit_error

@@ -143,7 +143,7 @@ class State:
         libmitfeatures.mit_extra_instruction(self.state)
         self.registers["I"].set(0) # Skip to next instruction
 
-    def run(self, args=None, trace_file=None, optimize=False):
+    def run(self, args=None, trace_file=None, optimize=True):
         '''
         Run until `halt` or error.
 
