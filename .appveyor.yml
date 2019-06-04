@@ -21,10 +21,10 @@ init:
 
 install:
   - cmd: C:\msys64\usr\bin\bash.exe -lc "cd c:/projects/mit && ./build-aux/appveyor-install.sh"
-  - sh: sudo apt-get update && sudo ACCEPT_EULA=Y DEBIAN_FRONTEND=noninteractive apt-get dist-upgrade -y && sudo apt-get install -y texlive-latex-extra texlive-science texlive-fonts-recommended texlive-fonts-extra tex-gyre help2man latexmk hevea
+  - sh: sudo apt-get update && sudo apt-get install -y texlive-latex-extra texlive-science texlive-fonts-recommended texlive-fonts-extra tex-gyre help2man latexmk hevea
 
 # FIXME: In-place mit doesn't work, so remove pforth after bootstrap
 # (It would otherwise be tested on mingw32.)
 build_script:
   - cmd: C:\msys64\usr\bin\bash.exe -lc "cd c:/projects/mit && ./bootstrap && rm -rf src/features/pforth && ./configure --enable-silent-rules && make && make install && make check"
-  - sh: ./bootstrap && ./configure --enable-optional-tests --enable-silent-rules --enable-package-suffix PY_LOG_ENV="LD_PRELOAD=/usr/lib/gcc/x86_64-linux-gnu/7/libasan.so PYTHONMALLOC=malloc" CFLAGS="-g3 -fsanitize=address -fsanitize=undefined" LDFLAGS="-fsanitize=address -fsanitize=undefined" && make check && make distcheck
+  - sh: ./bootstrap && ./configure --enable-silent-rules --enable-package-suffix PY_LOG_ENV="LD_PRELOAD=/usr/lib/gcc/x86_64-linux-gnu/7/libasan.so PYTHONMALLOC=malloc" CFLAGS="-g3 -fsanitize=address -fsanitize=undefined" LDFLAGS="-fsanitize=address -fsanitize=undefined" && make check && make distcheck
