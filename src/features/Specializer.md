@@ -7,25 +7,12 @@ used.
 Some explanatory notes follow.
 
 
-The trace
----------
-
-The trace file `instructions_trace.gz` is a raw binary dump of instruction
-opcodes, one per byte. An gzipped empty file can be used; this is useful to
-bootstrap a new instruction encoding; the trace file is updated by `make build-trace`, a maintainer target that is not normally run.
-
-
 The predictor
 -------------
 
-The script "gen-predictor" reads a trace file and approximates it by a
-predictor: a lookup table that guesses the next instruction based on the
-previous instructions.
-
-The script is slow, because it has to replay the whole trace. You may want to
-keep a library of predictor files, which are typically small (tens of
-kilobytes). It is for this reason that the "gen-predictor" script has been
-separated out from the rest of the procedure.
+The script "gen-predictor" runs some code and calculates a predictor: a
+lookup table that guesses the next instruction based on the previous
+instructions.
 
 
 The labels file

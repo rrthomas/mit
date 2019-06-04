@@ -13,7 +13,6 @@ The main entry point is dispatch().
 
 import functools
 
-from .opcode_frequency import counts
 from .code_util import Code, disable_warnings, c_symbol
 
 
@@ -402,20 +401,21 @@ def gen_case(instruction):
         code.extend(effect.store_results())
     return code
 
-def dispatch(Instruction, undefined_case, trace=None):
+def dispatch(Instruction, undefined_case, order=None):
     '''
     Generate dispatch code for some Instructions.
 
      - Instruction - InstructionEnum.
      - undefined_case - a Code defining the fallback behaviour.
-     - trace - an opcode trace to use to improve the dispatch code.
+     - order - an opcode order to use to improve the dispatch code.
     '''
     assert isinstance(undefined_case, Code)
     code = Code()
     else_text = ''
-    order = enumerate(Instruction)
-    if trace is not None:
-        order = counts(Instruction, trace)
+    if order is None:
+        order = enumerate(Instruction)
+    else:
+        order = enumerate(order)
     for (_, instruction) in order:
         code.append('{else_text}if (opcode == {prefix}_{instruction}) {{'.format(
             else_text=else_text,

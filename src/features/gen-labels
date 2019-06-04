@@ -22,14 +22,14 @@ predictor_filename = sys.argv[1]
 labels_filename = sys.argv[2]
 
 by_opcode = {i.opcode: i for i in Instruction}
-with open(predictor_filename, 'rb') as f:
+with open(predictor_filename) as f:
     # [{opcode (str): (new_state, count)]
     predictor = [
         {
             by_opcode[int(opcode, 16)]: (obj['new_state'], obj['count'])
             for opcode, obj in state.items()
         }
-        for state in json.loads(f.read().decode())
+        for state in json.load(f)
     ]
 
 
@@ -301,7 +301,6 @@ labels = [
 assert len(label_map) == len(labels)
 
 # Dump to a file.
-
 with open(labels_filename, 'wb') as f:
     # [(
     #     tos_constant (int?),

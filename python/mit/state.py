@@ -143,13 +143,12 @@ class State:
         libmitfeatures.mit_extra_instruction(self.state)
         self.registers["I"].set(0) # Skip to next instruction
 
-    def run(self, args=None, trace_file=None, optimize=True):
+    def run(self, args=None, predictor=False, optimize=True):
         '''
         Run until `halt` or error.
 
          - args - list of str - command-line arguments to register.
-         - trace_file - file - if not none, a file object to which to write an
-           instruction trace.
+         - predictor - bool - if True, gather data to build a predictor.
          - optimize - bool - if True, run with optimization.
         '''
         if args is None:
@@ -158,8 +157,8 @@ class State:
         self.register_args(*args)
         while True:
             try:
-                if trace_file is not None:
-                    libmitfeatures.mit_trace_run(self.state, trace_file.fileno())
+                if predictor == True:
+                    libmitfeatures.mit_predictor_run(self.state)
                 elif optimize == True:
                     libmitfeatures.mit_specializer_run(self.state)
                 else:

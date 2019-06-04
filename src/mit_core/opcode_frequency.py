@@ -1,5 +1,5 @@
 '''
-Count the frequency of opcodes or pairs in a trace.
+Count the frequency of opcodes in a predictor.
 
 Copyright (c) 2019 Mit authors
 
@@ -9,37 +9,29 @@ THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 RISK.
 '''
 
-def counts(Instruction, trace):
+import json
+
+
+def counts(Instruction, predictor_file):
     '''
     Returns a list of (count, instruction) sorted by descending count for a
-    trace.
+    predictor file.
 
      - Instruction - InstructionEnum
-     - trace - bytes - opcode values
+     - predictor_file - file - output of gen-predictor (q.v.)
     '''
+    # Read trace, computing opcode counts
     counts = {instruction.opcode: 0 for instruction in Instruction}
-    for opcode in trace: counts[opcode] += 1
-    freq = sorted([(count, opcode) for opcode, count in counts.items()],
-                  reverse=True)
-    by_opcode = {instruction.opcode: instruction for instruction in Instruction}
-    return [(count, by_opcode[opcode]) for count, opcode in freq]
+    for state in json.load(predictor_file):
+        for opcode, obj in state.items():
+            # We'll get an error for an illegal opcode!
+            counts[int(opcode, 16)] += obj['count']
 
-def pair_counts(Instruction, trace):
-    '''
-    Returns a list of (count, (instruction1, instruction2)) sorted by
-    descending count for a trace.
-
-     - Instruction - InstructionEnum
-     - trace - bytes - opcode values
-    '''
-    counts = {(instruction1.opcode, instruction2.opcode): 0
-              for instruction1 in Instruction
-              for instruction2 in Instruction}
-    for opcode1, opcode2 in zip(trace, trace[1:]):
-        counts[(opcode1, opcode2)] += 1
-    freq = sorted([(count, (opcode1, opcode2))
-                   for (opcode1, opcode2), count in counts.items()],
+    # Compute instruction frequencies
+    freqs = sorted([(count, opcode)
+                   for opcode, count in counts.items()],
                   reverse=True)
-    by_opcode = {instruction.opcode: instruction for instruction in Instruction}
-    return [(count, (by_opcode[opcode1], by_opcode[opcode2]))
-            for count, (opcode1, opcode2) in freq]
+
+    # Return instruction frequencies
+    by_opcode = {i.opcode: i for i in Instruction}
+    return [(count, by_opcode[opcode]) for count, opcode in freqs]
