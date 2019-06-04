@@ -27,4 +27,4 @@ install:
 # (It would otherwise be tested on mingw32.)
 build_script:
   - cmd: C:\msys64\usr\bin\bash.exe -lc "cd c:/projects/mit && ./bootstrap && rm -rf src/features/pforth && ./configure --enable-silent-rules && make && make install && make check"
-  - sh: ./bootstrap && ./configure --enable-silent-rules --enable-package-suffix PY_LOG_ENV="LD_PRELOAD=/usr/lib/gcc/x86_64-linux-gnu/7/libasan.so PYTHONMALLOC=malloc" CFLAGS="-g3 -fsanitize=address -fsanitize=undefined" LDFLAGS="-fsanitize=address -fsanitize=undefined" && make check && make distcheck
+  - sh: ./bootstrap && ./configure --enable-optional-tests --enable-silent-rules --enable-package-suffix PY_LOG_ENV="LD_PRELOAD=/usr/lib/gcc/x86_64-linux-gnu/7/libasan.so PYTHONMALLOC=malloc" CFLAGS="-g3 -fsanitize=address -fsanitize=undefined" LDFLAGS="-fsanitize=address -fsanitize=undefined" && make check && make distcheck
