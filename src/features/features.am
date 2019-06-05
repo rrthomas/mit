@@ -23,7 +23,7 @@ mit_pkginclude_HEADERS += %D%/mit/features.h
 
 libmitfeatures@PACKAGE_SUFFIX@_la_SOURCES += \
 	%D%/auto-extend.c \
-	%D%/trace.c \
+	%D%/predictor.c \
 	%D%/core-dump.c
 
 
@@ -72,8 +72,6 @@ DISTCLEANFILES += \
 # Specializer
 
 nodist_libmitfeatures@PACKAGE_SUFFIX@_la_SOURCES += %D%/specializer.c
-noinst_PROGRAMS = %D%/gen-predictor
-%D%_gen_predictor_LDADD = $(top_builddir)/lib/libgnu.la libutil.la
 
 if USING_PFORTH
 features/pforth/config.log:
@@ -97,24 +95,17 @@ check-local: features/pforth/config.log
 	cmp pforth-base pforth-new
 endif
 
-# Alternative trace-building arguments:
-#   --evaluate BYE
-#   make-base.fs
-#   tests.fs # (needs something on standard input)
-build-trace:
-	export LD_LIBRARY_PATH=$(abs_top_builddir)/src/@objdir@:$$LD_LIBRARY_PATH; \
+# Alternative predictor-building arguments:
+PREDICTOR_PFORTH_ARGS=--evaluate BYE
+#PREDICTOR_PFORTH_ARGS=make-base.fs
+#PREDICTOR_PFORTH_ARGS=tests.fs # (needs something on standard input)
+build-predictor: libmitfeatures@PACKAGE_SUFFIX@.la
+	export LD_LIBRARY_PATH=$(abs_top_builddir)/src/@objdir@:$(abs_top_builddir)/src/%D%/@objdir@:$$LD_LIBRARY_PATH; \
 	cd %D%/pforth/src/mit && \
-	$(PYTHON_WITH_PATH) $(abs_srcdir)/%D%/gen-trace $(abs_srcdir)/%D%/instructions_trace --evaluate BYE && \
-	gzip -f $(GZIP_ENV) $(abs_srcdir)/%D%/instructions_trace
-
-%D%/instructions_trace: $(srcdir)/%D%/instructions_trace.gz
-	gunzip --stdout $(srcdir)/%D%/instructions_trace.gz > $@
-
-%D%/instructions_predictor.json: mit_core/instruction.py mit_core/vm_data.py %D%/gen-predictor$(EXEEXT) %D%/instructions_trace
-	$(builddir)/%D%/gen-predictor$(EXEEXT) %D%/instructions_trace $@
+	$(PYTHON_WITH_PATH) $(abs_srcdir)/%D%/gen-predictor $(abs_srcdir)/%D%/instructions_predictor.json $(PREDICTOR_PFORTH_ARGS)
 
 %D%/instructions_labels.pickle: mit_core/instruction.py mit_core/vm_data.py %D%/instructions_predictor.json %D%/gen-labels
-	$(PYTHON_WITH_PATH) $(srcdir)/%D%/gen-labels %D%/instructions_predictor.json $@
+	$(PYTHON_WITH_PATH) $(srcdir)/%D%/gen-labels $(srcdir)/%D%/instructions_predictor.json $@
 
 %D%/specializer.c: mit_core/code_util.py mit_core/instruction.py mit_core/vm_data.py %D%/type_sizes.py mit_core/instruction_gen.py %D%/gen-specializer %D%/specializer.py %D%/instructions_labels.pickle
 	$(PYTHON_WITH_PATH) $(srcdir)/%D%/gen-specializer %D%/instructions_labels.pickle > %D%/specializer.c || ( rm -f %D%/specializer.c; exit 1 )
@@ -125,14 +116,13 @@ EXTRA_DIST += \
 	%D%/path.py \
 	%D%/futures.py \
 	%D%/specializer.py \
-	%D%/gen-trace \
+	%D%/gen-predictor \
 	%D%/gen-labels \
 	%D%/gen-specializer \
-	%D%/instructions_trace.gz \
+	%D%/instructions_predictor.json \
 	%D%/opcode-frequency
 
 DISTCLEANFILES += \
-	%D%/instructions_trace \
 	%D%/instructions_predictor.json \
 	%D%/instructions_labels.pickle \
 	%D%/specializer.c

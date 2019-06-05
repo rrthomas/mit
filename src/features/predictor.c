@@ -1,4 +1,4 @@
-// Generate the specializer's predictor file.
+// Generate a predictor file for the specializer.
 //
 // (c) Mit authors 2019
 //
@@ -9,23 +9,18 @@
 
 #include "config.h"
 
-#include <assert.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <stdint.h>
-#include <inttypes.h>
+#include <unistd.h>
 
-#include "progname.h"
-
-#include "mit/opcodes.h"
-
-#include "warn.h"
+#include "mit/mit.h"
+#include "mit/features.h"
 
 
 #define HISTORY_BITS 20
 #define NUM_HISTORIES (1 << HISTORY_BITS)
 #define SPARSITY 3
-#define NUM_OPCODES 32
+#define NUM_OPCODES 32 // FIXME
 #define COUNT_THRESHOLD 100
 
 
@@ -71,26 +66,7 @@ static history_t step_function(history_t history, opcode_t opcode) {
 }
 
 // How often each opcode has occurred after each history.
-static uint64_t counts[NUM_HISTORIES][NUM_OPCODES];
-
-static void init_counts(void) {
-    for (history_t history = 0; history < NUM_HISTORIES; history++)
-        for (opcode_t opcode = 0; opcode < NUM_OPCODES; opcode++)
-            counts[history][opcode] = 0;
-}
-
-// Read a trace file and add its statistics to `counts`.
-static void read_trace(FILE *trace) {
-    history_t history = 0;
-    while (1) {
-        opcode_t opcode = fgetc(trace);
-        if (feof(trace))
-            break;
-        assert(opcode < NUM_OPCODES);
-        counts[history][opcode]++;
-        history = step_function(history, opcode);
-    }
-}
+static uint64_t counts[NUM_HISTORIES][NUM_OPCODES] = {0};
 
 // Maps common histories to their index in the output file.
 // Uncommon histories are indicated by `-1`.
@@ -139,36 +115,45 @@ static void write_predictor(FILE *fp) {
     fprintf(fp, "\n]");
 }
 
-int main(int argc, char *argv[])
+
+static history_t history;
+
+void mit_predictor_init(void)
 {
-    set_program_name(argv[0]);
-    if (argc < 3) {
-        printf("Usage: %s TRACE-FILENAME PREDICTOR-FILENAME\n",
-               program_name);
-        exit(EXIT_SUCCESS);
-    }
-    const char *trace_filename = argv[1];
-    const char *predictor_filename = argv[2];
-
-    // Read input file.
     init_step_functions();
-    init_counts();
+    history = 0;
+}
 
-    printf("Reading trace file '%s'.\n", trace_filename);
-    FILE *trace = fopen(trace_filename, "rb");
-    if (trace == NULL)
-        die("%cannot not open file %s", trace_filename);
-    read_trace(trace);
-    fclose(trace);
+int mit_predictor_dump(int fd)
+{
+    // Open output stream (for buffering)
+    int dup_fd = dup(fd);
+    if (dup_fd == -1)
+        return -1;
+    FILE *fp = fdopen(dup_fd, "wb");
+    if (fp == NULL)
+        return -1;
 
-    // Write output file.
+    // Write output
     int num_common_histories = index_histories();
-    printf("There are %d common history values.\n", num_common_histories);
-
-    printf("Writing predictor file '%s'.\n", predictor_filename);
-    FILE *fp = fopen(predictor_filename, "wb");
-    if (trace == NULL)
-        die("%cannot not open file %s", predictor_filename);
     write_predictor(fp);
     fclose(fp);
+
+    return num_common_histories;
+}
+
+mit_word mit_predictor_run(mit_state * restrict state)
+{
+    int ret = 0;
+
+    // Run, recording history.
+    do {
+        opcode_t opcode = (int)(state->I & MIT_OPCODE_MASK);
+        if (opcode < NUM_OPCODES) {
+            counts[history][opcode]++;
+            history = step_function(history, opcode);
+        }
+    } while ((ret = mit_single_step(state)) == 0);
+
+    return ret;
 }

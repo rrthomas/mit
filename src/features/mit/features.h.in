@@ -20,6 +20,8 @@ mit_state *mit_auto_extend_init(void);
 int mit_auto_extend_handler(mit_state * restrict S, int error);
 const char *mit_core_dump(mit_state *S);
 mit_word mit_specializer_run(mit_state * restrict S);
-mit_word mit_trace_run(mit_state *state, int trace_fd);
+void mit_predictor_init(void);
+int mit_predictor_dump(int fd);
+mit_word mit_predictor_run(mit_state * restrict S);
 
 #endif

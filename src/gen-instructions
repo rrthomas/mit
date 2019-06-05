@@ -9,22 +9,22 @@
 # RISK.
 
 import sys
-import gzip
 
 from mit_core.vm_data import Instruction, InternalExtraInstruction
 from mit_core.code_util import Code
 from mit_core.instruction_gen import dispatch, gen_case
+from mit_core.opcode_frequency import counts
 
 
 if len(sys.argv) != 2:
-    print("Usage: gen-instructions TRACE-FILENAME", file=sys.stderr)
+    print("Usage: gen-instructions PREDICTOR-FILENAME", file=sys.stderr)
     sys.exit(1)
 
 
-# Read trace
-trace_filename = sys.argv[1]
-with gzip.open(trace_filename, 'rb') as f: trace = f.read()
-
+# Get instruction counts from predictor and compute order
+with open(sys.argv[1]) as f:
+    freqs = counts(Instruction, f)
+instruction_order = [instruction for count, instruction in freqs]
 
 # Write the output file
 code = Code()
@@ -80,7 +80,7 @@ body_code.append('''\
 body_code.extend(dispatch(Instruction, Code(
     '/* Undefined instruction. */',
     'RAISE(MIT_ERROR_INVALID_OPCODE);',
-), trace))
+), instruction_order))
 
 code.append(Code(*['''\
         mit_word error;

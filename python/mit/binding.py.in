@@ -208,6 +208,11 @@ libmitfeatures.mit_specializer_run.restype = c_word
 libmitfeatures.mit_specializer_run.argtypes = [c_void_p]
 libmitfeatures.mit_specializer_run.errcheck = mit_error
 
-libmitfeatures.mit_trace_run.restype = c_word
-libmitfeatures.mit_trace_run.argtypes = [c_void_p, c_void_p]
-libmitfeatures.mit_trace_run.errcheck = mit_error
+libmitfeatures.mit_predictor_init.restype = None
+libmitfeatures.mit_predictor_init.argtypes = None
+
+libmitfeatures.mit_predictor_dump.argtypes = [c_int]
+
+libmitfeatures.mit_predictor_run.restype = c_word
+libmitfeatures.mit_predictor_run.argtypes = [c_void_p]
+libmitfeatures.mit_predictor_run.errcheck = mit_error

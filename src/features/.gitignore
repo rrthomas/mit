@@ -1,14 +1,11 @@
 /.dirstamp
 /autom4te.cache
-/instructions_trace
-/instructions_predictor.json
 /instructions_labels.pickle
 /config.log
 /config.status
 /type-sizes
 /type-sizes.ac
 /extra-instructions.c
-/gen-predictor
 /specializer.c
 /specializer.h
 /type_sizes.py
