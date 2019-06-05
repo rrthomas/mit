@@ -89,26 +89,36 @@ if UNDEFINED < (1 << opcode_bit):
 
 # Tests
 assert(len(test) == len(result))
-error = 0
-for i, pc in enumerate(test):
-    STACK_DEPTH.set(0)    # reset stack pointer
 
-    print("Test {}".format(i + 1))
-    I.set(0)
-    PC.set(pc)
-    res = 0
-    while res == 0:
+def step_trace():
+    while True:
+        step(trace=True)
+
+error = 0
+def do_tests(run_fn):
+    global error
+    for i, pc in enumerate(test):
+        STACK_DEPTH.set(0)    # reset stack pointer
+
+        print("Test {}".format(i + 1))
+        I.set(0)
+        PC.set(pc)
+        res = 0
         try:
-            res = 0
-            step(trace=True)
+            run_fn()
         except ErrorCode as e:
             res = e.args[0]
 
-    if result[i] != res:
-         print("Error in errors tests: test {} failed; PC = {}".format(i + 1, PC.get()))
-         print("Error code is {}; should be {}".format(res, result[i]))
-         error += 1
-    print()
+        if result[i] != res:
+             print("Error in errors tests: test {} failed; PC = {}".format(i + 1, PC.get()))
+             print("Error code is {}; should be {}".format(res, result[i]))
+             error += 1
+        print()
+
+print("Running tests with single_step")
+do_tests(step_trace)
+print("Running tests with run (optimized)")
+do_tests(run)
 
 # Try to write to an invalid stack location (can't do this with virtual code)
 try:
