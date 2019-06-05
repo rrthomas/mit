@@ -121,6 +121,10 @@ class State:
             instruction.name: instruction
             for instruction in LibInstruction
         })
+        globals_dict.update({
+            lib.library.__name__: lib.library
+            for lib in LibInstruction
+        })
 
     def register_args(self, *args):
         argc = len(args)
@@ -139,13 +143,14 @@ class State:
         libmitfeatures.mit_extra_instruction(self.state)
         self.registers["I"].set(0) # Skip to next instruction
 
-    def run(self, args=None, trace_file=None):
+    def run(self, args=None, trace_file=None, optimize=True):
         '''
         Run until `halt` or error.
 
          - args - list of str - command-line arguments to register.
          - trace_file - file - if not none, a file object to which to write an
            instruction trace.
+         - optimize - bool - if True, run with optimization.
         '''
         if args is None:
             args = []
@@ -155,6 +160,8 @@ class State:
             try:
                 if trace_file is not None:
                     libmitfeatures.mit_trace_run(self.state, trace_file.fileno())
+                elif optimize == True:
+                    libmitfeatures.mit_specializer_run(self.state)
                 else:
                     libmit.mit_run(self.state)
             except ErrorCode as e:

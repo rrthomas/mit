@@ -12,11 +12,10 @@ import sys, pickle, textwrap
 
 from mit_core.code_util import Code
 from mit_core.vm_data import Instruction
+from mit_core.params import opcode_bit
 from specializer import CacheState, gen_case
 from path import SpecializedInstruction, State
 
-
-MIT_OPCODE_BIT = 8 # TODO: Get this from the same source as "mit.h" does.
 
 # Load the labels file, which tells us what control-flow graph to generate.
 if len(sys.argv) != 2:
@@ -86,7 +85,7 @@ class Label:
             instruction = state.specialize_instruction(Instruction[i_name])
             assert opcode_bits is not None
             opcode_value |= instruction.opcode << opcode_bits
-            opcode_bits += MIT_OPCODE_BIT
+            opcode_bits += opcode_bit
             if instruction.terminal:
                 opcode_bits = None # Must match all bits.
             state = state.step(instruction)

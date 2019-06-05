@@ -1,0 +1,77 @@
+#!/usr/bin/env python3
+'''
+Brainfuck compiler targeting the Mit VM.
+
+https://github.com/rrthomas/mit
+https://en.wikipedia.org/wiki/Brainfuck#Commands
+
+Copyright (c) 2019 Alistair Turnbull <apt1002@mupsych.org>
+
+This file is distributed under the MIT/X11 License.
+
+THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
+RISK.
+
+'''
+
+import sys, mit
+mit.State().globalize(globals())
+
+
+if len(sys.argv) != 2:
+    print('''\
+Usage: brainfuck OBJECT-FILENAME
+
+Brainfuck source is read from standard input.''', file=sys.stderr)
+    sys.exit(1)
+object_filename = sys.argv[1]
+
+def inc(): ass(LIT_1); ass(ADD)
+def dec(): ass(LIT_1); ass(NEGATE); ass(ADD)
+def dup(): ass(LIT_0); ass(DUP)
+def over(): ass(LIT_1); ass(DUP)
+def loadb(): ass(LIT_0); ass(LOAD)
+def storeb(): ass(LIT_0); ass(STORE)
+
+try:
+    lit(0) # Data pointer.
+    stack = [] # [(start of loop, word to patch)]
+    for c in sys.stdin.read():
+        if c == '>': inc()
+        elif c == '<': dec()
+        elif c == '+': dup(); loadb(); inc(); over(); storeb()
+        elif c == '-': dup(); loadb(); dec(); over(); storeb()
+        elif c == '.':
+            dup() # buffer
+            ass(LIT_1) # length
+            lit(LibC.STDOUT); ass_extra(LIBC, type=BRANCH)
+            lit(LibC.WRITE); ass_extra(LIBC, type=BRANCH)
+            ass(LIT_1); ass(POP)
+        elif c == ',':
+            dup() # buffer
+            ass(LIT_1) # length
+            lit(LibC.STDIN); ass_extra(LIBC, type=BRANCH)
+            lit(LibC.READ); ass_extra(LIBC, type=BRANCH)
+            ass(LIT_1); ass(POP)
+        elif c == '[':
+            loop = label()
+            dup()
+            loadb()
+            lit(0xDEADBEEF)
+            patch = assembler.pc - mit.word_bytes
+            ass(BRANCHZ)
+            stack.append((loop, patch))
+        elif c == ']':
+            loop, patch = stack.pop()
+            lit(loop)
+            ass(BRANCH)
+            M_word[patch] = label()
+    ass_extra(HALT)
+    M_word[mit.word_bytes] = label() # Patch data pointer.
+except mit.ErrorCode as e:
+    if e.args[0] == mit.MitError.INVALID_MEMORY_WRITE:
+        sys.exit(2)
+    else:
+        sys.exit(1)
+
+save(object_filename)

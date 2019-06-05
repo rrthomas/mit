@@ -63,4 +63,4 @@ before_install:
 script:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install help2man; fi
   - ./bootstrap
-  - ./configure --enable-silent-rules && make && sudo make install && make check && if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then make distcheck; fi
+  - ./configure --enable-optional-tests --enable-silent-rules && make && sudo make install && make check && if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then make distcheck; fi

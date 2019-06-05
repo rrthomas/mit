@@ -1,0 +1,48 @@
+#!/usr/bin/env python3
+# Run a brainfuck test.
+#
+# (c) Mit authors 2019
+#
+# The package is distributed under the MIT/X11 License.
+#
+# THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
+# RISK.
+
+import io
+import os
+import sys
+import subprocess
+import re
+
+from mit.state import State
+
+from redirect_stdout import stdout_redirector
+
+
+if len(sys.argv) != 2:
+    print("Usage: run-brainfuck-test BRAINFUCK-FILENAME", file=sys.stderr)
+    sys.exit(1)
+brainfuck_filename = sys.argv[1]
+
+object_filename = re.sub(".bf$", ".obj", os.path.basename(brainfuck_filename))
+with open(brainfuck_filename, 'rb') as f:
+    returncode = subprocess.run(
+        [os.environ['PYTHON'], os.path.join(os.environ['srcdir'], './brainfuck'), object_filename],
+        input=f.read(),
+    ).returncode
+    if returncode == 2:
+        sys.exit(77) # Program does not fit in Mit's memory; signal test skip
+    elif returncode != 0:
+        raise
+VM = State()
+VM.load(object_filename)
+f = io.BytesIO()
+with stdout_redirector(f):
+    VM.run()
+output = f.getvalue()
+correct_file = re.sub(".bf$", ".correct", brainfuck_filename)
+correct = open(correct_file, "rb").read()
+os.remove(object_filename)
+
+print("Output:\n{}\n\nCorrect:\n{}".format(output,correct))
+assert(output == correct)

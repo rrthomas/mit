@@ -224,7 +224,7 @@ class Assembler:
          - opcode - int - extra instruction opcode
          - type - int - extra instruction type (`CALL` [default] or `BRANCH`)
         '''
-        self.extended_instruction((opcode << opcode_bit) | type)
+        self.extended_instruction((int(opcode) << opcode_bit) | type)
 
     def lit(self, value):
         self.instruction(LIT)

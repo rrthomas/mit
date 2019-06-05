@@ -51,11 +51,20 @@ code.append('')
 code.extend(enum_to_python(vm_data.InternalExtraInstruction))
 code.append('')
 
-code.extend(enum_to_python(extra_instructions.LibInstruction))
-code.append('')
+lib_code = Code('''\
+    @unique
+    class LibInstruction(Enum):
+        def __init__(self, library, opcode):
+            self.library = library
+            self.opcode = opcode
 
+        def __int__(self):
+            return self.opcode''')
+lib_code.append('')
 for lib in extra_instructions.LibInstruction:
+    lib_code.append(Code('{} = ({}, {:#x})'.format(lib.name, lib.library.__name__, lib.opcode)))
     code.extend(enum_to_python(lib.library))
     code.append('')
+code.extend(lib_code)
 
 print(code)
