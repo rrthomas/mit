@@ -16,10 +16,16 @@
 #define MIT_FEATURES
 
 mit_word mit_extra_instruction(mit_state * restrict S);
+
 mit_state *mit_auto_extend_init(void);
 int mit_auto_extend_handler(mit_state * restrict S, int error);
+
 const char *mit_core_dump(mit_state *S);
+
 mit_word mit_specializer_run(mit_state * restrict S);
+
+// N.B. The predictor is not re-entrant: only one instance may be in use at
+// a time in a given process.
 void mit_predictor_init(void);
 int mit_predictor_dump(int fd);
 mit_word mit_predictor_run(mit_state * restrict S);
