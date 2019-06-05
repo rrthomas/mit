@@ -253,12 +253,12 @@ If an invalid or unaligned address is accessed when loading {\tt instruction}, t
 \label{control}
 
 These instructions implement unconditional and conditional branches, and subroutine
-call and return (subroutine return is {\tt branch}):
+call and return (subroutine return is {\tt jump}):
 
 \nopagebreak
 \begin{description}
-\inst{branch}{a-addr —}{If {\tt instruction} is not $0$, raise error $1$. Set {\tt pc} to \spic{a-addr}. Perform the action of {\tt next}.}
-\inst{branchz}{flag a-addr —}{If \spic{flag} is false then set {\tt pc} to \spic{a-addr} and perform the action of {\tt next}.}
+\inst{jump}{a-addr —}{If {\tt instruction} is not $0$, raise error $1$. Set {\tt pc} to \spic{a-addr}. Perform the action of {\tt next}.}
+\inst{jumpz}{flag a-addr —}{If \spic{flag} is false then set {\tt pc} to \spic{a-addr} and perform the action of {\tt next}.}
 \inst{call}{\aaddr1 — \aaddr2}{If {\tt instruction} is not $0$, raise error $1$. Exchange {\tt pc} with the top stack value. Perform the action of {\tt next}.}
 \end{description}
 
@@ -266,9 +266,9 @@ call and return (subroutine return is {\tt branch}):
 \subsection{Extra instructions}
 \label{extra}
 
-Since {\tt instruction} must be $0$ when {\tt next} is performed, the rest of an instruction word following {\tt next}, {\tt branch} and {\tt call} must normally be all zero bits.
+Since {\tt instruction} must be $0$ when {\tt next} is performed, the rest of an instruction word following {\tt next}, {\tt jump} and {\tt call} must normally be all zero bits.
 
-Non-zero values following {\tt next} and {\tt call} are reserved for the Mit specification; non-zero values following {\tt branch} may be used by implementations to implement extra functionality.
+Non-zero values following {\tt next} and {\tt call} are reserved for the Mit specification; non-zero values following {\tt jump} may be used by implementations to implement extra functionality.
 
 When an extra instruction is performed, the original instruction is considered to have completed executing.
 
@@ -397,8 +397,8 @@ Table~\ref{opcodetable} lists the instruction opcodes in numerical order. Table~
 \begin{tabular}{*{2}{cc}} \toprule
 \bf Opcode & \bf Instruction & \bf Opcode & \bf Instruction \\ \midrule
 \opcodetbl{0}{next}			{10}{eq}
-\opcodetbl{1}{branch}			{11}{lt}
-\opcodetbl{2}{branchz}			{12}{ult}
+\opcodetbl{1}{jump}			{11}{lt}
+\opcodetbl{2}{jumpz}			{12}{ult}
 \opcodetbl{3}{call}			{13}{negate}
 \opcodetbl{4}{pop}			{14}{add}
 \opcodetbl{5}{dup}			{15}{mul}

@@ -166,7 +166,7 @@ class Feature:
 Feature(# Extra instructions
     handler=Code('''\
         case MIT_ERROR_INVALID_OPCODE:
-            if ((S->I & MIT_OPCODE_MASK) == MIT_INSTRUCTION_BRANCH) {
+            if ((S->I & MIT_OPCODE_MASK) == MIT_INSTRUCTION_JUMP) {
                 error = mit_extra_instruction(S);
                 if (error == 0) {
                     S->I = 0;

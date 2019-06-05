@@ -44,14 +44,14 @@ try:
         elif c == '.':
             dup() # buffer
             ass(LIT_1) # length
-            lit(LibC.STDOUT); ass_extra(LIBC, type=BRANCH)
-            lit(LibC.WRITE); ass_extra(LIBC, type=BRANCH)
+            lit(LibC.STDOUT); ass_extra(LIBC, type=JUMP)
+            lit(LibC.WRITE); ass_extra(LIBC, type=JUMP)
             ass(LIT_1); ass(POP)
         elif c == ',':
             dup() # buffer
             ass(LIT_1) # length
-            lit(LibC.STDIN); ass_extra(LIBC, type=BRANCH)
-            lit(LibC.READ); ass_extra(LIBC, type=BRANCH)
+            lit(LibC.STDIN); ass_extra(LIBC, type=JUMP)
+            lit(LibC.READ); ass_extra(LIBC, type=JUMP)
             ass(LIT_1); ass(POP)
         elif c == '[':
             loop = label()
@@ -59,12 +59,12 @@ try:
             loadb()
             lit(0xDEADBEEF)
             patch = assembler.pc - mit.word_bytes
-            ass(BRANCHZ)
+            ass(JUMPZ)
             stack.append((loop, patch))
         elif c == ']':
             loop, patch = stack.pop()
             lit(loop)
-            ass(BRANCH)
+            ass(JUMP)
             M_word[patch] = label()
     ass_extra(HALT)
     M_word[mit.word_bytes] = label() # Patch data pointer.

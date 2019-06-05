@@ -47,13 +47,13 @@ class Instruction(InstructionEnum):
         DO_NEXT;'''
     ), True)
 
-    BRANCH = (0x1, ['addr'], [], Code('''\
+    JUMP = (0x1, ['addr'], [], Code('''\
         S->PC = (mit_uword)addr;
         CHECK_ALIGNED(S->PC);
         DO_NEXT;'''
     ), True)
 
-    BRANCHZ = (0x2, ['flag', 'addr'], [], Code('''\
+    JUMPZ = (0x2, ['flag', 'addr'], [], Code('''\
         if (flag == 0) {
             S->PC = (mit_uword)addr;
             CHECK_ALIGNED(S->PC);
