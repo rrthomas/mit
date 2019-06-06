@@ -195,35 +195,43 @@ static int load(mit_word * restrict memory, mit_uword memory_size,
 {
     if (unlikely(addr >= memory_size))
         return MIT_ERROR_INVALID_MEMORY_READ;
-    if (unlikely(!is_aligned(addr, size)))
-        return MIT_ERROR_UNALIGNED_ADDRESS;
 
     mit_word val;
     switch (size) {
     case 0:
+        if (unlikely(!is_aligned(addr, size)))
+            return MIT_ERROR_UNALIGNED_ADDRESS;
         val = (mit_uword)*((uint8_t *)memory + addr);
         break;
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wcast-align"
     case 1:
+        if (unlikely(!is_aligned(addr, size)))
+            return MIT_ERROR_UNALIGNED_ADDRESS;
         val = (mit_uword)*((uint16_t *)((uint8_t *)memory + addr));
         if (MIT_ENDISM != MIT_HOST_ENDISM)
             val = bswap_16(val);
         break;
 #if MIT_SIZE_WORD >= 2
     case 2:
+        if (unlikely(!is_aligned(addr, size)))
+            return MIT_ERROR_UNALIGNED_ADDRESS;
         val = (mit_uword)*((uint32_t *)((uint8_t *)memory + addr));
         if (MIT_ENDISM != MIT_HOST_ENDISM)
             val = bswap_32(val);
         break;
 #if MIT_SIZE_WORD >= 3
     case 3:
+        if (unlikely(!is_aligned(addr, size)))
+            return MIT_ERROR_UNALIGNED_ADDRESS;
         val = (mit_uword)*((uint64_t *)((uint8_t *)memory + addr));
         if (MIT_ENDISM != MIT_HOST_ENDISM)
             val = bswap_64(val);
         break;
 #if MIT_SIZE_WORD >= 4
     case 4:
+        if (unlikely(!is_aligned(addr, size)))
+            return MIT_ERROR_UNALIGNED_ADDRESS;
         val = (mit_uword)*((unsigned __int128 *)((uint8_t *)memory + addr));
         if (MIT_ENDISM != MIT_HOST_ENDISM)
             val = bswap_128(val);
@@ -245,34 +253,42 @@ static int store(mit_word * restrict memory, mit_uword memory_size,
 {
     if (unlikely(addr >= memory_size))
         return MIT_ERROR_INVALID_MEMORY_WRITE;
-    if (unlikely(!is_aligned(addr, size)))
-        return MIT_ERROR_UNALIGNED_ADDRESS;
 
     switch (size) {
     case 0:
+        if (unlikely(!is_aligned(addr, size)))
+            return MIT_ERROR_UNALIGNED_ADDRESS;
         ((uint8_t *)memory)[addr] = (uint8_t)val;
         break;
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wcast-align"
     case 1:
+        if (unlikely(!is_aligned(addr, size)))
+            return MIT_ERROR_UNALIGNED_ADDRESS;
         if (MIT_ENDISM != MIT_HOST_ENDISM)
             val = bswap_16(val);
         *((uint16_t *)((uint8_t *)memory + addr)) = (uint16_t)val;
         break;
 #if MIT_SIZE_WORD >= 2
     case 2:
+        if (unlikely(!is_aligned(addr, size)))
+            return MIT_ERROR_UNALIGNED_ADDRESS;
         if (MIT_ENDISM != MIT_HOST_ENDISM)
             val = bswap_32(val);
         *((uint32_t *)((uint8_t *)memory + addr)) = (uint32_t)val;
         break;
 #if MIT_SIZE_WORD >= 3
     case 3:
+        if (unlikely(!is_aligned(addr, size)))
+            return MIT_ERROR_UNALIGNED_ADDRESS;
         if (MIT_ENDISM != MIT_HOST_ENDISM)
             val = bswap_64(val);
         *((uint64_t *)((uint8_t *)memory + addr)) = (uint64_t)val;
         break;
 #if MIT_SIZE_WORD >= 4
     case 4:
+        if (unlikely(!is_aligned(addr, size)))
+            return MIT_ERROR_UNALIGNED_ADDRESS;
         if (MIT_ENDISM != MIT_HOST_ENDISM)
             val = bswap_128(val);
         *((unsigned __int128 *)((uint8_t *)memory + addr)) = (unsigned __int128)val;
