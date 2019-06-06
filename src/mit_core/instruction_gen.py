@@ -335,7 +335,7 @@ def check_underflow(num_pops):
     '''
     if num_pops <= 0: return Code()
     return Code(
-        'if ((S->STACK_DEPTH < (mit_uword)({num_pops}))) {{',
+        'if (unlikely(S->STACK_DEPTH < (mit_uword)({num_pops}))) {{',
         Code (
             'S->BAD = {num_pops} - 1;',
             'RAISE(MIT_ERROR_INVALID_STACK_READ);',
@@ -354,7 +354,7 @@ def check_overflow(num_pops, num_pushes):
     depth_change = num_pushes - num_pops
     if depth_change <= 0: return Code()
     return Code(
-        'if (((S->stack_size - S->STACK_DEPTH) < (mit_uword)({depth_change}))) {{',
+        'if (unlikely((S->stack_size - S->STACK_DEPTH) < (mit_uword)({depth_change}))) {{',
         Code(
             'S->BAD = ({depth_change}) - (S->stack_size - S->STACK_DEPTH);',
             'RAISE(MIT_ERROR_STACK_OVERFLOW);',
@@ -380,7 +380,9 @@ def gen_case(instruction):
         )
     code = Code()
     if instruction.terminal:
-        code.append('if (S->I != 0) RAISE(MIT_ERROR_INVALID_OPCODE);')
+        code.append(
+            'if (unlikely(S->I != 0)) RAISE(MIT_ERROR_INVALID_OPCODE);'
+        )
     if effect is not None:
         # Load the arguments into C variables.
         code.extend(effect.declare_vars())
