@@ -87,7 +87,7 @@ def store_stack(value, depth=0, type='mit_word'):
 
 def pop_stack(name, type='mit_word'):
     code = Code()
-    code.extend(check_underflow(type_words(type)))
+    code.extend(check_underflow(Size(type_words(type))))
     code.extend(load_stack(name, type=type))
     code.append(
         'S->STACK_DEPTH -= {};'.format(type_words(type)),
@@ -96,7 +96,7 @@ def pop_stack(name, type='mit_word'):
 
 def push_stack(value, type='mit_word'):
     code = Code()
-    code.extend(check_overflow(type_words(type), 0))
+    code.extend(check_overflow(Size(0), Size(type_words(type))))
     code.extend(store_stack(value, type=type))
     code.append(
         'S->STACK_DEPTH += {};'.format(type_words(type)),
@@ -338,36 +338,61 @@ def check_underflow(num_pops):
     '''
     Returns a Code to check that the stack contains enough items to
     pop the specified number of items.
-     - num_pops - Size
+     - num_pops - Size, with non-negative `count`.
     '''
-    if num_pops <= 0: return Code()
+    assert isinstance(num_pops, Size)
+    assert num_pops >= 0, num_pops
+    if num_pops == 0: return Code()
+    tests = []
+    tests.append(
+        'unlikely(S->STACK_DEPTH < (mit_uword)({}))'
+        .format(num_pops.size)
+    )
+    if num_pops.count == 1:
+        tests.append(
+            'unlikely(S->STACK_DEPTH - (mit_uword)({}) < (mit_uword)(COUNT))'
+            .format(num_pops.size)
+        )
     return Code(
-        'if (unlikely(S->STACK_DEPTH < (mit_uword)({num_pops}))) {{',
-        Code (
+        'if ({}) {{'.format(' || '.join(tests)),
+        Code(
             'S->BAD = {num_pops} - 1;',
             'RAISE(MIT_ERROR_INVALID_STACK_READ);',
-        ),
-        '}}',
-    ).format(num_pops=num_pops)
+        ).format(num_pops=num_pops),
+        '}',
+    )
 
 def check_overflow(num_pops, num_pushes):
     '''
     Returns a Code to check that the stack contains enough space to
     push `num_pushes` items, given that `num_pops` items will first be
-    popped.
+    popped successfully.
      - num_pops - Size.
      - num_pushes - Size.
+    `num_pops` and `num_pushes` must both be variadic or both not.
     '''
+    assert isinstance(num_pops, Size)
+    assert isinstance(num_pushes, Size)
+    assert num_pops >= 0
+    assert num_pushes >= 0
     depth_change = num_pushes - num_pops
     if depth_change <= 0: return Code()
-    return Code(
-        'if (unlikely((S->stack_size - S->STACK_DEPTH) < (mit_uword)({depth_change}))) {{',
-        Code(
-            'S->BAD = ({depth_change}) - (S->stack_size - S->STACK_DEPTH);',
-            'RAISE(MIT_ERROR_STACK_OVERFLOW);',
-        ),
-        '}}',
-    ).format(depth_change=depth_change)
+    code = Code()
+    if depth_change.count > 0:
+        code.append('''\
+            if (unlikely(COUNT + {} < COUNT)) {{
+                'S->BAD = MIT_UWORD_MAX;',
+                'RAISE(MIT_ERROR_STACK_OVERFLOW);',
+            }}
+        '''.format(depth_change.size))
+    code.append('''\
+        if (unlikely(S->stack_size - S->STACK_DEPTH < {depth_change})) {{
+            S->BAD = ({depth_change}) - (S->stack_size - S->STACK_DEPTH);
+            RAISE(MIT_ERROR_STACK_OVERFLOW);
+        }}'''.format(depth_change=depth_change),
+    )
+    return code
+
 
 def gen_case(instruction):
     '''
@@ -395,8 +420,11 @@ def gen_case(instruction):
         code.extend(effect.declare_vars())
         count = effect.args.by_name.get('COUNT')
         if count is not None:
-            # If we have COUNT, check its stack position is valid, and load it
-            code.extend(check_underflow(count.depth + count.size))
+            # If we have COUNT, check its stack position is valid, and load it.
+            # We actually check effects.args.size.size (more than we need),
+            # because this check will be generated anyway by the next
+            # check_underflow call, so the compiler can elide one check.
+            code.extend(check_underflow(Size(effect.args.size.size)))
             code.extend(count.load())
         code.extend(check_underflow(effect.args.size))
         code.extend(check_overflow(effect.args.size, effect.results.size))
