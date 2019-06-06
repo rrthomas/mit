@@ -339,7 +339,7 @@ int mit_push_stack(mit_state *S, mit_word val);
 
 // Unchecked macro: UNSAFE!
 #define UNCHECKED_STACK(stack, stack_depth, pos) \
-    ((stack) + (stack_depth) - (pos) - 1)
+    ((stack) + (stack_depth) - (mit_uword)(pos) - 1)
 
 // Inline functions
 #pragma GCC diagnostic push
