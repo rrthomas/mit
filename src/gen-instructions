@@ -106,7 +106,7 @@ code.append(Code(*['''\
         }'''
     ),
     '''\
-    } while (run == true && error == 0);
+    } while (likely(run == true) && likely(error == 0));
 
     *real_S = state;
     return error;''',
