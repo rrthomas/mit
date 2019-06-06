@@ -250,7 +250,7 @@ LibMit = InstructionEnum('LibMit', mit_lib)
 class Library(InstructionEnum):
     '''Wrap an Instruction enumeration as a library.'''
     def __init__(self, opcode, library, includes):
-        super().__init__(opcode, None, None, Code(*[
+        super().__init__(opcode, None, None, Code(
             '''\
             {
                 mit_word function;''',
@@ -260,7 +260,7 @@ class Library(InstructionEnum):
                 if (ret != 0)
                     RAISE(ret);
             }}'''.format(self.name.lower())
-        ]))
+        ))
         self.library = library
         self.includes = includes
 

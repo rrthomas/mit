@@ -89,14 +89,14 @@ class Label:
             if instruction.terminal:
                 opcode_bits = None # Must match all bits.
             state = state.step(instruction)
-            c_code.extend(Code(*['''\
+            c_code.extend(Code('''\
                 initial_PC = S->PC;
                 initial_I = S->I;
                 S->I >>= MIT_OPCODE_BIT;''',
                 '{{ // {}'.format(instruction.name),
-                gen_case(instruction, cache_state),
+                    gen_case(instruction, cache_state),
                 '}',
-            ]))
+            ))
         c_code.extend(label_by_index(self.if_correct).goto(cache_state))
         pops = -state.stack_min
         pushes = state.stack_max - state.stack_min
