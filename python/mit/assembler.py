@@ -34,7 +34,7 @@ internal_extra_mnemonic = {
     for instruction in InternalExtraInstruction
 }
 external_extra_mnemonic = {
-    instruction.value: instruction.name
+    instruction.opcode: instruction.name
     for instruction in LibInstruction
 }
 
