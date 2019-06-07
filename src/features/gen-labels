@@ -163,8 +163,8 @@ print("Choosing multi-guesses")
 # We cannot guess beyond such an instruction.
 GUESS_LIMITING = frozenset([
     Instruction.NEXT,
-    Instruction.BRANCH,
-    Instruction.BRANCHZ,
+    Instruction.JUMP,
+    Instruction.JUMPZ,
     Instruction.CALL,
 ])
 

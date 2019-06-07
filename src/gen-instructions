@@ -82,11 +82,11 @@ body_code.extend(dispatch(Instruction, Code(
     'RAISE(MIT_ERROR_INVALID_OPCODE);',
 ), instruction_order))
 
-code.append(Code(*['''\
+code.append(Code('''\
         mit_word error;
         mit_uword initial_PC, initial_I;
         do {''',
-            body_code]))
+            body_code))
 code.append('''
     error:
         if (error != 0) {

@@ -37,7 +37,7 @@ test.append(label())
 result.append(MitError.INVALID_MEMORY_READ)
 print("Test {}: PC = {}".format(len(test), test[-1]))
 lit(VM.memory_size * word_bytes + word_bytes)
-ass(BRANCH)
+ass(JUMP)
 
 # Try to load from an invalid address
 test.append(label())

@@ -22,7 +22,7 @@ from .opcodes import (
 NEXT = Instruction.NEXT
 LIT = Instruction.LIT
 LIT_PC_REL = Instruction.LIT_PC_REL
-BRANCH = Instruction.BRANCH
+JUMP = Instruction.JUMP
 CALL = Instruction.CALL
 
 mnemonic = {
@@ -106,7 +106,7 @@ class Disassembler:
                         comment = ' ({})'.format(
                             internal_extra_mnemonic.get(self.i, invalid_comment)
                         )
-                    elif opcode == BRANCH:
+                    elif opcode == JUMP:
                         comment = ' ({})'.format(
                             external_extra_mnemonic.get(self.i, invalid_comment)
                         )
@@ -218,11 +218,11 @@ class Assembler:
 
     def extra_instruction(self, opcode, type=CALL):
         '''
-        Appends an extra instruction opcode consisting of a CALL or BRANCH with
+        Appends an extra instruction opcode consisting of a CALL or JUMP with
         a code in the remainder of the instruction word.
 
          - opcode - int - extra instruction opcode
-         - type - int - extra instruction type (`CALL` [default] or `BRANCH`)
+         - type - int - extra instruction type (`CALL` [default] or `JUMP`)
         '''
         self.extended_instruction((int(opcode) << opcode_bit) | type)
 
