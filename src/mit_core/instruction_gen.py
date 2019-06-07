@@ -16,7 +16,7 @@ import functools
 from .code_util import Code, disable_warnings, c_symbol
 
 
-type_wordses = {'mit_word': 1} # Enough for the core
+type_wordses = {'mit_word': 1, 'mit_uword': 1} # Enough for the core
 
 def type_words(type):
     '''

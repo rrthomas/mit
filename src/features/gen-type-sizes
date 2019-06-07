@@ -24,8 +24,7 @@ ac_includes_default="\\
 for lib in LibInstruction:
     code.append(re.sub('"', '\\"', lib.includes))
 code.append('"')
-for type in list(set(['mit_word'] +
-                     [type for lib in LibInstruction
+for type in list(set([type for lib in LibInstruction
                       for type in lib.types()])):
     code.append('AC_CHECK_SIZEOF([{}])'.format(type))
 
