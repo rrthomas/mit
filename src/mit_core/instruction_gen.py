@@ -13,18 +13,25 @@ The main entry point is dispatch().
 
 import functools
 
-from .code_util import Code, disable_warnings, c_symbol
+from .code_util import Code, disable_warnings, c_symbol, unrestrict
 
 
 type_wordses = {'mit_word': 1, 'mit_uword': 1} # Enough for the core
 
+# Set to 0 to allow type_words to work without types information
+TYPE_SIZE_UNKNOWN = None
 def type_words(type):
     '''
-    Return the number of words occupied by 'type', or -1 if unknown: this
-    can be used in numeric calculations to generate C, but will cause
-    compilation errors if it is erroneously compiled.
+    Return the number of words occupied by 'type', or `TYPE_SIZE_UNKNOWN` if
+    unknown: `TYPE_SIZE_UNKNOWN` can be set to a number to allow the
+    generation of (incorrect!) code before the type sizes are known.
     '''
-    return type_wordses.get(type, -1)
+    type = unrestrict(type)
+    ret = type_wordses.get(type, TYPE_SIZE_UNKNOWN)
+    if ret == None:
+        import sys
+        print('type_words: "{}"'.format(type), type_wordses, file=sys.stderr)
+    return ret
 
 def load_stack(name, depth=0, type='mit_word'):
     '''

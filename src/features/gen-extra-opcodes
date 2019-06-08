@@ -9,6 +9,8 @@
 # RISK.
 
 from mit_core.code_util import Code, enum_to_c
+import mit_core.instruction_gen
+mit_core.instruction_gen.TYPE_SIZE_UNKNOWN = 0
 
 from extra_instructions import *
 

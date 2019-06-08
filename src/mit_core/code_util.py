@@ -112,3 +112,7 @@ class {}(IntEnum):'''.format(class_name))
             value=member.value,
         )))
     return code
+
+def unrestrict(type):
+    '''Return C type without any 'restrict'.'''
+    return re.sub('restrict', '', type).strip()
