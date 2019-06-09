@@ -4,7 +4,7 @@
 # This file is in the public domain.
 
 import sys
-import os.path
+import os
 
 import mit@PACKAGE_SUFFIX@
 

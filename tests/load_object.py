@@ -7,7 +7,7 @@
 # THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 # RISK.
 
-import os.path
+import os
 
 from mit import *
 VM = State()
