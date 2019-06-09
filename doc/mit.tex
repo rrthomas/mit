@@ -288,6 +288,7 @@ These instructions manage the stack (see also section~\ref{stackdepth}):
 
 
 \subsection{Logic and shifts}
+\label{logicshifts}
 
 Logic functions:
 
@@ -312,12 +313,10 @@ Shifts:
 
 \subsection{Comparison}
 
-These words compare two numbers (or, for equality tests, any two words) on the
-stack, returning a flag:
+These words compare two numbers on the stack, returning a flag (for equality, use {\tt xor}; see section~\ref{logicshifts}):
 
 \nopagebreak
 \begin{description}
-\inst{eq}{\x1 \x2 — flag}{\spic{flag} is $1$ if and only if \x1 is bit-for-bit the same as \x2.}
 \inst{lt}{\n1 \n2 — flag}{\spic{flag} is $1$ if and only if \n1 is less than \n2.}
 \inst{ult}{\U1 \U2 — flag}{\spic{flag} is $1$ if and only if \U1 is less than \U2.}
 \end{description}
@@ -406,7 +405,7 @@ Table~\ref{opcodetable} lists the instruction opcodes in numerical order. Table~
 \begin{center}
 \begin{tabular}{*{2}{cc}} \toprule
 \bf Opcode & \bf Instruction & \bf Opcode & \bf Instruction \\ \midrule
-\opcodetbl{0}{next}			{10}{eq}
+\opcodetbl{0}{next}			{10}{\rm (undefined)}
 \opcodetbl{1}{jump}			{11}{lt}
 \opcodetbl{2}{jumpz}			{12}{ult}
 \opcodetbl{3}{call}			{13}{negate}

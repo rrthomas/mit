@@ -116,10 +116,6 @@ class Instruction(InstructionEnum):
         three = 3;'''
     ))
 
-    EQ = (0x10, ['a', 'b'], ['flag'], Code('''\
-        flag = a == b;'''
-    ))
-
     LT = (0x11, ['a', 'b'], ['flag'], Code('''\
         flag = a < b;'''
     ))

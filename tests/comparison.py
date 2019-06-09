@@ -30,7 +30,6 @@ equality_pairs = [(237, 237),  (1, -1)]
 correct = []
 
 assemble_tests(less_than_pairs, [0, 1, 0, 1], LT)
-assemble_tests(equality_pairs, [1, 0], EQ)
 assemble_tests(less_than_pairs, [0, 1, 0, 0], ULT)
 
 run_test("comparison", VM, correct)
