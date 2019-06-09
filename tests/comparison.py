@@ -1,4 +1,4 @@
-# Test the comparison operators. We only test simple cases here, assuming
+# Test the comparison instructions. We only test simple cases here, assuming
 # that the C compiler's comparison routines will work for other cases.
 #
 # (c) Mit authors 1994-2019

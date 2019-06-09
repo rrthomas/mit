@@ -1,4 +1,4 @@
-# Test the memory operators. Also uses previously tested instructions.
+# Test the memory instructions. Also uses previously tested instructions.
 # See errors.py for address error handling tests.
 #
 # (c) Mit authors 1994-2019

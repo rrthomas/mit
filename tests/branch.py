@@ -1,6 +1,5 @@
-# Test the branch instructions and LIT_PC_REL. Also uses instructions tested
-# by earlier tests.
-# See errors.py for address error handling tests.
+# Test the branch instructions and `lit_pc_rel`. Also uses instructions
+# tested by earlier tests. See errors.py for address error handling tests.
 # The test program contains an infinite loop, but this is only executed
 # once.
 #

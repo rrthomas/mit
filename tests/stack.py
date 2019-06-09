@@ -1,4 +1,4 @@
-# Test the stack operators.
+# Test the stack instructions.
 #
 # (c) Mit authors 1994-2019
 #

@@ -1,4 +1,4 @@
-# Test single_step and NEXT.
+# Test single_step() and `next`.
 #
 # (c) Mit authors 1994-2019
 #

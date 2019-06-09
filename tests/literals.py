@@ -1,4 +1,4 @@
-# Test LIT.
+# Test `lit`, and `lit_0` to `lit_3`; `lit_pc_rel` is tested by `branch.py`.
 #
 # (c) Mit authors 1994-2019
 #

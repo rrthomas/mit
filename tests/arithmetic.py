@@ -1,8 +1,8 @@
-# Test the arithmetic operators. Also uses the SWAP and POP instructions,
-# and numbers. Since unsigned arithmetic overflow behaviour is guaranteed
-# by the ISO C standard, we only test the stack handling and basic
-# correctness of the operators here, assuming that if the arithmetic works
-# in one case, it will work in all.
+# Test the arithmetic instructions. Also uses the `swap` and `pop`
+# instructions, and numbers. Since unsigned arithmetic overflow behaviour is
+# guaranteed by the ISO C standard, we only test the stack handling and
+# basic correctness of the instructions here, assuming that if the arithmetic
+# works in one case, it will work in all.
 #
 # (c) Mit authors 1994-2019
 #
