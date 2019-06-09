@@ -50,6 +50,9 @@ gl_INIT
 # Set a value even if not found, so that an invocation via build-aux/missing works
 AC_PATH_PROG([HELP2MAN], [help2man], [help2man])
 
+# Timing/profiling
+AC_PATH_PROG([TIME], [time])
+
 # Optimization
 AX_CC_MAXOPT
 AX_GCC_BUILTIN(__builtin_expect)

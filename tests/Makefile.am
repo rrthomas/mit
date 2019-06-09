@@ -10,7 +10,7 @@
 TEST_EXTENSIONS = .py .bf
 # Use PY_LOG_ENV to set LD_PRELOAD for ASAN
 PY_LOG_COMPILER = env $(PY_LOG_ENV) $(PYTHON)
-BF_LOG_COMPILER = env $(PY_LOG_ENV) time $(PYTHON) $(srcdir)/run-brainfuck-test
+BF_LOG_COMPILER = env $(PY_LOG_ENV) $(TIME) $(PYTHON) $(srcdir)/run-brainfuck-test
 
 TESTS =	\
 	arithmetic.py	\
