@@ -22,9 +22,8 @@ def assemble_tests(inputs, outputs, op):
         lit(p[0])
         lit(p[1])
         ass(op)
-        lit(1)
         ass(POP)
-        correct.extend(([p[0]], [p[0], p[1]], [outputs[i]], [outputs[i], 1], []))
+        correct.extend(([p[0]], [p[0], p[1]], [outputs[i]], []))
 
 less_than_pairs = [(3, 1),  (1, 3),  (2, 2),  (-4, 3)]
 equality_pairs = [(237, 237),  (1, -1)]
