@@ -1,7 +1,6 @@
 *~
 *.log
 *.trs
-/.gitmodules
 /.version
 /mit*.tar.gz
 Makefile
