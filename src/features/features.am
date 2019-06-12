@@ -73,26 +73,26 @@ DISTCLEANFILES += \
 
 nodist_libmitfeatures@PACKAGE_SUFFIX@_la_SOURCES += %D%/specializer.c
 
+TEST_EXTENSIONS = .pforth
+PFORTH_LOG_COMPILER = $(SHELL)
+TESTS_ENVIRONMENT = \
+	export abs_top_srcdir="$(abs_top_srcdir)" \
+	export MIT_BINARY="$(MIT_BINARY)";
+check-bench:
+	$(MAKE) check TESTS="$(BENCH_TESTS)"
+
 if USING_PFORTH
 features/pforth/config.log:
 	cd features/pforth && \
 	autoreconf -i && \
 	./configure --build=mit BUILD_EXECUTOR=$(MIT_BINARY)
+check_DATA = features/pforth/config.log
 
-build_pforth = \
-	$(MIT_BINARY) $$MIT_OPTIONS pforth-base make-base.fs
+TESTS = \
+	%D%/build-pforth.pforth
 
-check-local: features/pforth/config.log
-	MIT_OPTIONS=-O && export MIT_OPTIONS && \
-	cd features/pforth/src/mit && \
-	if test "$(OPTIONAL_TESTS)" = "yes"; then \
-		time $(abs_top_srcdir)/build-aux/repeat 10 $(build_pforth) || exit 1; \
-		MIT_OPTIONS= && export MIT_OPTIONS && \
-		time $(abs_top_srcdir)/build-aux/repeat 10 $(build_pforth) || exit 1; \
-	else \
-		$(build_pforth) || exit 1; \
-	fi; \
-	cmp pforth-base pforth-new
+BENCH_TESTS = \
+	%D%/pforth-bench.pforth
 endif
 
 # Alternative predictor-building arguments:

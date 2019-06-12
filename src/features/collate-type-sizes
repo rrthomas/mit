@@ -12,6 +12,9 @@ import sys
 import re
 from pprint import pformat
 
+import mit_core.instruction_gen
+mit_core.instruction_gen.TYPE_SIZE_UNKNOWN = 0
+
 from extra_instructions import *
 
 

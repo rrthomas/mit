@@ -43,7 +43,7 @@ static mit_word _fetch_pc(mit_state *S)
 #pragma GCC diagnostic pop
 
 #define FETCH_PC(w)                                             \
-    if (unlikely(S->PC >= S->memory_size - MIT_WORD_BYTES)) {   \
+    if (unlikely(S->PC >= S->memory_size)) {                    \
         S->BAD = S->PC;                                         \
         RAISE(MIT_ERROR_INVALID_MEMORY_READ);                   \
     } else {                                                    \

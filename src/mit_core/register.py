@@ -30,4 +30,3 @@ class AutoNumber(NoValue):
 class RegisterEnum(AutoNumber):
     def __init__(self, type=None):
         self.type = type or 'mit_uword'
-        self.return_type = re.sub('restrict', '', self.type)

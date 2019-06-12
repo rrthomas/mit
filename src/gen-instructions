@@ -47,7 +47,7 @@ code.append('''\
 
 body_code = Code()
 body_code.append('mit_word error = MIT_ERROR_OK;')
-body_code.append('mit_uword opcode = S->I >> mit_opcode_bit;')
+body_code.append('mit_uword opcode = S->I >> MIT_OPCODE_BIT;')
 body_code.extend(dispatch(InternalExtraInstruction, Code(
     'RAISE(MIT_ERROR_INVALID_OPCODE);',
 )))
@@ -106,7 +106,7 @@ code.append(Code(*['''\
         }'''
     ),
     '''\
-    } while (run == true && error == 0);
+    } while (likely(run == true) && likely(error == 0));
 
     *real_S = state;
     return error;''',

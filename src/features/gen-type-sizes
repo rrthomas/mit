@@ -11,6 +11,9 @@
 import re
 
 from mit_core.code_util import Code
+import mit_core.instruction_gen
+mit_core.instruction_gen.TYPE_SIZE_UNKNOWN = 0
+
 from extra_instructions import LibInstruction
 
 
@@ -24,8 +27,7 @@ ac_includes_default="\\
 for lib in LibInstruction:
     code.append(re.sub('"', '\\"', lib.includes))
 code.append('"')
-for type in list(set(['mit_word'] +
-                     [type for lib in LibInstruction
+for type in list(set([type for lib in LibInstruction
                       for type in lib.types()])):
     code.append('AC_CHECK_SIZEOF([{}])'.format(type))
 

@@ -11,6 +11,8 @@
 import mit_core.vm_data as vm_data
 import mit_core.errors as errors
 from mit_core.code_util import Code, enum_to_python
+import mit_core.instruction_gen
+mit_core.instruction_gen.TYPE_SIZE_UNKNOWN = 0
 
 import extra_instructions
 

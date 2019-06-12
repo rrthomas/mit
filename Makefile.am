@@ -27,6 +27,10 @@ loc:
 	cd python && $(MAKE) loc
 	cd src && $(MAKE) loc
 
+bench:
+	cd src && $(MAKE) bench
+	cd tests && $(MAKE) bench
+
 release: distcheck
 	git diff --exit-code && \
 	git tag -a -m "Release tag" "v$(VERSION)" && \

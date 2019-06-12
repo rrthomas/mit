@@ -1,0 +1,43 @@
+#!/usr/bin/env python3
+# Time pForth building itself.
+#
+# (c) Mit authors 2019
+#
+# The package is distributed under the MIT/X11 License.
+#
+# THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
+# RISK.
+
+import os
+from os import environ as env
+import sys
+import argparse
+import subprocess
+
+
+# Command-line arguments
+parser = argparse.ArgumentParser(
+    prog='time-pforth-build',
+    description='Time pForth building itself.',
+)
+parser.add_argument('-n', '--times', type=int, metavar='N', default=1,
+                    help='repeat build N times [default 1]')
+args = parser.parse_args()
+
+# Check required environment variables are set
+assert env.get('srcdir') != None
+assert env.get('abs_top_srcdir') != None
+assert env.get('MIT_BINARY') != None
+
+os.chdir(os.path.join(env['srcdir'], 'features/pforth/src/mit'))
+
+# Build pForth the given number of times with given options
+subprocess.check_call(['time', os.path.join(env['abs_top_srcdir'],
+                                            'build-aux/repeat'),
+                       str(args.times),
+                       env['MIT_BINARY']] +
+                      env.get('MIT_OPTIONS', '').split() +
+                      ['pforth-base', 'make-base.fs'])
+
+# Check the result once (assume it built the same each time!)
+subprocess.check_call(['cmp', 'pforth-base', 'pforth-new'])

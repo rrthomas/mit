@@ -9,7 +9,7 @@
 
 from enum import Enum, unique
 
-from mit_core.code_util import Code
+from mit_core.code_util import Code, unrestrict
 from mit_core.instruction import InstructionEnum
 from mit_core.vm_data import Register
 from mit_core.instruction_gen import pop_stack, push_stack
@@ -228,7 +228,7 @@ for register in Register:
     get_code.extend(pop_code)
     get_code.extend(push_stack(
         'mit_get_{}(inner_state)'.format(register.name),
-        type=register.return_type
+        type=register.type
     ))
     mit_lib['GET_{}'.format(register.name.upper())] = (
         len(mit_lib), None, None, get_code,
@@ -249,7 +249,7 @@ LibMit = InstructionEnum('LibMit', mit_lib)
 
 class Library(InstructionEnum):
     '''Wrap an Instruction enumeration as a library.'''
-    def __init__(self, opcode, library, includes):
+    def __init__(self, opcode, library, includes, extra_types=[]):
         super().__init__(opcode, None, None, Code(
             '''\
             {
@@ -263,6 +263,7 @@ class Library(InstructionEnum):
         ))
         self.library = library
         self.includes = includes
+        self.extra_types = extra_types
 
     @staticmethod
     def _item_type(name_and_type):
@@ -271,7 +272,7 @@ class Library(InstructionEnum):
 
     def types(self):
         '''Return a list of all types used in the library.'''
-        return list(set(
+        return list(set(self.extra_types +
             [self._item_type(item)
              for function in self.library
              if function.args is not None or function.results is not None
@@ -285,7 +286,8 @@ class LibInstruction(Library):
     LIBMIT = (0x01, LibMit, '''\
 #include "mit/mit.h"
 #include "mit/features.h"
-''')
+''',
+              ['mit_word *'])
     LIBC = (0x02, LibC, '''\
 #include <stdlib.h>
 #include <stdbool.h>

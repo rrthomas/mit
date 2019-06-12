@@ -31,9 +31,11 @@ TESTS =	\
 	hello-world.bf  \
 	cell-size.bf
 
-if OPTIONAL_TESTS
-TESTS += mandelbrot.bf
-endif
+BENCH_TESTS = \
+	mandelbrot.bf
+
+check-bench:
+	$(MAKE) check TESTS="$(BENCH_TESTS)"
 
 # Python will not try a relative import from a different directory, so copy
 # modules from srcdir to builddir.
