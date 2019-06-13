@@ -46,13 +46,13 @@ try:
             ass(LIT_1) # length
             lit(LibC.STDOUT); ass_extra(LIBC, type=JUMP)
             lit(LibC.WRITE); ass_extra(LIBC, type=JUMP)
-            ass(LIT_1); ass(POP)
+            ass(POP)
         elif c == ',':
             dup() # buffer
             ass(LIT_1) # length
             lit(LibC.STDIN); ass_extra(LIBC, type=JUMP)
             lit(LibC.READ); ass_extra(LIBC, type=JUMP)
-            ass(LIT_1); ass(POP)
+            ass(POP)
         elif c == '[':
             loop = label()
             dup()

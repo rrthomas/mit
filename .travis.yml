@@ -52,7 +52,9 @@ matrix:
       - ENDISM=1
       - WORD_BYTES=8
     - env:
-      - CPPFLAGS="-DMIT_OPCODE_BIT=6"
+      - OPCODE_BIT=5
+    - env:
+      - WORD_BYTES=16
 
 
 before_install:

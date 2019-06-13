@@ -12,6 +12,7 @@ from enum import Enum, IntEnum, unique
 from .code_util import Code
 from .instruction import InstructionEnum
 from .register import RegisterEnum
+from .instruction_gen import pop_stack
 
 
 @unique
@@ -68,15 +69,11 @@ class Instruction(InstructionEnum):
         DO_NEXT;'''
     ), True)
 
-    POP = (0x4, ['ITEMS', 'COUNT'], [], Code())
+    POP = (0x4, ['x'], [], Code('(void)x;'))
 
     DUP = (0x5, ['x', 'ITEMS', 'COUNT'], ['x', 'ITEMS', 'x'], Code())
 
     SWAP = (0x6, ['x', 'ITEMS', 'y', 'COUNT'], ['y', 'ITEMS', 'x'], Code())
-
-    PUSH_STACK_DEPTH = (0x7, [], ['n'], Code('''\
-        n = S->STACK_DEPTH;'''
-    ))
 
     LOAD = (0x8, ['addr', 'size'], ['x'], Code('''\
         int ret = load(S->memory, S->memory_size, addr, size, &x);
@@ -117,10 +114,6 @@ class Instruction(InstructionEnum):
 
     LIT_3 = (0xf, [], ['three'], Code('''\
         three = 3;'''
-    ))
-
-    EQ = (0x10, ['a', 'b'], ['flag'], Code('''\
-        flag = a == b;'''
     ))
 
     LT = (0x11, ['a', 'b'], ['flag'], Code('''\
@@ -190,8 +183,23 @@ class Instruction(InstructionEnum):
         n2 = ARSHIFT(n2, (MIT_WORD_BYTES - (1 << size)) * MIT_BYTE_BIT);'''
     ))
 
-@unique
-class InternalExtraInstruction(InstructionEnum):
-    HALT = (0x1, [], [], Code('''\
+internal_extra_instruction = {
+    'HALT': (0x1, [], [], Code('''\
         RAISE(MIT_ERROR_HALT);'''
-    ))
+    )),
+
+    'GET_STACK_DEPTH': (0x2, [], ['n'], Code('''\
+        n = S->STACK_DEPTH;'''
+    )),
+}
+
+code = Code()
+code.append('mit_uword depth;')
+code.extend(pop_stack('depth', type='mit_uword'))
+code.append('S->STACK_DEPTH = depth;')
+internal_extra_instruction['SET_STACK_DEPTH'] = (
+    len(internal_extra_instruction) + 1, None, None, code
+)
+
+InternalExtraInstruction = InstructionEnum('InternalExtraInstruction',
+                                           internal_extra_instruction)

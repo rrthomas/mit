@@ -1,4 +1,4 @@
-# Test that run() works.
+# Test run().
 #
 # (c) Mit authors 1995-2019
 #

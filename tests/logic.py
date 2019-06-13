@@ -1,5 +1,5 @@
-# Test the logic operators. We only test the stack handling and basic
-# correctness of the operators here, assuming that if the logic works in
+# Test the logic instructions. We only test the stack handling and basic
+# correctness of the instructions here, assuming that if the logic works in
 # one case, it will work in all (if the C compiler doesn't implement it
 # correctly, we're in trouble anyway!).
 #

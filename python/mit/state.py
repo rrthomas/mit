@@ -172,7 +172,7 @@ class State:
                     raise
 
     def _print_trace_info(self):
-        print("step: PC={} I={:#x} instruction={}".format(
+        print("step: PC={:#x} I={:#x} instruction={}".format(
             self.registers["PC"].get(),
             self.registers["I"].get(),
             Disassembler(self).disassemble(),
@@ -181,15 +181,14 @@ class State:
 
     def step(self, n=1, addr=None, trace=False, auto_NEXT=True):
         '''
-        Single-step for n steps, or until PC=addr.
-        Does not count NEXT as a step, but always stops when PC changes.
+        Single-step for n steps (excluding NEXT when PC does not change), or
+        until PC=addr.
         '''
         done = 0
         ret = 0
         while addr is not None or done < n:
             if auto_NEXT and self.registers["I"].get() == 0:
-                if trace: self._print_trace_info()
-                ret = libmit.mit_single_step(self.state)
+                done -= 1
             if self.registers["PC"].get() == addr: break
             if trace: self._print_trace_info()
             try:
