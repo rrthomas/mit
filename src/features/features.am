@@ -79,7 +79,7 @@ TESTS_ENVIRONMENT = \
 	export abs_top_srcdir="$(abs_top_srcdir)" \
 	export TIME="$(TIME)"; \
 	export MIT_BINARY="$(MIT_BINARY)";
-check-bench:
+bench:
 	$(MAKE) check TESTS="$(BENCH_TESTS)"
 
 if USING_PFORTH
