@@ -42,9 +42,8 @@ nodist_mit_pkginclude_HEADERS = include/mit/opcodes.h include/mit/registers.h
 mit_pkginclude_HEADERS = include/mit/mit.h
 noinst_HEADERS = run.h
 
-step.lo: instructions.c
-object.lo step.lo storage.lo: include/mit/registers.h
-object.lo step.lo storage.lo main.o: include/mit/opcodes.h
+object.lo storage.lo: include/mit/registers.h
+object.lo storage.lo main.o: include/mit/opcodes.h
 instructions.lo main.o: main.c include/mit/registers.h
 main.o: warn.h
 
