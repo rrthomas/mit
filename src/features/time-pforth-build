@@ -27,14 +27,15 @@ args = parser.parse_args()
 # Check required environment variables are set
 assert env.get('srcdir') != None
 assert env.get('abs_top_srcdir') != None
-assert env.get('TIME') != None
+assert env.get('TIME_BINARY') != None
 assert env.get('MIT_BINARY') != None
 
 os.chdir(os.path.join(env['srcdir'], 'features/pforth/src/mit'))
 
 # Build pForth the given number of times with given options
-subprocess.check_call(env['TIME'].split() +[os.path.join(env['abs_top_srcdir'],
-                                            'build-aux/repeat'),
+subprocess.check_call(env['TIME_BINARY'].split() +
+                      [os.path.join(env['abs_top_srcdir'],
+                                    'build-aux/repeat'),
                        str(args.times),
                        env['MIT_BINARY']] +
                       env.get('MIT_OPTIONS', '').split() +
