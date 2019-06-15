@@ -295,10 +295,14 @@ for error in MitError:
 help_code = Code()
 for element in CommandLineElement.elements:
     if isinstance(element, Option):
-        help_code.append('    printf("  %-26s%s\\n", "--{long_name}{short_opt} {arg_name}", "{docstring}");'.format(
+        arg = ''
+        if element.arg_name: arg = element.arg_name
+        if element.arg == 'optional_argument':
+            arg = '[{}]'.format(arg)
+        help_code.append('    printf("  %-26s%s\\n", "--{long_name}{short_opt} {arg}", "{docstring}");'.format(
             long_name=element.long_name,
             short_opt=', -{}'.format(element.short_name) if element.short_name else '',
-            arg_name=element.arg_name or '',
+            arg=arg,
             docstring=element.docstring,
         ))
     elif isinstance(element, Arg):
