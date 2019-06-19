@@ -128,6 +128,8 @@ esac
 
 # Set size of word
 AC_CHECK_SIZEOF([size_t])
+# Use a configure variable to substitute this in mit.h.in, where we can't
+# include config.h, as mit.h is a public header.
 SIZEOF_SIZE_T=$ac_cv_sizeof_size_t
 AC_SUBST([SIZEOF_SIZE_T])
 AC_ARG_VAR([WORD_BYTES],
@@ -143,6 +145,11 @@ default_opcode_bit=8
 AC_ARG_VAR([OPCODE_BIT],
   [value of MIT_OPCODE_BIT [default: $default_opcode_bit]])
 : "${OPCODE_BIT=$default_opcode_bit}"
+
+# Get size of largest integer
+AC_CHECK_SIZEOF([intmax_t])
+SIZEOF_INTMAX_T=$ac_cv_sizeof_intmax_t
+AC_SUBST([SIZEOF_INTMAX_T])
 
 # Package suffix for side-by-side installation of multiple builds
 AC_ARG_ENABLE([package-suffix],
