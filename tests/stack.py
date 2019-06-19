@@ -20,6 +20,7 @@ correct = [
     [1, 2, 3],
     [1, 2, 3, 0],
     [1, 2, 3, 3],
+    [1, 2, 3, 3, 1],
     [1, 2, 3],
     [1, 2, 3, 0],
     [1, 3, 2],
@@ -27,12 +28,11 @@ correct = [
     [1, 3, 2, 3],
     [1, 3, 2, 3, 0],
     [1, 3, 3, 2],
+    [1, 3, 3, 2, 1],
     [1, 3, 3],
     [1, 3, 3, 0],
     [1, 3, 3, 3],
-    [1, 3, 3],
-    [1, 3],
-    [1],
+    [1, 3, 3, 3, 4],
     [],
     [2],
     [2, 1],
@@ -44,8 +44,6 @@ correct = [
     [2, 1, 2, 2, 0],
     [2, 1, 2, 2, 2],
     [2, 1, 2, 2, 2, 5],
-    [2, 1, 2, 2, 2, 5, 0],
-    [],
 ]
 
 # Test code
@@ -54,6 +52,7 @@ lit(2)
 lit(3)
 lit(0)
 ass(DUP)
+lit(1)
 ass(POP)
 lit(0)
 ass(SWAP)
@@ -61,12 +60,11 @@ lit(1)
 ass(DUP)
 lit(0)
 ass(SWAP)
+lit(1)
 ass(POP)
 lit(0)
 ass(DUP)
-ass(POP)
-ass(POP)
-ass(POP)
+lit(4)
 ass(POP)
 lit(2)
 lit(1)
@@ -77,9 +75,7 @@ lit(0)
 ass(DUP)
 lit(0)
 ass(DUP)
-ass_extra(GET_STACK_DEPTH)
-ass(LIT_0)
-ass_extra(SET_STACK_DEPTH)
+ass(PUSH_STACK_DEPTH)
 
 # Test
 run_test("stack", VM, correct)

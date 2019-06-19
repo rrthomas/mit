@@ -49,9 +49,9 @@
 \newcommand{\opcodetblone}[2]{0x#1 & {\tt #2} \\}
 
 
-\title{The Mit virtual machine}
+\title{The Mit Virtual Machine}
 \author{Reuben Thomas}
-\date{9th June 2019}
+\date{16th May 2019}
 
 \begin{document}
 \maketitle
@@ -263,15 +263,36 @@ call and return (subroutine return is {\tt jump}):
 \end{description}
 
 
+\subsection{Extra instructions}
+\label{extra}
+
+Since {\tt instruction} must be $0$ when {\tt next} is performed, the rest of an instruction word following {\tt next}, {\tt jump} and {\tt call} must normally be all zero bits.
+
+Non-zero values following {\tt next} and {\tt call} are reserved for the Mit specification; non-zero values following {\tt jump} may be used by implementations to implement extra functionality.
+
+When an extra instruction is performed, the original instruction is considered to have completed executing.
+
+\subsubsection{Termination}
+\label{halt}
+
+This instruction terminates execution (see section~\ref{errors}):
+
+\nopagebreak
+\begin{description}
+\inst{halt}{—}{Raise error $127$.}
+\end{description}
+
+
 \subsection{Stack manipulation}
 
-These instructions manage the stack (see also section~\ref{stackdepth}):
+These instructions manage the stack:
 
 \nopagebreak
 \begin{description}
 \inst{pop}{x —}{Remove \spic{x} from the stack.}
 \inst{dup}{\x{u}\dots\x0 u — \x{u}\dots\x0 \x{u}}{Remove \spic{u}. Copy \x{u} to the top of the stack.}
 \inst{swap}{\x{u+1}\dots\x0 u — \x0 \x{u}\dots\x1 \x{u+1}}{Exchange the top stack word with the \spic{u+1}th.}
+\inst{push\_stack\_depth}{— u}{\spic{u} is the value of {\tt stack\_depth}, the number of words on the stack.}
 \end{description}
 
 
@@ -359,37 +380,6 @@ These instructions fetch and store quantities to and from memory. If an invalid 
 \end{description}
 
 
-\subsection{Extra instructions}
-\label{extra}
-
-Since {\tt instruction} must be $0$ when {\tt next} is performed, the rest of an instruction word following {\tt next}, {\tt jump} and {\tt call} must normally be all zero bits.
-
-Non-zero values following {\tt next} and {\tt call} are reserved for the Mit specification; non-zero values following {\tt jump} may be used by implementations to implement extra functionality.
-
-When an extra instruction is performed, the original instruction is considered to have completed executing.
-
-\subsubsection{Stack depth manipulation}
-\label{stackdepth}
-
-These instructions read and write the {\tt stack\_depth} register:
-
-\nopagebreak
-\begin{description}
-\inst{get\_stack\_depth}{u —}{Set {\tt stack\_depth}, the number of words on the stack, to \spic{u}.}
-\inst{push\_stack\_depth}{— u}{\spic{u} is the value of {\tt stack\_depth}, the number of words on the stack. If there is not enough space for \spic{u} stack items, raise error~$2$.}
-\end{description}
-
-\subsubsection{Termination}
-\label{halt}
-
-This instruction terminates execution (see section~\ref{errors}):
-
-\nopagebreak
-\begin{description}
-\inst{halt}{—}{Raise error $127$.}
-\end{description}
-
-
 \subsection{Instruction encoding}
 \label{encoding}
 
@@ -412,7 +402,7 @@ Table~\ref{opcodetable} lists the instruction opcodes in numerical order. Table~
 \opcodetbl{4}{pop}			{14}{add}
 \opcodetbl{5}{dup}			{15}{mul}
 \opcodetbl{6}{swap}			{16}{divmod}
-\opcodetbl{7}{\rm (undefined)}		{17}{udivmod}
+\opcodetbl{7}{push\_stack\_depth}	{17}{udivmod}
 \smallskip
 \opcodetbl{8}{load}			{18}{not}
 \opcodetbl{9}{store}			{19}{and}
@@ -432,9 +422,7 @@ Table~\ref{opcodetable} lists the instruction opcodes in numerical order. Table~
 \begin{center}
 \begin{tabular}{*{1}{cc}} \toprule
 \bf Opcode & \bf Instruction \\ \midrule
-  \opcodetblone{1}{halt}
-  \opcodetblone{2}{get\_stack\_depth}
-  \opcodetblone{3}{set\_stack\_depth}
+\opcodetblone{1}{halt}
  \bottomrule
 \end{tabular}
 \caption{\label{extraopcodetable}Extra instruction opcodes}

@@ -25,16 +25,19 @@ correct = [
     [(size - 1) * word_bytes],
     [(size - 1) * word_bytes, size_word],
     [magic_number],
+    [magic_number, 1],
     [],
     [(size - 1) * word_bytes + (word_bytes - 2) * endism],
     [(size - 1) * word_bytes + (word_bytes - 2) * endism, 1],
     [magic_number],
+    [magic_number, 1],
     [],
     [(size - 1) * word_bytes + (word_bytes - 2) * endism],
     [(size - 1) * word_bytes + (word_bytes - 2) * endism, 1],
     [magic_number],
     [magic_number, 1],
     [magic_number | -0x10000],
+    [magic_number | -0x10000, 1],
     [],
     [(size - 1) * word_bytes + (word_bytes - 2) * endism + 1 * (1 - endism)],
     [(size - 1) * word_bytes + (word_bytes - 2) * endism + 1 * (1 - endism), 0],
@@ -55,16 +58,19 @@ ass(STORE)
 lit((size - 1) * word_bytes)
 lit(size_word)
 ass(LOAD)
+lit(1)
 ass(POP)
 lit((size - 1) * word_bytes + (word_bytes - 2) * endism)
 lit(1)
 ass(LOAD)
+lit(1)
 ass(POP)
 lit((size - 1) * word_bytes + (word_bytes - 2) * endism)
 lit(1)
 ass(LOAD)
 lit(1)
 ass(SIGN_EXTEND)
+lit(1)
 ass(POP)
 lit((size - 1) * word_bytes + (word_bytes - 2) * endism + 1 * (1 - endism))
 lit(0)
