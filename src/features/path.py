@@ -14,6 +14,7 @@ import re
 from mit_core.code_util import Code
 from mit_core.vm_data import Instruction
 from mit_core.instruction import InstructionEnum
+from mit_core.params import opcode_bit, word_bit
 
 
 def _replace_items(picture, replacement):
@@ -62,6 +63,8 @@ class State:
        Typically this will have occurred in the middle of an instruction,
        after popping but before pushing.
      - stack_max - int - the maximal `stack_pos` encountered so far.
+     - i_bits - int - the number of bits of I executed since the last
+       terminal instruction.
     '''
     def __init__(
         self,
@@ -69,11 +72,13 @@ class State:
         stack_pos=0,
         stack_min=0,
         stack_max=0,
+        i_bits=0,
     ):
         self.tos_constant = tos_constant
         self.stack_pos = stack_pos
         self.stack_min = stack_min
         self.stack_max = stack_max
+        self.i_bits = i_bits
 
     def specialize_instruction(self, instruction):
         '''
@@ -111,11 +116,16 @@ class State:
         # Simulate pushing results.
         stack_pos += len(instruction.results)
         stack_max = max(self.stack_max, stack_pos)
+        # Simulate consuming I.
+        i_bits = self.i_bits + opcode_bit
+        if instruction.terminal:
+            i_bits = 0
         return State(
             tos_constant=tos_constant,
             stack_pos=stack_pos,
             stack_min=stack_min,
             stack_max=stack_max,
+            i_bits=i_bits,
         )
 
     def is_worthwhile(self, instruction):
@@ -127,6 +137,14 @@ class State:
         variadic and the value at the top of the stack is not a known
         constant.
         '''
+        bits_remaining = word_bit - self.i_bits
+        if bits_remaining < 0:
+            mask_remaining = 0
+        else:
+            mask_remaining = (1 << bits_remaining) - 1
+        if instruction.opcode & mask_remaining != instruction.opcode:
+            # There's no way of encoding the instruction.
+            return False
         if 'ITEMS' in instruction.args or 'ITEMS' in instruction.results:
             # Variadic instruction. We can optimize only if we know `COUNT`.
             return (
