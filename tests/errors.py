@@ -8,6 +8,7 @@
 # RISK.
 
 from mit import *
+from mit.binding import libmit, libmitfeatures
 
 
 VM = State(memory_bytes=4096 * word_bytes, stack_words=3)

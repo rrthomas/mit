@@ -11,7 +11,9 @@ RISK.
 
 import collections.abc
 
-from .binding import *
+from ctypes import byref
+
+from .binding import libmit, c_word, byte_bit, word_bytes, size_word, endism
 
 
 # Memory access (word & byte)

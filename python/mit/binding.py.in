@@ -9,11 +9,20 @@ THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 RISK.
 '''
 
-from ctypes import *
+from ctypes import (
+    c_ubyte, c_char_p,
+    c_uint, c_int,
+    c_uint16, c_int16,
+    c_uint32, c_int32,
+    c_uint64, c_int64,
+    c_size_t, c_ssize_t,
+    c_void_p,
+    POINTER, byref, CDLL,
+)
 from ctypes.util import find_library
 
-from .errors import *
-from .int128 import *
+from .errors import MitErrorCode, MallocErrorCode, LoadErrorCode, SaveErrorCode
+from .int128 import c_uint128, c_int128
 
 
 library_file = find_library("mit@PACKAGE_SUFFIX@")

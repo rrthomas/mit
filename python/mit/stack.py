@@ -9,7 +9,7 @@ THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 RISK.
 '''
 
-from .binding import *
+from .binding import libmit, c_word, byref
 
 
 # Stacks

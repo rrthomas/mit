@@ -7,6 +7,8 @@
 # THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 # RISK.
 
+import os
+
 from mit import *
 memory_bytes = 256 * word_bytes
 VM = State(memory_bytes)

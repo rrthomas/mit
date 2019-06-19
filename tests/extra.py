@@ -9,6 +9,7 @@
 # RISK.
 
 from mit.globals import *
+from ctypes import sizeof, c_char_p
 
 
 # Data for ARGC/ARGV tests
