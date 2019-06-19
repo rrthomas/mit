@@ -21,7 +21,7 @@ init:
 
 install:
   - cmd: C:\msys64\usr\bin\bash.exe -lc "cd c:/projects/mit && ./build-aux/appveyor-install.sh"
-  - sh: sudo apt-get update && sudo apt-get install -y texlive-latex-extra texlive-science texlive-fonts-recommended texlive-fonts-extra tex-gyre help2man latexmk hevea
+  - sh: sudo apt-get update && sudo DEBIAN_FRONTEND=noninteractive apt-get install -y texlive-latex-extra texlive-science texlive-fonts-recommended texlive-fonts-extra tex-gyre help2man latexmk hevea
 
 # FIXME: In-place mit doesn't work, so remove pforth after bootstrap
 # (It would otherwise be tested on mingw32.)
