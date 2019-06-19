@@ -34,7 +34,7 @@ TESTS =	\
 BENCH_TESTS = \
 	mandelbrot.bf
 
-check-bench:
+bench:
 	$(MAKE) check TESTS="$(BENCH_TESTS)"
 
 # Python will not try a relative import from a different directory, so copy

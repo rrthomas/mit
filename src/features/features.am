@@ -77,9 +77,9 @@ TEST_EXTENSIONS = .pforth
 PFORTH_LOG_COMPILER = $(SHELL)
 TESTS_ENVIRONMENT = \
 	export abs_top_srcdir="$(abs_top_srcdir)" \
-	export TIME="$(TIME)"; \
+	export TIME_BINARY="$(TIME)"; \
 	export MIT_BINARY="$(MIT_BINARY)";
-check-bench:
+bench:
 	$(MAKE) check TESTS="$(BENCH_TESTS)"
 
 if USING_PFORTH
