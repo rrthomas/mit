@@ -35,25 +35,27 @@ correct = [
     [2, 0, -word_bytes],
     [2, 0, -word_bytes, 0],
     [2, -word_bytes, 0],
-    [2, -word_bytes],
+    [2, -word_bytes, 0, 2],
     [2],
     [-2],
     [-2, -1],
     [2, 0],
     [2, 0, 0],
     [0, 2],
-    [0],
+    [0, 2, 2],
     [],
     [word_bytes],
     [-word_bytes],
+    [-word_bytes, 1],
     [],
     [-8],
     [-8, 7],
     [-1, -1],
+    [-1, -1, 1],
     [-1],
     [-1, -2],
     [1, 1],
-    [1],
+    [1, 1, 2],
     [],
     [4],
     [4, 2],
@@ -77,25 +79,27 @@ lit(word_bytes)
 ass(MUL)
 lit(0)
 ass(SWAP)
-ass(POP)
+lit(2)
 ass(POP)
 ass(NEGATE)
 lit(-1)
 ass(DIVMOD)
 lit(0)
 ass(SWAP)
-ass(POP)
+lit(2)
 ass(POP)
 lit(word_bytes)
 ass(NEGATE)
+lit(1)
 ass(POP)
 lit(-8)
 lit(7)
 ass(DIVMOD)
+lit(1)
 ass(POP)
 lit(-2)
 ass(UDIVMOD)
-ass(POP)
+lit(2)
 ass(POP)
 lit(4)
 lit(2)

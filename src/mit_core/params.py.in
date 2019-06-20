@@ -1,6 +1,7 @@
 # Build-time parameters
 
 word_bytes = @WORD_BYTES@
+word_bit = 8 * word_bytes # FIXME: DRY (see mit.h.in).
 endism = @ENDISM@
 host_endism = @WORDS_BIGENDIAN@
 opcode_bit = @OPCODE_BIT@

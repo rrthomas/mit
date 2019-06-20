@@ -66,7 +66,7 @@ static history_t step_function(history_t history, opcode_t opcode) {
 }
 
 // How often each opcode has occurred after each history.
-static uint64_t counts[NUM_HISTORIES][NUM_OPCODES] = {0};
+static uint64_t counts[NUM_HISTORIES][NUM_OPCODES] = {{0}};
 
 // Maps common histories to their index in the output file.
 // Uncommon histories are indicated by `-1`.
