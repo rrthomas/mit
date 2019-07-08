@@ -269,7 +269,7 @@ class State:
 
         p = start
         while p < end:
-            print("{:#08x} ".format(p), end='', file=file)
+            print(("{:#0" + str(hex0x_word_width) + "x} ").format(p), end='', file=file)
             ascii = ""
             i = 0
             while i < chunk and p < end:

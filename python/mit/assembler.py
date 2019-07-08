@@ -13,6 +13,7 @@ from .binding import (
     align, is_aligned,
     word_bytes, word_bit, word_mask, sign_bit,
     opcode_bit, opcode_mask,
+    hex0x_word_width,
 )
 from .opcodes import (
     Instruction, InternalExtraInstruction, LibInstruction,
@@ -119,7 +120,7 @@ class Disassembler:
         return '{}{}'.format(name, comment)
 
     def __next__(self):
-        pc_str = '{:#x}'.format(self.pc)
+        pc_str = ('{:#0' + str(hex0x_word_width) + 'x}').format(self.pc)
         addr = '.' * len(pc_str)
         if self.ir == 0:
             self.ir = self._fetch()
