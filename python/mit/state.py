@@ -205,7 +205,7 @@ class State:
                     if n > 1:
                         print(" after {} steps".format(done), end='')
                     if addr is not None:
-                        print(" at pc = {:#x}".format(
+                        print(" at pc={:#x}".format(
                             self.registers["pc"].get()),
                             end='',
                         )
