@@ -66,28 +66,28 @@ int mit_store(mit_state *S, mit_uword addr, unsigned size, mit_word val)
 
 int mit_load_stack(mit_state *S, mit_uword pos, mit_word *val_ptr)
 {
-    return load_stack(S->stack, S->STACK_DEPTH, pos, val_ptr);
+    return load_stack(S->stack, S->stack_depth, pos, val_ptr);
 }
 
 int mit_store_stack(mit_state *S, mit_uword pos, mit_word val)
 {
-    return store_stack(S->stack, S->STACK_DEPTH, pos, val);
+    return store_stack(S->stack, S->stack_depth, pos, val);
 }
 
 int mit_pop_stack(mit_state *S, mit_word *val_ptr)
 {
-    int ret = load_stack(S->stack, S->STACK_DEPTH, 0, val_ptr);
-    S->STACK_DEPTH--;
+    int ret = load_stack(S->stack, S->stack_depth, 0, val_ptr);
+    S->stack_depth--;
     return ret;
 }
 
 int mit_push_stack(mit_state *S, mit_word val)
 {
-    if (unlikely(S->STACK_DEPTH >= S->stack_size))
+    if (unlikely(S->stack_depth >= S->stack_size))
         return MIT_ERROR_STACK_OVERFLOW;
 
-    (S->STACK_DEPTH)++;
-    return store_stack(S->stack, S->STACK_DEPTH, 0, val);
+    (S->stack_depth)++;
+    return store_stack(S->stack, S->stack_depth, 0, val);
 }
 
 
@@ -134,9 +134,9 @@ mit_state *mit_init(size_t memory_size, size_t stack_size)
     if (mit_realloc_stack(S, stack_size) != 0)
         return NULL;
 
-    S->PC = 0;
-    S->BAD = 0;
-    S->STACK_DEPTH = 0;
+    S->pc = 0;
+    S->bad = 0;
+    S->stack_depth = 0;
 
     return S;
 }

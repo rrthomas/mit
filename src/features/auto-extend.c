@@ -40,16 +40,16 @@ int mit_auto_extend_handler(mit_state * restrict S, int error)
     switch (error) {
     case 2:
         // Grow stack on demand
-        if (S->BAD >= S->stack_size &&
-            S->BAD < mit_uword_max - S->stack_size &&
-            mit_realloc_stack(S, round_up(S->stack_size + S->BAD, page_size)) == 0)
+        if (S->bad >= S->stack_size &&
+            S->bad < mit_uword_max - S->stack_size &&
+            mit_realloc_stack(S, round_up(S->stack_size + S->bad, page_size)) == 0)
             return 0;
         break;
     case 5:
     case 6:
         // Grow memory on demand
-        if (S->BAD >= S->memory_size &&
-            mit_realloc_memory(S, round_up(S->BAD, page_size)) == 0)
+        if (S->bad >= S->memory_size &&
+            mit_realloc_memory(S, round_up(S->bad, page_size)) == 0)
             return 0;
         break;
     default:

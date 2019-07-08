@@ -25,9 +25,9 @@ def run_test(name, state, correct):
         print("Data stack: {}".format(state.S))
         print("Correct stack: {}\n".format(stack))
         if str(stack) != str(state.S):
-            print("Error in {} tests: PC = {:#x}".format(
+            print("Error in {} tests: pc = {:#x}".format(
                 name,
-                state.registers["PC"].get()
+                state.registers["pc"].get()
             ))
             sys.exit(1)
 

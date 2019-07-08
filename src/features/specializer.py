@@ -19,7 +19,7 @@ class CacheState:
     in C variables, as they are likely to be popped soon.
     This class represents the current cacheing situation.
 
-    Caching items does not affect `S->STACK_DEPTH`.
+    Caching items does not affect `S->stack_depth`.
     If `item.depth < self.cached_depth`, then `item` is cached in variable
     `self.var(item.depth)`.
 
@@ -48,7 +48,7 @@ class CacheState:
         '''
         assert type(num_pops) is int
         if self.cached_depth >= num_pops: return '1'
-        return 'S->STACK_DEPTH >= {}'.format(num_pops)
+        return 'S->stack_depth >= {}'.format(num_pops)
 
     def overflow_test(self, num_pops, num_pushes):
         '''
@@ -62,12 +62,12 @@ class CacheState:
         assert type(num_pushes) is int
         depth_change = num_pushes - num_pops
         if self.checked_depth >= depth_change: return '1'
-        return '(S->stack_size - S->STACK_DEPTH) >= {}'.format(depth_change)
+        return '(S->stack_size - S->stack_depth) >= {}'.format(depth_change)
 
     def load_args(self, args):
         '''
         Returns a Code to read the arguments from the stack into C
-        variables. `S->STACK_DEPTH` is not modified.
+        variables. `S->stack_depth` is not modified.
 
          - args - list of str.
         '''
@@ -79,7 +79,7 @@ class CacheState:
     def store_results(self, results):
         '''
         Returns a Code to write the results from C variables into the
-        stack. `S->STACK_DEPTH` must be modified first.
+        stack. `S->stack_depth` must be modified first.
 
          - results - list of str.
         '''
@@ -123,7 +123,7 @@ class CacheState:
             return self.var(pos)
         else:
             # The item is really on the stack.
-            return '*UNCHECKED_STACK(S->stack, S->STACK_DEPTH, {})'.format(pos)
+            return '*UNCHECKED_STACK(S->stack, S->stack_depth, {})'.format(pos)
 
     def flush(self, goal=0):
         '''
@@ -178,13 +178,13 @@ def gen_case(instruction, cache_state):
     # Load the arguments into their C variables.
     code.extend(cache_state.load_args(instruction.args))
     # Inline `instruction.code`.
-    # Note: `S->STACK_DEPTH` and `cache_state` must be correct for RAISE().
+    # Note: `S->stack_depth` and `cache_state` must be correct for RAISE().
     code.extend(instruction.code)
     # Update stack pointer and cache_state.
-    code.append('S->STACK_DEPTH -= {};'.format(num_args))
+    code.append('S->stack_depth -= {};'.format(num_args))
     code.extend(cache_state.add(-num_args))
     code.extend(cache_state.add(num_results))
-    code.append('S->STACK_DEPTH += {};'.format(num_results))
+    code.append('S->stack_depth += {};'.format(num_results))
     # Store the results from their C variables.
     code.extend(cache_state.store_results(instruction.results))
     return code

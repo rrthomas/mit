@@ -63,7 +63,7 @@ class State:
        Typically this will have occurred in the middle of an instruction,
        after popping but before pushing.
      - stack_max - int - the maximal `stack_pos` encountered so far.
-     - i_bits - int - the number of bits of I executed since the last
+     - i_bits - int - the number of bits of ir executed since the last
        terminal instruction.
     '''
     def __init__(
@@ -116,7 +116,7 @@ class State:
         # Simulate pushing results.
         stack_pos += len(instruction.results)
         stack_max = max(self.stack_max, stack_pos)
-        # Simulate consuming I.
+        # Simulate consuming ir.
         i_bits = self.i_bits + opcode_bit
         if instruction.terminal:
             i_bits = 0

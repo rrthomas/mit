@@ -52,7 +52,7 @@ class State:
         self.M_word = WordMemory(self)
         self.S = Stack(
             self.state,
-            self.registers["STACK_DEPTH"],
+            self.registers["stack_depth"],
         )
         self.stack_size = stack_size
 
@@ -141,7 +141,7 @@ class State:
 
     def do_extra_instruction(self):
         libmitfeatures.mit_extra_instruction(self.state)
-        self.registers["I"].set(0) # Skip to next instruction
+        self.registers["ir"].set(0) # Skip to next instruction
 
     def run(self, args=None, predictor=False, optimize=True):
         '''
@@ -166,36 +166,38 @@ class State:
             except ErrorCode as e:
                 if e.args[0] == MitError.HALT:
                     return
-                elif e.args[0] == 1 and self.registers["I"].get() & opcode_mask == JUMP:
+                elif (e.args[0] == 1 and
+                      self.registers["ir"].get() & opcode_mask == JUMP
+                ):
                     self.do_extra_instruction()
                 else:
                     raise
 
     def _print_trace_info(self):
-        print("step: PC={:#x} I={:#x} instruction={}".format(
-            self.registers["PC"].get(),
-            self.registers["I"].get(),
+        print("step: pc={:#x} ir={:#x} instruction={}".format(
+            self.registers["pc"].get(),
+            self.registers["ir"].get(),
             Disassembler(self).disassemble(),
         ))
         print(str(self.S))
 
     def step(self, n=1, addr=None, trace=False, auto_NEXT=True):
         '''
-        Single-step for n steps (excluding NEXT when PC does not change), or
-        until PC=addr.
+        Single-step for n steps (excluding NEXT when pc does not change), or
+        until pc=addr.
         '''
         done = 0
         ret = 0
         while addr is not None or done < n:
-            if auto_NEXT and self.registers["I"].get() == 0:
+            if auto_NEXT and self.registers["ir"].get() == 0:
                 done -= 1
-            if self.registers["PC"].get() == addr: break
+            if self.registers["pc"].get() == addr: break
             if trace: self._print_trace_info()
             try:
                 libmit.mit_single_step(self.state)
             except ErrorCode as e:
                 ret = e.args[0]
-                if ret == 1 and self.registers["I"].get() & opcode_mask == JUMP:
+                if ret == 1 and self.registers["ir"].get() & opcode_mask == JUMP:
                     self.do_extra_instruction()
                     ret = 0
                 if ret != 0:
@@ -203,8 +205,8 @@ class State:
                     if n > 1:
                         print(" after {} steps".format(done), end='')
                     if addr is not None:
-                        print(" at PC = {:#x}".format(
-                            self.registers["PC"].get()),
+                        print(" at pc = {:#x}".format(
+                            self.registers["pc"].get()),
                             end='',
                         )
                     print("")
@@ -247,7 +249,7 @@ class State:
         '''
         if length is not None:
             end = start + length
-        for inst in Disassembler(self, pc=start, end=end, i=0):
+        for inst in Disassembler(self, pc=start, end=end):
             print(inst, file=file)
 
     def dump(self, start=None, length=None, end=None, file=sys.stdout):
@@ -258,7 +260,7 @@ class State:
         '''
         chunk = 16
         if start is None:
-            start = max(0, self.registers["PC"].get())
+            start = max(0, self.registers["pc"].get())
         start -= start % chunk
         if length is not None:
             end = start + length

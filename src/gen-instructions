@@ -47,7 +47,7 @@ code.append('''\
 
 body_code = Code()
 body_code.append('mit_word error = MIT_ERROR_OK;')
-body_code.append('mit_uword opcode = S->I >> MIT_OPCODE_BIT;')
+body_code.append('mit_uword opcode = S->ir >> MIT_OPCODE_BIT;')
 body_code.extend(dispatch(InternalExtraInstruction, Code(
     'RAISE(MIT_ERROR_INVALID_OPCODE);',
 )))
@@ -62,14 +62,14 @@ code.append('''
 body_code = Code()
 body_code.append('''\
     error = MIT_ERROR_OK;
-    mit_byte opcode = S->I & MIT_OPCODE_MASK;
-    initial_PC = S->PC;
-    initial_I = S->I;
-    S->I >>= MIT_OPCODE_BIT;
+    mit_byte opcode = S->ir & MIT_OPCODE_MASK;
+    initial_pc = S->pc;
+    initial_ir = S->ir;
+    S->ir >>= MIT_OPCODE_BIT;
 
-    // Check STACK_DEPTH is valid
-    if (S->STACK_DEPTH > S->stack_size) {
-        S->BAD = S->STACK_DEPTH - S->stack_size;
+    // Check stack_depth is valid
+    if (S->stack_depth > S->stack_size) {
+        S->bad = S->stack_depth - S->stack_size;
         RAISE(MIT_ERROR_STACK_OVERFLOW);
     }'''
 )
@@ -87,7 +87,7 @@ code.append(Code(*['''\
     mit_state state = *real_S;
     mit_state *const S = &state;
     mit_word error;
-    mit_uword initial_PC, initial_I;
+    mit_uword initial_pc, initial_ir;
 
     do {''',
     body_code,
@@ -95,14 +95,14 @@ code.append(Code(*['''\
     'error:',
     Code('''\
         if (error != 0) {
-            S->PC = initial_PC;
-            S->I = initial_I;
+            S->pc = initial_pc;
+            S->ir = initial_ir;
         }
 
         if (error == MIT_ERROR_INVALID_OPCODE &&
-            (S->I & MIT_OPCODE_MASK) == MIT_INSTRUCTION_CALL &&
+            (S->ir & MIT_OPCODE_MASK) == MIT_INSTRUCTION_CALL &&
             (error = mit_internal_extra_instruction(S)) == MIT_ERROR_OK) {
-            S->I = 0;
+            S->ir = 0;
         }'''
     ),
     '''\

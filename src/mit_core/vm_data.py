@@ -17,10 +17,11 @@ from .register import RegisterEnum
 @unique
 class Register(RegisterEnum):
     '''A VM register.'''
-    PC = ()
-    I = ()
-    BAD = ()
-    STACK_DEPTH = ()
+    pc = ()
+    ir = ()
+    bad = ()
+    stack_depth = ()
+    # Registers that are not part of the spec
     memory = ('mit_word *')
     memory_size = ()
     stack = ('mit_word * restrict')
@@ -48,23 +49,23 @@ class Instruction(InstructionEnum):
     ), True)
 
     JUMP = (0x1, ['addr'], [], Code('''\
-        S->PC = (mit_uword)addr;
-        CHECK_ALIGNED(S->PC);
+        S->pc = (mit_uword)addr;
+        CHECK_ALIGNED(S->pc);
         DO_NEXT;'''
     ), True)
 
     JUMPZ = (0x2, ['flag', 'addr'], [], Code('''\
         if (flag == 0) {
-            S->PC = (mit_uword)addr;
-            CHECK_ALIGNED(S->PC);
+            S->pc = (mit_uword)addr;
+            CHECK_ALIGNED(S->pc);
             DO_NEXT;
         }
     '''))
 
     CALL = (0x3, ['addr'], ['ret_addr'], Code('''\
-        ret_addr = S->PC;
-        S->PC = (mit_uword)addr;
-        CHECK_ALIGNED(S->PC);
+        ret_addr = S->pc;
+        S->pc = (mit_uword)addr;
+        CHECK_ALIGNED(S->pc);
         DO_NEXT;'''
     ), True)
 
@@ -75,13 +76,13 @@ class Instruction(InstructionEnum):
     SWAP = (0x6, ['x', 'ITEMS', 'y', 'COUNT'], ['y', 'ITEMS', 'x'], Code())
 
     PUSH_STACK_DEPTH = (0x7, [], ['n'], Code('''\
-        n = S->STACK_DEPTH;'''
+        n = S->stack_depth;'''
     ))
 
     LOAD = (0x8, ['addr', 'size'], ['x'], Code('''\
         int ret = load(S->memory, S->memory_size, addr, size, &x);
         if (ret != 0) {
-            S->BAD = addr;
+            S->bad = addr;
             RAISE(ret);
         }'''
     ))
@@ -89,7 +90,7 @@ class Instruction(InstructionEnum):
     STORE = (0x9, ['x', 'addr', 'size'], [], Code('''\
         int ret = store(S->memory, S->memory_size, addr, size, x);
         if (ret != 0) {
-            S->BAD = addr;
+            S->bad = addr;
             RAISE(ret);
         }'''
     ))
@@ -100,7 +101,7 @@ class Instruction(InstructionEnum):
 
     LIT_PC_REL = (0xb, [], ['n'], Code('''\
         FETCH_PC(n);
-        n += S->PC - MIT_WORD_BYTES;'''
+        n += S->pc - MIT_WORD_BYTES;'''
     ))
 
     LIT_0 = (0xc, [], ['zero'], Code('''\
