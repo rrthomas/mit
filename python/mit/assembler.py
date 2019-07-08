@@ -86,7 +86,7 @@ class Disassembler:
             opcode = self.ir & opcode_mask
             self.ir >>= opcode_bit
             try:
-                name = mnemonic[opcode]
+                name = mnemonic[opcode].lower()
             except KeyError:
                 name = "undefined opcode {:#x}".format(opcode)
             if opcode == LIT or opcode == LIT_PC_REL:
