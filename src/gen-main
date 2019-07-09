@@ -200,15 +200,14 @@ Feature(# Error message on error exit
 
 Feature(# Register and stack backtrace
     top_level=Code('''
-        #define WORD_STRLEN (MIT_WORD_BYTES * 2)
+        #define MAX_STACK_ITEM_STRLEN (sizeof(mit_max_stack_item_t) * 2)
 
-        static char hex[] = "0123456789abcdef";
-
-        static void word_to_str(mit_word w, char s[WORD_STRLEN])
+        static void stack_item_to_str(mit_max_stack_item_t x, unsigned size, char s[MAX_STACK_ITEM_STRLEN])
         {
-            for (unsigned i = 0; i < WORD_STRLEN; i++) {
-                s[WORD_STRLEN - i - 1] = hex[w & 0xf];
-                w >>= 4;
+            static const char hex[] = "0123456789abcdef";
+            for (unsigned i = 0, digits = size * 2; i < digits; i++) {
+                s[digits - i - 1] = hex[x & 0xf];
+                x >>= 4;
             }
         }
 
@@ -225,12 +224,12 @@ Feature(# Register and stack backtrace
     '''.format(default_max_backtrace)),
     exit=disable_warnings(
         ['-Wpointer-to-int-cast'], Code('''
-        if (backtrace == true) {
+        if (error != MIT_ERROR_HALT && backtrace == true) {
             fprintf(stderr, "\\nRegisters:\\n");
-            char word_str[WORD_STRLEN];
+            char str[MAX_STACK_ITEM_STRLEN];
             #define R(name, type, return_type) \\
-            word_to_str((mit_uword)S->name, &word_str[0]); \\
-            fprintf(stderr, #name "=0x%.*s\\n", WORD_STRLEN, word_str);
+            stack_item_to_str((mit_max_stack_item_t)S->name, sizeof(S->name), &str[0]); \\
+            fprintf(stderr, #name "=0x%.*s\\n", (int)(sizeof(S->name) * 2), str);
             #include "mit/registers.h"
             #undef R
             if (S->stack_depth <= S->stack_size) {
@@ -241,8 +240,8 @@ Feature(# Register and stack backtrace
                 for (mit_uword pos = 0; pos < items; pos++) {
                     mit_word w;
                     if (load_stack(S->stack, S->stack_depth, pos, &w) == 0) {
-                        word_to_str(w, &word_str[0]);
-                        fprintf(stderr, "0x%.*s\\n", WORD_STRLEN, word_str);
+                        stack_item_to_str(w, (int)sizeof(mit_uword), &str[0]);
+                        fprintf(stderr, "0x%.*s\\n", (int)(sizeof(mit_uword) * 2), str);
                     }
                 }
             }
