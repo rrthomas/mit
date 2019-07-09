@@ -225,7 +225,7 @@ Feature(# Register and stack backtrace
     '''.format(default_max_backtrace)),
     exit=disable_warnings(
         ['-Wpointer-to-int-cast'], Code('''
-        if (backtrace == true) {
+        if (error != MIT_ERROR_HALT && backtrace == true) {
             fprintf(stderr, "\\nRegisters:\\n");
             char word_str[WORD_STRLEN];
             #define R(name, type, return_type) \\
