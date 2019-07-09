@@ -131,8 +131,8 @@ vars().update([(c, cty.in_dll(libmit, "mit_{}".format(c)).value)
 c_ptrdiff_t = c_ssize_t
 
 # Errors
-mit_error = errcheck(MitError)
-malloc_error = errcheck(MallocError)
+mit_error = errcheck(MitErrorCode)
+malloc_error = errcheck(MallocErrorCode)
 
 # mit.h
 libmit.mit_load.argtypes = [c_void_p, c_uword, c_uint, POINTER(c_word)]
@@ -162,10 +162,10 @@ libmit.mit_single_step.errcheck = mit_error
 
 libmit.mit_load_object.restype = c_ptrdiff_t
 libmit.mit_load_object.argtypes = [c_void_p, c_uword, c_int]
-libmit.mit_load_object.errcheck = errcheck(LoadError)
+libmit.mit_load_object.errcheck = errcheck(LoadErrorCode)
 
 libmit.mit_save_object.argtypes = [c_void_p, c_uword, c_uword, c_int]
-libmit.mit_save_object.errcheck = errcheck(SaveError)
+libmit.mit_save_object.errcheck = errcheck(SaveErrorCode)
 
 libmit.mit_init.restype = c_void_p
 libmit.mit_init.argtypes = [c_size_t, c_size_t]

@@ -164,7 +164,7 @@ class State:
                 else:
                     libmit.mit_run(self.state)
             except ErrorCode as e:
-                if e.args[0] == MitError.HALT:
+                if e.args[0] == MitErrorCode.HALT:
                     return
                 elif (e.args[0] == 1 and
                       self.registers["ir"].get() & opcode_mask == JUMP

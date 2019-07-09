@@ -8,8 +8,8 @@
 # THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 # RISK.
 
-from mit_core.vm_data import Instruction, InternalExtraInstruction, MitError
-from mit_core.errors import MallocError, LoadError, SaveError
+from mit_core.vm_data import Instruction, InternalExtraInstruction, MitErrorCode
+from mit_core.errors import MallocErrorCode, LoadErrorCode, SaveErrorCode
 from mit_core.code_util import Code, enum_to_c
 
 
@@ -36,13 +36,13 @@ code.extend(enum_to_c(Instruction))
 code.append('')
 code.extend(enum_to_c(InternalExtraInstruction))
 code.append('')
-code.extend(enum_to_c(MitError))
+code.extend(enum_to_c(MitErrorCode))
 code.append('')
-code.extend(enum_to_c(MallocError))
+code.extend(enum_to_c(MallocErrorCode))
 code.append('')
-code.extend(enum_to_c(LoadError))
+code.extend(enum_to_c(LoadErrorCode))
 code.append('')
-code.extend(enum_to_c(SaveError))
+code.extend(enum_to_c(SaveErrorCode))
 code.append('')
 code.append('#endif')
 
