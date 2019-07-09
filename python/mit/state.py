@@ -19,11 +19,21 @@ Examining memory: dump, disassemble
 import os
 import sys
 
-from .binding import *
-from .opcodes import *
-from .memory import *
-from .stack import *
-from .assembler import *
+from .binding import (
+    libmit, libmitfeatures,
+    ErrorCode, is_aligned,
+    word_bytes, opcode_mask,
+    c_uword, c_void_p, c_char_p,
+    hex0x_word_width,
+)
+from .errors import MitErrorCode
+from .opcodes import (
+    Register,
+    Instruction, InternalExtraInstruction, LibInstruction,
+)
+from .memory import Memory, WordMemory
+from .stack import Stack
+from .assembler import Assembler, Disassembler
 
 
 # Set up binary I/O flag
@@ -167,7 +177,7 @@ class State:
                 if e.args[0] == MitErrorCode.HALT:
                     return
                 elif (e.args[0] == 1 and
-                      self.registers["ir"].get() & opcode_mask == JUMP
+                      self.registers["ir"].get() & opcode_mask == Instruction.JUMP
                 ):
                     self.do_extra_instruction()
                 else:
@@ -197,7 +207,9 @@ class State:
                 libmit.mit_single_step(self.state)
             except ErrorCode as e:
                 ret = e.args[0]
-                if ret == 1 and self.registers["ir"].get() & opcode_mask == JUMP:
+                if (ret == 1 and
+                    self.registers["ir"].get() & opcode_mask == Instruction.JUMP
+                ):
                     self.do_extra_instruction()
                     ret = 0
                 if ret != 0:
