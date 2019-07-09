@@ -32,12 +32,12 @@ code.append('''\
 from enum import IntEnum, unique
 ''')
 code.append('')
-code.extend(enum_to_python(vm_data.MitError))
+code.extend(enum_to_python(vm_data.MitErrorCode))
 code.append('')
-code.extend(enum_to_python(errors.MallocError))
+code.extend(enum_to_python(errors.MallocErrorCode))
 code.append('')
-code.extend(enum_to_python(errors.LoadError))
+code.extend(enum_to_python(errors.LoadErrorCode))
 code.append('')
-code.extend(enum_to_python(errors.SaveError))
+code.extend(enum_to_python(errors.SaveErrorCode))
 
 print(code)

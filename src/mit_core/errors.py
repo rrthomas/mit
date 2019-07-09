@@ -10,12 +10,12 @@
 from enum import IntEnum, unique
 
 @unique
-class MallocError(IntEnum):
+class MallocErrorCode(IntEnum):
     OK = 0
     CANNOT_ALLOCATE_MEMORY = -1
 
 @unique
-class LoadError(IntEnum):
+class LoadErrorCode(IntEnum):
     UNALIGNED_ADDRESS = -1
     INVALID_ADDRESS_RANGE = -2
     FILE_SYSTEM_ERROR = -3
@@ -24,7 +24,7 @@ class LoadError(IntEnum):
     OBJECT_FILE_TOO_LARGE = -6
 
 @unique
-class SaveError(IntEnum):
+class SaveErrorCode(IntEnum):
     OK = 0
     UNALIGNED_ADDRESS = -1
     INVALID_ADDRESS_RANGE = -2

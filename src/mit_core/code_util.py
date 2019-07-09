@@ -87,7 +87,7 @@ def enum_to_c(enum):
 
     Values must be int.
     '''
-    prefix = c_symbol(enum.__name__)
+    prefix = re.sub('_CODE$', '', c_symbol(enum.__name__))
     code = Code()
     code.append('enum {')
     for member in enum:

@@ -28,7 +28,7 @@ class Register(RegisterEnum):
     stack_size = ()
 
 @unique
-class MitError(IntEnum):
+class MitErrorCode(IntEnum):
     OK = 0
     INVALID_OPCODE = 1
     STACK_OVERFLOW = 2
