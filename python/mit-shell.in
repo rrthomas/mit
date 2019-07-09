@@ -1,2 +1,2 @@
 #!/bin/sh
-@IPYTHON@ -i @IPYTHON_OPTS@ -m mit@PACKAGE_SUFFIX@
+@IPYTHON@ -i @IPYTHON_OPTS@ -c "from mit@PACKAGE_SUFFIX@.globals import *"

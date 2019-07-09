@@ -7,13 +7,8 @@
 # THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 # RISK.
 
-from mit import *
-VM = State()
-VM.globalize(globals())
+from mit.globals import *
 
-if VM is None:
-    print("Error in run() tests: init with valid parameters failed")
-    sys.exit(1)
 
 # Test code
 final_pc = word_bytes
