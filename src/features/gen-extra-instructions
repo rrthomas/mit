@@ -79,7 +79,7 @@ code.append('''\
 code.append('')
 
 body_code = Code()
-body_code.append('mit_uword opcode = S->I >> mit_opcode_bit;')
+body_code.append('mit_uword opcode = S->ir >> mit_opcode_bit;')
 body_code.extend(dispatch(LibInstruction, Code(
     'return MIT_ERROR_EXTRA_INVALID_LIBRARY;'
 )))

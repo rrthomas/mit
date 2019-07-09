@@ -13,6 +13,7 @@ from .binding import (
     align, is_aligned,
     word_bytes, word_bit, word_mask, sign_bit,
     opcode_bit, opcode_mask,
+    hex0x_word_width,
 )
 from .opcodes import (
     Instruction, InternalExtraInstruction, LibInstruction,
@@ -40,28 +41,29 @@ external_extra_mnemonic = {
 
 class Disassembler:
     '''
-    Represents the state of a disassembler. This class simulates the PC and I
-    registers. When it reaches one of the TERMINAL_OPCODES, it continues at
-    the next word. The `goto()` method sets a new disassembly address.
-    Each call to `__next__()` dissassembles one instruction.
+    Represents the state of a disassembler. This class simulates the pc and
+    ir registers. When it reaches one of the TERMINAL_OPCODES, it
+    continues at the next word. The `goto()` method sets a new disassembly
+    address. Each call to `__next__()` dissassembles one instruction.
 
     Public fields:
-     - pc - the value of the simulated PC register.
-     - i - the value of the simulated I register.
-     - end - the PC value at which to stop.
+     - pc - the value of the simulated pc register.
+     - ir - the value of the simulated ir register.
+     - end - the pc value at which to stop.
     '''
-    def __init__(self, state, pc=None, length=None, end=None, i=0):
+    def __init__(self, state, pc=None, length=None, end=None, ir=0):
         '''
-        Disassembles code from the memory of `state`. `pc` and `i` default to
-        the current PC and I values of `state`. `length` defaults to 32.
+        Disassembles code from the memory of `state`. `pc` and `ir`
+        default to the current pc and ir values of `state`.
+        `length` defaults to 32.
         '''
         self.state = state
         if pc is None:
-            self.pc = self.state.registers["PC"].get()
-            self.i = self.state.registers["I"].get()
+            self.pc = self.state.registers["pc"].get()
+            self.ir = self.state.registers["ir"].get()
         else:
             self.pc = pc
-            self.i = i
+            self.ir = ir
         assert is_aligned(self.pc)
         self.end = end
         if length is not None:
@@ -82,10 +84,10 @@ class Disassembler:
     def disassemble(self):
         try:
             comment = ''
-            opcode = self.i & opcode_mask
-            self.i >>= opcode_bit
+            opcode = self.ir & opcode_mask
+            self.ir >>= opcode_bit
             try:
-                name = mnemonic[opcode]
+                name = mnemonic[opcode].lower()
             except KeyError:
                 name = "undefined opcode {:#x}".format(opcode)
             if opcode == LIT or opcode == LIT_PC_REL:
@@ -100,28 +102,28 @@ class Disassembler:
                     comment = ' ({:#x})'.format(initial_pc + signed_value)
             if opcode in TERMINAL_OPCODES:
                 # Call `self._fetch()` later, not now.
-                if self.i != 0:
+                if self.ir != 0:
                     invalid_comment = 'invalid extra instruction'
                     if opcode == CALL:
                         comment = ' ({})'.format(
-                            internal_extra_mnemonic.get(self.i, invalid_comment)
+                            internal_extra_mnemonic.get(self.ir, invalid_comment)
                         )
                     elif opcode == JUMP:
                         comment = ' ({})'.format(
-                            external_extra_mnemonic.get(self.i, invalid_comment)
+                            external_extra_mnemonic.get(self.ir, invalid_comment)
                         )
                     else:
                         comment = ' ({})'.format(invalid_comment)
-                self.i = 0
+                self.ir = 0
         except IndexError:
             name = "invalid address!"
         return '{}{}'.format(name, comment)
 
     def __next__(self):
-        pc_str = '{:#x}'.format(self.pc)
+        pc_str = ('{:#0' + str(hex0x_word_width) + 'x}').format(self.pc)
         addr = '.' * len(pc_str)
-        if self.i == 0:
-            self.i = self._fetch()
+        if self.ir == 0:
+            self.ir = self._fetch()
             addr = pc_str
         return '{}: {}'.format(addr, self.disassemble())
 
@@ -131,27 +133,27 @@ class Disassembler:
         '''
         assert is_aligned(self.pc)
         self.pc = pc
-        self.i = 0
+        self.ir = 0
 
 class Assembler:
     '''
     Represents the state of an assembler.
 
     Public fields:
-     - pc - the value of the simulated PC register.
+     - pc - the value of the simulated pc register.
      - i_addr - the address of the latest opcode word, i.e. the word from
-       which the simulated I register was most recently loaded. `None`
-       indicates that we're about to start a new word.
+       which the simulated ir register was most recently loaded.
+       `None` indicates that we're about to start a new word.
      - i_shift - the number of opcode bits already in the word at `i_addr`,
        or `None`.
     '''
     def __init__(self, state, pc=None):
         '''
-        `pc` defaults to the current PC value of `state`.
+        `pc` defaults to the current pc value of `state`.
         '''
         self.state = state
         if pc is None:
-            self.pc = self.state.registers["PC"].get()
+            self.pc = self.state.registers["pc"].get()
         else:
             self.pc = pc
         assert is_aligned(self.pc)

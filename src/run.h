@@ -20,7 +20,7 @@
 
 #define CHECK_ALIGNED(addr)                                   \
     if (!is_aligned((addr), MIT_SIZE_WORD)) {                 \
-        S->BAD = (addr);                                      \
+        S->bad = (addr);                                      \
         RAISE(MIT_ERROR_UNALIGNED_ADDRESS);                   \
     }
 
@@ -31,25 +31,25 @@ static mit_word _fetch_pc(mit_state *S)
 #if MIT_ENDISM == MIT_HOST_ENDISM
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wcast-align"
-    mit_word w = *(mit_word *)((uint8_t *)S->memory + S->PC);
+    mit_word w = *(mit_word *)((uint8_t *)S->memory + S->pc);
 #pragma GCC diagnostic pop
 #else
     mit_word w = 0;
-    load(S->memory, S->memory_size, S->PC, MIT_SIZE_WORD, &w);
+    load(S->memory, S->memory_size, S->pc, MIT_SIZE_WORD, &w);
 #endif
-    S->PC += MIT_WORD_BYTES;
+    S->pc += MIT_WORD_BYTES;
     return w;
 }
 #pragma GCC diagnostic pop
 
 #define FETCH_PC(w)                                             \
-    if (unlikely(S->PC >= S->memory_size)) {                    \
-        S->BAD = S->PC;                                         \
+    if (unlikely(S->pc >= S->memory_size)) {                    \
+        S->bad = S->pc;                                         \
         RAISE(MIT_ERROR_INVALID_MEMORY_READ);                   \
     } else {                                                    \
         (w) = (_fetch_pc(S));                                   \
     }
 
-#define DO_NEXT  FETCH_PC(S->I)
+#define DO_NEXT  FETCH_PC(S->ir)
 
 #endif

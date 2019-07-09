@@ -90,9 +90,9 @@ class Label:
                 opcode_bits = None # Must match all bits.
             state = state.step(instruction)
             c_code.extend(Code('''\
-                initial_PC = S->PC;
-                initial_I = S->I;
-                S->I >>= MIT_OPCODE_BIT;''',
+                initial_pc = S->pc;
+                initial_ir = S->ir;
+                S->ir >>= MIT_OPCODE_BIT;''',
                 '{{ // {}'.format(instruction.name),
                     gen_case(instruction, cache_state),
                 '}',
@@ -106,7 +106,7 @@ class Label:
         cache_state = self.cache_state()
         w_code = label_by_index(self.if_wrong).goto(cache_state)
         # Generate the guess condition.
-        opcode = 'S->I'
+        opcode = 'S->ir'
         if opcode_bits is not None:
             opcode = '({} & {})'.format(opcode, hex((1 << opcode_bits) - 1))
         cache_state = self.cache_state()
@@ -142,7 +142,7 @@ def label_by_index(index):
 # Generate the code for the labels first, so as to compute `max_cached_depth`.
 labels_code = Code()
 labels_code.append(Code('''\
-    mit_uword initial_PC, initial_I;
+    mit_uword initial_pc, initial_ir;
     // The number of stack items cached in C variables.
     int cached_depth = 0;
     goto A_0;
@@ -159,14 +159,14 @@ labels_code.append(Code('''\
     //    compile-time constant indicating how many top stack items are in
     //    C variables.
     //  - Before running the `Instruction.code` for an instruction, record
-    //    `initial_PC` and `initial_I`, and right-shift `I`.
+    //    `initial_pc` and `initial_ir`, and right-shift `ir`.
     //  - When an error occurs, call `RAISE(code)`.
-    //    It sets `error` to the return code; then it resets PC and
-    //    I to their initial values, and does "goto error".
+    //    It sets `error` to the return code; then it resets pc and
+    //    ir to their initial values, and does "goto error".
     //  - On exit, whether by `RAISE` or otherwise, all Mit
     //    registers must be set according to the Mit spec. In particular,
-    //    there must be no side effects before a RAISE, except on `I` and
-    //    `PC`, which will be reset as described above.
+    //    there must be no side effects before a RAISE, except on `ir` and
+    //    `pc`, which will be reset as described above.
 '''))
 max_cached_depth = 0
 for label in labels:
@@ -186,8 +186,8 @@ labels_code.append('''\
         continue;
 
     error:
-        S->PC = initial_PC;
-        S->I = initial_I;
+        S->pc = initial_pc;
+        S->ir = initial_ir;
         switch (cached_depth) {
 ''')
 switch_code = Code()

@@ -323,16 +323,16 @@ int mit_store_stack(mit_state *S, mit_uword pos, mit_word val);
 
 int mit_pop_stack(mit_state *S, mit_word *val_ptr);
 /* Load the word at position `0` on the stack into the word pointed to by
-   `val_ptr`, and decrement `STACK_DEPTH`.
+   `val_ptr`, and decrement `stack_depth`.
 
    Return 0 if OK, or error code if position `0` is invalid.
  */
 
 int mit_push_stack(mit_state *S, mit_word val);
-/* Increment `STACK_DEPTH`, then store the word `val` value at position 0 on
+/* Increment `stack_depth`, then store the word `val` value at position 0 on
    the stack.
 
-   Return 0 if OK, or error code if `STACK_DEPTH` is greater than or equal
+   Return 0 if OK, or error code if `stack_depth` is greater than or equal
    to `S->stack_size`.
 */
 
@@ -465,7 +465,7 @@ int mit_register_args(mit_state *S, int argc, const char *argv[]);
 */
 
 mit_word mit_internal_extra_instruction(mit_state *S);
-/* Execute an internal instruction, given by `S->I`. */
+/* Execute an internal instruction, given by `S->ir`. */
 
 #if HAVE_ARITHMETIC_RSHIFT
 #define ARSHIFT(n, p) \

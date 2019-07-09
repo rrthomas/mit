@@ -166,10 +166,10 @@ class Feature:
 Feature(# Extra instructions
     handler=Code('''\
         case MIT_ERROR_INVALID_OPCODE:
-            if ((S->I & MIT_OPCODE_MASK) == MIT_INSTRUCTION_JUMP) {
+            if ((S->ir & MIT_OPCODE_MASK) == MIT_INSTRUCTION_JUMP) {
                 error = mit_extra_instruction(S);
                 if (error == 0) {
-                    S->I = 0;
+                    S->ir = 0;
                     continue;
                 }
             }
@@ -233,14 +233,14 @@ Feature(# Register and stack backtrace
             fprintf(stderr, #name "=0x%.*s\\n", WORD_STRLEN, word_str);
             #include "mit/registers.h"
             #undef R
-            if (S->STACK_DEPTH <= S->stack_size) {
+            if (S->stack_depth <= S->stack_size) {
                 fprintf(stderr, "\\nStack:\\n");
-                mit_uword items = MIN(max_backtrace, S->STACK_DEPTH);
+                mit_uword items = MIN(max_backtrace, S->stack_depth);
                 if (max_backtrace == 0)
-                    items = S->STACK_DEPTH;
+                    items = S->stack_depth;
                 for (mit_uword pos = 0; pos < items; pos++) {
                     mit_word w;
-                    if (load_stack(S->stack, S->STACK_DEPTH, pos, &w) == 0) {
+                    if (load_stack(S->stack, S->stack_depth, pos, &w) == 0) {
                         word_to_str(w, &word_str[0]);
                         fprintf(stderr, "0x%.*s\\n", WORD_STRLEN, word_str);
                     }

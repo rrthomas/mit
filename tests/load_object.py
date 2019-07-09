@@ -134,7 +134,7 @@ except ErrorCode as e:
 print("Data stack: {}".format(S))
 print("Correct stack: {}".format(correct))
 if str(correct) != str(S):
-    print("Error in load_object() tests: PC = {:#x}".format(PC.get()))
+    print("Error in load_object() tests: pc = {:#x}".format(pc.get()))
     sys.exit(1)
 
 

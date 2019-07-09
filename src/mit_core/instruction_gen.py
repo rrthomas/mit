@@ -42,13 +42,13 @@ def load_stack(name, depth=0, type='mit_word'):
     '''
     code = Code()
     code.append(
-        'mit_max_stack_item_t temp = (mit_uword)(*UNCHECKED_STACK(S->stack, S->STACK_DEPTH, {}));'
+        'mit_max_stack_item_t temp = (mit_uword)(*UNCHECKED_STACK(S->stack, S->stack_depth, {}));'
         .format(depth)
     )
     for i in range(type_words(type) - 1):
         code.append('temp <<= MIT_WORD_BIT;')
         code.append(
-            'temp |= (mit_uword)(*UNCHECKED_STACK(S->stack, S->STACK_DEPTH, {}));'
+            'temp |= (mit_uword)(*UNCHECKED_STACK(S->stack, S->stack_depth, {}));'
             .format(depth + i + 1)
         )
     code.extend(disable_warnings(
@@ -72,12 +72,12 @@ def store_stack(value, depth=0, type='mit_word'):
     ))
     for i in reversed(range(type_words(type) - 1)):
         code.append(
-            '*UNCHECKED_STACK(S->stack, S->STACK_DEPTH, {}) = (mit_uword)(temp & MIT_WORD_MASK);'
+            '*UNCHECKED_STACK(S->stack, S->stack_depth, {}) = (mit_uword)(temp & MIT_WORD_MASK);'
             .format(depth + i + 1)
         )
         code.append('temp >>= MIT_WORD_BIT;')
     code.append(
-        '*UNCHECKED_STACK(S->stack, S->STACK_DEPTH, {}) = (mit_uword)({});'
+        '*UNCHECKED_STACK(S->stack, S->stack_depth, {}) = (mit_uword)({});'
         .format(
             depth,
             'temp & MIT_WORD_MASK' if type_words(type) > 1 else 'temp',
@@ -90,7 +90,7 @@ def pop_stack(name, type='mit_word'):
     code.extend(check_underflow(Size(type_words(type))))
     code.extend(load_stack(name, type=type))
     code.append(
-        'S->STACK_DEPTH -= {};'.format(type_words(type)),
+        'S->stack_depth -= {};'.format(type_words(type)),
     )
     return code
 
@@ -99,7 +99,7 @@ def push_stack(value, type='mit_word'):
     code.extend(check_overflow(Size(0), Size(type_words(type))))
     code.extend(store_stack(value, type=type))
     code.append(
-        'S->STACK_DEPTH += {};'.format(type_words(type)),
+        'S->stack_depth += {};'.format(type_words(type)),
     )
     return code
 
@@ -314,7 +314,7 @@ class StackEffect:
     def load_args(self):
         '''
         Returns a Code to read the arguments from the stack into C
-        variables. `S->STACK_DEPTH` is not modified.
+        variables. `S->stack_depth` is not modified.
         '''
         code = Code()
         for item in self.args.items:
@@ -325,7 +325,7 @@ class StackEffect:
     def store_results(self):
         '''
         Returns a Code to write the results from C variables into the
-        stack. `S->STACK_DEPTH` must be modified first.
+        stack. `S->stack_depth` must be modified first.
         '''
         code = Code()
         for item in self.results.items:
@@ -345,18 +345,18 @@ def check_underflow(num_pops):
     if num_pops == 0: return Code()
     tests = []
     tests.append(
-        'unlikely(S->STACK_DEPTH < (mit_uword)({}))'
+        'unlikely(S->stack_depth < (mit_uword)({}))'
         .format(num_pops.size)
     )
     if num_pops.count == 1:
         tests.append(
-            'unlikely(S->STACK_DEPTH - (mit_uword)({}) < (mit_uword)(COUNT))'
+            'unlikely(S->stack_depth - (mit_uword)({}) < (mit_uword)(COUNT))'
             .format(num_pops.size)
         )
     return Code(
         'if ({}) {{'.format(' || '.join(tests)),
         Code(
-            'S->BAD = {num_pops} - 1;',
+            'S->bad = {num_pops} - 1;',
             'RAISE(MIT_ERROR_INVALID_STACK_READ);',
         ).format(num_pops=num_pops),
         '}',
@@ -381,13 +381,13 @@ def check_overflow(num_pops, num_pushes):
     if depth_change.count > 0:
         code.append('''\
             if (unlikely(COUNT + {} < COUNT)) {{
-                'S->BAD = MIT_UWORD_MAX;',
+                'S->bad = MIT_UWORD_MAX;',
                 'RAISE(MIT_ERROR_STACK_OVERFLOW);',
             }}
         '''.format(depth_change.size))
     code.append('''\
-        if (unlikely(S->stack_size - S->STACK_DEPTH < {depth_change})) {{
-            S->BAD = ({depth_change}) - (S->stack_size - S->STACK_DEPTH);
+        if (unlikely(S->stack_size - S->stack_depth < {depth_change})) {{
+            S->bad = ({depth_change}) - (S->stack_size - S->stack_depth);
             RAISE(MIT_ERROR_STACK_OVERFLOW);
         }}'''.format(depth_change=depth_change),
     )
@@ -413,7 +413,7 @@ def gen_case(instruction):
     code = Code()
     if instruction.terminal:
         code.append(
-            'if (unlikely(S->I != 0)) RAISE(MIT_ERROR_INVALID_OPCODE);'
+            'if (unlikely(S->ir != 0)) RAISE(MIT_ERROR_INVALID_OPCODE);'
         )
     if effect is not None:
         # Load the arguments into C variables.
@@ -432,7 +432,7 @@ def gen_case(instruction):
     code.extend(instruction.code)
     if effect is not None:
         # Store the results from C variables.
-        code.append('S->STACK_DEPTH += {};'.format(
+        code.append('S->stack_depth += {};'.format(
             effect.results.size - effect.args.size
         ))
         code.extend(effect.store_results())

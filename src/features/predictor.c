@@ -148,7 +148,7 @@ mit_word mit_predictor_run(mit_state * restrict state)
 
     // Run, recording history.
     do {
-        opcode_t opcode = (int)(state->I & MIT_OPCODE_MASK);
+        opcode_t opcode = (int)(state->ir & MIT_OPCODE_MASK);
         if (opcode < NUM_OPCODES) {
             counts[history][opcode]++;
             history = step_function(history, opcode);

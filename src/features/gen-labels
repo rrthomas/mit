@@ -159,7 +159,7 @@ for path in language:
 
 print("Choosing multi-guesses")
 
-# The set of Instructions that might modify the I register.
+# The set of Instructions that might modify the ir register.
 # We cannot guess beyond such an instruction.
 GUESS_LIMITING = frozenset([
     Instruction.NEXT,

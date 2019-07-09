@@ -23,7 +23,7 @@ class InstructionEnum(Enum):
        If both are `None`, then the instruction has an arbitrary stack
        effect.
      - code - Code.
-     - terminal - bool - this instruction is terminal: I must be zero on
+     - terminal - bool - this instruction is terminal: ir must be zero on
        entry.
 
     C variables are created for the arguments and results; the arguments are
@@ -37,7 +37,7 @@ class InstructionEnum(Enum):
     CHECK_ALIGNED(addr): check a VM address is valid, raising an error if
     not.
 
-    FETCH_PC(w): fetch the word at PC, assign it to `w`, and increment PC by
+    FETCH_PC(w): fetch the word at pc, assign it to `w`, and increment pc by
     a word.
 
     DO_NEXT: perform the action of NEXT.
