@@ -83,7 +83,7 @@ bench:
 	$(MAKE) check TESTS="$(BENCH_TESTS)"
 
 if USING_PFORTH
-features/pforth/config.log:
+features/pforth/config.log: features/pforth
 	cd features/pforth && \
 	autoreconf -i && \
 	./configure --build=mit BUILD_EXECUTOR=$(MIT_BINARY)
