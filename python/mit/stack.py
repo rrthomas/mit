@@ -27,6 +27,25 @@ class Stack:
             l.append(v.value)
         return str(l)
 
+    def __getitem__(self, index):
+        if isinstance(index, slice):
+            index_ = slice(index.start, index.stop)
+            return [self[i] for i in range(*index_.indices(self.depth.get()))]
+        else:
+            v = c_word()
+            libmit.mit_load_stack(self.state, self.depth.get() - 1 - index, byref(v))
+            return v.value
+
+    def __setitem__(self, index, value):
+        if type(index) == slice:
+            index_ = slice(index.start, index.stop)
+            j = 0
+            for i in range(*index_.indices(self.depth.get())):
+                self[i] = value[j]
+                j += 1
+        else:
+            libmit.mit_store_stack(self.state, self.depth.get() - 1 - index, value)
+
     def push(self, v):
         '''Push a word on to the stack.'''
         ret = libmit.mit_push_stack(self.state, v)
