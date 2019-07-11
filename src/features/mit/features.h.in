@@ -30,4 +30,6 @@ void mit_predictor_init(void);
 int mit_predictor_dump(int fd);
 mit_word mit_predictor_run(mit_state * restrict S);
 
+mit_word mit_step_to(mit_state * restrict state, mit_uword *n, mit_uword addr, int auto_NEXT);
+
 #endif

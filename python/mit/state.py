@@ -23,7 +23,7 @@ from .binding import (
     libmit, libmitfeatures,
     ErrorCode, is_aligned,
     word_bytes, opcode_mask,
-    c_uword, c_void_p, c_char_p,
+    c_uword, c_void_p, c_char_p, byref,
     hex0x_word_width,
 )
 from .errors import MitErrorCode
@@ -116,15 +116,36 @@ class State:
                 else:
                     raise
 
-    def _print_trace_info(self):
-        print("step: pc={:#x} ir={:#x} instruction={}".format(
-            self.registers["pc"].get(),
-            self.registers["ir"].get(),
-            Disassembler(self).disassemble(),
-        ))
-        print(str(self.S))
+    def _report_step_error(self, e, done, addr):
+        ret = e.args[0]
+        print("Error code {} was returned".format(ret), end='')
+        print(" after {} step{}".format(done, 's' if done > 1 else ''), end='')
+        if addr is not None:
+            print(" at pc={:#x}".format(
+                self.registers["pc"].get()),
+                end='',
+            )
+        if ret != 0 and ret != MitErrorCode.HALT:
+            raise
 
-    def step(self, n=1, addr=None, trace=False, auto_NEXT=True):
+    def step(self, n=1, addr=None, auto_NEXT=True):
+        '''
+        Single-step for n steps (excluding NEXT when pc does not change), or
+        until pc=addr.
+        '''
+        if addr is None:
+            assert n != 0
+            addr = 0
+        else:
+            n = 0
+
+        n_ptr = c_uword(n)
+        try:
+            libmitfeatures.mit_step_to(self.state, byref(n_ptr), addr, auto_NEXT)
+        except ErrorCode as e:
+            self._report_step_error(e, n_ptr.value, addr)
+
+    def trace(self, n=1, addr=None, auto_NEXT=True):
         '''
         Single-step for n steps (excluding NEXT when pc does not change), or
         until pc=addr.
@@ -135,27 +156,21 @@ class State:
             if auto_NEXT and self.registers["ir"].get() == 0:
                 done -= 1
             if self.registers["pc"].get() == addr: break
-            if trace: self._print_trace_info()
+            print("step: pc={:#x} ir={:#x} instruction={}".format(
+                self.registers["pc"].get(),
+                self.registers["ir"].get(),
+                Disassembler(self).disassemble(),
+            ))
+            print(str(self.S))
             try:
                 libmit.mit_single_step(self.state)
             except ErrorCode as e:
-                ret = e.args[0]
-                if (ret == 1 and
+                if (e.args[0] == 1 and
                     self.registers["ir"].get() & opcode_mask == Instruction.JUMP
                 ):
                     self.do_extra_instruction()
-                    ret = 0
-                if ret != 0:
-                    print("Error code {} was returned".format(ret), end='')
-                    if n > 1:
-                        print(" after {} steps".format(done), end='')
-                    if addr is not None:
-                        print(" at pc={:#x}".format(
-                            self.registers["pc"].get()),
-                            end='',
-                        )
-                    print("")
-                    raise
+                else:
+                    self._report_step_error(e, done, addr)
             done += 1
 
     def load(self, file, addr=0):

@@ -50,7 +50,7 @@ ass_extra(LIBC, type=JUMP)
 breaks.append(label() + word_bytes)
 
 # Run LibC.ARGC test
-step(addr=breaks[0], trace=True)
+trace(addr=breaks[0])
 argc = S.pop()
 print("argc is {}, and should be {}".format(argc, len(args)))
 if argc != len(args):
@@ -58,7 +58,7 @@ if argc != len(args):
     sys.exit(1)
 
 # Run LibC.ARG test
-step(addr=breaks[1], trace=True)
+trace(addr=breaks[1])
 arg1len = S.pop()
 print("arg 1's length is {}, and should be {}".format(arg1len, len(args[1])))
 if arg1len != len(args[1]):
@@ -67,7 +67,7 @@ if arg1len != len(args[1]):
 S.push(arg1len) # push length back for next test
 
 # Run LibC.STRNCPY test
-step(addr=breaks[2], trace=True)
+trace(addr=breaks[2])
 print("addr: {}".format(libmit.mit_native_address_of_range(VM.state, buffer, 0)))
 c_str = string_at(libmit.mit_native_address_of_range(VM.state, buffer, 0))
 print("arg 1 is {}, and should be {}".format(c_str, args[1]))
