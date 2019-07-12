@@ -46,28 +46,58 @@ except:
 # State
 class State:
     '''A VM state.'''
-
-    def __init__(self, memory_size=1024*1024 if word_bytes > 2 else 16*1024, stack_size=1024):
-        '''Initialise the VM state.'''
-        self.state = libmit.mit_init(memory_size, stack_size)
-        if self.state is None:
+    def __new__(cls, memory_size=1024*1024 if word_bytes > 2 else 16*1024, stack_size=1024):
+        '''Create the VM state.'''
+        state = super().__new__(cls)
+        state.state = libmit.mit_init(memory_size, stack_size)
+        if state.state is None:
             raise Error("error creating virtual machine state")
-
-        self.registers = {
-            register.name: ActiveRegister(self.state, register.name, register)
+        state.registers = {
+            register.name: ActiveRegister(state.state, register.name, register)
             for register in Register
         }
-        self.M = Memory(self)
-        self.memory_size = memory_size
-        self.M_word = WordMemory(self)
-        self.S = Stack(
-            self.state,
-            self.registers["stack_depth"],
+        state.M = Memory(state)
+        state.M_word = WordMemory(state)
+        state.S = Stack(
+            state.state,
+            state.registers["stack_depth"],
         )
-        self.stack_size = stack_size
+        state.memory_size = memory_size
+        state.stack_size = stack_size
+        return state
 
     def __del__(self):
         libmit.mit_destroy(self.state)
+
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        del state['registers']
+        state['registers'] = {
+            register.name: self.registers[register.name].get()
+            for register in Register
+        }
+        del state['registers']['memory']
+        del state['registers']['stack']
+        del state['M']
+        del state['M_word']
+        state['M_word'] = self.M_word[0:len(self.M_word)]
+        del state['S']
+        state['S'] = self.S[0:self.registers["stack_depth"].get()]
+        del state['state']
+        if 'argv' in state:
+            state['argv'] = [cstr for cstr in state['argv']]
+        return state
+
+    def __getnewargs__(self):
+        return (self.memory_size, self.stack_size)
+
+    def __setstate__(self, state):
+        for name in state['registers']:
+            self.registers[name].set(state['registers'][name])
+        self.M_word[0:len(self.M_word)] = state['M_word']
+        for item in state['S']: self.S.push(item)
+        if 'argv' in state:
+            self.register_args(*state['argv'])
 
     def register_args(self, *args):
         argc = len(args)
