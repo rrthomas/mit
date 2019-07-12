@@ -11,7 +11,7 @@ RISK.
 Registers: a variable for each register; also a list, 'registers'
 Memory: M, M_word
 Stack: S
-Managing the VM state: load, save, initialise
+Managing the VM state: load, save
 Controlling and observing execution: run, step
 Examining memory: dump, disassemble
 '''
