@@ -191,4 +191,5 @@ AC_CONFIG_FILES([
 ])
 AC_CONFIG_FILES([python/mit-dump], [chmod +x python/mit-dump])
 AC_CONFIG_FILES([python/mit-shell], [chmod +x python/mit-shell])
+AC_CONFIG_FILES([tests/test-mit-shell], [chmod +x tests/test-mit-shell])
 AC_OUTPUT
