@@ -10,12 +10,11 @@
 from mit import *
 size = 256
 VM = State(size)
-VM.globalize(globals())
 
 
 # Test data
-M_word[0] = 0x01020304
-M_word[word_bytes] = 0x05060708
+VM.M_word[0] = 0x01020304
+VM.M_word[word_bytes] = 0x05060708
 
 # Test results
 addr = [(size + 1) * word_bytes, 0, 0]
@@ -25,7 +24,7 @@ correct = [-2, -2, 0]
 # Test
 def try_save(file, address, length):
     try:
-        save(file, address, length)
+        VM.save(file, address, length)
         ret = 0
     except ErrorCode as e:
         ret = e.args[0]
@@ -41,12 +40,12 @@ for i in range(3):
         print("Error in save_object() test {}".format(i + 1))
         sys.exit(1)
 
-ret = load("saveobj", 4 * word_bytes)
+ret = VM.load("saveobj", 4 * word_bytes)
 os.remove("saveobj")
 
 for i in range(4):
-    old = M_word[i * word_bytes]
-    new = M_word[(i + 4) * word_bytes]
+    old = VM.M_word[i * word_bytes]
+    new = VM.M_word[(i + 4) * word_bytes]
     print("Word {} of memory is {}; should be {}".format(i, new, old))
     if new != old:
         print("Error in save_object() tests: loaded file does not match data saved")

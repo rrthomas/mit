@@ -17,9 +17,9 @@ from .binding import *
 # Memory access (word & byte)
 class AbstractMemory(collections.abc.Sequence):
     '''A VM memory (abstract superclass).'''
-    def __init__(self, VM):
+    def __init__(self, VM, element_size):
         self.VM = VM
-        self.element_size = 1
+        self.element_size = element_size
 
     def __getitem__(self, index):
         if isinstance(index, slice):
@@ -53,10 +53,16 @@ class AbstractMemory(collections.abc.Sequence):
         raise NotImplementedError
 
     def __len__(self):
-        return self.memory_size * word_bytes
+        '''
+        Returns the number of read/writable locations.
+        '''
+        return self.VM.memory_size * word_bytes // self.element_size
 
 class Memory(AbstractMemory):
     '''A VM memory (byte-accessed).'''
+    def __init__(self, VM):
+        super().__init__(VM, 1)
+
     def load(self, index):
         word = c_word()
         libmit.mit_load(self.VM.state, index, 0, byref(word))
@@ -68,8 +74,7 @@ class Memory(AbstractMemory):
 class WordMemory(AbstractMemory):
     '''A VM memory (word-accessed).'''
     def __init__(self, VM):
-        super().__init__(VM)
-        self.element_size = word_bytes
+        super().__init__(VM, word_bytes)
 
     def load(self, index):
         word = c_word()

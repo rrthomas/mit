@@ -19,11 +19,21 @@ Examining memory: dump, disassemble
 import os
 import sys
 
-from .binding import *
-from .opcodes import *
-from .memory import *
-from .stack import *
-from .assembler import *
+from .binding import (
+    libmit, libmitfeatures,
+    ErrorCode, is_aligned,
+    word_bytes, opcode_mask,
+    c_uword, c_void_p, c_char_p,
+    hex0x_word_width,
+)
+from .errors import MitErrorCode
+from .opcodes import (
+    Register,
+    Instruction, InternalExtraInstruction, LibInstruction,
+)
+from .memory import Memory, WordMemory
+from .stack import Stack
+from .assembler import Assembler, Disassembler
 
 
 # Set up binary I/O flag
@@ -58,73 +68,6 @@ class State:
 
     def __del__(self):
         libmit.mit_destroy(self.state)
-
-    def globalize(self, globals_dict):
-        '''
-        Make the state accessible through global variables and functions:
-
-        Registers: a variable for each register; also a list 'registers'
-        Managing the VM state: load, save
-        Controlling and observing execution: run, step
-        Memory: M[], M_word[], dump
-        Assembly: Assembler, Disassembler, assembler,
-            word, bytes, instruction, lit, lit_pc_rel, label, goto
-        Abbreviations: ass=assembler.instruction, dis=self.disassemble
-
-        The instruction opcodes are available as constants.
-        '''
-        globals_dict.update({
-            name: register
-            for name, register in self.registers.items()
-        })
-        globals_dict.update({
-            name: self.__getattribute__(name)
-            for name in [
-                "M", "M_word", "S", "registers",
-                "load", "run", "step",
-                "dump", "disassemble",
-            ]
-        })
-        assembler = Assembler(self)
-        def _save(file, address=0, length=None):
-            if length is None:
-                length = assembler.pc - address
-            self.save(file, address, length)
-        globals_dict['save'] = _save
-        globals_dict['assembler'] = assembler
-        globals_dict.update({
-            name: assembler.__getattribute__(name)
-            for name in [
-                "instruction", "lit", "lit_pc_rel",
-                "label", "goto"
-            ]
-        })
-
-        # Abbreviations and diambiguations
-        globals_dict["ass_word"] = assembler.__getattribute__("word")
-        globals_dict["ass_bytes"] = assembler.__getattribute__("bytes")
-        globals_dict["ass"] = assembler.__getattribute__("instruction")
-        globals_dict["ass_extra"] = assembler.__getattribute__("extra_instruction")
-        globals_dict["dis"] = self.__getattribute__("disassemble")
-
-        # Opcodes
-        globals_dict.update({
-            instruction.name: instruction
-            for instruction in Instruction
-        })
-        globals_dict["UNDEFINED"] = 1 + max(Instruction)
-        globals_dict.update({
-            instruction.name: instruction
-            for instruction in InternalExtraInstruction
-        })
-        globals_dict.update({
-            instruction.name: instruction
-            for instruction in LibInstruction
-        })
-        globals_dict.update({
-            lib.library.__name__: lib.library
-            for lib in LibInstruction
-        })
 
     def register_args(self, *args):
         argc = len(args)
@@ -167,7 +110,7 @@ class State:
                 if e.args[0] == MitErrorCode.HALT:
                     return
                 elif (e.args[0] == 1 and
-                      self.registers["ir"].get() & opcode_mask == JUMP
+                      self.registers["ir"].get() & opcode_mask == Instruction.JUMP
                 ):
                     self.do_extra_instruction()
                 else:
@@ -197,7 +140,9 @@ class State:
                 libmit.mit_single_step(self.state)
             except ErrorCode as e:
                 ret = e.args[0]
-                if ret == 1 and self.registers["ir"].get() & opcode_mask == JUMP:
+                if (ret == 1 and
+                    self.registers["ir"].get() & opcode_mask == Instruction.JUMP
+                ):
                     self.do_extra_instruction()
                     ret = 0
                 if ret != 0:

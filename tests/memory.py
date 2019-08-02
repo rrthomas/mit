@@ -8,14 +8,12 @@
 # THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 # RISK.
 
-from mit import *
+from mit.globals import *
 from mit_test import *
-size = 4096
-VM = State(size)
-VM.globalize(globals())
 
 
 # Test results
+size = len(M_word)
 magic_number = 0xf201
 correct = [
     [magic_number],

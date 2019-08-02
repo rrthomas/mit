@@ -10,9 +10,7 @@
 # THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 # RISK.
 
-from mit import *
-VM = State(16384)
-VM.globalize(globals())
+from mit.globals import *
 
 
 # Test results

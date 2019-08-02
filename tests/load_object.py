@@ -9,9 +9,7 @@
 
 import os
 
-from mit import *
-VM = State()
-VM.globalize(globals())
+from mit.globals import *
 
 
 def try_load(file):

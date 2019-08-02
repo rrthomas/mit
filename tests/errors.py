@@ -8,10 +8,17 @@
 # RISK.
 
 from mit import *
+
+
 size = 4096
 VM = State(memory_size=size, stack_size=3)
-VM.globalize(globals())
-
+assembler = Assembler(VM)
+lit = assembler.lit
+label = assembler.label
+ass = assembler.instruction
+vars().update(VM.registers)
+vars().update(Instruction.__members__)
+UNDEFINED = 1 + max(Instruction)
 
 # Test results and data
 result = []
@@ -92,7 +99,7 @@ assert(len(test) == len(result))
 
 def step_trace():
     while True:
-        step(trace=True)
+        VM.step(trace=True)
 
 error = 0
 def do_tests(run_fn):
@@ -118,7 +125,7 @@ def do_tests(run_fn):
 print("Running tests with single_step")
 do_tests(step_trace)
 print("Running tests with run (optimized)")
-do_tests(run)
+do_tests(VM.run)
 
 # Try to write to an invalid stack location (can't do this with virtual code)
 try:

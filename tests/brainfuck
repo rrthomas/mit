@@ -14,8 +14,8 @@ RISK.
 
 '''
 
-import sys, mit
-mit.State().globalize(globals())
+import sys
+from mit.globals import *
 
 
 if len(sys.argv) != 2:
@@ -58,7 +58,7 @@ try:
             dup()
             loadb()
             lit(0xDEADBEEF)
-            patch = assembler.pc - mit.word_bytes
+            patch = assembler.pc - word_bytes
             ass(JUMPZ)
             stack.append((loop, patch))
         elif c == ']':
@@ -67,9 +67,9 @@ try:
             ass(JUMP)
             M_word[patch] = label()
     ass_extra(HALT)
-    M_word[mit.word_bytes] = label() # Patch data pointer.
-except mit.ErrorCode as e:
-    if e.args[0] == mit.MitError.INVALID_MEMORY_WRITE:
+    M_word[word_bytes] = label() # Patch data pointer.
+except ErrorCode as e:
+    if e.args[0] == MitError.INVALID_MEMORY_WRITE:
         sys.exit(2)
     else:
         sys.exit(1)

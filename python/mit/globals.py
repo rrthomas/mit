@@ -1,0 +1,50 @@
+from . import *
+
+VM = State()
+
+# Registers.
+vars().update(VM.registers)
+
+# Bits of the VM.
+vars().update({
+    name: VM.__getattribute__(name)
+    for name in [
+        "M", "M_word", "S", "registers",
+        "load", "run", "step",
+        "dump", "disassemble",
+    ]
+})
+
+# An Assembler.
+assembler = Assembler(VM)
+vars()['assembler'] = assembler
+vars().update({
+    name: assembler.__getattribute__(name)
+    for name in [
+        "instruction", "lit", "lit_pc_rel",
+        "label", "goto"
+    ]
+})
+
+# Add a default length to `save()`.
+def _save(file, address=0, length=None):
+    if length is None:
+        length = assembler.pc - address
+    VM.save(file, address, length)
+vars()['save'] = _save
+
+# Abbreviations and disambiguations
+ass_word = assembler.word
+ass_bytes = assembler.bytes
+ass = assembler.instruction
+ass_extra = assembler.extra_instruction
+dis = disassemble
+
+# Opcodes
+vars().update(Instruction.__members__)
+vars().update(InternalExtraInstruction.__members__)
+vars().update(LibInstruction.__members__)
+vars().update({
+    lib.library.__name__: lib.library
+    for lib in LibInstruction
+})
