@@ -11,7 +11,7 @@ RISK.
 Registers: a variable for each register; also a list, 'registers'
 Memory: M, M_word
 Stack: S
-Managing the VM state: load, save, initialise
+Managing the VM state: load, save
 Controlling and observing execution: run, step
 Examining memory: dump, disassemble
 '''
@@ -23,7 +23,7 @@ from .binding import (
     libmit, libmitfeatures,
     ErrorCode, is_aligned,
     word_bytes, opcode_mask,
-    c_uword, c_void_p, c_char_p,
+    c_uword, c_void_p, c_char_p, byref,
     hex0x_word_width,
 )
 from .errors import MitErrorCode
@@ -46,28 +46,58 @@ except:
 # State
 class State:
     '''A VM state.'''
-
-    def __init__(self, memory_size=1024*1024 if word_bytes > 2 else 16*1024, stack_size=1024):
-        '''Initialise the VM state.'''
-        self.state = libmit.mit_init(memory_size, stack_size)
-        if self.state is None:
+    def __new__(cls, memory_size=1024*1024 if word_bytes > 2 else 16*1024, stack_size=1024):
+        '''Create the VM state.'''
+        state = super().__new__(cls)
+        state.state = libmit.mit_init(memory_size, stack_size)
+        if state.state is None:
             raise Error("error creating virtual machine state")
-
-        self.registers = {
-            register.name: ActiveRegister(self.state, register.name, register)
+        state.registers = {
+            register.name: ActiveRegister(state.state, register.name, register)
             for register in Register
         }
-        self.M = Memory(self)
-        self.memory_size = memory_size
-        self.M_word = WordMemory(self)
-        self.S = Stack(
-            self.state,
-            self.registers["stack_depth"],
+        state.M = Memory(state)
+        state.M_word = WordMemory(state)
+        state.S = Stack(
+            state.state,
+            state.registers["stack_depth"],
         )
-        self.stack_size = stack_size
+        state.memory_size = memory_size
+        state.stack_size = stack_size
+        return state
 
     def __del__(self):
         libmit.mit_destroy(self.state)
+
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        del state['registers']
+        state['registers'] = {
+            register.name: self.registers[register.name].get()
+            for register in Register
+        }
+        del state['registers']['memory']
+        del state['registers']['stack']
+        del state['M']
+        del state['M_word']
+        state['M_word'] = self.M_word[0:len(self.M_word)]
+        del state['S']
+        state['S'] = self.S[0:self.registers["stack_depth"].get()]
+        del state['state']
+        if 'argv' in state:
+            state['argv'] = [cstr for cstr in state['argv']]
+        return state
+
+    def __getnewargs__(self):
+        return (self.memory_size, self.stack_size)
+
+    def __setstate__(self, state):
+        for name in state['registers']:
+            self.registers[name].set(state['registers'][name])
+        self.M_word[0:len(self.M_word)] = state['M_word']
+        for item in state['S']: self.S.push(item)
+        if 'argv' in state:
+            self.register_args(*state['argv'])
 
     def register_args(self, *args):
         argc = len(args)
@@ -116,15 +146,36 @@ class State:
                 else:
                     raise
 
-    def _print_trace_info(self):
-        print("step: pc={:#x} ir={:#x} instruction={}".format(
-            self.registers["pc"].get(),
-            self.registers["ir"].get(),
-            Disassembler(self).disassemble(),
-        ))
-        print(str(self.S))
+    def _report_step_error(self, e, done, addr):
+        ret = e.args[0]
+        print("Error code {} was returned".format(ret), end='')
+        print(" after {} step{}".format(done, 's' if done > 1 else ''), end='')
+        if addr is not None:
+            print(" at pc={:#x}".format(
+                self.registers["pc"].get()),
+                end='',
+            )
+        if ret != 0 and ret != MitErrorCode.HALT:
+            raise
 
-    def step(self, n=1, addr=None, trace=False, auto_NEXT=True):
+    def step(self, n=1, addr=None, auto_NEXT=True):
+        '''
+        Single-step for n steps (excluding NEXT when pc does not change), or
+        until pc=addr.
+        '''
+        if addr is None:
+            assert n != 0
+            addr = 0
+        else:
+            n = 0
+
+        n_ptr = c_uword(n)
+        try:
+            libmitfeatures.mit_step_to(self.state, byref(n_ptr), addr, auto_NEXT)
+        except ErrorCode as e:
+            self._report_step_error(e, n_ptr.value, addr)
+
+    def trace(self, n=1, addr=None, auto_NEXT=True):
         '''
         Single-step for n steps (excluding NEXT when pc does not change), or
         until pc=addr.
@@ -135,27 +186,21 @@ class State:
             if auto_NEXT and self.registers["ir"].get() == 0:
                 done -= 1
             if self.registers["pc"].get() == addr: break
-            if trace: self._print_trace_info()
+            print("step: pc={:#x} ir={:#x} instruction={}".format(
+                self.registers["pc"].get(),
+                self.registers["ir"].get(),
+                Disassembler(self).disassemble(),
+            ))
+            print(str(self.S))
             try:
                 libmit.mit_single_step(self.state)
             except ErrorCode as e:
-                ret = e.args[0]
-                if (ret == 1 and
+                if (e.args[0] == 1 and
                     self.registers["ir"].get() & opcode_mask == Instruction.JUMP
                 ):
                     self.do_extra_instruction()
-                    ret = 0
-                if ret != 0:
-                    print("Error code {} was returned".format(ret), end='')
-                    if n > 1:
-                        print(" after {} steps".format(done), end='')
-                    if addr is not None:
-                        print(" at pc={:#x}".format(
-                            self.registers["pc"].get()),
-                            end='',
-                        )
-                    print("")
-                    raise
+                else:
+                    self._report_step_error(e, done, addr)
             done += 1
 
     def load(self, file, addr=0):

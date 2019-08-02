@@ -38,7 +38,7 @@ AS_IF([test "$IPYTHON" = ""],
    PYTHON_VERSION=`$IPYTHON --quick --no-term-title -c "import sys; print(sys.version_info.major)"`
    PYTHON_VERSION=${PYTHON_VERSION%\\n}
    AS_IF([test "$PYTHON_VERSION" != "3"], AC_MSG_ERROR([IPYTHON is not Python 3]))
-   IPYTHON_OPTS="--autocall 2"]
+   IPYTHON_OPTS="--autocall 2 --no-confirm-exit"]
    AC_SUBST([IPYTHON_OPTS])
 )
 AC_PATH_PROG([LATEXMK], [latexmk], [true])
@@ -191,4 +191,5 @@ AC_CONFIG_FILES([
 ])
 AC_CONFIG_FILES([python/mit-dump], [chmod +x python/mit-dump])
 AC_CONFIG_FILES([python/mit-shell], [chmod +x python/mit-shell])
+AC_CONFIG_FILES([tests/test-mit-shell], [chmod +x tests/test-mit-shell])
 AC_OUTPUT

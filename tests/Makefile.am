@@ -9,6 +9,7 @@
 
 TEST_EXTENSIONS = .py .bf
 # Use PY_LOG_ENV to set LD_PRELOAD for ASAN
+LOG_COMPILER = env $(PY_LOG_ENV)
 PY_LOG_COMPILER = env $(PY_LOG_ENV) $(PYTHON)
 BF_LOG_COMPILER = env $(PY_LOG_ENV) $(TIME) $(PYTHON) $(srcdir)/run-brainfuck-test
 
@@ -29,7 +30,8 @@ TESTS =	\
 	single_step.py	\
 	stack.py	\
 	hello-world.bf  \
-	cell-size.bf
+	cell-size.bf	\
+	test-mit-shell
 
 BENCH_TESTS = \
 	mandelbrot.bf
@@ -67,6 +69,7 @@ EXTRA_DIST = \
 	brainfuck \
 	mit_test.py \
 	redirect_stdout.py \
+	test-mit-shell.in \
 	hello.correct \
 	hello-world.correct \
 	cell-size.correct \

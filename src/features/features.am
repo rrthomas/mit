@@ -23,9 +23,9 @@ mit_pkginclude_HEADERS += %D%/mit/features.h
 
 libmitfeatures@PACKAGE_SUFFIX@_la_SOURCES += \
 	%D%/auto-extend.c \
+	%D%/core-dump.c \
 	%D%/predictor.c \
-	%D%/core-dump.c
-
+	%D%/step_to.c
 
 # Library extra instructions
 
@@ -83,7 +83,7 @@ bench:
 	$(MAKE) check TESTS="$(BENCH_TESTS)"
 
 if USING_PFORTH
-features/pforth/config.log:
+features/pforth/config.log: features/pforth
 	cd features/pforth && \
 	autoreconf -i && \
 	./configure --build=mit BUILD_EXECUTOR=$(MIT_BINARY)

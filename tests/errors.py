@@ -99,7 +99,7 @@ assert(len(test) == len(result))
 
 def step_trace():
     while True:
-        VM.step(trace=True)
+        VM.trace()
 
 error = 0
 def do_tests(run_fn):

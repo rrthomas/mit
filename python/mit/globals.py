@@ -1,3 +1,28 @@
+'''
+Convenient globals.
+
+(c) Mit authors 2019
+
+The package is distributed under the MIT/X11 License.
+
+THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
+RISK.
+
+Make the state accessible through global variables and functions.
+
+Returns a vars table containing:
+
+Registers: a variable for each register; also a list 'registers'
+Managing the VM state: load, save
+Controlling and observing execution: run, step, trace
+Memory: M[], M_word[], dump
+Assembly: Assembler, Disassembler, assembler,
+    word, bytes, instruction, lit, lit_pc_rel, label, goto
+Abbreviations: ass=assembler.instruction, dis=self.disassemble
+
+The instruction opcodes are available as constants.
+'''
+
 from . import *
 
 VM = State()
@@ -10,7 +35,7 @@ vars().update({
     name: VM.__getattribute__(name)
     for name in [
         "M", "M_word", "S", "registers",
-        "load", "run", "step",
+        "load", "run", "step", "trace",
         "dump", "disassemble",
     ]
 })
