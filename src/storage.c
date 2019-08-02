@@ -48,17 +48,17 @@ _GL_ATTRIBUTE_CONST int mit_is_aligned(mit_uword addr, unsigned size)
 
 _GL_ATTRIBUTE_PURE uint8_t *mit_native_address_of_range(mit_state *S, mit_uword addr, mit_uword len)
 {
-    return native_address_of_range(S->memory, S->memory_size, addr, len);
+    return native_address_of_range(S->memory, S->memory_bytes, addr, len);
 }
 
 int mit_load(mit_state *S, mit_uword addr, unsigned size, mit_word *val_ptr)
 {
-    return load(S->memory, S->memory_size, addr, size, val_ptr);
+    return load(S->memory, S->memory_bytes, addr, size, val_ptr);
 }
 
 int mit_store(mit_state *S, mit_uword addr, unsigned size, mit_word val)
 {
-    return store(S->memory, S->memory_size, addr, size, val);
+    return store(S->memory, S->memory_bytes, addr, size, val);
 }
 
 
@@ -83,7 +83,7 @@ int mit_pop_stack(mit_state *S, mit_word *val_ptr)
 
 int mit_push_stack(mit_state *S, mit_word val)
 {
-    if (unlikely(S->stack_depth >= S->stack_size))
+    if (unlikely(S->stack_depth >= S->stack_words))
         return MIT_ERROR_STACK_OVERFLOW;
 
     (S->stack_depth)++;
@@ -95,43 +95,45 @@ int mit_push_stack(mit_state *S, mit_word val)
 
 static int mit_realloc(mit_word * restrict *ptr, mit_uword old_size, mit_uword new_size)
 {
-    mit_word * restrict new_ptr = realloc(*ptr, new_size * MIT_WORD_BYTES);
+    mit_word * restrict new_ptr = realloc(*ptr, new_size);
     if (new_ptr == NULL && new_size > 0)
         return MIT_MALLOC_ERROR_CANNOT_ALLOCATE_MEMORY;
     *ptr = new_ptr;
 
     if (old_size < new_size)
-        memset(*ptr + old_size, 0, (new_size - old_size) * MIT_WORD_BYTES);
+        memset(*(uint8_t **)ptr + old_size, 0, (new_size - old_size));
 
     return MIT_MALLOC_ERROR_OK;
 }
 
-int mit_realloc_memory(mit_state *S, mit_uword memory_size)
+int mit_realloc_memory(mit_state *S, mit_uword memory_bytes)
 {
-    int ret = mit_realloc(&S->memory, S->memory_size / MIT_WORD_BYTES, memory_size);
+    if (memory_bytes % MIT_WORD_BYTES != 0)
+        return MIT_MALLOC_ERROR_INVALID_SIZE;
+    int ret = mit_realloc(&S->memory, S->memory_bytes, memory_bytes);
     if (ret == 0)
-        S->memory_size = memory_size * MIT_WORD_BYTES;
+        S->memory_bytes = memory_bytes;
     return ret;
 }
 
-int mit_realloc_stack(mit_state *S, mit_uword stack_size)
+int mit_realloc_stack(mit_state *S, mit_uword stack_words)
 {
-    int ret = mit_realloc(&S->stack, S->stack_size, stack_size);
+    int ret = mit_realloc(&S->stack, S->stack_words, stack_words * MIT_WORD_BYTES);
     if (ret == 0)
-        S->stack_size = stack_size;
+        S->stack_words = stack_words;
     return ret;
 }
 
-mit_state *mit_init(size_t memory_size, size_t stack_size)
+mit_state *mit_init(size_t memory_bytes, size_t stack_words)
 {
     mit_state *S = calloc(1, sizeof(mit_state));
     if (S == NULL)
         return NULL;
 
-    if (mit_realloc_memory(S, memory_size) != 0)
+    if (mit_realloc_memory(S, memory_bytes) != 0)
         return NULL;
 
-    if (mit_realloc_stack(S, stack_size) != 0)
+    if (mit_realloc_stack(S, stack_words) != 0)
         return NULL;
 
     S->pc = 0;

@@ -56,7 +56,7 @@ class AbstractMemory(collections.abc.Sequence):
         '''
         Returns the number of read/writable locations.
         '''
-        return self.VM.memory_size * word_bytes // self.element_size
+        return self.VM.memory_bytes // self.element_size
 
 class Memory(AbstractMemory):
     '''A VM memory (byte-accessed).'''

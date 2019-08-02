@@ -16,8 +16,8 @@
 
 
 static mit_uword page_size;
-static mit_uword memory_size;
-static mit_uword stack_size;
+static mit_uword memory_bytes;
+static mit_uword stack_words;
 
 static mit_uword round_up(mit_uword n, mit_uword multiple)
 {
@@ -29,10 +29,10 @@ mit_state *mit_auto_extend_init(void)
     // getpagesize() is obsolete, but gnulib provides it, and
     // sysconf(_SC_PAGESIZE) does not work on some platforms.
     page_size = getpagesize();
-    memory_size = MIT_WORD_BYTES == 2 ? 0x1000U : 0x100000U;
-    stack_size = MIT_WORD_BYTES == 2 ? 1024U : 16384U;
+    memory_bytes = MIT_WORD_BYTES == 2 ? 0x1000U : 0x100000U * MIT_WORD_BYTES;
+    stack_words = MIT_WORD_BYTES == 2 ? 1024U : 16384U;
 
-    return mit_init(memory_size, stack_size);
+    return mit_init(memory_bytes, stack_words);
 }
 
 int mit_auto_extend_handler(mit_state * restrict S, int error)
@@ -40,15 +40,15 @@ int mit_auto_extend_handler(mit_state * restrict S, int error)
     switch (error) {
     case 2:
         // Grow stack on demand
-        if (S->bad >= S->stack_size &&
-            S->bad < mit_uword_max - S->stack_size &&
-            mit_realloc_stack(S, round_up(S->stack_size + S->bad, page_size)) == 0)
+        if (S->bad >= S->stack_words &&
+            S->bad < mit_uword_max - S->stack_words &&
+            mit_realloc_stack(S, round_up(S->stack_words + S->bad, page_size)) == 0)
             return 0;
         break;
     case 5:
     case 6:
         // Grow memory on demand
-        if (S->bad >= S->memory_size &&
+        if (S->bad >= S->memory_bytes &&
             mit_realloc_memory(S, round_up(S->bad, page_size)) == 0)
             return 0;
         break;

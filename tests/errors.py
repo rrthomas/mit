@@ -10,8 +10,7 @@
 from mit import *
 
 
-size = 4096
-VM = State(memory_size=size, stack_size=3)
+VM = State(memory_bytes=4096 * word_bytes, stack_words=3)
 assembler = Assembler(VM)
 lit = assembler.lit
 label = assembler.label
@@ -22,7 +21,7 @@ UNDEFINED = 1 + max(Instruction)
 
 # Test results and data
 result = []
-invalid_address = size * word_bytes + 1000
+invalid_address = memory_bytes.get() + 1000
 test = []
 
 # Try to divide by zero
@@ -43,7 +42,7 @@ ass(DUP)
 test.append(label())
 result.append(MitErrorCode.INVALID_MEMORY_READ)
 print("Test {}: pc = {}".format(len(test), test[-1]))
-lit(VM.memory_size * word_bytes + word_bytes)
+lit(memory_bytes.get() + word_bytes)
 ass(JUMP)
 
 # Try to load from an invalid address

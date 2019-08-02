@@ -13,6 +13,7 @@ from enum import IntEnum, unique
 class MallocErrorCode(IntEnum):
     OK = 0
     CANNOT_ALLOCATE_MEMORY = -1
+    INVALID_SIZE = -2
 
 @unique
 class LoadErrorCode(IntEnum):

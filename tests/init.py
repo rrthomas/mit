@@ -11,7 +11,7 @@
 from mit import *
 
 size = 1024
-VM = State(size // word_bytes, 1)
+VM = State(size, 1)
 if VM is None:
     print("Error in init() tests: init with valid parameters failed")
     sys.exit(1)

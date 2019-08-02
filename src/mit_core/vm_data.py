@@ -23,9 +23,9 @@ class Register(RegisterEnum):
     stack_depth = ()
     # Registers that are not part of the spec
     memory = ('mit_word *')
-    memory_size = ()
+    memory_bytes = ()
     stack = ('mit_word * restrict')
-    stack_size = ()
+    stack_words = ()
 
 @unique
 class MitErrorCode(IntEnum):
@@ -80,7 +80,7 @@ class Instruction(InstructionEnum):
     ))
 
     LOAD = (0x8, ['addr', 'size'], ['x'], Code('''\
-        int ret = load(S->memory, S->memory_size, addr, size, &x);
+        int ret = load(S->memory, S->memory_bytes, addr, size, &x);
         if (ret != 0) {
             S->bad = addr;
             RAISE(ret);
@@ -88,7 +88,7 @@ class Instruction(InstructionEnum):
     ))
 
     STORE = (0x9, ['x', 'addr', 'size'], [], Code('''\
-        int ret = store(S->memory, S->memory_size, addr, size, x);
+        int ret = store(S->memory, S->memory_bytes, addr, size, x);
         if (ret != 0) {
             S->bad = addr;
             RAISE(ret);

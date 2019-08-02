@@ -386,8 +386,8 @@ def check_overflow(num_pops, num_pushes):
             }}
         '''.format(depth_change.size))
     code.append('''\
-        if (unlikely(S->stack_size - S->stack_depth < {depth_change})) {{
-            S->bad = ({depth_change}) - (S->stack_size - S->stack_depth);
+        if (unlikely(S->stack_words - S->stack_depth < {depth_change})) {{
+            S->bad = ({depth_change}) - (S->stack_words - S->stack_depth);
             RAISE(MIT_ERROR_STACK_OVERFLOW);
         }}'''.format(depth_change=depth_change),
     )

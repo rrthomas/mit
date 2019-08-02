@@ -62,7 +62,7 @@ class CacheState:
         assert type(num_pushes) is int
         depth_change = num_pushes - num_pops
         if self.checked_depth >= depth_change: return '1'
-        return '(S->stack_size - S->stack_depth) >= {}'.format(depth_change)
+        return '(S->stack_words - S->stack_depth) >= {}'.format(depth_change)
 
     def load_args(self, args):
         '''
