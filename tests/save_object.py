@@ -8,8 +8,8 @@
 # RISK.
 
 from mit import *
-size = 256
-VM = State(size)
+memory_bytes = 256 * word_bytes
+VM = State(memory_bytes)
 
 
 # Test data
@@ -17,7 +17,7 @@ VM.M_word[0] = 0x01020304
 VM.M_word[word_bytes] = 0x05060708
 
 # Test results
-addr = [(size + 1) * word_bytes, 0, 0]
+addr = [memory_bytes + word_bytes, 0, 0]
 length = [32, 5000, 32]
 correct = [-2, -2, 0]
 

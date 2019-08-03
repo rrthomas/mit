@@ -46,10 +46,10 @@ except:
 # State
 class State:
     '''A VM state.'''
-    def __new__(cls, memory_size=1024*1024 if word_bytes > 2 else 16*1024, stack_size=1024):
+    def __new__(cls, memory_bytes=1024*1024 * word_bytes if word_bytes > 2 else 16*1024, stack_words=1024):
         '''Create the VM state.'''
         state = super().__new__(cls)
-        state.state = libmit.mit_init(memory_size, stack_size)
+        state.state = libmit.mit_init(memory_bytes, stack_words)
         if state.state is None:
             raise Error("error creating virtual machine state")
         state.registers = {
@@ -62,8 +62,8 @@ class State:
             state.state,
             state.registers["stack_depth"],
         )
-        state.memory_size = memory_size
-        state.stack_size = stack_size
+        state.memory_bytes = memory_bytes
+        state.stack_words = stack_words
         return state
 
     def __del__(self):
@@ -89,7 +89,7 @@ class State:
         return state
 
     def __getnewargs__(self):
-        return (self.memory_size, self.stack_size)
+        return (self.memory_bytes, self.stack_words)
 
     def __setstate__(self, state):
         for name in state['registers']:

@@ -182,18 +182,18 @@ int mit_store(mit_state *S, mit_uword addr, unsigned size, mit_word val);
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-function"
 _GL_ATTRIBUTE_PURE static uint8_t *
-native_address_of_range(mit_word * restrict memory, mit_uword memory_size,
+native_address_of_range(mit_word * restrict memory, mit_uword memory_bytes,
                         mit_uword addr, mit_uword len)
 {
-    if (unlikely(addr >= memory_size || len > memory_size - addr))
+    if (unlikely(addr >= memory_bytes || len > memory_bytes - addr))
         return NULL;
     return ((uint8_t *)memory) + addr;
 }
 
-static int load(mit_word * restrict memory, mit_uword memory_size,
+static int load(mit_word * restrict memory, mit_uword memory_bytes,
                 mit_uword addr, unsigned size, mit_word *val_ptr)
 {
-    if (unlikely(addr >= memory_size))
+    if (unlikely(addr >= memory_bytes))
         return MIT_ERROR_INVALID_MEMORY_READ;
 
     mit_word val;
@@ -248,10 +248,10 @@ static int load(mit_word * restrict memory, mit_uword memory_size,
     return MIT_ERROR_OK;
 }
 
-static int store(mit_word * restrict memory, mit_uword memory_size,
+static int store(mit_word * restrict memory, mit_uword memory_bytes,
                  mit_uword addr, unsigned size, mit_word val)
 {
-    if (unlikely(addr >= memory_size))
+    if (unlikely(addr >= memory_bytes))
         return MIT_ERROR_INVALID_MEMORY_WRITE;
 
     switch (size) {
@@ -333,7 +333,7 @@ int mit_push_stack(mit_state *S, mit_word val);
    the stack.
 
    Return 0 if OK, or error code if `stack_depth` is greater than or equal
-   to `S->stack_size`.
+   to `S->stack_words`.
 */
 
 
@@ -368,35 +368,39 @@ static int store_stack(mit_word * restrict stack, mit_uword stack_depth,
 
 // VM instantiation and control
 
-mit_state *mit_init(size_t memory_size, size_t stack_size);
+mit_state *mit_init(size_t memory_bytes, size_t stack_words);
 /* Create and initialize a virtual machine state.
 
-   - memory_size - number of words of memory required
-   - stack_size - number of words of stack space required
+   - memory_bytes - number of bytes of memory required
+   - stack_words - number of words of stack space required
 
-   Return a pointer to a new state, or `NULL` if memory cannot be
-   allocated, or if any requested size is larger than `MIT_UWORD_MAX`.
+   `memory_bytes` must be a multiple of `WORD_BYTES`.
+
+   Return a pointer to a new state, or `NULL` if memory cannot be allocated,
+   or if any requested size is larger than `MIT_UWORD_MAX` or `memory_bytes`
+   is not a multiple of a number of words.
 
    The memory and stack are zeroed, and the registers are initialized as per
    the spec.
 */
 
-int mit_realloc_memory(mit_state *S, mit_uword memory_size);
+int mit_realloc_memory(mit_state *S, mit_uword memory_bytes);
 /* Resize the memory of a state.
 
    - state - the state to change
-   - memory_size - number of words of memory required
+   - memory_bytes - number of bytes of memory required
 
-   Return 0 on success, or -1 if the requested memory cannot be allocated.
+   Return 0 on success, -1 if the requested memory cannot be allocated, or
+   -2 if `memory_bytes` is not a multiple of `WORD_BYTES`.
 
    Any new memory is zeroed.
 */
 
-int mit_realloc_stack(mit_state *S, mit_uword stack_size);
+int mit_realloc_stack(mit_state *S, mit_uword stack_words);
 /* Resize the stack of a state.
 
    - state - the state to change
-   - stack_size - number of words of stack required
+   - stack_words - number of words of stack required
 
    Return 0 on success, or -1 if the requested memory cannot be allocated.
 

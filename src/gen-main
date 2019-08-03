@@ -232,7 +232,7 @@ Feature(# Register and stack backtrace
             fprintf(stderr, #name "=0x%.*s\\n", (int)(sizeof(S->name) * 2), str);
             #include "mit/registers.h"
             #undef R
-            if (S->stack_depth <= S->stack_size) {
+            if (S->stack_depth <= S->stack_words) {
                 fprintf(stderr, "\\nStack:\\n");
                 mit_uword items = MIN(max_backtrace, S->stack_depth);
                 if (max_backtrace == 0)

@@ -171,19 +171,19 @@ mit_lib = {
     'LOAD': (0x2, ['addr', 'size', 'inner_state:mit_state *'], ['value', 'ret:int'],
         Code('''\
             value = 0;
-            ret = load(inner_state->memory, inner_state->memory_size,
+            ret = load(inner_state->memory, inner_state->memory_bytes,
                        addr, size, &value);
         '''),
     ),
 
     'STORE': (0x3, ['value', 'addr', 'size', 'inner_state:mit_state *'], ['ret:int'],
         Code('''\
-             ret = store(inner_state->memory, inner_state->memory_size,
+             ret = store(inner_state->memory, inner_state->memory_bytes,
                          addr, size, value);'''),
     ),
 
-    'INIT': (0x4, ['memory_size', 'stack_size'], ['new_state:mit_state *'],
-        Code('new_state = mit_init((size_t)memory_size, (size_t)stack_size);'),
+    'INIT': (0x4, ['memory_bytes', 'stack_words'], ['new_state:mit_state *'],
+        Code('new_state = mit_init((size_t)memory_bytes, (size_t)stack_words);'),
     ),
 
     'REALLOC_MEMORY': (0x5, ['u', 'inner_state:mit_state *'], ['ret:int'],

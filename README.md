@@ -112,3 +112,7 @@ A magic file for the file(1) command is also provided: mit.magic.
 
 Please send bug reports (preferably as [GitHub issues](https://github.com/rrthomas/mit/issues))
 and comments. I’m especially interested to know of portability bugs.
+
+Note that currently setting `WORD_BYTES` to 16 does not work properly with
+the Python bindings; see https://github.com/rrthomas/mit/issues/256 for
+details and workaround.

@@ -29,7 +29,7 @@ const char *mit_core_dump(mit_state *S)
     int fd = creat(file, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
     set_binary_mode (fd, O_BINARY); // Best effort
     if (fd >= 0) {
-        (void)mit_save_object(S, 0, S->memory_size, fd);
+        (void)mit_save_object(S, 0, S->memory_bytes, fd);
         close(fd);
         return file;
     }

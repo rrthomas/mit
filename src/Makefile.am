@@ -75,7 +75,7 @@ include/mit/registers.h: gen-registers mit_core/vm_data.py mit_core/instruction.
 	fi
 	$(PYTHON_WITH_PATH) $(srcdir)/gen-registers > include/mit/registers.h || ( rm -f include/mit/registers.h; exit 1 )
 
-include/mit/opcodes.h: gen-opcodes mit_core/vm_data.py mit_core/instruction.py
+include/mit/opcodes.h: gen-opcodes mit_core/vm_data.py mit_core/instruction.py mit_core/errors.py
 	$(MKDIR_P) include/mit
 	$(PYTHON_WITH_PATH) $(srcdir)/gen-opcodes > include/mit/opcodes.h || ( rm -f include/mit/opcodes.h; exit 1 )
 
