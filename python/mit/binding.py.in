@@ -13,6 +13,7 @@ from ctypes import *
 from ctypes.util import find_library
 
 from .errors import *
+from .int128 import *
 
 
 library_file = find_library("mit@PACKAGE_SUFFIX@")
@@ -75,33 +76,6 @@ hex0x_word_width = word_bytes * 2 + 2 # Width of a hex word with leading "0x"
 
 
 # Types
-class c_int128(Structure):
-    _fields_ = [('low', c_uint64),
-                ('high', c_int64)]
-
-    def __init__(self, n=0):
-        self.low = int(n) & ((1 << 64) - 1)
-        self.high = int(n) >> 64
-
-    @classmethod
-    def from_param(cls, value):
-        return cls(value)
-
-    @property
-    def value(self):
-        return self.low | (self.high << 64)
-
-    def __int__(self):
-        return self.value
-
-    def __hash__(self):
-        return int.__hash__(self.value)
-
-class c_uint128(c_int128):
-    @property
-    def value(self):
-        return (self.low | (self.high << 64)) & ((1 << 128) - 1)
-
 if word_bytes == 2:
     c_word = c_int16
     c_uword = c_uint16
