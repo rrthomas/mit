@@ -24,8 +24,8 @@ class Stack:
         for i in range(self.depth.get(), 0, -1):
             v = c_word()
             libmit.mit_load_stack(self.state, i - 1, byref(v))
-            l.append(v.value)
-        return str(l)
+            l.append('{v} ({v:#x})'.format(v=v.value))
+        return '[{}]'.format(', '.join(l))
 
     def __getitem__(self, index):
         if isinstance(index, slice):
