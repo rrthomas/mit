@@ -177,18 +177,16 @@ class State:
 
     def trace(self, n=1, addr=None, auto_NEXT=True):
         '''
-        Single-step for n steps (excluding NEXT when pc does not change), or
-        until pc=addr.
+        Single-step (see `step`), printing the instruction being executed, and
+        pc, ir, and the stack after each instruction.
         '''
         done = 0
         ret = 0
         while addr is not None or done < n:
             if auto_NEXT and self.registers["ir"].get() == 0:
-                done -= 1
+                libmit.mit_single_step(self.state) # safe to assume no error
             if self.registers["pc"].get() == addr: break
-            print("step: pc={:#x} ir={:#x} instruction={}".format(
-                self.registers["pc"].get(),
-                self.registers["ir"].get(),
+            print("trace: instruction={}".format(
                 Disassembler(self).disassemble(),
             ))
             print(str(self.S))
@@ -201,6 +199,10 @@ class State:
                     self.do_extra_instruction()
                 else:
                     self._report_step_error(e, done, addr)
+            print("pc={:#x} ir={:#x}".format(
+                self.registers["pc"].get(),
+                self.registers["ir"].get(),
+            ))
             done += 1
 
     def load(self, file, addr=0):
