@@ -20,12 +20,9 @@ class Stack:
         self.depth = depth
 
     def __str__(self):
-        l = []
-        for i in range(self.depth.get(), 0, -1):
-            v = c_word()
-            libmit.mit_load_stack(self.state, i - 1, byref(v))
-            l.append('{v} ({v:#x})'.format(v=v.value))
-        return '[{}]'.format(', '.join(l))
+        return '[{}]'.format(', '.join(
+            ['{v} ({v:#x})'.format(v=v) for v in self])
+        )
 
     def __getitem__(self, index):
         if isinstance(index, slice):
@@ -45,6 +42,12 @@ class Stack:
                 j += 1
         else:
             libmit.mit_store_stack(self.state, self.depth.get() - 1 - index, value)
+
+    def __iter__(self):
+        for i in range(self.depth.get(), 0, -1):
+            v = c_word()
+            libmit.mit_load_stack(self.state, i - 1, byref(v))
+            yield v.value
 
     def push(self, v):
         '''Push a word on to the stack.'''
