@@ -12,14 +12,15 @@ PYTHON_WITH_PATH = export PYTHONPATH=$(abs_top_srcdir)/python:$(abs_top_srcdir)/
 bin_SCRIPTS = mit@PACKAGE_SUFFIX@-dump mit@PACKAGE_SUFFIX@-shell
 man_MANS = mit@PACKAGE_SUFFIX@-dump.1 mit@PACKAGE_SUFFIX@-shell.1
 mit_pkgpythondir = $(pkgpythondir)@PACKAGE_SUFFIX@
-mit_pkgpython_PYTHON =		\
-	mit/__init__.py		\
-	mit/ctypes_align.py	\
-	mit/int128.py		\
-	mit/globals.py		\
-	mit/stack.py		\
-	mit/memory.py		\
-	mit/state.py		\
+mit_pkgpython_PYTHON =				\
+	mit/__init__.py				\
+	mit/ctypes_align.py			\
+	mit/int128.py				\
+	mit/globals.py				\
+	mit/ipython_suppress_traceback.py	\
+	mit/stack.py				\
+	mit/memory.py				\
+	mit/state.py				\
 	mit/assembler.py
 nodist_mit_pkgpython_PYTHON = mit/binding.py mit/errors.py mit/opcodes.py
 

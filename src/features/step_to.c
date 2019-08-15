@@ -23,8 +23,9 @@ mit_word mit_step_to(mit_state * restrict state, mit_uword *n_ptr, mit_uword add
          error == 0 && ((n == 0 && state->pc != addr) || done < n);
          done++) {
         if (auto_NEXT && state->ir == 0)
-            done--;
-        error = mit_single_step(state);
+            error = mit_single_step(state);
+        if (error == 0)
+            error = mit_single_step(state);
         if (error == 1 && (state->ir & MIT_OPCODE_MASK) == MIT_INSTRUCTION_JUMP) {
             error = mit_extra_instruction(state);
             state->ir = 0; // Skip to next instruction

@@ -24,7 +24,7 @@ def run_test(name, state, correct):
         state.step()
         print("Data stack: {}".format(state.S))
         print("Correct stack: {}\n".format(stack))
-        if str(stack) != str(state.S):
+        if stack != list(state.S):
             print("Error in {} tests: pc = {:#x}".format(
                 name,
                 state.registers["pc"].get()

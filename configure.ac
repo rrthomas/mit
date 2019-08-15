@@ -38,7 +38,7 @@ AS_IF([test "$IPYTHON" = ""],
    PYTHON_VERSION=`$IPYTHON --quick --no-term-title -c "import sys; print(sys.version_info.major)"`
    PYTHON_VERSION=${PYTHON_VERSION%\\n}
    AS_IF([test "$PYTHON_VERSION" != "3"], AC_MSG_ERROR([IPYTHON is not Python 3]))
-   IPYTHON_OPTS="--autocall 2 --no-confirm-exit"]
+   IPYTHON_OPTS="--profile mit-shell --ext mit.ipython_suppress_traceback --autocall 2 --no-confirm-exit"]
    AC_SUBST([IPYTHON_OPTS])
 )
 AC_PATH_PROG([LATEXMK], [latexmk], [true])
