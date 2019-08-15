@@ -34,9 +34,19 @@ assert(libmitfeatures)
 
 # Errors
 class Error(Exception):
+    '''
+    An error from the Python bindings for Mit.
+    '''
     pass
 
-class ErrorCode(Error):
+class VMError(Error):
+    '''
+    An error from Mit.
+
+    Public fields:
+     - error_code - int
+     - message - str
+    '''
     def __init__(self, error_code, message):
         super().__init__(error_code, message)
 
@@ -62,7 +72,7 @@ def errcheck(error_enum):
             message = "unknown error!"
         else:
             return result
-        raise ErrorCode(result, message)
+        raise VMError(result, message)
     return callback
 
 

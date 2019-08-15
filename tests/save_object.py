@@ -26,7 +26,7 @@ def try_save(file, address, length):
     try:
         VM.save(file, address, length)
         ret = 0
-    except ErrorCode as e:
+    except VMError as e:
         ret = e.args[0]
     print("save_object(\"{}\", {}, {}) returns {}".format(file, address, length, ret), end='')
     return ret

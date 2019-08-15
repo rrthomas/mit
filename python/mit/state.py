@@ -21,7 +21,7 @@ import sys
 
 from .binding import (
     libmit, libmitfeatures,
-    ErrorCode, is_aligned,
+    VMError, is_aligned,
     word_bytes, opcode_mask,
     c_uword, c_void_p, c_char_p, byref,
     hex0x_word_width,
@@ -136,7 +136,7 @@ class State:
                     libmitfeatures.mit_specializer_run(self.state)
                 else:
                     libmit.mit_run(self.state)
-            except ErrorCode as e:
+            except VMError as e:
                 if e.args[0] == MitErrorCode.HALT:
                     return
                 elif (e.args[0] == 1 and
@@ -172,7 +172,7 @@ class State:
         n_ptr = c_uword(n)
         try:
             libmitfeatures.mit_step_to(self.state, byref(n_ptr), addr, auto_NEXT)
-        except ErrorCode as e:
+        except VMError as e:
             self._report_step_error(e, n_ptr.value, addr)
 
     def trace(self, n=1, addr=None, auto_NEXT=True):
@@ -191,7 +191,7 @@ class State:
             ))
             try:
                 libmit.mit_single_step(self.state)
-            except ErrorCode as e:
+            except VMError as e:
                 if (e.args[0] == 1 and
                     self.registers["ir"].get() & opcode_mask == Instruction.JUMP
                 ):
