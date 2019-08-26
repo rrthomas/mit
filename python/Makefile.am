@@ -19,8 +19,6 @@ mit_pkgpython_PYTHON =				\
 	mit/autonumber.py			\
 	mit/globals.py				\
 	mit/ipython_suppress_traceback.py	\
-	mit/stack.py				\
-	mit/memory.py				\
 	mit/state.py				\
 	mit/assembler.py
 nodist_mit_pkgpython_PYTHON = mit/binding.py mit/errors.py mit/opcodes.py

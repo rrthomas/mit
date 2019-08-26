@@ -33,7 +33,5 @@ from .binding import (
     word_min, word_max, uword_max,
     align, is_aligned,
 )
-from .stack import Stack
-from .memory import Memory, WordMemory
 from .state import State
 from .assembler import Assembler, Disassembler
