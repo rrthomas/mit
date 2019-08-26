@@ -189,7 +189,6 @@ class State:
             print("trace: instruction={}".format(
                 Disassembler(self).disassemble(),
             ))
-            print(str(self.S))
             try:
                 libmit.mit_single_step(self.state)
             except ErrorCode as e:
@@ -203,6 +202,7 @@ class State:
                 self.registers["pc"].get(),
                 self.registers["ir"].get(),
             ))
+            print(str(self.S))
             done += 1
 
     def load(self, file, addr=0):
