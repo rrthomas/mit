@@ -17,6 +17,7 @@ lib_LTLIBRARIES = libmit@PACKAGE_SUFFIX@.la
 C_SRCS = storage.c object.c
 nodist_LIB_SRCS = include/mit/registers.h include/mit/opcodes.h instructions.c
 LIB_CORE_SRCS = \
+	mit_core/autonumber.py \
 	mit_core/register.py \
 	mit_core/instruction.py \
 	mit_core/vm_data.py \
@@ -42,9 +43,9 @@ nodist_mit_pkginclude_HEADERS = include/mit/opcodes.h include/mit/registers.h
 mit_pkginclude_HEADERS = include/mit/mit.h
 noinst_HEADERS = run.h
 
-object.lo storage.lo: include/mit/registers.h
+object.lo storage.lo: include/mit/mit.h include/mit/registers.h
 object.lo storage.lo main.o: include/mit/opcodes.h
-instructions.lo main.o: main.c include/mit/registers.h
+instructions.lo main.o: main.c include/mit/mit.h include/mit/registers.h
 main.o: warn.h
 
 .c.s:
@@ -68,7 +69,7 @@ mit@PACKAGE_SUFFIX@.1: mit@PACKAGE_SUFFIX@$(EXEEXT) mit-include.man
 include/mit@PACKAGE_SUFFIX@:
 	cd include && if test ! -e mit@PACKAGE_SUFFIX@; then $(LN_S) mit mit@PACKAGE_SUFFIX@; fi
 
-include/mit/registers.h: gen-registers mit_core/vm_data.py mit_core/instruction.py
+include/mit/registers.h: gen-registers mit_core/vm_data.py mit_core/register.py
 	$(MKDIR_P) include/mit
 	if test "@PACKAGE_SUFFIX@" != ""; then \
 		$(MAKE) include/mit@PACKAGE_SUFFIX@; \

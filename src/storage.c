@@ -150,15 +150,19 @@ void mit_destroy(mit_state *S)
     free(S);
 }
 
-#define R(reg, type, return_type)                                   \
+#define R_RO(reg, type, return_type)                                \
     _GL_ATTRIBUTE_PURE return_type mit_get_ ## reg(mit_state *S) {  \
         return S->reg;                                              \
-    }                                                               \
+    }
+
+#define R(reg, type, return_type)                                   \
+    R_RO(reg, type, return_type)                                    \
     void mit_set_ ## reg(mit_state *S, type val) {                  \
         S->reg = val;                                               \
     }
 #include "mit/registers.h"
 #undef R
+#undef R_RO
 
 // Register command-line args
 int mit_register_args(mit_state *S, int argc, const char *argv[])

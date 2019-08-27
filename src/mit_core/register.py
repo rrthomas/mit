@@ -9,24 +9,10 @@ THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 RISK.
 '''
 
-import re
-from enum import Enum
+from .autonumber import AutoNumber
 
-
-# Copied from https://docs.python.org/3/library/enum.html
-class NoValue(Enum):
-    def __repr__(self):
-        return '<%s.%s>' % (self.__class__.__name__, self.name)
-
-# Adapted from https://docs.python.org/3/library/enum.html
-# See https://bugs.python.org/issue37062
-class AutoNumber(NoValue):
-    def __new__(cls, *args):
-        value = len(cls.__members__) + 1
-        obj = object.__new__(cls)
-        obj._value_ = value
-        return obj
 
 class RegisterEnum(AutoNumber):
-    def __init__(self, type=None):
-        self.type = type or 'mit_uword'
+    def __init__(self, read_only=False, type='mit_uword'):
+        self.read_only = read_only
+        self.type = type

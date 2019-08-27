@@ -285,9 +285,10 @@ class ActiveRegister:
         self.getter = libmit["mit_get_{}".format(name)]
         self.getter.restype = c_uword
         self.getter.argtypes = [c_void_p]
-        self.setter = libmit["mit_set_{}".format(name)]
-        self.setter.restype = None
-        self.setter.argtypes = [c_void_p, c_uword]
+        if not register.read_only:
+            self.setter = libmit["mit_set_{}".format(name)]
+            self.setter.restype = None
+            self.setter.argtypes = [c_void_p, c_uword]
 
     def __str__(self):
         return str(self.get())
@@ -296,4 +297,5 @@ class ActiveRegister:
         return int(self.getter(self.state))
 
     def set(self, v):
+        assert not self.register.read_only, '{} is read-only!'.format(self.name)
         self.setter(self.state, v)
