@@ -20,7 +20,7 @@ from .opcodes import (
     TERMINAL_OPCODES,
 )
 
-NEXT = Instruction.NEXT
+
 LIT = Instruction.LIT
 LIT_PC_REL = Instruction.LIT_PC_REL
 JUMP = Instruction.JUMP
@@ -38,6 +38,7 @@ external_extra_mnemonic = {
     instruction.opcode: instruction.name
     for instruction in LibInstruction
 }
+
 
 class Disassembler:
     '''
@@ -98,22 +99,20 @@ class Disassembler:
                     signed_value -= 1 << word_bit
                 if opcode == LIT:
                     comment = ' ({:#x}={})'.format(value, signed_value)
-                else: # LIT_PC_REL
+                else: # opcode == LIT_PC_REL
                     comment = ' ({:#x})'.format(initial_pc + signed_value)
             if opcode in TERMINAL_OPCODES:
                 # Call `self._fetch()` later, not now.
                 if self.ir != 0:
-                    invalid_comment = 'invalid extra instruction'
-                    if opcode == CALL:
-                        comment = ' ({})'.format(
-                            internal_extra_mnemonic.get(self.ir, invalid_comment)
-                        )
-                    elif opcode == JUMP:
-                        comment = ' ({})'.format(
-                            external_extra_mnemonic.get(self.ir, invalid_comment)
-                        )
-                    else:
-                        comment = ' ({})'.format(invalid_comment)
+                    comment = 'invalid extra instruction'
+                    try:
+                        if opcode == CALL:
+                            comment = internal_extra_mnemonic[self.ir]
+                        elif opcode == JUMP:
+                            comment = external_extra_mnemonic[self.ir]
+                    except KeyError:
+                        pass
+                    comment = ' ({})'.format(comment)
                 self.ir = 0
         except IndexError:
             name = "invalid address!"
@@ -134,6 +133,7 @@ class Disassembler:
         assert is_aligned(self.pc)
         self.pc = pc
         self.ir = 0
+
 
 class Assembler:
     '''
@@ -169,12 +169,15 @@ class Assembler:
 
     def word(self, value):
         '''
-        Inserts a word with value `value`.
+        Writes a word with value `value` at `pc` and increments `pc`.
         '''
         self.state.M_word[self.pc] = value
         self.pc += word_bytes
 
     def bytes(self, bytes):
+        '''
+        Writes `bytes` at `pc`, followed by padding to the next word.
+        '''
         assert self.i_addr is None
         for b in bytes:
             self.state.M[self.pc] = b
@@ -189,44 +192,58 @@ class Assembler:
         self.word(0)
         self.i_shift = 0
 
-    def extended_instruction(self, opcode):
+    def _extended_instruction(self, extended_opcode):
         '''
         Appends an arbitrary opcode. If possible, this will be put in the
         same word as the previous opcode, otherwise it will start a new word.
+
+         - extended_opcode - int - Either an `opcode_bit`-bit integer, or a
+           wider integer whose bottom `opcode_bit` bits are in
+           `TERMINAL_OPCODES`.
         '''
+        assert type(extended_opcode) is int
         if self.i_addr is None:
             # Start of a new word.
             assert self.i_shift is None
             self._fetch()
         i = self.state.M_word[self.i_addr]
-        i |= opcode << self.i_shift
+        i |= extended_opcode << self.i_shift
         i &= word_mask
-        if (i >> self.i_shift) != opcode:
+        if (i >> self.i_shift) != extended_opcode:
             # Doesn't fit in the current word.
             self._fetch()
-            i = opcode
+            i = extended_opcode
         self.state.M_word[self.i_addr] = i
-        if (opcode & opcode_mask) in TERMINAL_OPCODES:
+        opcode = extended_opcode & opcode_mask
+        if opcode in TERMINAL_OPCODES:
             self.label()
+        else:
+            assert extended_opcode == opcode
+            self.i_shift += opcode_bit
 
     def instruction(self, opcode):
         '''
         Appends an instruction opcode.
+
+         - opcode - An Instruction or an `opcode_bit`-bit integer.
         '''
+        opcode = int(opcode)
         assert 0 <= opcode <= opcode_mask
-        self.extended_instruction(opcode)
-        if self.i_shift is not None:
-            self.i_shift += opcode_bit
+        self._extended_instruction(opcode)
 
-    def extra_instruction(self, opcode, type=CALL):
+    def extra_instruction(self, extra_opcode, opcode=CALL):
         '''
-        Appends an extra instruction opcode consisting of a CALL or JUMP with
-        a code in the remainder of the instruction word.
+        Appends an extra instruction consisting of a `CALL` or `JUMP`
+        with an extra instruction opcode in the remainder of the instruction
+        word.
 
-         - opcode - int - extra instruction opcode
-         - type - int - extra instruction type (`CALL` [default] or `JUMP`)
+         - extra_opcode - int-ish - opcode of the extra instruction. This can
+           be any type that can be converted to an int; it is typically an
+           IntEnum value.
+         - opcode - Instruction - `CALL` [default] or `JUMP`.
         '''
-        self.extended_instruction((int(opcode) << opcode_bit) | type)
+        assert opcode in (CALL, JUMP)
+        self._extended_instruction((int(extra_opcode) << opcode_bit) | opcode)
 
     def lit(self, value):
         self.instruction(LIT)

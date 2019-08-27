@@ -20,9 +20,9 @@ for i in range(2):
     lit(code_len)
     lit(14)
     lit(LibC.STDOUT)
-    ass_extra(LIBC, type=JUMP)
+    ass_extra(LIBC, opcode=JUMP)
     lit(LibC.WRITE)
-    ass_extra(LIBC, type=JUMP)
+    ass_extra(LIBC, opcode=JUMP)
     ass_extra(HALT)
     code_len = assembler.pc
 

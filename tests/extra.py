@@ -24,30 +24,30 @@ breaks = []
 lit(buffer)
 lit(16) # arbitary number > strlen(args[1])
 lit(LibMit.CURRENT_STATE)
-ass_extra(LIBMIT, type=JUMP)
+ass_extra(LIBMIT, opcode=JUMP)
 lit(LibMit.NATIVE_ADDRESS_OF_RANGE)
-ass_extra(LIBMIT, type=JUMP)
+ass_extra(LIBMIT, opcode=JUMP)
 
 # Test LibC.ARGC
 lit(LibC.ARGC)
 lit(LIBC)
-ass_extra(LIBC, type=JUMP)
+ass_extra(LIBC, opcode=JUMP)
 breaks.append(label() + word_bytes)
 
 # Test LibC.ARG
 lit(1)
 lit(LibC.ARG)
-ass_extra(LIBC, type=JUMP)
+ass_extra(LIBC, opcode=JUMP)
 for i in range(align(sizeof(c_char_p)) // word_bytes):
     lit(align(sizeof(c_char_p)) // word_bytes - 1)
     ass(DUP)
 lit(LibC.STRLEN)
-ass_extra(LIBC, type=JUMP)
+ass_extra(LIBC, opcode=JUMP)
 breaks.append(label() + word_bytes)
 
 # Test LibC.STRNCPY
 lit(LibC.STRNCPY)
-ass_extra(LIBC, type=JUMP)
+ass_extra(LIBC, opcode=JUMP)
 breaks.append(label() + word_bytes)
 
 # Run LibC.ARGC test
