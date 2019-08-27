@@ -31,10 +31,19 @@ code.append('''\
 from enum import Enum, IntEnum, unique
 ''')
 
-register_code = Code('class Register(Enum):')
 code.append('')
+register_code = Code('''\
+from .autonumber import AutoNumber
+
+class Register(AutoNumber):
+    def __init__(self, read_only, type):
+        self.read_only = read_only
+        self.type = type
+''')
 for register in vm_data.Register:
-    register_code.append(Code('{} = object()'.format(register.name)))
+    register_code.append(Code('{} = ({}, "{}")'.format(
+        register.name, register.read_only, register.type
+    )))
 code.extend(register_code)
 code.append('')
 

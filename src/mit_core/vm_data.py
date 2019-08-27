@@ -22,10 +22,10 @@ class Register(RegisterEnum):
     bad = ()
     stack_depth = ()
     # Registers that are not part of the spec
-    memory = ('mit_word *')
-    memory_bytes = ()
-    stack = ('mit_word * restrict')
-    stack_words = ()
+    memory = (True, 'mit_word *')
+    stack = (True, 'mit_word * restrict')
+    memory_bytes = (True,)
+    stack_words = (True,)
 
 @unique
 class MitErrorCode(IntEnum):
