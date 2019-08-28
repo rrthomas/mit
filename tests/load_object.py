@@ -16,7 +16,7 @@ def try_load(file):
     try:
         load(file)
         ret = 0
-    except ErrorCode as e:
+    except VMError as e:
         ret = e.args[0]
     print("load_object(\"{}\", 0) returns {}".format(file, ret), end='')
     return ret
@@ -126,7 +126,7 @@ if res != 0:
     sys.exit(1)
 try:
     run()
-except ErrorCode as e:
+except VMError as e:
     print("Error in load_object() tests: file {}; error: {}".format(test_file_name, e.args[1]))
     sys.exit(1)
 print("Data stack: {}".format(S))

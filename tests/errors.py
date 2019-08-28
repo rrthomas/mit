@@ -8,6 +8,7 @@
 # RISK.
 
 from mit import *
+from mit.binding import libmit, libmitfeatures
 
 
 VM = State(memory_bytes=4096 * word_bytes, stack_words=3)
@@ -112,7 +113,7 @@ def do_tests(run_fn):
         res = 0
         try:
             run_fn()
-        except ErrorCode as e:
+        except VMError as e:
             res = e.args[0]
 
         if result[i] != res:
@@ -130,7 +131,7 @@ do_tests(VM.run)
 try:
     libmit.mit_store_stack(VM.state, 4, 0)
     ret = 0
-except ErrorCode as e:
+except VMError as e:
     ret = e.args[0]
 if ret != 4:
     print("Error in errors test: test {} failed".format(i + 1))

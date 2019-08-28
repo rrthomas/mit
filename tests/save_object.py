@@ -7,6 +7,8 @@
 # THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 # RISK.
 
+import os
+
 from mit import *
 memory_bytes = 256 * word_bytes
 VM = State(memory_bytes)
@@ -26,7 +28,7 @@ def try_save(file, address, length):
     try:
         VM.save(file, address, length)
         ret = 0
-    except ErrorCode as e:
+    except VMError as e:
         ret = e.args[0]
     print("save_object(\"{}\", {}, {}) returns {}".format(file, address, length, ret), end='')
     return ret

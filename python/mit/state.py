@@ -19,20 +19,15 @@ Examining memory: dump, disassemble
 import os
 import sys
 
+from . import opcodes
 from .binding import (
     libmit, libmitfeatures,
-    ErrorCode, is_aligned,
-    word_bytes, opcode_mask,
-    c_uword, c_void_p, c_char_p, byref,
+    VMError, is_aligned,
+    word_bytes, size_word, opcode_mask,
+    c_word, c_uword, c_void_p, c_char_p, byref,
     hex0x_word_width,
 )
 from .errors import MitErrorCode
-from .opcodes import (
-    Register,
-    Instruction, InternalExtraInstruction, LibInstruction,
-)
-from .memory import Memory, WordMemory
-from .stack import Stack
 from .assembler import Assembler, Disassembler
 
 
@@ -43,7 +38,7 @@ try:
 except:
     pass
 
-# State
+
 class State:
     '''A VM state.'''
     def __new__(cls, memory_bytes=1024*1024 * word_bytes if word_bytes > 2 else 16*1024, stack_words=1024):
@@ -53,17 +48,12 @@ class State:
         if state.state is None:
             raise Error("error creating virtual machine state")
         state.registers = {
-            register.name: ActiveRegister(state.state, register.name, register)
-            for register in Register
+            register.name: Register(state.state, register)
+            for register in opcodes.Register
         }
-        state.M = Memory(state)
-        state.M_word = WordMemory(state)
-        state.S = Stack(
-            state.state,
-            state.registers["stack_depth"],
-        )
-        state.memory_bytes = memory_bytes
-        state.stack_words = stack_words
+        state.M = Memory(state.state)
+        state.M_word = WordMemory(state.state)
+        state.S = Stack(state.state)
         return state
 
     def __del__(self):
@@ -73,14 +63,14 @@ class State:
         state = self.__dict__.copy()
         del state['registers']
         state['registers'] = {
-            register.name: self.registers[register.name].get()
-            for register in Register
+            name: register.get()
+            for name, register in self.registers.items()
         }
         del state['registers']['memory']
         del state['registers']['stack']
         del state['M']
         del state['M_word']
-        state['M_word'] = self.M_word[0:len(self.M_word)]
+        state['M_word'] = self.M_word[0:self.M.memory_bytes()]
         del state['S']
         state['S'] = self.S[0:self.registers["stack_depth"].get()]
         del state['state']
@@ -89,12 +79,12 @@ class State:
         return state
 
     def __getnewargs__(self):
-        return (self.memory_bytes, self.stack_words)
+        return (self.M.memory_bytes(), self.registers['stack_words'].get())
 
     def __setstate__(self, state):
-        for name in state['registers']:
-            self.registers[name].set(state['registers'][name])
-        self.M_word[0:len(self.M_word)] = state['M_word']
+        for name, value in state['registers'].items():
+            self.registers[name].set(value)
+        self.M_word[0:self.M.memory_bytes()] = state['M_word']
         for item in state['S']: self.S.push(item)
         if 'argv' in state:
             self.register_args(*state['argv'])
@@ -136,11 +126,14 @@ class State:
                     libmitfeatures.mit_specializer_run(self.state)
                 else:
                     libmit.mit_run(self.state)
-            except ErrorCode as e:
+            except VMError as e:
                 if e.args[0] == MitErrorCode.HALT:
                     return
-                elif (e.args[0] == 1 and
-                      self.registers["ir"].get() & opcode_mask == Instruction.JUMP
+                elif (
+                    e.args[0] == 1 and (
+                        self.registers["ir"].get() & opcode_mask ==
+                        opcodes.Instruction.JUMP
+                    )
                 ):
                     self.do_extra_instruction()
                 else:
@@ -172,7 +165,7 @@ class State:
         n_ptr = c_uword(n)
         try:
             libmitfeatures.mit_step_to(self.state, byref(n_ptr), addr, auto_NEXT)
-        except ErrorCode as e:
+        except VMError as e:
             self._report_step_error(e, n_ptr.value, addr)
 
     def trace(self, n=1, addr=None, auto_NEXT=True):
@@ -191,9 +184,12 @@ class State:
             ))
             try:
                 libmit.mit_single_step(self.state)
-            except ErrorCode as e:
-                if (e.args[0] == 1 and
-                    self.registers["ir"].get() & opcode_mask == Instruction.JUMP
+            except VMError as e:
+                if (
+                    e.args[0] == 1 and (
+                        self.registers["ir"].get() & opcode_mask ==
+                        opcodes.Instruction.JUMP
+                    )
                 ):
                     self.do_extra_instruction()
                 else:
@@ -275,18 +271,22 @@ class State:
             p += chunk
             print(" |{0:.{1}}|".format(ascii, chunk), file=file)
 
-# Registers
-class ActiveRegister:
-    '''A VM register.'''
-    def __init__(self, state, name, register):
+
+class Register:
+    '''
+    A VM register.
+
+     - state - a c_void_p which is a mit_state *.
+     - register - an opcodes.Register indicating which register this is.
+    '''
+    def __init__(self, state, register):
         self.state = state
         self.register = register
-        self.name = name
-        self.getter = libmit["mit_get_{}".format(name)]
+        self.getter = libmit["mit_get_{}".format(register.name)]
         self.getter.restype = c_uword
         self.getter.argtypes = [c_void_p]
         if not register.read_only:
-            self.setter = libmit["mit_set_{}".format(name)]
+            self.setter = libmit["mit_set_{}".format(register.name)]
             self.setter.restype = None
             self.setter.argtypes = [c_void_p, c_uword]
 
@@ -299,3 +299,153 @@ class ActiveRegister:
     def set(self, v):
         assert not self.register.read_only, '{} is read-only!'.format(self.name)
         self.setter(self.state, v)
+
+
+class Stack:
+    '''
+    VM stack.
+
+     - state - a c_void_p which is a mit_state *.
+
+    When specifying stack indices, this class uses the Python convention, so
+    0 is the base of the stack. In contrast, the C API (`mit_load_stack()`
+    etc.) use the convention that 0 is the top of the stack.
+    '''
+    def __init__(self, state):
+        self.state = state
+        self.stack_depth = Register(state, opcodes.Register.stack_depth)
+
+    def __str__(self):
+        return '[{}]'.format(', '.join(
+            ['{v} ({v:#x})'.format(v=v) for v in self])
+        )
+
+    def __len__(self):
+        return self.stack_depth.get()
+
+    def __getitem__(self, index):
+        if isinstance(index, slice):
+            return [self[i] for i in range(*index.indices(len(self)))]
+        else:
+            v = c_word()
+            libmit.mit_load_stack(self.state, len(self) - 1 - index, byref(v))
+            return v.value
+
+    def __setitem__(self, index, value):
+        if isinstance(index, slice):
+            for i, v in zip(range(*index.indices(len(self))), value):
+                self[i] = v
+        else:
+            libmit.mit_store_stack(self.state, len(self) - 1 - index, value)
+
+    def __iter__(self):
+        return (self[i] for i in range(len(self)))
+
+    def push(self, v):
+        '''Push a word on to the stack.'''
+        ret = libmit.mit_push_stack(self.state, v)
+
+    def pop(self):
+        '''Pop a word off the stack.'''
+        v = c_word()
+        ret = libmit.mit_pop_stack(self.state, byref(v))
+        return v.value
+
+
+class AbstractMemory:
+    '''
+    A view of VM memory (abstract superclass).
+
+     - element_size - the number of bytes read/written at a time.
+
+    Memory addresses are specified in bytes. Only addresses that are multiples
+    of `element_size` are valid.
+
+    Memory address slices' `start` and `stop` fields must be valid addresses.
+    The `step` field must be `1` or `element_size`; either will be treated as
+    `element_size`, i.e. only the valid addresses will be accessed.
+
+    `len()` counts the valid addresses, i.e. the length is measured in
+    elements. Use `memory_bytes()` for the number of bytes.
+    '''
+    def __init__(self, state, element_size):
+        self.state = state
+        self.element_size = element_size
+        self.memory_bytes = Register(state, opcodes.Register.memory_bytes)
+
+    def memory_bytes(self):
+        return self.memory_bytes.get()
+
+    def _slice_to_range(self, index):
+        '''
+        Returns a range that represents the valid addresses in `index`.
+        '''
+        index = range(*index.indices(self.memory_bytes()))
+        assert index.start % self.element_size == 0
+        assert index.stop % self.element_size == 0
+        assert index.step in (1, self.element_size)
+        return range(index.start, index.stop, self.element_size)
+
+    def __getitem__(self, index):
+        if isinstance(index, slice):
+            return [self[i] for i in self._slice_to_range(index)]
+        else:
+            return self.load(index)
+
+    def __setitem__(self, index, value):
+        if type(index) == slice:
+            it = iter(value)
+            for i in self._slice_to_range(index):
+                self[i] = next(it)
+            assert len(list(it)) == 0
+        else:
+            self.store(index, value)
+
+    def load(self, index):
+        '''
+        Return the value at `index`.
+        This is an abstract method, which must be overridden.
+        '''
+        raise NotImplementedError
+
+    def store(self):
+        '''
+        Store `value` at `index`.
+        This is an abstract method, which must be overridden.
+        '''
+        raise NotImplementedError
+
+    def __len__(self):
+        '''
+        Returns the number of valid addresses. Note that this might not be the
+        same as the number of bytes.
+        '''
+        return self.memory_bytes() // self.element_size
+
+
+class Memory(AbstractMemory):
+    '''A VM memory (byte-accessed).'''
+    def __init__(self, state):
+        super().__init__(state, 1)
+
+    def load(self, index):
+        word = c_word()
+        libmit.mit_load(self.state, index, 0, byref(word))
+        return word.value
+
+    def store(self, index, value):
+        libmit.mit_store(self.state, index, 0, value)
+
+
+class WordMemory(AbstractMemory):
+    '''A VM memory (word-accessed).'''
+    def __init__(self, state):
+        super().__init__(state, word_bytes)
+
+    def load(self, index):
+        word = c_word()
+        libmit.mit_load(self.state, index, size_word, byref(word))
+        return word.value
+
+    def store(self, index, value):
+        libmit.mit_store(self.state, index, size_word, value)
