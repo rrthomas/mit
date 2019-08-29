@@ -9,7 +9,7 @@ THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 RISK.
 '''
 
-import re
+import re, functools
 
 from mit_core.code_util import Code
 from mit_core.vm_data import Instruction
@@ -156,6 +156,7 @@ class State:
             return True
 
 
+@functools.total_ordering
 class Path:
     '''
     Represents a sequence of Instructions that is potentially optimizable.
@@ -181,10 +182,16 @@ class Path:
             instruction = self.state.specialize_instruction(instruction)
             self.state = self.state.step(instruction)
 
+    def _opcodes(self):
+        return [i.opcode for i in self.instructions]
+
     def __repr__(self):
         return 'Path(({}))'.format(
             ', '.join(i.name for i in self.instructions)
         )
+
+    def __le__(self, other):
+        return self._opcodes().__le__(other._opcodes())
 
     def __eq__(self, other):
         return self.instructions == other.instructions
