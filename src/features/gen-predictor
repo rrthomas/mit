@@ -10,7 +10,8 @@
 
 import sys
 
-from mit import *
+from mit import State
+from mit.binding import libmitfeatures
 
 
 if len(sys.argv) < 3:
