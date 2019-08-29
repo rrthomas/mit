@@ -12,7 +12,7 @@ from mit.globals import *
 
 # Test code
 final_pc = word_bytes
-ass_extra(HALT)
+ass(CALL, HALT)
 
 # Test
 ret = run() # will raise an exception on error

@@ -44,14 +44,14 @@ try:
         elif c == '.':
             dup() # buffer
             ass(LIT_1) # length
-            lit(LibC.STDOUT); ass_extra(LIBC, opcode=JUMP)
-            lit(LibC.WRITE); ass_extra(LIBC, opcode=JUMP)
+            lit(LibC.STDOUT); ass(JUMP, LIBC)
+            lit(LibC.WRITE); ass(JUMP, LIBC)
             ass(LIT_1); ass(POP)
         elif c == ',':
             dup() # buffer
             ass(LIT_1) # length
-            lit(LibC.STDIN); ass_extra(LIBC, opcode=JUMP)
-            lit(LibC.READ); ass_extra(LIBC, opcode=JUMP)
+            lit(LibC.STDIN); ass(JUMP, LIBC)
+            lit(LibC.READ); ass(JUMP, LIBC)
             ass(LIT_1); ass(POP)
         elif c == '[':
             loop = label()
@@ -66,7 +66,7 @@ try:
             lit(loop)
             ass(JUMP)
             M_word[patch] = label()
-    ass_extra(HALT)
+    ass(CALL, HALT)
     M_word[word_bytes] = label() # Patch data pointer.
 except ErrorCode as e:
     if e.args[0] == MitError.INVALID_MEMORY_WRITE:
