@@ -192,16 +192,23 @@ class Assembler:
         self.word(0)
         self.i_shift = 0
 
-    def _extended_instruction(self, extended_opcode):
+    def instruction(self, opcode, extra_opcode=None):
         '''
-        Appends an arbitrary opcode. If possible, this will be put in the
-        same word as the previous opcode, otherwise it will start a new word.
+        Appends an instruction opcode.
 
-         - extended_opcode - int - Either an `opcode_bit`-bit integer, or a
-           wider integer whose bottom `opcode_bit` bits are in
-           `TERMINAL_OPCODES`.
+         - opcode - An Instruction or an `opcode_bit`-bit integer.
+         - extra_opcode - optional - if `opcode` is `JUMP` or `CALL`, the
+           extra opcode for an extra instruction.  This can be any type that
+           can be converted to an int; it is typically an IntEnum value.
         '''
-        assert type(extended_opcode) is int
+        # Compute the extended opcode.
+        extended_opcode = int(opcode)
+        assert 0 <= extended_opcode <= opcode_mask
+        if extra_opcode is not None:
+            assert extended_opcode in (CALL, JUMP)
+            extended_opcode |= (int(extra_opcode) << opcode_bit)
+
+        # Store the extended opcode, starting a new word if necessary.
         if self.i_addr is None:
             # Start of a new word.
             assert self.i_shift is None
@@ -214,36 +221,13 @@ class Assembler:
             self._fetch()
             i = extended_opcode
         self.state.M_word[self.i_addr] = i
-        opcode = extended_opcode & opcode_mask
+
+        # If the opcode is terminal, start a new word.
         if opcode in TERMINAL_OPCODES:
             self.label()
         else:
-            assert extended_opcode == opcode
+            assert extended_opcode == int(opcode)
             self.i_shift += opcode_bit
-
-    def instruction(self, opcode):
-        '''
-        Appends an instruction opcode.
-
-         - opcode - An Instruction or an `opcode_bit`-bit integer.
-        '''
-        opcode = int(opcode)
-        assert 0 <= opcode <= opcode_mask
-        self._extended_instruction(opcode)
-
-    def extra_instruction(self, extra_opcode, opcode=CALL):
-        '''
-        Appends an extra instruction consisting of a `CALL` or `JUMP`
-        with an extra instruction opcode in the remainder of the instruction
-        word.
-
-         - extra_opcode - int-ish - opcode of the extra instruction. This can
-           be any type that can be converted to an int; it is typically an
-           IntEnum value.
-         - opcode - Instruction - `CALL` [default] or `JUMP`.
-        '''
-        assert opcode in (CALL, JUMP)
-        self._extended_instruction((int(extra_opcode) << opcode_bit) | opcode)
 
     def lit(self, value):
         self.instruction(LIT)

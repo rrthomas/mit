@@ -62,7 +62,6 @@ vars()['save'] = _save
 ass_word = assembler.word
 ass_bytes = assembler.bytes
 ass = assembler.instruction
-ass_extra = assembler.extra_instruction
 dis = disassemble
 
 # Opcodes
