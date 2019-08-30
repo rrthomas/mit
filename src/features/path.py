@@ -248,7 +248,7 @@ class Path:
 
     def suffixes(self):
         '''Yields legal proper suffixes of this Path.'''
-        for i in range(1, len(self)):
+        for i in range(1, len(self) + 1):
             try:
                 yield self[i:]
             except ValueError:
