@@ -309,6 +309,7 @@ labels = [
         path.state.tos_constant,
         path.cached_depth(),
         path.checked_depth(),
+        ' '.join(instruction.name for instruction in path.instructions),
         ' '.join(instruction.name for instruction in guess),
         short_circuit(c),
         short_circuit(w),
@@ -326,7 +327,8 @@ with open(labels_filename, 'wb') as f:
     #     tos_constant (int?),
     #     cached_depth (int),
     #     checked_depth (int),
-    #     instruction_sequence (str, space-separated),
+    #     path_instruction_sequence (str, space-separated),
+    #     guess_instruction_sequence (str, space-separated),
     #     if_correct (int?),
     #     if_wrong (int?)
     # )]

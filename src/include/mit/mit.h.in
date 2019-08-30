@@ -487,4 +487,7 @@ mit_word mit_internal_extra_instruction(mit_state *S);
    quantities is implementation-defined in C99).
 */
 
+/* The name of the file written by `mit --profile`. */
+#define MIT_PROFILE_FILENAME "mit-profile.json"
+
 #endif

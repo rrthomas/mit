@@ -24,6 +24,7 @@ if len(sys.argv) != 2:
 
 class Label:
     '''
+     - index - int - the index of this Label.
      - name - str - The C identifier of this Label.
      - tos_constant - int - the constant at the top of the stack at this
        Label, or `None` if the top stack item is not known to be constant.
@@ -31,6 +32,7 @@ class Label:
        variables at this Label.
      - checked_depth - int - the number of empty stack slots that are known to
        exist above the top of the stack at this Label.
+     - path - str - the instruction sequence just executed.
      - guess - str - the most probable next instruction sequence.
        (space-separated).
      - if_correct - int - the Label index to jump to if `guess` is correct.
@@ -38,18 +40,22 @@ class Label:
     '''
     def __init__(
         self,
+        index,
         name,
         tos_constant=None,
         cached_depth=0,
         checked_depth=0,
+        path=None,
         guess=None,
         if_correct=None,
         if_wrong=None,
     ):
+        self.index = index
         self.name = name
         self.tos_constant = tos_constant
         self.cached_depth = cached_depth
         self.checked_depth = checked_depth
+        self.path = path
         self.guess = guess
         self.if_correct = if_correct
         self.if_wrong = if_wrong
@@ -77,6 +83,7 @@ class Label:
         # Generate the Code for the branch where the guess is correct.
         # Also, compute the guess bit string.
         c_code = Code()
+        c_code.append('state_guess_correct[{}]++;'.format(self.index))
         opcode_value = 0 # Bit pattern to match.
         opcode_bits = 0 # Number of bits to match.
         state = State(tos_constant=self.tos_constant)
@@ -103,8 +110,10 @@ class Label:
         max_cached_depth = (
             max(self.cached_depth, -state.stack_min) + state.stack_max)
         # Generate the code for the branch where the guess is wrong.
+        w_code = Code()
+        w_code.append('state_guess_wrong[{}]++;'.format(self.index))
         cache_state = self.cache_state()
-        w_code = label_by_index(self.if_wrong).goto(cache_state)
+        w_code.extend(label_by_index(self.if_wrong).goto(cache_state))
         # Generate the guess condition.
         opcode = 'S->ir'
         if opcode_bits is not None:
@@ -117,6 +126,7 @@ class Label:
         ]
         # Generate the main Code.
         code = Code(
+            '// History: {}'.format(self.path),
             'assert(error == MIT_ERROR_OK);',
             'assert(cached_depth == {});'.format(self.cached_depth),
             'if ({}) {{'.format(' && '.join(tests)),
@@ -129,13 +139,13 @@ class Label:
 
 with open(sys.argv[1], "rb") as h:
     labels = [
-        Label('A_{}'.format(index), tos, ca, ch, gu, ic, iw)
-        for index, (tos, ca, ch, gu, ic, iw) in enumerate(pickle.load(h))
+        Label(index, 'A_{}'.format(index), tos, ca, ch, path, gu, ic, iw)
+        for index, (tos, ca, ch, path, gu, ic, iw) in enumerate(pickle.load(h))
     ]
 
 def label_by_index(index):
     if index is None:
-        return Label('A_FALLBACK')
+        return Label(len(labels), 'A_FALLBACK')
     return labels[index]
 
 
@@ -246,10 +256,34 @@ code.append('''\
     #include "mit/features.h"
 
     #include "run.h"
+    #include "warn.h"
 
 
-    mit_word mit_specializer_run(mit_state * restrict real_S) {
-''')
+    // The number of times we guessed correctly at each specializer label.
+    static unsigned long long state_guess_correct[{num_counts}] = {{0}};
+    // The number of times we guessed wrong at each specializer label.
+    static unsigned long long state_guess_wrong[{num_counts}] = {{0}};
+
+    void mit_specializer_dump_profile(void) {{
+        FILE *fp = fopen(MIT_PROFILE_FILENAME, "w");
+        if (fp == NULL)
+            warn("could not open file "MIT_PROFILE_FILENAME);
+        else {{
+            fprintf(fp, "[");
+            const char *sep = "";
+            for (unsigned i = 0; i < {num_counts}; i++) {{
+                fprintf(fp, "%s\\n  {{\\"c\\": %llu, \\"w\\": %llu}}",
+                    sep, state_guess_correct[i], state_guess_wrong[i]);
+                sep = ",";
+            }}
+            fprintf(fp, "\\n]\\n");
+            fclose(fp);
+            warn("wrote profile data to "MIT_PROFILE_FILENAME);
+        }}
+    }}
+
+    mit_word mit_specializer_run(mit_state * restrict real_S) {{
+'''.format(num_counts=len(labels)))
 code.append(body_code)
 code.append('}')
 

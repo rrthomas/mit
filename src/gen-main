@@ -15,61 +15,65 @@ from mit_core.code_util import Code, disable_warnings
 
 # Command line
 
-class CommandLineElement:
-    elements = []
-    def __init__(self):
-        self.elements.append(self)
-
-class Doc(CommandLineElement):
+class Doc:
     '''
     Free-form documentation.
 
-     - text - str - if the string starts and ends with a double quote, it is
-       printed literally and may thus contain interpolations. Otherwise, it is
-       output in quotes.
+     - docstring - str - if the string starts and ends with a double quote, it
+       is printed literally and may thus contain interpolations. Otherwise, it
+       is output in quotes.
     '''
-    def __init__(self, text):
-        super().__init__()
-        self.text = text
+    elements = []
+    def __init__(self, docstring):
+        self.elements.append(self)
+        if docstring[:1] != '"' or docstring[-1:] != '"':
+            docstring = '"{}"'.format(repr(docstring)[1:-1])
+        self.docstring = docstring
 
-class Option(CommandLineElement):
+class Option(Doc):
     '''
     A command-line option.
 
      - long_name - str - long option name
-     - docstring - str - argument docstring
+     - docstring - str - argument docstring as for Doc class.
      - short_name - str - short option char
-     - arg - str - 'no_argument' (default), 'required_argument' or 'optional_argument'
+     - arg - str - 'no_argument' (default), 'required_argument' or
+       'optional_argument'
      - arg_name - str - name for the argument, if any
      - parse_code - str - code run when the option is parsed
     '''
     options = []
     def __init__(self, long_name, docstring, short_name=None,
                  arg=None, arg_name=None, parse_code=None):
-        super().__init__()
+        super().__init__(docstring)
         self.options.append(self)
         self.long_name = long_name
-        self.docstring = docstring
         self.short_name = short_name
         self.arg = arg or 'no_argument'
         self.arg_name = arg_name
         self.parse_code = parse_code
 
-class Arg(CommandLineElement):
+class Arg(Doc):
     '''
     A command-line argument.
 
      - arg - str - argument name
-     - docstring - str - argument docstring
+     - docstring - str - argument docstring as for Doc class.
     '''
     def __init__(self, arg, docstring):
+        super().__init__(docstring)
         self.arg = arg
-        self.docstring = docstring
+
 
 Option('specializer',
        'use specializing interpreter',
        short_name='O',
        parse_code=Code('run_fn = mit_specializer_run;'),
+)
+
+Option('profile',
+       '"write profiling data to "MIT_PROFILE_FILENAME" on exit"',
+       parse_code=Code('profile = true;'),
 )
 
 Option('no-auto-extend',
@@ -79,7 +83,7 @@ Option('no-auto-extend',
 
 default_max_backtrace = 16
 Option('backtrace',
-       '''show registers and top N stack items on error\\n\\
+       '''show registers and top N stack items on error
                             [default {}; 0 to show entire stack]'''.format(default_max_backtrace),
        arg='optional_argument', arg_name='N',
        parse_code=Code('''\
@@ -282,6 +286,14 @@ Feature(# VM core dump
     ''')
 )
 
+Feature(# Dump specializer profiling data
+    init=Code('bool profile = false;'),
+    exit=Code('''
+        if (profile)
+            mit_specializer_dump_profile();
+    ''')
+)
+
 
 # Generate output
 
@@ -294,28 +306,25 @@ for error in MitErrorCode:
 
 # Command-line documentation
 help_code = Code()
-for element in CommandLineElement.elements:
+for element in Doc.elements:
     if isinstance(element, Option):
         arg = ''
         if element.arg_name: arg = element.arg_name
         if element.arg == 'optional_argument':
             arg = '[{}]'.format(arg)
-        help_code.append('    printf("  %-26s%s\\n", "--{long_name}{short_opt} {arg}", "{docstring}");'.format(
+        help_code.append('    printf("  %-26s%s\\n", "--{long_name}{short_opt} {arg}", {docstring});'.format(
             long_name=element.long_name,
             short_opt=', -{}'.format(element.short_name) if element.short_name else '',
             arg=arg,
             docstring=element.docstring,
         ))
     elif isinstance(element, Arg):
-        help_code.append('printf("  %-26s%s\\n", {arg}, {docstring});'.format(
+        help_code.append('printf("  %-26s%s\\n", "{arg}", {docstring});'.format(
             arg=element.arg,
             docstring=element.docstring
         ))
     elif isinstance(element, Doc):
-        text = element.text
-        if len(text) > 1 and not(text[0] == '"' and text[-1] == '"'):
-            text = '"{}"'.format(repr(text)[1:-1])
-        help_code.append('    printf({}"\\n");'.format(text))
+        help_code.append('    printf({}"\\n");'.format(element.docstring))
 
 # Command-line options
 getopt_code = Code()
