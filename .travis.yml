@@ -1,6 +1,6 @@
 language: c
 sudo: true
-dist: xenial
+dist: bionic
 
 addons:
   apt:
@@ -65,14 +65,11 @@ matrix:
 
 before_install:
   - eval "${MATRIX_EVAL}"
-  # workaround clang not installed in default PATH, so "sudo make install" fails
-  - export CC=`which $CC`
 
-# Run make install so that Python's ctypes.util.find_library works on Python < 3.6; hence don't use --enable-package-suffix,
-# as otherwise the installed libraries will have the wrong name for make distcheck.
-# Use travis_wait because clang can take longer than 10 minutes to build the specializer.
 script:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install help2man; fi
   - ./bootstrap
-  - ./configure --enable-silent-rules && travis_wait make && sudo make install && make check && if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then make distcheck; fi
+  - ./configure --enable-silent-rules && make
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then sudo make install; fi
+  - make check && if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then make distcheck; fi
   - if [[ "$BENCH_TEST" == "yes" ]]; then make bench; fi
