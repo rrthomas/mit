@@ -130,7 +130,7 @@ int mit_predictor_dump(int fd)
     int dup_fd = dup(fd);
     if (dup_fd == -1)
         return -1;
-    FILE *fp = fdopen(dup_fd, "wb");
+    FILE *fp = fdopen(dup_fd, "w");
     if (fp == NULL)
         return -1;
 
