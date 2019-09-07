@@ -75,7 +75,7 @@ class Label:
         code.append('goto {};'.format(self.name))
         return code
 
-    def generate_code(self):
+    def generate_code(self, profiling=False):
         '''
         Returns a Code to place at this Label.
         Also returns the peak value of `CacheState.cached_depth`.
@@ -83,7 +83,8 @@ class Label:
         # Generate the Code for the branch where the guess is correct.
         # Also, compute the guess bit string.
         c_code = Code()
-        c_code.append('state_guess_correct[{}]++;'.format(self.index))
+        if profiling:
+            c_code.append('state_guess_correct[{}]++;'.format(self.index))
         opcode_value = 0 # Bit pattern to match.
         opcode_bits = 0 # Number of bits to match.
         state = State(tos_constant=self.tos_constant)
@@ -111,7 +112,8 @@ class Label:
             max(self.cached_depth, -state.stack_min) + state.stack_max)
         # Generate the code for the branch where the guess is wrong.
         w_code = Code()
-        w_code.append('state_guess_wrong[{}]++;'.format(self.index))
+        if profiling:
+            w_code.append('state_guess_wrong[{}]++;'.format(self.index))
         cache_state = self.cache_state()
         w_code.extend(label_by_index(self.if_wrong).goto(cache_state))
         # Generate the guess condition.
@@ -149,99 +151,111 @@ def label_by_index(index):
     return labels[index]
 
 
+def gen_labels_code(profiling=False):
+    code = Code()
+    code.append(Code('''\
+        mit_uword initial_pc, initial_ir;
+        // The number of stack items cached in C variables.
+        int cached_depth = 0;
+        goto A_0;
+
+        // Each A_XXX label has an expectation of what instruction sequence
+        // probably comes next. If correct, there is a fast path for executing
+        // that sequence, otherwise we fall back on a slow path with broader
+        // expectations. Ultimately, we fall back to `A_FALLBACK` which calls
+        // `mit_single_step()` to handle corner cases.
+        //
+        // The calling convention at each A_XXX label is as follows:
+        //
+        //  - On entry, `error` is `MIT_ERROR_OK`. `cached_depth` is a
+        //    compile-time constant indicating how many top stack items are in
+        //    C variables.
+        //  - Before running the `Instruction.code` for an instruction, record
+        //    `initial_pc` and `initial_ir`, and right-shift `ir`.
+        //  - When an error occurs, call `RAISE(code)`.
+        //    It sets `error` to the return code; then it resets pc and
+        //    ir to their initial values, and does "goto error".
+        //  - On exit, whether by `RAISE` or otherwise, all Mit
+        //    registers must be set according to the Mit spec. In particular,
+        //    there must be no side effects before a RAISE, except on `ir` and
+        //    `pc`, which will be reset as described above.
+    '''))
+    max_cached_depth = 0
+    for label in labels:
+        code.append('')
+        code.append('{label_name}:'.format(label_name=label.name))
+        label_code, cached_depth = label.generate_code(profiling)
+        code.append(label_code)
+        max_cached_depth = max(max_cached_depth, cached_depth)
+    code.append('')
+    code.append('''\
+        A_FALLBACK:
+            assert(error == MIT_ERROR_OK);
+            assert(cached_depth == 0);
+            *real_S = state;
+            error = mit_single_step(real_S);
+            state = *real_S;
+            continue;
+
+        error:
+            S->pc = initial_pc;
+            S->ir = initial_ir;
+            switch (cached_depth) {
+    ''')
+    switch_code = Code()
+    cache_state = CacheState(max_cached_depth, 0)
+    while cache_state.cached_depth > 0:
+        switch_code.append('case {}:'.format(cache_state.cached_depth))
+        case_code = Code()
+        case_code.extend(cache_state.flush(cache_state.cached_depth - 1))
+        case_code.append('// Falls through.')
+        switch_code.append(case_code)
+    switch_code.append('''\
+        case 0:
+            break;
+        default:
+            assert(0); // Unreachable.
+        }
+    ''')
+    code.append(switch_code)
+
+    return code, max_cached_depth
+
 # Generate the code for the labels first, so as to compute `max_cached_depth`.
-labels_code = Code()
-labels_code.append(Code('''\
-    mit_uword initial_pc, initial_ir;
-    // The number of stack items cached in C variables.
-    int cached_depth = 0;
-    goto A_0;
+labels_code, max_cached_depth = gen_labels_code(profiling=False)
+labels_code_profiling = gen_labels_code(profiling=True)
 
-    // Each A_XXX label has an expectation of what instruction sequence
-    // probably comes next. If correct, there is a fast path for executing
-    // that sequence, otherwise we fall back on a slow path with broader
-    // expectations. Ultimately, we fall back to `A_FALLBACK` which calls
-    // `mit_single_step()` to handle corner cases.
-    //
-    // The calling convention at each A_XXX label is as follows:
-    //
-    //  - On entry, `error` is `MIT_ERROR_OK`. `cached_depth` is a
-    //    compile-time constant indicating how many top stack items are in
-    //    C variables.
-    //  - Before running the `Instruction.code` for an instruction, record
-    //    `initial_pc` and `initial_ir`, and right-shift `ir`.
-    //  - When an error occurs, call `RAISE(code)`.
-    //    It sets `error` to the return code; then it resets pc and
-    //    ir to their initial values, and does "goto error".
-    //  - On exit, whether by `RAISE` or otherwise, all Mit
-    //    registers must be set according to the Mit spec. In particular,
-    //    there must be no side effects before a RAISE, except on `ir` and
-    //    `pc`, which will be reset as described above.
-'''))
-max_cached_depth = 0
-for label in labels:
-    labels_code.append('')
-    labels_code.append('{label_name}:'.format(label_name=label.name))
-    label_code, cached_depth = label.generate_code()
-    labels_code.append(label_code)
-    max_cached_depth = max(max_cached_depth, cached_depth)
-labels_code.append('')
-labels_code.append('''\
-    A_FALLBACK:
-        assert(error == MIT_ERROR_OK);
-        assert(cached_depth == 0);
+def gen_body_code(profiling=False):
+    code = Code()
+    code.append('''\
+        mit_state state = *real_S;
+        mit_state *const S = &state;
+        int error = MIT_ERROR_OK;
+    ''')
+    if max_cached_depth > 0:
+        cache_state = CacheState(max_cached_depth, 0)
+        code.append('mit_word {};'.format(
+            ', '.join(
+                cache_state.var(pos)
+                for pos in reversed(range(max_cached_depth))
+            )
+        ))
+    code.append('do {')
+    code.extend(labels_code)
+    code.append('''\
+        } while (error == MIT_ERROR_OK);
         *real_S = state;
-        error = mit_single_step(real_S);
-        state = *real_S;
-        continue;
+        return error;
+    ''')
 
-    error:
-        S->pc = initial_pc;
-        S->ir = initial_ir;
-        switch (cached_depth) {
-''')
-switch_code = Code()
-cache_state = CacheState(max_cached_depth, 0)
-while cache_state.cached_depth > 0:
-    switch_code.append('case {}:'.format(cache_state.cached_depth))
-    case_code = Code()
-    case_code.extend(cache_state.flush(cache_state.cached_depth - 1))
-    case_code.append('// Falls through.')
-    switch_code.append(case_code)
-switch_code.append('''\
-    case 0:
-        break;
-    default:
-        assert(0); // Unreachable.
-    }
-''')
-labels_code.append(switch_code)
+    return code
 
 # Construct a Code for the function body, copying `labels_code`.
-body_code = Code()
-body_code.append('''\
-    mit_state state = *real_S;
-    mit_state *const S = &state;
-    int error = MIT_ERROR_OK;
-''')
-if max_cached_depth > 0:
-    cache_state = CacheState(max_cached_depth, 0)
-    body_code.append('mit_word {};'.format(
-        ', '.join(
-            cache_state.var(pos)
-            for pos in reversed(range(max_cached_depth))
-        )
-    ))
-body_code.append('do {')
-body_code.extend(labels_code)
-body_code.append('''\
-    } while (error == MIT_ERROR_OK);
-    *real_S = state;
-    return error;
-''')
+body_code = gen_body_code(profiling=False)
+body_code_profiling = gen_body_code(profiling=True)
 
 
-# Generate the code for the entire source file, incorporating `body_code`.
+# Generate the code for the entire source file.
 code = Code()
 code.append('''\
     // Auto-generated by gen-specializer - DO NOT EDIT.
@@ -251,40 +265,64 @@ code.append('''\
 
     #include <assert.h>
     #include <stdio.h>
+    #include <unistd.h>
 
     #include "mit/mit.h"
     #include "mit/features.h"
 
     #include "run.h"
-    #include "warn.h"
 
 
+    #define NUM_LABELS {num_labels}
     // The number of times we guessed correctly at each specializer label.
-    static unsigned long long state_guess_correct[{num_counts}] = {{0}};
+    static unsigned long long state_guess_correct[NUM_LABELS];
     // The number of times we guessed wrong at each specializer label.
-    static unsigned long long state_guess_wrong[{num_counts}] = {{0}};
+    static unsigned long long state_guess_wrong[NUM_LABELS];
 
-    void mit_specializer_dump_profile(void) {{
-        FILE *fp = fopen(MIT_PROFILE_FILENAME, "w");
+    void mit_specializer_profiling_init(void)
+    {{
+        for (unsigned i = 0; i < NUM_LABELS; i++)
+            state_guess_correct[i] = state_guess_wrong[i] = 0;
+    }}
+
+    int mit_specializer_dump_profile(int fd)
+    {{
+        // Open output stream (for buffering)
+        int dup_fd = dup(fd);
+        if (dup_fd == -1)
+            return -1;
+        FILE *fp = fdopen(dup_fd, "w");
         if (fp == NULL)
-            warn("could not open file "MIT_PROFILE_FILENAME);
+            return -1;
         else {{
-            fprintf(fp, "[");
+            if (fprintf(fp, "[") < 0)
+                goto err;
             const char *sep = "";
-            for (unsigned i = 0; i < {num_counts}; i++) {{
-                fprintf(fp, "%s\\n  {{\\"c\\": %llu, \\"w\\": %llu}}",
-                    sep, state_guess_correct[i], state_guess_wrong[i]);
+            for (unsigned i = 0; i < NUM_LABELS; i++) {{
+                if (fprintf(fp, "%s\\n  {{\\"c\\": %llu, \\"w\\": %llu}}",
+                            sep, state_guess_correct[i], state_guess_wrong[i])
+                    < 0)
+                    goto err;
                 sep = ",";
             }}
-            fprintf(fp, "\\n]\\n");
-            fclose(fp);
-            warn("wrote profile data to "MIT_PROFILE_FILENAME);
+            if (fprintf(fp, "\\n]\\n") < 0)
+                goto err;
+            if (fclose(fp) == 0)
+                return 0;
         }}
+    err:
+        return -1;
     }}
 
     mit_word mit_specializer_run(mit_state * restrict real_S) {{
-'''.format(num_counts=len(labels)))
+'''.format(num_labels=len(labels)))
 code.append(body_code)
+code.append('''\
+    }
+
+    mit_word mit_specializer_profiling_run(mit_state * restrict real_S) {
+''')
+code.append(body_code_profiling)
 code.append('}')
 
 print(code)

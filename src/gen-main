@@ -72,8 +72,14 @@ Option('specializer',
 )
 
 Option('profile',
-       '"write profiling data to "MIT_PROFILE_FILENAME" on exit"',
-       parse_code=Code('profile = true;'),
+       '"write execution profile to "MIT_PROFILE_FILENAME" on exit"',
+       parse_code=Code('''\
+       {
+           mit_specializer_profiling_init();
+           run_fn = mit_specializer_profiling_run;
+           profile = true;
+       }
+       '''),
 )
 
 Option('no-auto-extend',
@@ -289,8 +295,17 @@ Feature(# VM core dump
 Feature(# Dump specializer profiling data
     init=Code('bool profile = false;'),
     exit=Code('''
-        if (profile)
-            mit_specializer_dump_profile();
+        if (profile) {
+            FILE *fp = fopen(MIT_PROFILE_FILENAME, "w");
+            if (fp == NULL)
+                warn("could not open file "MIT_PROFILE_FILENAME);
+            else {
+                if (mit_specializer_dump_profile(fileno(fp)) == 0)
+                    warn("wrote profile data to "MIT_PROFILE_FILENAME);
+                else
+                    warn("error writing profile data");
+            }
+        }
     ''')
 )
 
