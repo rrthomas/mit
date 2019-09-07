@@ -64,24 +64,40 @@ class Arg(Doc):
         super().__init__(docstring)
         self.arg = arg
 
-
-Option('specializer',
-       'use specializing interpreter',
+Doc('Execution:')
+Option('optimize',
+       'use optimizing interpreter',
        short_name='O',
-       parse_code=Code('run_fn = mit_specializer_run;'),
+       parse_code=Code('set_run_function(mit_specializer_run);'),
 )
 
 Option('profile',
-       '"write execution profile to "MIT_PROFILE_FILENAME" on exit"',
+       '''write execution profile to FILE
+                            (implies --optimize)''',
+       arg='required_argument', arg_name='FILE',
        parse_code=Code('''\
        {
-           mit_specializer_profiling_init();
-           run_fn = mit_specializer_profiling_run;
-           profile = true;
+           mit_profile_init();
+           set_run_function(mit_profile_run);
+           profile_file = optarg;
        }
        '''),
 )
 
+Option('predictor',
+       '''write data for a predictor to FILE
+                            (incompatible with --optimize)''',
+       arg='required_argument', arg_name='FILE',
+       parse_code=Code('''\
+       {
+           mit_predictor_init();
+           set_run_function(mit_predictor_run);
+           predictor_file = optarg;
+       }
+       '''),
+)
+
+Doc('\nMiscellaneous:')
 Option('no-auto-extend',
        'do not automatically extend stack or memory',
        parse_code=Code('auto_extend = false;'),
@@ -145,7 +161,7 @@ Option('version',
 
 Arg('OBJECT-FILE', 'load and run object OBJECT-FILE')
 Doc('')
-Doc('"The ARGUMENTS are available to "PACKAGE_NAME"."')
+Doc('"The ARGUMENTs are passed to "PACKAGE_NAME"."')
 Doc('''
 If an error occurs during execution, the exit status is the error code; if
 execution halts normally, the exit status is 0. Note that the VM code may
@@ -292,22 +308,27 @@ Feature(# VM core dump
     ''')
 )
 
-Feature(# Dump specializer profiling data
-    init=Code('bool profile = false;'),
-    exit=Code('''
-        if (profile) {
-            FILE *fp = fopen(MIT_PROFILE_FILENAME, "w");
-            if (fp == NULL)
-                warn("could not open file "MIT_PROFILE_FILENAME);
-            else {
-                if (mit_specializer_dump_profile(fileno(fp)) == 0)
-                    warn("wrote profile data to "MIT_PROFILE_FILENAME);
-                else
-                    warn("error writing profile data");
-            }
-        }
-    ''')
-)
+def file_feature(basename):
+    Feature(
+        init=Code('char *{}_file = NULL;'.format(basename)),
+        exit=Code('''
+            if ({basename}_file != NULL) {{
+                FILE *fp = fopen({basename}_file, "w");
+                if (fp == NULL)
+                    warn("could not open file %s", {basename}_file);
+                else {{
+                    if (mit_{basename}_dump(fileno(fp)) == -1)
+                        warn("error writing {basename} data");
+                    else
+                        warn("wrote {basename} data to %s", {basename}_file);
+                    fclose(fp);
+                }}
+            }}
+        '''.format(basename=basename))
+    )
+
+file_feature('profile') # Dump specializer profiling data
+file_feature('predictor') # Dump predictor data
 
 
 # Generate output
@@ -370,10 +391,11 @@ for i, option in enumerate(Option.options):
 getopt_code.append('{0, 0, 0, 0}')
 
 # Features
-top_level_code = Code()
+top_level_code = Code('''\
+    mit_word (*run_fn)(mit_state *) = mit_run;
+''')
 init_code = Code('''\
     set_program_name(argv[0]);
-    mit_word (*run_fn)(mit_state *) = mit_run;
 ''')
 handlers_code = Code()
 exit_code = Code()
@@ -433,7 +455,7 @@ static void usage(void)
 {
     printf("Usage: %s [OPTION...] [OBJECT-FILE ARGUMENT...]\\n"
            "\\n"
-           "Run " PACKAGE_NAME ".\\n"
+           "Run " PACKAGE_NAME " virtual machine code.\\n"
            "\\n",
            program_name);''',
               help_code,
@@ -450,6 +472,17 @@ static void exit_function(void)
 
 code.extend(top_level_code)
 code.extend(Code('''
+static void set_run_function(mit_word (*new_run_fn)(mit_state *))
+{
+    if (run_fn == new_run_fn ||
+        (run_fn == mit_profile_run && new_run_fn == mit_specializer_run))
+        ;
+    else if (run_fn == mit_run)
+        run_fn = new_run_fn;
+    else
+        die("incompatible execution options given; see %s --help", program_name);
+}
+
 int main(int argc, char *argv[])
 {
 ''',

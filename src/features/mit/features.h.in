@@ -22,11 +22,11 @@ int mit_auto_extend_handler(mit_state * restrict S, int error);
 
 const char *mit_core_dump(mit_state *S);
 
-// N.B. The specializer profile is global to the process.
 mit_word mit_specializer_run(mit_state * restrict S);
-mit_word mit_specializer_profiling_run(mit_state * restrict S);
-void mit_specializer_profiling_init(void);
-int mit_specializer_dump_profile(int fd);
+// N.B. The profiler is global to the process.
+mit_word mit_profile_run(mit_state * restrict S);
+void mit_profile_init(void);
+int mit_profile_dump(int fd);
 
 // N.B. The predictor is not re-entrant: only one instance may be in use at
 // a time in a given process.

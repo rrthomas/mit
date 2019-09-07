@@ -102,10 +102,10 @@ endif
 PREDICTOR_PFORTH_ARGS=--evaluate BYE
 #PREDICTOR_PFORTH_ARGS=make-base.fs
 #PREDICTOR_PFORTH_ARGS=tests.fs # (needs something on standard input)
-build-predictor: libmitfeatures@PACKAGE_SUFFIX@.la
+build-predictor: libmitfeatures@PACKAGE_SUFFIX@.la $(MIT_BINARY)
 	export LD_LIBRARY_PATH=$(abs_top_builddir)/src/@objdir@:$(abs_top_builddir)/src/%D%/@objdir@:$$LD_LIBRARY_PATH; \
 	cd %D%/pforth/src/mit && \
-	$(PYTHON_WITH_PATH) $(abs_srcdir)/%D%/gen-predictor $(abs_srcdir)/%D%/instructions_predictor.json $(PREDICTOR_PFORTH_ARGS)
+	$(MIT_BINARY) --predictor=$(abs_srcdir)/%D%/instructions_predictor.json pforth-base $(PREDICTOR_PFORTH_ARGS)
 
 %D%/instructions_labels.pickle: mit_core/code_util.py mit_core/params.py mit_core/instruction.py mit_core/vm_data.py %D%/instructions_predictor.json %D%/gen-labels %D%/path.py %D%/futures.py
 	$(PYTHON_WITH_PATH) $(srcdir)/%D%/gen-labels $(srcdir)/%D%/instructions_predictor.json $@
@@ -119,7 +119,6 @@ EXTRA_DIST += \
 	%D%/path.py \
 	%D%/futures.py \
 	%D%/specializer.py \
-	%D%/gen-predictor \
 	%D%/gen-labels \
 	%D%/gen-specializer \
 	%D%/instructions_predictor.json \
