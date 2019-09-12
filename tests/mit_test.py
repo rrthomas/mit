@@ -10,7 +10,7 @@
 import sys
 
 from mit.assembler import Disassembler
-from mit.binding import word_bit, uword_max
+from mit import word_bit, uword_max
 
 def cast_to_word(stack):
     return [n if 0 <= n < (1 << (word_bit - 1)) else
