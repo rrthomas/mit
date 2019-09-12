@@ -21,18 +21,15 @@ mit_pkgpython_PYTHON =				\
 	mit/ipython_suppress_traceback.py	\
 	mit/state.py				\
 	mit/assembler.py
-nodist_mit_pkgpython_PYTHON = mit/binding.py mit/errors.py mit/opcodes.py
+nodist_mit_pkgpython_PYTHON = mit/binding.py mit/enums.py
 
-all-local: mit/binding.py mit/errors.py mit/opcodes.py
+all-local: mit/binding.py mit/enums.py
 
 mit/binding.py: $(top_builddir)/config.status mit/binding.py.in
 	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
 
-mit/opcodes.py: gen-python-opcodes $(top_srcdir)/src/mit_core/instruction.py $(top_srcdir)/src/mit_core/vm_data.py $(top_srcdir)/src/features/extra_instructions.py
-	$(PYTHON_WITH_PATH) $(srcdir)/gen-python-opcodes > mit/opcodes.py || ( rm -f mit/opcodes.py; exit 1 )
-
-mit/errors.py: gen-python-errors $(top_srcdir)/src/mit_core/instruction.py $(top_srcdir)/src/mit_core/vm_data.py $(top_srcdir)/src/features/extra_instructions.py
-	$(PYTHON_WITH_PATH) $(srcdir)/gen-python-errors > mit/errors.py || ( rm -f mit/errors.py; exit 1 )
+mit/enums.py: gen-python-enums $(top_srcdir)/src/mit_core/instruction.py $(top_srcdir)/src/mit_core/vm_data.py $(top_srcdir)/src/features/extra_instructions.py
+	$(PYTHON_WITH_PATH) $(srcdir)/gen-python-enums > mit/enums.py || ( rm -f mit/enums.py; exit 1 )
 
 # sloccount --autogen doesn't work (Debian bug #929000), so temporarily move
 # binding.py.in during count.
@@ -58,11 +55,10 @@ mit@PACKAGE_SUFFIX@-shell.1: mit-shell.1
 endif
 
 EXTRA_DIST = \
-	gen-python-opcodes	\
-	gen-python-errors	\
+	gen-python-enums	\
 	$(man_MANS)		\
 	mit/binding.py.in	\
 	mit-dump.in		\
 	mit-shell.in
 
-DISTCLEANFILES = $(bin_SCRIPTS) $(man_MANS) mit/errors.py mit/opcodes.py
+DISTCLEANFILES = $(bin_SCRIPTS) $(man_MANS) mit/enums.py

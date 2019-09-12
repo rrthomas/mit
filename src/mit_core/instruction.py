@@ -51,7 +51,3 @@ class InstructionEnum(Enum):
         self.results = results
         self.code = code
         self.terminal = terminal
-
-    @property
-    def value(self):
-        return self.opcode

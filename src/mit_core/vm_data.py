@@ -16,7 +16,7 @@ from .register import RegisterEnum
 
 @unique
 class Register(RegisterEnum):
-    '''A VM register.'''
+    '''VM registers.'''
     pc = ()
     ir = ()
     bad = ()
@@ -29,6 +29,7 @@ class Register(RegisterEnum):
 
 @unique
 class MitErrorCode(IntEnum):
+    'VM error codes returned by e.g. `mit_run()`.'
     OK = 0
     INVALID_OPCODE = 1
     STACK_OVERFLOW = 2
@@ -43,7 +44,7 @@ class MitErrorCode(IntEnum):
 
 @unique
 class Instruction(InstructionEnum):
-    '''VM instruction instructions.'''
+    '''VM instruction opcodes.'''
     NEXT = (0x0, [], [], Code('''\
         DO_NEXT;'''
     ), True)
@@ -189,6 +190,7 @@ class Instruction(InstructionEnum):
 
 @unique
 class InternalExtraInstruction(InstructionEnum):
+    'Internal extra instruction opcodes.'
     HALT = (0x1, [], [], Code('''\
         RAISE(MIT_ERROR_HALT);'''
     ))

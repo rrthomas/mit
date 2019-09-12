@@ -21,7 +21,7 @@ from ctypes import (
 )
 from ctypes.util import find_library
 
-from .errors import MitErrorCode, MallocErrorCode, LoadErrorCode, SaveErrorCode
+from .enums import MitErrorCode, MallocErrorCode, LoadErrorCode, SaveErrorCode
 from .int128 import c_uint128, c_int128
 
 

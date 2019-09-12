@@ -1,5 +1,6 @@
 __pycache__/
 /mit/binding.py
+/mit/enums.py
 /mit-dump
 /mit-[bl]e-[248]-dump
 /mit-[bl]e-16-dump

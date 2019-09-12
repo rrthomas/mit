@@ -19,7 +19,7 @@ Examining memory: dump, disassemble
 import os
 import sys
 
-from . import opcodes
+from . import enums
 from .binding import (
     libmit, libmitfeatures,
     VMError, is_aligned,
@@ -27,7 +27,6 @@ from .binding import (
     c_word, c_uword, c_void_p, c_char_p, byref,
     hex0x_word_width,
 )
-from .errors import MitErrorCode
 from .assembler import Assembler, Disassembler
 
 
@@ -49,7 +48,7 @@ class State:
             raise Error("error creating virtual machine state")
         state.registers = {
             register.name: Register(state.state, register)
-            for register in opcodes.Register
+            for register in enums.Register
         }
         state.M = Memory(state.state)
         state.M_word = WordMemory(state.state)
@@ -127,12 +126,12 @@ class State:
                 else:
                     libmit.mit_run(self.state)
             except VMError as e:
-                if e.args[0] == MitErrorCode.HALT:
+                if e.args[0] == enums.MitErrorCode.HALT:
                     return
                 elif (
                     e.args[0] == 1 and (
                         self.registers["ir"].get() & opcode_mask ==
-                        opcodes.Instruction.JUMP
+                        enums.Instruction.JUMP
                     )
                 ):
                     self.do_extra_instruction()
@@ -148,7 +147,7 @@ class State:
                 self.registers["pc"].get()),
                 end='',
             )
-        if ret != 0 and ret != MitErrorCode.HALT:
+        if ret != 0 and ret != enums.MitErrorCode.HALT:
             raise
 
     def step(self, n=1, addr=None, auto_NEXT=True):
@@ -188,7 +187,7 @@ class State:
                 if (
                     e.args[0] == 1 and (
                         self.registers["ir"].get() & opcode_mask ==
-                        opcodes.Instruction.JUMP
+                        enums.Instruction.JUMP
                     )
                 ):
                     self.do_extra_instruction()
@@ -277,7 +276,7 @@ class Register:
     A VM register.
 
      - state - a c_void_p which is a mit_state *.
-     - register - an opcodes.Register indicating which register this is.
+     - register - an enums.Register indicating which register this is.
     '''
     def __init__(self, state, register):
         self.state = state
@@ -313,7 +312,7 @@ class Stack:
     '''
     def __init__(self, state):
         self.state = state
-        self.stack_depth = Register(state, opcodes.Register.stack_depth)
+        self.stack_depth = Register(state, enums.Register.stack_depth)
 
     def __str__(self):
         return '[{}]'.format(', '.join(
@@ -371,7 +370,7 @@ class AbstractMemory:
     def __init__(self, state, element_size):
         self.state = state
         self.element_size = element_size
-        self.memory_bytes = Register(state, opcodes.Register.memory_bytes)
+        self.memory_bytes = Register(state, enums.Register.memory_bytes)
 
     def memory_bytes(self):
         return self.memory_bytes.get()

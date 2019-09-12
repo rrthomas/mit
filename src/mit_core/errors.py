@@ -11,12 +11,14 @@ from enum import IntEnum, unique
 
 @unique
 class MallocErrorCode(IntEnum):
+    'Error codes returned by functions that allocate memory.'
     OK = 0
     CANNOT_ALLOCATE_MEMORY = -1
     INVALID_SIZE = -2
 
 @unique
 class LoadErrorCode(IntEnum):
+    'Error codes returned by `mit_load_object()`.'
     UNALIGNED_ADDRESS = -1
     INVALID_ADDRESS_RANGE = -2
     FILE_SYSTEM_ERROR = -3
@@ -26,6 +28,7 @@ class LoadErrorCode(IntEnum):
 
 @unique
 class SaveErrorCode(IntEnum):
+    'Error codes returned by `mit_save_object()`.'
     OK = 0
     UNALIGNED_ADDRESS = -1
     INVALID_ADDRESS_RANGE = -2
