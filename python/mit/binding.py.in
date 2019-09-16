@@ -202,6 +202,15 @@ libmitfeatures.mit_specializer_run.restype = c_word
 libmitfeatures.mit_specializer_run.argtypes = [c_void_p]
 libmitfeatures.mit_specializer_run.errcheck = mit_error
 
+libmitfeatures.mit_profile_run.restype = c_word
+libmitfeatures.mit_profile_run.argtypes = [c_void_p]
+libmitfeatures.mit_profile_run.errcheck = mit_error
+
+libmitfeatures.mit_profile_init.restype = None
+libmitfeatures.mit_profile_init.argtypes = None
+
+libmitfeatures.mit_profile_dump.argtypes = [c_int]
+
 libmitfeatures.mit_predictor_init.argtypes = None
 libmitfeatures.mit_predictor_init.errcheck = malloc_error
 
