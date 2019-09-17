@@ -3,7 +3,11 @@ Mit
 
 This package provides Mit bindings for Python 3, and offers a convenient
 set of functions and variables to interact with Mit in a Python REPL.
+Module mit provides a Pythonic API.
+Module mit.binding provides direct access to libmit and libmitfeatures.
 Module mit.assembler provides Assembler and Disassembler.
+Module mit.globals provides a convenient set of globals for interactive use
+and for testing.
 
 (c) Mit authors 2019
 
@@ -17,10 +21,10 @@ provides a global Mit instance in VM, and defines various globals. See
 `State.globalize()` for details.
 '''
 
-from .errors import MitErrorCode, MallocErrorCode, LoadErrorCode, SaveErrorCode
-from .opcodes import (
+from .enums import (
     Register, Instruction, TERMINAL_OPCODES, InternalExtraInstruction,
     LibMit, LibC, LibInstruction,
+    MitErrorCode, MallocErrorCode, LoadErrorCode, SaveErrorCode,
 )
 from .binding import (
     Error, VMError,

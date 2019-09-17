@@ -140,8 +140,11 @@ AS_IF([test "$WORD_BYTES" = 16], [
   AS_IF([test "$ax_cv_int128" != yes],
     AC_MSG_ERROR([Cannot find 128-bit support for WORD_BYTES=16]))])
 
+# Set byte size
+AC_SUBST([MIT_BYTE_BIT], [8])
+
 # Set instruction opcode size
-default_opcode_bit=8
+default_opcode_bit=$MIT_BYTE_BIT
 AC_ARG_VAR([OPCODE_BIT],
   [value of MIT_OPCODE_BIT [default: $default_opcode_bit]])
 : "${OPCODE_BIT=$default_opcode_bit}"

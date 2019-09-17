@@ -21,7 +21,7 @@ from ctypes import (
 )
 from ctypes.util import find_library
 
-from .errors import MitErrorCode, MallocErrorCode, LoadErrorCode, SaveErrorCode
+from .enums import MitErrorCode, MallocErrorCode, LoadErrorCode, SaveErrorCode
 from .int128 import c_uint128, c_int128
 
 
@@ -202,8 +202,17 @@ libmitfeatures.mit_specializer_run.restype = c_word
 libmitfeatures.mit_specializer_run.argtypes = [c_void_p]
 libmitfeatures.mit_specializer_run.errcheck = mit_error
 
-libmitfeatures.mit_predictor_init.restype = None
+libmitfeatures.mit_profile_run.restype = c_word
+libmitfeatures.mit_profile_run.argtypes = [c_void_p]
+libmitfeatures.mit_profile_run.errcheck = mit_error
+
+libmitfeatures.mit_profile_init.restype = None
+libmitfeatures.mit_profile_init.argtypes = None
+
+libmitfeatures.mit_profile_dump.argtypes = [c_int]
+
 libmitfeatures.mit_predictor_init.argtypes = None
+libmitfeatures.mit_predictor_init.errcheck = malloc_error
 
 libmitfeatures.mit_predictor_dump.argtypes = [c_int]
 

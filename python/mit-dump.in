@@ -11,13 +11,16 @@ import mit@PACKAGE_SUFFIX@
 if len(sys.argv) != 2:
     print("Usage: mit-dump OBJECT-FILE")
     sys.exit(1)
-file = sys.argv[1]
-base, ext = os.path.splitext(file)
+filename = sys.argv[1]
+basename, ext = os.path.splitext(filename)
 
 VM = mit.State()
-length = VM.load(file)
+length = VM.load(filename)
 
-with open("{}.asm".format(file), "w") as h:
+asm_filename = "{}.asm".format(basename)
+with open(asm_filename, "w") as h:
     VM.disassemble(0, length, file=h)
-with open("{}.hex".format(file), "w") as h:
+
+hex_filename = "{}.hex".format(basename)
+with open(hex_filename, "w") as h:
     VM.dump(0, length, file=h)

@@ -15,7 +15,7 @@ from .binding import (
     opcode_bit, opcode_mask,
     hex0x_word_width,
 )
-from .opcodes import (
+from .enums import (
     Instruction, InternalExtraInstruction, LibInstruction,
     TERMINAL_OPCODES,
 )

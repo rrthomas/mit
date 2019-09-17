@@ -19,6 +19,8 @@ ass = assembler.instruction
 vars().update(VM.registers)
 vars().update(Instruction.__members__)
 UNDEFINED = 1 + max(Instruction)
+import sys
+print(UNDEFINED, file=sys.stderr)
 
 # Test results and data
 result = []

@@ -64,54 +64,69 @@ def disable_warnings(warnings, code):
     Returns `code` wrapped in "#pragmas" to suppress the given list
     `warnings` of warning flags.
 
+     - warnings - list of str.
      - code - a Code.
     '''
     assert isinstance(code, Code)
-    outer_code = Code()
-    outer_code.append('#pragma GCC diagnostic push')
+    pragmaed_code = Code()
+    pragmaed_code.append('#pragma GCC diagnostic push')
     for w in warnings:
-        outer_code.append('#pragma GCC diagnostic ignored "{}"'.format(w))
-    outer_code.extend(code)
-    outer_code.append('#pragma GCC diagnostic pop')
-    return outer_code
+        pragmaed_code.append('#pragma GCC diagnostic ignored "{}"'.format(w))
+    pragmaed_code.extend(code)
+    pragmaed_code.append('#pragma GCC diagnostic pop')
+    return pragmaed_code
 
 def c_symbol(python_symbol):
+    '''
+    Convert "MyIdentifier" to "MIT_MY_IDENTIFIER".
+    The "MIT_" prefix is only added if not already present.
+    '''
     c_symbol = re.sub('(?<!^)([A-Z])', '_\\1', python_symbol).upper()
     if not re.match('^MIT', c_symbol):
         c_symbol = 'MIT_{}'.format(c_symbol)
     return c_symbol
 
-def enum_to_c(enum):
+def enum_to_c(enum, value_extractor=lambda x: x.value):
     '''
     Convert an Enum to C code; returns a Code.
 
+     - enum - an Enum subclass.
+
     Values must be int.
     '''
-    prefix = re.sub('_CODE$', '', c_symbol(enum.__name__))
-    code = Code()
-    code.append('enum {')
+    prefix = c_symbol(re.sub('Code$', '', enum.__name__))
+    code = Code("/* ", enum.__doc__, " */")
     for member in enum:
-        code.append(Code('{prefix}_{name} = {value},'.format(
+        code.append('{prefix}_{name} = {value},'.format(
             prefix=prefix,
             name=member.name,
-            value=member.value
-        )))
-    code.append('};')
-    return code
+            value=value_extractor(member),
+        ))
+    return Code(
+        'enum {',
+        code,
+        '};',
+    )
 
-def enum_to_python(enum):
-    'Convert an IntEnum to Python code; return a Code.'
+def enum_to_python(enum, value_extractor=lambda x: "{:#x}".format(x.value)):
+    '''
+    Convert an Enum to Python code; return a Code.
+     - enum - an Enum subclass.
+     - value_extractor - a function that takes an element `x` of `enum` and
+       return an str. Defaults to `x.value` formatted as hex.
+    '''
     class_name = enum.__name__
-    code = Code()
-    code.append('''\
-@unique
-class {}(IntEnum):'''.format(class_name))
+    code = Code("'''", enum.__doc__, "'''")
     for member in enum:
-        code.append(Code('{name} = {value:#x}'.format(
+        code.append('{name} = {value}'.format(
             name=member.name,
-            value=member.value,
-        )))
-    return code
+            value=value_extractor(member),
+        ))
+    return Code(
+        '@unique',
+        'class {}(IntEnum):'.format(class_name),
+        code,
+    )
 
 def unrestrict(type):
     '''Return C type without any 'restrict'.'''

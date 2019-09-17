@@ -39,6 +39,7 @@
 #define MIT_OPCODE_BIT @OPCODE_BIT@
 
 // Types and constants
+// Define MIT_WORD_BIT as a number literal so we can token paste it below
 #if MIT_WORD_BYTES == 2
 #define MIT_WORD_BIT 16
 #define MIT_SIZE_WORD 1
@@ -64,7 +65,7 @@ typedef unsigned __int128 mit_uword;
 #endif
 
 typedef uint8_t mit_byte;
-#define MIT_BYTE_BIT 8
+#define MIT_BYTE_BIT @MIT_BYTE_BIT@
 #define MIT_BYTE_MASK ((1 << MIT_BYTE_BIT) - 1)
 
 #define MIT_WORD_MASK ((mit_uword)((mit_word)-1))

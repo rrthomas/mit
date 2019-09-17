@@ -17,6 +17,7 @@ from mit_core.instruction_gen import pop_stack, push_stack
 
 @unique
 class LibC(InstructionEnum):
+    'Function codes for the external extra instruction LIBC.'
     ARGC = (0x0, [], ['argc'], Code('''\
         argc = S->main_argc;
     '''))
@@ -247,6 +248,8 @@ for register in Register:
         )
 
 LibMit = InstructionEnum('LibMit', mit_lib)
+LibMit.__doc__ = 'Function codes for the external extra instruction LIBMIT.'
+
 
 class Library(InstructionEnum):
     '''Wrap an Instruction enumeration as a library.'''
@@ -283,7 +286,7 @@ class Library(InstructionEnum):
 
 @unique
 class LibInstruction(Library):
-    '''VM instruction instructions to access external libraries.'''
+    '''External extra instruction opcodes.'''
     LIBMIT = (0x01, LibMit, '''\
 #include "mit/mit.h"
 #include "mit/features.h"

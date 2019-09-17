@@ -10,12 +10,11 @@
 
 from mit_core.code_util import Code
 from mit_core.instruction_gen import *
+from mit_core.params import word_bytes
 
 
 # Get type sizes and inject them into instruction_gen
 from type_sizes import type_sizes
-assert 'mit_word' in type_sizes
-word_bytes = type_sizes['mit_word']
 import mit_core.instruction_gen
 mit_core.instruction_gen.type_wordses.update(
     {type: (size + word_bytes - 1) // word_bytes
