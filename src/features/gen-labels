@@ -1,5 +1,4 @@
 #!/usr/bin/python3
-# Generate the specializer's labels file.
 #
 # Copyright (c) 2019 Mit authors
 #
@@ -8,21 +7,33 @@
 # THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 # RISK.
 
-import sys, json, pickle, functools, heapq
+import sys, json, pickle, functools, heapq, argparse
 
 from mit_core.vm_data import Instruction
 from path import State, Path
 from futures import Future
 
 
-if len(sys.argv) != 3:
-    print("Usage: gen-labels PREDICTOR-FILENAME LABELS-FILENAME", file=sys.stderr)
-    sys.exit(1)
-predictor_filename = sys.argv[1]
-labels_filename = sys.argv[2]
+# Command-line arguments.
+parser = argparse.ArgumentParser(
+    prog='gen-labels',
+    description="Generate the specializer's labels file.",
+)
+parser.add_argument(
+    'predictor_filename',
+    metavar='PREDICTOR-FILENAME',
+    help='predictor file to read',
+)
+parser.add_argument(
+    'labels_filename',
+    metavar='LABELS-FILENAME',
+    help='labels file to write',
+)
+args = parser.parse_args()
 
+# Load predictor file.
 by_opcode = {i.opcode: i for i in Instruction}
-with open(predictor_filename) as f:
+with open(args.predictor_filename) as f:
     # [{opcode (str): (new_state, count)]
     predictor = [
         {
@@ -322,7 +333,7 @@ labels = [
 assert len(label_map) == len(labels)
 
 # Dump to a file.
-with open(labels_filename, 'wb') as f:
+with open(args.labels_filename, 'wb') as f:
     # [(
     #     tos_constant (int?),
     #     cached_depth (int),
@@ -333,4 +344,4 @@ with open(labels_filename, 'wb') as f:
     #     if_wrong (int?)
     # )]
     pickle.dump(labels, file=f)
-print('Wrote {}'.format(labels_filename))
+print('Wrote {}'.format(args.labels_filename))
