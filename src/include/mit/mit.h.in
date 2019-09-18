@@ -109,15 +109,7 @@ enum {
 };
 
 // VM registers
-typedef struct {
-#define R(reg, type, return_type) type reg;
-#define R_RO(reg, type, return_type) type reg;
-#include <mit@PACKAGE_SUFFIX@/registers.h>
-#undef R
-#undef R_RO
-    int main_argc;
-    const char **main_argv;
-} mit_state;
+typedef struct mit_state mit_state;
 
 #define R_RO(reg, type, return_type)            \
     return_type mit_get_ ## reg(mit_state *S);

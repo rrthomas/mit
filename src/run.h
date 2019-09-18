@@ -12,6 +12,8 @@
 #define MIT_RUN
 
 
+#include "state.h"
+
 #define RAISE(code)                                           \
     do {                                                      \
         error = (code);                                       \

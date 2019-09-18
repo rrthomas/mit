@@ -14,6 +14,8 @@
 #include "mit/mit.h"
 #include "mit/features.h"
 
+#include "state.h"
+
 
 static mit_uword page_size;
 static mit_uword memory_bytes;
