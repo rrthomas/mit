@@ -226,10 +226,6 @@ def gen_labels_code(profiling=False):
 
     return code, max_cached_depth
 
-# Generate the code for the labels first, so as to compute `max_cached_depth`.
-labels_code, max_cached_depth = gen_labels_code(profiling=False)
-labels_code_profiling = gen_labels_code(profiling=True)
-
 def gen_body_code(profiling=False):
     code = Code()
     code.append('''\
@@ -237,6 +233,9 @@ def gen_body_code(profiling=False):
         mit_state *const S = &state;
         int error = MIT_ERROR_OK;
     ''')
+    # Generate the code for the labels first, so as to compute
+    # `max_cached_depth`.
+    labels_code, max_cached_depth = gen_labels_code(profiling)
     if max_cached_depth > 0:
         cache_state = CacheState(max_cached_depth, 0)
         # Initialize the cache variables to avoid (incorrect) uninitialized
@@ -254,12 +253,7 @@ def gen_body_code(profiling=False):
         *real_S = state;
         return error;
     ''')
-
     return code
-
-# Construct a Code for the function body, copying `labels_code`.
-body_code = gen_body_code(profiling=False)
-body_code_profiling = gen_body_code(profiling=True)
 
 
 # Generate the code for the entire source file.
@@ -284,14 +278,32 @@ code.append('''
     // The number of times we guessed wrong at each specializer label.
     static unsigned long long state_guess_wrong[NUM_LABELS];
 
+    // Extra data to be included in profile files.    
+    static const struct label {{
+        const char *path;
+        const char *guess;
+        int correct_label;
+        int wrong_label;
+    }} label_data[NUM_LABELS] = {{'''.format(num_labels=len(labels))
+)
+def label_to_c(l):
+    return -1 if l is None else l
+code.append(Code(',\n'.join([
+    ('{{"{}", "{}", {}, {}}}'.format(
+        l.path, l.guess, label_to_c(l.if_correct), label_to_c(l.if_wrong),
+    ))
+    for l in labels
+])))
+code.append('};')
+code.append('''
     void mit_profile_init(void)
-    {{
+    {
         for (unsigned i = 0; i < NUM_LABELS; i++)
             state_guess_correct[i] = state_guess_wrong[i] = 0;
-    }}
+    }
 
     int mit_profile_dump(int fd)
-    {{
+    {
         // Open output stream (for buffering)
         int dup_fd = dup(fd);
         if (dup_fd == -1)
@@ -299,35 +311,50 @@ code.append('''
         FILE *fp = fdopen(dup_fd, "w");
         if (fp == NULL)
             return -1;
-        else {{
+        else {
             if (fprintf(fp, "[") < 0)
                 goto err;
             const char *sep = "";
-            for (unsigned i = 0; i < NUM_LABELS; i++) {{
-                if (fprintf(fp, "%s\\n  {{\\"c\\": %llu, \\"w\\": %llu}}",
-                            sep, state_guess_correct[i], state_guess_wrong[i])
-                    < 0)
+            for (unsigned i = 0; i < NUM_LABELS; i++) {
+                struct label l = label_data[i];
+                if (fprintf(fp,
+                        "%s\\n  {"
+                            "\\"path\\": \\"%s\\", "
+                            "\\"guess\\": \\"%s\\", "
+                            "\\"correct_state\\": %d, "
+                            "\\"wrong_state\\": %d, "
+                            "\\"correct_count\\": %llu, "
+                            "\\"wrong_count\\": %llu"
+                        "}",
+                        sep,
+                        l.path,
+                        l.guess,
+                        l.correct_label,
+                        l.wrong_label,
+                        state_guess_correct[i],
+                        state_guess_wrong[i]
+                    ) < 0
+                )
                     goto err;
                 sep = ",";
-            }}
+            }
             if (fprintf(fp, "\\n]\\n") < 0)
                 goto err;
             if (fclose(fp) == 0)
                 return 0;
-        }}
+        }
     err:
         return -1;
-    }}
-
-    mit_word mit_specializer_run(mit_state * restrict real_S) {{
-'''.format(num_labels=len(labels)))
-code.append(body_code)
-code.append('''\
     }
-
-    mit_word mit_profile_run(mit_state * restrict real_S) {
 ''')
-code.append(body_code_profiling)
-code.append('}')
+
+for profiling, fn in [
+    (False, 'mit_specializer_run'),
+    (True, 'mit_profile_run'),
+]:
+    code.append('')
+    code.append('mit_word {}(mit_state * restrict real_S) {{'.format(fn))
+    code.append(gen_body_code(profiling))
+    code.append('}')
 
 print(code)
