@@ -12,7 +12,6 @@ import sys, json, pickle, functools, heapq, argparse
 from mit_core.vm_data import Instruction
 from path import State, Path
 import profile
-from futures import Future
 
 
 # Command-line arguments.
@@ -21,9 +20,9 @@ parser = argparse.ArgumentParser(
     description="Generate the specializer's labels file.",
 )
 parser.add_argument(
-    'predictor_filename',
-    metavar='PREDICTOR-FILENAME',
-    help='predictor file to read',
+    'profile_filename',
+    metavar='PROFILE-FILENAME',
+    help='profile file to read',
 )
 parser.add_argument(
     'labels_filename',
@@ -46,21 +45,23 @@ print("Finding paths")
 @functools.total_ordering
 class QueueItem:
     '''
-    A potentially interesting Path and its resulting Distribution.
-    Compares by `distribution.total` (reversed).
+    A potentially interesting Path and its PathNode.
+    Compares by `node.frequency` (reversed).
+     - path - Path.
+     - node - PathNode.
     '''
-    def __init__(self, path, distribution):
+    def __init__(self, path, node):
         self.path = path
-        self.distribution = distribution
+        self.node = node
 
     def __le__(self, other):
-        return self.distribution.total.__ge__(other.distribution.total)
+        return self.node.frequency.__ge__(other.node.frequency)
 
     def __eq__(self, other):
-        return self.distribution.total.__eq__(other.distribution.total)
+        return self.node.frequency.__eq__(other.node.frequency)
 
     def __hash__(self):
-        return self.distribution.total.__hash__()
+        return self.node.frequency.__hash__()
 
     def successors(self):
         '''Yields slightly longer paths.'''
@@ -68,19 +69,17 @@ class QueueItem:
         if self.path.remove_repeating_part() != self.path:
             # This path won't become a state, because we'll loop instead.
             return
-        # Add one instruction to the Path in all useful ways.
-        predictions = self.distribution.predict()
-        for instruction, new_distribution in predictions.items():
-            if self.path.state.is_worthwhile(instruction):
-                yield QueueItem(
-                    self.path + (instruction,),
-                    new_distribution,
-                )
+        for guess, node in self.node.predict():
+            assert isinstance(guess, Instruction)
+            try:
+                yield QueueItem(self.path + (guess,), node)
+            except ValueError:
+                pass
 
 
 NUM_PATHS = 1100
 
-# The `NUM_PATHS` most common instruction sequences.
+# The `NUM_PATHS` most common instruction sequences (roughly).
 # Path -> frequency
 language = {}
 
@@ -90,8 +89,10 @@ for _ in range(NUM_PATHS):
         item = heapq.heappop(heap)
     except IndexError:
         break
-    language[item.path] = item.distribution
-    least_freq = item.distribution.total
+    if item.path not in language:
+        language[item.path] = 0.0
+    language[item.path] += item.node.frequency
+    least_freq = item.node.frequency
     for new_item in item.successors():
         heapq.heappush(heap, new_item)
 
@@ -107,7 +108,7 @@ proposed_deletions = set()
 for path in language:
     for suffix in path.suffixes():
         if suffix in language:
-            if language[suffix].total - language[path].total < least_freq:
+            if language[suffix] - language[path] < least_freq:
                 proposed_deletions.add(suffix)
 
 # Keep all paths that we don't propose to delete, and their prefixes.
@@ -121,59 +122,30 @@ language = {path: language[path] for path in to_keep}
 
 # For each path, find strings of instructions that might come next.
 
-print("Choosing multi-guesses")
-
-# The set of Instructions that might modify the ir register.
-# We cannot guess beyond such an instruction.
-GUESS_LIMITING = frozenset([
-    Instruction.NEXT,
-    Instruction.JUMP,
-    Instruction.JUMPZ,
-    Instruction.CALL,
-])
-
-def elaborate_future(distribution, state, total):
-    '''
-    Returns a Future representing the Instructions predicted by
-    `distribution`.
-     - distribution - Distribution.
-     - state - State.
-     - total - the frequency of the root of the decision tree. This is used
-       to decide how deeply to elaborate the tree.
-    '''
-    children = {}
-    for instruction, new_distribution in distribution.predict().items():
-        if not state.is_worthwhile(instruction):
-            # Useless guess: we cannot optimize it.
-            pass
-        elif distribution.total + new_distribution.total < total:
-            # Useless guess: insufficiently probable.
-            pass
-        elif instruction in GUESS_LIMITING:
-            # Do not guess beyond this one.
-            children[instruction] = Future(new_distribution.total, {})
-        else:
-            # Recurse.
-            children[instruction] = elaborate_future(
-                new_distribution,
-                state.step(state.specialize_instruction(instruction)),
-                total,
-            )
-    return Future(distribution.total, children)
+print("Choosing guesses")
+# TODO: Reimplement multi-guesses
 
 # Path -> list of non-empty tuple of Instruction
 path_guesses = {path: [] for path in language}
 
-for path, distribution in language.items():
-    future = elaborate_future(distribution, path.state, distribution.total)
-    while True:
-        guess = tuple(future.guess())
-        if len(guess) == 0:
-            break
-        if path + guess not in language:
-            break
-        path_guesses[path].append(guess)
-        future.eliminate(guess)
+for path in language:
+    guesses = []
+    for instruction in Instruction:
+        guess = (instruction,)
+        if path.state.is_worthwhile(instruction):
+            new_path = path + guess
+            if new_path in language:
+                new_freq = language[new_path]
+                guesses.append((new_freq, guess))
+    path_guesses[path] = [
+        guess
+        for _, guess in sorted(
+            guesses,
+            key=lambda x: x[0],
+            reverse=True,
+        )
+    ]
+
 
 # Generate state space of (path × rejects) with flood fill.
 
@@ -230,6 +202,7 @@ while len(transitions) < len(states):
             transitions.append(None)
 
 assert len(states) == len(state_index) == len(transitions)
+
 
 # Tension branches.
 

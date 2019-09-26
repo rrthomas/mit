@@ -11,14 +11,13 @@ import sys
 import argparse
 from pprint import pprint
 
-from mit_core.vm_data import Instruction
-from mit_core.opcode_frequency import counts
+import profile
 
 
 # Command-line arguments
 parser = argparse.ArgumentParser(
     prog='opcode-frequency',
-    description='Count the frequency of opcodes in a predictor.',
+    description='Count the frequency of opcodes in a profile.',
 )
 parser.add_argument('-n', '--topmost', type=int, metavar='N',
                     help='only output topmost N frequencies')
@@ -26,8 +25,8 @@ parser.add_argument('file', metavar='FILE')
 args = parser.parse_args()
 
 # Compute frequencies
-with open(args.file) as predictor_file:
-    freqs = counts(Instruction, predictor_file)
+profile.load(args.file)
+freqs = profile.counts()
 
 # Truncate list if desired
 if args.topmost is not None:

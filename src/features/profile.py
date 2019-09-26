@@ -80,7 +80,6 @@ def load(filename):
             for index, profile in enumerate(json.load(h))
         ]
     ROOT_NODE = PathNode((), get_state(0), 1.0)
-    
 
 
 def get_state(index):
@@ -88,6 +87,27 @@ def get_state(index):
         return None
     else:
         return profile[index]
+
+
+def counts():
+    '''
+    Returns a list of (count, instruction) sorted by descending count.
+    '''
+    # Read trace, computing opcode counts
+    counts = {instruction: 0 for instruction in Instruction}
+    for state in profile:
+        for name in state.guess.split():
+            # We'll get an error for an illegal opcode!
+            counts[Instruction[name]] += state.correct_count
+
+    # Compute instruction frequencies
+    freqs = sorted([(count, instruction)
+                    for instruction, count in counts.items()],
+                   reverse=True,
+                   key=lambda x: x[0])
+
+    # Return instruction frequencies
+    return freqs
 
 
 class PathNode:
