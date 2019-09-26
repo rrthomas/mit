@@ -1,0 +1,327 @@
+#!/usr/bin/env python3
+#
+# (c) Mit authors 2019
+#
+# The package is distributed under the MIT/X11 License.
+#
+# THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
+# RISK.
+
+
+import sys, json, functools, heapq, argparse, random
+
+from mit_core.vm_data import Instruction
+
+
+random.seed(0)
+
+# Command-line arguments.
+parser = argparse.ArgumentParser(
+    prog='simulate-jit',
+    description="Experimental algorithm for incremental compilation.",
+)
+parser.add_argument(
+    'profile_filename',
+    metavar='PROFILE-FILENAME',
+    help='profile file to read',
+)
+args = parser.parse_args()
+
+
+# Load profile file.
+
+class ProfileState:
+    '''
+    Represents a state of the interpreter that we profiled.
+     - index - the index of this ProfileState in `profile`.
+     - path - str (space-separated Instruction name) - the canonical path to
+       this ProfileState.
+     - guess - str (space-separated Instruction name) - the guessed
+       continuation.
+     - correct_state - int - the index of the ProfileState to jump to if
+       `guess` is correct, or `-1` for the fallback state.
+     - wrong_state - int - the index of the ProfileState to jump to if
+       `guess` is correctwrong, or `-1` for the fallback state.
+     - correct_count - the number of times `guess` was correct.
+     - wrong_count - the number of times `guess` was wrong.
+     - total_count - `correct_count + wrong_count`.
+    '''
+    def __init__(
+        self,
+        index,
+        path,
+        guess,
+        correct_state,
+        wrong_state,
+        correct_count,
+        wrong_count,
+    ):
+        self.index = index
+        self.path = path
+        self.guess = guess
+        self.correct_state = correct_state
+        self.wrong_state = wrong_state
+        self.correct_count = correct_count
+        self.wrong_count = wrong_count
+        self.total_count = correct_count + wrong_count
+
+    def __repr__(self):
+        return 'ProfileState({}, {!r}, {!r}, {}, {}, {}, {})'.format(
+            self.index,
+            self.path,
+            self.guess,
+            self.correct_state,
+            self.wrong_state,
+            self.correct_count,
+            self.wrong_count,
+        )
+
+# Load the data file.
+with open(args.profile_filename) as h:
+    profile = [
+        ProfileState(
+            index,
+            profile['path'],
+            profile['guess'],
+            profile['correct_state'],
+            profile['wrong_state'],
+            profile['correct_count'],
+            profile['wrong_count'],
+        )
+        for index, profile in enumerate(json.load(h))
+    ]
+
+
+def get_profile_state(index):
+    if index == -1:
+        return None
+    else:
+        return profile[index]
+
+
+class PathNode:
+    '''
+    Represents a node of the tree of probable paths.
+     - guess - a tuple of Instructions that we've committed to.
+     - profile_state - the ProfileState we'll reach after exhausting `guess`, or
+       `None`.
+     - frequency - an estimate of the relative frequency of this PathNode.
+    '''
+    def __init__(self, guess, profile_state, frequency):
+        assert type(guess) is tuple
+        assert profile_state is None or isinstance(profile_state, ProfileState)
+        assert type(frequency) is float
+        self.guess = guess
+        self.profile_state = profile_state
+        self.frequency = frequency
+
+    def __repr__(self):
+        return 'Node({!r}, {!r}, {})'.format(
+            ' '.join(i.name for i in self.guess),
+            self.profile_state,
+            self.frequency,
+        )
+
+    def predict(self):
+        '''
+        Yields (Instruction, PathNode).
+        '''
+        if len(self.guess) > 0:
+            yield (
+                self.guess[0],
+                PathNode(
+                    self.guess[1:],
+                    self.profile_state,
+                    self.frequency,
+                )
+            )
+        else:
+            for successor in self._successors():
+                for instruction, path_node in successor.predict():
+                    yield (instruction, path_node)
+
+    def _successors(self):
+        '''
+        Requires `self.guess` to be empty.
+        Yields PathNodes whose union describes the same tree as `self`.
+        '''
+        assert len(self.guess) == 0
+        if self.profile_state is not None and self.frequency > 0.0:
+            ps = self.profile_state
+            assert ps.total_count != 0
+            # The successor if the guess is correct.
+            yield PathNode(
+                tuple(Instruction[name] for name in ps.guess.split()),
+                get_profile_state(ps.correct_state),
+                self.frequency * ps.correct_count / ps.total_count,
+            )
+            # The successor if the guess is wrong.
+            yield PathNode(
+                (),
+                get_profile_state(ps.wrong_state),
+                self.frequency * ps.wrong_count / ps.total_count,
+            )
+
+ROOT_NODE = PathNode((), get_profile_state(0), 1.0)
+
+
+def trace():
+    current_node = ROOT_NODE
+    while True:
+        current_node.frequency = 1.0 # Ensure we never stop by underflow.
+        predictions = list(current_node.predict())
+        frequencies = [node.frequency for _, node in predictions]
+        instruction, current_node = random.choices(predictions, frequencies)[0]
+        yield instruction
+
+
+class Label:
+    '''
+    A simulated code address (as if compiled by the JIT).
+
+    When a Label is first constructed, it merely counts how often it is
+    executed. When the count reaches `COMPILE_THRESHOLD`, code is compiled
+    at the label.
+
+    Public fields:
+     - path - tuple of Instruction - the canonical name of this Label, defined
+       to be the shortest sequence of Instructions that takes the interpreter
+       from `ROOT_LABEL` to this Label.
+     - right_parent - the Label whose `path` is `self.path[:-1]` (`None` for
+       `ROOT_LABEL`).
+     - left_parent - the Label whose `path` is `self.path[1:]` (`None` for
+       `ROOT_LABEL`).
+     - right_children - dict from Instruction to Label - the Labels of which
+       `self` is the `right_parent`.
+     - left_children - dict from Instruction to Label - the Labels of which
+       `self` is the `left_parent`.
+     - count - int - the number of times execution has reached this Label.
+    '''
+    ALL_LABELS = []
+
+    def __init__(self, path, right_parent, left_parent):
+        self.path = path
+        print('Constructing {!r}'.format(self))
+        if len(path) == 0:
+            assert right_parent is None
+            assert left_parent is None
+        else:
+            assert right_parent.left_parent is left_parent.right_parent
+            assert right_parent.is_compiled() and left_parent.is_compiled()
+            assert path[:-1] == right_parent.path
+            assert path[1:] == left_parent.path
+            assert path[-1] not in right_parent.right_children
+            right_parent.right_children[path[-1]] = self
+            assert path[0] not in left_parent.left_children
+            left_parent.left_children[path[0]] = self
+        self.right_parent = right_parent
+        self.left_parent = left_parent
+        self.right_children = {}
+        self.left_children = {}
+        self.count = 0
+        Label.ALL_LABELS.append(self)
+
+    def __repr__(self):
+        return 'Label({})'.format(
+            ' '.join(instruction.name for instruction in self.path)
+        )
+
+    COMPILE_THRESHOLD = 10
+
+    def is_compiled(self):
+        return self.count >= Label.COMPILE_THRESHOLD
+
+    # Invariant for all `self` and `instruction`.
+    # Base case: Initially, only `ROOT_LABEL` is compiled, and Labels exist
+    # for all possible paths of length 1.
+    # When any Label's `count` reaches `COMPILE_THRESHOLD` we construct new
+    # Labels as necessary to maintain this invariant.
+    # TODO: Call this somewhere.
+    def _assert_invariant(self, instruction):
+        if self is ROOT_LABEL:
+            sp_pc = ROOT_LABEL
+        else:
+            sp_pc = self.left_parent.right_children.get(instruction)
+        assert self.left_parent is sp_pc.right_parent
+        assert (
+            instruction in self.right_children
+        ) == (
+            self.is_compiled() and
+            sp_pc is not None and
+            sp_pc.is_compiled()
+        )
+            
+    def guess(self, instruction):
+        '''
+        Tests whether the JIT has compiled specialized code for executing
+        `instruction` from `self`. If so, returns the Label otherwise `None`.
+        '''
+        return self.right_children.get(instruction)
+
+    def default(self):
+        '''
+        Returns a Label whose `path` is a suffix of `self.path` (`None` for
+        `ROOT_LABEL`). The interpreter will jump to this Label if it cannot
+        find a more specialized Label.
+        '''
+        return self.left_parent
+        # FIXME Make the following work (see #275)
+        default = self.left_parent
+        while default is not None and len(default.left_children) < 2:
+            default = default.left_parent
+        return default
+
+    def run(self, instruction):
+        '''
+        Executes one instruction.
+        Returns the next Label.
+        '''
+        self.count += 1
+        if self.count == Label.COMPILE_THRESHOLD:
+            # It is time to compile this Label.
+            # This is rare and can be slow.
+            print()
+            print("Compiling {!r}".format(self))
+            assert self is not ROOT_LABEL
+            # Construct new Labels of which we are the `right_parent`.
+            for last, label in self.left_parent.right_children.items():
+                if label.is_compiled():
+                    Label(self.path + (last,), self, label)
+            # Construct new Labels of which we are the `left_parent`.
+            for first, label in self.right_parent.left_children.items():
+                if label.is_compiled() and label is not self:
+                    Label((first,) + self.path, label, self)
+        label = self.guess(instruction)
+        if label is not None:
+            # Execute a compiled instruction.
+            print(instruction.name, end=' ')
+            return label
+        else:
+            default = self.default()
+            if default is not None:
+                return default.run(instruction)
+            else:
+                # Fall back to the interpreter.
+                print("FALLBACK({})".format(instruction.name))
+                return ROOT_LABEL
+            
+
+# The unique Label with an empty `path`.
+ROOT_LABEL = Label((), None, None)
+ROOT_LABEL.count = Label.COMPILE_THRESHOLD
+for instruction in Instruction:
+    Label((instruction,), ROOT_LABEL, ROOT_LABEL)
+
+
+current_label = ROOT_LABEL
+for instruction in trace():
+    if len(Label.ALL_LABELS) > 400:
+        break
+    current_label = current_label.run(instruction)
+
+print()
+from pprint import pprint
+import sys
+label_strs = sorted(repr(l) for l in Label.ALL_LABELS if l.is_compiled())
+pprint(label_strs, stream=sys.stderr)
+print(len(label_strs), file=sys.stderr)
