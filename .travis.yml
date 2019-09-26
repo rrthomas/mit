@@ -69,6 +69,7 @@ before_install:
 
 script:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install help2man; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then pip3 install pyyaml; fi
   - ./bootstrap
   - ./configure --enable-silent-rules "${CONFIGURE_ARGS[@]}" && make
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then sudo make install; fi
