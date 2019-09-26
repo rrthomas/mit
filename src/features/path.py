@@ -95,12 +95,13 @@ class State:
     def step(self, instruction):
         '''
         Returns the State that results from executing `instruction` in this
-        State. Requires `self.is_worthwhile(instruction)`.
+        State. Raises ValueError unless `self.is_worthwhile(instruction)`.
          - instruction - an InstructionEnum, typically an Instruction or a
            SpecializedInstruction.
         '''
         assert isinstance(instruction, InstructionEnum)
         if 'ITEMS' in instruction.args or 'ITEMS' in instruction.results:
+            # TODO: Use a more specific exception
             raise ValueError("non-constant variadic instruction")
         # Update `tos_constant`.
         m = re.match('LIT_(\d+)', instruction.name)
@@ -172,8 +173,6 @@ class Path:
         Construct a Path for `instructions`. The Path must not include a
         variadic instruction when the value at the top of the stack
         is not a known constant.
-         - tos_constant - the constant value on the top of the stack at the
-           beginning of this Path, or `None` if unknown.
         '''
         assert type(instructions) is tuple
         self.instructions = instructions
