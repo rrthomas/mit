@@ -28,6 +28,8 @@ RISK.
 Mit should work on any POSIX-1.2001-compatible system. Mit has been
 tested on x86_64 GNU/Linux with GNU C.
 
+The Python bindings require [PyYAML](https://pyyaml.org/).
+
 Reports on compatibility, whether positive or negative, are welcomed.
 
 

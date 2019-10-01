@@ -22,23 +22,43 @@ mit_pkgpython_PYTHON =				\
 	mit/ipython_suppress_traceback.py	\
 	mit/state.py				\
 	mit/assembler.py
-nodist_mit_pkgpython_PYTHON = mit/binding.py mit/enums.py
+nodist_mit_pkgpython_PYTHON = mit/binding.py mit/enums.py mit/extra_enums.py
 
-all-local: mit/binding.py mit/enums.py
+install_edit = sed \
+	-e 's|@pkgdatadir[@]|$(pkgdatadir)|g'
+
+inplace_edit = sed \
+	-e 's|@pkgdatadir[@]|$(top_srcdir)/src/mit_core|g'
+
+all-local: $(nodist_mit_pkgpython_PYTHON)
 
 mit/binding.py: $(top_builddir)/config.status mit/binding.py.in
 	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
 
-mit/enums.py: gen-python-enums $(top_srcdir)/src/mit_core/instruction.py $(top_srcdir)/src/mit_core/vm_data.py $(top_srcdir)/src/features/extra_instructions.py
-	$(PYTHON_WITH_PATH) $(srcdir)/gen-python-enums > mit/enums.py || ( rm -f mit/enums.py; exit 1 )
+mit/enums.py: $(top_srcdir)/src/mit_core/mit_spec.yaml Makefile mit/enums.py.in
+	@rm -f $@ $@.tmp
+	$(AM_V_GEN)$(inplace_edit) $(srcdir)/'$@.in' >$@.tmp
+	$(AM_V_at)mv $@.tmp $@
+
+mit/extra_enums.py: gen-extra-enums $(top_srcdir)/src/features/extra_instructions.py
+	$(PYTHON_WITH_PATH) $(srcdir)/gen-extra-enums > mit/extra_enums.py || ( rm -f mit/extra_enums.py; exit 1 )
+
+install-data-hook: mit/enums.py
+	@$(install_edit) '$(top_builddir)/python/mit/enums.py' >$@.tmp
+	@echo $(INSTALL_SCRIPT) --mode=644 $@ $(DESTDIR)$(mit_pkgpythondir)/enums.py
+	@$(INSTALL_SCRIPT) --mode=644 $@.tmp $(DESTDIR)$(mit_pkgpythondir)/enums.py
+	@rm -f $@.tmp
 
 # sloccount --autogen doesn't work (Debian bug #929000), so temporarily move
-# binding.py.in during count.
+# *.py.in during count.
 loc:
-	mv mit/binding.py.in mit/binding.py.in.bak && \
+	for file in $(nodist_mit_pkgpython_PYTHON); do \
+		mv $$file.in $$file.in.bak; \
+	done && \
 	$(SLOCCOUNT) --autogen $(bin_SCRIPTS) $(mit_pkgpython_PYTHON) $(nodist_mit_pkgpython_PYTHON); \
-	mv mit/binding.py.in.bak mit/binding.py.in
-
+	for file in $(nodist_mit_pkgpython_PYTHON); do \
+		mv $$file.in.bak $$file.in; \
+	done
 if USING_PACKAGE_SUFFIX
 mit@PACKAGE_SUFFIX@-dump: mit-dump
 	cp mit-dump $@
@@ -56,9 +76,10 @@ mit@PACKAGE_SUFFIX@-shell.1: mit-shell.1
 endif
 
 EXTRA_DIST = \
-	gen-python-enums	\
+	gen-extra-enums		\
 	$(man_MANS)		\
 	mit/binding.py.in	\
+	mit/enums.py.in		\
 	mit-dump.in		\
 	mit-shell.in
 

@@ -15,11 +15,8 @@ from .binding import (
     opcode_bit, opcode_mask,
     hex0x_word_width,
 )
-from .enums import (
-    Instruction, InternalExtraInstruction, LibInstruction,
-    TERMINAL_OPCODES,
-)
-
+from .enums import Instruction, InternalExtraInstruction, TERMINAL_OPCODES
+from .extra_enums import LibInstruction
 
 LIT = Instruction.LIT
 LIT_PC_REL = Instruction.LIT_PC_REL
