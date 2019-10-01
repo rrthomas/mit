@@ -24,8 +24,9 @@ provides a global Mit instance in VM, and defines various globals. See
 from .enums import (
     Register, Instruction, TERMINAL_OPCODES, InternalExtraInstruction,
     LibMit, LibC, LibInstruction,
-    MitErrorCode, MallocErrorCode, LoadErrorCode, SaveErrorCode,
+    MitErrorCode,
 )
+from .errors import MallocErrorCode, LoadErrorCode, SaveErrorCode
 from .binding import (
     Error, VMError,
     endism, word_bytes,
