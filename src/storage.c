@@ -15,6 +15,8 @@
 
 #include "mit/mit.h"
 
+#include "state.h"
+
 
 // Constants
 const unsigned mit_word_bytes = MIT_WORD_BYTES;

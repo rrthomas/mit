@@ -22,7 +22,7 @@ UNDEFINED = 1 + max(Instruction)
 
 # Test results and data
 result = []
-invalid_address = memory_bytes.get() + 1000
+invalid_address = VM.M.memory_bytes() + 1000
 test = []
 
 # Try to divide by zero
@@ -43,7 +43,7 @@ ass(DUP)
 test.append(label())
 result.append(MitErrorCode.INVALID_MEMORY_READ)
 print("Test {}: pc = {}".format(len(test), test[-1]))
-lit(memory_bytes.get() + word_bytes)
+lit(VM.M.memory_bytes() + word_bytes)
 ass(JUMP)
 
 # Try to load from an invalid address

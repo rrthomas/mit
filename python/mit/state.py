@@ -65,8 +65,6 @@ class State:
             name: register.get()
             for name, register in self.registers.items()
         }
-        del state['registers']['memory']
-        del state['registers']['stack']
         del state['M']
         del state['M_word']
         state['M_word'] = self.M_word[0:self.M.memory_bytes()]
@@ -78,7 +76,7 @@ class State:
         return state
 
     def __getnewargs__(self):
-        return (self.M.memory_bytes(), self.registers['stack_words'].get())
+        return (self.M.memory_bytes(), libmit.mit_get_stack_words(state.state))
 
     def __setstate__(self, state):
         for name, value in state['registers'].items():
@@ -284,10 +282,9 @@ class Register:
         self.getter = libmit["mit_get_{}".format(register.name)]
         self.getter.restype = c_uword
         self.getter.argtypes = [c_void_p]
-        if not register.read_only:
-            self.setter = libmit["mit_set_{}".format(register.name)]
-            self.setter.restype = None
-            self.setter.argtypes = [c_void_p, c_uword]
+        self.setter = libmit["mit_set_{}".format(register.name)]
+        self.setter.restype = None
+        self.setter.argtypes = [c_void_p, c_uword]
 
     def __str__(self):
         return str(self.get())
@@ -296,7 +293,6 @@ class Register:
         return int(self.getter(self.state))
 
     def set(self, v):
-        assert not self.register.read_only, '{} is read-only!'.format(self.name)
         self.setter(self.state, v)
 
 
@@ -370,10 +366,9 @@ class AbstractMemory:
     def __init__(self, state, element_size):
         self.state = state
         self.element_size = element_size
-        self.memory_bytes = Register(state, enums.Register.memory_bytes)
 
     def memory_bytes(self):
-        return self.memory_bytes.get()
+        return int(libmit.mit_get_memory_bytes(self.state))
 
     def _slice_to_range(self, index):
         '''

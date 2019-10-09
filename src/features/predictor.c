@@ -17,6 +17,8 @@
 #include "mit/mit.h"
 #include "mit/features.h"
 
+#include "state.h"
+
 
 #define HISTORY_BITS 20
 #define NUM_HISTORIES (1 << HISTORY_BITS)

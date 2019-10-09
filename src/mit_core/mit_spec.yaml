@@ -1,0 +1,165 @@
+# Mit VM definition
+#
+# (c) Mit authors 1994-2019
+#
+# The package is distributed under the MIT/X11 License.
+#
+# THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
+# RISK.
+
+# Error codes
+ErrorCode:
+  OK: 0
+  INVALID_OPCODE: 1
+  STACK_OVERFLOW: 2
+  INVALID_STACK_READ: 3
+  INVALID_STACK_WRITE: 4
+  INVALID_MEMORY_READ: 5
+  INVALID_MEMORY_WRITE: 6
+  UNALIGNED_ADDRESS: 7
+  BAD_SIZE: 8
+  DIVISION_BY_ZERO: 9
+  HALT: 127
+
+# VM registers
+Register:
+  - pc
+  - ir
+  - bad
+  - stack_depth
+
+# VM instruction instructions
+Instruction:
+  NEXT:
+    opcode: 0x0
+    args: []
+    results: []
+    terminal: true
+  JUMP:
+    opcode: 0x1
+    args: ['addr']
+    results: []
+    terminal: true
+  JUMPZ:
+    opcode: 0x2
+    args: ['flag', 'addr']
+    results: []
+  CALL:
+    opcode: 0x3
+    args: ['addr']
+    results: ['ret_addr']
+    terminal: true
+  POP:
+    opcode: 0x4
+    args: ['ITEMS', 'COUNT']
+    results: []
+  DUP:
+    opcode: 0x5
+    args: ['x', 'ITEMS', 'COUNT']
+    results: ['x', 'ITEMS', 'x']
+  SWAP:
+    opcode: 0x6
+    args: ['x', 'ITEMS', 'y', 'COUNT']
+    results: ['y', 'ITEMS', 'x']
+  PUSH_STACK_DEPTH:
+    opcode: 0x7
+    args: []
+    results: ['n']
+  LOAD:
+    opcode: 0x8
+    args: ['addr', 'size']
+    results: ['x']
+  STORE:
+    opcode: 0x9
+    args: ['x', 'addr', 'size']
+    results: []
+  LIT:
+    opcode: 0xa
+    args: []
+    results: ['n']
+  LIT_PC_REL:
+    opcode: 0xb
+    args: []
+    results: ['n']
+  LIT_0:
+    opcode: 0xc
+    args: []
+    results: ['zero']
+  LIT_1:
+    opcode: 0xd
+    args: []
+    results: ['one']
+  LIT_2:
+    opcode: 0xe
+    args: []
+    results: ['two']
+  LIT_3:
+    opcode: 0xf
+    args: []
+    results: ['three']
+  LT:
+    opcode: 0x11
+    args: ['a', 'b']
+    results: ['flag']
+  ULT:
+    opcode: 0x12
+    args: ['a', 'b']
+    results: ['flag']
+  NEGATE:
+    opcode: 0x13
+    args: ['a']
+    results: ['r']
+  ADD:
+    opcode: 0x14
+    args: ['a', 'b']
+    results: ['r']
+  MUL:
+    opcode: 0x15
+    args: ['a', 'b']
+    results: ['r']
+  DIVMOD:
+    opcode: 0x16
+    args: ['a', 'b']
+    results: ['q', 'r']
+  UDIVMOD:
+    opcode: 0x17
+    args: ['a', 'b']
+    results: ['q', 'r']
+  NOT:
+    opcode: 0x18
+    args: ['x']
+    results: ['r']
+  AND:
+    opcode: 0x19
+    args: ['x', 'y']
+    results: ['r']
+  OR:
+    opcode: 0x1a
+    args: ['x', 'y']
+    results: ['r']
+  XOR:
+    opcode: 0x1b
+    args: ['x', 'y']
+    results: ['r']
+  LSHIFT:
+    opcode: 0x1c
+    args: ['x', 'n']
+    results: ['r']
+  RSHIFT:
+    opcode: 0x1d
+    args: ['x', 'n']
+    results: ['r']
+  ARSHIFT:
+    opcode: 0x1e
+    args: ['x', 'n']
+    results: ['r']
+  SIGN_EXTEND:
+    opcode: 0x1f
+    args: ['n1', 'size']
+    results: ['n2']
+
+InternalExtraInstruction:
+  HALT:
+    opcode: 0x1
+    args: []
+    results: []

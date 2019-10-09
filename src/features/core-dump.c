@@ -19,6 +19,8 @@
 #include "mit/mit.h"
 #include "mit/features.h"
 
+#include "state.h"
+
 
 const char *mit_core_dump(mit_state *S)
 {

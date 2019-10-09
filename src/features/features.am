@@ -49,8 +49,8 @@ libmitfeatures@PACKAGE_SUFFIX@_la_SOURCES += %D%/extra-instructions.c
 	$(PYTHON_WITH_PATH) $(abs_srcdir)/%D%/gen-extra-instructions > extra-instructions.c || ( rm -f extra-instructions.c; exit 1 )
 
 %D%/mit/extra-opcodes.h: %D%/gen-extra-opcodes %D%/extra_instructions.py mit_core/instruction.py mit_core/instruction_gen.py
+	$(MKDIR_P) %D%/mit && \
 	cd %D% && \
-	$(MKDIR_P) mit && \
 	$(PYTHON_WITH_PATH) $(abs_srcdir)/%D%/gen-extra-opcodes > mit/extra-opcodes.h || ( rm -f mit/extra-opcodes.h; exit 1 )
 
 EXTRA_DIST += \

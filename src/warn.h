@@ -7,9 +7,15 @@
 // THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 // RISK.
 
+#ifndef MIT_WARN
+#define MIT_WARN
+
+
 #include <stdarg.h>
 
 
 void verror(const char *format, va_list args);
 void warn(const char *format, ...);
 void die(const char *format, ...);
+
+#endif
