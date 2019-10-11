@@ -130,7 +130,7 @@ int mit_predictor_init(void)
         return MIT_MALLOC_ERROR_CANNOT_ALLOCATE_MEMORY;
     init_step_functions();
     predictor->history = 0;
-    return MIT_MALLOC_ERROR_OK;
+    return MIT_ERROR_OK;
 }
 
 int mit_predictor_dump(int fd)

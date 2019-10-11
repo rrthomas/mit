@@ -105,7 +105,7 @@ static int mit_realloc(mit_word * restrict *ptr, mit_uword old_size, mit_uword n
     if (old_size < new_size)
         memset(*(uint8_t **)ptr + old_size, 0, (new_size - old_size));
 
-    return MIT_MALLOC_ERROR_OK;
+    return MIT_ERROR_OK;
 }
 
 int mit_realloc_memory(mit_state *S, mit_uword memory_bytes)
