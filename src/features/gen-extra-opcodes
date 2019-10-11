@@ -13,6 +13,7 @@ import mit_core.instruction_gen
 mit_core.instruction_gen.TYPE_SIZE_UNKNOWN = 0
 
 from extra_instructions import *
+from extra_errors import RegisterArgsErrorCode
 
 
 code = Code()
@@ -41,6 +42,8 @@ for lib_instruction in LibInstruction:
     code.extend(enum_to_c(lib_instruction.library, lambda i: i.value[0]))
     code.append('')
 code.append('#undef INSTRUCTION')
+code.append('')
+code.extend(enum_to_c(RegisterArgsErrorCode))
 code.append('')
 code.append('#endif')
 

@@ -23,6 +23,7 @@ from ctypes.util import find_library
 
 from .enums import MitErrorCode
 from .errors import MallocErrorCode, LoadErrorCode, SaveErrorCode
+from .extra_errors import RegisterArgsErrorCode
 from .int128 import c_uint128, c_int128
 
 
@@ -185,8 +186,6 @@ libmit.mit_realloc_stack.errcheck = malloc_error
 libmit.mit_destroy.restype = None
 libmit.mit_destroy.argtypes = [c_void_p]
 
-libmit.mit_register_args.argtypes = [c_void_p, c_int, c_void_p]
-
 libmit.mit_align.restype = c_uword
 libmit.mit_align.argtypes = [c_uword, c_uint]
 
@@ -199,6 +198,9 @@ def is_aligned(addr):
     return libmit.mit_is_aligned(addr, size_word)
 
 # features.h
+libmitfeatures.mit_register_args.argtypes = [c_int, c_void_p]
+libmitfeatures.mit_register_args.errcheck = errcheck(RegisterArgsErrorCode)
+
 libmitfeatures.mit_extra_instruction.restype = c_word
 libmitfeatures.mit_extra_instruction.argtypes = [c_void_p]
 libmitfeatures.mit_extra_instruction.errcheck = mit_error

@@ -165,12 +165,3 @@ void mit_destroy(mit_state *S)
 #include "mit/registers.h"
 #undef R
 #undef R_RO
-
-// Register command-line args
-int mit_register_args(mit_state *S, int argc, const char *argv[])
-{
-    S->main_argc = argc;
-    S->main_argv = argv;
-
-    return MIT_ERROR_OK;
-}

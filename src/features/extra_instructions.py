@@ -19,11 +19,11 @@ from mit_core.instruction_gen import pop_stack, push_stack
 class LibC(InstructionEnum):
     'Function codes for the external extra instruction LIBC.'
     ARGC = (0x0, [], ['argc'], Code('''\
-        argc = S->main_argc;
+        argc = mit_argc();
     '''))
 
     ARG = (0x1, ['u'], ['arg:const char *'], Code('''\
-        arg = S->main_argv[u];
+        arg = mit_argv(u);
     '''))
 
     EXIT = (0x2, ['ret_code'], [], Code('''\
@@ -213,10 +213,6 @@ mit_lib = {
 
     'SAVE_OBJECT': (0xb, ['fd:int', 'addr', 'len', 'inner_state:mit_state *'], ['ret:int'],
         Code('ret = mit_save_object(inner_state, addr, len, fd);'),
-    ),
-
-    'REGISTER_ARGS': (0xc, ['argv:const char **', 'argc:int', 'inner_state:mit_state *'], ['ret:int'],
-        Code('ret = mit_register_args(inner_state, argc, argv);'),
     ),
 }
 

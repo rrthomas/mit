@@ -17,8 +17,6 @@ struct mit_state {
 #include "mit/registers.h"
 #undef R
 #undef R_RO
-    int main_argc;
-    const char **main_argv;
 };
 
 #endif

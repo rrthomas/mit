@@ -97,7 +97,7 @@ class State:
                 arg = bytes(arg)
             bargs.append(arg)
         self.argv = arg_strings(*bargs)
-        assert(libmit.mit_register_args(self.state, argc, self.argv) == 0)
+        assert(libmitfeatures.mit_register_args(argc, self.argv) == 0)
 
     def do_extra_instruction(self):
         libmitfeatures.mit_extra_instruction(self.state)

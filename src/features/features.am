@@ -24,10 +24,13 @@ $(libmitfeatures@PACKAGE_SUFFIX@_la_SOURCES): include/mit/mit.h
 # Simple features
 
 libmitfeatures@PACKAGE_SUFFIX@_la_SOURCES += \
+	%D%/args.c \
 	%D%/auto-extend.c \
 	%D%/core-dump.c \
 	%D%/predictor.c \
 	%D%/step_to.c
+
+%D%/args.lo: %D%/mit/extra-opcodes.h
 
 
 # Library extra instructions
@@ -117,6 +120,7 @@ build-predictor: libmitfeatures@PACKAGE_SUFFIX@.la $(MIT_BINARY)
 %D%/specializer.lo: include/mit/mit.h %D%/mit/features.h
 
 EXTRA_DIST += \
+	%D%/extra_errors.py \
 	%D%/path.py \
 	%D%/futures.py \
 	%D%/specializer.py \

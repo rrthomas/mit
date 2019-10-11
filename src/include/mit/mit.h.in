@@ -455,17 +455,6 @@ int mit_save_object(mit_state *S, mit_uword addr, mit_uword len, int fd);
    -2: `addr` or `len` is invalid
 */
 
-int mit_register_args(mit_state *S, int argc, const char *argv[]);
-/* Register command-line arguments in the given state, which can be
-   retrieved using the `ARGC` and `ARG` functions of the `LIBC` extra
-   instruction (see `mit_core/ext.py`).
-
-   - state - the state in which to register the arguments
-   - argc, argv - as for `main`.
-
-    Return 0.
-*/
-
 mit_word mit_internal_extra_instruction(mit_state *S);
 /* Execute an internal instruction, given by `S->ir`. */
 
