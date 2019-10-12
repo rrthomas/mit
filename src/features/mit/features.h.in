@@ -15,6 +15,20 @@
 #ifndef MIT_FEATURES
 #define MIT_FEATURES
 
+int mit_argc(void);
+/* Return the registered value of `argc`. */
+const char *mit_argv(int arg);
+/* Return the `arg`th argument, or `NULL`. */
+int mit_register_args(int argc, const char *argv[]);
+/* Register command-line arguments for the process, which can be
+   retrieved using the `ARGC` and `ARG` functions of the `LIBC` extra
+   instruction (see `extra_instructions.py`).
+
+   - argc, argv - as for `main`.
+
+    Return MIT_ERROR_OK if `argv` has at least `argc` non-NULL entries.
+*/
+
 mit_word mit_extra_instruction(mit_state * restrict S);
 
 mit_state *mit_auto_extend_init(void);

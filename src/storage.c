@@ -105,7 +105,7 @@ static int mit_realloc(mit_word * restrict *ptr, mit_uword old_size, mit_uword n
     if (old_size < new_size)
         memset(*(uint8_t **)ptr + old_size, 0, (new_size - old_size));
 
-    return MIT_MALLOC_ERROR_OK;
+    return MIT_ERROR_OK;
 }
 
 int mit_realloc_memory(mit_state *S, mit_uword memory_bytes)
@@ -165,12 +165,3 @@ void mit_destroy(mit_state *S)
 #include "mit/registers.h"
 #undef R
 #undef R_RO
-
-// Register command-line args
-int mit_register_args(mit_state *S, int argc, const char *argv[])
-{
-    S->main_argc = argc;
-    S->main_argv = argv;
-
-    return MIT_ERROR_OK;
-}

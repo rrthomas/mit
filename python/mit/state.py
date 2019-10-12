@@ -97,7 +97,7 @@ class State:
                 arg = bytes(arg)
             bargs.append(arg)
         self.argv = arg_strings(*bargs)
-        assert(libmit.mit_register_args(self.state, argc, self.argv) == 0)
+        assert(libmitfeatures.mit_register_args(argc, self.argv) == 0)
 
     def do_extra_instruction(self):
         libmitfeatures.mit_extra_instruction(self.state)
@@ -217,7 +217,7 @@ class State:
         assert length is not None
         ptr = libmit.mit_native_address_of_range(self.state, address, length)
         if not is_aligned(address) or ptr is None:
-            return -1
+            raise Error("invalid or unaligned address")
 
         fd = os.open(file, os.O_CREAT | os.O_RDWR | O_BINARY, mode=0o666)
         if fd < 0:
