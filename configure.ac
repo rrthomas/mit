@@ -185,11 +185,12 @@ AC_CONFIG_FILES([
         src/include/mit/mit.h
         src/mit_core/params.py
         src/features/mit/features.h
-        tests/Makefile
         python/Makefile
         python/mit/binding.py
         python/mit-dump.1
         python/mit-shell.1
+        tests/Makefile
+        tests/test_pickle.py
         doc/Makefile
 ])
 AC_CONFIG_FILES([python/mit-dump], [chmod +x python/mit-dump])

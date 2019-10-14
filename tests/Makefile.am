@@ -33,6 +33,10 @@ TESTS =	\
 	cell-size.bf	\
 	test-mit-shell
 
+if USING_PFORTH
+TESTS += test_pickle.py
+endif
+
 BENCH_TESTS = \
 	mandelbrot.bf
 
