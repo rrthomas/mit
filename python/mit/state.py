@@ -76,7 +76,7 @@ class State:
         return state
 
     def __getnewargs__(self):
-        return (self.M.memory_bytes(), libmit.mit_get_stack_words(state.state))
+        return (self.M.memory_bytes(), libmit.mit_get_stack_words(self.state))
 
     def __setstate__(self, state):
         for name, value in state['registers'].items():

@@ -45,10 +45,10 @@ mit/extra_enums.py: gen-extra-enums $(top_srcdir)/src/features/extra_instruction
 	$(PYTHON_WITH_PATH) $(srcdir)/gen-extra-enums > mit/extra_enums.py || ( rm -f mit/extra_enums.py; exit 1 )
 
 install-data-hook: mit/enums.py
-	@$(install_edit) '$(top_builddir)/python/mit/enums.py' >$@.tmp
-	@echo $(INSTALL_SCRIPT) --mode=644 $@ $(DESTDIR)$(mit_pkgpythondir)/enums.py
-	@$(INSTALL_SCRIPT) --mode=644 $@.tmp $(DESTDIR)$(mit_pkgpythondir)/enums.py
-	@rm -f $@.tmp
+	@$(install_edit) $(top_srcdir)/python/mit/enums.py.in > enums.py.tmp
+	@echo $(INSTALL_SCRIPT) --mode=644 enums.py.tmp $(DESTDIR)$(mit_pkgpythondir)/enums.py
+	@$(INSTALL_SCRIPT) --mode=644 enums.py.tmp $(DESTDIR)$(mit_pkgpythondir)/enums.py
+	@rm -f enums.py.tmp
 
 # sloccount --autogen doesn't work (Debian bug #929000), so temporarily move
 # *.py.in during count.
