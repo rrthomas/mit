@@ -20,7 +20,7 @@ init:
 install:
   - cmd: C:\msys64\usr\bin\bash.exe -lc "cd c:/projects/mit && ./build-aux/appveyor-install.sh"
 
-# FIXME: In-place mit doesn't work, so remove pforth after bootstrap
-# (It would otherwise be tested on mingw32.)
+# `git rm-symlinks` in pforth (defined in build-aux/appveyor-install.sh) to
+# fix symlinks for Windows.
 build_script:
-  - cmd: C:\msys64\usr\bin\bash.exe -lc "cd c:/projects/mit && ./bootstrap && rm -rf src/features/pforth && ./configure --enable-silent-rules && make && make install && make check"
+  - cmd: C:\msys64\usr\bin\bash.exe -lc "cd c:/projects/mit && ./bootstrap && cd src/features/pforth && git rm-symlinks && cd ../../.. && ./configure --enable-silent-rules && make && make check"

@@ -54,7 +54,11 @@ $(top_builddir)/copied-python-module-to-build:
 	    touch $@; \
 	fi
 
+# Augment PATH (for Windows) and LD_LIBRARY_PATH (for Linux) so that
+# Python's `ctypes.find_library` find the in-tree shared libraries.
+# macOS System Integrity Protection erases DYLD_LIBRARY_PATH on exec(2).
 TESTS_ENVIRONMENT = \
+	export PATH=$(top_builddir)/src/@objdir@:$$PATH; \
 	export LD_LIBRARY_PATH=$(top_builddir)/src/@objdir@:$$LD_LIBRARY_PATH; \
 	export PYTHON=$(PYTHON); \
 	export PYTHONPATH=$(top_builddir)/python;
