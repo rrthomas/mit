@@ -18,7 +18,7 @@ from .instruction import InstructionEnum
 
 
 with open(os.path.join(os.path.dirname(__file__), 'mit_spec.yaml')) as f:
-    spec = yaml.load(f.read())
+    spec = yaml.safe_load(f.read())
 
 
 class RegisterEnum(AutoNumber):
