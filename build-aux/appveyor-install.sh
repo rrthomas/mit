@@ -63,14 +63,12 @@ case $MSYSTEM in
     MINGW32)
         MINGW_ARCH=i686
         PREFIX=/mingw32
-        pacman --noconfirm -S mingw-w64-$MINGW_ARCH-python3-setuptools
-        #pacman --noconfirm -S mingw-w64-$MINGW_ARCH-python3-ipython
+        pacman --noconfirm -S mingw-w64-$MINGW_ARCH-python3-setuptools mingw-w64-$MINGW_ARCH-python3-ipython
         ;;
     MINGW64)
         MINGW_ARCH=x86_64
         PREFIX=/mingw64
-        pacman --noconfirm -S mingw-w64-$MINGW_ARCH-python3-setuptools
-        #pacman --noconfirm -S mingw-w64-$MINGW_ARCH-python3-ipython
+        pacman --noconfirm -S mingw-w64-$MINGW_ARCH-python3-setuptools mingw-w64-$MINGW_ARCH-python3-ipython
         ;;
     MSYS)
         MINGW_ARCH=msys

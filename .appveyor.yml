@@ -1,8 +1,5 @@
 version: "{build}"
 
-# FIXME: currently does not work with IPython: get error "stdin is not a tty"
-# when trying to test version of IPython in configure
-
 environment:
   global:
     VERBOSE: 1 # Get test logs in output
