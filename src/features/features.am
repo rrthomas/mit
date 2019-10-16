@@ -93,7 +93,7 @@ features/pforth/config.status: features/pforth/configure
 features/pforth/configure:
 	cd features/pforth && \
 	autoreconf -i && \
-	./configure --build=mit BUILD_EXECUTOR=$(MIT_BINARY)
+	./configure --build=mit BUILD_EXECUTOR=$(MIT_BINARY) BUILD_EXECUTOR_FLAGS=-O
 check_DATA = features/pforth/config.status
 
 TESTS = \
