@@ -3,6 +3,10 @@ sudo: true
 dist: bionic
 
 addons:
+  homebrew:
+    packages:
+    - help2man
+    update: true
   apt:
     sources:
       - ubuntu-toolchain-r-test
@@ -68,7 +72,6 @@ before_install:
   - eval "${MATRIX_EVAL}"
 
 script:
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install help2man; fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then pip3 install pyyaml; fi
   - ./bootstrap
   - ./configure --enable-silent-rules "${CONFIGURE_ARGS[@]}" && make
