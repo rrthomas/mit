@@ -26,7 +26,7 @@ mit_pkgpython_PYTHON =				\
 nodist_mit_pkgpython_PYTHON = mit/binding.py mit/enums.py mit/extra_enums.py
 
 install_edit = sed \
-	-e 's|@pkgdatadir[@]|$(pkgdatadir)|g'
+	-e 's|@pkgdatadir[@]|'`$(CYGPATH_W) $(pkgdatadir)`'|g'
 
 inplace_edit = sed \
 	-e 's|@pkgdatadir[@]|$(top_srcdir)/src/mit_core|g'
