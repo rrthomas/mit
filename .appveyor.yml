@@ -11,6 +11,8 @@ environment:
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
       MSYSTEM: MINGW32
 
+test: off
+
 init:
   - cmd: git config --global core.autocrlf input
 
