@@ -30,7 +30,7 @@ __git_rm_symlinks() {
 
     if [ -f "$src" ]; then
       rm -f "$symlink"
-      cmd //C mklink //H "$doslnk" "$dossrc"
+      fsutil hardlink create "$doslnk" "$dossrc"
     elif [ -d "$src" ]; then
       rm -f "$symlink"
       cmd //C mklink //J "$doslnk" "$dossrc"
