@@ -104,8 +104,8 @@ BENCH_TESTS = \
 endif
 
 # Alternative predictor-building arguments:
-PREDICTOR_PFORTH_ARGS=--evaluate BYE
-#PREDICTOR_PFORTH_ARGS=make-base.fs
+PREDICTOR_PFORTH_ARGS=make-base.fs
+#PREDICTOR_PFORTH_ARGS=--evaluate BYE
 #PREDICTOR_PFORTH_ARGS=tests.fs # (needs something on standard input)
 build-predictor: libmitfeatures@PACKAGE_SUFFIX@.la $(MIT_BINARY)
 	export LD_LIBRARY_PATH=$(abs_top_builddir)/src/@objdir@:$(abs_top_builddir)/src/%D%/@objdir@:$$LD_LIBRARY_PATH; \
