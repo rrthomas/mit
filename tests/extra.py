@@ -9,7 +9,8 @@
 # RISK.
 
 from mit.globals import *
-from ctypes import sizeof, c_char_p
+from mit.binding import libmit
+from ctypes import sizeof, c_char_p, string_at
 
 
 # Data for ARGC/ARGV tests
@@ -30,7 +31,6 @@ ass(JUMP, LIBMIT)
 
 # Test LibC.ARGC
 lit(LibC.ARGC)
-lit(LIBC)
 ass(JUMP, LIBC)
 breaks.append(label() + word_bytes)
 
