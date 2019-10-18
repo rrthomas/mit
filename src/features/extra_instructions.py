@@ -214,6 +214,10 @@ mit_lib = {
     'SAVE_OBJECT': (0xb, ['fd:int', 'addr', 'len', 'inner_state:mit_state *'], ['ret:int'],
         Code('ret = mit_save_object(inner_state, addr, len, fd);'),
     ),
+
+    'NATIVE_POINTER_WORDS': (0xc, [], ['n'],
+        Code('n = MAX(sizeof(void *), sizeof(mit_word)) / sizeof(mit_word);'),
+    ),
 }
 
 for register in Register:
@@ -284,6 +288,8 @@ class Library(InstructionEnum):
 class LibInstruction(Library):
     '''External extra instruction opcodes.'''
     LIBMIT = (0x01, LibMit, '''\
+#include "minmax.h"
+
 #include "mit/mit.h"
 #include "mit/features.h"
 ''',
