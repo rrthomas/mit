@@ -89,11 +89,12 @@ bench:
 	$(MAKE) check TESTS="$(BENCH_TESTS)"
 
 if USING_PFORTH
-features/pforth/config.log: features/pforth
+features/pforth/config.status: features/pforth/configure
+features/pforth/configure:
 	cd features/pforth && \
 	autoreconf -i && \
-	./configure --build=mit BUILD_EXECUTOR=$(MIT_BINARY)
-check_DATA = features/pforth/config.log
+	./configure --build=mit BUILD_EXECUTOR=$(MIT_BINARY) BUILD_EXECUTOR_FLAGS=-O
+check_DATA = features/pforth/config.status
 
 TESTS = \
 	%D%/build-pforth.pforth
@@ -103,8 +104,8 @@ BENCH_TESTS = \
 endif
 
 # Alternative predictor-building arguments:
-PREDICTOR_PFORTH_ARGS=--evaluate BYE
-#PREDICTOR_PFORTH_ARGS=make-base.fs
+PREDICTOR_PFORTH_ARGS=make-base.fs
+#PREDICTOR_PFORTH_ARGS=--evaluate BYE
 #PREDICTOR_PFORTH_ARGS=tests.fs # (needs something on standard input)
 build-predictor: libmitfeatures@PACKAGE_SUFFIX@.la $(MIT_BINARY)
 	export LD_LIBRARY_PATH=$(abs_top_builddir)/src/@objdir@:$(abs_top_builddir)/src/%D%/@objdir@:$$LD_LIBRARY_PATH; \

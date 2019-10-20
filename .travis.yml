@@ -3,6 +3,10 @@ sudo: true
 dist: bionic
 
 addons:
+  homebrew:
+    packages:
+    - help2man
+    update: true
   apt:
     sources:
       - ubuntu-toolchain-r-test
@@ -68,10 +72,11 @@ before_install:
   - eval "${MATRIX_EVAL}"
 
 script:
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install help2man; fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then pip3 install pyyaml; fi
   - ./bootstrap
   - ./configure --enable-silent-rules "${CONFIGURE_ARGS[@]}" && make
+  # Can't use libraries in-tree on macOS, so "make install", and don't "make
+  # distcheck".
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then sudo make install; fi
   - make check && if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then make distcheck; fi
-  - if [[ "$BENCH_TEST" == "yes" ]]; then make bench; fi
+  - if [[ "$BENCH_TEST" == "yes" ]]; then travis_wait make bench; fi

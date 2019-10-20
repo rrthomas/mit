@@ -26,7 +26,7 @@ mit_pkgpython_PYTHON =				\
 nodist_mit_pkgpython_PYTHON = mit/binding.py mit/enums.py mit/extra_enums.py
 
 install_edit = sed \
-	-e 's|@pkgdatadir[@]|$(pkgdatadir)|g'
+	-e 's|@pkgdatadir[@]|'`$(CYGPATH_W) $(pkgdatadir)`'|g'
 
 inplace_edit = sed \
 	-e 's|@pkgdatadir[@]|$(top_srcdir)/src/mit_core|g'
@@ -46,8 +46,8 @@ mit/extra_enums.py: gen-extra-enums $(top_srcdir)/src/features/extra_instruction
 
 install-data-hook: mit/enums.py
 	@$(install_edit) $(top_srcdir)/python/mit/enums.py.in > enums.py.tmp
-	@echo $(INSTALL_SCRIPT) --mode=644 enums.py.tmp $(DESTDIR)$(mit_pkgpythondir)/enums.py
-	@$(INSTALL_SCRIPT) --mode=644 enums.py.tmp $(DESTDIR)$(mit_pkgpythondir)/enums.py
+	@echo $(INSTALL_SCRIPT) -m 644 enums.py.tmp $(DESTDIR)$(mit_pkgpythondir)/enums.py
+	@$(INSTALL_SCRIPT) -m 644 enums.py.tmp $(DESTDIR)$(mit_pkgpythondir)/enums.py
 	@rm -f enums.py.tmp
 
 # sloccount --autogen doesn't work (Debian bug #929000), so temporarily move

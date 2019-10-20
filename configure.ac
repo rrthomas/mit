@@ -35,7 +35,12 @@ AS_IF([test "$IPYTHON" = ""],
    IPYTHON=$PYTHON
    IPYTHON_OPTS=""],
    [# Check IPython is Python 3; error if not
-   PYTHON_VERSION=`$IPYTHON --quick --no-term-title -c "import sys; print(sys.version_info.major)"`
+   # On mingw32, run ipython script with python.exe to avoid using winpty
+   case $host in
+     *mingw32) PYTHON_PREFIX=$ac_cv_path_PYTHON ;;
+     *) PYTHON_PREFIX="" ;;
+   esac
+   PYTHON_VERSION=`$PYTHON_PREFIX $IPYTHON --quick --no-term-title -c "import sys; print(sys.version_info.major)"`
    PYTHON_VERSION=${PYTHON_VERSION%\\n}
    AS_IF([test "$PYTHON_VERSION" != "3"], AC_MSG_ERROR([IPYTHON is not Python 3]))
    IPYTHON_OPTS="--profile mit-shell --ext mit.ipython_suppress_traceback --autocall 2 --no-confirm-exit"]
@@ -92,7 +97,6 @@ if test "$gl_gcc_warnings" = yes; then
   dnl Add some more safety measures
   gl_WARN_ADD([-Wimplicit-fallthrough])
   gl_WARN_ADD([-Wswitch-default])
-  gl_WARN_ADD([-D_FORTIFY_SOURCE=2])
 
   # When compiling with GCC, prefer -isystem to -I when including system
   # include files, to avoid generating useless diagnostics for the files.

@@ -25,7 +25,7 @@ def enum(enum_name, docstring, spec, value_extractor=lambda x: x):
 
 
 with open(os.path.join('@pkgdatadir@', 'mit_spec.yaml')) as f:
-    spec = yaml.load(f.read())
+    spec = yaml.safe_load(f.read())
 
 
 Register = unique(AutoNumber(

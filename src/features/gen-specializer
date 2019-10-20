@@ -239,9 +239,11 @@ def gen_body_code(profiling=False):
     ''')
     if max_cached_depth > 0:
         cache_state = CacheState(max_cached_depth, 0)
+        # Initialize the cache variables to avoid (incorrect) uninitialized
+        # variable warning.
         code.append('mit_word {};'.format(
             ', '.join(
-                cache_state.var(pos)
+                '{} = 0'.format(cache_state.var(pos))
                 for pos in reversed(range(max_cached_depth))
             )
         ))
