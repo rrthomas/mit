@@ -15,9 +15,14 @@
 #include "state.h"
 
 
-// Single-step for n steps (excluding NEXT when pc does not change), or
-// until pc=addr.
-mit_word mit_step_to(mit_state * restrict state, mit_uword *n_ptr, mit_uword addr, int auto_NEXT)
+// Single-step for `*n_ptr` steps (excluding NEXT when `pc` does not change),
+// or until `pc` = `addr`.
+mit_word mit_step_to(
+    mit_state * restrict state,
+    mit_uword *n_ptr,
+    mit_uword addr,
+    int auto_NEXT
+)
 {
     mit_word error = 0;
     mit_uword n = *n_ptr, done;

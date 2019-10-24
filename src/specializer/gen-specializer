@@ -185,8 +185,8 @@ def gen_labels_code(profiling=False):
         //  - Before running the `Instruction.code` for an instruction, record
         //    `initial_pc` and `initial_ir`, and right-shift `ir`.
         //  - When an error occurs, call `RAISE(code)`.
-        //    It sets `error` to the return code; then it resets pc and
-        //    ir to their initial values, and does "goto error".
+        //    It sets `error` to the return code; then it resets `pc` and
+        //    `ir` to their initial values, and does "goto error".
         //  - On exit, whether by `RAISE` or otherwise, all Mit
         //    registers must be set according to the Mit spec. In particular,
         //    there must be no side effects before a RAISE, except on `ir` and

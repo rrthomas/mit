@@ -11,9 +11,10 @@ RISK.
 The main entry point is dispatch().
 '''
 
-import functools
+from functools import total_ordering
 
 from .code_util import Code, disable_warnings, c_symbol, unrestrict
+from .instruction import InstructionEnum
 
 
 type_wordses = {'mit_word': 1, 'mit_uword': 1} # Enough for the core
@@ -36,7 +37,7 @@ def type_words(type):
 def load_stack(name, depth=0, type='mit_word'):
     '''
     Generate C code to load the variable `name` of type `type` occupying
-    stack slots starting at position `depth`. Does not check the stack.
+    stack slots `depth`, `depth+1`, ... . Does not check the stack.
 
     Returns a Code.
     '''
@@ -45,11 +46,11 @@ def load_stack(name, depth=0, type='mit_word'):
         'mit_max_stack_item_t temp = (mit_uword)(*UNCHECKED_STACK(S->stack, S->stack_depth, {}));'
         .format(depth)
     )
-    for i in range(type_words(type) - 1):
+    for i in range(1, type_words(type)):
         code.append('temp <<= MIT_WORD_BIT;')
         code.append(
             'temp |= (mit_uword)(*UNCHECKED_STACK(S->stack, S->stack_depth, {}));'
-            .format(depth + i + 1)
+            .format(depth + i)
         )
     code.extend(disable_warnings(
         ['-Wint-to-pointer-cast'],
@@ -60,7 +61,7 @@ def load_stack(name, depth=0, type='mit_word'):
 def store_stack(value, depth=0, type='mit_word'):
     '''
     Generate C code to store the value `value` of type `type` occupying
-    stack slots starting at position `depth`. Does not check the stack.
+    stack slots `depth`, `depth+1`, ... . Does not check the stack.
 
     Returns a Code.
     '''
@@ -70,10 +71,10 @@ def store_stack(value, depth=0, type='mit_word'):
         Code('mit_max_stack_item_t temp = (mit_max_stack_item_t){};')
             .format(value),
     ))
-    for i in reversed(range(type_words(type) - 1)):
+    for i in reversed(range(1, type_words(type))):
         code.append(
             '*UNCHECKED_STACK(S->stack, S->stack_depth, {}) = (mit_uword)(temp & MIT_WORD_MASK);'
-            .format(depth + i + 1)
+            .format(depth + i)
         )
         code.append('temp >>= MIT_WORD_BIT;')
     code.append(
@@ -104,13 +105,14 @@ def push_stack(value, type='mit_word'):
     return code
 
 
-@functools.total_ordering
+@total_ordering
 class Size:
     '''
     Represents the size of some stack items.
 
      - size - int.
-     - count - int - ±1 if the size includes variadic 'ITEMS'
+     - count - int - ±1 to indicate that there are variadic 'ITEMS',
+       otherwise 0.
     '''
     def __init__(self, size, count=0):
         assert type(size) is int
@@ -153,6 +155,9 @@ class Size:
         return self.size <= value.size and self.count <= value.count
 
     def __str__(self):
+        '''
+        The returned string is a C expression.
+        '''
         if self.count == 0: s = '{}'
         elif self.count == 1: s = '{} + COUNT'
         elif self.count == -1: s = '{} - COUNT'
@@ -170,7 +175,6 @@ class Size:
         return Size.of(value) + self
 
     def __sub__(self, value):
-        value = Size.of(value)
         return self + (-value)
 
     def __rsub__(self, value):
@@ -239,8 +243,7 @@ class StackPicture:
     '''
     Represents the top few items on the stack.
 
-    Each of `items` is augmented with an extra field 'depth' (a Size),
-    which gives the stack position of its top-most word.
+    The `depth` field of each item is set (see StackItem).
 
     Public fields:
 
@@ -272,9 +275,9 @@ class StackEffect:
 
     If the instruction is variadic, a pseudo-item 'ITEMS' represents the
     unnamed items; one of the arguments above that must be 'COUNT', which is
-    the number of words in 'ITEMS'. If 'ITEMS' appears in 'results', it must
+    the number of words in 'ITEMS'. If 'ITEMS' appears in `results`, it must
     be at the same position relative to the bottom of the stack as in
-    'args'.
+    `args`.
 
     Public fields:
 
@@ -291,7 +294,7 @@ class StackEffect:
         # Check that 'ITEMS' does not move.
         if 'ITEMS' in args.by_name and 'ITEMS' in results.by_name:
             arg_pos = args.size - args.by_name['ITEMS'].depth
-            result_pos = args.size - args.by_name['ITEMS'].depth
+            result_pos = results.size - results.by_name['ITEMS'].depth
             assert arg_pos == result_pos
         # Check that `results` is type-compatible with `args`.
         for item in results.items:
@@ -314,7 +317,9 @@ class StackEffect:
     def load_args(self):
         '''
         Returns a Code to read the arguments from the stack into C
-        variables. `S->stack_depth` is not modified.
+        variables, skipping 'ITEMS' and 'COUNT'.
+
+        `S->stack_depth` is not modified.
         '''
         code = Code()
         for item in self.args.items:
@@ -324,8 +329,10 @@ class StackEffect:
 
     def store_results(self):
         '''
-        Returns a Code to write the results from C variables into the
-        stack. `S->stack_depth` must be modified first.
+        Returns a Code to write the results from C variables into the stack,
+        skipping 'ITEMS'.
+
+        `S->stack_depth` must be modified first.
         '''
         code = Code()
         for item in self.results.items:
@@ -379,12 +386,13 @@ def check_overflow(num_pops, num_pushes):
     if depth_change <= 0: return Code()
     code = Code()
     if depth_change.count > 0:
+        # Check that the `depth_change` calculation does not overflow.
         code.append('''\
-            if (unlikely(COUNT + {} < COUNT)) {{
+            if (unlikely({} < COUNT)) {{
                 'S->bad = MIT_UWORD_MAX;',
                 'RAISE(MIT_ERROR_STACK_OVERFLOW);',
             }}
-        '''.format(depth_change.size))
+        '''.format(depth_change))
     code.append('''\
         if (unlikely(S->stack_words - S->stack_depth < {depth_change})) {{
             S->bad = ({depth_change}) - (S->stack_words - S->stack_depth);
@@ -421,7 +429,7 @@ def gen_case(instruction):
         count = effect.args.by_name.get('COUNT')
         if count is not None:
             # If we have COUNT, check its stack position is valid, and load it.
-            # We actually check effects.args.size.size (more than we need),
+            # We actually check `effects.args.size.size` (more than we need),
             # because this check will be generated anyway by the next
             # check_underflow call, so the compiler can elide one check.
             code.extend(check_underflow(Size(effect.args.size.size)))
@@ -438,31 +446,35 @@ def gen_case(instruction):
         code.extend(effect.store_results())
     return code
 
-def dispatch(Instruction, undefined_case, order=None):
+def dispatch(instructions, undefined_case, order=None):
     '''
     Generate dispatch code for some Instructions.
 
-     - Instruction - InstructionEnum.
-     - undefined_case - a Code defining the fallback behaviour.
-     - order - an opcode order to use to improve the dispatch code.
+     - instructions - InstructionEnum.
+     - undefined_case - Code - the fallback behaviour.
+     - order - sequence of elements of `instructions` - an ordering to use to
+       improve the dispatch code.
     '''
+    assert issubclass(instructions, InstructionEnum)
     assert isinstance(undefined_case, Code)
     code = Code()
     else_text = ''
     if order is None:
-        order = enumerate(Instruction)
+        order = instructions
     else:
-        order = enumerate(order)
-    for (_, instruction) in order:
-        code.append('{else_text}if (opcode == {prefix}_{instruction}) {{'.format(
-            else_text=else_text,
-            instruction=instruction.name,
-            prefix=c_symbol(Instruction.__name__),
-        ))
+        assert set(order) == set(instructions)
+    for (_, instruction) in enumerate(order):
+        code.append(
+            '{else_text}if (opcode == {prefix}_{instruction}) {{'.format(
+                else_text=else_text,
+                prefix=c_symbol(instructions.__name__),
+                instruction=instruction.name,
+            ),
+        )
         code.append(gen_case(instruction))
         code.append('}')
         else_text = 'else '
-    code.append('else {')
+    code.append('{}{{'.format(else_text))
     code.append(undefined_case)
     code.append('}')
     return code
