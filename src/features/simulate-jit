@@ -175,50 +175,100 @@ def trace():
         yield instruction
 
 
+def is_suffix_of(a, b):
+    '''Tests whether `a` is a suffix of `b`.'''
+    pos = len(b) - len(a)
+    return b[pos:] == a
+
+def is_proper_suffix_of(a, b):
+    return len(a) < len(b) and is_suffix_of(a, b)
+
+def is_prefix_of(a, b):
+    '''Tests whether `a` is a prefix of `b`.'''
+    pos = len(a)
+    return b[:pos] == a
+
+def is_proper_prefix_of(a, b):
+    return len(a) < len(b) and is_prefix_of(a, b)
+
+def _end_of_prefix(short, long):
+    assert is_proper_suffix_of(short, long)
+    pos = len(long) - len(short)
+    return long[pos - 1]
+
+
 class Label:
     '''
-    A simulated code address (as if compiled by the JIT).
+    A simulated code address (as if compiled by the JIT). Each Label has a
+    `path`, defined to be the shortest sequence of Instructions that takes the
+    interpreter from `ROOT_LABEL` to this Label.
 
-    When a Label is first constructed, it merely counts how often it is
-    executed. When the count reaches `COMPILE_THRESHOLD`, code is compiled
-    at the label.
+    At each Label, we count how many times each Instruction follows it. When
+    a counter reaches `COMPILE_THRESHOLD`, we construct a new Label.
+
+    Invariants:
+     - UNIQUE - There is at most one Label for each path.
+     - RIGHT - If a Label exists for a non-empty path `p`, then a Label exists
+       for path `p[:-1]`.
+     - LEFT - If Labels exist for paths `p` and `q`, then a Label exists for
+       the longest common suffix of `p` and `q`.
+     - EXISTS - A Label exists for a path `pi` iff a Label exists for `p` and
+       its count for Instruction `i` is at least `COMPILE_THRESHOLD`.
 
     Public fields:
-     - path - tuple of Instruction - the canonical name of this Label, defined
-       to be the shortest sequence of Instructions that takes the interpreter
-       from `ROOT_LABEL` to this Label.
+     - path - tuple of Instruction - the canonical name of this Label.
      - right_parent - the Label whose `path` is `self.path[:-1]` (`None` for
-       `ROOT_LABEL`).
-     - left_parent - the Label whose `path` is `self.path[1:]` (`None` for
        `ROOT_LABEL`).
      - right_children - dict from Instruction to Label - the Labels of which
        `self` is the `right_parent`.
-     - left_children - dict from Instruction to Label - the Labels of which
-       `self` is the `left_parent`.
-     - count - int - the number of times execution has reached this Label.
+     - left_ancestor - the Label whose `path` is `self.path[n:]` for the
+       smallest `n>0` (`None` for `ROOT_LABEL`).
+     - left_descendants - dict from Instruction to Label - the Labels of which
+       `self` is the `left_ancestor`. Note that by "LEFT" the key is a single
+       Instruction.
+     - counts - dict from Instruction to int - `counts[i]` is the number of
+       times this Label is followed by the Instruction `i`.
     '''
     ALL_LABELS = []
 
-    def __init__(self, path, right_parent, left_parent):
+    def __init__(self, path, right_parent, left_ancestor):
         self.path = path
-        print('Constructing {!r}'.format(self))
-        if len(path) == 0:
-            assert right_parent is None
-            assert left_parent is None
-        else:
-            assert right_parent.left_parent is left_parent.right_parent
-            assert right_parent.is_compiled() and left_parent.is_compiled()
-            assert path[:-1] == right_parent.path
-            assert path[1:] == left_parent.path
-            assert path[-1] not in right_parent.right_children
-            right_parent.right_children[path[-1]] = self
-            assert path[0] not in left_parent.left_children
-            left_parent.left_children[path[0]] = self
         self.right_parent = right_parent
-        self.left_parent = left_parent
+        self.left_ancestor = left_ancestor
         self.right_children = {}
-        self.left_children = {}
-        self.count = 0
+        self.left_descendants = {}
+        self.counts = {i: 0 for i in Instruction}
+        print('Constructing {!r}'.format(self))
+        print('    right_parent = {!r}'.format(right_parent))
+        print('    left_ancestor = {!r}'.format(left_ancestor))
+        if len(path) == 0:
+            # Check the invariants.
+            assert right_parent is None
+            assert left_ancestor is None
+        else:
+            # Check the invariants.
+            # `right_parent` is the immediate prefix. Implies RIGHT.
+            assert path[:-1] == right_parent.path
+            # UNIQUE.
+            right_key = path[-1]
+            assert right_parent.right_children.get(right_key) is None
+            # Half of EXISTS.
+            assert right_parent.counts[right_key] >= Label.COMPILE_THRESHOLD
+            # `left_ancestor` is a suffix.
+            assert is_proper_suffix_of(left_ancestor.path, path)
+            # `left_ancestor` is the longest suffix.
+            # Also, LEFT.
+            left_key = _end_of_prefix(left_ancestor.path, path)
+            left_descendant = left_ancestor.left_descendants.get(left_key)
+            if left_descendant is not None:
+                assert is_proper_suffix_of(path, left_descendant.path)
+            # Update the connections.
+            right_parent.right_children[right_key] = self
+            left_ancestor.left_descendants[left_key] = self
+            if left_descendant is not None:
+                left_key2 = _end_of_prefix(path, left_descendant.path)
+                self.left_descendants[left_key2] = left_descendant
+        # Add `self` to `ALL_LABELS`.
         Label.ALL_LABELS.append(self)
 
     def __repr__(self):
@@ -226,31 +276,8 @@ class Label:
             ' '.join(instruction.name for instruction in self.path)
         )
 
-    COMPILE_THRESHOLD = 10
+    COMPILE_THRESHOLD = 100
 
-    def is_compiled(self):
-        return self.count >= Label.COMPILE_THRESHOLD
-
-    # Invariant for all `self` and `instruction`.
-    # Base case: Initially, only `ROOT_LABEL` is compiled, and Labels exist
-    # for all possible paths of length 1.
-    # When any Label's `count` reaches `COMPILE_THRESHOLD` we construct new
-    # Labels as necessary to maintain this invariant.
-    # TODO: Call this somewhere.
-    def _assert_invariant(self, instruction):
-        if self is ROOT_LABEL:
-            sp_pc = ROOT_LABEL
-        else:
-            sp_pc = self.left_parent.right_children.get(instruction)
-        assert self.left_parent is sp_pc.right_parent
-        assert (
-            instruction in self.right_children
-        ) == (
-            self.is_compiled() and
-            sp_pc is not None and
-            sp_pc.is_compiled()
-        )
-            
     def guess(self, instruction):
         '''
         Tests whether the JIT has compiled specialized code for executing
@@ -264,33 +291,30 @@ class Label:
         `ROOT_LABEL`). The interpreter will jump to this Label if it cannot
         find a more specialized Label.
         '''
-        return self.left_parent
-        # FIXME Make the following work (see #275)
-        default = self.left_parent
-        while default is not None and len(default.left_children) < 2:
-            default = default.left_parent
-        return default
+        return self.left_ancestor
 
     def run(self, instruction):
         '''
         Executes one instruction.
         Returns the next Label.
         '''
-        self.count += 1
-        if self.count == Label.COMPILE_THRESHOLD:
-            # It is time to compile this Label.
+        self.counts[instruction] += 1
+        if self.counts[instruction] == Label.COMPILE_THRESHOLD:
+            new_path = self.path + (instruction,)
+            # It is time to create a Label for `new_path`.
             # This is rare and can be slow.
             print()
-            print("Compiling {!r}".format(self))
-            assert self is not ROOT_LABEL
-            # Construct new Labels of which we are the `right_parent`.
-            for last, label in self.left_parent.right_children.items():
-                if label.is_compiled():
-                    Label(self.path + (last,), self, label)
-            # Construct new Labels of which we are the `left_parent`.
-            for first, label in self.right_parent.left_children.items():
-                if label.is_compiled() and label is not self:
-                    Label((first,) + self.path, label, self)
+            print("Compiling {!r} + {}".format(self, instruction.name))
+            left_ancestor = self.left_ancestor
+            while left_ancestor is not None:
+                right_child_of_left_ancestor = \
+                    left_ancestor.right_children.get(instruction)
+                if right_child_of_left_ancestor is not None:
+                    break
+                left_ancestor = left_ancestor.left_ancestor
+            else:
+                right_child_of_left_ancestor = ROOT_LABEL
+            Label(new_path, self, right_child_of_left_ancestor)
         label = self.guess(instruction)
         if label is not None:
             # Execute a compiled instruction.
@@ -299,6 +323,8 @@ class Label:
         else:
             default = self.default()
             if default is not None:
+                num_shrinks = len(self.path) - len(default.path)
+                print(">" * num_shrinks, end=' ')
                 return default.run(instruction)
             else:
                 # Fall back to the interpreter.
@@ -308,20 +334,66 @@ class Label:
 
 # The unique Label with an empty `path`.
 ROOT_LABEL = Label((), None, None)
-ROOT_LABEL.count = Label.COMPILE_THRESHOLD
-for instruction in Instruction:
-    Label((instruction,), ROOT_LABEL, ROOT_LABEL)
 
 
 current_label = ROOT_LABEL
 for instruction in trace():
-    if len(Label.ALL_LABELS) > 400:
+    if len(Label.ALL_LABELS) >= 200:
         break
     current_label = current_label.run(instruction)
 
 print()
 from pprint import pprint
 import sys
-label_strs = sorted(repr(l) for l in Label.ALL_LABELS if l.is_compiled())
-pprint(label_strs, stream=sys.stderr)
-print(len(label_strs), file=sys.stderr)
+print()
+label_strs = sorted(repr(l) for l in Label.ALL_LABELS)
+pprint(label_strs, width=999)
+print()
+label_reversed_strs = sorted(
+    ' '.join(i.name for i in reversed(l.path))
+    for l in Label.ALL_LABELS
+)
+pprint(label_reversed_strs, width=999)
+
+
+def write_svg(filename):
+    print("Generating '{}'...".format(filename))
+    import pydot
+    g = pydot.Dot(
+        'labels',
+        rankdir='LR',
+        root=repr(ROOT_LABEL),
+        overlap='false',
+        K='10',
+        splines='curved',
+    )
+    nodes = {} # Label -> Node
+    for i, l in enumerate(Label.ALL_LABELS):
+        n = pydot.Node(
+            str(i),
+#            '('+' '.join(instruction.name for instruction in l.path)+')',
+            shape='star' if l is ROOT_LABEL else 'ellipse',
+        )
+        nodes[l] = n
+        g.add_node(nodes[l])
+    for l in Label.ALL_LABELS:
+        for i, l2 in l.right_children.items():
+            g.add_edge(pydot.Edge(
+                nodes[l],
+                nodes[l2],
+                color='green',
+#                label=i.name,
+            ))
+        if l is not ROOT_LABEL:
+            l2 = l.default()
+            num_shrinks = len(l.path) - len(l2.path)
+            g.add_edge(pydot.Edge(
+                nodes[l],
+                nodes[l2],
+                color='red',
+                style=('solid' if num_shrinks==1 else 'bold'),
+            ))
+    g.write_svg(filename, prog='sfdp')
+    print("Wrote '{}'".format(filename))
+
+write_svg('/tmp/labels.svg')
