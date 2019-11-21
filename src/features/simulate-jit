@@ -175,6 +175,19 @@ def trace():
         yield instruction
 
 
+def trace2():
+    '''
+    Alternate, highly artificial trace, useful for debugging.
+    '''
+    while True:
+        for _ in range(2):
+            for instruction in list(Instruction)[:3]:
+                yield instruction
+        for _ in range(2):
+            for instruction in list(Instruction)[8:11]:
+                yield instruction
+
+
 def is_suffix_of(a, b):
     '''Tests whether `a` is a suffix of `b`.'''
     pos = len(b) - len(a)
@@ -203,8 +216,8 @@ class Label:
     `path`, defined to be the shortest sequence of Instructions that takes the
     interpreter from `ROOT_LABEL` to this Label.
 
-    At each Label, we count how many times each Instruction follows it. When
-    a counter reaches `COMPILE_THRESHOLD`, we construct a new Label.
+    At each Label, we count how many times each Instruction follows it. This is
+    the basis of a policy to decide when to construct a new Label.
 
     Invariants:
      - UNIQUE - There is at most one Label for each path.
@@ -212,8 +225,6 @@ class Label:
        for path `p[:-1]`.
      - LEFT - If Labels exist for paths `p` and `q`, then a Label exists for
        the longest common suffix of `p` and `q`.
-     - EXISTS - A Label exists for a path `pi` iff a Label exists for `p` and
-       its count for Instruction `i` is at least `COMPILE_THRESHOLD`.
 
     Public fields:
      - path - tuple of Instruction - the canonical name of this Label.
@@ -226,8 +237,9 @@ class Label:
      - left_descendants - dict from Instruction to Label - the Labels of which
        `self` is the `left_ancestor`. Note that by "LEFT" the key is a single
        Instruction.
-     - counts - dict from Instruction to int - `counts[i]` is the number of
-       times this Label is followed by the Instruction `i`.
+     - counts - dict from Instruction to int - Until `right_children[i]` is
+       created, `counts[i]` is the number of times this Label is followed by
+       the Instruction `i`. We don't bother to count thereafter.
     '''
     ALL_LABELS = []
 
@@ -252,8 +264,6 @@ class Label:
             # UNIQUE.
             right_key = path[-1]
             assert right_parent.right_children.get(right_key) is None
-            # Half of EXISTS.
-            assert right_parent.counts[right_key] >= Label.COMPILE_THRESHOLD
             # `left_ancestor` is a suffix.
             assert is_proper_suffix_of(left_ancestor.path, path)
             # `left_ancestor` is the longest suffix.
@@ -293,44 +303,55 @@ class Label:
         '''
         return self.left_ancestor
 
-    def run(self, instruction):
+    def construct(self, instruction):
+        '''
+        Construct and return a new right child of `self`.
+        '''
+        new_path = self.path + (instruction,)
+        left_ancestor = self.left_ancestor
+        while left_ancestor is not None:
+            right_child_of_left_ancestor = \
+                left_ancestor.right_children.get(instruction)
+            if right_child_of_left_ancestor is not None:
+                break
+            left_ancestor = left_ancestor.left_ancestor
+        else:
+            right_child_of_left_ancestor = ROOT_LABEL
+        return Label(new_path, self, right_child_of_left_ancestor)
+
+    @staticmethod
+    def run(label, instruction):
         '''
         Executes one instruction.
         Returns the next Label.
         '''
-        self.counts[instruction] += 1
-        if self.counts[instruction] == Label.COMPILE_THRESHOLD:
-            new_path = self.path + (instruction,)
-            # It is time to create a Label for `new_path`.
-            # This is rare and can be slow.
-            print()
-            print("Compiling {!r} + {}".format(self, instruction.name))
-            left_ancestor = self.left_ancestor
-            while left_ancestor is not None:
-                right_child_of_left_ancestor = \
-                    left_ancestor.right_children.get(instruction)
-                if right_child_of_left_ancestor is not None:
-                    break
-                left_ancestor = left_ancestor.left_ancestor
-            else:
-                right_child_of_left_ancestor = ROOT_LABEL
-            Label(new_path, self, right_child_of_left_ancestor)
-        label = self.guess(instruction)
-        if label is not None:
-            # Execute a compiled instruction.
-            print(instruction.name, end=' ')
-            return label
-        else:
-            default = self.default()
-            if default is not None:
-                num_shrinks = len(self.path) - len(default.path)
-                print(">" * num_shrinks, end=' ')
-                return default.run(instruction)
-            else:
+        threshold = Label.COMPILE_THRESHOLD
+        while True:
+            # Is there a right edge? Follow it if so.
+            next_label = label.guess(instruction)
+            if next_label is not None:
+                # Execute a compiled instruction.
+                print(instruction.name, end=' ')
+                return next_label
+            # Should we make the right edge that we didn't follow?
+            label.counts[instruction] += 1
+            if label.counts[instruction] >= threshold:
+                # It is time to create a Label for `new_path`.
+                # This is rare and can be slow.
+                print()
+                print("Compiling {!r} + {}".format(label, instruction.name))
+                label.construct(instruction)
+            # Follow a left edge.
+            old_length = len(label.path)
+            threshold = Label.COMPILE_THRESHOLD + label.counts[instruction]
+            label = label.default()
+            if label is None:
                 # Fall back to the interpreter.
                 print("FALLBACK({})".format(instruction.name))
                 return ROOT_LABEL
-            
+            num_shrinks = old_length - len(label.path)
+            print(">" * num_shrinks, end=' ')
+
 
 # The unique Label with an empty `path`.
 ROOT_LABEL = Label((), None, None)
@@ -340,20 +361,20 @@ current_label = ROOT_LABEL
 for instruction in trace():
     if len(Label.ALL_LABELS) >= 200:
         break
-    current_label = current_label.run(instruction)
+    current_label = Label.run(current_label, instruction)
 
 print()
 from pprint import pprint
 import sys
 print()
 label_strs = sorted(repr(l) for l in Label.ALL_LABELS)
-pprint(label_strs, width=999)
+pprint(label_strs, width=499)
 print()
 label_reversed_strs = sorted(
     ' '.join(i.name for i in reversed(l.path))
     for l in Label.ALL_LABELS
 )
-pprint(label_reversed_strs, width=999)
+pprint(label_reversed_strs, width=499)
 
 
 def write_svg(filename):
@@ -365,13 +386,15 @@ def write_svg(filename):
         root=repr(ROOT_LABEL),
         overlap='false',
         K='10',
-        splines='curved',
+        splines='curved', # Don't combine with prog='dot'; see below.
     )
     nodes = {} # Label -> Node
     for i, l in enumerate(Label.ALL_LABELS):
         n = pydot.Node(
-            str(i),
-#            '('+' '.join(instruction.name for instruction in l.path)+')',
+            # EITHER: number the states
+            #str(i),
+            # OR: name the states.
+            '('+' '.join(instruction.name for instruction in l.path)+')',
             shape='star' if l is ROOT_LABEL else 'ellipse',
         )
         nodes[l] = n
@@ -382,7 +405,7 @@ def write_svg(filename):
                 nodes[l],
                 nodes[l2],
                 color='green',
-#                label=i.name,
+                #label=i.name,
             ))
         if l is not ROOT_LABEL:
             l2 = l.default()
@@ -393,7 +416,11 @@ def write_svg(filename):
                 color='red',
                 style=('solid' if num_shrinks==1 else 'bold'),
             ))
-    g.write_svg(filename, prog='sfdp')
+    # With "prog='dot'" and non-default "splines" some of the arrows are
+    # inverted.
+    # We think it's https://gitlab.com/graphviz/graphviz/issues/763
+    # i.e. not our fault. Works with other engines.
+    g.write_svg(filename, prog='dot')
     print("Wrote '{}'".format(filename))
 
 write_svg('/tmp/labels.svg')
