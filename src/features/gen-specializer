@@ -295,6 +295,20 @@ code.append(Code(',\n'.join([
     for l in labels
 ])))
 code.append('};')
+# TODO: Instrument the fallback interpreter.
+# Currently, A_FALLBACK is "infectious": if it is used by a particular
+# build of mit, then it ends up in the mit-profile.json, and therefore
+# in successive builds of mit.
+# Add mit_profile_specializer_run (for specializer) and mit_profile_run
+# (for core interpreter).
+# Share mit_profile_init and mit_profile_dump.
+# mit_profile_init should take as an argument the number of labels, and
+# should be called by a wrapper init function for the specializer/non-specializer
+# passing in the number of labels: dynamically allocate the count arrays.
+# For the specializer, the first few states are reserved for the fallback
+# interpreter.
+# --profile then becomes orthogonal to --optimize, but each combination
+# calls a different run_fn.
 code.append('''
     void mit_profile_init(void)
     {
