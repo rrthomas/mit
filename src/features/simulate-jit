@@ -7,10 +7,11 @@
 # THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 # RISK.
 
-
-import sys, json, functools, heapq, argparse, random
+import sys, functools, heapq, argparse, random
 
 from mit_core.vm_data import Instruction
+
+import profile
 
 
 random.seed(0)
@@ -30,143 +31,11 @@ args = parser.parse_args()
 
 # Load profile file.
 
-class ProfileState:
-    '''
-    Represents a state of the interpreter that we profiled.
-     - index - the index of this ProfileState in `profile`.
-     - path - str (space-separated Instruction name) - the canonical path to
-       this ProfileState.
-     - guess - str (space-separated Instruction name) - the guessed
-       continuation.
-     - correct_state - int - the index of the ProfileState to jump to if
-       `guess` is correct, or `-1` for the fallback state.
-     - wrong_state - int - the index of the ProfileState to jump to if
-       `guess` is correctwrong, or `-1` for the fallback state.
-     - correct_count - the number of times `guess` was correct.
-     - wrong_count - the number of times `guess` was wrong.
-     - total_count - `correct_count + wrong_count`.
-    '''
-    def __init__(
-        self,
-        index,
-        path,
-        guess,
-        correct_state,
-        wrong_state,
-        correct_count,
-        wrong_count,
-    ):
-        self.index = index
-        self.path = path
-        self.guess = guess
-        self.correct_state = correct_state
-        self.wrong_state = wrong_state
-        self.correct_count = correct_count
-        self.wrong_count = wrong_count
-        self.total_count = correct_count + wrong_count
-
-    def __repr__(self):
-        return 'ProfileState({}, {!r}, {!r}, {}, {}, {}, {})'.format(
-            self.index,
-            self.path,
-            self.guess,
-            self.correct_state,
-            self.wrong_state,
-            self.correct_count,
-            self.wrong_count,
-        )
-
-# Load the data file.
-with open(args.profile_filename) as h:
-    profile = [
-        ProfileState(
-            index,
-            profile['path'],
-            profile['guess'],
-            profile['correct_state'],
-            profile['wrong_state'],
-            profile['correct_count'],
-            profile['wrong_count'],
-        )
-        for index, profile in enumerate(json.load(h))
-    ]
-
-
-def get_profile_state(index):
-    if index == -1:
-        return None
-    else:
-        return profile[index]
-
-
-class PathNode:
-    '''
-    Represents a node of the tree of probable paths.
-     - guess - a tuple of Instructions that we've committed to.
-     - profile_state - the ProfileState we'll reach after exhausting `guess`, or
-       `None`.
-     - frequency - an estimate of the relative frequency of this PathNode.
-    '''
-    def __init__(self, guess, profile_state, frequency):
-        assert type(guess) is tuple
-        assert profile_state is None or isinstance(profile_state, ProfileState)
-        assert type(frequency) is float
-        self.guess = guess
-        self.profile_state = profile_state
-        self.frequency = frequency
-
-    def __repr__(self):
-        return 'Node({!r}, {!r}, {})'.format(
-            ' '.join(i.name for i in self.guess),
-            self.profile_state,
-            self.frequency,
-        )
-
-    def predict(self):
-        '''
-        Yields (Instruction, PathNode).
-        '''
-        if len(self.guess) > 0:
-            yield (
-                self.guess[0],
-                PathNode(
-                    self.guess[1:],
-                    self.profile_state,
-                    self.frequency,
-                )
-            )
-        else:
-            for successor in self._successors():
-                for instruction, path_node in successor.predict():
-                    yield (instruction, path_node)
-
-    def _successors(self):
-        '''
-        Requires `self.guess` to be empty.
-        Yields PathNodes whose union describes the same tree as `self`.
-        '''
-        assert len(self.guess) == 0
-        if self.profile_state is not None and self.frequency > 0.0:
-            ps = self.profile_state
-            assert ps.total_count != 0
-            # The successor if the guess is correct.
-            yield PathNode(
-                tuple(Instruction[name] for name in ps.guess.split()),
-                get_profile_state(ps.correct_state),
-                self.frequency * ps.correct_count / ps.total_count,
-            )
-            # The successor if the guess is wrong.
-            yield PathNode(
-                (),
-                get_profile_state(ps.wrong_state),
-                self.frequency * ps.wrong_count / ps.total_count,
-            )
-
-ROOT_NODE = PathNode((), get_profile_state(0), 1.0)
+profile.load(args.profile_filename)
 
 
 def trace():
-    current_node = ROOT_NODE
+    current_node = profile.ROOT_NODE
     while True:
         current_node.frequency = 1.0 # Ensure we never stop by underflow.
         predictions = list(current_node.predict())
