@@ -110,7 +110,7 @@ class Label:
        created, `counts[i]` is the number of times this Label is followed by
        the Instruction `i`. We don't bother to count thereafter.
     '''
-    ALL_LABELS = []
+    ALL = []
 
     def __init__(self, path, right_parent, left_ancestor):
         self.path = path
@@ -146,9 +146,10 @@ class Label:
             left_ancestor.left_descendants[left_key] = self
             if left_descendant is not None:
                 left_key2 = _end_of_prefix(path, left_descendant.path)
+                left_descendant.left_ancestor = self
                 self.left_descendants[left_key2] = left_descendant
-        # Add `self` to `ALL_LABELS`.
-        Label.ALL_LABELS.append(self)
+        # Add `self` to `ALL`.
+        Label.ALL.append(self)
 
     def __repr__(self):
         return 'Label({})'.format(
@@ -174,19 +175,40 @@ class Label:
 
     def construct(self, instruction):
         '''
-        Construct and return a new right child of `self`.
+        Construct and return a new right child of `self` for `instruction`.
         '''
+        assert instruction not in self.right_children
         new_path = self.path + (instruction,)
+        # Search for a left ancestor of `self`
+        # with a right child for `instruction`.
         left_ancestor = self.left_ancestor
         while left_ancestor is not None:
-            right_child_of_left_ancestor = \
-                left_ancestor.right_children.get(instruction)
-            if right_child_of_left_ancestor is not None:
+            other = left_ancestor.right_children.get(instruction)
+            if other is not None:
+                left_key = _end_of_prefix(left_ancestor.path, self.path)
+                similar = other.left_descendants.get(left_key)
+                if similar is not None:
+                    # `similar` has a similar path to `new_path`
+                    # and already ends with `instruction`.
+                    # Find the common suffix of `similar.path` and `new_path`.
+                    left_ancestor = similar.right_parent.left_ancestor
+                    while not is_suffix_of(left_ancestor.path, self.path):
+                        left_ancestor = left_ancestor.left_ancestor
+                    common_path = left_ancestor.path + (instruction,)
+                    assert is_suffix_of(common_path, new_path)
+                    assert is_proper_suffix_of(common_path, similar.path)
+                    assert instruction not in left_ancestor.right_children
+                    if left_ancestor is not self:
+                        # To maintain LEFT, we must construct a new Label.
+                        print("Constructing common left ancestor")
+                        print("other = {}".format(other))
+                        print("similar = {}".format(similar))
+                        other = Label(common_path, left_ancestor, other)
                 break
             left_ancestor = left_ancestor.left_ancestor
         else:
-            right_child_of_left_ancestor = ROOT_LABEL
-        return Label(new_path, self, right_child_of_left_ancestor)
+            other = ROOT_LABEL
+        return Label(new_path, self, other)
 
     @staticmethod
     def run(label, instruction):
@@ -194,6 +216,7 @@ class Label:
         Executes one instruction.
         Returns the next Label.
         '''
+        ALLOW_GRIDS = False # Allow grid structures to grow?
         threshold = Label.COMPILE_THRESHOLD
         while True:
             # Is there a right edge? Follow it if so.
@@ -204,7 +227,12 @@ class Label:
                 return next_label
             # Should we make the right edge that we didn't follow?
             label.counts[instruction] += 1
-            if label.counts[instruction] >= threshold:
+            if label.counts[instruction] >= threshold and (
+                ALLOW_GRIDS or
+                label is ROOT_LABEL or
+                len(label.left_ancestor.right_children) > 1 or
+                instruction not in label.left_ancestor.right_children
+            ):
                 # It is time to create a Label for `new_path`.
                 # This is rare and can be slow.
                 print()
@@ -226,26 +254,6 @@ class Label:
 ROOT_LABEL = Label((), None, None)
 
 
-current_label = ROOT_LABEL
-for instruction in trace():
-    if len(Label.ALL_LABELS) >= 200:
-        break
-    current_label = Label.run(current_label, instruction)
-
-print()
-from pprint import pprint
-import sys
-print()
-label_strs = sorted(repr(l) for l in Label.ALL_LABELS)
-pprint(label_strs, width=499)
-print()
-label_reversed_strs = sorted(
-    ' '.join(i.name for i in reversed(l.path))
-    for l in Label.ALL_LABELS
-)
-pprint(label_reversed_strs, width=499)
-
-
 def write_svg(filename):
     print("Generating '{}'...".format(filename))
     import pydot
@@ -255,20 +263,23 @@ def write_svg(filename):
         root=repr(ROOT_LABEL),
         overlap='false',
         K='10',
-        splines='curved', # Don't combine with prog='dot'; see below.
+        #splines='curved', # Don't combine with prog='dot'; see below.
     )
     nodes = {} # Label -> Node
-    for i, l in enumerate(Label.ALL_LABELS):
+    for i, l in enumerate(Label.ALL):
         n = pydot.Node(
             # EITHER: number the states
             #str(i),
             # OR: name the states.
             '('+' '.join(instruction.name for instruction in l.path)+')',
             shape='star' if l is ROOT_LABEL else 'ellipse',
+            style='filled',
+            fillcolor='' if l is ROOT_LABEL
+                else '/pastel19/{}'.format(1 + l.path[-1].opcode % 9),
         )
         nodes[l] = n
         g.add_node(nodes[l])
-    for l in Label.ALL_LABELS:
+    for l in Label.ALL:
         for i, l2 in l.right_children.items():
             g.add_edge(pydot.Edge(
                 nodes[l],
@@ -289,7 +300,42 @@ def write_svg(filename):
     # inverted.
     # We think it's https://gitlab.com/graphviz/graphviz/issues/763
     # i.e. not our fault. Works with other engines.
-    g.write_svg(filename, prog='dot')
+    g.write_svg(filename, prog='neato')
     print("Wrote '{}'".format(filename))
+
+
+current_label = ROOT_LABEL
+tick_count = 0
+for instruction in trace():
+    if len(Label.ALL) >= 1000:
+        break
+    current_label = Label.run(current_label, instruction)
+    tick_count += 1
+
+for label in Label.ALL:
+    if label is not ROOT_LABEL:
+        right_key = label.path[-1]
+        assert label.right_parent.right_children[right_key] is label
+        left_key = _end_of_prefix(label.left_ancestor.path, label.path)
+        assert label.left_ancestor.left_descendants[left_key] is label
+
+print()
+from pprint import pprint
+import sys
+print()
+label_strs = sorted(repr(l) for l in Label.ALL)
+pprint(label_strs, width=499)
+print()
+label_reversed_strs = sorted(
+    ' '.join(i.name for i in reversed(l.path))
+    for l in Label.ALL
+)
+pprint(label_reversed_strs, width=499)
+histogram = [0]*len(Instruction)
+for l in Label.ALL:
+    histogram[len(l.right_children)] += 1
+for i, count in enumerate(histogram):
+    print('{} labels have {} right children'.format(count, i))
+print("tick_count = {}".format(tick_count))
 
 write_svg('/tmp/labels.svg')
