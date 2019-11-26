@@ -96,6 +96,13 @@ for _ in range(NUM_PATHS):
     for new_item in item.successors():
         heapq.heappush(heap, new_item)
 
+# Add singleton paths to improve profiling information.
+for instruction in Instruction:
+    if Path(()).state.is_worthwhile(instruction):
+        path = Path((instruction,))
+        if path not in language:
+            language[path] = 0.0
+
 # Sanity check.
 for path in language:
     assert path[:-1] in language
