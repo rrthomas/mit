@@ -79,7 +79,8 @@ def load(filename):
             )
             for index, profile in enumerate(json.load(h))
         ]
-    ROOT_NODE = PathNode((), get_state(0), 1.0)
+    root_state = 0 if len(profile) > 0 else -1
+    ROOT_NODE = PathNode((), get_state(root_state), 1.0)
 
 
 def get_state(index):
