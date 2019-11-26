@@ -231,8 +231,8 @@ def short_circuit(state):
 labels = [
     (
         path.state.tos_constant,
-        path.cached_depth(),
-        path.checked_depth(),
+        path.state.cached_depth(),
+        path.state.checked_depth(),
         ' '.join(instruction.name for instruction in path.instructions),
         ' '.join(instruction.name for instruction in guess),
         short_circuit(c),

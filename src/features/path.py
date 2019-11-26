@@ -80,6 +80,20 @@ class State:
         self.stack_max = stack_max
         self.i_bits = i_bits
 
+    def cached_depth(self):
+        '''
+        Returns the number of stack items that can be cached in C variables
+        after executing this Path.
+        '''
+        return self.stack_pos - self.stack_min
+
+    def checked_depth(self):
+        '''
+        Returns the number of free stack slots that are known to exist
+        after executing this Path.
+        '''
+        return self.stack_max - self.stack_pos
+
     def specialize_instruction(self, instruction):
         '''
         Tries to replace `instruction` with a specialized version that does
@@ -95,7 +109,7 @@ class State:
     def step(self, instruction):
         '''
         Returns the State that results from executing `instruction` in this
-        State. Raises ValueError unless `self.is_worthwhile(instruction)`.
+        State. Raises ValueError if `instruction` is variadic.
          - instruction - an InstructionEnum, typically an Instruction or a
            SpecializedInstruction.
         '''
@@ -212,20 +226,6 @@ class Path:
     def __add__(self, sequence):
         return Path(self.instructions + sequence)
 
-    def cached_depth(self):
-        '''
-        Returns the number of stack items that can be cached in C variables
-        after executing this Path.
-        '''
-        return self.state.stack_pos - self.state.stack_min
-
-    def checked_depth(self):
-        '''
-        Returns the number of free stack slots that are known to exist
-        after executing this Path.
-        '''
-        return self.state.stack_max - self.state.stack_pos
-
     def remove_repeating_part(self):
         '''
         If all of:
@@ -236,11 +236,12 @@ class Path:
         '''
         if len(self.instructions) < 2:
             return self
+        state = self.state
         for n in range(2, len(self)//2+1):
             if self.instructions[-n:] == self.instructions[-2*n:-n]:
                 shorter = self[:-n]
-                if (self.cached_depth() >= shorter.cached_depth() and
-                    self.checked_depth() >= shorter.checked_depth()
+                if (state.cached_depth() >= shorter.state.cached_depth() and
+                    state.checked_depth() >= shorter.state.checked_depth()
                 ):
                     return shorter
         return self
