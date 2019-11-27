@@ -10,7 +10,8 @@
 import sys, functools, heapq, argparse, random, pickle
 
 from mit_core.vm_data import Instruction
-import path, profile
+from path import Path
+import profile
 
 
 # Command-line arguments.
@@ -73,95 +74,10 @@ def trace2():
                 yield instruction
 
 
-# TODO: Move this modified copy of `path.Path` back to "path.py".
-# It is here because the original is still in use.
-@functools.total_ordering
-class Path:
-    '''
-    Represents a sequence of Instructions.
-
-     - instructions - tuple of Instructions.
-     - state - the path.State that exists at the end of this Path, or `None`
-       if this Path cannot usefully be optimized.
-       Stack depths are measured relative to the stack depth at the beginning
-       of this Path.
-    '''
-    def __init__(self, instructions):
-        '''
-        Construct a Path for `instructions`.
-        '''
-        assert type(instructions) is tuple
-        self.instructions = instructions
-        self.state = path.State()
-        for instruction in instructions:
-            if self.state.is_worthwhile(instruction):
-                instruction = self.state.specialize_instruction(instruction)
-                self.state = self.state.step(instruction)
-            else:
-                self.state = None
-                break
-
-    def _opcodes(self):
-        return [i.opcode for i in self.instructions]
-
-    def __repr__(self):
-        return 'Path(({}))'.format(
-            ', '.join(i.name for i in self.instructions)
-        )
-
-    def __le__(self, other):
-        return self._opcodes().__le__(other._opcodes())
-
-    def __eq__(self, other):
-        return self.instructions == other.instructions
-
-    def __hash__(self):
-        return hash(self.instructions)
-
-    def __len__(self):
-        return len(self.instructions)
-
-    def __getitem__(self, index_or_slice):
-        if isinstance(index_or_slice, slice):
-            return Path(self.instructions[index_or_slice])
-        elif isinstance(index_or_slice, int):
-            return self.instructions[index_or_slice]
-        else:
-            raise TypeError('Path indices must be integers or slices')
-
-    def __add__(self, sequence):
-        return Path(self.instructions + sequence)
-
-    def is_suffix_of(self, other):
-        '''Tests whether `self` is a suffix of `other`.'''
-        pos = len(other) - len(self)
-        return other.instructions[pos:] == self.instructions
-
-    def is_proper_suffix_of(self, other):
-        return len(self) < len(other) and self.is_suffix_of(other)
-
-    def is_prefix_of(self, other):
-        '''Tests whether `self` is a prefix of `other`.'''
-        pos = len(self)
-        return other.instructions[:pos] == self.instructions
-
-    def is_proper_prefix_of(self, other):
-        return len(self) < len(other) and self.is_prefix_of(other)
-
-    def _end_of_prefix(self, other):
-        '''
-        Returns the last instruction of `other` that is not in `self`.
-        Requires that `self` is a proper suffix of `other`.
-        '''
-        assert self.is_proper_suffix_of(other)
-        pos = len(other) - len(self)
-        return other[pos - 1]
-
-
 class Label:
     '''
     A simulated code address (as if compiled by the JIT). Each Label has a
-    `path`, defined to be the shortest sequence of Instructions that takes the
+    Path, defined to be the shortest sequence of Instructions that takes the
     interpreter from `ROOT_LABEL` to this Label.
 
     At each Label, we count how many times each Instruction follows it. This is
@@ -192,6 +108,7 @@ class Label:
     ALL = []
 
     def __init__(self, path, right_parent, left_ancestor):
+        assert isinstance(path, Path)
         self.path = path
         self.right_parent = right_parent
         self.left_ancestor = left_ancestor

@@ -124,7 +124,6 @@ EXTRA_DIST += \
 	%D%/path.py \
 	%D%/futures.py \
 	%D%/specializer.py \
-	%D%/gen-labels \
 	%D%/gen-specializer \
 	%D%/opcode-frequency
 

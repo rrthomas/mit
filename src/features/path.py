@@ -63,7 +63,7 @@ class State:
        Typically this will have occurred in the middle of an instruction,
        after popping but before pushing.
      - stack_max - int - the maximal `stack_pos` encountered so far.
-     - i_bits - int - the number of bits of ir executed since the last
+     - i_bits - int - the number of bits of `ir` executed since the last
        terminal instruction.
     '''
     def __init__(
@@ -82,15 +82,13 @@ class State:
 
     def cached_depth(self):
         '''
-        Returns the number of stack items that can be cached in C variables
-        after executing this Path.
+        Returns the number of stack items that are known to be chacheable.
         '''
         return self.stack_pos - self.stack_min
 
     def checked_depth(self):
         '''
-        Returns the number of free stack slots that are known to exist
-        after executing this Path.
+        Returns the number of free stack slots that are known to exist.
         '''
         return self.stack_max - self.stack_pos
 
@@ -174,26 +172,26 @@ class State:
 @functools.total_ordering
 class Path:
     '''
-    Represents a sequence of Instructions that is potentially optimizable.
-    Does not handle variadic instructions unless there is a known constant
-    on the top of the stack.
+    Represents a sequence of Instructions.
 
      - instructions - tuple of Instructions.
-     - state - the State that exists at the end of this Path. Stack depths
-       are measured relative to the beginning of this Path.
+     - state - the State that exists at the end of this Path, or `None` if
+       this Path cannot usefully be optimized.
     '''
     def __init__(self, instructions):
         '''
-        Construct a Path for `instructions`. The Path must not include a
-        variadic instruction when the value at the top of the stack
-        is not a known constant.
+        Construct a Path for `instructions`.
         '''
         assert type(instructions) is tuple
         self.instructions = instructions
         self.state = State()
         for instruction in instructions:
-            instruction = self.state.specialize_instruction(instruction)
-            self.state = self.state.step(instruction)
+            if self.state.is_worthwhile(instruction):
+                instruction = self.state.specialize_instruction(instruction)
+                self.state = self.state.step(instruction)
+            else:
+                self.state = None
+                break
 
     def _opcodes(self):
         return [i.opcode for i in self.instructions]
@@ -226,31 +224,27 @@ class Path:
     def __add__(self, sequence):
         return Path(self.instructions + sequence)
 
-    def remove_repeating_part(self):
-        '''
-        If all of:
-         - this Path ends with two repeats of some "loop body",
-         - we know at least as much about the stack now as we did before
-           the last repeat,
-        returns the Path before the last repeat, otherwise returns `self`.
-        '''
-        if len(self.instructions) < 2:
-            return self
-        state = self.state
-        for n in range(2, len(self)//2+1):
-            if self.instructions[-n:] == self.instructions[-2*n:-n]:
-                shorter = self[:-n]
-                if (state.cached_depth() >= shorter.state.cached_depth() and
-                    state.checked_depth() >= shorter.state.checked_depth()
-                ):
-                    return shorter
-        return self
+    def is_suffix_of(self, other):
+        '''Tests whether `self` is a suffix of `other`.'''
+        pos = len(other) - len(self)
+        return other.instructions[pos:] == self.instructions
 
-    def suffixes(self):
-        '''Yields legal proper suffixes of this Path.'''
-        for i in range(1, len(self) + 1):
-            try:
-                yield self[i:]
-            except ValueError:
-                pass
+    def is_proper_suffix_of(self, other):
+        return len(self) < len(other) and self.is_suffix_of(other)
 
+    def is_prefix_of(self, other):
+        '''Tests whether `self` is a prefix of `other`.'''
+        pos = len(self)
+        return other.instructions[:pos] == self.instructions
+
+    def is_proper_prefix_of(self, other):
+        return len(self) < len(other) and self.is_prefix_of(other)
+
+    def _end_of_prefix(self, other):
+        '''
+        Returns the last instruction of `other` that is not in `self`.
+        Requires that `self` is a proper suffix of `other`.
+        '''
+        assert self.is_proper_suffix_of(other)
+        pos = len(other) - len(self)
+        return other[pos - 1]
