@@ -22,7 +22,7 @@ parser = argparse.ArgumentParser(
 parser.add_argument(
     '--labels',
     type=int,
-    default=1000,
+    default=400,
     metavar='N',
     help='generate approximately N labels',
 )
@@ -337,7 +337,7 @@ def write_svg(filename):
     # inverted.
     # We think it's https://gitlab.com/graphviz/graphviz/issues/763
     # i.e. not our fault. Works with other engines.
-    g.write_svg(filename, prog='neato')
+    g.write_svg(filename, prog='dot' if len(Label.ALL)<=200 else 'neato')
     print("Wrote '{}'".format(filename))
 
 

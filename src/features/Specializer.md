@@ -39,5 +39,5 @@ Bootstrapping
 
 To build mit from scratch, first make a profile file with the contents "[]",
 representing no knowledge. Then repeatedly build Mit and and run your code with
-"mit --profile". Typically, the first three or four iterations will improve
+"mit --profile". Typically, the first four to seven iterations will improve
 performance significantly.
