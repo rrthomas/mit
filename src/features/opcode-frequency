@@ -34,3 +34,4 @@ if args.topmost is not None:
 
 # Output frequencies, with instruction names instead of instructions
 pprint([(count, instruction.name) for count, instruction in freqs])
+print('Total instructions executed: {:_}'.format(sum(count for count, _ in freqs)))
