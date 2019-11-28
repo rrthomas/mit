@@ -226,15 +226,6 @@ libmitfeatures.mit_profile_init.argtypes = None
 
 libmitfeatures.mit_profile_dump.argtypes = [c_int]
 
-libmitfeatures.mit_predictor_init.argtypes = None
-libmitfeatures.mit_predictor_init.errcheck = malloc_error
-
-libmitfeatures.mit_predictor_dump.argtypes = [c_int]
-
-libmitfeatures.mit_predictor_run.restype = c_word
-libmitfeatures.mit_predictor_run.argtypes = [c_void_p]
-libmitfeatures.mit_predictor_run.errcheck = mit_error
-
 libmitfeatures.mit_step_to.restype = c_word
 libmitfeatures.mit_step_to.argtypes = [c_void_p, POINTER(c_uword), c_uword, c_int]
 libmitfeatures.mit_step_to.errcheck = mit_error

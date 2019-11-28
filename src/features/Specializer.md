@@ -7,18 +7,19 @@ used.
 Some explanatory notes follow.
 
 
-The predictor
--------------
+The profile
+-----------
 
-The script "gen-predictor" runs some code and calculates a predictor: a
-lookup table that guesses the next instruction based on the previous
-instructions.
+"mit --profile" runs some code and calculates a profile: a lookup table that
+records the number of times certain sequences of instructions were executed.
+The profile will be more specific if the interpreter is already specialized
+for the code being run.
 
 
 The labels file
 ---------------
 
-The script "gen-labels" reads a predictor file and constructs a suitable
+The script "simulate-jit" reads a profile file and constructs a suitable
 control-flow graph for the specialized interpreter.
 
 The script is fast, but it has nonetheless been separated out from the rest
@@ -31,3 +32,12 @@ The interpreter
 
 The script "gen-specializer" reads a labels file and writes out a C source
 file.
+
+
+Bootstrapping
+-------------
+
+To build mit from scratch, first make a profile file with the contents "[]",
+representing no knowledge. Then repeatedly build Mit and and run your code with
+"mit --profile". Typically, the first four to seven iterations will improve
+performance significantly.

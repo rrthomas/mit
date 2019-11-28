@@ -89,20 +89,6 @@ Option('profile',
        '''),
 )
 
-Option('predictor',
-       '''write data for a predictor to FILE
-                            (incompatible with --optimize)''',
-       arg='required_argument', arg_name='FILE',
-       parse_code=Code('''\
-       {
-           if (mit_predictor_init() == -1)
-               die("could not allocate memory for predictor");
-           set_run_function(mit_predictor_run);
-           predictor_file = optarg;
-       }
-       '''),
-)
-
 Doc('\nMiscellaneous:')
 Option('no-auto-extend',
        'do not automatically extend stack or memory',
@@ -334,7 +320,6 @@ def file_feature(basename):
     )
 
 file_feature('profile') # Dump specializer profiling data
-file_feature('predictor') # Dump predictor data
 
 
 # Generate output

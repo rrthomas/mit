@@ -13,7 +13,8 @@ import sys
 from mit_core.vm_data import Instruction, InternalExtraInstruction
 from mit_core.code_util import Code, copyright_banner
 from mit_core.instruction_gen import dispatch, gen_case
-from mit_core.opcode_frequency import counts
+
+import mit_profile
 
 
 GENERATOR_PROGRAM = 'gen-instructions'
@@ -22,14 +23,13 @@ COPYRIGHT_YEARS = '1994-2019'
 
 
 if len(sys.argv) != 2:
-    print("Usage: gen-instructions PREDICTOR-FILENAME", file=sys.stderr)
+    print("Usage: gen-instructions PROFILE-FILENAME", file=sys.stderr)
     sys.exit(1)
 
 
-# Get instruction counts from predictor and compute order
-with open(sys.argv[1]) as f:
-    freqs = counts(Instruction, f)
-instruction_order = [instruction for count, instruction in freqs]
+# Get instruction counts from profile and compute order
+mit_profile.load(sys.argv[1])
+instruction_order = [instruction for count, instruction in mit_profile.counts()]
 
 # Write the output file
 code = copyright_banner(GENERATOR_PROGRAM, PURPOSE, COPYRIGHT_YEARS)

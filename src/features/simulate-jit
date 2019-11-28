@@ -1,0 +1,481 @@
+#!/usr/bin/env python3
+#
+# (c) Mit authors 2019
+#
+# The package is distributed under the MIT/X11 License.
+#
+# THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
+# RISK.
+
+import sys, functools, heapq, argparse, random, pickle
+
+from mit_core.vm_data import Instruction
+from path import Path
+import mit_profile
+
+
+# Command-line arguments.
+parser = argparse.ArgumentParser(
+    prog='simulate-jit',
+    description="Experimental algorithm for incremental compilation.",
+)
+parser.add_argument(
+    '--labels',
+    type=int,
+    default=400,
+    metavar='N',
+    help='generate approximately N labels',
+)
+parser.add_argument(
+    '--svg-file',
+    metavar='SVG-FILENAME',
+    help='write a control flow diagram',
+)
+parser.add_argument(
+    'profile_filename',
+    metavar='PROFILE-FILENAME',
+    help='profile file to read',
+)
+parser.add_argument(
+    'labels_filename',
+    metavar='LABELS-FILENAME',
+    help='labels file to write',
+)
+args = parser.parse_args()
+
+
+# Load profile file.
+
+mit_profile.load(args.profile_filename)
+
+
+def trace():
+    current_node = mit_profile.ROOT_NODE
+    while True:
+        current_node.frequency = 1.0 # Ensure we never stop by underflow.
+        predictions = list(current_node.predict())
+        frequencies = [node.frequency for _, node in predictions]
+        if len(frequencies) == 0:
+            break
+        instruction, current_node = random.choices(predictions, frequencies)[0]
+        yield instruction
+
+
+def trace2():
+    '''
+    Alternate, highly artificial trace, useful for debugging.
+    '''
+    while True:
+        for _ in range(2):
+            for instruction in list(Instruction)[:3]:
+                yield instruction
+        for _ in range(2):
+            for instruction in list(Instruction)[8:11]:
+                yield instruction
+
+
+class Label:
+    '''
+    A simulated code address (as if compiled by the JIT). Each Label has a
+    Path, defined to be the shortest sequence of Instructions that takes the
+    interpreter from `ROOT_LABEL` to this Label.
+
+    At each Label, we count how many times each Instruction follows it. This is
+    the basis of a policy to decide when to construct a new Label.
+
+    Invariants:
+     - UNIQUE - There is at most one Label for each path.
+     - RIGHT - If a Label exists for a non-empty path `p`, then a Label exists
+       for path `p[:-1]`.
+     - LEFT - If Labels exist for paths `p` and `q`, then a Label exists for
+       the longest common suffix of `p` and `q`.
+
+    Public fields:
+     - path - Path - the canonical name of this Label.
+     - right_parent - the Label whose `path` is `self.path[:-1]` (`None` for
+       `ROOT_LABEL`).
+     - right_children - dict from Instruction to Label - the Labels of which
+       `self` is the `right_parent`.
+     - left_ancestor - the Label whose `path` is `self.path[n:]` for the
+       smallest `n>0` (`None` for `ROOT_LABEL`).
+     - left_descendants - dict from Instruction to Label - the Labels of which
+       `self` is the `left_ancestor`. Note that by "LEFT" the key is a single
+       Instruction.
+     - counts - dict from Instruction to int - Until `right_children[i]` is
+       created, `counts[i]` is the number of times this Label is followed by
+       the Instruction `i`. We don't bother to count thereafter.
+    '''
+    ALL = []
+
+    def __init__(self, path, right_parent, left_ancestor):
+        assert isinstance(path, Path)
+        self.path = path
+        self.right_parent = right_parent
+        self.left_ancestor = left_ancestor
+        self.right_children = {}
+        self.left_descendants = {}
+        self.counts = {i: 0 for i in Instruction}
+        #print('Constructing {!r}'.format(self))
+        #print('    right_parent = {!r}'.format(right_parent))
+        #print('    left_ancestor = {!r}'.format(left_ancestor))
+        if len(path) == 0:
+            # Check the invariants.
+            assert right_parent is None
+            assert left_ancestor is None
+        else:
+            # Check the invariants.
+            # `right_parent` is the immediate prefix. Implies RIGHT.
+            assert path[:-1] == right_parent.path
+            # UNIQUE.
+            right_key = path[-1]
+            assert right_parent.right_children.get(right_key) is None
+            # `left_ancestor` is a suffix.
+            assert left_ancestor.path.is_proper_suffix_of(path)
+            # `left_ancestor` is the longest suffix.
+            # Also, LEFT.
+            left_key = left_ancestor.path._end_of_prefix(path)
+            left_descendant = left_ancestor.left_descendants.get(left_key)
+            if left_descendant is not None:
+                assert path.is_proper_suffix_of(left_descendant.path)
+            # Update the connections.
+            right_parent.right_children[right_key] = self
+            left_ancestor.left_descendants[left_key] = self
+            if left_descendant is not None:
+                left_key2 = path._end_of_prefix(left_descendant.path)
+                left_descendant.left_ancestor = self
+                self.left_descendants[left_key2] = left_descendant
+        # Add `self` to `ALL`.
+        Label.ALL.append(self)
+
+    def __repr__(self):
+        return 'Label({})'.format(
+            ' '.join(instruction.name for instruction in self.path)
+        )
+
+    COMPILE_THRESHOLD = 10
+
+    def guess(self, instruction):
+        '''
+        Tests whether the JIT has compiled specialized code for executing
+        `instruction` from `self`. If so, returns the Label otherwise `None`.
+        '''
+        return self.right_children.get(instruction)
+
+    def default(self):
+        '''
+        Returns a Label whose `path` is a suffix of `self.path` (`None` for
+        `ROOT_LABEL`). The interpreter will jump to this Label if it cannot
+        find a more specialized Label.
+        '''
+        return self.left_ancestor
+
+    def construct(self, instruction):
+        '''
+        Construct and return a new right child of `self` for `instruction`.
+        '''
+        assert instruction not in self.right_children
+        new_path = self.path + (instruction,)
+        # Search for a left ancestor of `self`
+        # with a right child for `instruction`.
+        left_ancestor = self.left_ancestor
+        while left_ancestor is not None:
+            other = left_ancestor.right_children.get(instruction)
+            if other is not None:
+                left_key = left_ancestor.path._end_of_prefix(self.path)
+                break
+            left_ancestor = left_ancestor.left_ancestor
+        else:
+            other = ROOT_LABEL
+            left_key = instruction
+        similar = other.left_descendants.get(left_key)
+        if similar is not None:
+            # `similar` has a similar path to `new_path`
+            # and already ends with `instruction`.
+            # Find the common suffix of `similar.path` and `new_path`.
+            left_ancestor = similar.right_parent.left_ancestor
+            while not left_ancestor.path.is_suffix_of(self.path):
+                left_ancestor = left_ancestor.left_ancestor
+            common_path = left_ancestor.path + (instruction,)
+            assert common_path.is_suffix_of(new_path)
+            assert common_path.is_proper_suffix_of(similar.path)
+            assert instruction not in left_ancestor.right_children
+            if left_ancestor is not self:
+                # To maintain LEFT, we must construct a new Label.
+                #print("Constructing common left ancestor")
+                #print("other = {}".format(other))
+                #print("similar = {}".format(similar))
+                other = Label(common_path, left_ancestor, other)
+        return Label(new_path, self, other)
+
+    @staticmethod
+    def run(label, instruction):
+        '''
+        Executes one instruction.
+        Returns the next Label.
+        '''
+        ALLOW_GRIDS = False # Allow grid structures to grow?
+        threshold = Label.COMPILE_THRESHOLD
+        while True:
+            # Is there a right edge? Follow it if so.
+            next_label = label.guess(instruction)
+            if next_label is not None:
+                # Execute a compiled instruction.
+                return next_label
+            # Should we make the right edge that we didn't follow?
+            label.counts[instruction] += 1
+            if label.counts[instruction] >= threshold and (
+                ALLOW_GRIDS or
+                label is ROOT_LABEL or
+                len(label.left_ancestor.right_children) > 1 or
+                instruction not in label.left_ancestor.right_children
+            ):
+                # It is time to create a Label for `new_path`.
+                # This is rare and can be slow.
+                label.construct(instruction)
+            # Follow a left edge.
+            threshold = Label.COMPILE_THRESHOLD + label.counts[instruction]
+            label = label.default()
+            if label is None:
+                # Fall back to the interpreter.
+                return ROOT_LABEL
+
+
+# The unique Label with an empty Path.
+ROOT_LABEL = Label(Path(()), None, None)
+
+
+# Make Labels exemplifying the whole instruction set, to improve profiling.
+for instruction in Instruction:
+    ROOT_LABEL.construct(instruction)
+for lit_instruction in [
+    Instruction.LIT_0,
+    Instruction.LIT_1,
+    Instruction.LIT_2,
+    Instruction.LIT_3,
+]:
+    lit = ROOT_LABEL.right_children.get(lit_instruction)
+    for instruction in [
+        Instruction.NEXT,
+        Instruction.POP,
+        Instruction.DUP,
+        Instruction.SWAP,
+    ]:
+        lit.construct(instruction)
+    lit_next = lit.right_children[Instruction.NEXT]
+    for instruction in [
+        Instruction.POP,
+        Instruction.DUP,
+        Instruction.SWAP,
+    ]:
+        lit_next.construct(instruction)
+
+
+# Do the Markov Monte-Carlo simulation.
+
+random.seed(0)
+current_label = ROOT_LABEL
+tick_count = 0
+for instruction in trace():
+    if len(Label.ALL) >= args.labels:
+        break
+    current_label = Label.run(current_label, instruction)
+    tick_count += 1
+
+for label in Label.ALL:
+    if label is not ROOT_LABEL:
+        right_key = label.path[-1]
+        assert label.right_parent.right_children[right_key] is label
+        left_key = label.left_ancestor.path._end_of_prefix(label.path)
+        assert label.left_ancestor.left_descendants[left_key] is label
+
+
+# Diagnostics.
+
+def write_svg(filename):
+    print("Generating '{}'...".format(filename))
+    import pydot
+    g = pydot.Dot(
+        'labels',
+        rankdir='LR',
+        root=repr(ROOT_LABEL),
+        overlap='false',
+        K='10',
+        #splines='curved', # Don't combine with prog='dot'; see below.
+    )
+    nodes = {} # Label -> Node
+    for i, l in enumerate(Label.ALL):
+        n = pydot.Node(
+            # EITHER: number the states
+            #str(i),
+            # OR: name the states.
+            '('+' '.join(instruction.name for instruction in l.path)+')',
+            shape='star' if l is ROOT_LABEL else 'ellipse',
+            style='filled',
+            fillcolor='' if l is ROOT_LABEL
+                else '/pastel19/{}'.format(1 + l.path[-1].opcode % 9),
+        )
+        nodes[l] = n
+        g.add_node(nodes[l])
+    for l in Label.ALL:
+        for i, l2 in l.right_children.items():
+            g.add_edge(pydot.Edge(
+                nodes[l],
+                nodes[l2],
+                color='green',
+                #label=i.name,
+            ))
+        if l is not ROOT_LABEL:
+            l2 = l.default()
+            num_shrinks = len(l.path) - len(l2.path)
+            g.add_edge(pydot.Edge(
+                nodes[l],
+                nodes[l2],
+                color='red',
+                style=('solid' if num_shrinks==1 else 'bold'),
+            ))
+    # With "prog='dot'" and non-default "splines" some of the arrows are
+    # inverted.
+    # We think it's https://gitlab.com/graphviz/graphviz/issues/763
+    # i.e. not our fault. Works with other engines.
+    g.write_svg(filename, prog='dot' if len(Label.ALL)<=200 else 'neato')
+    print("Wrote '{}'".format(filename))
+
+
+print()
+from pprint import pprint
+import sys
+print()
+label_strs = sorted(
+    ' '.join(i.name for i in l.path)
+    for l in Label.ALL
+)
+pprint(label_strs, width=499)
+print()
+label_reversed_strs = sorted(
+    ' '.join(i.name for i in reversed(l.path))
+    for l in Label.ALL
+)
+pprint(label_reversed_strs, width=499)
+histogram = [0]*(1 + len(Instruction))
+for l in Label.ALL:
+    histogram[len(l.right_children)] += 1
+for i, count in enumerate(histogram):
+    print('{} labels have {} right children'.format(count, i))
+print("tick_count = {}".format(tick_count))
+
+if args.svg_file is not None:
+    write_svg(args.svg_file)
+
+
+# Filter out the Labels we don't want to compile.
+
+class CompiledLabel:
+    '''
+    Represents a Label that we want to compile.
+     - path - Path with non-None `state`.
+     - right_children - dict from Instruction to CompiledLabel.
+     - left_ancestor - CompiledLabel or `None`.
+    '''
+    ALL = []
+
+    def __init__(self, path, right_parent, left_ancestor):
+        assert path.state is not None
+        self.path = path
+        self.left_ancestor = left_ancestor
+        self.right_children = {}
+        if len(path) == 0:
+            assert left_ancestor is None
+            assert right_parent is None
+        else:
+            assert left_ancestor.path.is_proper_suffix_of(path)
+            assert right_parent.path == path[:-1]
+            right_key = path[-1]
+            assert right_key not in right_parent.right_children
+            right_parent.right_children[right_key] = self
+        CompiledLabel.ALL.append(self)
+
+    def __repr__(self):
+        return 'CompiledLabel({})'.format(
+            ' '.join(instruction.name for instruction in self.path)
+        )
+
+
+# Label to CompiledLabel.
+label_to_compiled = {None: None}
+for label in sorted(Label.ALL, key=lambda x: len(x.path)):
+    if label.path.state is not None:
+        left_ancestor = label.left_ancestor
+        while left_ancestor is not None and left_ancestor.path.state is None:
+            left_ancestor = left_ancestor.left_ancestor
+        label_to_compiled[label] = CompiledLabel(
+            label.path,
+            label_to_compiled[label.right_parent],
+            label_to_compiled[left_ancestor],
+        )
+
+# Expand each CompiledLabel into a tree of "if"s.
+
+# Map from CompiledLabel to the corresponding index in `states`.
+# `None` represents the index of the fallback state.
+# We allocate `n` states for a CompiledLabel with `n` right children.
+label_to_state = {None: None}
+num_states = 0
+for label in CompiledLabel.ALL:
+    label_to_state[label] = (
+        num_states if len(label.right_children) > 0 else
+        label_to_state[label.left_ancestor]
+    )
+    num_states += len(label.right_children)
+
+# The code at each state is:
+#   (Path, tuple(Instruction) guess, int c, int w)
+# meaning:
+#   if (next==guess) { execute guess; goto c; } else goto w;
+states = []
+for label in CompiledLabel.ALL:
+    if len(label.right_children) > 0:
+        assert len(states) == label_to_state[label]
+        # Guess each right child.
+        for i, (instruction, child) in enumerate(label.right_children.items()):
+            # Go to `wrong_state` if the next instruction is not `instruction`.
+            if i + 1 < len(label.right_children):
+                # There are more right children to try.
+                wrong_state = len(states) + 1
+            else:
+                wrong_state = label_to_state[label.left_ancestor]
+                # Optimization: skip redundant "if"s.
+                while wrong_state is not None:
+                    (path, guess, c, w) = states[wrong_state]
+                    if guess[0] not in label.right_children:
+                        # Found a guess we haven't already tried.
+                        break
+                    wrong_state = w
+            states.append((
+                label.path,
+                (instruction,),
+                label_to_state[child],
+                wrong_state,
+            ))
+
+# Dump to a file.
+labels_file = [(
+    path.state.tos_constant,
+    path.state.cached_depth(),
+    path.state.checked_depth(),
+    ' '.join(i.name for i in path),
+    ' '.join(i.name for i in guess),
+    c,
+    w,
+) for (path, guess, c, w) in states]
+with open(args.labels_filename, 'wb') as f:
+    # [(
+    #     tos_constant (int?),
+    #     cached_depth (int),
+    #     checked_depth (int),
+    #     path_instruction_sequence (str, space-separated),
+    #     guess_instruction_sequence (str, space-separated),
+    #     if_correct (int?),
+    #     if_wrong (int?)
+    # )]
+    pickle.dump(labels_file, file=f)
+print('Wrote {}'.format(args.labels_filename))
