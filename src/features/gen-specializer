@@ -162,7 +162,6 @@ def gen_labels_code(profiling=False):
         mit_uword initial_pc, initial_ir;
         // The number of stack items cached in C variables.
         int cached_depth = 0;
-        goto A_0;
 
         // Each A_XXX label has an expectation of what instruction sequence
         // probably comes next. If correct, there is a fast path for executing
