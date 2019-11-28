@@ -111,7 +111,7 @@ build-profile: libmitfeatures@PACKAGE_SUFFIX@.la $(MIT_BINARY)
 	cd %D%/pforth/src/mit && \
 	$(MIT_BINARY) --profile=$(abs_srcdir)/%D%/mit-profile.json pforth-base $(PROFILE_PFORTH_ARGS)
 
-%D%/instructions_labels.pickle: mit_core/code_util.py mit_core/params.py mit_core/instruction.py mit_core/vm_data.py %D%/mit-profile.json %D%/simulate-jit %D%/path.py %D%/profile.py
+%D%/instructions_labels.pickle: mit_core/code_util.py mit_core/params.py mit_core/instruction.py mit_core/vm_data.py %D%/mit-profile.json %D%/simulate-jit %D%/path.py %D%/mit_profile.py
 	$(PYTHON_WITH_PATH) $(srcdir)/%D%/simulate-jit $(srcdir)/%D%/mit-profile.json $@
 
 %D%/specializer.c: mit_core/code_util.py mit_core/instruction.py mit_core/vm_data.py %D%/type_sizes.py mit_core/instruction_gen.py %D%/gen-specializer %D%/specializer.py %D%/instructions_labels.pickle
@@ -122,9 +122,11 @@ build-profile: libmitfeatures@PACKAGE_SUFFIX@.la $(MIT_BINARY)
 EXTRA_DIST += \
 	%D%/extra_errors.py \
 	%D%/path.py \
-	%D%/futures.py \
+	%D%/mit_profile.py \
 	%D%/specializer.py \
+	%D%/simulate-jit \
 	%D%/gen-specializer \
+	%D%/mit-profile.json \
 	%D%/opcode-frequency
 
 DISTCLEANFILES += \

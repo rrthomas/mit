@@ -14,7 +14,7 @@ from mit_core.vm_data import Instruction, InternalExtraInstruction
 from mit_core.code_util import Code, copyright_banner
 from mit_core.instruction_gen import dispatch, gen_case
 
-import profile
+import mit_profile
 
 
 GENERATOR_PROGRAM = 'gen-instructions'
@@ -28,8 +28,8 @@ if len(sys.argv) != 2:
 
 
 # Get instruction counts from profile and compute order
-profile.load(sys.argv[1])
-instruction_order = [instruction for count, instruction in profile.counts()]
+mit_profile.load(sys.argv[1])
+instruction_order = [instruction for count, instruction in mit_profile.counts()]
 
 # Write the output file
 code = copyright_banner(GENERATOR_PROGRAM, PURPOSE, COPYRIGHT_YEARS)

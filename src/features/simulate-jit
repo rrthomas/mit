@@ -11,7 +11,7 @@ import sys, functools, heapq, argparse, random, pickle
 
 from mit_core.vm_data import Instruction
 from path import Path
-import profile
+import mit_profile
 
 
 # Command-line arguments.
@@ -46,11 +46,11 @@ args = parser.parse_args()
 
 # Load profile file.
 
-profile.load(args.profile_filename)
+mit_profile.load(args.profile_filename)
 
 
 def trace():
-    current_node = profile.ROOT_NODE
+    current_node = mit_profile.ROOT_NODE
     while True:
         current_node.frequency = 1.0 # Ensure we never stop by underflow.
         predictions = list(current_node.predict())
