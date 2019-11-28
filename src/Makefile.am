@@ -33,7 +33,7 @@ noinst_LTLIBRARIES = libutil.la
 libutil_la_SOURCES = warn.h warn.c
 
 bin_PROGRAMS = mit@PACKAGE_SUFFIX@$(EXEEXT)
-MIT_BINARY = $(abs_srcdir)/mit@PACKAGE_SUFFIX@$(EXEEXT)
+MIT_BINARY = $(abs_builddir)/mit@PACKAGE_SUFFIX@$(EXEEXT)
 man_MANS = mit@PACKAGE_SUFFIX@.1
 mit@PACKAGE_SUFFIX@_LDADD = libmit@PACKAGE_SUFFIX@.la libmitfeatures@PACKAGE_SUFFIX@.la $(top_builddir)/lib/libgnu.la libutil.la
 nodist_mit@PACKAGE_SUFFIX@_SOURCES = main.c
@@ -62,7 +62,7 @@ mit@PACKAGE_SUFFIX@.1: mit@PACKAGE_SUFFIX@$(EXEEXT) mit-include.man
 	  $(top_srcdir)/build-aux/missing --run $(HELP2MAN) --no-info \
 		--name="Virtual machine" \
 		--include=$(srcdir)/mit-include.man \
-		--output=$@ ./mit@PACKAGE_SUFFIX@$(EXEEXT); \
+		--output=$@ $(MIT_BINARY); \
 	fi
 
 include/mit@PACKAGE_SUFFIX@:
