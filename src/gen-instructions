@@ -104,7 +104,7 @@ code.append(Code(*['''\
     '',
     'error:',
     Code('''\
-        if (error != 0) {
+        if (error != MIT_ERROR_OK) {
             S->pc = initial_pc;
             S->ir = initial_ir;
         }
@@ -116,7 +116,7 @@ code.append(Code(*['''\
         }'''
     ),
     '''\
-    } while (likely(run == true) && likely(error == 0));
+    } while (likely(run == true) && likely(error == MIT_ERROR_OK));
 
     *real_S = state;
     return error;''',
