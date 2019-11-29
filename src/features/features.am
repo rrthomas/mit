@@ -7,15 +7,7 @@
 # THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 # RISK.
 
-lib_LTLIBRARIES += libmitfeatures@PACKAGE_SUFFIX@.la
-libmitfeatures@PACKAGE_SUFFIX@_la_SOURCES =
-nodist_libmitfeatures@PACKAGE_SUFFIX@_la_SOURCES =
-libmitfeatures@PACKAGE_SUFFIX@_la_LIBADD = libmit@PACKAGE_SUFFIX@.la $(top_builddir)/lib/libgnu.la
-libmitfeatures@PACKAGE_SUFFIX@_la_LDFLAGS = -no-undefined -export-symbols-regex '^mit_.*'
-
 mit_pkginclude_HEADERS += %D%/mit/features.h
-
-$(libmitfeatures@PACKAGE_SUFFIX@_la_SOURCES): include/mit/mit.h
 
 %D%/mit/features.h: $(top_builddir)/config.status %D%/mit/features.h.in
 	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
@@ -58,6 +50,7 @@ libmitfeatures@PACKAGE_SUFFIX@_la_SOURCES += %D%/extra-instructions.c
 
 EXTRA_DIST += \
 	%D%/extra_instructions.py \
+	%D%/extra_errors.py \
 	%D%/gen-extra-instructions \
 	%D%/gen-extra-opcodes \
 	%D%/gen-type-sizes \
@@ -72,65 +65,3 @@ DISTCLEANFILES += \
 	%D%/type-sizes \
 	%D%/config.log \
 	%D%/type_sizes.py
-
-
-# Specializer
-
-nodist_libmitfeatures@PACKAGE_SUFFIX@_la_SOURCES += %D%/specializer.c
-
-TEST_EXTENSIONS = .pforth
-PFORTH_LOG_COMPILER = $(SHELL)
-TESTS_ENVIRONMENT = \
-	export abs_top_srcdir="$(abs_top_srcdir)" \
-	export TIME_BINARY="$(TIME)"; \
-	export MIT_BINARY="$(MIT_BINARY)";
-bench:
-	$(MAKE) check TESTS="$(BENCH_TESTS)"
-
-if USING_PFORTH
-features/pforth/config.status: features/pforth/configure
-features/pforth/configure:
-	cd features/pforth && \
-	autoreconf -i && \
-	./configure --build=mit BUILD_EXECUTOR=$(MIT_BINARY) BUILD_EXECUTOR_FLAGS=-O
-check_DATA = features/pforth/config.status
-
-TESTS = \
-	%D%/build-pforth.pforth
-
-BENCH_TESTS = \
-	%D%/pforth-bench.pforth
-endif
-
-# Alternative profile-building arguments:
-PROFILE_PFORTH_ARGS=make-base.fs
-#PROFILE_PFORTH_ARGS=--evaluate BYE
-#PROFILE_PFORTH_ARGS=tests.fs # (needs something on standard input)
-build-profile: mit@PACKAGE_SUFFIX@$(EXEEXT)
-	export LD_LIBRARY_PATH=$(abs_top_builddir)/src/@objdir@:$(abs_top_builddir)/src/%D%/@objdir@:$$LD_LIBRARY_PATH; \
-	cd %D%/pforth/src/mit && \
-	$(MIT_BINARY) --profile=$(abs_srcdir)/%D%/mit-profile.json pforth-base $(PROFILE_PFORTH_ARGS) && \
-	cd $(abs_builddir) && \
-	$(MAKE)
-
-%D%/instructions_labels.pickle: mit_core/code_util.py mit_core/params.py mit_core/instruction.py mit_core/vm_data.py %D%/mit-profile.json %D%/simulate-jit %D%/path.py %D%/mit_profile.py
-	$(PYTHON_WITH_PATH) $(srcdir)/%D%/simulate-jit $(srcdir)/%D%/mit-profile.json $@
-
-%D%/specializer.c: mit_core/code_util.py mit_core/instruction.py mit_core/vm_data.py %D%/type_sizes.py mit_core/instruction_gen.py %D%/gen-specializer %D%/specializer.py %D%/instructions_labels.pickle
-	$(PYTHON_WITH_PATH) $(srcdir)/%D%/gen-specializer %D%/instructions_labels.pickle > %D%/specializer.c || ( rm -f %D%/specializer.c; exit 1 )
-
-%D%/specializer.lo: include/mit/mit.h %D%/mit/features.h
-
-EXTRA_DIST += \
-	%D%/extra_errors.py \
-	%D%/path.py \
-	%D%/mit_profile.py \
-	%D%/specializer.py \
-	%D%/simulate-jit \
-	%D%/gen-specializer \
-	%D%/mit-profile.json \
-	%D%/opcode-frequency
-
-DISTCLEANFILES += \
-	%D%/instructions_labels.pickle \
-	%D%/specializer.c

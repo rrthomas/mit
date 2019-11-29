@@ -13,7 +13,7 @@ from mit.globals import *
 
 
 # Load pforth image and run it, defining a new word
-load("@top_srcdir@/src/features/pforth/src/mit/pforth-base")
+load("@top_srcdir@/src/specializer/pforth/src/mit/pforth-base")
 run(['--evaluate', ': FOO ;'])
 pc.set(0)
 ir.set(0)

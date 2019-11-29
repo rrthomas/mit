@@ -1,6 +1,7 @@
 *~
 *.log
 *.trs
+.dirstamp
 /.version
 /mit*.tar.gz
 Makefile

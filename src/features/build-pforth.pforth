@@ -1,2 +1,0 @@
-#!/bin/sh
-$srcdir/features/time-pforth-build

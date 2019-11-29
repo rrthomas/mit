@@ -1,0 +1,3 @@
+#!/bin/sh
+$srcdir/specializer/time-pforth-build --times 10
+MIT_OPTIONS=-O $srcdir/specializer/time-pforth-build --times 10

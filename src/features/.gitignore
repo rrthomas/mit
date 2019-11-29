@@ -1,11 +1,7 @@
-/.dirstamp
 /autom4te.cache
-/instructions_labels.pickle
 /config.log
 /config.status
 /type-sizes
 /type-sizes.ac
 /extra-instructions.c
-/specializer.c
-/specializer.h
 /type_sizes.py

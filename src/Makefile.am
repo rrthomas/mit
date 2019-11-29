@@ -11,7 +11,7 @@ WORD_BYTES = @WORD_BYTES@
 ENDISM = @ENDISM@
 
 AM_CPPFLAGS = -I$(abs_top_builddir)/lib -I$(abs_top_srcdir)/lib -I$(abs_builddir)/include -I$(abs_srcdir)/include -I$(abs_builddir)/features $(WARN_CFLAGS)
-PYTHON_WITH_PATH = export PYTHONPATH=$(abs_top_srcdir)/python:$(abs_top_srcdir)/src:$(abs_top_builddir)/src:$(abs_top_srcdir)/src/features:$(abs_top_builddir)/src/features; $(PYTHON)
+PYTHON_WITH_PATH = export PYTHONPATH=$(abs_top_srcdir)/python:$(abs_top_srcdir)/src:$(abs_top_builddir)/src:$(abs_top_srcdir)/src/specializer:$(abs_top_builddir)/src/specializer:$(abs_top_srcdir)/src/features:$(abs_top_builddir)/src/features; $(PYTHON)
 
 lib_LTLIBRARIES = libmit@PACKAGE_SUFFIX@.la
 C_SRCS = storage.c object.c
@@ -79,17 +79,17 @@ include/mit/opcodes.h: gen-opcodes mit_core/mit_spec.yaml mit_core/vm_data.py mi
 	$(MKDIR_P) include/mit
 	$(PYTHON_WITH_PATH) $(srcdir)/gen-opcodes > include/mit/opcodes.h || ( rm -f include/mit/opcodes.h; exit 1 )
 
-instructions.c: gen-instructions mit_core/mit_spec.yaml mit_core/vm_data.py mit_core/instruction.py mit_core/code_util.py mit_core/instruction_gen.py features/mit-profile.json
-	$(PYTHON_WITH_PATH) $(srcdir)/gen-instructions $(srcdir)/features/mit-profile.json > instructions.c || ( rm -f instructions.c; exit 1 )
+instructions.c: gen-instructions mit_core/mit_spec.yaml mit_core/vm_data.py mit_core/instruction.py mit_core/code_util.py mit_core/instruction_gen.py specializer/mit-profile.json
+	$(PYTHON_WITH_PATH) $(srcdir)/gen-instructions $(srcdir)/specializer/mit-profile.json > instructions.c || ( rm -f instructions.c; exit 1 )
 
 main.c: gen-main
 	$(PYTHON_WITH_PATH) $(srcdir)/gen-main > main.c || ( rm -f main.c; exit 1 )
 
 loc:
 	$(SLOCCOUNT) \
-		$(C_SRCS) \
-		$(LIB_CORE_SRCS) \
-		gen-registers gen-opcodes gen-instructions gen-main
+	$(C_SRCS) \
+	$(LIB_CORE_SRCS) \
+	gen-registers gen-opcodes gen-instructions gen-main
 
 EXTRA_DIST = \
 	$(pkgdata_DATA) \
@@ -116,4 +116,13 @@ distcleancheck_listfiles = \
 	    sh '{}' ';'
 
 # Features
+lib_LTLIBRARIES += libmitfeatures@PACKAGE_SUFFIX@.la
+libmitfeatures@PACKAGE_SUFFIX@_la_SOURCES =
+nodist_libmitfeatures@PACKAGE_SUFFIX@_la_SOURCES =
+libmitfeatures@PACKAGE_SUFFIX@_la_LIBADD = libmit@PACKAGE_SUFFIX@.la $(top_builddir)/lib/libgnu.la
+libmitfeatures@PACKAGE_SUFFIX@_la_LDFLAGS = -no-undefined -export-symbols-regex '^mit_.*'
+
+$(libmitfeatures@PACKAGE_SUFFIX@_la_SOURCES): include/mit/mit.h
+
 include features/features.am
+include specializer/specializer.am
