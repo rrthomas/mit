@@ -8,6 +8,7 @@
 # RISK.
 
 import sys, functools, heapq, argparse, random, pickle
+from pprint import pprint
 
 from mit_core.vm_data import Instruction
 from path import Path
@@ -18,6 +19,11 @@ import mit_profile
 parser = argparse.ArgumentParser(
     prog='simulate-jit',
     description="Experimental algorithm for incremental compilation.",
+)
+parser.add_argument(
+    '--verbose',
+    action='store_true',
+    help='output diagnostics',
 )
 parser.add_argument(
     '--labels',
@@ -115,9 +121,10 @@ class Label:
         self.right_children = {}
         self.left_descendants = {}
         self.counts = {i: 0 for i in Instruction}
-        #print('Constructing {!r}'.format(self))
-        #print('    right_parent = {!r}'.format(right_parent))
-        #print('    left_ancestor = {!r}'.format(left_ancestor))
+        if args.verbose:
+            print('Constructing {!r}'.format(self))
+            print('    right_parent = {!r}'.format(right_parent))
+            print('    left_ancestor = {!r}'.format(left_ancestor))
         if len(path) == 0:
             # Check the invariants.
             assert right_parent is None
@@ -201,9 +208,10 @@ class Label:
             assert instruction not in left_ancestor.right_children
             if left_ancestor is not self:
                 # To maintain LEFT, we must construct a new Label.
-                #print("Constructing common left ancestor")
-                #print("other = {}".format(other))
-                #print("similar = {}".format(similar))
+                if args.verbose:
+                    print("Constructing common left ancestor")
+                    print("other = {}".format(other))
+                    print("similar = {}".format(similar))
                 other = Label(common_path, left_ancestor, other)
         return Label(new_path, self, other)
 
@@ -292,7 +300,8 @@ for label in Label.ALL:
 # Diagnostics.
 
 def write_svg(filename):
-    print("Generating '{}'...".format(filename))
+    if args.verbose:
+        print("Generating '{}'...".format(filename))
     import pydot
     g = pydot.Dot(
         'labels',
@@ -338,30 +347,30 @@ def write_svg(filename):
     # We think it's https://gitlab.com/graphviz/graphviz/issues/763
     # i.e. not our fault. Works with other engines.
     g.write_svg(filename, prog='dot' if len(Label.ALL)<=200 else 'neato')
-    print("Wrote '{}'".format(filename))
+    if args.verbose:
+        print("Wrote '{}'".format(filename))
 
 
-print()
-from pprint import pprint
-import sys
-print()
-label_strs = sorted(
-    ' '.join(i.name for i in l.path)
-    for l in Label.ALL
-)
-pprint(label_strs, width=499)
-print()
-label_reversed_strs = sorted(
-    ' '.join(i.name for i in reversed(l.path))
-    for l in Label.ALL
-)
-pprint(label_reversed_strs, width=499)
-histogram = [0]*(1 + len(Instruction))
-for l in Label.ALL:
-    histogram[len(l.right_children)] += 1
-for i, count in enumerate(histogram):
-    print('{} labels have {} right children'.format(count, i))
-print("tick_count = {}".format(tick_count))
+# Diagnostic output
+if args.verbose:
+    print()
+    label_strs = sorted(
+        ' '.join(i.name for i in l.path)
+        for l in Label.ALL
+    )
+    pprint(label_strs, width=499)
+    print()
+    label_reversed_strs = sorted(
+        ' '.join(i.name for i in reversed(l.path))
+        for l in Label.ALL
+    )
+    pprint(label_reversed_strs, width=499)
+    histogram = [0]*(1 + len(Instruction))
+    for l in Label.ALL:
+        histogram[len(l.right_children)] += 1
+    for i, count in enumerate(histogram):
+        print('{} labels have {} right children'.format(count, i))
+    print("tick_count = {}".format(tick_count))
 
 if args.svg_file is not None:
     write_svg(args.svg_file)
@@ -478,4 +487,5 @@ with open(args.labels_filename, 'wb') as f:
     #     if_wrong (int?)
     # )]
     pickle.dump(labels_file, file=f)
-print('Wrote {}'.format(args.labels_filename))
+if args.verbose:
+    print('Wrote {}'.format(args.labels_filename))
