@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# Generate code for instructions.
 #
 # (c) Mit authors 1994-2019
 #
@@ -8,7 +7,7 @@
 # THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 # RISK.
 
-import sys
+import argparse
 
 from mit_core.vm_data import Instruction, InternalExtraInstruction
 from mit_core.code_util import Code, copyright_banner
@@ -18,17 +17,25 @@ import mit_profile
 
 
 GENERATOR_PROGRAM = 'gen-instructions'
-PURPOSE = 'Run the virtual machine main loop.'
+PURPOSE = 'Run the virtual machine main loop (naive version).'
 COPYRIGHT_YEARS = '1994-2019'
 
 
-if len(sys.argv) != 2:
-    print("Usage: gen-instructions PROFILE-FILENAME", file=sys.stderr)
-    sys.exit(1)
+# Command-line arguments.
+parser = argparse.ArgumentParser(
+    prog=GENERATOR_PROGRAM,
+    description='Generate naive interpreter',
+)
+parser.add_argument(
+    'profile_filename',
+    metavar='PROFILE-FILENAME',
+    help='profile file to use',
+)
+args = parser.parse_args()
 
 
 # Get instruction counts from profile and compute order
-mit_profile.load(sys.argv[1])
+mit_profile.load(args.profile_filename)
 instruction_order = [instruction for count, instruction in mit_profile.counts()]
 
 # Write the output file
@@ -97,7 +104,7 @@ code.append(Code(*['''\
     '',
     'error:',
     Code('''\
-        if (error != 0) {
+        if (error != MIT_ERROR_OK) {
             S->pc = initial_pc;
             S->ir = initial_ir;
         }
@@ -109,7 +116,7 @@ code.append(Code(*['''\
         }'''
     ),
     '''\
-    } while (likely(run == true) && likely(error == 0));
+    } while (likely(run == true) && likely(error == MIT_ERROR_OK));
 
     *real_S = state;
     return error;''',

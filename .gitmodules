@@ -7,6 +7,6 @@
 [submodule "gl-mod/bootstrap"]
 	path = gl-mod/bootstrap
 	url = https://github.com/gnulib-modules/bootstrap.git
-[submodule "src/features/pforth"]
-	path = src/features/pforth
+[submodule "src/specializer/pforth"]
+	path = src/specializer/pforth
 	url = git://github.com/rrthomas/pforth.git

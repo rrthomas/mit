@@ -22,6 +22,6 @@ install:
 # `git rm-symlinks` in pforth (defined in build-aux/appveyor-install.sh) to
 # fix symlinks for Windows.
 build_script:
-  - cmd: C:\msys64\usr\bin\bash.exe -lc "cd c:/projects/mit && ./bootstrap && cd src/features/pforth && git rm-symlinks && cd ../../.. && ./configure --enable-silent-rules && make"
+  - cmd: C:\msys64\usr\bin\bash.exe -lc "cd c:/projects/mit && ./bootstrap && cd src/specializer/pforth && git rm-symlinks && cd ../../.. && ./configure --enable-silent-rules && make"
   - cmd: C:\msys64\usr\bin\bash.exe -lc "if [[ \"$MSYSTEM\" = \"MSYS\" ]]; then cd c:/projects/mit && make install; fi"
   - cmd: C:\msys64\usr\bin\bash.exe -lc "cd c:/projects/mit && make check"

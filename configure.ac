@@ -178,7 +178,7 @@ AM_CONDITIONAL([USING_PACKAGE_SUFFIX], [test "$gl_package_suffix" = "yes"])
 # pForth tests, run if the pforth source tree is present and Mit is
 # configured compatibly with pForth.
 AM_CONDITIONAL([USING_PFORTH],
-   [test -d src/features/pforth -a "$WORD_BYTES" = 4 -a "$ENDISM" = 0])
+   [test -d src/specializer/pforth -a "$WORD_BYTES" = 4 -a "$ENDISM" = 0])
 
 # Generate output files
 AC_CONFIG_HEADERS([config.h])

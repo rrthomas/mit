@@ -234,7 +234,7 @@ Feature(# Register and stack backtrace
             return (s[0] == '0' && (s[1] == 'X' || s[1] == 'x')) ?
                 strtoul(s + 2, endp, 16) : strtoul(s, endp, 10);
         }
-        '''),
+    '''),
     init=Code('''
         bool backtrace = false;
         unsigned long default_max_backtrace = {};
@@ -300,26 +300,35 @@ Feature(# VM core dump
     ''')
 )
 
-def file_feature(basename):
-    Feature(
-        init=Code('char *{}_file = NULL;'.format(basename)),
-        exit=Code('''
-            if ({basename}_file != NULL) {{
-                FILE *fp = fopen({basename}_file, "w");
-                if (fp == NULL)
-                    warn("could not open file %s", {basename}_file);
-                else {{
-                    if (mit_{basename}_dump(fileno(fp)) == -1)
-                        warn("error writing {basename} data");
-                    else
-                        warn("wrote {basename} data to %s", {basename}_file);
-                    fclose(fp);
-                }}
+Feature(# Optimizing interpreter and profiling
+    top_level=Code('''
+        static void set_run_function(mit_word (*new_run_fn)(mit_state *))
+        {
+            if (run_fn == new_run_fn ||
+                (run_fn == mit_profile_run && new_run_fn == mit_specializer_run))
+                ;
+            else if (run_fn == mit_run)
+                run_fn = new_run_fn;
+            else
+                die("incompatible execution options given; see %s --help", program_name);
+        }
+    '''),
+    init=Code('char *profile_file = NULL;'),
+    exit=Code('''
+        if (profile_file != NULL) {{
+            FILE *fp = fopen(profile_file, "w");
+            if (fp == NULL)
+                warn("could not open file %s", profile_file);
+            else {{
+                if (mit_profile_dump(fileno(fp)) == -1)
+                    warn("error writing profile data");
+                else
+                    warn("wrote profile data to %s", profile_file);
+                fclose(fp);
             }}
-        '''.format(basename=basename))
-    )
-
-file_feature('profile') # Dump specializer profiling data
+        }}
+    '''),
+)
 
 
 # Generate output
@@ -463,17 +472,6 @@ code.extend(initial_code)
 
 code.extend(top_level_code)
 code.extend(Code('''
-static void set_run_function(mit_word (*new_run_fn)(mit_state *))
-{
-    if (run_fn == new_run_fn ||
-        (run_fn == mit_profile_run && new_run_fn == mit_specializer_run))
-        ;
-    else if (run_fn == mit_run)
-        run_fn = new_run_fn;
-    else
-        die("incompatible execution options given; see %s --help", program_name);
-}
-
 int main(int argc, char *argv[])
 {
 ''',
