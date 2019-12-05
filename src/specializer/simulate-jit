@@ -431,60 +431,130 @@ for label in sorted(Label.ALL, key=lambda x: len(x.path)):
 
 # Expand each CompiledLabel into a tree of "if"s.
 
-# Map from CompiledLabel to the corresponding index in `states`.
-# `None` represents the index of the fallback state.
-# We allocate `n` states for a CompiledLabel with `n` right children.
-label_to_state = {None: None}
-num_states = 0
-for label in CompiledLabel.ALL:
-    label_to_state[label] = (
-        num_states if len(label.right_children) > 0 else
-        label_to_state[label.left_ancestor]
-    )
-    num_states += len(label.right_children)
+class State:
+    '''
+    Represents a CompiledLabel and a number of incorrect guesses.
+     - index - an index into `CompiledLabel.ALL`.
+     - case - the number of wrong guesses, which may be viewed as in index
+       into `CompiledLabel.ALL[index].right_children`.
+    '''
+    def __init__(self, index, case):
+        assert case <= len(CompiledLabel.ALL[index].right_children)
+        self.index = index
+        self.case = case
 
-# The code at each state is:
-#   (Path, tuple(Instruction) guess, int c, int w)
-# meaning:
-#   if (next==guess) { execute guess; goto c; } else goto w;
-states = []
-for label in CompiledLabel.ALL:
-    if len(label.right_children) > 0:
-        assert len(states) == label_to_state[label]
-        # Guess each right child.
-        for i, (instruction, child) in enumerate(label.right_children.items()):
-            # Go to `wrong_state` if the next instruction is not `instruction`.
-            if i + 1 < len(label.right_children):
-                # There are more right children to try.
-                wrong_state = len(states) + 1
-            else:
-                wrong_state = label_to_state[label.left_ancestor]
-                # Optimization: skip redundant "if"s.
-                while wrong_state is not None:
-                    (path, guess, c, w) = states[wrong_state]
-                    if guess[0] not in label.right_children:
-                        # Found a guess we haven't already tried.
-                        break
-                    wrong_state = w
-            states.append((
-                label.path,
-                (instruction,),
-                label_to_state[child],
-                wrong_state,
-            ))
+    def __repr__(self):
+        return 'State({}, {})'.format(self.index, self.case)
+
+    def __eq__(self, other):
+        return self.index == other.index and self.case == other.case
+
+    def __hash__(self):
+        return (self.index, self.case).__hash__()
+
+
+# Map from CompiledLabel to the corresponding State.
+label_to_state = {
+    label: State(index, 0)
+    for index, label in enumerate(CompiledLabel.ALL)
+}
+
+
+class Code:
+    '''
+    Represents an action to perform on reaching a State.
+    '''
+    pass
+
+class Goto(Code):
+    '''
+     - target - State - where to go to.
+    '''
+    def __init__(self, target):
+        self.target = target
+
+    def __repr__(self):
+        return 'goto {}'.format(self.target)
+
+class If(Code):
+    '''
+     - path - Path - shortest Path from the root to this State. Used to decide
+       the calling convention.
+     - guess - tuple(Instruction) - likely continuation.
+     - c - State - where to go if `guess` is correct.
+     - w - State - where to go if `guess` is wrong.
+    '''
+    def __init__(self, path, guess, c, w):
+        self.path = path
+        self.guess = guess
+        self.c = c
+        self.w = w
+
+    def __repr__(self):
+        return 'if {} goto {} else goto {}'.format(self.guess, self.c, self.w)
+
+
+state_to_code = {}
+for index, label in enumerate(CompiledLabel.ALL):
+    assert label_to_state[label].index == index
+    # Guess each right child.
+    for i, (instruction, child) in enumerate(label.right_children.items()):
+        state_to_code[State(index, i)] = If(
+            label.path,
+            (instruction,),
+            label_to_state.get(child),
+            State(index, i + 1),
+        )
+    state_to_code[State(index, len(label.right_children))] = Goto(
+        label_to_state.get(label.left_ancestor),
+    )
 
 
 # Tension branches.
 
-# TODO: Factor this out of the previous step.
+def tension(state):
+    '''
+    If tempted to jump to `state`, returns a better State to jump to.
+    If the returned State is not `None`, the code there will always be an If.
+     - state - State
+    '''
+    if state is None:
+        rejects = set()
+    else:
+        label = CompiledLabel.ALL[state.index]
+        if state.case < len(label.right_children):
+            # The next guess will definitely be useful, so there's no
+            # point in computing `rejects` accurately.
+            rejects = set()
+        else:
+            # All guesses for this CompiledLabel were wrong.
+            # Don't make them again.
+            rejects = set(label.right_children.keys())
+    while state is not None:
+        code = state_to_code[state]
+        if isinstance(code, Goto):
+            # Follow the Goto.
+            state = code.target
+        elif isinstance(code, If):
+            if code.guess[0] in rejects:
+                # "If" condition is always `false`.
+                # Follow the "else" branch.
+                state = code.w
+            else:
+                # We've found something worth executing.
+                break
+        else:
+            assert False, "Unknown Code instance"
+    return state
+
+state_to_code = {
+    state: If(code.path, code.guess, tension(code.c), tension(code.w))
+    for state, code in state_to_code.items()
+    if isinstance(code, If)
+}
 
 
 # Number reachable states.
-
-# TODO: Make `states` a dictionary from State (TODO) to (guess, c, w).
-# For now, State is just int.
-ROOT_STATE = 0
-states = dict(enumerate(states))
 
 reachable_states = []
 state_to_number = {s: n for n, s in enumerate(reachable_states)} # Invariant.
@@ -500,14 +570,14 @@ def enqueue(state):
         reachable_states.append(state)
         state_to_number[state] = number
 
-enqueue(ROOT_STATE) # Root state.
+enqueue(State(0, 0)) # Root state.
 
 done = 0 # Not including `None`.
 while done < len(reachable_states):
     state = reachable_states[done]
-    (path, guess, c, w) = states[state]
-    enqueue(c)
-    enqueue(w)
+    code = state_to_code[state]
+    enqueue(code.c)
+    enqueue(code.w)
     done += 1
 
 
@@ -525,15 +595,15 @@ while done < len(reachable_states):
 # )]
 
 def row_for_state(state):
-    (path, guess, c, w) = states[state]
+    code = state_to_code[state]
     return (
-        path.state.tos_constant,
-        path.state.cached_depth(),
-        path.state.checked_depth(),
-        ' '.join(i.name for i in path),
-        ' '.join(i.name for i in guess),
-        None if c is None else state_to_number[c],
-        None if w is None else state_to_number[w],
+        code.path.state.tos_constant,
+        code.path.state.cached_depth(),
+        code.path.state.checked_depth(),
+        ' '.join(i.name for i in code.path),
+        ' '.join(i.name for i in code.guess),
+        state_to_number.get(code.c),
+        state_to_number.get(code.w),
     )
 
 with open(args.labels_filename, 'wb') as f:
