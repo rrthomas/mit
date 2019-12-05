@@ -559,26 +559,22 @@ state_to_code = {
 reachable_states = []
 state_to_number = {s: n for n, s in enumerate(reachable_states)} # Invariant.
 
-def enqueue(state):
+def walk(state):
     '''
-    Allocate a number for a state, if necessary, preserving the invariant.
+    Ensures all States reachable from `state` are numbered.
     '''
-    if state is not None and state not in state_to_number:
-        number = len(reachable_states)
-        if args.verbose:
-            print('Allocating number {} for state {}'.format(number, state))
-        reachable_states.append(state)
-        state_to_number[state] = number
-
-enqueue(State(0, 0)) # Root state.
-
-done = 0 # Not including `None`.
-while done < len(reachable_states):
-    state = reachable_states[done]
+    if state is None or state in state_to_number:
+        return
+    number = len(reachable_states)
+    if args.verbose:
+        print('Allocating number {} for state {}'.format(number, state))
+    reachable_states.append(state)
+    state_to_number[state] = number
     code = state_to_code[state]
-    enqueue(code.c)
-    enqueue(code.w)
-    done += 1
+    walk(code.c)
+    walk(code.w)
+
+walk(State(0, 0))    
 
 
 # Dump to a file.
