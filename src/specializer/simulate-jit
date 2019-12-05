@@ -351,7 +351,8 @@ def write_svg(filename):
         print("Wrote '{}'".format(filename))
 
 
-# Diagnostic output
+# Diagnostic output.
+
 if args.verbose:
     print()
     label_strs = sorted(
@@ -422,6 +423,12 @@ for label in sorted(Label.ALL, key=lambda x: len(x.path)):
             label_to_compiled[left_ancestor],
         )
 
+
+# Guess multiple instructions at a time.
+
+# TODO.
+
+
 # Expand each CompiledLabel into a tree of "if"s.
 
 # Map from CompiledLabel to the corresponding index in `states`.
@@ -466,26 +473,70 @@ for label in CompiledLabel.ALL:
                 wrong_state,
             ))
 
+
+# Tension branches.
+
+# TODO: Factor this out of the previous step.
+
+
+# Number reachable states.
+
+# TODO: Make `states` a dictionary from State (TODO) to (guess, c, w).
+# For now, State is just int.
+ROOT_STATE = 0
+states = dict(enumerate(states))
+
+reachable_states = []
+state_to_number = {s: n for n, s in enumerate(reachable_states)} # Invariant.
+
+def enqueue(state):
+    '''
+    Allocate a number for a state, if necessary, preserving the invariant.
+    '''
+    if state is not None and state not in state_to_number:
+        number = len(reachable_states)
+        if args.verbose:
+            print('Allocating number {} for state {}'.format(number, state))
+        reachable_states.append(state)
+        state_to_number[state] = number
+
+enqueue(ROOT_STATE) # Root state.
+
+done = 0 # Not including `None`.
+while done < len(reachable_states):
+    state = reachable_states[done]
+    (path, guess, c, w) = states[state]
+    enqueue(c)
+    enqueue(w)
+    done += 1
+
+
 # Dump to a file.
-labels_file = [(
-    path.state.tos_constant,
-    path.state.cached_depth(),
-    path.state.checked_depth(),
-    ' '.join(i.name for i in path),
-    ' '.join(i.name for i in guess),
-    c,
-    w,
-) for (path, guess, c, w) in states]
+
+# File format is Pickle, with the following contents:
+# [(
+#     tos_constant (int?),
+#     cached_depth (int),
+#     checked_depth (int),
+#     path_instruction_sequence (str, space-separated),
+#     guess_instruction_sequence (str, space-separated),
+#     if_correct (int?),
+#     if_wrong (int?),
+# )]
+
+def row_for_state(state):
+    (path, guess, c, w) = states[state]
+    return (
+        path.state.tos_constant,
+        path.state.cached_depth(),
+        path.state.checked_depth(),
+        ' '.join(i.name for i in path),
+        ' '.join(i.name for i in guess),
+        None if c is None else state_to_number[c],
+        None if w is None else state_to_number[w],
+    )
+
 with open(args.labels_filename, 'wb') as f:
-    # [(
-    #     tos_constant (int?),
-    #     cached_depth (int),
-    #     checked_depth (int),
-    #     path_instruction_sequence (str, space-separated),
-    #     guess_instruction_sequence (str, space-separated),
-    #     if_correct (int?),
-    #     if_wrong (int?)
-    # )]
-    pickle.dump(labels_file, file=f)
+    pickle.dump([row_for_state(s) for s in reachable_states], file=f)
 if args.verbose:
     print('Wrote {}'.format(args.labels_filename))
