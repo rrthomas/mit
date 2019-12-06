@@ -379,6 +379,15 @@ if args.svg_file is not None:
 
 # Filter out the Labels we don't want to compile.
 
+# The set of Instructions that might modify the `ir` register.
+# We cannot guess beyond such an instruction.
+GUESS_LIMITING = frozenset([
+    Instruction.NEXT,
+    Instruction.JUMP,
+    Instruction.JUMPZ,
+    Instruction.CALL,
+])
+
 class CompiledLabel:
     '''
     Represents a Label that we want to compile.
@@ -409,6 +418,26 @@ class CompiledLabel:
             ' '.join(instruction.name for instruction in self.path)
         )
 
+    def guesses(self):
+        '''
+        Yields `(guess, label)` where `guess` is a tuple of Instruction and
+        `label` is a CompiledLabel.
+        '''
+        for instruction, label in self.right_children.items():
+            guess = [instruction]
+            while label is not None and guess[-1] not in GUESS_LIMITING:
+                if len(label.right_children) == 0:
+                    # Shrink.
+                    label = label.left_ancestor
+                elif len(label.right_children) == 1:
+                    for instruction, new_label in label.right_children.items():
+                        guess.append(instruction)
+                        label = new_label
+                        break
+                else:
+                    break
+            yield tuple(guess), label
+
 
 # Label to CompiledLabel.
 label_to_compiled = {None: None}
@@ -422,11 +451,6 @@ for label in sorted(Label.ALL, key=lambda x: len(x.path)):
             label_to_compiled[label.right_parent],
             label_to_compiled[left_ancestor],
         )
-
-
-# Guess multiple instructions at a time.
-
-# TODO.
 
 
 # Expand each CompiledLabel into a tree of "if"s.
@@ -471,6 +495,7 @@ class Goto(Code):
      - target - State - where to go to.
     '''
     def __init__(self, target):
+        assert target is None or isinstance(target, State)
         self.target = target
 
     def __repr__(self):
@@ -485,6 +510,10 @@ class If(Code):
      - w - State - where to go if `guess` is wrong.
     '''
     def __init__(self, path, guess, c, w):
+        assert isinstance(path, Path)
+        assert isinstance(guess, tuple)
+        assert c is None or isinstance(c, State)
+        assert w is None or isinstance(w, State)
         self.path = path
         self.guess = guess
         self.c = c
@@ -494,18 +523,21 @@ class If(Code):
         return 'if {} goto {} else goto {}'.format(self.guess, self.c, self.w)
 
 
+# For a CompiledLabel with `n` right_children, make Codes for `n+1` States.
 state_to_code = {}
 for index, label in enumerate(CompiledLabel.ALL):
     assert label_to_state[label].index == index
     # Guess each right child.
-    for i, (instruction, child) in enumerate(label.right_children.items()):
+    i = 0
+    for (guess, child) in label.guesses():
         state_to_code[State(index, i)] = If(
             label.path,
-            (instruction,),
+            guess,
             label_to_state.get(child),
             State(index, i + 1),
         )
-    state_to_code[State(index, len(label.right_children))] = Goto(
+        i += 1
+    state_to_code[State(index, i)] = Goto(
         label_to_state.get(label.left_ancestor),
     )
 
@@ -518,25 +550,21 @@ def tension(state):
     If the returned State is not `None`, the code there will always be an If.
      - state - State
     '''
-    if state is None:
-        rejects = set()
-    else:
-        label = CompiledLabel.ALL[state.index]
-        if state.case < len(label.right_children):
-            # The next guess will definitely be useful, so there's no
-            # point in computing `rejects` accurately.
-            rejects = set()
-        else:
-            # All guesses for this CompiledLabel were wrong.
-            # Don't make them again.
-            rejects = set(label.right_children.keys())
+    rejects = set()
+    if state is not None:
+        it = CompiledLabel.ALL[state.index].guesses()
+        for _ in range(state.case):
+            rejects.add(next(it)[0])
     while state is not None:
         code = state_to_code[state]
         if isinstance(code, Goto):
             # Follow the Goto.
             state = code.target
         elif isinstance(code, If):
-            if code.guess[0] in rejects:
+            if any(
+                code.guess[:i] in rejects
+                for i in range(1, len(code.guess) + 1)
+            ):
                 # "If" condition is always `false`.
                 # Follow the "else" branch.
                 state = code.w
