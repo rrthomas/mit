@@ -351,7 +351,8 @@ def write_svg(filename):
         print("Wrote '{}'".format(filename))
 
 
-# Diagnostic output
+# Diagnostic output.
+
 if args.verbose:
     print()
     label_strs = sorted(
@@ -377,6 +378,15 @@ if args.svg_file is not None:
 
 
 # Filter out the Labels we don't want to compile.
+
+# The set of Instructions that might modify the `ir` register.
+# We cannot guess beyond such an instruction.
+GUESS_LIMITING = frozenset([
+    Instruction.NEXT,
+    Instruction.JUMP,
+    Instruction.JUMPZ,
+    Instruction.CALL,
+])
 
 class CompiledLabel:
     '''
@@ -408,6 +418,26 @@ class CompiledLabel:
             ' '.join(instruction.name for instruction in self.path)
         )
 
+    def guesses(self):
+        '''
+        Yields `(guess, label)` where `guess` is a tuple of Instruction and
+        `label` is a CompiledLabel.
+        '''
+        for instruction, label in self.right_children.items():
+            guess = [instruction]
+            while label is not None and guess[-1] not in GUESS_LIMITING:
+                if len(label.right_children) == 0:
+                    # Shrink.
+                    label = label.left_ancestor
+                elif len(label.right_children) == 1:
+                    for instruction, new_label in label.right_children.items():
+                        guess.append(instruction)
+                        label = new_label
+                        break
+                else:
+                    break
+            yield tuple(guess), label
+
 
 # Label to CompiledLabel.
 label_to_compiled = {None: None}
@@ -422,70 +452,185 @@ for label in sorted(Label.ALL, key=lambda x: len(x.path)):
             label_to_compiled[left_ancestor],
         )
 
+
 # Expand each CompiledLabel into a tree of "if"s.
 
-# Map from CompiledLabel to the corresponding index in `states`.
-# `None` represents the index of the fallback state.
-# We allocate `n` states for a CompiledLabel with `n` right children.
-label_to_state = {None: None}
-num_states = 0
-for label in CompiledLabel.ALL:
-    label_to_state[label] = (
-        num_states if len(label.right_children) > 0 else
-        label_to_state[label.left_ancestor]
-    )
-    num_states += len(label.right_children)
+class State:
+    '''
+    Represents a CompiledLabel and a number of incorrect guesses.
+     - index - an index into `CompiledLabel.ALL`.
+     - case - the number of wrong guesses, which may be viewed as in index
+       into `CompiledLabel.ALL[index].right_children`.
+    '''
+    def __init__(self, index, case):
+        assert case <= len(CompiledLabel.ALL[index].right_children)
+        self.index = index
+        self.case = case
 
-# The code at each state is:
-#   (Path, tuple(Instruction) guess, int c, int w)
-# meaning:
-#   if (next==guess) { execute guess; goto c; } else goto w;
-states = []
-for label in CompiledLabel.ALL:
-    if len(label.right_children) > 0:
-        assert len(states) == label_to_state[label]
-        # Guess each right child.
-        for i, (instruction, child) in enumerate(label.right_children.items()):
-            # Go to `wrong_state` if the next instruction is not `instruction`.
-            if i + 1 < len(label.right_children):
-                # There are more right children to try.
-                wrong_state = len(states) + 1
+    def __repr__(self):
+        return 'State({}, {})'.format(self.index, self.case)
+
+    def __eq__(self, other):
+        return self.index == other.index and self.case == other.case
+
+    def __hash__(self):
+        return (self.index, self.case).__hash__()
+
+
+# Map from CompiledLabel to the corresponding State.
+label_to_state = {
+    label: State(index, 0)
+    for index, label in enumerate(CompiledLabel.ALL)
+}
+
+
+class Code:
+    '''
+    Represents an action to perform on reaching a State.
+    '''
+    pass
+
+class Goto(Code):
+    '''
+     - target - State - where to go to.
+    '''
+    def __init__(self, target):
+        assert target is None or isinstance(target, State)
+        self.target = target
+
+    def __repr__(self):
+        return 'goto {}'.format(self.target)
+
+class If(Code):
+    '''
+     - path - Path - shortest Path from the root to this State. Used to decide
+       the calling convention.
+     - guess - tuple(Instruction) - likely continuation.
+     - c - State - where to go if `guess` is correct.
+     - w - State - where to go if `guess` is wrong.
+    '''
+    def __init__(self, path, guess, c, w):
+        assert isinstance(path, Path)
+        assert isinstance(guess, tuple)
+        assert c is None or isinstance(c, State)
+        assert w is None or isinstance(w, State)
+        self.path = path
+        self.guess = guess
+        self.c = c
+        self.w = w
+
+    def __repr__(self):
+        return 'if {} goto {} else goto {}'.format(self.guess, self.c, self.w)
+
+
+# For a CompiledLabel with `n` right_children, make Codes for `n+1` States.
+state_to_code = {}
+for index, label in enumerate(CompiledLabel.ALL):
+    assert label_to_state[label].index == index
+    # Guess each right child.
+    i = 0
+    for (guess, child) in label.guesses():
+        state_to_code[State(index, i)] = If(
+            label.path,
+            guess,
+            label_to_state.get(child),
+            State(index, i + 1),
+        )
+        i += 1
+    state_to_code[State(index, i)] = Goto(
+        label_to_state.get(label.left_ancestor),
+    )
+
+
+# Tension branches.
+
+def tension(state):
+    '''
+    If tempted to jump to `state`, returns a better State to jump to.
+    If the returned State is not `None`, the code there will always be an If.
+     - state - State
+    '''
+    rejects = set()
+    if state is not None:
+        it = CompiledLabel.ALL[state.index].guesses()
+        for _ in range(state.case):
+            rejects.add(next(it)[0])
+    while state is not None:
+        code = state_to_code[state]
+        if isinstance(code, Goto):
+            # Follow the Goto.
+            state = code.target
+        elif isinstance(code, If):
+            if any(
+                code.guess[:i] in rejects
+                for i in range(1, len(code.guess) + 1)
+            ):
+                # "If" condition is always `false`.
+                # Follow the "else" branch.
+                state = code.w
             else:
-                wrong_state = label_to_state[label.left_ancestor]
-                # Optimization: skip redundant "if"s.
-                while wrong_state is not None:
-                    (path, guess, c, w) = states[wrong_state]
-                    if guess[0] not in label.right_children:
-                        # Found a guess we haven't already tried.
-                        break
-                    wrong_state = w
-            states.append((
-                label.path,
-                (instruction,),
-                label_to_state[child],
-                wrong_state,
-            ))
+                # We've found something worth executing.
+                break
+        else:
+            assert False, "Unknown Code instance"
+    return state
+
+state_to_code = {
+    state: If(code.path, code.guess, tension(code.c), tension(code.w))
+    for state, code in state_to_code.items()
+    if isinstance(code, If)
+}
+
+
+# Number reachable states.
+
+reachable_states = []
+state_to_number = {s: n for n, s in enumerate(reachable_states)} # Invariant.
+
+def walk(state):
+    '''
+    Ensures all States reachable from `state` are numbered.
+    '''
+    if state is None or state in state_to_number:
+        return
+    number = len(reachable_states)
+    if args.verbose:
+        print('Allocating number {} for state {}'.format(number, state))
+    reachable_states.append(state)
+    state_to_number[state] = number
+    code = state_to_code[state]
+    walk(code.c)
+    walk(code.w)
+
+walk(State(0, 0))    
+
 
 # Dump to a file.
-labels_file = [(
-    path.state.tos_constant,
-    path.state.cached_depth(),
-    path.state.checked_depth(),
-    ' '.join(i.name for i in path),
-    ' '.join(i.name for i in guess),
-    c,
-    w,
-) for (path, guess, c, w) in states]
+
+# File format is Pickle, with the following contents:
+# [(
+#     tos_constant (int?),
+#     cached_depth (int),
+#     checked_depth (int),
+#     path_instruction_sequence (str, space-separated),
+#     guess_instruction_sequence (str, space-separated),
+#     if_correct (int?),
+#     if_wrong (int?),
+# )]
+
+def row_for_state(state):
+    code = state_to_code[state]
+    return (
+        code.path.state.tos_constant,
+        code.path.state.cached_depth(),
+        code.path.state.checked_depth(),
+        ' '.join(i.name for i in code.path),
+        ' '.join(i.name for i in code.guess),
+        state_to_number.get(code.c),
+        state_to_number.get(code.w),
+    )
+
 with open(args.labels_filename, 'wb') as f:
-    # [(
-    #     tos_constant (int?),
-    #     cached_depth (int),
-    #     checked_depth (int),
-    #     path_instruction_sequence (str, space-separated),
-    #     guess_instruction_sequence (str, space-separated),
-    #     if_correct (int?),
-    #     if_wrong (int?)
-    # )]
-    pickle.dump(labels_file, file=f)
+    pickle.dump([row_for_state(s) for s in reachable_states], file=f)
 if args.verbose:
     print('Wrote {}'.format(args.labels_filename))
