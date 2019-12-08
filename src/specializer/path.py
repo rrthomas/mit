@@ -85,7 +85,7 @@ class State:
 
     def cached_depth(self):
         '''
-        Returns the number of stack items that are known to be chacheable.
+        Returns the number of stack items that are known to be cacheable.
         '''
         return self.stack_pos - self.stack_min
 
