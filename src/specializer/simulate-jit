@@ -10,7 +10,7 @@
 import sys, functools, heapq, argparse, random, pickle
 from pprint import pprint
 
-from mit_core.vm_data import Instruction
+from mit_core.spec import Instruction
 from path import Path
 import mit_profile
 

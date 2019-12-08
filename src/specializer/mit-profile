@@ -10,7 +10,7 @@
 import argparse, pickle, json
 from pprint import pprint # Convenience for running with `python -i`.
 
-from mit_core.vm_data import Instruction
+from mit_core.spec import Instruction
 
 
 # Command-line arguments.

@@ -12,7 +12,7 @@ RISK.
 import re, functools
 
 from mit_core.code_util import Code
-from mit_core.vm_data import Instruction
+from mit_core.spec import Instruction
 from mit_core.instruction import InstructionEnum
 from mit_core.params import opcode_bit, word_bit
 
