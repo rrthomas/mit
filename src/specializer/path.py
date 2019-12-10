@@ -39,8 +39,10 @@ def _gen_specialized_instruction(instruction, tos_constant):
     code.extend(instruction.code)
     return (
         instruction.opcode,
-        _replace_items(instruction.effect.args, replacement),
-        _replace_items(instruction.effect.results, replacement),
+        (
+            _replace_items(instruction.effect.args, replacement),
+            _replace_items(instruction.effect.results, replacement),
+        ),
         code,
         instruction.terminal,
     )

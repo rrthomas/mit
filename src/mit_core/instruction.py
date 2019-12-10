@@ -30,19 +30,19 @@ class InstructionEnum(Enum):
 
     There are special macros available to instructions; see run.h.
     '''
-    def __init__(self, opcode, args, results, code, terminal=False):
+    def __init__(self, opcode, effect, code, terminal=False):
         '''
-          - args, results - lists of str, acceptable to StackPicture.of().
-            If both are `None`, then the instruction has an arbitrary stack
+          - effect - tuple of two lists of str, acceptable to StackPicture.of(),
+            or `None`, meaning that the instruction has an arbitrary stack
             effect.
         '''
         self.opcode = opcode
-        if args is None or results is None:
-            assert args is None and results is None
+        if effect is None:
             self.effect = None
         else:
-            self.effect = StackEffect(StackPicture.of(args),
-                                      StackPicture.of(results))
+            assert type(effect) is tuple and len(effect) == 2
+            self.effect = StackEffect(StackPicture.of(effect[0]),
+                                      StackPicture.of(effect[1]))
         assert isinstance(code, Code)
         self.code = code
         self.terminal = terminal

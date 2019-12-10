@@ -44,7 +44,7 @@ def instruction_enum(enum_name, docstring, spec, code):
         enum_name,
         ((
             name,
-            (i['opcode'], i['args'], i['results'], code[name],
+            (i['opcode'], (i['args'], i['results']), code[name],
              i.get('terminal', False)),
         ) for name, i in spec.items())
     ))
