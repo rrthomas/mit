@@ -167,10 +167,10 @@ def gen_case(instruction, cache_state):
     # Assert that we have a sufficiently simple Instruction.
     assert not(instruction.is_variadic) and all(
         item.size == Size(1)
-        for item in (instruction.args.items + instruction.results.items)
+        for item in instruction.effect.by_name.values()
     ), instruction
-    num_args = len(instruction.args.items)
-    num_results = len(instruction.results.items)
+    num_args = len(instruction.effect.args.items)
+    num_results = len(instruction.effect.results.items)
     # Declare C variables for args and results.
     code.extend(Code(*[
         'mit_word {}{};'.format(name,
@@ -180,7 +180,7 @@ def gen_case(instruction, cache_state):
         for name, item in instruction.effect.by_name.items()
     ]))
     # Load the arguments into their C variables.
-    code.extend(cache_state.load_args(instruction.args))
+    code.extend(cache_state.load_args(instruction.effect.args))
     # Inline `instruction.code`.
     # Note: `S->stack_depth` and `cache_state` must be correct for RAISE().
     code.extend(instruction.code)
@@ -190,5 +190,5 @@ def gen_case(instruction, cache_state):
     code.extend(cache_state.add(num_results))
     code.append('S->stack_depth += {};'.format(num_results))
     # Store the results from their C variables.
-    code.extend(cache_state.store_results(instruction.results))
+    code.extend(cache_state.store_results(instruction.effect.results))
     return code

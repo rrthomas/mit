@@ -20,7 +20,6 @@ class InstructionEnum(Enum):
     VM instruction instruction descriptor.
 
      - opcode - int - opcode number.
-     - args, results - StackPicture.
      - effect - StackEffect or None.
      - code - Code.
      - terminal - bool - this instruction is terminal: `ir` must be zero on
@@ -40,17 +39,14 @@ class InstructionEnum(Enum):
         self.opcode = opcode
         if args is None or results is None:
             assert args is None and results is None
-            self.args = None
-            self.results = None
             self.effect = None
         else:
-            self.args = StackPicture.of(args)
-            self.results = StackPicture.of(results)
-            self.effect = StackEffect(self.args, self.results)
+            self.effect = StackEffect(StackPicture.of(args),
+                                      StackPicture.of(results))
         assert isinstance(code, Code)
         self.code = code
         self.terminal = terminal
         self.is_variadic = (
-            self.args is not None and
-            any(item.name == 'ITEMS' for item in self.args.items)
+            self.effect is not None and
+            any(item.name == 'ITEMS' for item in self.effect.args.items)
         )

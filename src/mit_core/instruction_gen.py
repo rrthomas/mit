@@ -37,7 +37,7 @@ def gen_case(instruction):
         count = effect.args.by_name.get('COUNT')
         if count is not None:
             # If we have COUNT, check its stack position is valid, and load it.
-            # We actually check `effects.args.size.size` (more than we need),
+            # We actually check `effect.args.size.size` (more than we need),
             # because this check will be generated anyway by the next
             # check_underflow call, so the compiler can elide one check.
             code.extend(check_underflow(Size(effect.args.size.size)))

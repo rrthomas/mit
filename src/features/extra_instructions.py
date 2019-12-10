@@ -289,8 +289,8 @@ class Library(InstructionEnum):
         return list(set(self.extra_types +
             [item.type
              for function in self.library
-             if function.args is not None or function.results is not None
-             for item in function.args.items + function.results.items
+             if function.effect is not None
+             for item in function.effect.by_name.values()
             ]
         ))
 

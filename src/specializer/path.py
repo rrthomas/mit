@@ -39,8 +39,8 @@ def _gen_specialized_instruction(instruction, tos_constant):
     code.extend(instruction.code)
     return (
         instruction.opcode,
-        _replace_items(instruction.args, replacement),
-        _replace_items(instruction.results, replacement),
+        _replace_items(instruction.effect.args, replacement),
+        _replace_items(instruction.effect.results, replacement),
         code,
         instruction.terminal,
     )
@@ -127,10 +127,10 @@ class State:
         elif instruction == Instruction.NEXT:
             tos_constant = self.tos_constant
         # Simulate popping arguments.
-        stack_pos = self.stack_pos - len(instruction.args.items)
+        stack_pos = self.stack_pos - len(instruction.effect.args.items)
         stack_min = min(self.stack_min, stack_pos)
         # Simulate pushing results.
-        stack_pos += len(instruction.results.items)
+        stack_pos += len(instruction.effect.results.items)
         stack_max = max(self.stack_max, stack_pos)
         # Simulate consuming `ir`.
         i_bits = self.i_bits + opcode_bit
@@ -164,7 +164,7 @@ class State:
         if instruction.is_variadic:
             # Variadic instruction. We can optimize only if we know `COUNT`.
             return (
-                instruction.args.items[-1].name == 'COUNT' and
+                instruction.effect.args.items[-1].name == 'COUNT' and
                 self.tos_constant is not None
             )
         else:
