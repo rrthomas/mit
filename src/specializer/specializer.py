@@ -10,6 +10,7 @@ RISK.
 '''
 
 from mit_core.code_util import Code
+from mit_core.stack import Size
 
 
 # TODO: Unify with path.State?
@@ -72,8 +73,8 @@ class CacheState:
          - args - list of str.
         '''
         return Code(*[
-            '{} = {};'.format(name, self.lvalue(pos))
-            for pos, name in enumerate(reversed(args))
+            '{} = {};'.format(item.name, self.lvalue(pos))
+            for pos, item in enumerate(reversed(args.items))
         ])
 
     def store_results(self, results):
@@ -84,8 +85,8 @@ class CacheState:
          - results - list of str.
         '''
         return Code(*[
-            '{} = {};'.format(self.lvalue(pos), name)
-            for pos, name in enumerate(reversed(results))
+            '{} = {};'.format(self.lvalue(pos), item.name)
+            for pos, item in enumerate(reversed(results.items))
         ])
 
     def add(self, depth_change):
@@ -164,16 +165,19 @@ def gen_case(instruction, cache_state):
     '''
     code = Code()
     # Assert that we have a sufficiently simple Instruction.
-    assert all(
-        name != 'ITEMS' and ':' not in name
-        for name in instruction.args + instruction.results
+    assert not(instruction.is_variadic) and all(
+        item.size == Size(1)
+        for item in (instruction.args.items + instruction.results.items)
     ), instruction
-    num_args = len(instruction.args)
-    num_results = len(instruction.results)
+    num_args = len(instruction.args.items)
+    num_results = len(instruction.results.items)
     # Declare C variables for args and results.
     code.extend(Code(*[
-        'mit_word {};'.format(name)
-        for name in set(instruction.args + instruction.results)
+        'mit_word {}{};'.format(name,
+                                ' = {}'.format(item.expr)
+                                if item.expr is not None
+                                else '')
+        for name, item in instruction.effect.by_name.items()
     ]))
     # Load the arguments into their C variables.
     code.extend(cache_state.load_args(instruction.args))

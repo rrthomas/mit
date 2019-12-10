@@ -14,12 +14,17 @@
 
 #include "state.h"
 
+
+// RAISE(error): the code should RAISE any error before writing any state,
+// so that if an error is raised, the state of the VM is not changed.
 #define RAISE(code)                                           \
     do {                                                      \
         error = (code);                                       \
         goto error;                                           \
     } while (0)
 
+// CHECK_ALIGNED(addr): check a VM address is valid, raising an error if
+// not.
 #define CHECK_ALIGNED(addr)                                   \
     if (!is_aligned((addr), MIT_SIZE_WORD)) {                 \
         S->bad = (addr);                                      \
@@ -44,6 +49,8 @@ static mit_word _fetch_pc(mit_state *S)
 }
 #pragma GCC diagnostic pop
 
+// FETCH_PC(w): fetch the word at `pc`, assign it to `w`, and increment `pc`
+// by a word.
 #define FETCH_PC(w)                                             \
     if (unlikely(S->pc >= S->memory_bytes)) {                   \
         S->bad = S->pc;                                         \
@@ -52,6 +59,7 @@ static mit_word _fetch_pc(mit_state *S)
         (w) = (_fetch_pc(S));                                   \
     }
 
+// Perform the action of NEXT.
 #define DO_NEXT  FETCH_PC(S->ir)
 
 #endif

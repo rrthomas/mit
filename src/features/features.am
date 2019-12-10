@@ -39,7 +39,7 @@ libmitfeatures@PACKAGE_SUFFIX@_la_SOURCES += %D%/extra-instructions.c
 	$(GREP) "^#define SIZEOF" config.log | cut -d " " -f 3 | \
 		( $(PYTHON_WITH_PATH) $(abs_srcdir)/%D%/collate-type-sizes > type_sizes.py ) || ( rm -f type-sizes.ac type-sizes type_sizes.py; exit 1 )
 
-%D%/extra-instructions.c: %D%/gen-extra-instructions %D%/mit/features.h %D%/mit/extra-opcodes.h %D%/extra_instructions.py mit_core/instruction.py mit_core/instruction_gen.py %D%/type_sizes.py
+%D%/extra-instructions.c: %D%/gen-extra-instructions %D%/mit/features.h %D%/mit/extra-opcodes.h %D%/extra_instructions.py mit_core/instruction.py mit_core/stack.py mit_core/instruction_gen.py %D%/type_sizes.py
 	cd %D% && \
 	$(PYTHON_WITH_PATH) $(abs_srcdir)/%D%/gen-extra-instructions > extra-instructions.c || ( rm -f extra-instructions.c; exit 1 )
 

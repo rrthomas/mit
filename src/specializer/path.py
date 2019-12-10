@@ -22,11 +22,11 @@ def _replace_items(picture, replacement):
     Replaces 'ITEMS' with `replacement` in `picture`
     '''
     ret = []
-    for item in picture:
-        if item == 'ITEMS':
+    for item in picture.items:
+        if item.size.count != 0:
             ret.extend(replacement)
         else:
-            ret.append(item)
+            ret.append(item.name)
     return ret
 
 def _gen_specialized_instruction(instruction, tos_constant):
@@ -51,7 +51,7 @@ SpecializedInstruction = InstructionEnum('SpecializedInstruction', {
         tos_constant=tos_constant,
     ): _gen_specialized_instruction(instruction, tos_constant)
     for instruction in Instruction
-    if 'ITEMS' in instruction.args
+    if instruction.is_variadic
     for tos_constant in range(4)
 })
 
@@ -115,7 +115,7 @@ class State:
            SpecializedInstruction.
         '''
         assert isinstance(instruction, InstructionEnum)
-        if 'ITEMS' in instruction.args or 'ITEMS' in instruction.results:
+        if instruction.is_variadic:
             # TODO: Use a more specific exception
             raise ValueError("non-constant variadic instruction")
         # Update `tos_constant`.
@@ -127,12 +127,12 @@ class State:
         else:
             tos_constant = None
         # Simulate popping arguments.
-        stack_pos = self.stack_pos - len(instruction.args)
+        stack_pos = self.stack_pos - len(instruction.args.items)
         stack_min = min(self.stack_min, stack_pos)
         # Simulate pushing results.
-        stack_pos += len(instruction.results)
+        stack_pos += len(instruction.results.items)
         stack_max = max(self.stack_max, stack_pos)
-        # Simulate consuming ir.
+        # Simulate consuming `ir`.
         i_bits = self.i_bits + opcode_bit
         if instruction.terminal:
             i_bits = 0
@@ -161,10 +161,10 @@ class State:
         if instruction.opcode & mask_remaining != instruction.opcode:
             # There's no way of encoding the instruction.
             return False
-        if 'ITEMS' in instruction.args or 'ITEMS' in instruction.results:
+        if instruction.is_variadic:
             # Variadic instruction. We can optimize only if we know `COUNT`.
             return (
-                instruction.args[-1] == 'COUNT' and
+                instruction.args.items[-1].name == 'COUNT' and
                 self.tos_constant is not None
             )
         else:

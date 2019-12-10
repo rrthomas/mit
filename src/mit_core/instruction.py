@@ -12,16 +12,16 @@ RISK.
 from enum import Enum
 
 from .code_util import Code
+from .stack import StackPicture, StackEffect
 
 
 class InstructionEnum(Enum):
     '''
     VM instruction instruction descriptor.
 
-     - opcode - int - opcode number
-     - args, results - lists of str, acceptable to StackPicture.of().
-       If both are `None`, then the instruction has an arbitrary stack
-       effect.
+     - opcode - int - opcode number.
+     - args, results - StackPicture.
+     - effect - StackEffect or None.
      - code - Code.
      - terminal - bool - this instruction is terminal: `ir` must be zero on
        entry.
@@ -29,25 +29,28 @@ class InstructionEnum(Enum):
     C variables are created for the arguments and results; the arguments are
     popped and results pushed.
 
-    Macros available to instructions (see run.h):
-
-    RAISE(error): the code should RAISE any error before writing any state,
-    so that if an error is raised, the state of the VM is not changed.
-
-    CHECK_ALIGNED(addr): check a VM address is valid, raising an error if
-    not.
-
-    FETCH_PC(w): fetch the word at `pc`, assign it to `w`, and increment `pc`
-    by a word.
-
-    DO_NEXT: perform the action of NEXT.
+    There are special macros available to instructions; see run.h.
     '''
     def __init__(self, opcode, args, results, code, terminal=False):
+        '''
+          - args, results - lists of str, acceptable to StackPicture.of().
+            If both are `None`, then the instruction has an arbitrary stack
+            effect.
+        '''
         self.opcode = opcode
         if args is None or results is None:
             assert args is None and results is None
+            self.args = None
+            self.results = None
+            self.effect = None
+        else:
+            self.args = StackPicture.of(args)
+            self.results = StackPicture.of(results)
+            self.effect = StackEffect(self.args, self.results)
         assert isinstance(code, Code)
-        self.args = args
-        self.results = results
         self.code = code
         self.terminal = terminal
+        self.is_variadic = (
+            self.args is not None and
+            any(item.name == 'ITEMS' for item in self.args.items)
+        )

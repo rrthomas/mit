@@ -12,7 +12,7 @@ from enum import Enum, unique
 from mit_core.code_util import Code
 from mit_core.instruction import InstructionEnum
 from mit_core.spec import Register
-from mit_core.instruction_gen import pop_stack, push_stack
+from mit_core.stack import pop_stack, push_stack
 
 
 @unique
@@ -284,18 +284,13 @@ class Library(InstructionEnum):
         self.includes = includes
         self.extra_types = extra_types
 
-    @staticmethod
-    def _item_type(name_and_type):
-        l = name_and_type.split(':')
-        return l[1] if len(l) > 1 else 'mit_word'
-
     def types(self):
         '''Return a list of all types used in the library.'''
         return list(set(self.extra_types +
-            [self._item_type(item)
+            [item.type
              for function in self.library
              if function.args is not None or function.results is not None
-             for item in function.args + function.results
+             for item in function.args.items + function.results.items
             ]
         ))
 
