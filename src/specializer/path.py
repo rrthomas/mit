@@ -119,13 +119,13 @@ class State:
             # TODO: Use a more specific exception
             raise ValueError("non-constant variadic instruction")
         # Update `tos_constant`.
-        m = re.match('LIT_(\d+)', instruction.name)
-        if m:
-            tos_constant = int(m.group(1))
+        tos_constant = None
+        if (len(instruction.effect.results.items) > 0 and
+            instruction.effect.results.items[-1].expr is not None
+        ):
+            tos_constant = int(instruction.effect.results.items[-1].expr)
         elif instruction == Instruction.NEXT:
             tos_constant = self.tos_constant
-        else:
-            tos_constant = None
         # Simulate popping arguments.
         stack_pos = self.stack_pos - len(instruction.args.items)
         stack_min = min(self.stack_min, stack_pos)
