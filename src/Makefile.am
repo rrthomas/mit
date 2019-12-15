@@ -20,7 +20,7 @@ pkgdata_DATA = mit_core/mit_spec.yaml
 LIB_CORE_SRCS = \
 	mit_core/autonumber.py \
 	mit_core/instruction.py \
-	mit_core/vm_data.py \
+	mit_core/spec.py \
 	mit_core/errors.py \
 	mit_core/code_util.py \
 	mit_core/instruction_gen.py \
@@ -68,18 +68,18 @@ mit@PACKAGE_SUFFIX@.1: mit@PACKAGE_SUFFIX@$(EXEEXT) mit-include.man
 include/mit@PACKAGE_SUFFIX@:
 	cd include && if test ! -e mit@PACKAGE_SUFFIX@; then $(LN_S) mit mit@PACKAGE_SUFFIX@; fi
 
-include/mit/registers.h: gen-registers mit_core/mit_spec.yaml mit_core/vm_data.py
+include/mit/registers.h: gen-registers mit_core/mit_spec.yaml mit_core/spec.py
 	$(MKDIR_P) include/mit
 	if test "@PACKAGE_SUFFIX@" != ""; then \
 		$(MAKE) include/mit@PACKAGE_SUFFIX@; \
 	fi
 	$(PYTHON_WITH_PATH) $(srcdir)/gen-registers > include/mit/registers.h || ( rm -f include/mit/registers.h; exit 1 )
 
-include/mit/opcodes.h: gen-opcodes mit_core/mit_spec.yaml mit_core/vm_data.py mit_core/instruction.py mit_core/errors.py
+include/mit/opcodes.h: gen-opcodes mit_core/mit_spec.yaml mit_core/spec.py mit_core/instruction.py mit_core/errors.py
 	$(MKDIR_P) include/mit
 	$(PYTHON_WITH_PATH) $(srcdir)/gen-opcodes > include/mit/opcodes.h || ( rm -f include/mit/opcodes.h; exit 1 )
 
-instructions.c: gen-instructions mit_core/mit_spec.yaml mit_core/vm_data.py mit_core/instruction.py mit_core/code_util.py mit_core/instruction_gen.py specializer/mit-profile.json
+instructions.c: gen-instructions mit_core/mit_spec.yaml mit_core/spec.py mit_core/instruction.py mit_core/code_util.py mit_core/instruction_gen.py specializer/mit-profile.json
 	$(PYTHON_WITH_PATH) $(srcdir)/gen-instructions $(srcdir)/specializer/mit-profile.json > instructions.c || ( rm -f instructions.c; exit 1 )
 
 main.c: gen-main

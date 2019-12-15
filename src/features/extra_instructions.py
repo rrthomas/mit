@@ -11,7 +11,7 @@ from enum import Enum, unique
 
 from mit_core.code_util import Code
 from mit_core.instruction import InstructionEnum
-from mit_core.vm_data import Register
+from mit_core.spec import Register
 from mit_core.instruction_gen import pop_stack, push_stack
 
 
@@ -165,11 +165,17 @@ mit_lib = {
         state = S;
     ''')),
 
-    'NATIVE_ADDRESS_OF_RANGE': (0x1, ['addr', 'len', 'inner_state:mit_state *'], ['ptr:uint8_t *'],
+    'NATIVE_ADDRESS_OF_RANGE': (
+        0x1,
+        ['addr', 'len', 'inner_state:mit_state *'],
+        ['ptr:uint8_t *'],
         Code('ptr = mit_native_address_of_range(inner_state, addr, len);'),
     ),
 
-    'LOAD': (0x2, ['addr', 'size', 'inner_state:mit_state *'], ['value', 'ret:int'],
+    'LOAD': (
+        0x2,
+        ['addr', 'size', 'inner_state:mit_state *'],
+        ['value', 'ret:int'],
         Code('''\
             value = 0;
             ret = load(inner_state->memory, inner_state->memory_bytes,
@@ -177,7 +183,10 @@ mit_lib = {
         '''),
     ),
 
-    'STORE': (0x3, ['value', 'addr', 'size', 'inner_state:mit_state *'], ['ret:int'],
+    'STORE': (
+        0x3,
+        ['value', 'addr', 'size', 'inner_state:mit_state *'],
+        ['ret:int'],
         Code('''\
              ret = store(inner_state->memory, inner_state->memory_bytes,
                          addr, size, value);'''),
@@ -207,11 +216,17 @@ mit_lib = {
         ret = mit_single_step(inner_state);
     ''')),
 
-    'LOAD_OBJECT': (0xa, ['fd:int', 'addr', 'inner_state:mit_state *'], ['ret:int'],
+    'LOAD_OBJECT': (
+        0xa,
+        ['fd:int', 'addr', 'inner_state:mit_state *'],
+        ['ret:int'],
         Code('ret = mit_load_object(inner_state, addr, fd);'),
     ),
 
-    'SAVE_OBJECT': (0xb, ['fd:int', 'addr', 'len', 'inner_state:mit_state *'], ['ret:int'],
+    'SAVE_OBJECT': (
+        0xb,
+        ['fd:int', 'addr', 'len', 'inner_state:mit_state *'],
+        ['ret:int'],
         Code('ret = mit_save_object(inner_state, addr, len, fd);'),
     ),
 

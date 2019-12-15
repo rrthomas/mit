@@ -9,9 +9,9 @@
 
 import argparse
 
-from mit_core.vm_data import Instruction, InternalExtraInstruction
+from mit_core.spec import Instruction, InternalExtraInstruction
 from mit_core.code_util import Code, copyright_banner
-from mit_core.instruction_gen import dispatch, gen_case
+from mit_core.instruction_gen import dispatch
 
 import mit_profile
 

@@ -70,7 +70,8 @@ for lib in LibInstruction:
     code.append('''
         error:
             return error;
-        }''')
+        }'''
+    )
 
 code.append('')
 code.append('''\
@@ -92,6 +93,7 @@ code.append('')
 code.append('''
     error:
         return error;
-    }''')
+    }'''
+)
 
 print(code)

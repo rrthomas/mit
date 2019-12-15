@@ -9,7 +9,7 @@
 # RISK.
 
 from mit_core.code_util import Code, copyright_banner, unrestrict
-from mit_core.vm_data import Register
+from mit_core.spec import Register
 
 
 GENERATOR_PROGRAM = 'gen-registers'

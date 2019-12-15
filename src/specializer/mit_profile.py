@@ -11,7 +11,7 @@ RISK.
 
 import json
 
-from mit_core.vm_data import Instruction
+from mit_core.spec import Instruction
 
 
 class State:

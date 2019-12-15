@@ -80,8 +80,8 @@ Instruction = instruction_enum(
         ),
 
         'POP': Code(),
-            'DUP': Code(),
-            'SWAP': Code(),
+        'DUP': Code(),
+        'SWAP': Code(),
 
         'PUSH_STACK_DEPTH': Code('n = S->stack_depth;'),
 
@@ -109,16 +109,16 @@ Instruction = instruction_enum(
         ),
 
         'LIT_0': Code('zero = 0;'),
-            'LIT_1': Code('one = 1;'),
-            'LIT_2': Code('two = 2;'),
-            'LIT_3': Code('three = 3;'),
+        'LIT_1': Code('one = 1;'),
+        'LIT_2': Code('two = 2;'),
+        'LIT_3': Code('three = 3;'),
 
         'LT': Code('flag = a < b;'),
-            'ULT': Code('flag = (mit_uword)a < (mit_uword)b;'),
+        'ULT': Code('flag = (mit_uword)a < (mit_uword)b;'),
 
         'NEGATE': Code('r = -a;'),
-            'ADD': Code('r = a + b;'),
-            'MUL': Code('r = a * b;'),
+        'ADD': Code('r = a + b;'),
+        'MUL': Code('r = a * b;'),
 
         'DIVMOD': Code('''\
             if (b == 0)
