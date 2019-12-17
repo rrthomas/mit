@@ -421,22 +421,50 @@ class CompiledLabel:
     def guesses(self):
         '''
         Yields `(guess, label)` where `guess` is a tuple of Instruction and
-        `label` is a CompiledLabel.
+        `label` is a CompiledLabel that results if the guess is correct.
         '''
-        for instruction, label in self.right_children.items():
-            guess = [instruction]
-            while label is not None and guess[-1] not in GUESS_LIMITING:
-                if len(label.right_children) == 0:
-                    # Shrink.
-                    label = label.left_ancestor
-                elif len(label.right_children) == 1:
-                    for instruction, new_label in label.right_children.items():
-                        guess.append(instruction)
-                        label = new_label
-                        break
-                else:
+        for instruction, child in self.right_children.items():
+            guess = (instruction,)
+            label = child
+            if instruction not in GUESS_LIMITING:
+                preguess = label.preguess()
+                guess += preguess
+                for instruction2 in preguess:
+                    while len(label.right_children) == 0:
+                        label = label.left_ancestor
+                    assert len(label.right_children) == 1, (self, instruction.name)
+                    label = label.right_children[instruction2]
+            yield guess, label
+
+    def preguess(self):
+        '''
+        Returns a tuple of Instruction which is probably correct if
+        control-flow reaches this CompiledLabel.
+
+        It is likely that previous instructions are able to verify the
+        preguess at low cost, in which case the code at this CompiledLabel can
+        be optimized.
+
+        The preguess is calculated by following the predicted path until we
+        reach a CompiledLabel with more than one right child or a
+        `GUESS_LIMITING` Instruction. "Predicted path" means proceeding to the
+        unique right child if there is one, otherwise to the left ancestor.
+        '''
+        preguess = []
+        label = self
+        while label is not None:
+            if len(label.right_children) == 0:
+                # Shrink.
+                label = label.left_ancestor
+            elif len(label.right_children) == 1:
+                for instruction, label in label.right_children.items():
                     break
-            yield tuple(guess), label
+                preguess.append(instruction)
+                if instruction in GUESS_LIMITING:
+                    break
+            else:
+                break
+        return tuple(preguess)
 
 
 # Label to CompiledLabel.
