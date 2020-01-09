@@ -420,21 +420,11 @@ class CompiledLabel:
 
     def guesses(self):
         '''
-        Yields `(guess, label)` where `guess` is a tuple of Instruction and
+        Yields `(guess, label)` where `guess` is an Instruction and
         `label` is a CompiledLabel that results if the guess is correct.
         '''
         for instruction, child in self.right_children.items():
-            guess = (instruction,)
-            label = child
-            if instruction not in GUESS_LIMITING:
-                preguess = label.preguess()
-                guess += preguess
-                for instruction2 in preguess:
-                    while len(label.right_children) == 0:
-                        label = label.left_ancestor
-                    assert len(label.right_children) == 1, (self, instruction.name)
-                    label = label.right_children[instruction2]
-            yield guess, label
+            yield instruction, child
 
     def preguess(self):
         '''
@@ -533,13 +523,13 @@ class If(Code):
     '''
      - path - Path - shortest Path from the root to this State. Used to decide
        the calling convention.
-     - guess - tuple(Instruction) - likely continuation.
+     - guess - Instruction - most likely single-Instruction continuation.
      - c - State - where to go if `guess` is correct.
      - w - State - where to go if `guess` is wrong.
     '''
     def __init__(self, path, guess, c, w):
         assert isinstance(path, Path)
-        assert isinstance(guess, tuple)
+        assert isinstance(guess, Instruction)
         assert c is None or isinstance(c, State)
         assert w is None or isinstance(w, State)
         self.path = path
@@ -589,10 +579,7 @@ def tension(state):
             # Follow the Goto.
             state = code.target
         elif isinstance(code, If):
-            if any(
-                code.guess[:i] in rejects
-                for i in range(1, len(code.guess) + 1)
-            ):
+            if code.guess in rejects:
                 # "If" condition is always `false`.
                 # Follow the "else" branch.
                 state = code.w
@@ -641,19 +628,22 @@ walk(State(0, 0))
 #     cached_depth (int),
 #     checked_depth (int),
 #     path_instruction_sequence (str, space-separated),
-#     guess_instruction_sequence (str, space-separated),
+#     preguess_instruction_sequence (str, space-separated),
+#     guess (Instruction),
 #     if_correct (int?),
 #     if_wrong (int?),
 # )]
 
 def row_for_state(state):
     code = state_to_code[state]
+    label = CompiledLabel.ALL[state.index]
     return (
         code.path.state.tos_constant,
         code.path.state.cached_depth(),
         code.path.state.checked_depth(),
         ' '.join(i.name for i in code.path),
-        ' '.join(i.name for i in code.guess),
+        ' '.join(i.name for i in label.preguess()),
+        code.guess.name,
         state_to_number.get(code.c),
         state_to_number.get(code.w),
     )

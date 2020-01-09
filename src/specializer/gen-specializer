@@ -44,9 +44,10 @@ class Label:
        variables at this Label.
      - checked_depth - int - the number of empty stack slots that are known to
        exist above the top of the stack at this Label.
-     - path - str - the instruction sequence just executed.
-     - guess - str - the most probable next instruction sequence.
+     - path - str - the instruction sequence just executed (space-separated).
+     - preguess - str - the longest unique probable continuation
        (space-separated).
+     - guess - str - the most probable next Instruction.
      - if_correct - int - the Label index to jump to if `guess` is correct.
      - if_wrong - int - the Label index to jump to if `guess` is wrong.
     '''
@@ -58,6 +59,7 @@ class Label:
         cached_depth=0,
         checked_depth=0,
         path=None,
+        preguess=None,
         guess=None,
         if_correct=None,
         if_wrong=None,
@@ -68,6 +70,7 @@ class Label:
         self.cached_depth = cached_depth
         self.checked_depth = checked_depth
         self.path = path
+        self.preguess = preguess
         self.guess = guess
         self.if_correct = if_correct
         self.if_wrong = if_wrong
@@ -154,8 +157,9 @@ class Label:
 # Load the labels file, which tells us what control-flow graph to generate.
 with open(args.labels_filename, "rb") as h:
     labels = [
-        Label(index, 'A_{}'.format(index), tos, ca, ch, path, gu, ic, iw)
-        for index, (tos, ca, ch, path, gu, ic, iw) in enumerate(pickle.load(h))
+        Label(index, 'A_{}'.format(index), tos, ca, ch, path, pgu, gu, ic, iw)
+        for index, (tos, ca, ch, path, pgu, gu, ic, iw)
+            in enumerate(pickle.load(h))
     ]
 
 def label_by_index(index):
