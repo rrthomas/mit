@@ -428,17 +428,30 @@ class CompiledLabel:
 
     def preguess(self):
         '''
-        Returns a tuple of Instruction which is probably correct if
-        control-flow reaches this CompiledLabel.
+        Returns a tuple of Instruction which we're definitely going to execute
+        if control-flow reaches this CompiledLabel. Previous instructions can
+        verify the preguess at low cost, and the code at this CompiledLabel
+        can thereby be optimized.
 
-        It is likely that previous instructions are able to verify the
-        preguess at low cost, in which case the code at this CompiledLabel can
-        be optimized.
+        The preguess is the same as `longest_unique_probable_continuation()`
+        except that it is empty in the following cases:
 
-        The preguess is calculated by following the predicted path until we
-        reach a CompiledLabel with more than one right child or a
-        `GUESS_LIMITING` Instruction. "Predicted path" means proceeding to the
-        unique right child if there is one, otherwise to the left ancestor.
+         - `path` is empty,
+         - `path` ends with a terminal Instruction.
+        '''
+        if len(self.path) == 0 or self.path[-1].terminal:
+            return ()
+        else:
+            return self.longest_unique_probable_continuation()
+
+    def longest_unique_probable_continuation(self):
+        '''
+        Follows the predicted path until we reach a CompiledLabel with more
+        than one right child or a `GUESS_LIMITING` Instruction. "Predicted
+        path" means proceeding to the unique right child if there is one,
+        otherwise to the left ancestor.
+
+        Returns the path as a tuple of Instruction.
         '''
         preguess = []
         label = self
