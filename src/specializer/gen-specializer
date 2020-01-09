@@ -44,10 +44,10 @@ class Label:
        variables at this Label.
      - checked_depth - int - the number of empty stack slots that are known to
        exist above the top of the stack at this Label.
-     - path - str - the instruction sequence just executed (space-separated).
-     - preguess - str - the longest unique probable continuation
-       (space-separated).
-     - guess - str - the most probable next Instruction.
+     - path - list of Instruction - the instruction sequence just executed.
+     - preguess - list of Instruction - the longest unique probable
+       continuation.
+     - guess - Instruction - the most probable next Instruction.
      - if_correct - int - the Label index to jump to if `guess` is correct.
      - if_wrong - int - the Label index to jump to if `guess` is wrong.
     '''
@@ -64,14 +64,21 @@ class Label:
         if_correct=None,
         if_wrong=None,
     ):
+        '''
+         - path - str (space-separated Instruction names).
+         - preguess - str (space-separated Instruction names).
+         - guess - str (Instruction name).
+        '''
         self.index = index
         self.name = name
         self.tos_constant = tos_constant
         self.cached_depth = cached_depth
         self.checked_depth = checked_depth
-        self.path = path
-        self.preguess = preguess
-        self.guess = guess
+        self.path = None if path is None else [
+            Instruction[name] for name in path.split()]
+        self.preguess = None if preguess is None else [
+            Instruction[name] for name in preguess.split()]
+        self.guess = None if guess is None else Instruction[guess]
         self.if_correct = if_correct
         self.if_wrong = if_wrong
 
@@ -95,31 +102,22 @@ class Label:
         Returns a Code to place at this Label.
         Also returns the peak value of `CacheState.cached_depth`.
         '''
-        # Generate the Code for the branch where the guess is correct.
-        # Also, compute the guess bit string.
+        # Generate the Code for the branch where `self.guess` is correct.
         c_code = Code()
         if profiling:
             c_code.append('state_guess_correct[{}]++;'.format(self.index))
-        opcode_value = 0 # Bit pattern to match.
-        opcode_bits = 0 # Number of bits to match.
         state = State(tos_constant=self.tos_constant)
         cache_state = self.cache_state()
-        for i_name in self.guess.split():
-            instruction = state.specialize_instruction(Instruction[i_name])
-            assert opcode_bits is not None
-            opcode_value |= instruction.opcode << opcode_bits
-            opcode_bits += opcode_bit
-            if instruction.terminal:
-                opcode_bits = None # Must match all bits.
-            state = state.step(instruction)
-            c_code.extend(Code('''\
-                initial_pc = S->pc;
-                initial_ir = S->ir;
-                S->ir >>= MIT_OPCODE_BIT;''',
-                '{{ // {}'.format(instruction.name),
-                    gen_case(instruction, cache_state),
-                '}',
-            ))
+        instruction = state.specialize_instruction(self.guess)
+        state = state.step(instruction)
+        c_code.extend(Code('''\
+            initial_pc = S->pc;
+            initial_ir = S->ir;
+            S->ir >>= MIT_OPCODE_BIT;''',
+            '{{ // {}'.format(instruction.name),
+                gen_case(instruction, cache_state),
+            '}',
+        ))
         c_code.extend(label_by_index(self.if_correct).goto(cache_state))
         pops = -state.stack_min
         pushes = state.stack_max - state.stack_min
@@ -131,19 +129,34 @@ class Label:
             w_code.append('state_guess_wrong[{}]++;'.format(self.index))
         cache_state = self.cache_state()
         w_code.extend(label_by_index(self.if_wrong).goto(cache_state))
+        # Compute the bit string of Instruction opcodes to guess.
+        opcode_value = 0 # Bit pattern to match.
+        opcode_bits = 0 # Number of bits to match.
+        multiguess = [self.guess] + label_by_index(self.if_correct).preguess
+        for instruction in multiguess:
+            assert opcode_bits is not None
+            opcode_value |= instruction.opcode << opcode_bits
+            opcode_bits += opcode_bit
+            if instruction.terminal:
+                opcode_bits = None # Must match all bits.
         # Generate the guess condition.
-        opcode = 'S->ir'
-        if opcode_bits is not None:
-            opcode = '({} & {})'.format(opcode, hex((1 << opcode_bits) - 1))
+        if self.preguess[:len(multiguess)] == multiguess:
+            opcode_test = '1'
+        elif opcode_bits is None:
+            opcode_test = 'S->ir == {:#x}'.format(opcode_value)
+        else:
+            mask = (1 << opcode_bits) - 1
+            opcode_test = '(S->ir & {:#x}) == {:#x}'.format(mask, opcode_value)
         cache_state = self.cache_state()
         tests = [
-            '{} == {}'.format(opcode, hex(opcode_value)),
+            '({})'.format(opcode_test),
             'likely({})'.format(cache_state.underflow_test(pops)),
             'likely({})'.format(cache_state.overflow_test(pops, pushes)),
         ]
         # Generate the main Code.
         code = Code(
-            '// History: {}'.format(self.path),
+            '// History: {}'.format(' '.join(i.name for i in self.path)),
+            '// Future: {}'.format(' '.join(i.name for i in self.preguess)),
             'assert(error == MIT_ERROR_OK);',
             'assert(cached_depth == {});'.format(self.cached_depth),
             'if ({}) {{'.format(' && '.join(tests)),
@@ -301,7 +314,10 @@ def label_to_c(l):
     return -1 if l is None else l
 code.append(Code(',\n'.join([
     ('{{"{}", "{}", {}, {}}}'.format(
-        l.path, l.guess, label_to_c(l.if_correct), label_to_c(l.if_wrong),
+        ' '.join(i.name for i in l.path),
+        l.guess.name,
+        label_to_c(l.if_correct),
+        label_to_c(l.if_wrong),
     ))
     for l in labels
 ])))
