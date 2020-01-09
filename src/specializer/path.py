@@ -33,9 +33,10 @@ def _gen_specialized_instruction(instruction, tos_constant):
     replacement = ['x{}'.format(i) for i in range(tos_constant)]
     code = Code()
     code.append('assert(COUNT == {});'.format(tos_constant))
-    code.append('// Suppress warnings about possibly unused variables.')
-    for i in range(tos_constant):
-        code.append('(void)x{};'.format(i))
+    if tos_constant > 0:
+        code.append('// Suppress warnings about possibly unused variables.')
+        for i in range(tos_constant):
+            code.append('(void)x{};'.format(i))
     code.extend(instruction.code)
     return (
         instruction.opcode,
