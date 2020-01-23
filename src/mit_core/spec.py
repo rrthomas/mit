@@ -15,6 +15,7 @@ import yaml
 from .autonumber import AutoNumber
 from .code_util import Code
 from .instruction import InstructionEnum
+from .stack import StackEffect
 
 
 with open(os.path.join(os.path.dirname(__file__), 'mit_spec.yaml')) as f:
@@ -44,8 +45,12 @@ def instruction_enum(enum_name, docstring, spec, code):
         enum_name,
         ((
             name,
-            (i['opcode'], (i['args'], i['results']), code[name],
-             i.get('terminal', False)),
+            (
+                i['opcode'],
+                StackEffect.of(i['args'], i['results']),
+                code[name],
+                i.get('terminal', False),
+            ),
         ) for name, i in spec.items())
     ))
     enum.__doc__ = docstring

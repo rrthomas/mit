@@ -262,6 +262,12 @@ class StackPicture:
             item.depth = self.size
             self.size += item.size
 
+    def __str__(self):
+        return ' '.join(i.name for i in self.items)
+
+    def __repr__(self):
+        return 'StackPicture.of(\'{}\')'.format(str(self))
+
     @staticmethod
     def of(strs):
         '''
@@ -309,6 +315,20 @@ class StackEffect:
         self.args = args
         self.results = results
         self.by_name = {i.name: i for i in args.items + results.items}
+
+    def __str__(self):
+        return '{} -- {}'.format(self.args, self.results)
+
+    def __repr__(self):
+        return 'StackEffect.of(\'{}\', \'{}\')'.format(self.args, self.results)
+
+    @staticmethod
+    def of(args, results):
+        '''
+         - args - list acceptable to `StackPicture.of()`.
+         - results - list acceptable to `StackPicture.of()`.
+        '''
+        return StackEffect(StackPicture.of(args), StackPicture.of(results))
 
     def declare_vars(self):
         '''

@@ -12,12 +12,12 @@ RISK.
 from enum import Enum
 
 from .code_util import Code
-from .stack import StackPicture, StackEffect
+from .stack import StackEffect
 
 
 class InstructionEnum(Enum):
     '''
-    VM instruction instruction descriptor.
+    VM instruction descriptor.
 
      - opcode - int - opcode number.
      - effect - StackEffect or None.
@@ -37,12 +37,8 @@ class InstructionEnum(Enum):
             effect.
         '''
         self.opcode = opcode
-        if effect is None:
-            self.effect = None
-        else:
-            assert type(effect) is tuple and len(effect) == 2
-            self.effect = StackEffect(StackPicture.of(effect[0]),
-                                      StackPicture.of(effect[1]))
+        assert effect is None or isinstance(effect, StackEffect)
+        self.effect = effect
         assert isinstance(code, Code)
         self.code = code
         self.terminal = terminal
