@@ -11,52 +11,10 @@ RISK.
 
 import re, functools
 
-from mit_core.code_util import Code
 from mit_core.spec import Instruction
 from mit_core.instruction import InstructionEnum
 from mit_core.params import opcode_bit, word_bit
-
-
-def _replace_items(picture, replacement):
-    '''
-    Replaces 'ITEMS' with `replacement` in `picture`
-    '''
-    ret = []
-    for item in picture.items:
-        if item.size.count != 0:
-            ret.extend(replacement)
-        else:
-            ret.append(item.name)
-    return ret
-
-def _gen_specialized_instruction(instruction, tos_constant):
-    replacement = ['x{}'.format(i) for i in range(tos_constant)]
-    code = Code()
-    code.append('assert(COUNT == {});'.format(tos_constant))
-    if tos_constant > 0:
-        code.append('// Suppress warnings about possibly unused variables.')
-        for i in range(tos_constant):
-            code.append('(void)x{};'.format(i))
-    code.extend(instruction.code)
-    return (
-        instruction.opcode,
-        (
-            _replace_items(instruction.effect.args, replacement),
-            _replace_items(instruction.effect.results, replacement),
-        ),
-        code,
-        instruction.terminal,
-    )
-
-SpecializedInstruction = InstructionEnum('SpecializedInstruction', {
-    '{name}_WITH_{tos_constant}'.format(
-        name=instruction.name,
-        tos_constant=tos_constant,
-    ): _gen_specialized_instruction(instruction, tos_constant)
-    for instruction in Instruction
-    if instruction.is_variadic
-    for tos_constant in range(4)
-})
+from specialized_instruction import SpecializedInstruction
 
 
 class State:
