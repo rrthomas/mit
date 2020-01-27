@@ -1,7 +1,7 @@
 '''
 128-bit types for Python ctypes.
 
-(c) Mit authors 2019
+(c) Mit authors 2019-2020
 
 The package is distributed under the MIT/X11 License.
 
@@ -32,8 +32,11 @@ class c_uint128(aligned_struct):
     def value(self):
         return self.low | (self.high << 64)
 
-    def __int__(self):
+    def __index__(self):
         return self.value
+
+    def __int__(self):
+        return self.__index__()
 
     def __hash__(self):
         return int.__hash__(self.value)

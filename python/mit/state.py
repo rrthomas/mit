@@ -1,7 +1,7 @@
 '''
 VM state.
 
-(c) Mit authors 2019
+(c) Mit authors 2019-2020
 
 The package is distributed under the MIT/X11 License.
 
@@ -283,8 +283,17 @@ class Register:
         self.setter.restype = None
         self.setter.argtypes = [c_void_p, c_uword]
 
+    def __index__(self):
+        return self.get()
+
+    def __int__(self):
+        return self.__index__()
+
     def __str__(self):
-        return str(self.get())
+        return str(hex(int(self)))
+
+    def __repr__(self):
+        return str(self)
 
     def get(self):
         return int(self.getter(self.state))
@@ -311,6 +320,9 @@ class Stack:
         return '[{}]'.format(', '.join(
             ['{v} ({v:#x})'.format(v=v) for v in self])
         )
+
+    def __repr__(self):
+        return self.__str__()
 
     def __len__(self):
         return self.stack_depth.get()
