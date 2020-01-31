@@ -320,9 +320,7 @@ code.append('''
         if (dup_fd == -1)
             return -1;
         FILE *fp = fdopen(dup_fd, "w");
-        if (fp == NULL)
-            return -1;
-        else {
+        if (fp != NULL) {
             if (fprintf(fp, "[") < 0)
                 goto err;
             const char *sep = "";
@@ -353,8 +351,11 @@ code.append('''
                 goto err;
             if (fclose(fp) == 0)
                 return 0;
+            fp = NULL;
         }
     err:
+        if (fp != NULL)
+            fclose(fp);
         return -1;
     }
 ''')
