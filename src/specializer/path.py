@@ -97,10 +97,7 @@ class State:
         constant.
         '''
         bits_remaining = word_bit - self.i_bits
-        if bits_remaining < 0:
-            mask_remaining = 0
-        else:
-            mask_remaining = (1 << bits_remaining) - 1
+        mask_remaining = (1 << max(bits_remaining, 0)) - 1
         if instruction.opcode & mask_remaining != instruction.opcode:
             # There's no way of encoding the instruction.
             return False
