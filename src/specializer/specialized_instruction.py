@@ -11,7 +11,7 @@ RISK.
 
 from mit_core.code_util import Code
 from mit_core.spec import Instruction
-from mit_core.stack import StackEffect
+from mit_core.stack import StackEffect, Size
 from mit_core.instruction import InstructionEnum
 
 
@@ -27,10 +27,17 @@ class SpecializedInstructionEnum(InstructionEnum):
     more than one control flow path are modelled as several specialized
     instructions with the same opcode and different guard expressions; the
     guards for a particular opcode must be exclusive.
+
+    Specialized instructions cannot be variadic.
     '''
     def __init__(self, opcode, guard, effect, code, terminal=False):
         super().__init__(opcode, effect, code, terminal)
         self.guard = guard
+        assert not self.is_variadic
+        assert all(
+            item.size == Size(1)
+            for item in effect.by_name.values()
+        ), instruction
 
     def __repr__(self):
         return self.name
@@ -97,11 +104,11 @@ for instruction in Instruction:
     elif instruction.name == 'JUMPZ':
         specialized_instructions['JUMPZ_TAKEN'] = _gen_ordinary_instruction(
             instruction,
-            '{{stack_1}} == 0',
+            '{stack_1} == 0',
         )
         specialized_instructions['JUMPZ_UNTAKEN'] = _gen_ordinary_instruction(
             instruction,
-            '{{stack_1}} != 0',
+            '{stack_1} != 0',
         )
     else:
         specialized_instructions[instruction.name] = \

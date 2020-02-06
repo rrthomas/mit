@@ -11,16 +11,16 @@ RISK.
 
 import json
 
-from mit_core.spec import Instruction
+from specialized_instruction import SpecializedInstruction
+from path import Path
 
 
 class State:
     '''
     Represents a state of the interpreter that we profiled.
      - index - the index of this State in `profile`.
-     - path - str (space-separated Instruction name) - the canonical path to
-       this State.
-     - guess - Instruction - the guessed continuation.
+     - path - Path - the canonical path to this State.
+     - guess - SpecializedInstruction - the guessed continuation.
      - correct_state - int - the index of the State to jump to if `guess` is
        correct, or `-1` for the fallback state.
      - wrong_state - int - the index of the State to jump to if `guess` is
@@ -39,7 +39,8 @@ class State:
         correct_count,
         wrong_count,
     ):
-        assert isinstance(guess, Instruction)
+        assert isinstance(path, Path)
+        assert isinstance(guess, SpecializedInstruction)
         self.index = index
         self.path = path
         self.guess = guess
@@ -53,7 +54,7 @@ class State:
         return 'State({}, {!r}, {!r}, {}, {}, {}, {})'.format(
             self.index,
             self.path,
-            self.guess.name,
+            self.guess,
             self.correct_state,
             self.wrong_state,
             self.correct_count,
@@ -70,8 +71,11 @@ def load(filename):
         profile = [
             State(
                 index,
-                profile['path'],
-                Instruction[profile['guess']],
+                Path(tuple(
+                    SpecializedInstruction[name]
+                    for name in profile['path'].split()
+                )),
+                SpecializedInstruction[profile['guess']],
                 profile['correct_state'],
                 profile['wrong_state'],
                 profile['correct_count'],
@@ -91,12 +95,12 @@ def get_state(index):
 
 def predict(state):
     '''
-    Returns a probability distribution over Instructions from `state`,
-    and for each one gives the successor State.
+    Returns a probability distribution over SpecializedInstructions from
+    `state`, and for each one gives the successor State.
 
      - state - State or None.
 
-    Returns a list of (float, (Instruction, State or `None`))
+    Returns a list of (float, (SpecializedInstruction, State or `None`))
     '''
     result = []
     probability = 1.0
@@ -118,22 +122,10 @@ def predict(state):
 
 def counts():
     '''
-    Returns a list of (count, instruction) sorted by descending count.
+    Returns a dict from SpecializedInstruction to count.
     '''
     # Read trace, computing opcode counts
-    counts = {instruction: 0 for instruction in Instruction}
+    counts = {instruction: 0 for instruction in SpecializedInstruction}
     for state in profile:
         counts[state.guess] += state.correct_count
-
-    # Compute instruction frequencies
-    freqs = sorted(
-        [
-            (count, instruction)
-            for instruction, count in counts.items()
-        ],
-        reverse=True,
-        key=lambda x: x[0],
-    )
-
-    # Return instruction frequencies
-    return freqs
+    return counts

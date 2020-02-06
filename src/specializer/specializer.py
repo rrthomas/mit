@@ -151,24 +151,19 @@ class CacheState:
 
 def gen_case(instruction, cache_state):
     '''
-    Generate a Code for an Instruction. It is the caller's responsibility to
-    ensure that it's the right instruction to execute, and that the stack
-    won't underflow or overflow.
+    Generate a Code for a SpecializedInstruction. It is the caller's
+    responsibility to ensure that it's the right instruction to execute, and
+    that the stack won't underflow or overflow.
 
     In the code, S is the mit_state, and errors are reported by calling
     RAISE(). When calling RAISE(), the C variable `cached_depth` will contain
     the number of stack items cached in C locals.
 
-     - instruction - Instruction.
+     - instruction - SpecializedInstruction.
      - cache_state - CacheState - Which StackItems are cached.
        Updated in place.
     '''
     code = Code()
-    # Assert that we have a sufficiently simple Instruction.
-    assert not(instruction.is_variadic) and all(
-        item.size == Size(1)
-        for item in instruction.effect.by_name.values()
-    ), instruction
     num_args = len(instruction.effect.args.items)
     num_results = len(instruction.effect.results.items)
     # Declare C variables for args and results.

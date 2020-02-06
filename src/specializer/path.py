@@ -11,8 +11,6 @@ RISK.
 
 import re, functools
 
-from mit_core.spec import Instruction
-from mit_core.instruction import InstructionEnum
 from mit_core.params import opcode_bit, word_bit
 from specialized_instruction import SpecializedInstruction
 
@@ -56,36 +54,20 @@ class State:
         '''
         return self.stack_max - self.stack_pos
 
-    def specialize_instruction(self, instruction):
-        '''
-        Tries to replace `instruction` with a specialized version that does
-        the job in this State. Returns it, or `instruction` unchanged.
-        '''
-        assert isinstance(instruction, Instruction)
-        try:
-            name = '{}_WITH_{}'.format(instruction.name, self.tos_constant)
-            return SpecializedInstruction[name]
-        except KeyError:
-            return instruction
-
     def step(self, instruction):
         '''
         Returns the State that results from executing `instruction` in this
         State. Raises ValueError if `instruction` is variadic.
-         - instruction - an InstructionEnum, typically an Instruction or a
-           SpecializedInstruction.
+         - instruction - a SpecializedInstruction.
         '''
-        assert isinstance(instruction, InstructionEnum)
-        if instruction.is_variadic:
-            # TODO: Use a more specific exception
-            raise ValueError("non-constant variadic instruction")
+        assert isinstance(instruction, SpecializedInstruction)
         # Update `tos_constant`.
         tos_constant = None
         if (len(instruction.effect.results.items) > 0 and
             instruction.effect.results.items[-1].expr is not None
         ):
             tos_constant = int(instruction.effect.results.items[-1].expr)
-        elif instruction == Instruction.NEXT:
+        elif instruction == SpecializedInstruction.NEXT:
             tos_constant = self.tos_constant
         # Simulate popping arguments.
         stack_pos = self.stack_pos - len(instruction.effect.args.items)
@@ -122,23 +104,15 @@ class State:
         if instruction.opcode & mask_remaining != instruction.opcode:
             # There's no way of encoding the instruction.
             return False
-        if instruction.is_variadic:
-            # Variadic instruction. We can optimize only if we know `COUNT`.
-            return (
-                instruction.effect.args.items[-1].name == 'COUNT' and
-                self.tos_constant is not None
-            )
-        else:
-            # Ordinary instruction.
-            return True
+        return True
 
 
 @functools.total_ordering
 class Path:
     '''
-    Represents a sequence of Instructions.
+    Represents a sequence of SpecializedInstructions.
 
-     - instructions - tuple of Instructions.
+     - instructions - tuple of SpecializedInstructions.
      - state - the State that exists at the end of this Path, or `None` if
        this Path cannot usefully be optimized.
     '''
@@ -151,7 +125,6 @@ class Path:
         self.state = State()
         for instruction in instructions:
             if self.state.is_worthwhile(instruction):
-                instruction = self.state.specialize_instruction(instruction)
                 self.state = self.state.step(instruction)
             else:
                 self.state = None

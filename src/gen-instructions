@@ -36,7 +36,14 @@ args = parser.parse_args()
 
 # Get instruction counts from profile and compute order
 profile.load(args.profile_filename)
-instruction_order = [instruction for count, instruction in profile.counts()]
+instruction_counts = {instruction.opcode: 0 for instruction in Instruction}
+for instruction, count in profile.counts().items():
+    instruction_counts[instruction.opcode] += count
+instruction_order = sorted(
+    Instruction,
+    key=lambda i: instruction_counts[i.opcode],
+    reverse=True,
+)
 
 # Write the output file
 code = copyright_banner(GENERATOR_PROGRAM, PURPOSE, COPYRIGHT_YEARS)

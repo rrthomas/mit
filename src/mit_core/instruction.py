@@ -24,6 +24,7 @@ class InstructionEnum(Enum):
      - code - Code.
      - terminal - bool - this instruction is terminal: `ir` must be zero on
        entry.
+     - is_variadic - bool - true if this instruction is variadic.
 
     C variables are created for the arguments and results; the arguments are
     popped and results pushed.

@@ -10,7 +10,6 @@
 import argparse, pickle, textwrap
 
 from mit_core.code_util import Code, copyright_banner
-from mit_core.spec import Instruction
 from mit_core.params import opcode_bit
 from specializer import CacheState, gen_case
 from path import SpecializedInstruction, State
@@ -44,10 +43,11 @@ class Label:
        variables at this Label.
      - checked_depth - int - the number of empty stack slots that are known to
        exist above the top of the stack at this Label.
-     - path - list of Instruction - the instruction sequence just executed.
-     - preguess - list of Instruction - the longest unique probable
+     - path - list of SpecializedInstruction - the instruction sequence just
+       executed.
+     - preguess - list of SpecializedInstruction - the longest unique probable
        continuation.
-     - guess - Instruction - the most probable next Instruction.
+     - guess - SpecializedInstruction - the most probable next instruction.
      - if_correct - int - the Label index to jump to if `guess` is correct.
      - if_wrong - int - the Label index to jump to if `guess` is wrong.
     '''
@@ -65,9 +65,9 @@ class Label:
         if_wrong=None,
     ):
         '''
-         - path - str (space-separated Instruction names).
-         - preguess - str (space-separated Instruction names).
-         - guess - str (Instruction name).
+         - path - str (space-separated SpecializedInstruction names).
+         - preguess - str (space-separated SpecializedInstruction names).
+         - guess - str (SpecializedInstruction name).
         '''
         self.index = index
         self.name = name
@@ -75,10 +75,10 @@ class Label:
         self.cached_depth = cached_depth
         self.checked_depth = checked_depth
         self.path = None if path is None else [
-            Instruction[name] for name in path.split()]
+            SpecializedInstruction[name] for name in path.split()]
         self.preguess = None if preguess is None else [
-            Instruction[name] for name in preguess.split()]
-        self.guess = None if guess is None else Instruction[guess]
+            SpecializedInstruction[name] for name in preguess.split()]
+        self.guess = None if guess is None else SpecializedInstruction[guess]
         self.if_correct = if_correct
         self.if_wrong = if_wrong
 
@@ -108,14 +108,13 @@ class Label:
             c_code.append('state_guess_correct[{}]++;'.format(self.index))
         state = State(tos_constant=self.tos_constant)
         cache_state = self.cache_state()
-        instruction = state.specialize_instruction(self.guess)
-        state = state.step(instruction)
+        state = state.step(self.guess)
         c_code.extend(Code('''\
             initial_pc = S->pc;
             initial_ir = S->ir;
             S->ir >>= MIT_OPCODE_BIT;''',
-            '{{ // {}'.format(instruction.name),
-                gen_case(instruction, cache_state),
+            '{{ // {}'.format(self.guess.name),
+                gen_case(self.guess, cache_state),
             '}',
         ))
         c_code.extend(label_by_index(self.if_correct).goto(cache_state))
@@ -129,7 +128,7 @@ class Label:
             w_code.append('state_guess_wrong[{}]++;'.format(self.index))
         cache_state = self.cache_state()
         w_code.extend(label_by_index(self.if_wrong).goto(cache_state))
-        # Compute the bit string of Instruction opcodes to guess.
+        # Compute the bit string of SpecializedInstruction opcodes to guess.
         opcode_value = 0 # Bit pattern to match.
         opcode_bits = 0 # Number of bits to match.
         multiguess = [self.guess] + label_by_index(self.if_correct).preguess
@@ -148,10 +147,15 @@ class Label:
             mask = (1 << opcode_bits) - 1
             opcode_test = '(S->ir & {:#x}) == {:#x}'.format(mask, opcode_value)
         cache_state = self.cache_state()
+        guard_code = self.guess.guard.format(
+            stack_0=cache_state.lvalue(0),
+            stack_1=cache_state.lvalue(1),
+        )
         tests = [
             '({})'.format(opcode_test),
             'likely({})'.format(cache_state.underflow_test(pops)),
             'likely({})'.format(cache_state.overflow_test(pops, pushes)),
+            '({})'.format(guard_code),
         ]
         # Generate the main Code.
         code = Code(
@@ -199,8 +203,9 @@ def gen_labels_code(profiling=False):
         //  - On entry, `error` is `MIT_ERROR_OK`. `cached_depth` is a
         //    compile-time constant indicating how many top stack items are in
         //    C variables.
-        //  - Before running the `Instruction.code` for an instruction, record
-        //    `initial_pc` and `initial_ir`, and right-shift `ir`.
+        //  - Before running the `SpecializedInstruction.code` for an
+        //    instruction, record `initial_pc` and `initial_ir`, and right-shift
+        //    `ir`.
         //  - When an error occurs, call `RAISE(code)`.
         //    It sets `error` to the return code; then it resets `pc` and
         //    `ir` to their initial values, and does "goto error".
