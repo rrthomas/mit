@@ -38,12 +38,6 @@ class Label:
     '''
      - index - int - the index of this Label.
      - name - str - The C identifier of this Label.
-     - tos_constant - int - the constant at the top of the stack at this
-       Label, or `None` if the top stack item is not known to be constant.
-     - cached_depth - int - the number of stack items that are cached in C
-       variables at this Label.
-     - checked_depth - int - the number of empty stack slots that are known to
-       exist above the top of the stack at this Label.
      - path - Path - the instruction sequence just executed.
      - preguess - list of SpecializedInstruction - the longest unique probable
        continuation.
@@ -55,9 +49,6 @@ class Label:
         self,
         index,
         name,
-        tos_constant=None,
-        cached_depth=0,
-        checked_depth=0,
         path=None,
         preguess=None,
         guess=None,
@@ -71,9 +62,6 @@ class Label:
         '''
         self.index = index
         self.name = name
-        self.tos_constant = tos_constant
-        self.cached_depth = cached_depth
-        self.checked_depth = checked_depth
         self.path = None if path is None else Path(tuple(
             SpecializedInstruction[name] for name in path.split()
         ))
@@ -85,7 +73,13 @@ class Label:
 
     def cache_state(self):
         '''Returns a fresh CacheState describing this Label.'''
-        return CacheState(self.cached_depth, self.checked_depth)
+        return CacheState(self.cached_depth(), self.checked_depth())
+
+    def cached_depth(self):
+        return 0 if self.path is None else self.path.state.cached_depth()
+
+    def checked_depth(self):
+        return 0 if self.path is None else self.path.state.checked_depth()
 
     def goto(self, cache_state):
         '''
@@ -107,7 +101,7 @@ class Label:
         c_code = Code()
         if profiling:
             c_code.append('state_guess_correct[{}]++;'.format(self.index))
-        state = State(tos_constant=self.tos_constant)
+        state = State(tos_constant=self.path.state.tos_constant)
         cache_state = self.cache_state()
         state = state.step(self.guess)
         c_code.extend(Code('''\
@@ -122,7 +116,9 @@ class Label:
         pops = -state.stack_min
         pushes = state.stack_max - state.stack_min
         max_cached_depth = (
-            max(self.cached_depth, -state.stack_min) + state.stack_max)
+            max(self.cached_depth(), -state.stack_min) +
+            state.stack_max
+        )
         # Generate the code for the branch where the guess is wrong.
         w_code = Code()
         if profiling:
@@ -163,7 +159,7 @@ class Label:
             '// History: {}'.format(' '.join(i.name for i in self.path)),
             '// Future: {}'.format(' '.join(i.name for i in self.preguess)),
             'assert(error == MIT_ERROR_OK);',
-            'assert(cached_depth == {});'.format(self.cached_depth),
+            'assert(cached_depth == {});'.format(self.cached_depth()),
             'if ({}) {{'.format(' && '.join(tests)),
             c_code,
             '}',
@@ -175,8 +171,8 @@ class Label:
 # Load the labels file, which tells us what control-flow graph to generate.
 with open(args.labels_filename, "rb") as h:
     labels = [
-        Label(index, 'A_{}'.format(index), tos, ca, ch, path, pgu, gu, ic, iw)
-        for index, (tos, ca, ch, path, pgu, gu, ic, iw)
+        Label(index, 'A_{}'.format(index), path, pgu, gu, ic, iw)
+        for index, (_, _, _, path, pgu, gu, ic, iw)
             in enumerate(pickle.load(h))
     ]
 
