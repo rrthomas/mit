@@ -12,7 +12,8 @@ import argparse, pickle, textwrap
 from mit_core.code_util import Code, copyright_banner
 from mit_core.params import opcode_bit
 from specializer import CacheState, gen_case
-from path import SpecializedInstruction, State
+from specialized_instruction import SpecializedInstruction
+from path import Path, State
 
 
 GENERATOR_PROGRAM = 'gen-specializer'
@@ -43,8 +44,7 @@ class Label:
        variables at this Label.
      - checked_depth - int - the number of empty stack slots that are known to
        exist above the top of the stack at this Label.
-     - path - list of SpecializedInstruction - the instruction sequence just
-       executed.
+     - path - Path - the instruction sequence just executed.
      - preguess - list of SpecializedInstruction - the longest unique probable
        continuation.
      - guess - SpecializedInstruction - the most probable next instruction.
@@ -74,8 +74,9 @@ class Label:
         self.tos_constant = tos_constant
         self.cached_depth = cached_depth
         self.checked_depth = checked_depth
-        self.path = None if path is None else [
-            SpecializedInstruction[name] for name in path.split()]
+        self.path = None if path is None else Path(tuple(
+            SpecializedInstruction[name] for name in path.split()
+        ))
         self.preguess = None if preguess is None else [
             SpecializedInstruction[name] for name in preguess.split()]
         self.guess = None if guess is None else SpecializedInstruction[guess]
