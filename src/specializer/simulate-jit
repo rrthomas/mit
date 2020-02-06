@@ -620,9 +620,6 @@ walk(State(0, 0))
 
 # File format is Pickle, with the following contents:
 # [(
-#     tos_constant (int?),
-#     cached_depth (int),
-#     checked_depth (int),
 #     path_instruction_sequence (str, space-separated),
 #     preguess_instruction_sequence (str, space-separated),
 #     guess (SpecializedInstruction),
@@ -634,9 +631,6 @@ def row_for_state(state):
     code = state_to_code[state]
     label = CompiledLabel.ALL[state.index]
     return (
-        code.path.state.tos_constant,
-        code.path.state.cached_depth(),
-        code.path.state.checked_depth(),
         ' '.join(i.name for i in code.path),
         ' '.join(i.name for i in label.preguess()),
         code.guess.name,
