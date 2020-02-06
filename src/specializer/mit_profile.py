@@ -20,8 +20,7 @@ class State:
      - index - the index of this State in `profile`.
      - path - str (space-separated Instruction name) - the canonical path to
        this State.
-     - guess - str (space-separated Instruction name) - the guessed
-       continuation.
+     - guess - Instruction - the guessed continuation.
      - correct_state - int - the index of the State to jump to if `guess` is
        correct, or `-1` for the fallback state.
      - wrong_state - int - the index of the State to jump to if `guess` is
@@ -40,6 +39,7 @@ class State:
         correct_count,
         wrong_count,
     ):
+        assert isinstance(guess, Instruction)
         self.index = index
         self.path = path
         self.guess = guess
@@ -53,7 +53,7 @@ class State:
         return 'State({}, {!r}, {!r}, {}, {}, {}, {})'.format(
             self.index,
             self.path,
-            self.guess,
+            self.guess.name,
             self.correct_state,
             self.wrong_state,
             self.correct_count,
@@ -63,15 +63,15 @@ class State:
 
 def load(filename):
     '''
-    Load a profile data file, and initialize `profile` and `ROOT_NODE`.
+    Load a profile data file, and initialize `profile` and `ROOT_STATE`.
     '''
-    global profile, ROOT_NODE
+    global profile, ROOT_STATE
     with open(filename) as h:
         profile = [
             State(
                 index,
                 profile['path'],
-                profile['guess'],
+                Instruction[profile['guess']],
                 profile['correct_state'],
                 profile['wrong_state'],
                 profile['correct_count'],
@@ -79,8 +79,7 @@ def load(filename):
             )
             for index, profile in enumerate(json.load(h))
         ]
-    root_state = 0 if len(profile) > 0 else -1
-    ROOT_NODE = PathNode((), get_state(root_state), 1.0)
+    ROOT_STATE = get_state(0) if len(profile) > 0 else None
 
 
 def get_state(index):
@@ -90,6 +89,33 @@ def get_state(index):
         return profile[index]
 
 
+def predict(state):
+    '''
+    Returns a probability distribution over Instructions from `state`,
+    and for each one gives the successor State.
+
+     - state - State or None.
+
+    Returns a list of (float, (Instruction, State or `None`))
+    '''
+    result = []
+    probability = 1.0
+    while state is not None and probability > 0.0:
+        assert state.total_count != 0
+        # The successor if the guess is correct.
+        result.append((
+            probability * state.correct_count / state.total_count,
+            (
+                state.guess,
+                get_state(state.correct_state),
+            ),
+        ))
+        # The successor if the guess is wrong.
+        probability *= float(state.wrong_count) / state.total_count
+        state = get_state(state.wrong_state)
+    return result
+
+
 def counts():
     '''
     Returns a list of (count, instruction) sorted by descending count.
@@ -97,79 +123,17 @@ def counts():
     # Read trace, computing opcode counts
     counts = {instruction: 0 for instruction in Instruction}
     for state in profile:
-        for name in state.guess.split():
-            # We'll get an error for an illegal opcode!
-            counts[Instruction[name]] += state.correct_count
+        counts[state.guess] += state.correct_count
 
     # Compute instruction frequencies
-    freqs = sorted([(count, instruction)
-                    for instruction, count in counts.items()],
-                   reverse=True,
-                   key=lambda x: x[0])
+    freqs = sorted(
+        [
+            (count, instruction)
+            for instruction, count in counts.items()
+        ],
+        reverse=True,
+        key=lambda x: x[0],
+    )
 
     # Return instruction frequencies
     return freqs
-
-
-class PathNode:
-    '''
-    Represents a node of the tree of probable paths.
-     - guess - a tuple of Instructions that we've committed to.
-     - profile_state - the State we'll reach after exhausting `guess`,
-       or `None`.
-     - frequency - an estimate of the relative frequency of this PathNode.
-    '''
-    def __init__(self, guess, profile_state, frequency):
-        assert type(guess) is tuple
-        assert profile_state is None or isinstance(profile_state, State)
-        assert type(frequency) is float
-        self.guess = guess
-        self.profile_state = profile_state
-        self.frequency = frequency
-
-    def __repr__(self):
-        return 'Node({!r}, {!r}, {})'.format(
-            ' '.join(i.name for i in self.guess),
-            self.profile_state,
-            self.frequency,
-        )
-
-    def predict(self):
-        '''
-        Yields (Instruction, PathNode).
-        '''
-        if len(self.guess) > 0:
-            yield (
-                self.guess[0],
-                PathNode(
-                    self.guess[1:],
-                    self.profile_state,
-                    self.frequency,
-                )
-            )
-        else:
-            for successor in self._successors():
-                for instruction, path_node in successor.predict():
-                    yield (instruction, path_node)
-
-    def _successors(self):
-        '''
-        Requires `self.guess` to be empty.
-        Yields PathNodes whose union describes the same tree as `self`.
-        '''
-        assert len(self.guess) == 0
-        if self.profile_state is not None and self.frequency > 0.0:
-            ps = self.profile_state
-            assert ps.total_count != 0
-            # The successor if the guess is correct.
-            yield PathNode(
-                tuple(Instruction[name] for name in ps.guess.split()),
-                get_state(ps.correct_state),
-                self.frequency * ps.correct_count / ps.total_count,
-            )
-            # The successor if the guess is wrong.
-            yield PathNode(
-                (),
-                get_state(ps.wrong_state),
-                self.frequency * ps.wrong_count / ps.total_count,
-            )

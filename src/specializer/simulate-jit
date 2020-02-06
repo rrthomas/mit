@@ -56,14 +56,14 @@ mit_profile.load(args.profile_filename)
 
 
 def trace():
-    current_node = mit_profile.ROOT_NODE
+    profile_state = mit_profile.ROOT_STATE
     while True:
-        current_node.frequency = 1.0 # Ensure we never stop by underflow.
-        predictions = list(current_node.predict())
-        frequencies = [node.frequency for _, node in predictions]
-        if len(frequencies) == 0:
+        predictions = mit_profile.predict(profile_state)
+        if len(predictions) == 0:
             break
-        instruction, current_node = random.choices(predictions, frequencies)[0]
+        probabilities, choices = tuple(zip(*predictions))
+        choice = random.choices(choices, probabilities)[0]
+        instruction, profile_state = choice
         yield instruction
 
 
