@@ -127,14 +127,14 @@ Instruction = instruction_enum(
 
         'DIVMOD': Code('''\
             if (b == 0)
-              RAISE(MIT_ERROR_DIVISION_BY_ZERO);
+                RAISE(MIT_ERROR_DIVISION_BY_ZERO);
             q = a / b;
             r = a % b;'''
         ),
 
         'UDIVMOD': Code('''\
             if (b == 0)
-              RAISE(MIT_ERROR_DIVISION_BY_ZERO);
+                RAISE(MIT_ERROR_DIVISION_BY_ZERO);
             q = (mit_word)((mit_uword)a / (mit_uword)b);
             r = (mit_word)((mit_uword)a % (mit_uword)b);'''
         ),
