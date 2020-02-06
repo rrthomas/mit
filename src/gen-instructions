@@ -13,7 +13,7 @@ from mit_core.spec import Instruction, InternalExtraInstruction
 from mit_core.code_util import Code, copyright_banner
 from mit_core.instruction_gen import dispatch
 
-import mit_profile
+import profile
 
 
 GENERATOR_PROGRAM = 'gen-instructions'
@@ -35,8 +35,8 @@ args = parser.parse_args()
 
 
 # Get instruction counts from profile and compute order
-mit_profile.load(args.profile_filename)
-instruction_order = [instruction for count, instruction in mit_profile.counts()]
+profile.load(args.profile_filename)
+instruction_order = [instruction for count, instruction in profile.counts()]
 
 # Write the output file
 code = copyright_banner(GENERATOR_PROGRAM, PURPOSE, COPYRIGHT_YEARS)

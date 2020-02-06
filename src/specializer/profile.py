@@ -1,5 +1,5 @@
 '''
-Library for reading and processing mit-profile data files.
+Library for reading and processing profile files.
 
 (c) 2019 Mit authors
 

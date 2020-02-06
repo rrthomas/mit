@@ -323,7 +323,7 @@ code.append(Code(',\n'.join([
 ])))
 code.append('};')
 # Currently, A_FALLBACK is "infectious": if it is used by a particular
-# build of mit, then it ends up in the mit-profile.json, and therefore
+# build of mit, then it ends up in the profile file, and therefore
 # in successive builds of mit. We add suitable labels in `simulate-jit`
 # to compensate; see the definition of `ROOT_LABEL`.
 code.append('''

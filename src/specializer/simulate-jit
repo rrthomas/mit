@@ -12,7 +12,7 @@ from pprint import pprint
 
 from mit_core.spec import Instruction
 from path import Path
-import mit_profile
+import profile
 
 
 # Command-line arguments.
@@ -52,13 +52,13 @@ args = parser.parse_args()
 
 # Load profile file.
 
-mit_profile.load(args.profile_filename)
+profile.load(args.profile_filename)
 
 
 def trace():
-    profile_state = mit_profile.ROOT_STATE
+    profile_state = profile.ROOT_STATE
     while True:
-        predictions = mit_profile.predict(profile_state)
+        predictions = profile.predict(profile_state)
         if len(predictions) == 0:
             break
         probabilities, choices = tuple(zip(*predictions))
