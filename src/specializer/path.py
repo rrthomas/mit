@@ -11,49 +11,8 @@ RISK.
 
 import re, functools
 
-from mit_core.code_util import Code
-from mit_core.spec import Instruction
-from mit_core.instruction import InstructionEnum
 from mit_core.params import opcode_bit, word_bit
-
-
-def _replace_items(picture, replacement):
-    '''
-    Replaces 'ITEMS' with `replacement` in `picture`
-    '''
-    ret = []
-    for item in picture:
-        if item == 'ITEMS':
-            ret.extend(replacement)
-        else:
-            ret.append(item)
-    return ret
-
-def _gen_specialized_instruction(instruction, tos_constant):
-    replacement = ['x{}'.format(i) for i in range(tos_constant)]
-    code = Code()
-    code.append('assert(COUNT == {});'.format(tos_constant))
-    code.append('// Suppress warnings about possibly unused variables.')
-    for i in range(tos_constant):
-        code.append('(void)x{};'.format(i))
-    code.extend(instruction.code)
-    return (
-        instruction.opcode,
-        _replace_items(instruction.args, replacement),
-        _replace_items(instruction.results, replacement),
-        code,
-        instruction.terminal,
-    )
-
-SpecializedInstruction = InstructionEnum('SpecializedInstruction', {
-    '{name}_WITH_{tos_constant}'.format(
-        name=instruction.name,
-        tos_constant=tos_constant,
-    ): _gen_specialized_instruction(instruction, tos_constant)
-    for instruction in Instruction
-    if 'ITEMS' in instruction.args
-    for tos_constant in range(4)
-})
+from specialized_instruction import SpecializedInstruction
 
 
 class State:
@@ -95,44 +54,28 @@ class State:
         '''
         return self.stack_max - self.stack_pos
 
-    def specialize_instruction(self, instruction):
-        '''
-        Tries to replace `instruction` with a specialized version that does
-        the job in this State. Returns it, or `instruction` unchanged.
-        '''
-        assert isinstance(instruction, Instruction)
-        try:
-            name = '{}_WITH_{}'.format(instruction.name, self.tos_constant)
-            return SpecializedInstruction[name]
-        except KeyError:
-            return instruction
-
     def step(self, instruction):
         '''
         Returns the State that results from executing `instruction` in this
         State. Raises ValueError if `instruction` is variadic.
-         - instruction - an InstructionEnum, typically an Instruction or a
-           SpecializedInstruction.
+         - instruction - a SpecializedInstruction.
         '''
-        assert isinstance(instruction, InstructionEnum)
-        if 'ITEMS' in instruction.args or 'ITEMS' in instruction.results:
-            # TODO: Use a more specific exception
-            raise ValueError("non-constant variadic instruction")
+        assert isinstance(instruction, SpecializedInstruction)
         # Update `tos_constant`.
-        m = re.match('LIT_(\d+)', instruction.name)
-        if m:
-            tos_constant = int(m.group(1))
-        elif instruction == Instruction.NEXT:
+        tos_constant = None
+        if (len(instruction.effect.results.items) > 0 and
+            instruction.effect.results.items[-1].expr is not None
+        ):
+            tos_constant = int(instruction.effect.results.items[-1].expr)
+        elif instruction == SpecializedInstruction.NEXT:
             tos_constant = self.tos_constant
-        else:
-            tos_constant = None
         # Simulate popping arguments.
-        stack_pos = self.stack_pos - len(instruction.args)
+        stack_pos = self.stack_pos - len(instruction.effect.args.items)
         stack_min = min(self.stack_min, stack_pos)
         # Simulate pushing results.
-        stack_pos += len(instruction.results)
+        stack_pos += len(instruction.effect.results.items)
         stack_max = max(self.stack_max, stack_pos)
-        # Simulate consuming ir.
+        # Simulate consuming `ir`.
         i_bits = self.i_bits + opcode_bit
         if instruction.terminal:
             i_bits = 0
@@ -154,30 +97,19 @@ class State:
         constant.
         '''
         bits_remaining = word_bit - self.i_bits
-        if bits_remaining < 0:
-            mask_remaining = 0
-        else:
-            mask_remaining = (1 << bits_remaining) - 1
+        mask_remaining = (1 << max(bits_remaining, 0)) - 1
         if instruction.opcode & mask_remaining != instruction.opcode:
             # There's no way of encoding the instruction.
             return False
-        if 'ITEMS' in instruction.args or 'ITEMS' in instruction.results:
-            # Variadic instruction. We can optimize only if we know `COUNT`.
-            return (
-                instruction.args[-1] == 'COUNT' and
-                self.tos_constant is not None
-            )
-        else:
-            # Ordinary instruction.
-            return True
+        return True
 
 
 @functools.total_ordering
 class Path:
     '''
-    Represents a sequence of Instructions.
+    Represents a sequence of SpecializedInstructions.
 
-     - instructions - tuple of Instructions.
+     - instructions - tuple of SpecializedInstructions.
      - state - the State that exists at the end of this Path, or `None` if
        this Path cannot usefully be optimized.
     '''
@@ -190,7 +122,6 @@ class Path:
         self.state = State()
         for instruction in instructions:
             if self.state.is_worthwhile(instruction):
-                instruction = self.state.specialize_instruction(instruction)
                 self.state = self.state.step(instruction)
             else:
                 self.state = None

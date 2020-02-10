@@ -10,6 +10,7 @@ RISK.
 '''
 
 from mit_core.code_util import Code
+from mit_core.stack import Size
 
 
 # TODO: Unify with path.State?
@@ -72,8 +73,8 @@ class CacheState:
          - args - list of str.
         '''
         return Code(*[
-            '{} = {};'.format(name, self.lvalue(pos))
-            for pos, name in enumerate(reversed(args))
+            '{} = {};'.format(item.name, self.lvalue(pos))
+            for pos, item in enumerate(reversed(args.items))
         ])
 
     def store_results(self, results):
@@ -84,8 +85,8 @@ class CacheState:
          - results - list of str.
         '''
         return Code(*[
-            '{} = {};'.format(self.lvalue(pos), name)
-            for pos, name in enumerate(reversed(results))
+            '{} = {};'.format(self.lvalue(pos), item.name)
+            for pos, item in enumerate(reversed(results.items))
         ])
 
     def add(self, depth_change):
@@ -150,33 +151,31 @@ class CacheState:
 
 def gen_case(instruction, cache_state):
     '''
-    Generate a Code for an Instruction. It is the caller's responsibility to
-    ensure that it's the right instruction to execute, and that the stack
-    won't underflow or overflow.
+    Generate a Code for a SpecializedInstruction. It is the caller's
+    responsibility to ensure that it's the right instruction to execute, and
+    that the stack won't underflow or overflow.
 
     In the code, S is the mit_state, and errors are reported by calling
     RAISE(). When calling RAISE(), the C variable `cached_depth` will contain
     the number of stack items cached in C locals.
 
-     - instruction - Instruction.
+     - instruction - SpecializedInstruction.
      - cache_state - CacheState - Which StackItems are cached.
        Updated in place.
     '''
     code = Code()
-    # Assert that we have a sufficiently simple Instruction.
-    assert all(
-        name != 'ITEMS' and ':' not in name
-        for name in instruction.args + instruction.results
-    ), instruction
-    num_args = len(instruction.args)
-    num_results = len(instruction.results)
+    num_args = len(instruction.effect.args.items)
+    num_results = len(instruction.effect.results.items)
     # Declare C variables for args and results.
     code.extend(Code(*[
-        'mit_word {};'.format(name)
-        for name in set(instruction.args + instruction.results)
+        'mit_word {}{};'.format(name,
+                                ' = {}'.format(item.expr)
+                                if item.expr is not None
+                                else '')
+        for name, item in instruction.effect.by_name.items()
     ]))
     # Load the arguments into their C variables.
-    code.extend(cache_state.load_args(instruction.args))
+    code.extend(cache_state.load_args(instruction.effect.args))
     # Inline `instruction.code`.
     # Note: `S->stack_depth` and `cache_state` must be correct for RAISE().
     code.extend(instruction.code)
@@ -186,5 +185,5 @@ def gen_case(instruction, cache_state):
     code.extend(cache_state.add(num_results))
     code.append('S->stack_depth += {};'.format(num_results))
     # Store the results from their C variables.
-    code.extend(cache_state.store_results(instruction.results))
+    code.extend(cache_state.store_results(instruction.effect.results))
     return code

@@ -15,6 +15,7 @@ import yaml
 from .autonumber import AutoNumber
 from .code_util import Code
 from .instruction import InstructionEnum
+from .stack import StackEffect
 
 
 with open(os.path.join(os.path.dirname(__file__), 'mit_spec.yaml')) as f:
@@ -44,8 +45,12 @@ def instruction_enum(enum_name, docstring, spec, code):
         enum_name,
         ((
             name,
-            (i['opcode'], i['args'], i['results'], code[name],
-             i.get('terminal', False)),
+            (
+                i['opcode'],
+                StackEffect.of(i['args'], i['results']),
+                code[name],
+                i.get('terminal', False),
+            ),
         ) for name, i in spec.items())
     ))
     enum.__doc__ = docstring
@@ -108,10 +113,10 @@ Instruction = instruction_enum(
             n += S->pc - MIT_WORD_BYTES;'''
         ),
 
-        'LIT_0': Code('zero = 0;'),
-        'LIT_1': Code('one = 1;'),
-        'LIT_2': Code('two = 2;'),
-        'LIT_3': Code('three = 3;'),
+        'LIT_0': Code(),
+        'LIT_1': Code(),
+        'LIT_2': Code(),
+        'LIT_3': Code(),
 
         'LT': Code('flag = a < b;'),
         'ULT': Code('flag = (mit_uword)a < (mit_uword)b;'),
@@ -122,14 +127,14 @@ Instruction = instruction_enum(
 
         'DIVMOD': Code('''\
             if (b == 0)
-              RAISE(MIT_ERROR_DIVISION_BY_ZERO);
+                RAISE(MIT_ERROR_DIVISION_BY_ZERO);
             q = a / b;
             r = a % b;'''
         ),
 
         'UDIVMOD': Code('''\
             if (b == 0)
-              RAISE(MIT_ERROR_DIVISION_BY_ZERO);
+                RAISE(MIT_ERROR_DIVISION_BY_ZERO);
             q = (mit_word)((mit_uword)a / (mit_uword)b);
             r = (mit_word)((mit_uword)a % (mit_uword)b);'''
         ),
