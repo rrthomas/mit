@@ -87,22 +87,6 @@ class State:
             i_bits=i_bits,
         )
 
-    def is_worthwhile(self, instruction):
-        '''
-        Returns `True` if we have some hope of optimizing the implementation
-        of `instruction` in this State.
-
-        In practice, this method returns `False` only if `instruction` is
-        variadic and the value at the top of the stack is not a known
-        constant.
-        '''
-        bits_remaining = word_bit - self.i_bits
-        mask_remaining = (1 << max(bits_remaining, 0)) - 1
-        if instruction.opcode & mask_remaining != instruction.opcode:
-            # There's no way of encoding the instruction.
-            return False
-        return True
-
 
 @functools.total_ordering
 class Path:
@@ -110,8 +94,7 @@ class Path:
     Represents a sequence of Instructions.
 
      - instructions - tuple of Instructions.
-     - state - the State that exists at the end of this Path, or `None` if
-       this Path cannot usefully be optimized.
+     - state - the State that exists at the end of this Path.
     '''
     def __init__(self, instructions):
         '''
@@ -121,11 +104,7 @@ class Path:
         self.instructions = instructions
         self.state = State()
         for instruction in instructions:
-            if self.state.is_worthwhile(instruction):
-                self.state = self.state.step(instruction)
-            else:
-                self.state = None
-                break
+            self.state = self.state.step(instruction)
 
     def _opcodes(self):
         return [i.opcode for i in self.instructions]
