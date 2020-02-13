@@ -93,43 +93,20 @@ def get_state(index):
         return profile[index]
 
 
-def predict(state):
-    '''
-    Returns a probability distribution over Instructions from
-    `state`, and for each one gives the successor State.
-
-     - state - State or None.
-
-    Returns a list of (float, (Instruction, State or `None`))
-    '''
-    result = []
-    probability = 1.0
-    while state is not None and probability > 0.0:
-        assert state.total_count != 0
-        # The successor if the guess is correct.
-        result.append((
-            probability * state.correct_count / state.total_count,
-            (
-                state.guess,
-                get_state(state.correct_state),
-            ),
-        ))
-        # The successor if the guess is wrong.
-        probability *= float(state.wrong_count) / state.total_count
-        state = get_state(state.wrong_state)
-    return result
-
-
 def random_trace():
     profile_state = ROOT_STATE
     while True:
-        predictions = predict(profile_state)
-        if len(predictions) == 0:
-            break
-        probabilities, choices = tuple(zip(*predictions))
-        choice = random.choices(choices, probabilities)[0]
-        instruction, profile_state = choice
-        yield instruction
+        if profile_state is None:
+            # Fallback interpreter is modelled as uniformly random.
+            yield random.choice(list(Instruction))
+            profile_state = ROOT_STATE
+        elif random.randrange(profile_state.total_count) < profile_state.correct_count:
+            # Model a correct guess.
+            yield profile_state.guess
+            profile_state = get_state(profile_state.correct_state)
+        else:
+            # Model a wrong guess.
+            profile_state = get_state(profile_state.wrong_state)
 
 
 def counts():
