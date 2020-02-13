@@ -15,19 +15,19 @@ from spec import Instruction
 from path import Path
 
 
-class State:
+class Label:
     '''
-    Represents a state of the interpreter that we profiled.
-     - index - the index of this State in `profile`.
-     - path - Path - the canonical path to this State.
+    Represents a label of the interpreter that we profiled.
+     - index - int - the index of this Label in `profile`.
+     - path - Path - the canonical path to this Label.
      - guess - Instruction - the guessed continuation.
-     - correct_state - int - the index of the State to jump to if `guess` is
-       correct, or `-1` for the fallback state.
-     - wrong_state - int - the index of the State to jump to if `guess` is
-       wrong, or `-1` for the fallback state.
-     - correct_count - the number of times `guess` was correct.
-     - wrong_count - the number of times `guess` was wrong.
-     - total_count - `correct_count + wrong_count`.
+     - correct_state - int - the index of the Label to jump to if `guess` is
+       correct, or `-1` for the fallback label.
+     - wrong_state - int - the index of the Label to jump to if `guess` is
+       wrong, or `-1` for the fallback label.
+     - correct_count - int - the number of times `guess` was correct.
+     - wrong_count - int - the number of times `guess` was wrong.
+     - total_count - int - `correct_count + wrong_count`.
     '''
     def __init__(
         self,
@@ -51,7 +51,7 @@ class State:
         self.total_count = correct_count + wrong_count
 
     def __repr__(self):
-        return 'State({}, {!r}, {!r}, {}, {}, {}, {})'.format(
+        return 'Label({}, {!r}, {!r}, {}, {}, {}, {})'.format(
             self.index,
             self.path,
             self.guess,
@@ -64,12 +64,12 @@ class State:
 
 def load(filename):
     '''
-    Load a profile data file, and initialize `profile` and `ROOT_STATE`.
+    Load a profile data file, and initialize `profile` and `ROOT_LABEL`.
     '''
-    global profile, ROOT_STATE
+    global profile, ROOT_LABEL
     with open(filename) as h:
         profile = [
-            State(
+            Label(
                 index,
                 Path(tuple(
                     Instruction[name]
@@ -83,10 +83,10 @@ def load(filename):
             )
             for index, profile in enumerate(json.load(h))
         ]
-    ROOT_STATE = get_state(0) if len(profile) > 0 else None
+    ROOT_LABEL = get_label(0) if len(profile) > 0 else None
 
 
-def get_state(index):
+def get_label(index):
     if index == -1:
         return None
     else:
@@ -94,19 +94,19 @@ def get_state(index):
 
 
 def random_trace():
-    profile_state = ROOT_STATE
+    label = ROOT_LABEL
     while True:
-        if profile_state is None:
+        if label is None:
             # Fallback interpreter is modelled as uniformly random.
             yield random.choice(list(Instruction))
-            profile_state = ROOT_STATE
-        elif random.randrange(profile_state.total_count) < profile_state.correct_count:
+            label = ROOT_LABEL
+        elif random.randrange(label.total_count) < label.correct_count:
             # Model a correct guess.
-            yield profile_state.guess
-            profile_state = get_state(profile_state.correct_state)
+            yield label.guess
+            label = get_label(label.correct_state)
         else:
             # Model a wrong guess.
-            profile_state = get_state(profile_state.wrong_state)
+            label = get_label(label.wrong_state)
 
 
 def counts():
@@ -115,6 +115,6 @@ def counts():
     '''
     # Read trace, computing opcode counts
     counts = {instruction: 0 for instruction in Instruction}
-    for state in profile:
-        counts[state.guess] += state.correct_count
+    for label in profile:
+        counts[label.guess] += label.correct_count
     return counts
