@@ -12,7 +12,7 @@ RISK.
 import re, functools
 
 from mit_core.params import opcode_bit, word_bit
-from specialized_instruction import SpecializedInstruction
+from spec import Instruction
 
 
 class State:
@@ -58,16 +58,16 @@ class State:
         '''
         Returns the State that results from executing `instruction` in this
         State. Raises ValueError if `instruction` is variadic.
-         - instruction - a SpecializedInstruction.
+         - instruction - a Instruction.
         '''
-        assert isinstance(instruction, SpecializedInstruction)
+        assert isinstance(instruction, Instruction)
         # Update `tos_constant`.
         tos_constant = None
         if (len(instruction.effect.results.items) > 0 and
             instruction.effect.results.items[-1].expr is not None
         ):
             tos_constant = int(instruction.effect.results.items[-1].expr)
-        elif instruction == SpecializedInstruction.NEXT:
+        elif instruction == Instruction.NEXT:
             tos_constant = self.tos_constant
         # Simulate popping arguments.
         stack_pos = self.stack_pos - len(instruction.effect.args.items)
@@ -107,9 +107,9 @@ class State:
 @functools.total_ordering
 class Path:
     '''
-    Represents a sequence of SpecializedInstructions.
+    Represents a sequence of Instructions.
 
-     - instructions - tuple of SpecializedInstructions.
+     - instructions - tuple of Instructions.
      - state - the State that exists at the end of this Path, or `None` if
        this Path cannot usefully be optimized.
     '''
