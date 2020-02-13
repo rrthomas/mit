@@ -11,7 +11,7 @@ RISK.
 
 import json, random
 
-from specialized_instruction import SpecializedInstruction
+from spec import Instruction
 from path import Path
 
 
@@ -20,7 +20,7 @@ class State:
     Represents a state of the interpreter that we profiled.
      - index - the index of this State in `profile`.
      - path - Path - the canonical path to this State.
-     - guess - SpecializedInstruction - the guessed continuation.
+     - guess - Instruction - the guessed continuation.
      - correct_state - int - the index of the State to jump to if `guess` is
        correct, or `-1` for the fallback state.
      - wrong_state - int - the index of the State to jump to if `guess` is
@@ -40,7 +40,7 @@ class State:
         wrong_count,
     ):
         assert isinstance(path, Path)
-        assert isinstance(guess, SpecializedInstruction)
+        assert isinstance(guess, Instruction)
         self.index = index
         self.path = path
         self.guess = guess
@@ -72,10 +72,10 @@ def load(filename):
             State(
                 index,
                 Path(tuple(
-                    SpecializedInstruction[name]
+                    Instruction[name]
                     for name in profile['path'].split()
                 )),
-                SpecializedInstruction[profile['guess']],
+                Instruction[profile['guess']],
                 profile['correct_state'],
                 profile['wrong_state'],
                 profile['correct_count'],
@@ -95,12 +95,12 @@ def get_state(index):
 
 def predict(state):
     '''
-    Returns a probability distribution over SpecializedInstructions from
+    Returns a probability distribution over Instructions from
     `state`, and for each one gives the successor State.
 
      - state - State or None.
 
-    Returns a list of (float, (SpecializedInstruction, State or `None`))
+    Returns a list of (float, (Instruction, State or `None`))
     '''
     result = []
     probability = 1.0
@@ -134,10 +134,10 @@ def random_trace():
 
 def counts():
     '''
-    Returns a dict from SpecializedInstruction to count.
+    Returns a dict from Instruction to count.
     '''
     # Read trace, computing opcode counts
-    counts = {instruction: 0 for instruction in SpecializedInstruction}
+    counts = {instruction: 0 for instruction in Instruction}
     for state in profile:
         counts[state.guess] += state.correct_count
     return counts

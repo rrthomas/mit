@@ -10,7 +10,7 @@
 import sys, functools, heapq, argparse, random, pickle
 from pprint import pprint
 
-from specialized_instruction import SpecializedInstruction
+from spec import Instruction
 from path import Path
 import profile
 
@@ -55,22 +55,22 @@ args = parser.parse_args()
 profile.load(args.profile_filename)
 
 
-# The set of SpecializedInstructions that might modify the `ir` register.
+# The set of Instructions that might modify the `ir` register.
 # We cannot guess beyond such an instruction.
 GUESS_LIMITING = frozenset([
-    SpecializedInstruction.NEXT,
-    SpecializedInstruction.JUMP,
-    SpecializedInstruction.JUMPZ_TAKEN,
-    SpecializedInstruction.CALL,
+    Instruction.NEXT,
+    Instruction.JUMP,
+    Instruction.JUMPZ_TAKEN,
+    Instruction.CALL,
 ])
 
 class Label:
     '''
     A simulated code address (as if compiled by the JIT). Each Label has a
-    Path, defined to be the shortest sequence of SpecializedInstructions that
+    Path, defined to be the shortest sequence of Instructions that
     takes the interpreter from `ROOT_LABEL` to this Label.
 
-    At each Label, we count how many times each SpecializedInstruction follows
+    At each Label, we count how many times each Instruction follows
     it. This is the basis of a policy to decide when to construct a new Label.
 
     Invariants:
@@ -84,16 +84,16 @@ class Label:
      - path - Path - the canonical name of this Label.
      - right_parent - the Label whose `path` is `self.path[:-1]` (`None` for
        `ROOT_LABEL`).
-     - right_children - dict from SpecializedInstruction to Label - the Labels
+     - right_children - dict from Instruction to Label - the Labels
        of which `self` is the `right_parent`.
      - left_ancestor - the Label whose `path` is `self.path[n:]` for the
        smallest `n>0` (`None` for `ROOT_LABEL`).
-     - left_descendants - dict from SpecializedInstruction to Label - the Labels
+     - left_descendants - dict from Instruction to Label - the Labels
        of which `self` is the `left_ancestor`. Note that by "LEFT" the key is a
-       single SpecializedInstruction.
-     - counts - dict from SpecializedInstruction to int - Until
+       single Instruction.
+     - counts - dict from Instruction to int - Until
        `right_children[i]` is created, `counts[i]` is the number of times this
-       Label is followed by the SpecializedInstruction `i`. We don't bother to
+       Label is followed by the Instruction `i`. We don't bother to
        count thereafter.
     '''
     ALL = []
@@ -106,7 +106,7 @@ class Label:
         self.right_children = {}
         self.left_descendants = {}
         self._right_children_of_left_descendants = set() # of Instruction.
-        self.counts = {i: 0 for i in SpecializedInstruction}
+        self.counts = {i: 0 for i in Instruction}
         if args.verbose:
             print('Constructing {!r}'.format(self))
             print('    right_parent = {!r}'.format(right_parent))
@@ -207,7 +207,7 @@ class Label:
 
     def preguess(self):
         '''
-        Returns a tuple of SpecializedInstruction which will be executed if
+        Returns a tuple of Instruction which will be executed if
         control-flow reaches this Label. Previous Labels can verify the preguess
         at low cost, and must avoid this Label if it is wrong.
         The code at this Label can thereby be optimized.
@@ -215,14 +215,14 @@ class Label:
         The preguess is empty in the following cases:
 
          - `path` is empty, i.e. this is `ROOT_LABEL`.
-         - `path` ends with a `GUESS_LIMITING` SpecializedInstruction.
-         - We do not confidently know the next SpecializedInstruction. We test 
+         - `path` ends with a `GUESS_LIMITING` Instruction.
+         - We do not confidently know the next Instruction. We test 
            this by checking that the right_children of this Label and of all its
-           left descendants follow the same SpecializedInstruction.
+           left descendants follow the same Instruction.
 
         Otherwise:
          - if there is one right child, the preguess is the preguess of that
-           child prefixed with the SpecializedInstruction that leads to it.
+           child prefixed with the Instruction that leads to it.
          - otherwise, the preguess is that of our left ancestor.
         '''
         if (
@@ -243,7 +243,7 @@ ROOT_LABEL = Label(Path(()), None, None)
 
 
 # Make Labels exemplifying the whole instruction set, to improve profiling.
-for instruction in SpecializedInstruction:
+for instruction in Instruction:
     ROOT_LABEL.construct(instruction)
 
 
@@ -389,7 +389,7 @@ if args.verbose:
         for l in Label.ALL
     )
     pprint(label_reversed_strs, width=499)
-    histogram = [0]*(1 + len(SpecializedInstruction))
+    histogram = [0]*(1 + len(Instruction))
     for l in Label.ALL:
         histogram[len(l.right_children)] += 1
     for i, count in enumerate(histogram):
@@ -452,14 +452,14 @@ class If(Code):
     '''
      - path - Path - shortest Path from the root to this State. Used to decide
        the calling convention.
-     - guess - SpecializedInstruction - most likely single-instruction
+     - guess - Instruction - most likely single-instruction
        continuation.
      - c - State - where to go if `guess` is correct.
      - w - State - where to go if `guess` is wrong.
     '''
     def __init__(self, path, guess, c, w):
         assert isinstance(path, Path)
-        assert isinstance(guess, SpecializedInstruction)
+        assert isinstance(guess, Instruction)
         assert c is None or isinstance(c, State)
         assert w is None or isinstance(w, State)
         self.path = path
@@ -555,7 +555,7 @@ walk(State(0, 0))
 # [(
 #     path_instruction_sequence (str, space-separated),
 #     preguess_instruction_sequence (str, space-separated),
-#     guess (SpecializedInstruction),
+#     guess (Instruction),
 #     if_correct (int?),
 #     if_wrong (int?),
 # )]
