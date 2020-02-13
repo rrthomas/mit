@@ -118,3 +118,12 @@ Instruction = InstructionEnum(
     'Instruction',
     specialized_instructions,
 )
+
+# The set of Instructions that might modify the `ir` register.
+# We cannot guess beyond such an instruction.
+GUESS_LIMITING = frozenset([
+    Instruction.NEXT,
+    Instruction.JUMP,
+    Instruction.JUMPZ_TAKEN,
+    Instruction.CALL,
+])

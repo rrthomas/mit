@@ -10,7 +10,7 @@
 import sys, functools, heapq, argparse, random, pickle
 from pprint import pprint
 
-from spec import Instruction
+from spec import Instruction, GUESS_LIMITING
 from path import Path
 import profile
 
@@ -54,15 +54,6 @@ args = parser.parse_args()
 
 profile.load(args.profile_filename)
 
-
-# The set of Instructions that might modify the `ir` register.
-# We cannot guess beyond such an instruction.
-GUESS_LIMITING = frozenset([
-    Instruction.NEXT,
-    Instruction.JUMP,
-    Instruction.JUMPZ_TAKEN,
-    Instruction.CALL,
-])
 
 class Label:
     '''
