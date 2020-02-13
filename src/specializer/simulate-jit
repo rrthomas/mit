@@ -165,7 +165,10 @@ class Label:
 
     def construct(self, instruction):
         '''
-        Construct and return a new right child of `self` for `instruction`.
+        Construct and return a Label with path `self.path + (instruction,)`.
+        It will become `self.right_children[instruction]`.
+        If necessary, construct an additional Label to serve as the
+        `left_ancestor` of the new Label.
         '''
         assert instruction not in self.right_children
         new_path = self.path + (instruction,)
@@ -228,41 +231,11 @@ class Label:
             len(self._right_children_of_left_descendants) > 1
         ):
             return ()
+        # `right_children` is subset of `_right_children_of_left_descendants`.
+        assert len(self.right_children) <= 1
         for instruction, label in self.right_children.items():
             return (instruction,) + label.preguess()
         return self.left_ancestor.preguess()
-
-    @staticmethod
-    def run(label, instruction):
-        '''
-        Executes one instruction.
-        Returns the next Label.
-        '''
-        ALLOW_GRIDS = False # Allow grid structures to grow?
-        threshold = Label.COMPILE_THRESHOLD
-        while True:
-            # Is there a right edge? Follow it if so.
-            next_label = label.right_children.get(instruction)
-            if next_label is not None:
-                # Execute a compiled instruction.
-                return next_label
-            # Should we make the right edge that we didn't follow?
-            label.counts[instruction] += 1
-            if label.counts[instruction] >= threshold and (
-                ALLOW_GRIDS or
-                label is ROOT_LABEL or
-                len(label.left_ancestor.right_children) > 1 or
-                instruction not in label.left_ancestor.right_children
-            ):
-                # It is time to create a Label for `new_path`.
-                # This is rare and can be slow.
-                label.construct(instruction)
-            # Follow a left edge.
-            threshold = Label.COMPILE_THRESHOLD + label.counts[instruction]
-            label = label.left_ancestor
-            if label is None:
-                # Fall back to the interpreter.
-                return ROOT_LABEL
 
 
 # The unique Label with an empty Path.
@@ -276,17 +249,55 @@ for instruction in SpecializedInstruction:
 
 # Do the Markov Monte-Carlo simulation.
 
+def run_label(label, instruction):
+    '''
+    Simulates executing one instruction.
+    Returns the next Label.
+    '''
+    ALLOW_GRIDS = False # Allow grid structures to grow?
+    threshold = Label.COMPILE_THRESHOLD
+    while True:
+        # Does the JIT have specialized code for executing `instruction`
+        # from `self`?
+        next_label = label.right_children.get(instruction)
+        if next_label is not None:
+            # Simulate executing the compiled instruction.
+            return next_label
+        # Should we compile the specialized code that was missing?
+        label.counts[instruction] += 1
+        if label.counts[instruction] >= threshold and (
+            ALLOW_GRIDS or
+            label.is_root() or
+            len(label.left_ancestor.right_children) > 1 or
+            instruction not in label.left_ancestor.right_children
+        ):
+            # It is time to create a Label for `new_path`.
+            # This is rare and can be slow.
+            label.construct(instruction)
+        # Forget some history, and try again. We want a Label whose `path` is
+        # the longest possible suffix of `self.path` (`None` for a root label).
+        label = label.left_ancestor
+        if label is None:
+            # Simulate executing `instruction` using the fall-back interpreter.
+            # We just need to advance to the resulting vm_data.State.
+            return ROOT_LABEL
+        # Increase `threshold` because we prefer to compile new code before
+        # forgetting history.
+        threshold = Label.COMPILE_THRESHOLD + label.counts[instruction]
+
+
 random.seed(0)
 current_label = ROOT_LABEL
 tick_count = 0
 for instruction in profile.random_trace():
     if len(Label.ALL) >= args.labels:
         break
-    current_label = Label.run(current_label, instruction)
+    current_label = run_label(current_label, instruction)
     tick_count += 1
 
 for label in Label.ALL:
-    if label is not ROOT_LABEL:
+    # Sanity check the navigation links.
+    if not label.is_root():
         right_key = label.path[-1]
         assert label.right_parent.right_children[right_key] is label
         left_key = label.left_ancestor.path._end_of_prefix(label.path)
@@ -330,9 +341,9 @@ def write_svg(filename):
             #str(i),
             # OR: name the states.
             '('+' '.join(instruction.name for instruction in l.path)+')',
-            shape='star' if l is ROOT_LABEL else 'ellipse',
+            shape='star' if l.is_root() else 'ellipse',
             style='filled',
-            fillcolor='' if l is ROOT_LABEL
+            fillcolor='' if l.is_root()
                 else '/pastel19/{}'.format(1 + l.path[-1].opcode % 9),
         )
         nodes[l] = n
@@ -345,7 +356,7 @@ def write_svg(filename):
                 color='green',
                 #label=i.name,
             ))
-        if l is not ROOT_LABEL:
+        if not l.is_root():
             l2 = l.left_ancestor
             num_shrinks = len(l.path) - len(l2.path)
             g.add_edge(pydot.Edge(
@@ -466,7 +477,7 @@ for index, label in enumerate(Label.ALL):
     assert label_to_state[label].index == index
     # Guess each right child.
     i = 0
-    for (guess, child) in label.right_children.items():
+    for guess, child in label.right_children.items():
         state_to_code[State(index, i)] = If(
             label.path,
             guess,
@@ -535,7 +546,7 @@ def walk(state):
     walk(code.c)
     walk(code.w)
 
-walk(State(0, 0))    
+walk(State(0, 0))
 
 
 # Dump to a file.
