@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# (c) Mit authors 2019
+# (c) Mit authors 2019-2020
 #
 # The package is distributed under the MIT/X11 License.
 #
@@ -53,18 +53,6 @@ args = parser.parse_args()
 # Load profile file.
 
 profile.load(args.profile_filename)
-
-
-def trace():
-    profile_state = profile.ROOT_STATE
-    while True:
-        predictions = profile.predict(profile_state)
-        if len(predictions) == 0:
-            break
-        probabilities, choices = tuple(zip(*predictions))
-        choice = random.choices(choices, probabilities)[0]
-        instruction, profile_state = choice
-        yield instruction
 
 
 # The set of SpecializedInstructions that might modify the `ir` register.
@@ -175,21 +163,6 @@ class Label:
         '''
         return len(self.path) == 0
 
-    def guess(self, instruction):
-        '''
-        Tests whether the JIT has compiled specialized code for executing
-        `instruction` from `self`. If so, returns the Label otherwise `None`.
-        '''
-        return self.right_children.get(instruction)
-
-    def default(self):
-        '''
-        Returns a Label whose `path` is a suffix of `self.path` (`None` for
-        `ROOT_LABEL`). The interpreter will jump to this Label if it cannot
-        find a more specialized Label.
-        '''
-        return self.left_ancestor
-
     def construct(self, instruction):
         '''
         Construct and return a new right child of `self` for `instruction`.
@@ -269,7 +242,7 @@ class Label:
         threshold = Label.COMPILE_THRESHOLD
         while True:
             # Is there a right edge? Follow it if so.
-            next_label = label.guess(instruction)
+            next_label = label.right_children.get(instruction)
             if next_label is not None:
                 # Execute a compiled instruction.
                 return next_label
@@ -286,7 +259,7 @@ class Label:
                 label.construct(instruction)
             # Follow a left edge.
             threshold = Label.COMPILE_THRESHOLD + label.counts[instruction]
-            label = label.default()
+            label = label.left_ancestor
             if label is None:
                 # Fall back to the interpreter.
                 return ROOT_LABEL
@@ -306,7 +279,7 @@ for instruction in SpecializedInstruction:
 random.seed(0)
 current_label = ROOT_LABEL
 tick_count = 0
-for instruction in trace():
+for instruction in profile.random_trace():
     if len(Label.ALL) >= args.labels:
         break
     current_label = Label.run(current_label, instruction)
@@ -373,7 +346,7 @@ def write_svg(filename):
                 #label=i.name,
             ))
         if l is not ROOT_LABEL:
-            l2 = l.default()
+            l2 = l.left_ancestor
             num_shrinks = len(l.path) - len(l2.path)
             g.add_edge(pydot.Edge(
                 nodes[l],
