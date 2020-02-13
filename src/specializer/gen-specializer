@@ -27,6 +27,11 @@ parser = argparse.ArgumentParser(
     description='Generate optimizing interpreter',
 )
 parser.add_argument(
+    '--no-preguess',
+    action='store_true',
+    help='disable preguessing',
+)
+parser.add_argument(
     'labels_filename',
     metavar='LABELS-FILENAME',
     help='labels file to use',
@@ -171,7 +176,13 @@ class Label:
 # Load the labels file, which tells us what control-flow graph to generate.
 with open(args.labels_filename, "rb") as h:
     labels = [
-        Label(index, 'A_{}'.format(index), path, pgu, gu, ic, iw)
+        Label(
+            index,
+            'A_{}'.format(index),
+            path,
+            '' if args.no_preguess else pgu,
+            gu, ic, iw,
+        )
         for index, (path, pgu, gu, ic, iw)
             in enumerate(pickle.load(h))
     ]
