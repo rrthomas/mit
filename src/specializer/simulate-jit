@@ -67,6 +67,15 @@ def trace():
         yield instruction
 
 
+# The set of SpecializedInstructions that might modify the `ir` register.
+# We cannot guess beyond such an instruction.
+GUESS_LIMITING = frozenset([
+    SpecializedInstruction.NEXT,
+    SpecializedInstruction.JUMP,
+    SpecializedInstruction.JUMPZ_TAKEN,
+    SpecializedInstruction.CALL,
+])
+
 class Label:
     '''
     A simulated code address (as if compiled by the JIT). Each Label has a
@@ -77,7 +86,7 @@ class Label:
     it. This is the basis of a policy to decide when to construct a new Label.
 
     Invariants:
-     - UNIQUE - There is at most one Label for each path.
+     - UNIQUE - There is at most one Label for each Path.
      - RIGHT - If a Label exists for a non-empty path `p`, then a Label exists
        for path `p[:-1]`.
      - LEFT - If Labels exist for paths `p` and `q`, then a Label exists for
@@ -108,12 +117,13 @@ class Label:
         self.left_ancestor = left_ancestor
         self.right_children = {}
         self.left_descendants = {}
+        self._right_children_of_left_descendants = set() # of Instruction.
         self.counts = {i: 0 for i in SpecializedInstruction}
         if args.verbose:
             print('Constructing {!r}'.format(self))
             print('    right_parent = {!r}'.format(right_parent))
             print('    left_ancestor = {!r}'.format(left_ancestor))
-        if len(path) == 0:
+        if self.is_root():
             # Check the invariants.
             assert right_parent is None
             assert left_ancestor is None
@@ -123,7 +133,7 @@ class Label:
             assert path[:-1] == right_parent.path
             # UNIQUE.
             right_key = path[-1]
-            assert right_parent.right_children.get(right_key) is None
+            assert right_key not in right_parent.right_children
             # `left_ancestor` is a suffix.
             assert left_ancestor.path.is_proper_suffix_of(path)
             # `left_ancestor` is the longest suffix.
@@ -139,6 +149,16 @@ class Label:
                 left_key2 = path._end_of_prefix(left_descendant.path)
                 left_descendant.left_ancestor = self
                 self.left_descendants[left_key2] = left_descendant
+                self._right_children_of_left_descendants.update(
+                    left_descendant._right_children_of_left_descendants)
+            # Update `_right_children_of_left_descendants` recursively.
+            label = right_parent
+            while (
+                label is not None and
+                right_key not in label._right_children_of_left_descendants
+            ):
+                label._right_children_of_left_descendants.add(right_key)
+                label = label.left_ancestor
         # Add `self` to `ALL`.
         Label.ALL.append(self)
 
@@ -148,6 +168,12 @@ class Label:
         )
 
     COMPILE_THRESHOLD = 10
+
+    def is_root(self):
+        '''
+        Returns `true` if `self` is a root Label.
+        '''
+        return len(self.path) == 0
 
     def guess(self, instruction):
         '''
@@ -202,6 +228,36 @@ class Label:
                     print("similar = {}".format(similar))
                 other = Label(common_path, left_ancestor, other)
         return Label(new_path, self, other)
+
+    def preguess(self):
+        '''
+        Returns a tuple of SpecializedInstruction which will be executed if
+        control-flow reaches this Label. Previous Labels can verify the preguess
+        at low cost, and must avoid this Label if it is wrong.
+        The code at this Label can thereby be optimized.
+
+        The preguess is empty in the following cases:
+
+         - `path` is empty, i.e. this is `ROOT_LABEL`.
+         - `path` ends with a `GUESS_LIMITING` SpecializedInstruction.
+         - We do not confidently know the next SpecializedInstruction. We test 
+           this by checking that the right_children of this Label and of all its
+           left descendants follow the same SpecializedInstruction.
+
+        Otherwise:
+         - if there is one right child, the preguess is the preguess of that
+           child prefixed with the SpecializedInstruction that leads to it.
+         - otherwise, the preguess is that of our left ancestor.
+        '''
+        if (
+            self.is_root() or
+            self.path[-1] in GUESS_LIMITING or
+            len(self._right_children_of_left_descendants) > 1
+        ):
+            return ()
+        for instruction, label in self.right_children.items():
+            return (instruction,) + label.preguess()
+        return self.left_ancestor.preguess()
 
     @staticmethod
     def run(label, instruction):
@@ -262,6 +318,22 @@ for label in Label.ALL:
         assert label.right_parent.right_children[right_key] is label
         left_key = label.left_ancestor.path._end_of_prefix(label.path)
         assert label.left_ancestor.left_descendants[left_key] is label
+    # Sanity check the preguesses.
+    assert not set(label.right_children.keys()).difference(
+        label._right_children_of_left_descendants
+    )
+    label_preguess = label.preguess()
+    if len(label_preguess) > 0:
+        for instruction, child in label.right_children.items():
+            assert label_preguess[0] == instruction
+            child_preguess = child.preguess()
+            assert label_preguess[1:][:len(child_preguess)] == child_preguess
+    if label.left_ancestor is not None:
+        assert not label._right_children_of_left_descendants.difference(
+            label.left_ancestor._right_children_of_left_descendants
+        )
+        shrink_preguess = label.left_ancestor.preguess()
+        assert label_preguess[:len(shrink_preguess)] == shrink_preguess
 
 
 # Diagnostics.
@@ -344,139 +416,17 @@ if args.svg_file is not None:
     write_svg(args.svg_file)
 
 
-# Filter out the Labels we don't want to compile.
-
-# The set of SpecializedInstructions that might modify the `ir` register.
-# We cannot guess beyond such an instruction.
-GUESS_LIMITING = frozenset([
-    SpecializedInstruction.NEXT,
-    SpecializedInstruction.JUMP,
-    SpecializedInstruction.JUMPZ_TAKEN,
-    SpecializedInstruction.CALL,
-])
-
-class CompiledLabel:
-    '''
-    Represents a Label that we want to compile.
-     - path - Path with non-None `state`.
-     - right_children - dict from SpecializedInstruction to CompiledLabel.
-     - left_ancestor - CompiledLabel or `None`.
-    '''
-    ALL = []
-
-    def __init__(self, path, right_parent, left_ancestor):
-        assert path.state is not None
-        self.path = path
-        self.left_ancestor = left_ancestor
-        self.right_children = {}
-        # Set of SpecializedInstruction.
-        self._right_children_of_left_descendants = set()
-        if len(path) == 0:
-            assert left_ancestor is None
-            assert right_parent is None
-        else:
-            assert left_ancestor.path.is_proper_suffix_of(path)
-            assert right_parent.path == path[:-1]
-            right_key = path[-1]
-            assert right_key not in right_parent.right_children
-            right_parent.right_children[right_key] = self
-            # Update `_right_children_of_left_descendants` recursively.
-            label = right_parent
-            while (
-                label is not None and
-                right_key not in label._right_children_of_left_descendants
-            ):
-                label._right_children_of_left_descendants.add(right_key)
-                label = label.left_ancestor
-        CompiledLabel.ALL.append(self)
-
-    def __repr__(self):
-        return 'CompiledLabel({})'.format(
-            ' '.join(instruction.name for instruction in self.path)
-        )
-
-    def guesses(self):
-        '''
-        Yields `(guess, label)` where `guess` is a SpecializedInstruction and
-        `label` is a CompiledLabel that results if the guess is correct.
-        '''
-        for instruction, child in self.right_children.items():
-            yield instruction, child
-
-    def preguess(self):
-        '''
-        Returns a tuple of SpecializedInstruction which will be executed if
-        control-flow reaches this CompiledLabel. Previous CompiledLabels can
-        verify the preguess at low cost, and must avoid this CompiledLabel if it
-        is wrong. The code at this CompiledLabel can thereby be optimized.
-
-        The preguess is empty in the following cases:
-
-         - `path` is empty, i.e. this is `ROOT_LABEL`.
-         - `path` ends with a `GUESS_LIMITING` SpecializedInstruction.
-         - We do not confidently know the next SpecializedInstruction. We test 
-           this by checking that the right_children of this CompiledLabel and of
-           all its left descendants follow the same SpecializedInstruction.
-
-        Otherwise:
-         - if there is one right child, the preguess is the preguess of that
-           child prefixed with the SpecializedInstruction that leads to it.
-         - otherwise, the preguess is that of our left ancestor.
-        '''
-        if (
-            len(self.path) == 0 or
-            self.path[-1] in GUESS_LIMITING or
-            len(self._right_children_of_left_descendants) > 1
-        ):
-            return ()
-        for instruction, label in self.right_children.items():
-            return (instruction,) + label.preguess()
-        return self.left_ancestor.preguess()
-
-
-# Label to CompiledLabel.
-label_to_compiled = {None: None}
-for label in sorted(Label.ALL, key=lambda x: len(x.path)):
-    if label.path.state is not None:
-        left_ancestor = label.left_ancestor
-        while left_ancestor is not None and left_ancestor.path.state is None:
-            left_ancestor = left_ancestor.left_ancestor
-        label_to_compiled[label] = CompiledLabel(
-            label.path,
-            label_to_compiled[label.right_parent],
-            label_to_compiled[left_ancestor],
-        )
-
-# Sanity check the preguesses.
-for label in CompiledLabel.ALL:
-    assert not set(label.right_children.keys()).difference(
-        label._right_children_of_left_descendants
-    )
-    label_preguess = label.preguess()
-    if len(label_preguess) > 0:
-        for instruction, child in label.guesses():
-            assert label_preguess[0] == instruction
-            child_preguess = child.preguess()
-            assert label_preguess[1:][:len(child_preguess)] == child_preguess
-    if label.left_ancestor is not None:
-        assert not label._right_children_of_left_descendants.difference(
-            label.left_ancestor._right_children_of_left_descendants
-        )
-        shrink_preguess = label.left_ancestor.preguess()
-        assert label_preguess[:len(shrink_preguess)] == shrink_preguess
-
-
-# Expand each CompiledLabel into a tree of "if"s.
+# Expand each Label into a tree of "if"s.
 
 class State:
     '''
-    Represents a CompiledLabel and a number of incorrect guesses.
-     - index - an index into `CompiledLabel.ALL`.
+    Represents a Label and a number of incorrect guesses.
+     - index - an index into `Label.ALL`.
      - case - the number of wrong guesses, which may be viewed as in index
-       into `CompiledLabel.ALL[index].right_children`.
+       into `Label.ALL[index].right_children`.
     '''
     def __init__(self, index, case):
-        assert case <= len(CompiledLabel.ALL[index].right_children)
+        assert case <= len(Label.ALL[index].right_children)
         self.index = index
         self.case = case
 
@@ -490,10 +440,10 @@ class State:
         return (self.index, self.case).__hash__()
 
 
-# Map from CompiledLabel to the corresponding State.
+# Map from Label to the corresponding State.
 label_to_state = {
     label: State(index, 0)
-    for index, label in enumerate(CompiledLabel.ALL)
+    for index, label in enumerate(Label.ALL)
 }
 
 
@@ -537,13 +487,13 @@ class If(Code):
         return 'if {} goto {} else goto {}'.format(self.guess, self.c, self.w)
 
 
-# For a CompiledLabel with `n` right_children, make Codes for `n+1` States.
+# For a Label with `n` right_children, make Codes for `n+1` States.
 state_to_code = {}
-for index, label in enumerate(CompiledLabel.ALL):
+for index, label in enumerate(Label.ALL):
     assert label_to_state[label].index == index
     # Guess each right child.
     i = 0
-    for (guess, child) in label.guesses():
+    for (guess, child) in label.right_children.items():
         state_to_code[State(index, i)] = If(
             label.path,
             guess,
@@ -564,11 +514,10 @@ def tension(state):
     If the returned State is not `None`, the code there will always be an If.
      - state - State
     '''
-    rejects = set()
-    if state is not None:
-        it = CompiledLabel.ALL[state.index].guesses()
-        for _ in range(state.case):
-            rejects.add(next(it)[0])
+    if state is None:
+        return None
+    right_children = list(Label.ALL[state.index].right_children)
+    rejects = set(right_children[:state.case])
     while state is not None:
         code = state_to_code[state]
         if isinstance(code, Goto):
@@ -629,7 +578,7 @@ walk(State(0, 0))
 
 def row_for_state(state):
     code = state_to_code[state]
-    label = CompiledLabel.ALL[state.index]
+    label = Label.ALL[state.index]
     return (
         ' '.join(i.name for i in code.path),
         ' '.join(i.name for i in label.preguess()),
