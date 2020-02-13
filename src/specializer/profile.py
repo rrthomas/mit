@@ -1,7 +1,7 @@
 '''
 Library for reading and processing profile files.
 
-(c) 2019 Mit authors
+(c) 2019-2020 Mit authors
 
 The package is distributed under the MIT/X11 License.
 
@@ -9,7 +9,7 @@ THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 RISK.
 '''
 
-import json
+import json, random
 
 from specialized_instruction import SpecializedInstruction
 from path import Path
@@ -118,6 +118,18 @@ def predict(state):
         probability *= float(state.wrong_count) / state.total_count
         state = get_state(state.wrong_state)
     return result
+
+
+def random_trace():
+    profile_state = ROOT_STATE
+    while True:
+        predictions = predict(profile_state)
+        if len(predictions) == 0:
+            break
+        probabilities, choices = tuple(zip(*predictions))
+        choice = random.choices(choices, probabilities)[0]
+        instruction, profile_state = choice
+        yield instruction
 
 
 def counts():
