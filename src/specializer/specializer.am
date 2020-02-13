@@ -68,7 +68,7 @@ specialize-mit: mit@PACKAGE_SUFFIX@$(EXEEXT)
 %D%/instructions_labels.pickle: mit_core/code_util.py mit_core/params.py mit_core/instruction.py mit_core/spec.py %D%/profile.json %D%/simulate-jit %D%/path.py %D%/profile.py
 	$(PYTHON_WITH_PATH) $(srcdir)/%D%/simulate-jit $(srcdir)/%D%/profile.json $@
 
-%D%/specializer.c: mit_core/code_util.py mit_core/instruction.py mit_core/stack.py mit_core/spec.py mit_core/instruction_gen.py %D%/gen-specializer %D%/specializer.py %D%/spec.py %D%/instructions_labels.pickle
+%D%/specializer.c: mit_core/code_util.py mit_core/instruction.py mit_core/stack.py mit_core/spec.py mit_core/instruction_gen.py %D%/specializer.am %D%/gen-specializer %D%/specializer.py %D%/spec.py %D%/instructions_labels.pickle
 	$(PYTHON_WITH_PATH) $(srcdir)/%D%/gen-specializer %D%/instructions_labels.pickle > %D%/specializer.c || ( rm -f %D%/specializer.c; exit 1 )
 
 %D%/specializer.lo: include/mit/mit.h
