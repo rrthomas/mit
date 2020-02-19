@@ -14,7 +14,7 @@ import argparse
 import mit@PACKAGE_SUFFIX@
 
 
-# Command-line arguments.
+# Process command-line arguments
 parser = argparse.ArgumentParser(
     prog='mit-dump',
     description='Dump Mit object file as hex and disassembly',
@@ -27,16 +27,17 @@ parser.add_argument(
 )
 args = parser.parse_args()
 
-for filename in args.object_file:
-    basename, ext = os.path.splitext(filename)
+# Dump files
+for file in args.object_file:
+    basename, ext = os.path.splitext(file)
 
     VM = mit.State()
-    length = VM.load(filename)
+    length = VM.load(file)
 
-    asm_filename = "{}.asm".format(basename)
-    with open(asm_filename, "w") as h:
+    asm_file = "{}.asm".format(basename)
+    with open(asm_file, "w") as h:
         VM.disassemble(0, length, file=h)
 
-    hex_filename = "{}.hex".format(basename)
-    with open(hex_filename, "w") as h:
+    hex_file = "{}.hex".format(basename)
+    with open(hex_file, "w") as h:
         VM.dump(0, length, file=h)

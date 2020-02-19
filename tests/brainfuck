@@ -15,16 +15,17 @@ RISK.
 '''
 
 import sys
+
 from mit.globals import *
 
 
 if len(sys.argv) != 2:
     print('''\
-Usage: brainfuck OBJECT-FILENAME
+Usage: brainfuck OBJECT-FILE
 
 Brainfuck source is read from standard input.''', file=sys.stderr)
     sys.exit(1)
-object_filename = sys.argv[1]
+object_file = sys.argv[1]
 
 def inc(): ass(LIT_1); ass(ADD)
 def dec(): ass(LIT_1); ass(NEGATE); ass(ADD)
@@ -74,4 +75,4 @@ except ErrorCode as e:
     else:
         sys.exit(1)
 
-save(object_filename)
+save(object_file)
