@@ -7,7 +7,7 @@
 # THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 # RISK.
 
-import sys, functools, heapq, argparse, random, pickle
+import sys, functools, heapq, argparse, random, json
 from pprint import pprint
 
 from spec import Instruction, GUESS_LIMITING
@@ -542,27 +542,27 @@ walk(State(0, 0))
 
 # Dump to a file.
 
-# File format is Pickle, with the following contents:
-# [(
-#     path_instruction_sequence (str, space-separated),
-#     preguess_instruction_sequence (str, space-separated),
-#     guess (Instruction),
-#     if_correct (int?),
-#     if_wrong (int?),
-# )]
+# File format is JSON, with the following contents:
+# [{
+#     "path": str - a space-separated list of Instruction names,
+#     "preguess": str - a space-separated list of Instruction names,
+#     "guess": str - an Instruction name,
+#     "if_correct": int or None - a label index,
+#     "if_wrong": int or None - a label index,
+# }]
 
 def row_for_state(state):
     code = state_to_code[state]
     label = Label.ALL[state.index]
-    return (
-        ' '.join(i.name for i in code.path),
-        ' '.join(i.name for i in label.preguess()),
-        code.guess.name,
-        state_to_number.get(code.c),
-        state_to_number.get(code.w),
-    )
+    return {
+        'path': ' '.join(i.name for i in code.path),
+        'preguess': ' '.join(i.name for i in label.preguess()),
+        'guess': code.guess.name,
+        'if_correct': state_to_number.get(code.c),
+        'if_wrong': state_to_number.get(code.w),
+    }
 
-with open(args.labels_filename, 'wb') as f:
-    pickle.dump([row_for_state(s) for s in reachable_states], file=f)
+with open(args.labels_filename, 'w') as f:
+    json.dump([row_for_state(s) for s in reachable_states], f, indent=2)
 if args.verbose:
     print('Wrote {}'.format(args.labels_filename))

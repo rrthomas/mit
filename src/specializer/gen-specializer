@@ -7,7 +7,7 @@
 # THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 # RISK.
 
-import argparse, pickle, textwrap
+import argparse, json, textwrap
 
 from mit_core.code_util import Code, copyright_banner
 from mit_core.params import opcode_bit
@@ -179,12 +179,14 @@ with open(args.labels_filename, "rb") as h:
         Label(
             index,
             'A_{}'.format(index),
-            path,
-            '' if args.no_preguess else pgu,
-            gu, ic, iw,
+            obj['path'],
+            '' if args.no_preguess else obj['preguess'],
+            obj['guess'],
+            obj['if_correct'],
+            obj['if_wrong'],
         )
-        for index, (path, pgu, gu, ic, iw)
-            in enumerate(pickle.load(h))
+        for index, obj
+            in enumerate(json.load(h))
     ]
 
 def label_by_index(index):
