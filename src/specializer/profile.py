@@ -21,9 +21,9 @@ class Label:
      - index - int - the index of this Label in `profile`.
      - path - Path - the canonical path to this Label.
      - guess - Instruction - the guessed continuation.
-     - correct_state - int - the index of the Label to jump to if `guess` is
+     - if_correct - int - the index of the Label to jump to if `guess` is
        correct, or `-1` for the fallback label.
-     - wrong_state - int - the index of the Label to jump to if `guess` is
+     - if_wrong - int - the index of the Label to jump to if `guess` is
        wrong, or `-1` for the fallback label.
      - correct_count - int - the number of times `guess` was correct.
      - wrong_count - int - the number of times `guess` was wrong.
@@ -34,8 +34,8 @@ class Label:
         index,
         path,
         guess,
-        correct_state,
-        wrong_state,
+        if_correct,
+        if_wrong,
         correct_count,
         wrong_count,
     ):
@@ -44,8 +44,8 @@ class Label:
         self.index = index
         self.path = path
         self.guess = guess
-        self.correct_state = correct_state
-        self.wrong_state = wrong_state
+        self.if_correct = if_correct
+        self.if_wrong = if_wrong
         self.correct_count = correct_count
         self.wrong_count = wrong_count
         self.total_count = correct_count + wrong_count
@@ -55,8 +55,8 @@ class Label:
             self.index,
             self.path,
             self.guess,
-            self.correct_state,
-            self.wrong_state,
+            self.if_correct,
+            self.if_wrong,
             self.correct_count,
             self.wrong_count,
         )
@@ -76,8 +76,8 @@ def load(filename):
                     for name in profile['path'].split()
                 )),
                 Instruction[profile['guess']],
-                profile['correct_state'],
-                profile['wrong_state'],
+                profile['if_correct'],
+                profile['if_wrong'],
                 profile['correct_count'],
                 profile['wrong_count'],
             )
@@ -103,10 +103,10 @@ def random_trace():
         elif random.randrange(label.total_count) < label.correct_count:
             # Model a correct guess.
             yield label.guess
-            label = get_label(label.correct_state)
+            label = get_label(label.if_correct)
         else:
             # Model a wrong guess.
-            label = get_label(label.wrong_state)
+            label = get_label(label.if_wrong)
 
 
 def counts():

@@ -363,8 +363,8 @@ code.append('''
                         "%s\\n  {"
                             "\\"path\\": \\"%s\\", "
                             "\\"guess\\": \\"%s\\", "
-                            "\\"correct_state\\": %d, "
-                            "\\"wrong_state\\": %d, "
+                            "\\"if_correct\\": %d, "
+                            "\\"if_wrong\\": %d, "
                             "\\"correct_count\\": %llu, "
                             "\\"wrong_count\\": %llu"
                         "}",
