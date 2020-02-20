@@ -492,7 +492,7 @@ def tension(state):
     if state is None:
         return None
     right_children = list(Label.ALL[state.index].right_children)
-    rejects = set(right_children[:state.case])
+    rejects = set() # FIXME: Why slower?: set(right_children[:state.case])
     while state is not None:
         code = state_to_code[state]
         if isinstance(code, Goto):
