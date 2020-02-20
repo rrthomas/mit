@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # Run a brainfuck test.
 #
-# (c) Mit authors 2019
+# (c) Mit authors 2019-2020
 #
 # The package is distributed under the MIT/X11 License.
 #
@@ -20,14 +20,14 @@ from redirect_stdout import stdout_redirector
 
 
 if len(sys.argv) != 2:
-    print("Usage: run-brainfuck-test BRAINFUCK-FILENAME", file=sys.stderr)
+    print("Usage: run-brainfuck-test BRAINFUCK-FILE", file=sys.stderr)
     sys.exit(1)
-brainfuck_filename = sys.argv[1]
+brainfuck_file = sys.argv[1]
 
-object_filename = re.sub(".bf$", ".obj", os.path.basename(brainfuck_filename))
-with open(brainfuck_filename, 'rb') as f:
+object_file = re.sub(".bf$", ".obj", os.path.basename(brainfuck_file))
+with open(brainfuck_file, 'rb') as f:
     returncode = subprocess.run(
-        [os.environ['PYTHON'], os.path.join(os.environ['srcdir'], './brainfuck'), object_filename],
+        [os.environ['PYTHON'], os.path.join(os.environ['srcdir'], './brainfuck'), object_file],
         input=f.read(),
     ).returncode
     if returncode == 2:
@@ -35,14 +35,14 @@ with open(brainfuck_filename, 'rb') as f:
     elif returncode != 0:
         raise
 VM = State()
-VM.load(object_filename)
+VM.load(object_file)
 f = io.BytesIO()
 with stdout_redirector(f):
     VM.run()
 output = f.getvalue()
-correct_file = re.sub(".bf$", ".correct", brainfuck_filename)
+correct_file = re.sub(".bf$", ".correct", brainfuck_file)
 correct = open(correct_file, "rb").read()
-os.remove(object_filename)
+os.remove(object_file)
 
 print("Output:\n{}\n\nCorrect:\n{}".format(output,correct))
 assert(output == correct)

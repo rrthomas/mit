@@ -27,15 +27,15 @@ parser = argparse.ArgumentParser(
     description='Generate naive interpreter',
 )
 parser.add_argument(
-    'profile_filename',
-    metavar='PROFILE-FILENAME',
+    'profile_file',
+    metavar='PROFILE-FILE',
     help='profile file to use',
 )
 args = parser.parse_args()
 
 
 # Get instruction counts from profile and compute order
-profile.load(args.profile_filename)
+profile.load(args.profile_file)
 instruction_counts = {instruction.opcode: 0 for instruction in Instruction}
 for instruction, count in profile.counts().items():
     instruction_counts[instruction.opcode] += count
