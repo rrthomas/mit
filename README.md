@@ -1,6 +1,6 @@
 # Mit
 
-by Reuben Thomas <rrt@sc3d.org>  
+Maintainer: Reuben Thomas <rrt@sc3d.org>  
 https://github.com/rrthomas/mit  
 
 Mit is a simple virtual machine designed for study and experiment. It uses
@@ -112,5 +112,6 @@ A magic file for the file(1) command is also provided: mit.magic.
 
 ## Bugs and comments
 
-Please send bug reports (preferably as [GitHub issues](https://github.com/rrthomas/mit/issues))
-and comments. I’m especially interested to know of portability bugs.
+Please file bugs, if you can, as [GitHub issues](https://github.com/rrthomas/mit/issues).
+
+The maintainer welcomes comments; please see the top of this file for the email address.
