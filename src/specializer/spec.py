@@ -12,10 +12,10 @@ RISK.
 from mit_core.code_util import Code
 from mit_core.spec import Instruction
 from mit_core.stack import StackEffect, Size
-from mit_core.instruction import InstructionEnum
+import mit_core.instruction
 
 
-class SpecializedInstructionEnum(InstructionEnum):
+class InstructionEnum(mit_core.instruction.InstructionEnum):
     '''
     Specialized VM instruction descriptor.
     
@@ -114,7 +114,16 @@ for instruction in Instruction:
         specialized_instructions[instruction.name] = \
             _gen_ordinary_instruction(instruction)
 
-SpecializedInstruction = SpecializedInstructionEnum(
-    'SpecializedInstruction',
+Instruction = InstructionEnum(
+    'Instruction',
     specialized_instructions,
 )
+
+# The set of Instructions that might modify the `ir` register.
+# We cannot guess beyond such an instruction.
+GUESS_LIMITING = frozenset([
+    Instruction.NEXT,
+    Instruction.JUMP,
+    Instruction.JUMPZ_TAKEN,
+    Instruction.CALL,
+])

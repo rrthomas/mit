@@ -17,7 +17,7 @@
 # 2. `make` then calls itself recursively to regenerate the specialized
 # interpreter using the new profile:
 #
-#   a. `instructions_labels.pickle` is built by `simulate-jit`, which reads
+#   a. `labels.json` is built by `simulate-jit`, which reads
 #      a profile and constructs a new control-flow graph for the specialized
 #      interpreter.
 #
@@ -65,18 +65,18 @@ specialize-mit: mit@PACKAGE_SUFFIX@$(EXEEXT)
 	cd $(abs_builddir) && \
 	$(MAKE)
 
-%D%/instructions_labels.pickle: mit_core/code_util.py mit_core/params.py mit_core/instruction.py mit_core/spec.py %D%/profile.json %D%/simulate-jit %D%/path.py %D%/profile.py
+%D%/labels.json: mit_core/code_util.py mit_core/params.py mit_core/instruction.py mit_core/spec.py %D%/profile.json %D%/simulate-jit %D%/path.py %D%/profile.py
 	$(PYTHON_WITH_PATH) $(srcdir)/%D%/simulate-jit $(srcdir)/%D%/profile.json $@
 
-%D%/specializer.c: mit_core/code_util.py mit_core/instruction.py mit_core/stack.py mit_core/spec.py mit_core/instruction_gen.py %D%/gen-specializer %D%/specializer.py %D%/specialized_instruction.py %D%/instructions_labels.pickle
-	$(PYTHON_WITH_PATH) $(srcdir)/%D%/gen-specializer %D%/instructions_labels.pickle > %D%/specializer.c || ( rm -f %D%/specializer.c; exit 1 )
+%D%/specializer.c: mit_core/code_util.py mit_core/instruction.py mit_core/stack.py mit_core/spec.py mit_core/instruction_gen.py %D%/specializer.am %D%/gen-specializer %D%/specializer.py %D%/spec.py %D%/labels.json
+	$(PYTHON_WITH_PATH) $(srcdir)/%D%/gen-specializer %D%/labels.json > %D%/specializer.c || ( rm -f %D%/specializer.c; exit 1 )
 
 %D%/specializer.lo: include/mit/mit.h
 
 EXTRA_DIST += \
 	%D%/path.py \
 	%D%/profile.py \
-	%D%/specialized_instruction.py \
+	%D%/spec.py \
 	%D%/specializer.py \
 	%D%/simulate-jit \
 	%D%/gen-specializer \
@@ -84,5 +84,5 @@ EXTRA_DIST += \
 	%D%/opcode-frequency
 
 DISTCLEANFILES += \
-	%D%/instructions_labels.pickle \
+	%D%/labels.json \
 	%D%/specializer.c

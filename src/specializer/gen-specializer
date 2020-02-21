@@ -7,12 +7,12 @@
 # THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 # RISK.
 
-import argparse, pickle, textwrap
+import argparse, json, textwrap
 
 from mit_core.code_util import Code, copyright_banner
 from mit_core.params import opcode_bit
 from specializer import CacheState, gen_case
-from specialized_instruction import SpecializedInstruction
+from spec import Instruction
 from path import Path, State
 
 
@@ -27,6 +27,11 @@ parser = argparse.ArgumentParser(
     description='Generate optimizing interpreter',
 )
 parser.add_argument(
+    '--no-preguess',
+    action='store_true',
+    help='disable preguessing',
+)
+parser.add_argument(
     'labels_filename',
     metavar='LABELS-FILENAME',
     help='labels file to use',
@@ -39,9 +44,9 @@ class Label:
      - index - int - the index of this Label.
      - name - str - The C identifier of this Label.
      - path - Path - the instruction sequence just executed.
-     - preguess - list of SpecializedInstruction - the longest unique probable
+     - preguess - list of Instruction - the longest unique probable
        continuation.
-     - guess - SpecializedInstruction - the most probable next instruction.
+     - guess - Instruction - the most probable next instruction.
      - if_correct - int - the Label index to jump to if `guess` is correct.
      - if_wrong - int - the Label index to jump to if `guess` is wrong.
     '''
@@ -56,18 +61,18 @@ class Label:
         if_wrong=None,
     ):
         '''
-         - path - str (space-separated SpecializedInstruction names).
-         - preguess - str (space-separated SpecializedInstruction names).
-         - guess - str (SpecializedInstruction name).
+         - path - str (space-separated Instruction names).
+         - preguess - str (space-separated Instruction names).
+         - guess - str (Instruction name).
         '''
         self.index = index
         self.name = name
         self.path = None if path is None else Path(tuple(
-            SpecializedInstruction[name] for name in path.split()
+            Instruction[name] for name in path.split()
         ))
         self.preguess = None if preguess is None else [
-            SpecializedInstruction[name] for name in preguess.split()]
-        self.guess = None if guess is None else SpecializedInstruction[guess]
+            Instruction[name] for name in preguess.split()]
+        self.guess = None if guess is None else Instruction[guess]
         self.if_correct = if_correct
         self.if_wrong = if_wrong
 
@@ -125,7 +130,7 @@ class Label:
             w_code.append('state_guess_wrong[{}]++;'.format(self.index))
         cache_state = self.cache_state()
         w_code.extend(label_by_index(self.if_wrong).goto(cache_state))
-        # Compute the bit string of SpecializedInstruction opcodes to guess.
+        # Compute the bit string of Instruction opcodes to guess.
         opcode_value = 0 # Bit pattern to match.
         opcode_bits = 0 # Number of bits to match.
         multiguess = [self.guess] + label_by_index(self.if_correct).preguess
@@ -171,9 +176,17 @@ class Label:
 # Load the labels file, which tells us what control-flow graph to generate.
 with open(args.labels_filename, "rb") as h:
     labels = [
-        Label(index, 'A_{}'.format(index), path, pgu, gu, ic, iw)
-        for index, (path, pgu, gu, ic, iw)
-            in enumerate(pickle.load(h))
+        Label(
+            index,
+            'A_{}'.format(index),
+            obj['path'],
+            '' if args.no_preguess else obj['preguess'],
+            obj['guess'],
+            obj['if_correct'],
+            obj['if_wrong'],
+        )
+        for index, obj
+            in enumerate(json.load(h))
     ]
 
 def label_by_index(index):
@@ -200,7 +213,7 @@ def gen_labels_code(profiling=False):
         //  - On entry, `error` is `MIT_ERROR_OK`. `cached_depth` is a
         //    compile-time constant indicating how many top stack items are in
         //    C variables.
-        //  - Before running the `SpecializedInstruction.code` for an
+        //  - Before running the `Instruction.code` for an
         //    instruction, record `initial_pc` and `initial_ir`, and right-shift
         //    `ir`.
         //  - When an error occurs, call `RAISE(code)`.
@@ -352,8 +365,8 @@ code.append('''
                         "%s\\n  {"
                             "\\"path\\": \\"%s\\", "
                             "\\"guess\\": \\"%s\\", "
-                            "\\"correct_state\\": %d, "
-                            "\\"wrong_state\\": %d, "
+                            "\\"if_correct\\": %d, "
+                            "\\"if_wrong\\": %d, "
                             "\\"correct_count\\": %llu, "
                             "\\"wrong_count\\": %llu"
                         "}",

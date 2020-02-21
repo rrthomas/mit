@@ -1,0 +1,126 @@
+#!/usr/bin/env python3
+'''
+Library for analysing profile files.
+
+Copyright (c) 2020 Mit authors, 2020 Welly authors.
+'''
+
+import collections
+import json
+import math
+import os
+import random
+import sys
+
+from pprint import pprint
+
+import profile
+
+
+profile.load(sys.argv[1])
+
+
+MINIMUM_COUNT = int(0.01 * max(pl.total_count for pl in profile.profile))
+
+
+class Graph:
+    '''
+    Incrementally constructs a dot file.
+    '''
+    def __init__(self, **kwargs):
+        self.graph_extras = kwargs
+        self.nodes = {} # str -> kwargs
+        self.edges = [] # [((str, str), kwargs)]
+
+    def add_node(self, name, **kwargs):
+        assert isinstance(name, str)
+        assert name not in self.nodes, (
+            "Duplicate node '{}'".format(node))
+        self.nodes[name] = kwargs
+
+    def add_edge(self, node1, node2, **kwargs):
+        assert isinstance(node1, str)
+        assert isinstance(node2, str)
+        self.edges.append(((node1, node2), kwargs))
+
+    def print(self, f=sys.stdout):
+        def escape(text):
+            return '"{}"'.format(
+                text.replace('\\', '\\\\')
+                    .replace('"', '\\"')
+                    .replace('\n', '\\n')
+            )
+        def statements():
+            yield 'graph', self.graph_extras
+            for node, node_extras in self.nodes.items():
+                yield node, node_extras
+            for (node1, node2), edge_extras in self.edges:
+                yield '{} -> {}'.format(node1, node2), edge_extras
+        print('digraph {', file=f)
+        for statement, extra in statements():
+            extra = ' '.join(
+                '{}={}'.format(k, escape(v))
+                for k, v in extra.items()
+            )
+            print('    {} [{}]'.format(statement, extra), file=f)
+        print('}', file=f)
+
+
+def weight(count):
+    if count < MINIMUM_COUNT:
+        return '0'
+    else:
+        return '{:.2f}'.format(math.log(count / MINIMUM_COUNT, 2))
+
+def history_len(index):
+    if index == -1: return 0
+    pl = profile.get_label(index)
+    path_len = len(pl.path)
+    return min(1.0, 20 * path_len / len(profile.profile))
+
+def is_grow(index1, index2):
+    if index2 == -1: return False
+    if index1 == -1: return True
+    pl1 = profile.get_label(index1)
+    pl2 = profile.get_label(index2)
+    return len(pl1.path) < len(pl2.path)
+
+nodes = {
+    index: '{}'.format(index)
+    for index, pl in enumerate(profile.profile)
+    if pl.total_count > MINIMUM_COUNT
+}
+nodes[-1] = 'FALLBACK'
+
+g = Graph(ordering='out', rankdir='LR')
+for index, node in nodes.items():
+    pl = profile.get_label(index)
+    if pl is None:
+        g.add_node(node)
+    else:
+        g.add_node(
+            node,
+            style='filled',
+            fillcolor='grey{}'.format(int(100 - 50 * history_len(index))),
+        )
+        if pl.if_correct in nodes and pl.correct_count >= MINIMUM_COUNT:
+            index2 = pl.if_correct
+            g.add_edge(
+                node,
+                nodes[index2],
+                label='{}'.format(pl.guess.name),
+                color='green',
+                penwidth=weight(pl.correct_count),
+            )
+        if pl.if_wrong in nodes and pl.wrong_count >= MINIMUM_COUNT:
+            index2 = pl.if_wrong
+            g.add_edge(
+                node,
+                nodes[index2],
+                label='{}'.format(pl.wrong_count),
+                color='red',
+                penwidth=weight(pl.wrong_count),
+            )
+        if index == 0:
+            g.add_edge(nodes[-1], node)
+g.print()
