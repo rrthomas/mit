@@ -1,6 +1,6 @@
 # VM definition
 #
-# (c) Mit authors 1994-2019
+# (c) Mit authors 1994-2020
 #
 # The package is distributed under the MIT/X11 License.
 #
@@ -92,18 +92,14 @@ Instruction = instruction_enum(
 
         'LOAD': Code('''\
             int ret = load(S->memory, S->memory_bytes, addr, size, &x);
-            if (ret != 0) {
-                S->bad = addr;
-                RAISE(ret);
-            }'''
+            if (ret != 0)
+                RAISE(ret);'''
         ),
 
         'STORE': Code('''\
             int ret = store(S->memory, S->memory_bytes, addr, size, x);
-            if (ret != 0) {
-                S->bad = addr;
-                RAISE(ret);
-            }'''
+            if (ret != 0)
+                RAISE(ret);'''
         ),
 
         'LIT': Code('FETCH_PC(n);'),

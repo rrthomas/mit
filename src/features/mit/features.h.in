@@ -1,6 +1,6 @@
-// Mit features header file.
+// Mit features header file
 //
-// (c) Mit authors 2019
+// (c) Mit authors 2019-2020
 //
 // The package is distributed under the MIT/X11 License.
 //
@@ -30,9 +30,6 @@ int mit_register_args(int argc, const char *argv[]);
 */
 
 mit_word mit_extra_instruction(mit_state * restrict S);
-
-mit_state *mit_auto_extend_init(void);
-int mit_auto_extend_handler(mit_state * restrict S, int error);
 
 const char *mit_core_dump(mit_state *S);
 

@@ -1,6 +1,6 @@
 # Mit VM definition
 #
-# (c) Mit authors 1994-2019
+# (c) Mit authors 1994-2020
 #
 # The package is distributed under the MIT/X11 License.
 #
@@ -25,7 +25,6 @@ ErrorCode:
 Register:
   - pc
   - ir
-  - bad
   - stack_depth
 
 # VM instruction instructions

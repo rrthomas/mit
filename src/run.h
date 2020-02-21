@@ -26,10 +26,8 @@
 // CHECK_ALIGNED(addr): check a VM address is valid, raising an error if
 // not.
 #define CHECK_ALIGNED(addr)                                   \
-    if (!is_aligned((addr), MIT_SIZE_WORD)) {                 \
-        S->bad = (addr);                                      \
-        RAISE(MIT_ERROR_UNALIGNED_ADDRESS);                   \
-    }
+    if (!is_aligned((addr), MIT_SIZE_WORD))                   \
+        RAISE(MIT_ERROR_UNALIGNED_ADDRESS);
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-function"
@@ -53,7 +51,6 @@ static mit_word _fetch_pc(mit_state *S)
 // by a word.
 #define FETCH_PC(w)                                             \
     if (unlikely(S->pc >= S->memory_bytes)) {                   \
-        S->bad = S->pc;                                         \
         RAISE(MIT_ERROR_INVALID_MEMORY_READ);                   \
     } else {                                                    \
         (w) = (_fetch_pc(S));                                   \

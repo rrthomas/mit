@@ -91,7 +91,7 @@ Option('profile',
 
 Doc('\nMiscellaneous:')
 Option('no-auto-extend',
-       'do not automatically extend stack or memory',
+       'do not automatically extend the stack',
        parse_code=Code('auto_extend = false;'),
 )
 
@@ -159,7 +159,7 @@ If an error occurs during execution, the exit status is the error code; if
 execution halts normally, the exit status is 0. Note that the VM code may
 cause an exit with a different status.
 ''')
-Doc('"Report bugs to "PACKAGE_BUGREPORT"."')
+Doc('"Please report bugs to "PACKAGE_BUGREPORT"."')
 
 
 # Features
@@ -195,13 +195,34 @@ Feature(# Extra instructions
     ''')
 )
 
-Feature(# Auto-extend stack and memory
+Feature(# Auto-extend stack
+    top_level=Code('''
+        static mit_uword page_size;
+        static mit_uword memory_bytes;
+        static mit_uword stack_words;
+
+        static mit_uword round_up(mit_uword n, mit_uword multiple)
+        {
+            return (n - 1) - (n - 1) % multiple + multiple;
+        }
+
+        static mit_state *auto_extend_init(void)
+        {
+            // getpagesize() is obsolete, but gnulib provides it, and
+            // sysconf(_SC_PAGESIZE) does not work on some platforms.
+            page_size = getpagesize();
+            memory_bytes = MIT_WORD_BYTES == 2 ? 0x1000U : 0x100000U * MIT_WORD_BYTES;
+            stack_words = MIT_WORD_BYTES == 2 ? 1024U : 16384U;
+
+            return mit_init(memory_bytes, stack_words);
+        }
+    '''),
     init=Code('bool auto_extend = true;'),
     handler=Code('''\
         case MIT_ERROR_STACK_OVERFLOW:
-        case MIT_ERROR_INVALID_MEMORY_READ:
-        case MIT_ERROR_INVALID_MEMORY_WRITE:
-            if (auto_extend == true && mit_auto_extend_handler(S, error) == 0)
+            if (auto_extend == true &&
+                mit_realloc_stack(S, round_up(S->stack_words + 1,
+                    page_size / MIT_WORD_BYTES)) == 0)
                 continue;
             break;
     ''')
@@ -504,7 +525,7 @@ int main(int argc, char *argv[])
         usage();
 
     // Set up VM
-    S = mit_auto_extend_init();
+    S = auto_extend_init();
     if (S == NULL)
         die("could not allocate virtual machine state");
     if (atexit(exit_function) != 0)

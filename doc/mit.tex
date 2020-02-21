@@ -1,11 +1,7 @@
-%
 % The definition of Mit (self-contained paper)
 %
-% (c) Reuben Thomas 1993-2019
+% (c) Reuben Thomas 1993-2020
 % This file is in the public domain.
-%
-% Started 1/6-29/10/93
-%
 
 \documentclass[a4paper]{article}
 \usepackage[british]{babel}
@@ -51,7 +47,7 @@
 
 \title{The Mit Virtual Machine}
 \author{Reuben Thomas}
-\date{8th July 2019}
+\date{21st February 2020}
 
 \begin{document}
 \maketitle
@@ -93,7 +89,6 @@ The registers are word quantities; they are listed, with their functions, in tab
  \midrule
 {\tt pc} & The {\tt p}rogram {\tt c}ounter. Points to the next word from which {\tt i} may be loaded. \\
 {\tt ir} & The {\tt i}nstruction {\tt r}egister. Contains instructions to be executed. \\
-{\tt bad} & The invalid stack position, or invalid or unaligned memory address, that last caused an error. \\
 {\tt stack\_depth} & The number of words on the stack. \\
 {\tt endism} & The endianness of Mit: 0 = Little-endian, 1 = Big-endian. Fixed for a particular instance of Mit. \\
 {\tt word\_bytes} & The number of bytes in a word. Must be in the range $2$ to $32$ inclusive, and a power of $2$. Fixed for a particular instance of Mit. \\
@@ -134,7 +129,7 @@ If an error occurs during execution (see section~\ref{errors}), the state of the
 \subsection{Errors and termination}
 \label{errors}
 
-When Mit encounters certain abnormal situations, such as an attempt to access an invalid address, or divide by zero, an {\bf error} is {\bf raised}, and execution terminates. The effect of the current instruction is undone (see section~\ref{execution}). If the error is a stack or memory access error, {\tt bad} is set to the stack position or address that caused the error. An {\bf error code} is returned to the caller.
+When Mit encounters certain abnormal situations, such as an attempt to access an invalid address, or divide by zero, an {\bf error} is {\bf raised}, and execution terminates. The effect of the current instruction is undone (see section~\ref{execution}). An {\bf error code} is returned to the caller.
 
 Execution can be terminated explicitly by performing a {\tt halt} instruction (see section~\ref{halt}).
 
@@ -146,12 +141,12 @@ Error codes are unsigned numbers. $0$ to $127$ are reserved for the specificatio
 \bf Code & \bf Meaning \\ \midrule
 $0$ & {\bf single\_step()} has terminated without error. \\
 $1$ & Invalid opcode (see section~\ref{opcodes}). \\
-$2$ & Stack overflow. {\tt bad} is set to the extra number of words of stack space required. \\
-$3$ & Invalid stack read. {\tt bad} is set to the invalid stack position. \\
-$4$ & Invalid stack write. {\tt bad} is set to the invalid stack position. \\
-$5$ & Invalid memory read. {\tt bad} is set to the invalid address. \\
-$6$ & Invalid memory write. {\tt bad} is set to the invalid address. \\
-$7$ & Address alignment error: raised when an instruction is given a valid address, but insufficiently aligned. {\tt bad} is set to the invalid address. \\
+$2$ & Stack overflow. \\
+$3$ & Invalid stack read. \\
+$4$ & Invalid stack write. \\
+$5$ & Invalid memory read. \\
+$6$ & Invalid memory write. \\
+$7$ & Address alignment error: raised when an instruction is given a valid address, but insufficiently aligned. \\
 $8$ & Invalid size (greater than $\log_2{\tt word\_bytes}$). \\
 $9$ & Division by zero attempted (see section~\ref{arithmetic}). \\
 $127$ & A {\tt halt} instruction was executed. \\
