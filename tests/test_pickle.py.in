@@ -1,6 +1,6 @@
 # Test pickling VM state.
 #
-# (c) Mit authors 2019
+# (c) Mit authors 2019-2020
 #
 # The package is distributed under the MIT/X11 License.
 #
@@ -13,7 +13,7 @@ from mit.globals import *
 
 
 # Load pforth image and run it, defining a new word
-load("@top_srcdir@/src/specializer/pforth/src/mit/pforth-base")
+load("@top_srcdir@/src/specializer/pforth/src/mit/pforth")
 run(['--evaluate', ': FOO ;'])
 pc.set(0)
 ir.set(0)

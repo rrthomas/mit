@@ -1,6 +1,6 @@
 # Specialized interpreter Makefile.am
 #
-# (c) Mit authors 2019
+# (c) Mit authors 2019-2020
 #
 # The package is distributed under the MIT/X11 License.
 #
@@ -55,13 +55,13 @@ BENCH_TESTS = \
 endif
 
 # Alternative profile-building arguments:
-PROFILE_PFORTH_ARGS=make-base.fs
+PROFILE_PFORTH_ARGS=make.fs
 #PROFILE_PFORTH_ARGS=--evaluate BYE
 #PROFILE_PFORTH_ARGS=tests.fs # (needs something on standard input)
 specialize-mit: mit@PACKAGE_SUFFIX@$(EXEEXT)
 	export LD_LIBRARY_PATH=$(abs_top_builddir)/src/@objdir@:$(abs_top_builddir)/src/%D%/@objdir@:$$LD_LIBRARY_PATH; \
 	cd %D%/pforth/src/mit && \
-	$(MIT_BINARY) --profile=$(abs_srcdir)/%D%/profile.json pforth-base $(PROFILE_PFORTH_ARGS) && \
+	$(MIT_BINARY) --profile=$(abs_srcdir)/%D%/profile.json pforth $(PROFILE_PFORTH_ARGS) && \
 	cd $(abs_builddir) && \
 	$(MAKE)
 

@@ -64,14 +64,14 @@ ptrdiff_t mit_load_object(mit_state *S, mit_uword addr, int fd)
         len = reverse_endianness(MIT_WORD_BIT, len);
     if (res != sizeof(len))
         return MIT_LOAD_ERROR_INVALID_OBJECT_FILE;
-    uint8_t *ptr = mit_native_address_of_range(S, addr, len);
+    uint8_t *ptr = mit_native_address_of_range(S, addr, len * MIT_WORD_BYTES);
     if (ptr == NULL)
         return MIT_LOAD_ERROR_INVALID_ADDRESS_RANGE;
 
     // Read code
-    if ((res = read(fd, ptr, len)) == -1)
+    if ((res = read(fd, ptr, len * MIT_WORD_BYTES)) == -1)
         return MIT_LOAD_ERROR_FILE_SYSTEM_ERROR;
-    else if (res != (ssize_t)len)
+    else if (res != (ssize_t)(len * MIT_WORD_BYTES))
         return MIT_LOAD_ERROR_INVALID_OBJECT_FILE;
 
     return (ssize_t)len;
@@ -96,7 +96,7 @@ int mit_save_object(mit_state *S, mit_uword addr, mit_uword len, int fd)
 
     if (write(fd, &buf[0], HEADER_LENGTH) != HEADER_LENGTH ||
         write(fd, &len_save, sizeof(len_save)) != sizeof(len_save) ||
-        write(fd, ptr, len) != (ssize_t)len)
+        write(fd, ptr, len * MIT_WORD_BYTES) != (ssize_t)(len * MIT_WORD_BYTES))
         return MIT_SAVE_ERROR_FILE_SYSTEM_ERROR;
 
     return 0;

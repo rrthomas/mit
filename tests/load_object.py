@@ -41,7 +41,7 @@ def object_file(word_bytes=word_bytes):
     Generate a dummy object file containing the single word 0102..{word_bytes}.
     '''
     return bytearray(b'MIT\0\0\0' + bytes([endism]) + bytes([word_bytes]) +
-                     word_to_bytes(word_bytes) + word_to_bytes(test_word()))
+                     word_to_bytes(1) + word_to_bytes(test_word()))
 
 test_file_name = 'testobj'
 

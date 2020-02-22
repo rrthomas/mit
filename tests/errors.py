@@ -1,6 +1,6 @@
 # Test the VM-generated error codes.
 #
-# (c) Mit authors 1995-2019
+# (c) Mit authors 1995-2020
 #
 # The package is distributed under the MIT/X11 License.
 #
@@ -11,7 +11,7 @@ from mit import *
 from mit.binding import libmit, libmitfeatures
 
 
-VM = State(memory_bytes=4096 * word_bytes, stack_words=3)
+VM = State(memory_words=4096, stack_words=3)
 assembler = Assembler(VM)
 lit = assembler.lit
 label = assembler.label
@@ -22,7 +22,7 @@ UNDEFINED = 1 + max(Instruction)
 
 # Test results and data
 result = []
-invalid_address = VM.M.memory_bytes() + 1000
+invalid_address = VM.M.memory_words() * word_bytes + 1000
 test = []
 
 # Try to divide by zero
@@ -43,7 +43,7 @@ ass(DUP)
 test.append(label())
 result.append(MitErrorCode.INVALID_MEMORY_READ)
 print("Test {}: pc = {}".format(len(test), test[-1]))
-lit(VM.M.memory_bytes() + word_bytes)
+lit((VM.M.memory_words() + 1) * word_bytes)
 ass(JUMP)
 
 # Try to load from an invalid address

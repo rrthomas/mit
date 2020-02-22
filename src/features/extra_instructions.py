@@ -1,6 +1,6 @@
 # External extra instructions.
 #
-# (c) Mit authors 1994-2019
+# (c) Mit authors 1994-2020
 #
 # The package is distributed under the MIT/X11 License.
 #
@@ -213,7 +213,7 @@ mit_lib = {
         ),
         Code('''\
             value = 0;
-            ret = load(inner_state->memory, inner_state->memory_bytes,
+            ret = load(inner_state->memory, inner_state->memory_words * MIT_WORD_BYTES,
                        addr, size, &value);
         '''),
     ),
@@ -225,53 +225,41 @@ mit_lib = {
             ['ret:int'],
         ),
         Code('''\
-             ret = store(inner_state->memory, inner_state->memory_bytes,
+             ret = store(inner_state->memory, inner_state->memory_words * MIT_WORD_BYTES,
                          addr, size, value);'''),
     ),
 
     'NEW_STATE': (
         0x4,
         StackEffect.of(
-            ['memory_bytes', 'stack_words'],
+            ['memory_words', 'stack_words'],
             ['new_state:mit_state *'],
         ),
         Code('''\
-            new_state = mit_new_state((size_t)memory_bytes, (size_t)stack_words);
+            new_state = mit_new_state((size_t)memory_words, (size_t)stack_words);
         '''),
     ),
 
-    'REALLOC_MEMORY': (
-        0x5,
-        StackEffect.of(['u', 'inner_state:mit_state *'], ['ret:int']),
-        Code('ret = mit_realloc_memory(inner_state, (size_t)u);'),
-    ),
-
-    'REALLOC_STACK': (
-        0x6,
-        StackEffect.of(['u', 'inner_state:mit_state *'], ['ret:int']),
-        Code('ret = mit_realloc_stack(inner_state, (size_t)u);'),
-    ),
-
     'DESTROY': (
-        0x7,
+        0x5,
         StackEffect.of(['inner_state:mit_state *'], []),
         Code('mit_destroy(inner_state);'),
     ),
 
     'RUN': (
-        0x8,
+        0x6,
         StackEffect.of(['inner_state:mit_state *'], ['ret']),
         Code('ret = mit_run(inner_state);'),
     ),
 
     'SINGLE_STEP': (
-        0x9,
+        0x7,
         StackEffect.of(['inner_state:mit_state *'], ['ret']),
         Code('ret = mit_single_step(inner_state);'),
     ),
 
     'LOAD_OBJECT': (
-        0xa,
+        0x8,
         StackEffect.of(
             ['fd:int', 'addr', 'inner_state:mit_state *'],
             ['ret:int'],
@@ -280,7 +268,7 @@ mit_lib = {
     ),
 
     'SAVE_OBJECT': (
-        0xb,
+        0x9,
         StackEffect.of(
             ['fd:int', 'addr', 'len', 'inner_state:mit_state *'],
             ['ret:int'],
@@ -289,7 +277,7 @@ mit_lib = {
     ),
 
     'NATIVE_POINTER_WORDS': (
-        0xc,
+        0xa,
         StackEffect.of([], ['n']),
         Code('n = MAX(sizeof(void *), sizeof(mit_word)) / sizeof(mit_word);'),
     ),

@@ -79,7 +79,7 @@ class Arg(Doc):
 
 Doc('Execution:')
 Option('memory',
-       ['size of memory in words [default %zu]', '(size_t)memory_bytes'],
+       ['size of memory in words [default %zu]', '(size_t)memory_words'],
        short_name='m',
        arg='required_argument', arg_name='N',
        parse_code=Code('''\
@@ -90,7 +90,7 @@ Option('memory',
            uintmax_t size = strtoumax(optarg, &endptr, 10);
            if (*optarg == '\\0' || *endptr != '\\0' || size == 0 || size > (uintmax_t)max)
                die("memory size must be a positive number up to %zu", max);
-           memory_bytes = (mit_uword)size;
+           memory_words = (mit_uword)size;
        }
      ''')
 )
@@ -231,7 +231,7 @@ Feature(# Auto-extend stack
     handler=Code('''\
         if (error == MIT_ERROR_STACK_OVERFLOW)
             if (auto_extend_stack == true &&
-                mit_realloc_stack(S, round_up(S->stack_words + 1,
+                REALLOC_N(S, round_up(S->stack_words + 1,
                     page_size / MIT_WORD_BYTES)) == 0)
                 continue;
     '''),
@@ -424,7 +424,7 @@ getopt_code.append('{0, 0, 0, 0}')
 # Features
 top_level_code = Code('''\
     mit_word (*run_fn)(mit_state *) = mit_run;
-    mit_uword memory_bytes;
+    mit_uword memory_words;
 ''')
 init_code = Code('''\
     set_program_name(argv[0]);
@@ -432,7 +432,7 @@ init_code = Code('''\
     // getpagesize() is obsolete, but gnulib provides it, and
     // sysconf(_SC_PAGESIZE) does not work on some platforms.
     mit_uword page_size = getpagesize();
-    memory_bytes = MIT_WORD_BYTES == 2 ? 0x1000U : 0x100000U * MIT_WORD_BYTES;
+    memory_words = MIT_WORD_BYTES == 2 ? 0x1000U : 0x100000U;
     mit_uword stack_words = MIT_WORD_BYTES == 2 ? 1024U : 16384U;
 ''')
 handlers_code = Code()
@@ -470,6 +470,7 @@ initial_code = Code('''
 #include "progname.h"
 #include "binary-io.h"
 #include "minmax.h"
+#include "safe-alloc.h"
 
 #include "mit/mit.h"
 #include "mit/features.h"
@@ -545,7 +546,7 @@ int main(int argc, char *argv[])
         usage();
 
     // Set up VM
-    S = mit_new_state(memory_bytes, stack_words);
+    S = mit_new_state(memory_words, stack_words);
     if (S == NULL)
         die("could not allocate virtual machine state");
     if (atexit(exit_function) != 0)

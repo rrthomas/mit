@@ -55,7 +55,7 @@ vars().update({
 def _save(file, address=0, length=None):
     if length is None:
         length = assembler.pc - address
-    VM.save(file, address, length)
+    VM.save(file, address, length // word_bytes)
 vars()['save'] = _save
 
 # Abbreviations and disambiguations
