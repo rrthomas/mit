@@ -126,7 +126,7 @@ int mit_realloc_stack(mit_state *S, mit_uword stack_words)
     return ret;
 }
 
-mit_state *mit_init(size_t memory_bytes, size_t stack_words)
+mit_state *mit_new_state(size_t memory_bytes, size_t stack_words)
 {
     mit_state *S = calloc(1, sizeof(mit_state));
     if (S == NULL)

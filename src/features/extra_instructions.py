@@ -229,14 +229,14 @@ mit_lib = {
                          addr, size, value);'''),
     ),
 
-    'INIT': (
+    'NEW_STATE': (
         0x4,
         StackEffect.of(
             ['memory_bytes', 'stack_words'],
             ['new_state:mit_state *'],
         ),
         Code('''\
-            new_state = mit_init((size_t)memory_bytes, (size_t)stack_words);
+            new_state = mit_new_state((size_t)memory_bytes, (size_t)stack_words);
         '''),
     ),
 

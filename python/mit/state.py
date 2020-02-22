@@ -43,7 +43,7 @@ class State:
     def __new__(cls, memory_bytes=1024*1024 * word_bytes if word_bytes > 2 else 16*1024, stack_words=1024):
         '''Create the VM state.'''
         state = super().__new__(cls)
-        state.state = libmit.mit_init(memory_bytes, stack_words)
+        state.state = libmit.mit_new_state(memory_bytes, stack_words)
         if state.state is None:
             raise Error("error creating virtual machine state")
         state.registers = {

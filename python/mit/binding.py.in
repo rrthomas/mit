@@ -174,8 +174,8 @@ libmit.mit_load_object.errcheck = errcheck(LoadErrorCode)
 libmit.mit_save_object.argtypes = [c_void_p, c_uword, c_uword, c_int]
 libmit.mit_save_object.errcheck = errcheck(SaveErrorCode)
 
-libmit.mit_init.restype = c_void_p
-libmit.mit_init.argtypes = [c_size_t, c_size_t]
+libmit.mit_new_state.restype = c_void_p
+libmit.mit_new_state.argtypes = [c_size_t, c_size_t]
 
 libmit.mit_realloc_memory.argtypes = [c_void_p, c_int]
 libmit.mit_realloc_memory.errcheck = malloc_error

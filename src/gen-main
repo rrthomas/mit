@@ -545,7 +545,7 @@ int main(int argc, char *argv[])
         usage();
 
     // Set up VM
-    S = mit_init(memory_bytes, stack_words);
+    S = mit_new_state(memory_bytes, stack_words);
     if (S == NULL)
         die("could not allocate virtual machine state");
     if (atexit(exit_function) != 0)

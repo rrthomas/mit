@@ -366,11 +366,11 @@ static int store_stack(mit_word * restrict stack, mit_uword stack_depth,
 
 // VM instantiation and control
 
-mit_state *mit_init(size_t memory_bytes, size_t stack_words);
+mit_state *mit_new_state(size_t memory_bytes, size_t stack_words);
 /* Create and initialize a virtual machine state.
 
-   - memory_bytes - number of bytes of memory required
-   - stack_words - number of words of stack space required
+   - memory_bytes - number of bytes of memory required (may be 0)
+   - stack_words - number of words of stack space required (may be 0)
 
    `memory_bytes` must be a multiple of `WORD_BYTES`.
 
