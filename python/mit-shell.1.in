@@ -9,7 +9,7 @@ convenient access to the Mit VM.
 .SH "SEE ALSO"
 .BR mit@PACKAGE_SUFFIX@ (1)
 .SH "REPORTING BUGS"
-Report bugs to rrt@sc3d.org.
+Please report bugs to @PACKAGE_BUGREPORT@.
 .SH "COPYRIGHT"
 \(co Mit authors 2019
 .br

@@ -139,7 +139,6 @@ mit_state *mit_init(size_t memory_bytes, size_t stack_words)
         return NULL;
 
     S->pc = 0;
-    S->bad = 0;
     S->stack_depth = 0;
 
     return S;

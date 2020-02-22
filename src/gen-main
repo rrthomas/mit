@@ -15,7 +15,7 @@ from mit_core.code_util import Code, copyright_banner, disable_warnings
 
 GENERATOR_PROGRAM = 'gen-main'
 PURPOSE = 'Command-line front end for Mit.'
-COPYRIGHT_YEARS = '1995-2019'
+COPYRIGHT_YEARS = '1995-2020'
 
 
 # Command line
@@ -24,16 +24,24 @@ class Doc:
     '''
     Free-form documentation.
 
-     - docstring - str - if the string starts and ends with a double quote, it
-       is printed literally and may thus contain interpolations. Otherwise, it
-       is output in quotes.
+     - docstring - str or list of str - if the string (or first string)
+       starts and ends with a double quote, it is printed literally and may
+       thus contain interpolations. Otherwise, it is output in quotes. For a
+       list, the other strings are printed literally; they are intended to
+       be arguments for `printf` substitutions.
     '''
     elements = []
     def __init__(self, docstring):
         self.elements.append(self)
-        if docstring[:1] != '"' or docstring[-1:] != '"':
-            docstring = '"{}"'.format(repr(docstring)[1:-1])
-        self.docstring = docstring
+        if not isinstance(docstring, list):
+            docstring = [docstring]
+        if docstring[0][:1] != '"' or docstring[0][-1:] != '"':
+            docstring[0] = '"{}"'.format(repr(docstring[0])[1:-1])
+        self._docstring = docstring
+
+    @property
+    def docstring(self):
+        return ', '.join(self._docstring)
 
 class Option(Doc):
     '''
@@ -70,6 +78,23 @@ class Arg(Doc):
         self.arg = arg
 
 Doc('Execution:')
+Option('memory',
+       ['size of memory in words [default %zu]', '(size_t)memory_bytes'],
+       short_name='m',
+       arg='required_argument', arg_name='N',
+       parse_code=Code('''\
+       {
+           size_t max = SIZE_MAX / MIT_WORD_BYTES;
+           char *endptr;
+           errno = 0;
+           uintmax_t size = strtoumax(optarg, &endptr, 10);
+           if (*optarg == '\\0' || *endptr != '\\0' || size == 0 || size > (uintmax_t)max)
+               die("memory size must be a positive number up to %zu", max);
+           memory_bytes = (mit_uword)size;
+       }
+     ''')
+)
+
 Option('optimize',
        'use optimizing interpreter',
        short_name='O',
@@ -91,8 +116,8 @@ Option('profile',
 
 Doc('\nMiscellaneous:')
 Option('no-auto-extend',
-       'do not automatically extend stack or memory',
-       parse_code=Code('auto_extend = false;'),
+       'do not automatically extend the stack',
+       parse_code=Code('auto_extend_stack = false;'),
 )
 
 default_max_backtrace = 16
@@ -159,7 +184,7 @@ If an error occurs during execution, the exit status is the error code; if
 execution halts normally, the exit status is 0. Note that the VM code may
 cause an exit with a different status.
 ''')
-Doc('"Report bugs to "PACKAGE_BUGREPORT"."')
+Doc('"Please report bugs to "PACKAGE_BUGREPORT"."')
 
 
 # Features
@@ -195,13 +220,19 @@ Feature(# Extra instructions
     ''')
 )
 
-Feature(# Auto-extend stack and memory
-    init=Code('bool auto_extend = true;'),
+Feature(# Auto-extend stack
+    top_level=Code('''
+        static mit_uword round_up(mit_uword n, mit_uword multiple)
+        {
+            return (n - 1) - (n - 1) % multiple + multiple;
+        }
+    '''),
+    init=Code('bool auto_extend_stack = true;'),
     handler=Code('''\
         case MIT_ERROR_STACK_OVERFLOW:
-        case MIT_ERROR_INVALID_MEMORY_READ:
-        case MIT_ERROR_INVALID_MEMORY_WRITE:
-            if (auto_extend == true && mit_auto_extend_handler(S, error) == 0)
+            if (auto_extend_stack == true &&
+                mit_realloc_stack(S, round_up(S->stack_words + 1,
+                    page_size / MIT_WORD_BYTES)) == 0)
                 continue;
             break;
     ''')
@@ -348,12 +379,13 @@ for element in Doc.elements:
         if element.arg_name: arg = element.arg_name
         if element.arg == 'optional_argument':
             arg = '[{}]'.format(arg)
-        help_code.append('    printf("  %-26s%s\\n", "--{long_name}{short_opt} {arg}", {docstring});'.format(
+        help_code.append('    printf("  %-26s", "--{long_name}{short_opt} {arg}");'.format(
             long_name=element.long_name,
             short_opt=', -{}'.format(element.short_name) if element.short_name else '',
             arg=arg,
-            docstring=element.docstring,
         ))
+        help_code.append('    printf({});'.format(element.docstring))
+        help_code.append('    putchar(\'\\n\');')
     elif isinstance(element, Arg):
         help_code.append('printf("  %-26s%s\\n", "{arg}", {docstring});'.format(
             arg=element.arg,
@@ -393,9 +425,16 @@ getopt_code.append('{0, 0, 0, 0}')
 # Features
 top_level_code = Code('''\
     mit_word (*run_fn)(mit_state *) = mit_run;
+    mit_uword memory_bytes;
 ''')
 init_code = Code('''\
     set_program_name(argv[0]);
+
+    // getpagesize() is obsolete, but gnulib provides it, and
+    // sysconf(_SC_PAGESIZE) does not work on some platforms.
+    mit_uword page_size = getpagesize();
+    memory_bytes = MIT_WORD_BYTES == 2 ? 0x1000U : 0x100000U * MIT_WORD_BYTES;
+    mit_uword stack_words = MIT_WORD_BYTES == 2 ? 1024U : 16384U;
 ''')
 handlers_code = Code()
 exit_code = Code()
@@ -419,6 +458,9 @@ initial_code = Code('''
 #include <stdarg.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <stdint.h>
+#include <inttypes.h>
+#include <errno.h>
 #include <signal.h>
 #include <getopt.h>
 #include <unistd.h>
@@ -450,6 +492,16 @@ struct option longopts[] = {''',
               '''\
 };
 
+static mit_state *S;
+
+static void exit_function(void)
+{
+    mit_destroy(S);
+}''')
+code.extend(initial_code)
+
+code.extend(top_level_code)
+code.extend(Code('''
 static void usage(void)
 {
     printf("Usage: %s [OPTION...] [OBJECT-FILE ARGUMENT...]\\n"
@@ -462,16 +514,6 @@ static void usage(void)
     exit(EXIT_SUCCESS);
 }
 
-static mit_state *S;
-
-static void exit_function(void)
-{
-    mit_destroy(S);
-}''')
-code.extend(initial_code)
-
-code.extend(top_level_code)
-code.extend(Code('''
 int main(int argc, char *argv[])
 {
 ''',
@@ -504,7 +546,7 @@ int main(int argc, char *argv[])
         usage();
 
     // Set up VM
-    S = mit_auto_extend_init();
+    S = mit_init(memory_bytes, stack_words);
     if (S == NULL)
         die("could not allocate virtual machine state");
     if (atexit(exit_function) != 0)

@@ -85,10 +85,8 @@ body_code.append('''\
     S->ir >>= MIT_OPCODE_BIT;
 
     // Check stack_depth is valid
-    if (S->stack_depth > S->stack_words) {
-        S->bad = S->stack_depth - S->stack_words;
-        RAISE(MIT_ERROR_STACK_OVERFLOW);
-    }'''
+    if (S->stack_depth > S->stack_words)
+        RAISE(MIT_ERROR_STACK_OVERFLOW);'''
 )
 body_code.extend(dispatch(Instruction, Code(
     '/* Undefined instruction. */',
