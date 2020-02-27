@@ -1,6 +1,6 @@
 # Test save_object().
 #
-# (c) Mit authors 1995-2019
+# (c) Mit authors 1995-2020
 #
 # The package is distributed under the MIT/X11 License.
 #
@@ -8,10 +8,11 @@
 # RISK.
 
 import os
+import sys
 
 from mit import *
-memory_bytes = 256 * word_bytes
-VM = State(memory_bytes)
+memory_words = 256
+VM = State(memory_words)
 
 
 # Test data
@@ -19,8 +20,8 @@ VM.M_word[0] = 0x01020304
 VM.M_word[word_bytes] = 0x05060708
 
 # Test results
-addr = [memory_bytes + word_bytes, 0, 0]
-length = [32, 5000, 32]
+addr = [(memory_words + 1) * word_bytes, 0, 0]
+length = [2, 5000, 2]
 correct = [-2, -2, 0]
 
 # Test

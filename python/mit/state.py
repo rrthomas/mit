@@ -40,10 +40,10 @@ except:
 
 class State:
     '''A VM state.'''
-    def __new__(cls, memory_bytes=1024*1024 * word_bytes if word_bytes > 2 else 16*1024, stack_words=1024):
+    def __new__(cls, memory_words=1024*1024 if word_bytes > 2 else 8*1024, stack_words=1024):
         '''Create the VM state.'''
         state = super().__new__(cls)
-        state.state = libmit.mit_init(memory_bytes, stack_words)
+        state.state = libmit.mit_new_state(memory_words, stack_words)
         if state.state is None:
             raise Error("error creating virtual machine state")
         state.registers = {
@@ -67,7 +67,7 @@ class State:
         }
         del state['M']
         del state['M_word']
-        state['M_word'] = self.M_word[0:self.M.memory_bytes()]
+        state['M_word'] = self.M_word[0:self.M.memory_words() * word_bytes]
         del state['S']
         state['S'] = self.S[0:self.registers["stack_depth"].get()]
         del state['state']
@@ -76,12 +76,12 @@ class State:
         return state
 
     def __getnewargs__(self):
-        return (self.M.memory_bytes(), libmit.mit_get_stack_words(self.state))
+        return (self.M.memory_words(), libmit.mit_get_stack_words(self.state))
 
     def __setstate__(self, state):
         for name, value in state['registers'].items():
             self.registers[name].set(value)
-        self.M_word[0:self.M.memory_bytes()] = state['M_word']
+        self.M_word[0:self.M.memory_words() * word_bytes] = state['M_word']
         for item in state['S']: self.S.push(item)
         if 'argv' in state:
             self.register_args(*state['argv'])
@@ -212,7 +212,7 @@ class State:
         Save an object file from the given address and length.
         '''
         assert length is not None
-        ptr = libmit.mit_native_address_of_range(self.state, address, length)
+        ptr = libmit.mit_native_address_of_range(self.state, address, length * word_bytes)
         if not is_aligned(address) or ptr is None:
             raise Error("invalid or unaligned address")
 
@@ -370,20 +370,20 @@ class AbstractMemory:
     `element_size`, i.e. only the valid addresses will be accessed.
 
     `len()` counts the valid addresses, i.e. the length is measured in
-    elements. Use `memory_bytes()` for the number of bytes.
+    elements. Use `memory_words()` for the number of words.
     '''
     def __init__(self, state, element_size):
         self.state = state
         self.element_size = element_size
 
-    def memory_bytes(self):
-        return int(libmit.mit_get_memory_bytes(self.state))
+    def memory_words(self):
+        return int(libmit.mit_get_memory_words(self.state))
 
     def _slice_to_range(self, index):
         '''
         Returns a range that represents the valid addresses in `index`.
         '''
-        index = range(*index.indices(self.memory_bytes()))
+        index = range(*index.indices(self.memory_words() * word_bytes))
         assert index.start % self.element_size == 0
         assert index.stop % self.element_size == 0
         assert index.step in (1, self.element_size)
@@ -423,7 +423,7 @@ class AbstractMemory:
         Returns the number of valid addresses. Note that this might not be the
         same as the number of bytes.
         '''
-        return self.memory_bytes() // self.element_size
+        return self.memory_words() * word_bytes // self.element_size
 
 
 class Memory(AbstractMemory):

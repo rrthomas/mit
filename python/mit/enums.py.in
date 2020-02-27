@@ -69,7 +69,7 @@ class LibMit(IntEnum):
     NATIVE_ADDRESS_OF_RANGE = 0x1
     LOAD = 0x2
     STORE = 0x3
-    INIT = 0x4
+    NEW_STATE = 0x4
     REALLOC_MEMORY = 0x5
     REALLOC_STACK = 0x6
     DESTROY = 0x7

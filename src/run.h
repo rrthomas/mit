@@ -1,7 +1,7 @@
 // Macros for the inner loop and instruction actions; see
 // mit_core/instruction.py for documentation.
 //
-// (c) Mit authors 1994-2019
+// (c) Mit authors 1994-2020
 //
 // The package is distributed under the MIT/X11 License.
 //
@@ -40,7 +40,7 @@ static mit_word _fetch_pc(mit_state *S)
 #pragma GCC diagnostic pop
 #else
     mit_word w = 0;
-    load(S->memory, S->memory_bytes, S->pc, MIT_SIZE_WORD, &w);
+    load(S->memory, S->memory_words * MIT_WORD_BYTES, S->pc, MIT_SIZE_WORD, &w);
 #endif
     S->pc += MIT_WORD_BYTES;
     return w;
@@ -50,7 +50,7 @@ static mit_word _fetch_pc(mit_state *S)
 // FETCH_PC(w): fetch the word at `pc`, assign it to `w`, and increment `pc`
 // by a word.
 #define FETCH_PC(w)                                             \
-    if (unlikely(S->pc >= S->memory_bytes)) {                   \
+    if (unlikely(S->pc >= S->memory_words * MIT_WORD_BYTES)) {  \
         RAISE(MIT_ERROR_INVALID_MEMORY_READ);                   \
     } else {                                                    \
         (w) = (_fetch_pc(S));                                   \

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # Generate front-end.
 #
-# Copyright (c) 1995-2019 Mit authors
+# Copyright (c) 1995-2020 Mit authors
 #
 # The package is distributed under the MIT/X11 License.
 #
@@ -79,7 +79,7 @@ class Arg(Doc):
 
 Doc('Execution:')
 Option('memory',
-       ['size of memory in words [default %zu]', '(size_t)memory_bytes'],
+       ['size of memory in words [default %zu]', '(size_t)memory_words'],
        short_name='m',
        arg='required_argument', arg_name='N',
        parse_code=Code('''\
@@ -90,7 +90,7 @@ Option('memory',
            uintmax_t size = strtoumax(optarg, &endptr, 10);
            if (*optarg == '\\0' || *endptr != '\\0' || size == 0 || size > (uintmax_t)max)
                die("memory size must be a positive number up to %zu", max);
-           memory_bytes = (mit_uword)size;
+           memory_words = (mit_uword)size;
        }
      ''')
 )
@@ -195,7 +195,8 @@ class Feature:
 
      - top_level - Code - additional top-level code for the option
      - init - Code - declarations inside main, and initialisation
-     - handler - Code - cases added to the error handler
+     - handler - Code - code added to the error handler (in Feature order).
+       A handler should "continue" if it does not want execution to stop.
      - exit - Code - code run immediately before exit
     '''
     features = []
@@ -208,7 +209,7 @@ class Feature:
 
 Feature(# Extra instructions
     handler=Code('''\
-        case MIT_ERROR_INVALID_OPCODE:
+        if (error == MIT_ERROR_INVALID_OPCODE)
             if ((S->ir & MIT_OPCODE_MASK) == MIT_INSTRUCTION_JUMP) {
                 error = mit_extra_instruction(S);
                 if (error == 0) {
@@ -216,8 +217,7 @@ Feature(# Extra instructions
                     continue;
                 }
             }
-            break;
-    ''')
+    '''),
 )
 
 Feature(# Auto-extend stack
@@ -229,13 +229,12 @@ Feature(# Auto-extend stack
     '''),
     init=Code('bool auto_extend_stack = true;'),
     handler=Code('''\
-        case MIT_ERROR_STACK_OVERFLOW:
+        if (error == MIT_ERROR_STACK_OVERFLOW)
             if (auto_extend_stack == true &&
-                mit_realloc_stack(S, round_up(S->stack_words + 1,
+                REALLOC_N(S, round_up(S->stack_words + 1,
                     page_size / MIT_WORD_BYTES)) == 0)
                 continue;
-            break;
-    ''')
+    '''),
 )
 
 Feature(# Error message on error exit
@@ -297,7 +296,7 @@ Feature(# Register and stack backtrace
                 }
             }
         }
-    '''))
+    ''')),
 )
 
 Feature(# VM core dump
@@ -308,7 +307,7 @@ Feature(# VM core dump
             sa.sa_handler = handler;
             sa.sa_flags = 0;
             sigemptyset(&sa.sa_mask);
-            sigaction(sig, &sa, NULL);  /* ignore error: none possible */
+            sigaction(sig, &sa, NULL); // ignore error: none possible
         }
 
         static void do_core_dump(void)
@@ -328,7 +327,7 @@ Feature(# VM core dump
     exit=Code('''
         if (error != MIT_ERROR_HALT && core_dump)
             do_core_dump();
-    ''')
+    '''),
 )
 
 Feature(# Optimizing interpreter and profiling
@@ -425,7 +424,7 @@ getopt_code.append('{0, 0, 0, 0}')
 # Features
 top_level_code = Code('''\
     mit_word (*run_fn)(mit_state *) = mit_run;
-    mit_uword memory_bytes;
+    mit_uword memory_words;
 ''')
 init_code = Code('''\
     set_program_name(argv[0]);
@@ -433,7 +432,7 @@ init_code = Code('''\
     // getpagesize() is obsolete, but gnulib provides it, and
     // sysconf(_SC_PAGESIZE) does not work on some platforms.
     mit_uword page_size = getpagesize();
-    memory_bytes = MIT_WORD_BYTES == 2 ? 0x1000U : 0x100000U * MIT_WORD_BYTES;
+    memory_words = MIT_WORD_BYTES == 2 ? 0x1000U : 0x100000U;
     mit_uword stack_words = MIT_WORD_BYTES == 2 ? 1024U : 16384U;
 ''')
 handlers_code = Code()
@@ -471,6 +470,7 @@ initial_code = Code('''
 #include "progname.h"
 #include "binary-io.h"
 #include "minmax.h"
+#include "safe-alloc.h"
 
 #include "mit/mit.h"
 #include "mit/features.h"
@@ -546,7 +546,7 @@ int main(int argc, char *argv[])
         usage();
 
     // Set up VM
-    S = mit_init(memory_bytes, stack_words);
+    S = mit_new_state(memory_words, stack_words);
     if (S == NULL)
         die("could not allocate virtual machine state");
     if (atexit(exit_function) != 0)
@@ -586,13 +586,7 @@ int main(int argc, char *argv[])
     // Run
     for (;;) {
         mit_word error = run_fn(S);''',
-                 Code('''switch (error) {''',
-                      handlers_code,
-                      Code('''\
-                      default:
-                          break;'''),
-                      '''\
-                      }'''),
+                 handlers_code,
                  exit_code),
             '''
         return error == MIT_ERROR_HALT ? 0 : error;

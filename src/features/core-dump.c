@@ -1,6 +1,6 @@
 // Auto-extend stack and memory on demand.
 //
-// (c) Mit authors 1994-2019
+// (c) Mit authors 1994-2020
 //
 // The package is distributed under the MIT/X11 License.
 //
@@ -31,7 +31,7 @@ const char *mit_core_dump(mit_state *S)
     int fd = creat(file, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
     set_binary_mode (fd, O_BINARY); // Best effort
     if (fd >= 0) {
-        (void)mit_save_object(S, 0, S->memory_bytes, fd);
+        (void)mit_save_object(S, 0, S->memory_words, fd);
         close(fd);
         return file;
     }

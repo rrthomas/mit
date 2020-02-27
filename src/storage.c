@@ -1,6 +1,6 @@
 // Manage storage for the state, registers and memory.
 //
-// (c) Mit authors 1994-2019
+// (c) Mit authors 1994-2020
 //
 // The package is distributed under the MIT/X11 License.
 //
@@ -12,6 +12,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <limits.h>
+
+#include "safe-alloc.h"
 
 #include "mit/mit.h"
 
@@ -50,17 +52,17 @@ _GL_ATTRIBUTE_CONST int mit_is_aligned(mit_uword addr, unsigned size)
 
 _GL_ATTRIBUTE_PURE uint8_t *mit_native_address_of_range(mit_state *S, mit_uword addr, mit_uword len)
 {
-    return native_address_of_range(S->memory, S->memory_bytes, addr, len);
+    return native_address_of_range(S->memory, S->memory_words, addr, len);
 }
 
 int mit_load(mit_state *S, mit_uword addr, unsigned size, mit_word *val_ptr)
 {
-    return load(S->memory, S->memory_bytes, addr, size, val_ptr);
+    return load(S->memory, S->memory_words, addr, size, val_ptr);
 }
 
 int mit_store(mit_state *S, mit_uword addr, unsigned size, mit_word val)
 {
-    return store(S->memory, S->memory_bytes, addr, size, val);
+    return store(S->memory, S->memory_words, addr, size, val);
 }
 
 
@@ -95,51 +97,26 @@ int mit_push_stack(mit_state *S, mit_word val)
 
 // Initialisation and memory management
 
-static int mit_realloc(mit_word * restrict *ptr, mit_uword old_size, mit_uword new_size)
-{
-    mit_word * restrict new_ptr = realloc(*ptr, new_size);
-    if (new_ptr == NULL && new_size > 0)
-        return MIT_MALLOC_ERROR_CANNOT_ALLOCATE_MEMORY;
-    *ptr = new_ptr;
-
-    if (old_size < new_size)
-        memset(*(uint8_t **)ptr + old_size, 0, (new_size - old_size));
-
-    return MIT_ERROR_OK;
-}
-
-int mit_realloc_memory(mit_state *S, mit_uword memory_bytes)
-{
-    if (memory_bytes % MIT_WORD_BYTES != 0)
-        return MIT_MALLOC_ERROR_INVALID_SIZE;
-    int ret = mit_realloc(&S->memory, S->memory_bytes, memory_bytes);
-    if (ret == 0)
-        S->memory_bytes = memory_bytes;
-    return ret;
-}
-
-int mit_realloc_stack(mit_state *S, mit_uword stack_words)
-{
-    int ret = mit_realloc(&S->stack, S->stack_words, stack_words * MIT_WORD_BYTES);
-    if (ret == 0)
-        S->stack_words = stack_words;
-    return ret;
-}
-
-mit_state *mit_init(size_t memory_bytes, size_t stack_words)
+mit_state *mit_new_state(size_t memory_words, size_t stack_words)
 {
     mit_state *S = calloc(1, sizeof(mit_state));
     if (S == NULL)
         return NULL;
 
-    if (mit_realloc_memory(S, memory_bytes) != 0)
+    if (memory_words > 0 &&
+        (S->memory = calloc(memory_words, sizeof(mit_word))) == NULL)
         return NULL;
 
-    if (mit_realloc_stack(S, stack_words) != 0)
+    if (stack_words > 0 &&
+        (S->stack = calloc(stack_words, sizeof(mit_word))) == NULL) {
+        FREE(S->memory);
         return NULL;
+    }
 
     S->pc = 0;
     S->stack_depth = 0;
+    S->memory_words = memory_words;
+    S->stack_words = stack_words;
 
     return S;
 }

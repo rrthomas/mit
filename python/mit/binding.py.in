@@ -136,8 +136,8 @@ libmit.mit_get_memory.restype = POINTER(c_word)
 libmit.mit_get_stack.argtypes = [c_void_p]
 libmit.mit_get_stack.restype = POINTER(c_word)
 
-libmit.mit_get_memory_bytes.argtypes = [c_void_p]
-libmit.mit_get_memory_bytes.restype = c_uword
+libmit.mit_get_memory_words.argtypes = [c_void_p]
+libmit.mit_get_memory_words.restype = c_uword
 
 libmit.mit_get_stack_words.argtypes = [c_void_p]
 libmit.mit_get_stack_words.restype = c_uword
@@ -174,14 +174,8 @@ libmit.mit_load_object.errcheck = errcheck(LoadErrorCode)
 libmit.mit_save_object.argtypes = [c_void_p, c_uword, c_uword, c_int]
 libmit.mit_save_object.errcheck = errcheck(SaveErrorCode)
 
-libmit.mit_init.restype = c_void_p
-libmit.mit_init.argtypes = [c_size_t, c_size_t]
-
-libmit.mit_realloc_memory.argtypes = [c_void_p, c_int]
-libmit.mit_realloc_memory.errcheck = malloc_error
-
-libmit.mit_realloc_stack.argtypes = [c_void_p, c_int]
-libmit.mit_realloc_stack.errcheck = malloc_error
+libmit.mit_new_state.restype = c_void_p
+libmit.mit_new_state.argtypes = [c_size_t, c_size_t]
 
 libmit.mit_destroy.restype = None
 libmit.mit_destroy.argtypes = [c_void_p]

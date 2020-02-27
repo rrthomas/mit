@@ -1,7 +1,7 @@
 // Public data structures and interface calls.
 // This is the header file to include in programs using Mit.
 //
-// (c) Mit authors 1994-2019
+// (c) Mit authors 1994-2020
 //
 // The package is distributed under the MIT/X11 License.
 //
@@ -180,18 +180,18 @@ int mit_store(mit_state *S, mit_uword addr, unsigned size, mit_word val);
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-function"
 _GL_ATTRIBUTE_PURE static uint8_t *
-native_address_of_range(mit_word * restrict memory, mit_uword memory_bytes,
+native_address_of_range(mit_word * restrict memory, mit_uword memory_words,
                         mit_uword addr, mit_uword len)
 {
-    if (unlikely(addr >= memory_bytes || len > memory_bytes - addr))
+    if (unlikely(addr >= memory_words * MIT_WORD_BYTES || len > memory_words * MIT_WORD_BYTES - addr))
         return NULL;
     return ((uint8_t *)memory) + addr;
 }
 
-static int load(mit_word * restrict memory, mit_uword memory_bytes,
+static int load(mit_word * restrict memory, mit_uword memory_words,
                 mit_uword addr, unsigned size, mit_word *val_ptr)
 {
-    if (unlikely(addr >= memory_bytes))
+    if (unlikely(addr >= memory_words * MIT_WORD_BYTES))
         return MIT_ERROR_INVALID_MEMORY_READ;
 
     mit_word val;
@@ -246,10 +246,10 @@ static int load(mit_word * restrict memory, mit_uword memory_bytes,
     return MIT_ERROR_OK;
 }
 
-static int store(mit_word * restrict memory, mit_uword memory_bytes,
+static int store(mit_word * restrict memory, mit_uword memory_words,
                  mit_uword addr, unsigned size, mit_word val)
 {
-    if (unlikely(addr >= memory_bytes))
+    if (unlikely(addr >= memory_words * MIT_WORD_BYTES))
         return MIT_ERROR_INVALID_MEMORY_WRITE;
 
     switch (size) {
@@ -366,43 +366,17 @@ static int store_stack(mit_word * restrict stack, mit_uword stack_depth,
 
 // VM instantiation and control
 
-mit_state *mit_init(size_t memory_bytes, size_t stack_words);
+mit_state *mit_new_state(size_t memory_words, size_t stack_words);
 /* Create and initialize a virtual machine state.
 
-   - memory_bytes - number of bytes of memory required
-   - stack_words - number of words of stack space required
-
-   `memory_bytes` must be a multiple of `WORD_BYTES`.
+   - memory_words - number of words of memory required (may be 0)
+   - stack_words - number of words of stack space required (may be 0)
 
    Return a pointer to a new state, or `NULL` if memory cannot be allocated,
-   or if any requested size is larger than `MIT_UWORD_MAX` or `memory_bytes`
-   is not a multiple of a number of words.
+   or if any requested size is larger than `MIT_UWORD_MAX`.
 
    The memory and stack are zeroed, and the registers are initialized as per
    the spec.
-*/
-
-int mit_realloc_memory(mit_state *S, mit_uword memory_bytes);
-/* Resize the memory of a state.
-
-   - state - the state to change
-   - memory_bytes - number of bytes of memory required
-
-   Return 0 on success, -1 if the requested memory cannot be allocated, or
-   -2 if `memory_bytes` is not a multiple of `WORD_BYTES`.
-
-   Any new memory is zeroed.
-*/
-
-int mit_realloc_stack(mit_state *S, mit_uword stack_words);
-/* Resize the stack of a state.
-
-   - state - the state to change
-   - stack_words - number of words of stack required
-
-   Return 0 on success, or -1 if the requested memory cannot be allocated.
-
-   Any new memory is zeroed.
 */
 
 void mit_destroy(mit_state *S);
@@ -426,7 +400,7 @@ ptrdiff_t mit_load_object(mit_state *S, mit_uword addr, int fd);
    - addr - the address at which to load the object file
    - fd - the file descriptor to load from
 
-   Return the number of bytes of code loaded, or one of the following
+   Return the number of words of code loaded, or one of the following
    errors:
 
    -1: error reading the object file
@@ -446,7 +420,7 @@ int mit_save_object(mit_state *S, mit_uword addr, mit_uword len, int fd);
 /* Save some memory as an object file.
 
    - state - the state to save from
-   - addr, len - the area of memory to save
+   - addr, len - the address and number of words of memory to save
    - fd - the file descriptor to save to
 
    Return 0 on success, or one of the following errors:

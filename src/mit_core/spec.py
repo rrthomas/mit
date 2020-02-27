@@ -32,7 +32,7 @@ register.update({
     # Registers that are not part of the spec
     'memory': (True, 'mit_word *'),
     'stack': (True, 'mit_word * restrict'),
-    'memory_bytes': (True,),
+    'memory_words': (True,),
     'stack_words': (True,),
 })
 Register = unique(RegisterEnum('Register', register))
@@ -91,13 +91,13 @@ Instruction = instruction_enum(
         'PUSH_STACK_DEPTH': Code('n = S->stack_depth;'),
 
         'LOAD': Code('''\
-            int ret = load(S->memory, S->memory_bytes, addr, size, &x);
+            int ret = load(S->memory, S->memory_words, addr, size, &x);
             if (ret != 0)
                 RAISE(ret);'''
         ),
 
         'STORE': Code('''\
-            int ret = store(S->memory, S->memory_bytes, addr, size, x);
+            int ret = store(S->memory, S->memory_words, addr, size, x);
             if (ret != 0)
                 RAISE(ret);'''
         ),
