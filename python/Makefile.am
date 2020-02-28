@@ -1,13 +1,13 @@
 # Python bindings Makefile.am
 #
-# (c) Mit authors 2019
+# (c) Mit authors 2019-2020
 #
 # The package is distributed under the MIT/X11 License.
 #
 # THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 # RISK.
 
-PYTHON_WITH_PATH = export PYTHONPATH=$(abs_top_srcdir)/python:$(abs_top_srcdir)/src:$(abs_top_builddir)/src:$(abs_top_srcdir)/src/features; $(PYTHON)
+PYTHON_ENVIRONMENT = export PYTHONPATH=$(abs_top_srcdir)/python:$(abs_top_srcdir)/src:$(abs_top_builddir)/src:$(abs_top_srcdir)/src/features;
 
 bin_SCRIPTS = mit@PACKAGE_SUFFIX@-dump mit@PACKAGE_SUFFIX@-shell
 man_MANS = mit@PACKAGE_SUFFIX@-dump.1 mit@PACKAGE_SUFFIX@-shell.1
@@ -33,6 +33,16 @@ inplace_edit = sed \
 
 all-local: $(nodist_mit_pkgpython_PYTHON)
 
+%.1: % %-include.man $(top_builddir)/build-aux/man-include.man
+## Exit gracefully if $@ is not writeable, such as during distcheck!
+	$(AM_V_GEN)if ( touch $@.w && rm -f $@.w; ) >/dev/null 2>&1; then \
+	  $(PYTHON_ENVIRONMENT) $(top_srcdir)/build-aux/missing --run $(HELP2MAN) --no-info \
+		--no-discard-stderr \
+		--include=$(builddir)/$*-include.man \
+		--include=$(top_builddir)/build-aux/man-include.man \
+		--output=$@ ./$*; \
+	fi
+
 mit/binding.py: $(top_builddir)/config.status mit/binding.py.in
 	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
 
@@ -42,7 +52,7 @@ mit/enums.py: $(top_srcdir)/src/mit_core/mit_spec.yaml Makefile mit/enums.py.in
 	$(AM_V_at)mv $@.tmp $@
 
 mit/extra_enums.py: gen-extra-enums $(top_srcdir)/src/features/extra_instructions.py
-	$(PYTHON_WITH_PATH) $(srcdir)/gen-extra-enums > mit/extra_enums.py || ( rm -f mit/extra_enums.py; exit 1 )
+	$(PYTHON_ENVIRONMENT) $(PYTHON) $(srcdir)/gen-extra-enums > mit/extra_enums.py || ( rm -f mit/extra_enums.py; exit 1 )
 
 install-data-hook: mit/enums.py
 	@$(install_edit) $(top_srcdir)/python/mit/enums.py.in > enums.py.tmp
@@ -70,18 +80,20 @@ mit@PACKAGE_SUFFIX@-shell: mit-shell
 	chmod +x $@
 
 mit@PACKAGE_SUFFIX@-dump.1: mit-dump.1
-	cp mit-dump $@
+	cp mit-dump.1 $@
 
 mit@PACKAGE_SUFFIX@-shell.1: mit-shell.1
-	cp mit-shell $@
+	cp mit-shell.1 $@
 endif
 
 EXTRA_DIST = \
-	gen-extra-enums		\
-	$(man_MANS)		\
-	mit/binding.py.in	\
-	mit/enums.py.in		\
-	mit-dump.in		\
+	gen-extra-enums			\
+	mit-dump-include.man.in		\
+	mit-shell-include.man.in	\
+	$(man_MANS)			\
+	mit/binding.py.in		\
+	mit/enums.py.in			\
+	mit-dump.in			\
 	mit-shell.in
 
 DISTCLEANFILES = $(bin_SCRIPTS) $(man_MANS) mit/enums.py

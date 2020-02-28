@@ -166,7 +166,7 @@ Option('version',
        parse_code=Code('''\
            {
                printf(PACKAGE_NAME " " VERSION " (%d-byte word, %s-endian)\\n"
-                      "(c) Mit authors 1994-2019\\n"
+                      "Copyright (c) Mit authors 1994-2019.\\n"
                       PACKAGE_NAME " comes with ABSOLUTELY NO WARRANTY.\\n"
                       "You may redistribute copies of " PACKAGE_NAME "\\n"
                       "under the terms of the MIT/X11 License.\\n",
@@ -182,9 +182,7 @@ Doc('"The ARGUMENTs are passed to "PACKAGE_NAME"."')
 Doc('''
 If an error occurs during execution, the exit status is the error code; if
 execution halts normally, the exit status is 0. Note that the VM code may
-cause an exit with a different status.
-''')
-Doc('"Please report bugs to "PACKAGE_BUGREPORT"."')
+cause an exit with a different status.''')
 
 
 # Features

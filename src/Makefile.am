@@ -57,11 +57,12 @@ include/mit/mit.h: $(top_builddir)/config.status include/mit/mit.h.in include/mi
 # Depend on mit@PACKAGE_SUFFIX@$(EXEEXT) rather than explicitly make-ing it, as otherwise
 # we break parallel builds, as libmit@PACKAGE_SUFFIX@.la can be built twice in parallel,
 # which can fail. Set distcleancheck_listfiles below to fix distcheck.
-mit@PACKAGE_SUFFIX@.1: mit@PACKAGE_SUFFIX@$(EXEEXT) mit-include.man
+mit@PACKAGE_SUFFIX@.1: mit@PACKAGE_SUFFIX@$(EXEEXT) $(top_builddir)/build-aux/man-include.man mit-include.man
 ## Exit gracefully if mit.1 is not writeable, such as during distcheck!
 	$(AM_V_GEN)if ( touch $@.w && rm -f $@.w; ) >/dev/null 2>&1; then \
 	  $(top_srcdir)/build-aux/missing --run $(HELP2MAN) --no-info \
 		--name="Virtual machine" \
+		--include=$(top_builddir)/build-aux/man-include.man \
 		--include=$(srcdir)/mit-include.man \
 		--output=$@ $(MIT_BINARY); \
 	fi
