@@ -31,4 +31,5 @@ under the terms of the MIT/X11 License.'''
 args = parser.parse_args()
 
 # Run IPython
-subprocess.run(['@IPYTHON@', '-i', '@IPYTHON_OPTS@', '-c', 'from mit@PACKAGE_SUFFIX@.globals import *'])
+ipython_opts = '@IPYTHON_OPTS@'.split()
+subprocess.run(['@IPYTHON@', '-i'] + ipython_opts + ['-c', 'from mit@PACKAGE_SUFFIX@.globals import *'])
