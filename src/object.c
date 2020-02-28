@@ -1,6 +1,6 @@
 // Load and save object files.
 //
-// (c) Mit authors 1995-2019
+// (c) Mit authors 1995-2020
 //
 // The package is distributed under the MIT/X11 License.
 //
@@ -15,8 +15,8 @@
 #include "mit/mit.h"
 
 
-#define HEADER_LENGTH 8
-#define HEADER_MAGIC "MIT\0\0"
+const char *mit_header_magic = MIT_HEADER_MAGIC;
+const unsigned mit_header_length = 16;
 
 ptrdiff_t mit_load_object(mit_state *S, mit_uword addr, int fd)
 {
@@ -42,18 +42,19 @@ ptrdiff_t mit_load_object(mit_state *S, mit_uword addr, int fd)
     }
 
     // Read and check header
-    char header[HEADER_LENGTH] = {'\0'};
+    char header[mit_header_length];
+    memset(header, 0, mit_header_length);
     mit_uword endism;
     mit_uword file_word_bytes;
     memcpy(header, buf, nread);
     if ((res = read(fd, &header[nread], sizeof(header) - nread)) == -1)
         return MIT_LOAD_ERROR_FILE_SYSTEM_ERROR;
     if (res != (ssize_t)(sizeof(header) - nread) ||
-        memcmp(header, HEADER_MAGIC, sizeof(HEADER_MAGIC)) ||
-        (endism = header[sizeof(HEADER_MAGIC)]) > 1)
+        memcmp(header, MIT_HEADER_MAGIC, sizeof(MIT_HEADER_MAGIC)) ||
+        (endism = header[sizeof(MIT_HEADER_MAGIC)]) > 1)
         return MIT_LOAD_ERROR_INVALID_OBJECT_FILE;
     if (endism != MIT_ENDISM ||
-        (file_word_bytes = header[sizeof(HEADER_MAGIC) + 1]) != MIT_WORD_BYTES)
+        (file_word_bytes = header[sizeof(MIT_HEADER_MAGIC) + 1]) != MIT_WORD_BYTES)
         return MIT_LOAD_ERROR_INCOMPATIBLE_OBJECT_FILE;
 
     // Read and check size, and ensure code will fit in memory
@@ -86,15 +87,16 @@ int mit_save_object(mit_state *S, mit_uword addr, mit_uword len, int fd)
     if (ptr == NULL)
         return MIT_SAVE_ERROR_INVALID_ADDRESS_RANGE;
 
-    mit_byte buf[HEADER_LENGTH] = HEADER_MAGIC;
-    buf[sizeof(HEADER_MAGIC)] = MIT_ENDISM;
-    buf[sizeof(HEADER_MAGIC) + 1] = MIT_WORD_BYTES;
+    mit_byte buf[mit_header_length];
+    strcpy((char *)buf, mit_header_magic);
+    buf[sizeof(MIT_HEADER_MAGIC)] = MIT_ENDISM;
+    buf[sizeof(MIT_HEADER_MAGIC) + 1] = MIT_WORD_BYTES;
 
     mit_uword len_save = len;
     if (MIT_ENDISM != MIT_HOST_ENDISM)
         len_save = reverse_endianness(MIT_WORD_BIT, len_save);
 
-    if (write(fd, &buf[0], HEADER_LENGTH) != HEADER_LENGTH ||
+    if (write(fd, &buf[0], mit_header_length) != mit_header_length ||
         write(fd, &len_save, sizeof(len_save)) != sizeof(len_save) ||
         write(fd, ptr, len * MIT_WORD_BYTES) != (ssize_t)(len * MIT_WORD_BYTES))
         return MIT_SAVE_ERROR_FILE_SYSTEM_ERROR;

@@ -90,6 +90,9 @@ typedef uintmax_t mit_max_stack_item_t;
 typedef mit_uword mit_max_stack_item_t;
 #endif
 
+// Required as macro so we can compute mit_header_length statically
+#define MIT_HEADER_MAGIC "mit" // includes terminating NUL
+
 // Constants (for easy FFI binding)
 extern const unsigned mit_word_bytes;
 extern const unsigned mit_endism;
@@ -101,6 +104,9 @@ extern const mit_uword mit_word_mask;
 extern const mit_uword mit_uword_max;
 extern const mit_word mit_word_min;
 extern const mit_word mit_word_max;
+extern const char *mit_header_magic;
+extern const unsigned mit_header_length;
+
 
 // Implementation-defined errors
 enum {
@@ -128,12 +134,16 @@ typedef struct mit_state mit_state;
 extern const unsigned mit_opcode_bit;
 extern const unsigned mit_opcode_mask;
 
-// Utility functions
-mit_uword mit_align(mit_uword addr, unsigned size);
-/* Return `addr` aligned to the next 2^`size`-byte boundary. */
+// Utility macros and functions
+#define MIT_ROUND_UP(n, N) \
+    (((n) - 1) - ((n) - 1) % (N) + (N))
+/* Evaluate `n` aligned to the next `N`-byte boundary. */
 
-int mit_is_aligned(mit_uword addr, unsigned size);
-/* Return 1 if `addr` is a multiple of 2^`size`, or `0` if not. */
+mit_uword mit_align(mit_uword n, unsigned size);
+/* Return `n` aligned to the next 2^`size`-byte boundary. */
+
+int mit_is_aligned(mit_uword n, unsigned size);
+/* Return 1 if `n` is a multiple of 2^`size`, or `0` if not. */
 
 // Inline functions
 #pragma GCC diagnostic push
@@ -400,15 +410,8 @@ ptrdiff_t mit_load_object(mit_state *S, mit_uword addr, int fd);
    - addr - the address at which to load the object file
    - fd - the file descriptor to load from
 
-   Return the number of words of code loaded, or one of the following
-   errors:
-
-   -1: error reading the object file
-   -2: module is invalid
-   -3: current implementation is incompatible with the module (for example,
-       the word size or `MIT_ENDISM` is incompatible)
-   -4: the code will not fit into memory at the address given, or the
-       address is out of range or unaligned.
+   Return the number of words of code loaded, or one of the MIT_LOAD_ERROR_*
+   error codes (see mit/opcodes.h).
 
    As an extension to the specification, if an object file starts with the
    ASCII bytes `#!`, then it is assumed to be the start of a UNIX-style
