@@ -1,0 +1,5 @@
+[NAME]
+mit-dump@PACKAGE_SUFFIX@ - dump Mit object files as hex and disassembly
+
+[SEE ALSO]
+.BR mit@PACKAGE_SUFFIX@ (1)

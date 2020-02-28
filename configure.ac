@@ -20,7 +20,7 @@ AC_INIT([Mit],
         [mit],
         [https://github.com/rrthomas/mit/])
 AC_CONFIG_AUX_DIR([build-aux])
-AM_INIT_AUTOMAKE([-Wall -Werror foreign subdir-objects])
+AM_INIT_AUTOMAKE([-Wall foreign subdir-objects])
 
 # Check for programs
 AC_PROG_CC_C99
@@ -184,6 +184,7 @@ AM_CONDITIONAL([USING_PFORTH],
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_FILES([
         Makefile
+        build-aux/man-include.man
         lib/Makefile
         src/Makefile
         src/include/mit/mit.h
@@ -191,8 +192,8 @@ AC_CONFIG_FILES([
         src/features/mit/features.h
         python/Makefile
         python/mit/binding.py
-        python/mit-dump.1
-        python/mit-shell.1
+        python/mit-dump-include.man
+        python/mit-shell-include.man
         tests/Makefile
         tests/test_pickle.py
         doc/Makefile

@@ -11,8 +11,10 @@ SUBDIRS = lib src python tests doc
 
 ACLOCAL_AMFLAGS = -I m4
 
-EXTRA_DIST = README.md \
-	m4/gnulib-cache.m4 \
+EXTRA_DIST = \
+	README.md			\
+	m4/gnulib-cache.m4		\
+	build-aux/man-include.man.in	\
 	$(top_srcdir)/.version
 
 BUILT_SOURCES = $(top_srcdir)/.version
