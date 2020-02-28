@@ -11,9 +11,6 @@
 
 % Macros for this document
 
-% Constants
-\newcommand{\instsize}{$8$}
-
 % Font for stack pictures; macro \spic includes italic correction
 
 \newcommand{\spic}[1]{\texttt{\textsl{#1\/}}}
@@ -72,15 +69,34 @@ Mit is conceptually (and usually in fact) a library, embedded in other programs;
 
 \section{Architecture}
 
-Mit's address unit is the byte, which is eight bits.
+The address unit is the byte, which is eight bits.
 Most of the quantities on which Mit operates are fixed-size words, which are stored in memory in either big- or little-endian order.
 The choice of byte and word size enable efficient implementation on the vast majority of machine architectures.
+
+
+\subsection{Parameters}
+
+Some parameters may take a range of values, but are fixed for a particular virtual machine instance. They are listed in table~\ref{paramtable}.
+
+\begin{table}[htbp]
+\begin{center}
+\begin{tabular}{cp{3.75in}} \toprule
+\bf Parameter & \bf Meaning \\
+ \midrule
+{\tt endism} & The endianness of the virtual machine instance: $0$ for little-endian, or $1$ for big-endian. \\
+{\tt word\_bytes} & The number of bytes in a word. Must be in the range $2$ to $32$ inclusive, and a power of $2$. \\
+{\tt instruction\_bits} & The number of bits in an instruction. Must be in the range $5$ to $8$ inclusive. \\
+ \bottomrule
+\end{tabular}
+\caption{\label{paramtable}Registers}
+\end{center}
+\end{table}
 
 
 \subsection{Registers}
 \label{registers}
 
-The registers are word quantities; they are listed, with their functions, in table~\ref{regtable}. Registers without fixed values are initialised to~$0$.
+The registers are word quantities; they are listed, with their functions, in table~\ref{regtable}. The registers are initialised to~$0$.
 
 \begin{table}[htbp]
 \begin{center}
@@ -90,8 +106,6 @@ The registers are word quantities; they are listed, with their functions, in tab
 {\tt pc} & The {\tt p}rogram {\tt c}ounter. Points to the next word from which {\tt i} may be loaded. \\
 {\tt ir} & The {\tt i}nstruction {\tt r}egister. Contains instructions to be executed. \\
 {\tt stack\_depth} & The number of words on the stack. \\
-{\tt endism} & The endianness of Mit: 0 = Little-endian, 1 = Big-endian. Fixed for a particular instance of Mit. \\
-{\tt word\_bytes} & The number of bytes in a word. Must be in the range $2$ to $32$ inclusive, and a power of $2$. Fixed for a particular instance of Mit. \\
  \bottomrule
 \end{tabular}
 \caption{\label{regtable}Registers}
@@ -118,8 +132,8 @@ Execution proceeds as follows:
 
 \begin{tabbing}
 \hspace{0.5in}\=begin\=\+\+ \\*
-let \textbf{opcode} be the least significant \instsize\ bits of {\tt ir} \\*
-shift {\tt ir} logically \instsize\ bits to the right \\*
+let \textbf{opcode} be the least significant {\tt instruction\_bits} bits of {\tt ir} \\*
+shift {\tt ir} logically {\tt instruction\_bits} bits to the right \\*
 execute the instruction given by \textbf{opcode} \- \\*
 repeat
 \end{tabbing}
@@ -378,7 +392,7 @@ These instructions fetch and store quantities to and from memory. If an invalid 
 \subsection{Instruction encoding}
 \label{encoding}
 
-Instructions are encoded as {\instsize}-bit opcodes; opcodes are packed into words, which are executed starting at the least-significant bits.
+Instructions are encoded as {\tt instruction\_bits}-bit opcodes; opcodes are packed into words, which are executed starting at the least-significant bits.
 
 
 \subsection{Instruction opcodes}
