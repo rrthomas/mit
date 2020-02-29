@@ -89,9 +89,16 @@ def errcheck(error_enum):
 
 # Constants (all of type unsigned)
 vars().update([(c, c_uint.in_dll(libmit, "mit_{}".format(c)).value)
-               for c in ["word_bytes", "endism", "size_word",
-                         "byte_bit", "byte_mask", "word_bit",
-                         "opcode_bit", "opcode_mask"]])
+               for c in [
+                       "word_bytes", "endism", "size_word",
+                       "byte_bit", "byte_mask", "word_bit",
+                       "opcode_bit", "opcode_mask",
+                       "header_length",
+               ]])
+vars().update([(c, c_char_p.in_dll(libmit, "mit_{}".format(c)).value)
+               for c in [
+                       "header_magic",
+               ]])
 sign_bit = 1 << (word_bit - 1)
 hex0x_word_width = word_bytes * 2 + 2 # Width of a hex word with leading "0x"
 

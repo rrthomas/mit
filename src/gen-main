@@ -219,17 +219,11 @@ Feature(# Extra instructions
 )
 
 Feature(# Auto-extend stack
-    top_level=Code('''
-        static mit_uword round_up(mit_uword n, mit_uword multiple)
-        {
-            return (n - 1) - (n - 1) % multiple + multiple;
-        }
-    '''),
     init=Code('bool auto_extend_stack = true;'),
     handler=Code('''\
         if (error == MIT_ERROR_STACK_OVERFLOW)
             if (auto_extend_stack == true &&
-                REALLOC_N(S, round_up(S->stack_words + 1,
+                REALLOC_N(S, MIT_ROUND_UP(S->stack_words + 1,
                     page_size / MIT_WORD_BYTES)) == 0)
                 continue;
     '''),

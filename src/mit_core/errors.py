@@ -23,7 +23,6 @@ class LoadErrorCode(IntEnum):
     FILE_SYSTEM_ERROR = -3
     INVALID_OBJECT_FILE = -4
     INCOMPATIBLE_OBJECT_FILE = -5
-    OBJECT_FILE_TOO_LARGE = -6
 
 @unique
 class SaveErrorCode(IntEnum):

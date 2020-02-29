@@ -88,7 +88,7 @@ Some parameters may take a range of values, but are fixed for a particular virtu
 {\tt instruction\_bits} & The number of bits in an instruction. Must be in the range $5$ to $8$ inclusive. \\
  \bottomrule
 \end{tabular}
-\caption{\label{paramtable}Registers}
+\caption{\label{paramtable}Parameters}
 \end{center}
 \end{table}
 
@@ -451,8 +451,8 @@ Table~\ref{opcodetable} lists the instruction opcodes in numerical order. Table~
 \label{object}
 
 The object file starts with the ASCII codes of the letters
-``mit'', followed by three zero bytes, then the one-byte values of
-the {\tt endism} and {\tt word\_bytes} registers of the system which saved the file, then a word (of the given endianness and size) containing the number of words the code occupies. Then follows the code.
+``mit'', followed by a zero byte, then the one-byte values of
+the {\tt endism} and {\tt word\_bytes} registers of the system which saved the file, then ten zero bytes (adding up to $16$ total), then a word (of the given endianness and size) containing the number of words the code occupies. Then follows the given number of words of code.
 
 
 \section*{Acknowledgements}

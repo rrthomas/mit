@@ -1,10 +1,9 @@
 #------------------------------------------------------------------------------
-# $File: mit,v 1.2 2018/02/05 23:42:17 rrt Exp $
 # mit:  file(1) magic for Mit VM object files
 # https://github.com/rrthomas/mit/
-# (c) Reuben Thomas 2019.
+# (c) Reuben Thomas 2019-2020.
 # This file is in the public domain.
 
 # Mit object module
-0	search/64	MIT\000	Mit VM object file
+0	search/64	mit\000	Mit VM object file
 !:strength + 50
