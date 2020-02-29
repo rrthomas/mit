@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# (c) Mit authors 1994-2019
+# (c) Mit authors 1994-2020
 #
 # The package is distributed under the MIT/X11 License.
 #
@@ -9,7 +9,7 @@
 
 import argparse, json, textwrap
 
-from mit_core.code_util import Code, copyright_banner
+from mit_core.code_util import Code, copyright_banner, disable_warnings
 from mit_core.params import opcode_bit
 from specializer import CacheState, gen_case
 from spec import Instruction
@@ -229,7 +229,10 @@ def gen_labels_code(profiling=False):
         code.append('')
         code.append('{label_name}:'.format(label_name=label.name))
         label_code, cached_depth = label.generate_code(profiling)
-        code.append(label_code)
+        code.append(disable_warnings(
+            ['-Wunsafe-loop-optimizations'],
+            label_code,
+        ))
         max_cached_depth = max(max_cached_depth, cached_depth)
     code.append('')
     code.append('''\
