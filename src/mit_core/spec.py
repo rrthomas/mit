@@ -23,17 +23,16 @@ with open(os.path.join(os.path.dirname(__file__), 'mit_spec.yaml')) as f:
 
 
 class RegisterEnum(AutoNumber):
-    def __init__(self, read_only=False, type='mit_uword'):
-        self.read_only = read_only
+    def __init__(self, type='mit_uword'):
         self.type = type
 
 register = {r: () for r in spec['Register']}
 register.update({
     # Registers that are not part of the spec
-    'memory': (True, 'mit_word *'),
-    'stack': (True, 'mit_word * restrict'),
-    'memory_words': (True,),
-    'stack_words': (True,),
+    'memory': ('mit_word *'),
+    'stack': ('mit_word * restrict'),
+    'memory_words': (),
+    'stack_words': (),
 })
 Register = unique(RegisterEnum('Register', register))
 Register.__doc__ = 'VM registers.'

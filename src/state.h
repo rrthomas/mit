@@ -1,6 +1,6 @@
 // Declaration of mit_state.
 //
-// (c) Mit authors 2019
+// (c) Mit authors 2019-2020
 //
 // The package is distributed under the MIT/X11 License.
 //
@@ -13,10 +13,8 @@
 
 struct mit_state {
 #define R(reg, type, return_type) type reg;
-#define R_RO(reg, type, return_type) type reg;
 #include "mit/registers.h"
 #undef R
-#undef R_RO
 };
 
 #endif

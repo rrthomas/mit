@@ -117,14 +117,11 @@ enum {
 // VM registers
 typedef struct mit_state mit_state;
 
-#define R_RO(reg, type, return_type)            \
-    return_type mit_get_ ## reg(mit_state *S);
 #define R(reg, type, return_type)                       \
-    R_RO(reg, type, return_type)                        \
+    return_type mit_get_ ## reg(mit_state *S);          \
     void mit_set_ ## reg(mit_state *S, type val);
 #include <mit@PACKAGE_SUFFIX@/registers.h>
 #undef R
-#undef R_RO
 
 // Instructions
 #if MIT_OPCODE_BIT < 5 || MIT_OPCODE_BIT > 8

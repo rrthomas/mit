@@ -298,17 +298,16 @@ for register in Register:
         len(mit_lib), None, get_code,
     )
 
-    if not register.read_only:
-        set_code = Code()
-        set_code.extend(pop_code)
-        set_code.append('{} value;'.format(register.type))
-        set_code.extend(pop_stack('value', register.type))
-        set_code.append('''\
-            mit_set_{}(inner_state, value);'''.format(register.name),
-        )
-        mit_lib['SET_{}'.format(register.name.upper())] = (
-            len(mit_lib), None, set_code,
-        )
+    set_code = Code()
+    set_code.extend(pop_code)
+    set_code.append('{} value;'.format(register.type))
+    set_code.extend(pop_stack('value', register.type))
+    set_code.append('''\
+        mit_set_{}(inner_state, value);'''.format(register.name),
+    )
+    mit_lib['SET_{}'.format(register.name.upper())] = (
+        len(mit_lib), None, set_code,
+    )
 
 LibMit = InstructionEnum('LibMit', mit_lib)
 LibMit.__doc__ = 'Function codes for the external extra instruction LIBMIT.'
