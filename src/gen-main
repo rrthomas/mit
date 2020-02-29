@@ -488,7 +488,7 @@ static mit_state *S;
 
 static void exit_function(void)
 {
-    mit_destroy(S);
+    mit_free_state(S);
 }''')
 code.extend(initial_code)
 

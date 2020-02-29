@@ -121,7 +121,7 @@ mit_state *mit_new_state(size_t memory_words, size_t stack_words)
     return S;
 }
 
-void mit_destroy(mit_state *S)
+void mit_free_state(mit_state *S)
 {
     free(S->memory);
     free(S->stack);

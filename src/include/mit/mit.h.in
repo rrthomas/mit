@@ -389,8 +389,8 @@ mit_state *mit_new_state(size_t memory_words, size_t stack_words);
    the spec.
 */
 
-void mit_destroy(mit_state *S);
-/* Destroy the given state, deallocating its memory. */
+void mit_free_state(mit_state *S);
+/* Free the given state, deallocating its memory. */
 
 mit_word mit_run(mit_state * restrict S);
 /* Start the execution cycle in the given state as described in the spec.

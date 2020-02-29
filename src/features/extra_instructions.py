@@ -243,7 +243,7 @@ mit_lib = {
     'DESTROY': (
         0x5,
         StackEffect.of(['inner_state:mit_state *'], []),
-        Code('mit_destroy(inner_state);'),
+        Code('mit_free_state(inner_state);'),
     ),
 
     'RUN': (
