@@ -184,8 +184,8 @@ libmit.mit_save_object.errcheck = errcheck(SaveErrorCode)
 libmit.mit_new_state.restype = c_void_p
 libmit.mit_new_state.argtypes = [c_size_t, c_size_t]
 
-libmit.mit_destroy.restype = None
-libmit.mit_destroy.argtypes = [c_void_p]
+libmit.mit_free_state.restype = None
+libmit.mit_free_state.argtypes = [c_void_p]
 
 libmit.mit_align.restype = c_uword
 libmit.mit_align.argtypes = [c_uword, c_uint]

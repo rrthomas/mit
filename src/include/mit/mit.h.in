@@ -117,14 +117,11 @@ enum {
 // VM registers
 typedef struct mit_state mit_state;
 
-#define R_RO(reg, type, return_type)            \
-    return_type mit_get_ ## reg(mit_state *S);
 #define R(reg, type, return_type)                       \
-    R_RO(reg, type, return_type)                        \
+    return_type mit_get_ ## reg(mit_state *S);          \
     void mit_set_ ## reg(mit_state *S, type val);
 #include <mit@PACKAGE_SUFFIX@/registers.h>
 #undef R
-#undef R_RO
 
 // Instructions
 #if MIT_OPCODE_BIT < 5 || MIT_OPCODE_BIT > 8
@@ -389,8 +386,8 @@ mit_state *mit_new_state(size_t memory_words, size_t stack_words);
    the spec.
 */
 
-void mit_destroy(mit_state *S);
-/* Destroy the given state, deallocating its memory. */
+void mit_free_state(mit_state *S);
+/* Free the given state, deallocating its memory. */
 
 mit_word mit_run(mit_state * restrict S);
 /* Start the execution cycle in the given state as described in the spec.

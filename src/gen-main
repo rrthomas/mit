@@ -267,13 +267,11 @@ Feature(# Register and stack backtrace
         if (error != MIT_ERROR_HALT && backtrace == true) {
             fprintf(stderr, "\\nRegisters:\\n");
             char str[MAX_STACK_ITEM_STRLEN];
-            #define R_RO(name, type, return_type) \\
+            #define R(name, type, return_type) \\
             stack_item_to_str((mit_max_stack_item_t)S->name, sizeof(S->name), &str[0]); \\
             fprintf(stderr, #name "=0x%.*s\\n", (int)(sizeof(S->name) * 2), str);
-            #define R(name, type, return_type) R_RO(name,type, return_type)
             #include "mit/registers.h"
             #undef R
-            #undef R_RO
             if (S->stack_depth <= S->stack_words) {
                 fprintf(stderr, "\\nStack:\\n");
                 mit_uword items = MIN(max_backtrace, S->stack_depth);
@@ -488,7 +486,7 @@ static mit_state *S;
 
 static void exit_function(void)
 {
-    mit_destroy(S);
+    mit_free_state(S);
 }''')
 code.extend(initial_code)
 

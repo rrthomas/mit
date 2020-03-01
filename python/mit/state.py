@@ -56,7 +56,7 @@ class State:
         return state
 
     def __del__(self):
-        libmit.mit_destroy(self.state)
+        libmit.mit_free_state(self.state)
 
     def __getstate__(self):
         state = self.__dict__.copy()
