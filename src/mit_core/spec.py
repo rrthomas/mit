@@ -45,9 +45,9 @@ def instruction_enum(enum_name, docstring, spec, code):
         ((
             name,
             (
-                i['opcode'],
                 StackEffect.of(i['args'], i['results']),
                 code[name],
+                i['opcode'],
                 i.get('terminal', False),
             ),
         ) for name, i in spec.items())

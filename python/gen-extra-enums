@@ -54,7 +54,7 @@ for lib in extra_instructions.LibInstruction:
         lib.library.__name__,
         lib.opcode,
     ))
-    code.extend(enum_to_python(lib.library, lambda i: "{:#x}".format(i.value[0])))
+    code.extend(enum_to_python(lib.library, lambda i: "{:#x}".format(i.opcode)))
     code.append('')
 code.append('''\
     @unique

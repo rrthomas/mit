@@ -1,7 +1,7 @@
 '''
 Class for instructions.
 
-Copyright (c) 2019 Mit authors
+Copyright (c) 2019-2020 Mit authors
 
 The package is distributed under the MIT/X11 License.
 
@@ -19,9 +19,10 @@ class InstructionEnum(Enum):
     '''
     VM instruction descriptor.
 
-     - opcode - int - opcode number.
      - effect - StackEffect or None.
      - code - Code.
+     - opcode - int or None - opcode number, defaults to the number of
+       instructions before adding this one.
      - terminal - bool - this instruction is terminal: `ir` must be zero on
        entry.
      - is_variadic - bool - true if this instruction is variadic.
@@ -31,17 +32,23 @@ class InstructionEnum(Enum):
 
     There are special macros available to instructions; see run.h.
     '''
-    def __init__(self, opcode, effect, code, terminal=False):
+    def __new__(cls, *args):
+        obj = object.__new__(cls)
+        obj.opcode = len(cls.__members__)
+        return obj
+
+    def __init__(self, effect, code, opcode=None, terminal=False):
         '''
           - effect - tuple of two lists of str, acceptable to StackPicture.of(),
             or `None`, meaning that the instruction has an arbitrary stack
             effect.
         '''
-        self.opcode = opcode
-        assert effect is None or isinstance(effect, StackEffect)
+        assert effect is None or isinstance(effect, StackEffect), effect
         self.effect = effect
         assert isinstance(code, Code)
         self.code = code
+        if opcode is not None:
+            self.opcode = opcode
         self.terminal = terminal
         self.is_variadic = (
             self.effect is not None and
