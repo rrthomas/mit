@@ -19,14 +19,6 @@ from mit_core.stack import pop_stack, push_stack
 @unique
 class LibC(InstructionEnum):
     'Function codes for the external extra instruction LIBC.'
-    ARGC = (StackEffect.of([], ['argc']), Code('''\
-        argc = mit_argc();
-    '''))
-
-    ARG = (StackEffect.of(['u'], ['arg:const char *']), Code('''\
-        arg = mit_argv(u);
-    '''))
-
     EXIT = (StackEffect.of(['ret_code'], []), Code('''\
         exit(ret_code);
     '''))
@@ -209,6 +201,8 @@ for register in Register:
     )
 
 mit_lib.update({
+    # libmit functions
+
     'CURRENT_STATE': (
         StackEffect.of([], ['state:mit_state *']),
         Code('state = S;'),
@@ -288,6 +282,60 @@ mit_lib.update({
     'NATIVE_POINTER_WORDS': (
         StackEffect.of([], ['n']),
         Code('n = MAX(sizeof(void *), sizeof(mit_word)) / sizeof(mit_word);'),
+    ),
+
+
+    # libmitfeatures functions
+
+    'ARGC': (
+        StackEffect.of([], ['argc']),
+        Code('argc = (mit_word)mit_argc();'),
+    ),
+
+    'ARG': (
+        StackEffect.of(['u'], ['arg:const char *']),
+        Code('arg = mit_argv((int)u);'),
+    ),
+
+    'REGISTER_ARGS': (
+        # Note: actually "char *argv[]", but we can't express that.
+        StackEffect.of(['argc:int', 'argv:const char **'], ['ret:int']),
+        Code('ret = mit_register_args(argc, argv);'),
+    ),
+
+    'EXTRA_INSTRUCTION': (
+        StackEffect.of(['state:mit_state *'], ['ret']),
+        Code('ret = mit_extra_instruction(state);'),
+    ),
+
+    'CORE_DUMP': (
+        StackEffect.of(['state:mit_state *'], ['file:const char *']),
+        Code('file = mit_core_dump(state);'),
+    ),
+
+    'SPECIALIZER_RUN': (
+        StackEffect.of(['state:mit_state *'], ['ret']),
+        Code('ret = mit_specializer_run(state);'),
+    ),
+
+    'PROFILE_INIT': (
+        StackEffect.of([], []),
+        Code('mit_profile_init();'),
+    ),
+
+    'PROFILE_RUN': (
+        StackEffect.of(['state:mit_state *'], ['ret']),
+        Code('ret = mit_profile_run(state);'),
+    ),
+
+    'PROFILE_DUMP': (
+        StackEffect.of(['fd:int'], ['ret:int']),
+        Code('ret = mit_profile_dump(fd);'),
+    ),
+
+    'STEP_TO': (
+        StackEffect.of(['state:mit_state *', 'n:mit_uword *', 'addr', 'auto_NEXT:int'], ['ret']),
+        Code('ret = mit_step_to(state, n, addr, auto_NEXT);'),
     ),
 })
 
