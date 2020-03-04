@@ -180,7 +180,35 @@ class LibC(InstructionEnum):
         '''),
     )
 
-mit_lib = {
+mit_lib = {}
+
+for register in Register:
+    pop_code = Code()
+    pop_code.append('mit_state *inner_state;')
+    pop_code.extend(pop_stack('inner_state', type='mit_state *'))
+
+    get_code = Code()
+    get_code.extend(pop_code)
+    get_code.extend(push_stack(
+        'mit_get_{}(inner_state)'.format(register.name),
+        type=register.type
+    ))
+    mit_lib['GET_{}'.format(register.name.upper())] = (
+        None, get_code,
+    )
+
+    set_code = Code()
+    set_code.extend(pop_code)
+    set_code.append('{} value;'.format(register.type))
+    set_code.extend(pop_stack('value', register.type))
+    set_code.append('''\
+        mit_set_{}(inner_state, value);'''.format(register.name),
+    )
+    mit_lib['SET_{}'.format(register.name.upper())] = (
+        None, set_code,
+    )
+
+mit_lib.update({
     'CURRENT_STATE': (
         StackEffect.of([], ['state:mit_state *']),
         Code('state = S;'),
@@ -261,33 +289,7 @@ mit_lib = {
         StackEffect.of([], ['n']),
         Code('n = MAX(sizeof(void *), sizeof(mit_word)) / sizeof(mit_word);'),
     ),
-}
-
-for register in Register:
-    pop_code = Code()
-    pop_code.append('mit_state *inner_state;')
-    pop_code.extend(pop_stack('inner_state', type='mit_state *'))
-
-    get_code = Code()
-    get_code.extend(pop_code)
-    get_code.extend(push_stack(
-        'mit_get_{}(inner_state)'.format(register.name),
-        type=register.type
-    ))
-    mit_lib['GET_{}'.format(register.name.upper())] = (
-        None, get_code,
-    )
-
-    set_code = Code()
-    set_code.extend(pop_code)
-    set_code.append('{} value;'.format(register.type))
-    set_code.extend(pop_stack('value', register.type))
-    set_code.append('''\
-        mit_set_{}(inner_state, value);'''.format(register.name),
-    )
-    mit_lib['SET_{}'.format(register.name.upper())] = (
-        None, set_code,
-    )
+})
 
 LibMit = InstructionEnum('LibMit', mit_lib)
 LibMit.__doc__ = 'Function codes for the external extra instruction LIBMIT.'
