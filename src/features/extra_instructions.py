@@ -19,59 +19,51 @@ from mit_core.stack import pop_stack, push_stack
 @unique
 class LibC(InstructionEnum):
     'Function codes for the external extra instruction LIBC.'
-    ARGC = (0x0, StackEffect.of([], ['argc']), Code('''\
-        argc = mit_argc();
-    '''))
-
-    ARG = (0x1, StackEffect.of(['u'], ['arg:const char *']), Code('''\
-        arg = mit_argv(u);
-    '''))
-
-    EXIT = (0x2, StackEffect.of(['ret_code'], []), Code('''\
+    EXIT = (StackEffect.of(['ret_code'], []), Code('''\
         exit(ret_code);
     '''))
 
-    STRLEN = (0x3, StackEffect.of(['s:const char *'], ['len']), Code('''\
+    STRLEN = (StackEffect.of(['s:const char *'], ['len']), Code('''\
         len = (mit_word)(mit_uword)strlen(s);
     '''))
 
-    STRNCPY = (0x4, StackEffect.of(['dest:char *', 'src:const char *', 'n'], ['ret:char *']),
+    STRNCPY = (StackEffect.of(['dest:char *', 'src:const char *', 'n'], ['ret:char *']),
         Code('ret = strncpy(dest, src, (size_t)n);'),
     )
 
-    STDIN = (0x5, StackEffect.of([], ['fd:int']), Code('''\
+    STDIN = (StackEffect.of([], ['fd:int']), Code('''\
         fd = (mit_word)STDIN_FILENO;
     '''))
 
-    STDOUT = (0x6, StackEffect.of([], ['fd:int']), Code('''\
+    STDOUT = (StackEffect.of([], ['fd:int']), Code('''\
         fd = (mit_word)STDOUT_FILENO;
     '''))
 
-    STDERR = (0x7, StackEffect.of([], ['fd:int']), Code('''\
+    STDERR = (StackEffect.of([], ['fd:int']), Code('''\
         fd = (mit_word)STDERR_FILENO;
     '''))
 
-    O_RDONLY = (0x8, StackEffect.of([], ['flag']), Code('''\
+    O_RDONLY = (StackEffect.of([], ['flag']), Code('''\
         flag = (mit_word)O_RDONLY;
     '''))
 
-    O_WRONLY = (0x9, StackEffect.of([], ['flag']), Code('''\
+    O_WRONLY = (StackEffect.of([], ['flag']), Code('''\
         flag = (mit_word)O_WRONLY;
     '''))
 
-    O_RDWR = (0xa, StackEffect.of([], ['flag']), Code('''\
+    O_RDWR = (StackEffect.of([], ['flag']), Code('''\
         flag = (mit_word)O_RDWR;
     '''))
 
-    O_CREAT = (0xb, StackEffect.of([], ['flag']), Code('''\
+    O_CREAT = (StackEffect.of([], ['flag']), Code('''\
         flag = (mit_word)O_CREAT;
     '''))
 
-    O_TRUNC = (0xc, StackEffect.of([], ['flag']), Code('''\
+    O_TRUNC = (StackEffect.of([], ['flag']), Code('''\
         flag = (mit_word)O_TRUNC;
     '''))
 
-    OPEN = (0xd, StackEffect.of(['str', 'flags'], ['fd:int']), Code('''\
+    OPEN = (StackEffect.of(['str', 'flags'], ['fd:int']), Code('''\
         {
             char *s = (char *)mit_native_address_of_range(S, str, 0);
             fd = s ? open(s, flags, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH) : -1;
@@ -80,13 +72,11 @@ class LibC(InstructionEnum):
     '''))
 
     CLOSE = (
-        0xe,
         StackEffect.of(['fd:int'], ['ret:int']),
         Code('ret = (mit_word)close(fd);'),
     )
 
     READ = (
-        0xf,
         StackEffect.of(['buf', 'nbytes', 'fd:int'], ['nread:int']),
         Code('''\
             {
@@ -99,7 +89,6 @@ class LibC(InstructionEnum):
     )
 
     WRITE = (
-        0x10,
         StackEffect.of(['buf', 'nbytes', 'fd:int'], ['nwritten']),
         Code('''\
             {
@@ -111,32 +100,29 @@ class LibC(InstructionEnum):
         '''),
     )
 
-    SEEK_SET = (0x11, StackEffect.of([], ['whence']), Code('''\
+    SEEK_SET = (StackEffect.of([], ['whence']), Code('''\
         whence = (mit_word)SEEK_SET;
     '''))
 
-    SEEK_CUR = (0x12, StackEffect.of([], ['whence']), Code('''\
+    SEEK_CUR = (StackEffect.of([], ['whence']), Code('''\
         whence = (mit_word)SEEK_CUR;
     '''))
 
-    SEEK_END = (0x13, StackEffect.of([], ['whence']), Code('''\
+    SEEK_END = (StackEffect.of([], ['whence']), Code('''\
         whence = (mit_word)SEEK_END;
     '''))
 
     LSEEK = (
-        0x14,
         StackEffect.of(['fd:int', 'offset:off_t', 'whence'], ['pos:off_t']),
         Code('pos = lseek(fd, offset, whence);'),
     )
 
     FDATASYNC = (
-        0x15,
         StackEffect.of(['fd:int'], ['ret:int']),
         Code('ret = fdatasync(fd);'),
     )
 
     RENAME = (
-        0x16,
         StackEffect.of(['old_name', 'new_name'], ['ret:int']),
         Code('''\
             {
@@ -149,7 +135,7 @@ class LibC(InstructionEnum):
         '''),
     )
 
-    REMOVE = (0x17, StackEffect.of(['name'], ['ret:int']), Code('''\
+    REMOVE = (StackEffect.of(['name'], ['ret:int']), Code('''\
         {
             char *s = (char *)mit_native_address_of_range(S, name, 0);
             if (s == NULL)
@@ -160,7 +146,6 @@ class LibC(InstructionEnum):
 
     # TODO: Expose stat(2). This requires struct mapping!
     FILE_SIZE = (
-        0x18,
         StackEffect.of(['fd:int'], ['size:off_t', 'ret:int']),
         Code('''\
             {
@@ -172,13 +157,11 @@ class LibC(InstructionEnum):
     )
 
     RESIZE_FILE = (
-        0x19,
         StackEffect.of(['size:off_t', 'fd:int'], ['ret:int']),
         Code('ret = ftruncate(fd, size);'),
     )
 
     FILE_STATUS = (
-        0x1a,
         StackEffect.of(['fd:int'], ['mode:mode_t', 'ret:int']),
         Code('''\
             {
@@ -189,99 +172,7 @@ class LibC(InstructionEnum):
         '''),
     )
 
-mit_lib = {
-    'CURRENT_STATE': (
-        0x0,
-        StackEffect.of([], ['state:mit_state *']),
-        Code('state = S;'),
-    ),
-
-    'NATIVE_ADDRESS_OF_RANGE': (
-        0x1,
-        StackEffect.of(
-            ['addr', 'len', 'inner_state:mit_state *'],
-            ['ptr:uint8_t *'],
-        ),
-        Code('ptr = mit_native_address_of_range(inner_state, addr, len);'),
-    ),
-
-    'LOAD': (
-        0x2,
-        StackEffect.of(
-            ['addr', 'size', 'inner_state:mit_state *'],
-            ['value', 'ret:int'],
-        ),
-        Code('''\
-            value = 0;
-            ret = load(inner_state->memory, inner_state->memory_words * MIT_WORD_BYTES,
-                       addr, size, &value);
-        '''),
-    ),
-
-    'STORE': (
-        0x3,
-        StackEffect.of(
-            ['value', 'addr', 'size', 'inner_state:mit_state *'],
-            ['ret:int'],
-        ),
-        Code('''\
-             ret = store(inner_state->memory, inner_state->memory_words * MIT_WORD_BYTES,
-                         addr, size, value);'''),
-    ),
-
-    'NEW_STATE': (
-        0x4,
-        StackEffect.of(
-            ['memory_words', 'stack_words'],
-            ['new_state:mit_state *'],
-        ),
-        Code('''\
-            new_state = mit_new_state((size_t)memory_words, (size_t)stack_words);
-        '''),
-    ),
-
-    'FREE_STATE': (
-        0x5,
-        StackEffect.of(['inner_state:mit_state *'], []),
-        Code('mit_free_state(inner_state);'),
-    ),
-
-    'RUN': (
-        0x6,
-        StackEffect.of(['inner_state:mit_state *'], ['ret']),
-        Code('ret = mit_run(inner_state);'),
-    ),
-
-    'SINGLE_STEP': (
-        0x7,
-        StackEffect.of(['inner_state:mit_state *'], ['ret']),
-        Code('ret = mit_single_step(inner_state);'),
-    ),
-
-    'LOAD_OBJECT': (
-        0x8,
-        StackEffect.of(
-            ['fd:int', 'addr', 'inner_state:mit_state *'],
-            ['ret:int'],
-        ),
-        Code('ret = mit_load_object(inner_state, addr, fd);'),
-    ),
-
-    'SAVE_OBJECT': (
-        0x9,
-        StackEffect.of(
-            ['fd:int', 'addr', 'len', 'inner_state:mit_state *'],
-            ['ret:int'],
-        ),
-        Code('ret = mit_save_object(inner_state, addr, len, fd);'),
-    ),
-
-    'NATIVE_POINTER_WORDS': (
-        0xa,
-        StackEffect.of([], ['n']),
-        Code('n = MAX(sizeof(void *), sizeof(mit_word)) / sizeof(mit_word);'),
-    ),
-}
+mit_lib = {}
 
 for register in Register:
     pop_code = Code()
@@ -295,7 +186,7 @@ for register in Register:
         type=register.type
     ))
     mit_lib['GET_{}'.format(register.name.upper())] = (
-        len(mit_lib), None, get_code,
+        None, get_code,
     )
 
     set_code = Code()
@@ -306,8 +197,147 @@ for register in Register:
         mit_set_{}(inner_state, value);'''.format(register.name),
     )
     mit_lib['SET_{}'.format(register.name.upper())] = (
-        len(mit_lib), None, set_code,
+        None, set_code,
     )
+
+mit_lib.update({
+    # libmit functions
+
+    'CURRENT_STATE': (
+        StackEffect.of([], ['state:mit_state *']),
+        Code('state = S;'),
+    ),
+
+    'NATIVE_ADDRESS_OF_RANGE': (
+        StackEffect.of(
+            ['addr', 'len', 'inner_state:mit_state *'],
+            ['ptr:uint8_t *'],
+        ),
+        Code('ptr = mit_native_address_of_range(inner_state, addr, len);'),
+    ),
+
+    'LOAD': (
+        StackEffect.of(
+            ['addr', 'size', 'inner_state:mit_state *'],
+            ['value', 'ret:int'],
+        ),
+        Code('''\
+            value = 0;
+            ret = load(inner_state->memory, inner_state->memory_words * MIT_WORD_BYTES,
+                       addr, size, &value);
+        '''),
+    ),
+
+    'STORE': (
+        StackEffect.of(
+            ['value', 'addr', 'size', 'inner_state:mit_state *'],
+            ['ret:int'],
+        ),
+        Code('''\
+             ret = store(inner_state->memory, inner_state->memory_words * MIT_WORD_BYTES,
+                         addr, size, value);'''),
+    ),
+
+    'NEW_STATE': (
+        StackEffect.of(
+            ['memory_words', 'stack_words'],
+            ['new_state:mit_state *'],
+        ),
+        Code('''\
+            new_state = mit_new_state((size_t)memory_words, (size_t)stack_words);
+        '''),
+    ),
+
+    'FREE_STATE': (
+        StackEffect.of(['inner_state:mit_state *'], []),
+        Code('mit_free_state(inner_state);'),
+    ),
+
+    'RUN': (
+        StackEffect.of(['inner_state:mit_state *'], ['ret']),
+        Code('ret = mit_run(inner_state);'),
+    ),
+
+    'SINGLE_STEP': (
+        StackEffect.of(['inner_state:mit_state *'], ['ret']),
+        Code('ret = mit_single_step(inner_state);'),
+    ),
+
+    'LOAD_OBJECT': (
+        StackEffect.of(
+            ['fd:int', 'addr', 'inner_state:mit_state *'],
+            ['ret:int'],
+        ),
+        Code('ret = mit_load_object(inner_state, addr, fd);'),
+    ),
+
+    'SAVE_OBJECT': (
+        StackEffect.of(
+            ['fd:int', 'addr', 'len', 'inner_state:mit_state *'],
+            ['ret:int'],
+        ),
+        Code('ret = mit_save_object(inner_state, addr, len, fd);'),
+    ),
+
+    'NATIVE_POINTER_WORDS': (
+        StackEffect.of([], ['n']),
+        Code('n = MAX(sizeof(void *), sizeof(mit_word)) / sizeof(mit_word);'),
+    ),
+
+
+    # libmitfeatures functions
+
+    'ARGC': (
+        StackEffect.of([], ['argc']),
+        Code('argc = (mit_word)mit_argc();'),
+    ),
+
+    'ARG': (
+        StackEffect.of(['u'], ['arg:const char *']),
+        Code('arg = mit_argv((int)u);'),
+    ),
+
+    'REGISTER_ARGS': (
+        # Note: actually "char *argv[]", but we can't express that.
+        StackEffect.of(['argc:int', 'argv:const char **'], ['ret:int']),
+        Code('ret = mit_register_args(argc, argv);'),
+    ),
+
+    'EXTRA_INSTRUCTION': (
+        StackEffect.of(['state:mit_state *'], ['ret']),
+        Code('ret = mit_extra_instruction(state);'),
+    ),
+
+    'CORE_DUMP': (
+        StackEffect.of(['state:mit_state *'], ['file:const char *']),
+        Code('file = mit_core_dump(state);'),
+    ),
+
+    'SPECIALIZER_RUN': (
+        StackEffect.of(['state:mit_state *'], ['ret']),
+        Code('ret = mit_specializer_run(state);'),
+    ),
+
+    'PROFILE_INIT': (
+        StackEffect.of([], []),
+        Code('mit_profile_init();'),
+    ),
+
+    'PROFILE_RUN': (
+        StackEffect.of(['state:mit_state *'], ['ret']),
+        Code('ret = mit_profile_run(state);'),
+    ),
+
+    'PROFILE_DUMP': (
+        StackEffect.of(['fd:int'], ['ret:int']),
+        Code('ret = mit_profile_dump(fd);'),
+    ),
+
+    'STEP_TO': (
+        StackEffect.of(['state:mit_state *', 'n:mit_uword *', 'addr', 'auto_NEXT:int'], ['ret']),
+        Code('ret = mit_step_to(state, n, addr, auto_NEXT);'),
+    ),
+})
 
 LibMit = InstructionEnum('LibMit', mit_lib)
 LibMit.__doc__ = 'Function codes for the external extra instruction LIBMIT.'
@@ -316,7 +346,7 @@ LibMit.__doc__ = 'Function codes for the external extra instruction LIBMIT.'
 class Library(InstructionEnum):
     '''Wrap an Instruction enumeration as a library.'''
     def __init__(self, opcode, library, includes, extra_types=[]):
-        super().__init__(opcode, None, Code(
+        super().__init__(None, Code(
             '''\
             {
                 mit_word function;''',
@@ -326,7 +356,7 @@ class Library(InstructionEnum):
                 if (ret != 0)
                     RAISE(ret);
             }}'''.format(self.name.lower())
-        ))
+        ), opcode=opcode)
         self.library = library
         self.includes = includes
         self.extra_types = extra_types

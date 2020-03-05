@@ -1,12 +1,14 @@
 # Test extra instructions (libc and mit functions).
 # TODO: test file routines.
 #
-# (c) Mit authors 1994-2019
+# (c) Mit authors 1994-2020
 #
 # The package is distributed under the MIT/X11 License.
 #
 # THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 # RISK.
+
+import sys
 
 from mit.globals import *
 from mit.binding import libmit
@@ -35,15 +37,15 @@ lit(LibMit.NATIVE_POINTER_WORDS)
 ass(JUMP, LIBMIT)
 breaks.append(label() + word_bytes)
 
-# Test LibC.ARGC
-lit(LibC.ARGC)
-ass(JUMP, LIBC)
+# Test LibMit.ARGC
+lit(LibMit.ARGC)
+ass(JUMP, LIBMIT)
 breaks.append(label() + word_bytes)
 
-# Test LibC.ARG
+# Test LibMit.ARG
 lit(1)
-lit(LibC.ARG)
-ass(JUMP, LIBC)
+lit(LibMit.ARG)
+ass(JUMP, LIBMIT)
 for i in range(native_pointer_words):
     lit(native_pointer_words - 1)
     ass(DUP)

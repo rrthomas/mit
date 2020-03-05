@@ -30,8 +30,8 @@ class InstructionEnum(mit_core.instruction.InstructionEnum):
 
     Specialized instructions cannot be variadic.
     '''
-    def __init__(self, opcode, guard, effect, code, terminal=False):
-        super().__init__(opcode, effect, code, terminal)
+    def __init__(self, guard, effect, code, opcode=None, terminal=False):
+        super().__init__(effect, code, opcode, terminal)
         self.guard = guard
         assert not self.is_variadic
         assert all(
@@ -57,10 +57,10 @@ def _replace_items(picture, replacement):
 
 def _gen_ordinary_instruction(instruction, guard='1'):
     return (
-        instruction.opcode,
         guard,
         instruction.effect,
         instruction.code,
+        instruction.opcode,
         instruction.terminal,
     )
 
@@ -74,13 +74,13 @@ def _gen_variadic_instruction(instruction, count):
             code.append('(void)x{};'.format(i))
     code.extend(instruction.code)
     return (
-        instruction.opcode,
         '{{stack_0}} == {}'.format(count),
         StackEffect.of(
             _replace_items(instruction.effect.args, replacement),
             _replace_items(instruction.effect.results, replacement),
         ),
         code,
+        instruction.opcode,
         instruction.terminal,
     )
 
