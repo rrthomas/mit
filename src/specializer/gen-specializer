@@ -97,7 +97,7 @@ class Label:
         code.append('goto {};'.format(self.name))
         return code
 
-    def generate_code(self, profiling=False):
+    def generate_code(self, profiling=False, no_preguess=False):
         '''
         Returns a Code to place at this Label.
         Also returns the peak value of `CacheState.cached_depth`.
@@ -133,7 +133,9 @@ class Label:
         # Compute the bit string of Instruction opcodes to guess.
         opcode_value = 0 # Bit pattern to match.
         opcode_bits = 0 # Number of bits to match.
-        multiguess = [self.guess] + label_by_index(self.if_correct).preguess
+        multiguess = [self.guess]
+        if not no_preguess:
+            multiguess.extend(label_by_index(self.if_correct).preguess)
         for instruction in multiguess:
             assert opcode_bits is not None
             opcode_value |= instruction.opcode << opcode_bits
@@ -141,7 +143,7 @@ class Label:
             if instruction.terminal:
                 opcode_bits = None # Must match all bits.
         # Generate the guess condition.
-        if self.preguess[:len(multiguess)] == multiguess:
+        if not no_preguess and self.preguess[:len(multiguess)] == multiguess:
             opcode_test = '1'
         elif opcode_bits is None:
             opcode_test = 'S->ir == {:#x}'.format(opcode_value)
@@ -180,7 +182,7 @@ with open(args.labels_filename, "rb") as h:
             index,
             'A_{}'.format(index),
             obj['path'],
-            '' if args.no_preguess else obj['preguess'],
+            obj['preguess'],
             obj['guess'],
             obj['if_correct'],
             obj['if_wrong'],
@@ -228,7 +230,10 @@ def gen_labels_code(profiling=False):
     for label in labels:
         code.append('')
         code.append('{label_name}:'.format(label_name=label.name))
-        label_code, cached_depth = label.generate_code(profiling)
+        label_code, cached_depth = label.generate_code(
+            profiling,
+            args.no_preguess or profiling
+        )
         code.append(disable_warnings(
             ['-Wunsafe-loop-optimizations'],
             label_code,
