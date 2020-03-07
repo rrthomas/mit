@@ -227,10 +227,10 @@ class State:
     # Disassembly
     def disassemble(self, start=None, length=None, end=None, file=sys.stdout):
         '''
-        Disassemble `length` bytes from `start`, or from `start` to `end`.
+        Disassemble `length` words from `start`, or from `start` to `end`.
         '''
         if length is not None:
-            end = start + length
+            end = start + length * word_bytes
         for inst in Disassembler(self, pc=start, end=end):
             print(inst, file=file)
 
