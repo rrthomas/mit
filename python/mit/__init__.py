@@ -9,7 +9,7 @@ Module mit.assembler provides Assembler and Disassembler.
 Module mit.globals provides a convenient set of globals for interactive use
 and for testing.
 
-(c) Mit authors 2019
+(c) Mit authors 2019-2020
 
 The package is distributed under the MIT/X11 License.
 
@@ -26,7 +26,7 @@ from .enums import (
     MitErrorCode
 )
 from .extra_enums import LibMit, LibC, LibInstruction
-from .errors import MallocErrorCode, LoadErrorCode, SaveErrorCode
+from .errors import LoadErrorCode, SaveErrorCode
 from .binding import (
     Error, VMError,
     endism, word_bytes,

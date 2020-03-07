@@ -1,6 +1,6 @@
 # API errors
 #
-# (c) Mit authors 1994-2019
+# (c) Mit authors 1994-2020
 #
 # The package is distributed under the MIT/X11 License.
 #
@@ -8,12 +8,6 @@
 # RISK.
 
 from enum import IntEnum, unique
-
-@unique
-class MallocErrorCode(IntEnum):
-    'Error codes returned by functions that allocate memory.'
-    CANNOT_ALLOCATE_MEMORY = -1
-    INVALID_SIZE = -2
 
 @unique
 class LoadErrorCode(IntEnum):

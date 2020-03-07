@@ -9,7 +9,7 @@
 # RISK.
 
 from mit_core.spec import Instruction, InternalExtraInstruction, MitErrorCode
-from mit_core.errors import MallocErrorCode, LoadErrorCode, SaveErrorCode
+from mit_core.errors import LoadErrorCode, SaveErrorCode
 from mit_core.code_util import Code, copyright_banner, enum_to_c
 
 
@@ -34,8 +34,6 @@ code.append('')
 code.extend(enum_to_c(InternalExtraInstruction, lambda i: i.opcode))
 code.append('')
 code.extend(enum_to_c(MitErrorCode))
-code.append('')
-code.extend(enum_to_c(MallocErrorCode))
 code.append('')
 code.extend(enum_to_c(LoadErrorCode))
 code.append('')
