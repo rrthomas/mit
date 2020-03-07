@@ -22,7 +22,7 @@ from ctypes import (
 from ctypes.util import find_library
 
 from .enums import MitErrorCode
-from .errors import MallocErrorCode, LoadErrorCode, SaveErrorCode
+from .errors import LoadErrorCode, SaveErrorCode
 from .extra_errors import RegisterArgsErrorCode
 from .int128 import c_uint128, c_int128
 
@@ -134,7 +134,6 @@ c_ptrdiff_t = c_ssize_t
 
 # Errors
 mit_error = errcheck(MitErrorCode)
-malloc_error = errcheck(MallocErrorCode)
 
 # mit.h
 libmit.mit_get_memory.argtypes = [c_void_p]
