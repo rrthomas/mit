@@ -236,18 +236,18 @@ class State:
 
     def dump(self, start=None, length=None, end=None, file=sys.stdout):
         '''
-        Dump `length` bytes from `start` (rounded down to nearest 16),
+        Dump `length` words from `start` (rounded down to nearest 16),
         or from `start` to `end`.
-        Defaults to 256 bytes from `start`.
+        Defaults to 64 words from `start`.
         '''
         chunk = 16
         if start is None:
             start = max(0, self.registers["pc"].get())
         start -= start % chunk
         if length is not None:
-            end = start + length
+            end = start + length * word_bytes
         elif end is None:
-            end = start + 256
+            end = start + 64 * word_bytes
 
         p = start
         while p < end:
