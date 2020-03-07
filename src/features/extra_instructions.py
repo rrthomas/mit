@@ -223,8 +223,7 @@ mit_lib.update({
         ),
         Code('''\
             value = 0;
-            ret = load(inner_state->memory, inner_state->memory_words * MIT_WORD_BYTES,
-                       addr, size, &value);
+            ret = mit_load(inner_state, addr, size, &value);
         '''),
     ),
 
@@ -233,9 +232,45 @@ mit_lib.update({
             ['value', 'addr', 'size', 'inner_state:mit_state *'],
             ['ret:int'],
         ),
+        Code('ret = mit_store(inner_state, addr, size, value);'),
+    ),
+
+    'LOAD_STACK': (
+        StackEffect.of(
+            ['pos', 'inner_state:mit_state *'],
+            ['value', 'ret:int'],
+        ),
         Code('''\
-             ret = store(inner_state->memory, inner_state->memory_words * MIT_WORD_BYTES,
-                         addr, size, value);'''),
+            value = 0;
+            ret = mit_load_stack(inner_state, pos, &value);
+        '''),
+    ),
+
+    'STORE_STACK': (
+        StackEffect.of(
+            ['value', 'pos', 'inner_state:mit_state *'],
+            ['ret:int'],
+        ),
+        Code('ret = mit_store_stack(inner_state, pos, value);'),
+    ),
+
+    'POP_STACK': (
+        StackEffect.of(
+            ['inner_state:mit_state*'],
+            ['value', 'ret:int'],
+        ),
+        Code('''\
+            value = 0;
+            ret = mit_pop_stack(inner_state, &value);
+        ''')
+    ),
+
+    'PUSH_STACK': (
+        StackEffect.of(
+            ['value', 'inner_state:mit_state *'],
+            ['ret:int'],
+        ),
+        Code('ret = mit_push_stack(inner_state, value);'),
     ),
 
     'NEW_STATE': (
