@@ -88,18 +88,14 @@ def pop_stack(name, type='mit_word'):
     code = Code()
     code.extend(check_underflow(Size(type_words(type))))
     code.extend(load_stack(name, type=type))
-    code.append(
-        'S->stack_depth -= {};'.format(type_words(type)),
-    )
+    code.append('S->stack_depth -= {};'.format(type_words(type)))
     return code
 
 def push_stack(value, type='mit_word'):
     code = Code()
     code.extend(check_overflow(Size(0), Size(type_words(type))))
+    code.append('S->stack_depth += {};'.format(type_words(type)))
     code.extend(store_stack(value, type=type))
-    code.append(
-        'S->stack_depth += {};'.format(type_words(type)),
-    )
     return code
 
 

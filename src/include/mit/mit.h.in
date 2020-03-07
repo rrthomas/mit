@@ -334,7 +334,7 @@ int mit_pop_stack(mit_state *S, mit_word *val_ptr);
  */
 
 int mit_push_stack(mit_state *S, mit_word val);
-/* Increment `stack_depth`, then store the word `val` value at position 0 on
+/* Increment `stack_depth`, then store the word `val` at position 0 on
    the stack.
 
    Return 0 if OK, or error code if `stack_depth` is greater than or equal
