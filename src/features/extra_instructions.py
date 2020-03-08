@@ -298,22 +298,6 @@ mit_lib.update({
         Code('ret = mit_single_step(inner_state);'),
     ),
 
-    'LOAD_OBJECT': (
-        StackEffect.of(
-            ['fd:int', 'addr', 'inner_state:mit_state *'],
-            ['ret:int'],
-        ),
-        Code('ret = mit_load_object(inner_state, addr, fd);'),
-    ),
-
-    'SAVE_OBJECT': (
-        StackEffect.of(
-            ['fd:int', 'addr', 'len', 'inner_state:mit_state *'],
-            ['ret:int'],
-        ),
-        Code('ret = mit_save_object(inner_state, addr, len, fd);'),
-    ),
-
     'NATIVE_POINTER_WORDS': (
         StackEffect.of([], ['n']),
         Code('n = MAX(sizeof(void *), sizeof(mit_word)) / sizeof(mit_word);'),

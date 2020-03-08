@@ -44,7 +44,7 @@
 
 \title{The Mit Virtual Machine}
 \author{Reuben Thomas}
-\date{21st February 2020}
+\date{8th March 2020}
 
 \begin{document}
 \maketitle
@@ -64,7 +64,7 @@ stated. Addresses are written in hexadecimal; hex numbers are prefixed with
 Mit is a simple virtual machine for study and experiment. It is a stack machine, based on the more complex register machine Mite~\cite{mite0}.
 This paper gives a full description of Mit.
 
-Mit is conceptually (and usually in fact) a library, embedded in other programs; it supports a simple object file format.
+Mit is conceptually (and usually in fact) a library, embedded in other programs.
 
 
 \section{Architecture}
@@ -443,16 +443,7 @@ Table~\ref{opcodetable} lists the instruction opcodes in numerical order. Table~
 \begin{itemize}
 \item Implementations should provide an \textbf{API} to create and run virtual machine instances, and provide access to its registers, stack and memory.
 \item Implementations can add \textbf{extra instructions} to provide extra computational primitives, and to offer access to system facilities, previously written code, native libraries and so on.
-\item The \textbf{object file} format allows compiled code to be saved, reloaded and shared between systems.
 \end{itemize}
-
-
-\subsection{Object file format}
-\label{object}
-
-The object file starts with the ASCII codes of the letters
-``mit'', followed by a zero byte, then the one-byte values of
-the {\tt endism} and {\tt word\_bytes} registers of the system which saved the file, then ten zero bytes (adding up to $16$ total), then a word (of the given endianness and size) containing the number of words the code occupies. Then follows the given number of words of code.
 
 
 \section*{Acknowledgements}

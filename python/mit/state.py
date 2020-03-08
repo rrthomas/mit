@@ -22,7 +22,7 @@ import sys
 from . import enums
 from .binding import (
     libmit, libmitfeatures,
-    VMError, is_aligned,
+    Error, VMError, is_aligned,
     word_bytes, size_word, opcode_mask,
     c_word, c_uword, c_void_p, c_char_p, byref,
     hex0x_word_width,
@@ -197,32 +197,39 @@ class State:
 
     def load(self, file, addr=0):
         '''
-        Load an object file at the given address. Returns the length.
+        Load a binary file at the given address. Returns the length in words.
         '''
-        fd = os.open(file, os.O_RDONLY | O_BINARY)
-        if fd < 0:
-            raise Error("cannot open file {}".format(file))
-        try:
-            return libmit.mit_load_object(self.state, addr, fd)
-        finally:
-            os.close(fd)
+        def strip_hashbang(data):
+            if data[:2] == b'#!':
+                try:
+                    i = data.index(b'\n')
+                except ValueError: # No \n, so just a #! line
+                    i = len(data) - 1
+                data = data[i + 1:]
+            return data
+
+        with open(file, 'rb') as h:
+            data = h.read()
+        data = strip_hashbang(data)
+        length = len(data)
+        if length > self.M.memory_words() * word_bytes:
+            raise Error('file {} is too big to fit in memory'.format(file))
+        if length % word_bytes != 0:
+            raise Error('file {} is not a whole number of words'.format(file))
+        self.M[addr:addr + length] = data
+        return length // word_bytes
 
     def save(self, file, address=0, length=None):
         '''
-        Save an object file from the given address and length.
+        Save a binary file from the given address and length.
         '''
         assert length is not None
         ptr = libmit.mit_native_address_of_range(self.state, address, length * word_bytes)
-        if not is_aligned(address) or ptr is None:
+        if not is_aligned(address) or not ptr:
             raise Error("invalid or unaligned address")
 
-        fd = os.open(file, os.O_CREAT | os.O_RDWR | O_BINARY, mode=0o666)
-        if fd < 0:
-            raise Error("cannot open file {}".format(file))
-        try:
-            return libmit.mit_save_object(self.state, address, length, fd)
-        finally:
-            os.close(fd)
+        with open(file, 'wb') as h:
+            h.write(bytes(self.M[address:length * word_bytes]))
 
     # Disassembly
     def disassemble(self, start=None, length=None, end=None, file=sys.stdout):

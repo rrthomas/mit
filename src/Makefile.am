@@ -14,7 +14,7 @@ AM_CPPFLAGS = -I$(abs_top_builddir)/lib -I$(abs_top_srcdir)/lib -I$(abs_builddir
 PYTHON_WITH_PATH = export PYTHONPATH=$(abs_top_srcdir)/python:$(abs_top_srcdir)/src:$(abs_top_builddir)/src:$(abs_top_srcdir)/src/specializer:$(abs_top_builddir)/src/specializer:$(abs_top_srcdir)/src/features:$(abs_top_builddir)/src/features; $(PYTHON)
 
 lib_LTLIBRARIES = libmit@PACKAGE_SUFFIX@.la
-C_SRCS = storage.c object.c
+C_SRCS = storage.c
 nodist_LIB_SRCS = include/mit/registers.h include/mit/opcodes.h instructions.c
 pkgdata_DATA = mit_core/mit_spec.yaml
 LIB_CORE_SRCS = \
@@ -22,7 +22,6 @@ LIB_CORE_SRCS = \
 	mit_core/instruction.py \
 	mit_core/stack.py \
 	mit_core/spec.py \
-	mit_core/errors.py \
 	mit_core/code_util.py \
 	mit_core/instruction_gen.py \
 	mit_core/params.py.in
@@ -43,8 +42,8 @@ nodist_mit_pkginclude_HEADERS = include/mit/opcodes.h include/mit/registers.h
 mit_pkginclude_HEADERS = include/mit/mit.h
 noinst_HEADERS = run.h state.h
 
-object.lo storage.lo: include/mit/mit.h include/mit/registers.h
-object.lo storage.lo main.o: include/mit/opcodes.h
+storage.lo: include/mit/mit.h include/mit/registers.h
+storage.lo main.o: include/mit/opcodes.h
 instructions.lo main.o: main.c include/mit/mit.h include/mit/registers.h
 main.o: warn.h
 
@@ -77,7 +76,7 @@ include/mit/registers.h: gen-registers mit_core/mit_spec.yaml mit_core/spec.py
 	fi
 	$(PYTHON_WITH_PATH) $(srcdir)/gen-registers > include/mit/registers.h || ( rm -f include/mit/registers.h; exit 1 )
 
-include/mit/opcodes.h: gen-opcodes mit_core/mit_spec.yaml mit_core/spec.py mit_core/instruction.py mit_core/errors.py
+include/mit/opcodes.h: gen-opcodes mit_core/mit_spec.yaml mit_core/spec.py mit_core/instruction.py
 	$(MKDIR_P) include/mit
 	$(PYTHON_WITH_PATH) $(srcdir)/gen-opcodes > include/mit/opcodes.h || ( rm -f include/mit/opcodes.h; exit 1 )
 

@@ -26,7 +26,6 @@ from .enums import (
     MitErrorCode
 )
 from .extra_enums import LibMit, LibC, LibInstruction
-from .errors import LoadErrorCode, SaveErrorCode
 from .binding import (
     Error, VMError,
     endism, word_bytes,
@@ -37,7 +36,6 @@ from .binding import (
     c_uword, c_word,
     word_min, word_max, uword_max,
     align, is_aligned,
-    header_magic, header_length,
 )
 from .state import State
 from .assembler import Assembler, Disassembler

@@ -1,4 +1,4 @@
-# Test save_object().
+# Test State.save().
 #
 # (c) Mit authors 1995-2020
 #
@@ -22,36 +22,35 @@ VM.M_word[word_bytes] = 0x05060708
 # Test results
 addr = [(memory_words + 1) * word_bytes, 0, 0]
 length = [2, 5000, 2]
-correct = [-2, -2, 0]
+correct = ["invalid or unaligned address", "invalid or unaligned address", None]
 
 # Test
 def try_save(file, address, length):
     try:
         VM.save(file, address, length)
-        ret = 0
-    except VMError as e:
-        ret = e.args[0]
-    print("save_object(\"{}\", {}, {}) returns {}".format(file, address, length, ret), end='')
-    return ret
+        err = None
+    except Error as e:
+        err = e.args[0]
+    print('State.save(\"{}\", {}, {}) raises error "{}"'.format(file, address, length, err), end='')
+    return err
 
 for i in range(3):
     res = try_save("saveobj", addr[i], length[i])
-    if i != 2:
-      os.remove("saveobj")
-    print(" should be {}".format(correct[i]))
+    print(' should be "{}"'.format(correct[i]))
     if res != correct[i]:
-        print("Error in save_object() test {}".format(i + 1))
+        print("Error in State.save() test {}".format(i + 1))
         sys.exit(1)
 
-ret = VM.load("saveobj", 4 * word_bytes)
+RANGE = 4
+assert VM.load("saveobj", RANGE * word_bytes) == length[2]
 os.remove("saveobj")
 
-for i in range(4):
+for i in range(RANGE):
     old = VM.M_word[i * word_bytes]
-    new = VM.M_word[(i + 4) * word_bytes]
+    new = VM.M_word[(i + RANGE) * word_bytes]
     print("Word {} of memory is {}; should be {}".format(i, new, old))
     if new != old:
-        print("Error in save_object() tests: loaded file does not match data saved")
+        print("Error in State.save() tests: loaded file does not match data saved")
         sys.exit(1)
 
-print("save_object() tests ran OK")
+print("State.save() tests ran OK")
