@@ -90,9 +90,6 @@ typedef uintmax_t mit_max_stack_item_t;
 typedef mit_uword mit_max_stack_item_t;
 #endif
 
-// Required as macro so we can compute mit_header_length statically
-#define MIT_HEADER_MAGIC "mit" // includes terminating NUL
-
 // Constants (for easy FFI binding)
 extern const unsigned mit_word_bytes;
 extern const unsigned mit_endism;
@@ -104,8 +101,6 @@ extern const mit_uword mit_word_mask;
 extern const mit_uword mit_uword_max;
 extern const mit_word mit_word_min;
 extern const mit_word mit_word_max;
-extern const char *mit_header_magic;
-extern const unsigned mit_header_length;
 
 
 // Implementation-defined errors
@@ -398,35 +393,6 @@ mit_word mit_single_step(mit_state * restrict S);
 /* Execute a single pass of the execution cycle in the given state.
    Return MIT_ERROR_HALT if execution completes without error, or the error
    code.
-*/
-
-ptrdiff_t mit_load_object(mit_state *S, mit_uword addr, int fd);
-/* Load an object file into a state.
-
-   - state - the state to load into
-   - addr - the address at which to load the object file
-   - fd - the file descriptor to load from
-
-   Return the number of words of code loaded, or one of the MIT_LOAD_ERROR_*
-   error codes (see mit/opcodes.h).
-
-   As an extension to the specification, if an object file starts with the
-   ASCII bytes `#!`, then it is assumed to be the start of a UNIX-style
-   “hash bang” line, and the file contents up to and including the first
-   newline character is ignored.
-*/
-
-int mit_save_object(mit_state *S, mit_uword addr, mit_uword len, int fd);
-/* Save some memory as an object file.
-
-   - state - the state to save from
-   - addr, len - the address and number of words of memory to save
-   - fd - the file descriptor to save to
-
-   Return 0 on success, or one of the following errors:
-
-   -1: error writing the object file
-   -2: `addr` or `len` is invalid
 */
 
 mit_word mit_internal_extra_instruction(mit_state *S);

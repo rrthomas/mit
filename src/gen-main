@@ -9,7 +9,6 @@
 # RISK.
 
 from mit_core.spec import MitErrorCode
-from mit_core.errors import LoadErrorCode
 from mit_core.code_util import Code, copyright_banner, disable_warnings
 
 
@@ -495,6 +494,32 @@ code.extend(initial_code)
 
 code.extend(top_level_code)
 code.extend(Code('''
+static off_t fleno(FILE *fp)
+{
+  off_t pos = ftello(fp);
+  if (pos != -1 && fseeko(fp, 0, SEEK_END) == 0) {
+    off_t len = ftello(fp);
+    if (len != -1 && fseeko(fp, pos, SEEK_SET) == 0)
+      return len;
+  }
+  return -1;
+}
+
+// Skip any #! header
+static int skip_hashbang(FILE *fp)
+{
+    char buf[sizeof("#!") - 1];
+    if (fread(&buf[0], 1, sizeof(buf), fp) != sizeof(buf))
+        return -1;
+    if (buf[0] == '#' && buf[1] == '!') {
+        for (int res; (res = getc(fp)) != '\\n'; )
+            if (res == EOF)
+                return -1;
+    }
+    rewind(fp);
+    return 0;
+}
+
 static void usage(void)
 {
     printf("Usage: %s [OPTION...] [OBJECT-FILE ARGUMENT...]\\n"
@@ -548,33 +573,24 @@ int main(int argc, char *argv[])
         die("could not register command-line arguments");
 
     // Load object file and report any error
-    int fd = open(argv[0], O_RDONLY);
-    if (fd < 0)
-        die("cannot not open file %s", argv[0]);
-    if (set_binary_mode(fd, O_BINARY) == -1)
-        die("cannot read file %s as binary", argv[0]);
-    int ret = mit_load_object(S, 0, fd);
-    close(fd);
-    const char *err = NULL;
-    if (ret < 0)
-        switch (ret) {''',
-                 Code(*[
-                     '''\
-                     case MIT_LOAD_ERROR_{}:
-                         err = "{}";
-                         break;'''.format(
-                         error.name,
-                         error.name.lower().translate(str.maketrans('_', ' '))
-                     ) for error in LoadErrorCode
-                 ], '''\
-                 default:
-                     err = "unknown error!";
-                     break;''')
-              ),
-            Code('''
+    {
+        FILE *fp = fopen(argv[0], "rb");
+        if (fp == NULL)
+            die("cannot not open file %s", argv[0]);
+        int ret = skip_hashbang(fp);
+        if (ret == -1)
+            die("error reading file %s", argv[0]);
+        off_t len = fleno(fp);
+        if (len == -1)
+            die("error finding size of file %s", argv[0]);
+        uint8_t *ptr = mit_native_address_of_range(S, 0, len);
+        if (ptr == NULL)
+            die("file %s is too big to fit in memory", argv[0]);
+        if ((off_t)fread(ptr, 1, len, fp) != len)
+            die("error reading file %s", argv[0]);
+        if (fclose(fp) == EOF)
+            die("error closing file %s", argv[0]);
     }
-    if (err != NULL)
-        die("%s: %s", argv[0], err);
 
     // Run
     for (;;) {

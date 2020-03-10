@@ -17,7 +17,6 @@ mit_pkgpython_PYTHON =				\
 	mit/ctypes_align.py			\
 	mit/int128.py				\
 	mit/autonumber.py			\
-	mit/errors.py				\
 	mit/extra_errors.py			\
 	mit/globals.py				\
 	mit/ipython_suppress_traceback.py	\
