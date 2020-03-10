@@ -222,10 +222,13 @@ Feature(# Auto-extend stack
     init=Code('bool auto_extend_stack = true;'),
     handler=Code('''\
         if (error == MIT_ERROR_STACK_OVERFLOW)
-            if (auto_extend_stack == true &&
-                REALLOC_N(S, MIT_ROUND_UP(S->stack_words + 1,
-                    page_size / MIT_WORD_BYTES)) == 0)
-                continue;
+            if (auto_extend_stack == true) {
+                S->stack_words = MIT_ROUND_UP(S->stack_words + 1,
+                                              page_size / MIT_WORD_BYTES);
+                if (safe_alloc_realloc_n((void *)&S->stack, MIT_WORD_BYTES,
+                                         S->stack_words) == 0)
+                    continue;
+            }
     '''),
 )
 
