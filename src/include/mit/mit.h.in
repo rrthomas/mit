@@ -196,24 +196,18 @@ static int load(mit_word * restrict memory, mit_uword memory_words,
         if (unlikely(!is_aligned(addr, size)))
             return MIT_ERROR_UNALIGNED_ADDRESS;
         val = (mit_uword)*((uint16_t *)((uint8_t *)memory + addr));
-        if (MIT_ENDISM != MIT_HOST_ENDISM)
-            val = bswap_16(val);
         break;
 #if MIT_SIZE_WORD >= 2
     case 2:
         if (unlikely(!is_aligned(addr, size)))
             return MIT_ERROR_UNALIGNED_ADDRESS;
         val = (mit_uword)*((uint32_t *)((uint8_t *)memory + addr));
-        if (MIT_ENDISM != MIT_HOST_ENDISM)
-            val = bswap_32(val);
         break;
 #if MIT_SIZE_WORD >= 3
     case 3:
         if (unlikely(!is_aligned(addr, size)))
             return MIT_ERROR_UNALIGNED_ADDRESS;
         val = (mit_uword)*((uint64_t *)((uint8_t *)memory + addr));
-        if (MIT_ENDISM != MIT_HOST_ENDISM)
-            val = bswap_64(val);
         break;
 #endif
 #endif
@@ -243,24 +237,18 @@ static int store(mit_word * restrict memory, mit_uword memory_words,
     case 1:
         if (unlikely(!is_aligned(addr, size)))
             return MIT_ERROR_UNALIGNED_ADDRESS;
-        if (MIT_ENDISM != MIT_HOST_ENDISM)
-            val = bswap_16(val);
         *((uint16_t *)((uint8_t *)memory + addr)) = (uint16_t)val;
         break;
 #if MIT_SIZE_WORD >= 2
     case 2:
         if (unlikely(!is_aligned(addr, size)))
             return MIT_ERROR_UNALIGNED_ADDRESS;
-        if (MIT_ENDISM != MIT_HOST_ENDISM)
-            val = bswap_32(val);
         *((uint32_t *)((uint8_t *)memory + addr)) = (uint32_t)val;
         break;
 #if MIT_SIZE_WORD >= 3
     case 3:
         if (unlikely(!is_aligned(addr, size)))
             return MIT_ERROR_UNALIGNED_ADDRESS;
-        if (MIT_ENDISM != MIT_HOST_ENDISM)
-            val = bswap_64(val);
         *((uint64_t *)((uint8_t *)memory + addr)) = (uint64_t)val;
         break;
 #endif

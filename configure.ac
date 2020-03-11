@@ -113,22 +113,18 @@ AC_SUBST([objdir])
 # Check features
 AX_C_ARITHMETIC_RSHIFT
 
-# Set endianness
+# Check endianness
 AC_C_BIGENDIAN
 AC_SUBST([WORDS_BIGENDIAN])
-AC_ARG_VAR([ENDISM],
-  [value of ENDISM register [default: native endianness]])
 if test "$ac_cv_c_bigendian" = "yes"; then
   WORDS_BIGENDIAN=1
+  endism_text=le
 else
   WORDS_BIGENDIAN=0
+  endism_text=be
 fi
 : "${ENDISM=$WORDS_BIGENDIAN}"
-case $ENDISM in
-     0) endism_text=le ;;
-     1) endism_text=be ;;
-     *) AC_MSG_ERROR([bad value $ENDISM for ENDISM]) ;;
-esac
+AC_SUBST([ENDISM])
 
 # Check word size
 AC_CHECK_SIZEOF([size_t])

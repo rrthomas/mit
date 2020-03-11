@@ -38,22 +38,14 @@ matrix:
             - *default_deps
             - [gcc-8]
     - env:
-      - ENDISM=0
       - BENCH_TEST=yes
       - CONFIGURE_ARGS=("CC=\"gcc -m32\"")
     - compiler: clang
       env:
-        - ENDISM=0
         - BENCH_TEST=yes
         - CONFIGURE_ARGS=("CC=\"gcc -m32\"")
     - env:
-      - ENDISM=0
       - CONFIGURE_ARGS=(--enable-package-suffix "CFLAGS=\"-g3 -fsanitize=address -fsanitize=undefined\"" "LDFLAGS=\"-fsanitize=address -fsanitize=undefined\"" "PY_LOG_ENV=\"LD_PRELOAD=/usr/lib/gcc/x86_64-linux-gnu/7/libasan.so PYTHONMALLOC=malloc\"")
-    - env:
-      - ENDISM=1
-      - CC="gcc -m32"
-    - env:
-      - ENDISM=1
     - env:
       - OPCODE_BIT=5
 

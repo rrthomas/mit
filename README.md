@@ -42,8 +42,8 @@ To build Mit from a release tarball, run
 
 `./configure && make && make check`
 
-See `./configure --help` for build options; note in particular the
-environment variables `ENDISM`, and the flag `--enable-package-suffix`.
+See `./configure --help` for build options; note in particular the flag
+`--enable-package-suffix`.
 
 For the bibliographies in the documentation to be built correctly, GNU Make
 should be used.
