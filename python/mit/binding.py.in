@@ -23,7 +23,6 @@ from ctypes.util import find_library
 
 from .enums import MitErrorCode
 from .extra_errors import RegisterArgsErrorCode
-from .int128 import c_uint128, c_int128
 
 
 library_file = find_library("mit@PACKAGE_SUFFIX@")
@@ -107,9 +106,6 @@ elif word_bytes == 4:
 elif word_bytes == 8:
     c_word = c_int64
     c_uword = c_uint64
-elif word_bytes == 16:
-    c_word = c_int128
-    c_uword = c_uint128
 else:
     raise Exception("Could not make Python C type matching WORD (size {})".format(word_bytes))
 

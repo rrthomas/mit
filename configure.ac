@@ -130,19 +130,14 @@ case $ENDISM in
      *) AC_MSG_ERROR([bad value $ENDISM for ENDISM]) ;;
 esac
 
-# Set size of word
+# Check word size
 AC_CHECK_SIZEOF([size_t])
 # Use a configure variable to substitute this in mit.h.in, where we can't
 # include config.h, as mit.h is a public header.
 SIZEOF_SIZE_T=$ac_cv_sizeof_size_t
 AC_SUBST([SIZEOF_SIZE_T])
-AC_ARG_VAR([WORD_BYTES],
-  [value of WORD_BYTES register [default: sizeof(size_t)]])
-: "${WORD_BYTES=$ac_cv_sizeof_size_t}"
-AS_IF([test "$WORD_BYTES" = 16], [
-  AX_HAVE_INT128
-  AS_IF([test "$ax_cv_int128" != yes],
-    AC_MSG_ERROR([Cannot find 128-bit support for WORD_BYTES=16]))])
+WORD_BYTES=$SIZEOF_SIZE_T
+AC_SUBST([WORD_BYTES])
 
 # Set byte size
 AC_SUBST([MIT_BYTE_BIT], [8])
