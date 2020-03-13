@@ -49,19 +49,8 @@
 #elif MIT_WORD_BYTES == 8
 #define MIT_WORD_BIT 64
 #define MIT_SIZE_WORD 3
-#elif MIT_WORD_BYTES == 16
-#define MIT_WORD_BIT 128
-#define MIT_SIZE_WORD 4
-/* Given an unsigned 128-bit argument X, return the value corresponding to
-   X with reversed byte order.  */
-#define bswap_128(x)                                                    \
-    (((unsigned __int128)(bswap_64((uint64_t)(x))) << 64) |             \
-     ((unsigned __int128)(bswap_64((uint64_t)((x) >> 64)))))
-
-typedef __int128 mit_word;
-typedef unsigned __int128 mit_uword;
 #else
-#error "MIT_WORD_BYTES must be 2, 4, 8 or 16!"
+#error "MIT_WORD_BYTES must be 2, 4 or 8!"
 #endif
 
 typedef uint8_t mit_byte;
@@ -75,12 +64,10 @@ typedef uint8_t mit_byte;
 #define _reverse_endianness(bits, n) bswap_ ## bits(n)
 #define reverse_endianness(bits, n) _reverse_endianness(bits, n)
 
-#if MIT_WORD_BYTES != 16
 #define _bits_type_name(prefix, bits) prefix ## bits ## _t
 #define bits_type_name(prefix, bits) _bits_type_name(prefix, bits)
 typedef bits_type_name(int, MIT_WORD_BIT) mit_word;
 typedef bits_type_name(uint, MIT_WORD_BIT) mit_uword;
-#endif
 
 // TODO: find largest type: bigger of long double and intmax_t?
 // Number in next line is sizeof(intmax_t)
@@ -209,34 +196,19 @@ static int load(mit_word * restrict memory, mit_uword memory_words,
         if (unlikely(!is_aligned(addr, size)))
             return MIT_ERROR_UNALIGNED_ADDRESS;
         val = (mit_uword)*((uint16_t *)((uint8_t *)memory + addr));
-        if (MIT_ENDISM != MIT_HOST_ENDISM)
-            val = bswap_16(val);
         break;
 #if MIT_SIZE_WORD >= 2
     case 2:
         if (unlikely(!is_aligned(addr, size)))
             return MIT_ERROR_UNALIGNED_ADDRESS;
         val = (mit_uword)*((uint32_t *)((uint8_t *)memory + addr));
-        if (MIT_ENDISM != MIT_HOST_ENDISM)
-            val = bswap_32(val);
         break;
 #if MIT_SIZE_WORD >= 3
     case 3:
         if (unlikely(!is_aligned(addr, size)))
             return MIT_ERROR_UNALIGNED_ADDRESS;
         val = (mit_uword)*((uint64_t *)((uint8_t *)memory + addr));
-        if (MIT_ENDISM != MIT_HOST_ENDISM)
-            val = bswap_64(val);
         break;
-#if MIT_SIZE_WORD >= 4
-    case 4:
-        if (unlikely(!is_aligned(addr, size)))
-            return MIT_ERROR_UNALIGNED_ADDRESS;
-        val = (mit_uword)*((unsigned __int128 *)((uint8_t *)memory + addr));
-        if (MIT_ENDISM != MIT_HOST_ENDISM)
-            val = bswap_128(val);
-        break;
-#endif
 #endif
 #endif
 #pragma GCC diagnostic pop
@@ -265,35 +237,20 @@ static int store(mit_word * restrict memory, mit_uword memory_words,
     case 1:
         if (unlikely(!is_aligned(addr, size)))
             return MIT_ERROR_UNALIGNED_ADDRESS;
-        if (MIT_ENDISM != MIT_HOST_ENDISM)
-            val = bswap_16(val);
         *((uint16_t *)((uint8_t *)memory + addr)) = (uint16_t)val;
         break;
 #if MIT_SIZE_WORD >= 2
     case 2:
         if (unlikely(!is_aligned(addr, size)))
             return MIT_ERROR_UNALIGNED_ADDRESS;
-        if (MIT_ENDISM != MIT_HOST_ENDISM)
-            val = bswap_32(val);
         *((uint32_t *)((uint8_t *)memory + addr)) = (uint32_t)val;
         break;
 #if MIT_SIZE_WORD >= 3
     case 3:
         if (unlikely(!is_aligned(addr, size)))
             return MIT_ERROR_UNALIGNED_ADDRESS;
-        if (MIT_ENDISM != MIT_HOST_ENDISM)
-            val = bswap_64(val);
         *((uint64_t *)((uint8_t *)memory + addr)) = (uint64_t)val;
         break;
-#if MIT_SIZE_WORD >= 4
-    case 4:
-        if (unlikely(!is_aligned(addr, size)))
-            return MIT_ERROR_UNALIGNED_ADDRESS;
-        if (MIT_ENDISM != MIT_HOST_ENDISM)
-            val = bswap_128(val);
-        *((unsigned __int128 *)((uint8_t *)memory + addr)) = (unsigned __int128)val;
-        break;
-#endif
 #endif
 #endif
 #pragma GCC diagnostic pop

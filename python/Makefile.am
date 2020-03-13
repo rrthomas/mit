@@ -14,8 +14,6 @@ man_MANS = mit@PACKAGE_SUFFIX@-dump.1 mit@PACKAGE_SUFFIX@-shell.1
 mit_pkgpythondir = $(pkgpythondir)@PACKAGE_SUFFIX@
 mit_pkgpython_PYTHON =				\
 	mit/__init__.py				\
-	mit/ctypes_align.py			\
-	mit/int128.py				\
 	mit/autonumber.py			\
 	mit/extra_errors.py			\
 	mit/globals.py				\

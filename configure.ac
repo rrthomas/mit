@@ -113,36 +113,27 @@ AC_SUBST([objdir])
 # Check features
 AX_C_ARITHMETIC_RSHIFT
 
-# Set endianness
+# Check endianness
 AC_C_BIGENDIAN
 AC_SUBST([WORDS_BIGENDIAN])
-AC_ARG_VAR([ENDISM],
-  [value of ENDISM register [default: native endianness]])
 if test "$ac_cv_c_bigendian" = "yes"; then
   WORDS_BIGENDIAN=1
+  endism_text=le
 else
   WORDS_BIGENDIAN=0
+  endism_text=be
 fi
 : "${ENDISM=$WORDS_BIGENDIAN}"
-case $ENDISM in
-     0) endism_text=le ;;
-     1) endism_text=be ;;
-     *) AC_MSG_ERROR([bad value $ENDISM for ENDISM]) ;;
-esac
+AC_SUBST([ENDISM])
 
-# Set size of word
+# Check word size
 AC_CHECK_SIZEOF([size_t])
 # Use a configure variable to substitute this in mit.h.in, where we can't
 # include config.h, as mit.h is a public header.
 SIZEOF_SIZE_T=$ac_cv_sizeof_size_t
 AC_SUBST([SIZEOF_SIZE_T])
-AC_ARG_VAR([WORD_BYTES],
-  [value of WORD_BYTES register [default: sizeof(size_t)]])
-: "${WORD_BYTES=$ac_cv_sizeof_size_t}"
-AS_IF([test "$WORD_BYTES" = 16], [
-  AX_HAVE_INT128
-  AS_IF([test "$ax_cv_int128" != yes],
-    AC_MSG_ERROR([Cannot find 128-bit support for WORD_BYTES=16]))])
+WORD_BYTES=$SIZEOF_SIZE_T
+AC_SUBST([WORD_BYTES])
 
 # Set byte size
 AC_SUBST([MIT_BYTE_BIT], [8])

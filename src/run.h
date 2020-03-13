@@ -33,15 +33,10 @@
 #pragma GCC diagnostic ignored "-Wunused-function"
 static mit_word _fetch_pc(mit_state *S)
 {
-#if MIT_ENDISM == MIT_HOST_ENDISM
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wcast-align"
     mit_word w = *(mit_word *)((uint8_t *)S->memory + S->pc);
 #pragma GCC diagnostic pop
-#else
-    mit_word w = 0;
-    load(S->memory, S->memory_words * MIT_WORD_BYTES, S->pc, MIT_SIZE_WORD, &w);
-#endif
     S->pc += MIT_WORD_BYTES;
     return w;
 }
