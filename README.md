@@ -106,8 +106,6 @@ object file, so that they can be run directly. A suggested line is:
 #!/usr/bin/env mit
 ```
 
-A magic file for the file(1) command is also provided: mit.magic.
-
 
 ## Bugs and comments
 
