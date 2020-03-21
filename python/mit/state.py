@@ -18,6 +18,7 @@ Examining memory: dump, disassemble
 
 import os
 import sys
+from ctypes import cast
 
 from . import enums
 from .binding import (
@@ -50,6 +51,7 @@ class State:
             register.name: Register(state.state, register)
             for register in enums.Register
         }
+        state.registers['pc'].set(state.registers['memory'].get())
         state.M = Memory(state.state)
         state.M_word = WordMemory(state.state)
         state.S = Stack(state.state)
@@ -64,10 +66,13 @@ class State:
         state['registers'] = {
             name: register.get()
             for name, register in self.registers.items()
+            if name not in set(['memory', 'memory_words', 'stack', 'stack_words'])
         }
         del state['M']
         del state['M_word']
-        state['M_word'] = self.M_word[0:self.M.memory_words() * word_bytes]
+        state['M_word'] = self.M_word[self.registers['memory'].get():
+                                      self.registers['memory'].get() +
+                                      self.M.memory_words() * word_bytes]
         del state['S']
         state['S'] = self.S[0:self.registers["stack_depth"].get()]
         del state['state']
@@ -81,7 +86,9 @@ class State:
     def __setstate__(self, state):
         for name, value in state['registers'].items():
             self.registers[name].set(value)
-        self.M_word[0:self.M.memory_words() * word_bytes] = state['M_word']
+        self.M_word[self.registers['memory'].get():
+                    self.registers['memory'].get() +
+                    self.M.memory_words() * word_bytes] = state['M_word']
         for item in state['S']: self.S.push(item)
         if 'argv' in state:
             self.register_args(*state['argv'])
@@ -97,7 +104,7 @@ class State:
                 arg = bytes(arg)
             bargs.append(arg)
         self.argv = arg_strings(*bargs)
-        assert(libmitfeatures.mit_register_args(argc, self.argv) == 0)
+        assert libmitfeatures.mit_register_args(argc, self.argv) == 0
 
     def do_extra_instruction(self):
         libmitfeatures.mit_extra_instruction(self.state)
@@ -196,9 +203,10 @@ class State:
             print(str(self.S))
             done += 1
 
-    def load(self, file, addr=0):
+    def load(self, file, addr=None):
         '''
-        Load a binary file at the given address. Returns the length in words.
+        Load a binary file at the given address (default is `memory`).
+        Returns the length in words.
         '''
         def strip_hashbang(data):
             if data[:2] == b'#!':
@@ -217,22 +225,25 @@ class State:
             raise Error('file {} is too big to fit in memory'.format(file))
         if length % word_bytes != 0:
             raise Error('file {} is not a whole number of words'.format(file))
+        if addr is None:
+            addr = self.registers['memory'].get()
         self.M[addr:addr + length] = data
         return length // word_bytes
 
-    def save(self, file, address=0, length=None):
+    def save(self, file, addr=None, length=None):
         '''
         Save a binary file from the given address and length.
         '''
         assert length is not None
-        ptr = libmit.mit_native_address_of_range(self.state, address, length * word_bytes)
-        if not is_aligned(address) or not ptr:
+        if addr is None:
+            addr = self.registers['memory'].get()
+        if (not is_aligned(addr) or
+            not libmit.mit_address_range_valid(self.state, addr, length * word_bytes)):
             raise Error("invalid or unaligned address")
 
         with open(file, 'wb') as h:
-            h.write(bytes(self.M[address:length * word_bytes]))
+            h.write(bytes(self.M[addr:addr + length * word_bytes]))
 
-    # Disassembly
     def disassemble(self, start=None, length=None, end=None, file=sys.stdout):
         '''
         Disassemble `length` words from `start`, or from `start` to `end`.
@@ -391,11 +402,16 @@ class AbstractMemory:
         '''
         Returns a range that represents the valid addresses in `index`.
         '''
-        index = range(*index.indices(self.memory_words() * word_bytes))
+        memory = cast(libmit.mit_get_memory(self.state), c_void_p).value
+        index = range(*slice(
+            index.start - memory,
+            index.stop - memory,
+            index.step
+        ).indices(self.memory_words() * word_bytes))
         assert index.start % self.element_size == 0
         assert index.stop % self.element_size == 0
         assert index.step in (1, self.element_size)
-        return range(index.start, index.stop, self.element_size)
+        return range(index.start + memory, index.stop + memory, self.element_size)
 
     def __getitem__(self, index):
         if isinstance(index, slice):
@@ -404,7 +420,7 @@ class AbstractMemory:
             return self.load(index)
 
     def __setitem__(self, index, value):
-        if type(index) == slice:
+        if isinstance(index, slice):
             it = iter(value)
             for i in self._slice_to_range(index):
                 self[i] = next(it)
@@ -441,11 +457,11 @@ class Memory(AbstractMemory):
 
     def load(self, index):
         word = c_word()
-        libmit.mit_load(self.state, index, 0, byref(word))
+        libmit.mit_load(index, 0, byref(word))
         return word.value
 
     def store(self, index, value):
-        libmit.mit_store(self.state, index, 0, value)
+        libmit.mit_store(index, 0, value)
 
 
 class WordMemory(AbstractMemory):
@@ -455,8 +471,8 @@ class WordMemory(AbstractMemory):
 
     def load(self, index):
         word = c_word()
-        libmit.mit_load(self.state, index, size_word, byref(word))
+        libmit.mit_load(index, size_word, byref(word))
         return word.value
 
     def store(self, index, value):
-        libmit.mit_store(self.state, index, size_word, value)
+        libmit.mit_store(index, size_word, value)

@@ -141,12 +141,12 @@ _GL_ATTRIBUTE_CONST static int is_aligned(mit_uword addr, unsigned size)
 
 // Memory access
 
-uint8_t *mit_native_address_of_range(mit_state *S, mit_uword addr, mit_uword len);
-/* Return a host pointer to the VM address `addr`, or `NULL` if any address
-   in the range [addr, addr+len] is invalid.
+int mit_address_range_valid(mit_state *S, mit_uword addr, mit_uword len);
+/* Return 1 if all addresses in the range [addr, addr+len] are valid,
+   or 0 otherwise.
 */
 
-int mit_load(mit_state *S, mit_uword addr, unsigned size, mit_word *val_ptr);
+int mit_load(mit_uword addr, unsigned size, mit_word *val_ptr);
 /* Copy 1 << `size` bytes from `addr` to `val_ptr`.
 
    `size` must be between 0 and log2(MIT_WORD_BYTES) inclusive.
@@ -155,7 +155,7 @@ int mit_load(mit_state *S, mit_uword addr, unsigned size, mit_word *val_ptr);
    Return 0 if OK, or error code if `addr` is invalid or unaligned.
 */
 
-int mit_store(mit_state *S, mit_uword addr, unsigned size, mit_word val);
+int mit_store(mit_uword addr, unsigned size, mit_word val);
 /* Store the 1 << `size` least-significant bytes of `val` at virtual address
    `addr`.
 
@@ -168,46 +168,42 @@ int mit_store(mit_state *S, mit_uword addr, unsigned size, mit_word val);
 // Inline functions
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-function"
-_GL_ATTRIBUTE_PURE static uint8_t *
-native_address_of_range(mit_word * restrict memory, mit_uword memory_words,
-                        mit_uword addr, mit_uword len)
+_GL_ATTRIBUTE_PURE static int
+address_range_valid(mit_word * restrict memory, mit_uword memory_words,
+                    mit_uword addr, mit_uword len)
 {
-    if (unlikely(addr >= memory_words * MIT_WORD_BYTES || len > memory_words * MIT_WORD_BYTES - addr))
-        return NULL;
-    return ((uint8_t *)memory) + addr;
+    return likely((uint8_t *)addr >= (uint8_t *)memory &&
+                  (mit_uword)((uint8_t *)addr - (uint8_t *)memory) <= memory_words * MIT_WORD_BYTES &&
+                  len < memory_words * MIT_WORD_BYTES - ((uint8_t *)addr - (uint8_t *)memory));
 }
 
-static int load(mit_word * restrict memory, mit_uword memory_words,
-                mit_uword addr, unsigned size, mit_word *val_ptr)
+static int load(mit_uword addr, unsigned size, mit_word *val_ptr)
 {
-    if (unlikely(addr >= memory_words * MIT_WORD_BYTES))
-        return MIT_ERROR_INVALID_MEMORY_READ;
-
     mit_word val;
     switch (size) {
     case 0:
         if (unlikely(!is_aligned(addr, size)))
             return MIT_ERROR_UNALIGNED_ADDRESS;
-        val = (mit_uword)*((uint8_t *)memory + addr);
+        val = (mit_uword)*((uint8_t *)addr);
         break;
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wcast-align"
     case 1:
         if (unlikely(!is_aligned(addr, size)))
             return MIT_ERROR_UNALIGNED_ADDRESS;
-        val = (mit_uword)*((uint16_t *)((uint8_t *)memory + addr));
+        val = (mit_uword)*((uint16_t *)((uint8_t *)addr));
         break;
 #if MIT_SIZE_WORD >= 2
     case 2:
         if (unlikely(!is_aligned(addr, size)))
             return MIT_ERROR_UNALIGNED_ADDRESS;
-        val = (mit_uword)*((uint32_t *)((uint8_t *)memory + addr));
+        val = (mit_uword)*((uint32_t *)((uint8_t *)addr));
         break;
 #if MIT_SIZE_WORD >= 3
     case 3:
         if (unlikely(!is_aligned(addr, size)))
             return MIT_ERROR_UNALIGNED_ADDRESS;
-        val = (mit_uword)*((uint64_t *)((uint8_t *)memory + addr));
+        val = (mit_uword)*((uint64_t *)((uint8_t *)addr));
         break;
 #endif
 #endif
@@ -220,36 +216,32 @@ static int load(mit_word * restrict memory, mit_uword memory_words,
     return MIT_ERROR_OK;
 }
 
-static int store(mit_word * restrict memory, mit_uword memory_words,
-                 mit_uword addr, unsigned size, mit_word val)
+static int store(mit_uword addr, unsigned size, mit_word val)
 {
-    if (unlikely(addr >= memory_words * MIT_WORD_BYTES))
-        return MIT_ERROR_INVALID_MEMORY_WRITE;
-
     switch (size) {
     case 0:
         if (unlikely(!is_aligned(addr, size)))
             return MIT_ERROR_UNALIGNED_ADDRESS;
-        ((uint8_t *)memory)[addr] = (uint8_t)val;
+        *(uint8_t *)addr = (uint8_t)val;
         break;
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wcast-align"
     case 1:
         if (unlikely(!is_aligned(addr, size)))
             return MIT_ERROR_UNALIGNED_ADDRESS;
-        *((uint16_t *)((uint8_t *)memory + addr)) = (uint16_t)val;
+        *(uint16_t *)addr = (uint16_t)val;
         break;
 #if MIT_SIZE_WORD >= 2
     case 2:
         if (unlikely(!is_aligned(addr, size)))
             return MIT_ERROR_UNALIGNED_ADDRESS;
-        *((uint32_t *)((uint8_t *)memory + addr)) = (uint32_t)val;
+        *(uint32_t *)addr = (uint32_t)val;
         break;
 #if MIT_SIZE_WORD >= 3
     case 3:
         if (unlikely(!is_aligned(addr, size)))
             return MIT_ERROR_UNALIGNED_ADDRESS;
-        *((uint64_t *)((uint8_t *)memory + addr)) = (uint64_t)val;
+        *(uint64_t *)addr = (uint64_t)val;
         break;
 #endif
 #endif

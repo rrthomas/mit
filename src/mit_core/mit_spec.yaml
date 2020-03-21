@@ -26,6 +26,10 @@ Register:
   - pc
   - ir
   - stack_depth
+  - memory
+  - memory_words
+  - stack
+  - stack_words
 
 # VM instruction instructions
 Instruction:
@@ -154,8 +158,8 @@ Instruction:
     results: ['r']
   SIGN_EXTEND:
     opcode: 0x1f
-    args: ['n1', 'size']
-    results: ['n2']
+    args: ['u', 'size']
+    results: ['n']
 
 InternalExtraInstruction:
   HALT:

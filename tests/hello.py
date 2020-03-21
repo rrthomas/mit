@@ -16,7 +16,7 @@ from mit.globals import *
 code_len = 0
 # Hack: two-pass assembly to calculate code_len
 for i in range(2):
-    goto(0)
+    goto(memory.get() + 0)
     lit(code_len)
     lit(14)
     lit(LibC.STDOUT)

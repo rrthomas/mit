@@ -57,8 +57,8 @@ def load_test(obj, error_code=0):
         print('Error in State.load() test "{}"'.format(test))
         sys.exit(1)
     if error_code == 0:
-        print("Word 0 of memory is {:#x}; should be {:#x}".format(M_word[0], test_word()))
-        if M_word[0] != test_word():
+        print("Word 0 of memory is {:#x}; should be {:#x}".format(M_word[memory.get() + 0], test_word()))
+        if M_word[memory.get() + 0] != test_word():
             print('Error in State.load() test "{}"'.format(test))
             sys.exit(1)
 
@@ -82,7 +82,7 @@ correct = [-128, 12345]
 for n in correct:
     lit(n)
 ass(CALL, HALT)
-save(test_file_name, length=assembler.label())
+save(test_file_name, length=assembler.label() - memory.get())
 res = try_load(test_file_name)
 print("; should be {}".format(0))
 if res != 0:

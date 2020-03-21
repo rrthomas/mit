@@ -27,13 +27,8 @@ class RegisterEnum(AutoNumber):
         self.type = type
 
 register = {r: () for r in spec['Register']}
-register.update({
-    # Registers that are not part of the spec
-    'memory': ('mit_word *'),
-    'stack': ('mit_word * restrict'),
-    'memory_words': (),
-    'stack_words': (),
-})
+register['memory'] = ('mit_word *',)
+register['stack'] = ('mit_word * restrict',)
 Register = unique(RegisterEnum('Register', register))
 Register.__doc__ = 'VM registers.'
 
@@ -90,13 +85,13 @@ Instruction = instruction_enum(
         'PUSH_STACK_DEPTH': Code('n = S->stack_depth;'),
 
         'LOAD': Code('''\
-            int ret = load(S->memory, S->memory_words, addr, size, &x);
+            int ret = load(addr, size, &x);
             if (ret != 0)
                 RAISE(ret);'''
         ),
 
         'STORE': Code('''\
-            int ret = store(S->memory, S->memory_words, addr, size, x);
+            int ret = store(addr, size, x);
             if (ret != 0)
                 RAISE(ret);'''
         ),
@@ -135,20 +130,23 @@ Instruction = instruction_enum(
         ),
 
         'NOT': Code('r = ~x;'),
-            'AND': Code('r = x & y;'),
-            'OR': Code('r = x | y;'),
-            'XOR': Code('r = x ^ y;'),
+        'AND': Code('r = x & y;'),
+        'OR': Code('r = x | y;'),
+        'XOR': Code('r = x ^ y;'),
 
-        'LSHIFT': Code('r = n < (mit_word)MIT_WORD_BIT ? x << n : 0;'),
-            'RSHIFT': Code('''\
+        'LSHIFT': Code('''\
+            r = n < (mit_word)MIT_WORD_BIT ?
+                (mit_word)((mit_uword)x << n) : 0;'''
+        ),
+        'RSHIFT': Code('''\
             r = n < (mit_word)MIT_WORD_BIT ?
                 (mit_word)((mit_uword)x >> n) : 0;'''
-            ),
-            'ARSHIFT': Code('r = ARSHIFT(x, n);'),
+        ),
+        'ARSHIFT': Code('r = ARSHIFT(x, n);'),
 
         'SIGN_EXTEND': Code('''\
-            n2 = n1 << (MIT_WORD_BYTES - (1 << size)) * MIT_BYTE_BIT;
-            n2 = ARSHIFT(n2, (MIT_WORD_BYTES - (1 << size)) * MIT_BYTE_BIT);'''
+            n = u << (MIT_WORD_BYTES - (1 << size)) * MIT_BYTE_BIT;
+            n = ARSHIFT(n, (MIT_WORD_BYTES - (1 << size)) * MIT_BYTE_BIT);'''
         ),
     },
 )

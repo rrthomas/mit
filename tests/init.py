@@ -8,6 +8,8 @@
 # THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 # RISK.
 
+import sys
+
 from mit import *
 
 size = 1024

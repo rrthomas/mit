@@ -27,7 +27,7 @@ def type_words(type):
     '''
     type = unrestrict(type)
     ret = type_wordses.get(type, TYPE_SIZE_UNKNOWN)
-    if ret == None:
+    if ret is None:
         import sys
         print('type_words: "{}"'.format(type), type_wordses, file=sys.stderr)
     return ret

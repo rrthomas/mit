@@ -47,8 +47,8 @@ for file in args.object_file:
 
     asm_file = "{}.asm".format(basename)
     with open(asm_file, "w") as h:
-        VM.disassemble(0, length, file=h)
+        VM.disassemble(VM.registers['memory'].get(), length, file=h)
 
     hex_file = "{}.hex".format(basename)
     with open(hex_file, "w") as h:
-        VM.dump(0, length, file=h)
+        VM.dump(VM.registers['memory'].get(), length, file=h)

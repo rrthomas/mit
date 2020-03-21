@@ -50,19 +50,19 @@ _GL_ATTRIBUTE_CONST int mit_is_aligned(mit_uword addr, unsigned size)
 
 // Memory
 
-_GL_ATTRIBUTE_PURE uint8_t *mit_native_address_of_range(mit_state *S, mit_uword addr, mit_uword len)
+_GL_ATTRIBUTE_PURE int mit_address_range_valid(mit_state *S, mit_uword addr, mit_uword len)
 {
-    return native_address_of_range(S->memory, S->memory_words, addr, len);
+    return address_range_valid(S->memory, S->memory_words, addr, len);
 }
 
-int mit_load(mit_state *S, mit_uword addr, unsigned size, mit_word *val_ptr)
+int mit_load(mit_uword addr, unsigned size, mit_word *val_ptr)
 {
-    return load(S->memory, S->memory_words, addr, size, val_ptr);
+    return load(addr, size, val_ptr);
 }
 
-int mit_store(mit_state *S, mit_uword addr, unsigned size, mit_word val)
+int mit_store(mit_uword addr, unsigned size, mit_word val)
 {
-    return store(S->memory, S->memory_words, addr, size, val);
+    return store(addr, size, val);
 }
 
 

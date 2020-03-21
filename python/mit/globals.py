@@ -52,10 +52,12 @@ vars().update({
 })
 
 # Add a default length to `save()`.
-def _save(file, address=0, length=None):
-    if length is None:
-        length = assembler.pc - address
-    VM.save(file, address, length // word_bytes)
+def _save(file, addr=None, length=None):
+    if addr is None:
+        addr = registers['memory'].get()
+        if length is None:
+            length = assembler.pc - registers['memory'].get()
+    VM.save(file, addr, length // word_bytes)
 vars()['save'] = _save
 
 # Abbreviations and disambiguations

@@ -10,6 +10,8 @@
 # THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 # RISK.
 
+import sys
+
 from mit.globals import *
 
 
@@ -17,81 +19,81 @@ from mit.globals import *
 correct = []
 
 # Code
-lit(96)
+lit(memory.get() + 96)
 correct.append(assembler.pc)
 ass(JUMP)
-goto(96)
+goto(memory.get() + 96)
 correct.append(assembler.pc + word_bytes)
 
-lit_pc_rel(48)
+lit_pc_rel(memory.get() + 48)
 correct.append(assembler.pc)
 ass(JUMP)
-goto(48)
+goto(memory.get() + 48)
 correct.append(assembler.pc + word_bytes)
 
-lit_pc_rel(10000)
+lit_pc_rel(memory.get() + 10000)
 correct.append(assembler.pc)
 ass(JUMP)
-goto(10000)
+goto(memory.get() + 10000)
 correct.append(assembler.pc + word_bytes)
 
 lit(1)
 correct.append(assembler.pc)
-lit(9999)
+lit(memory.get() + 9999)
 correct.append(assembler.pc)
 ass(JUMPZ)
 correct.append(assembler.pc)
 lit(1)
 correct.append(assembler.pc)
-lit(0)
+lit(memory.get() + 0)
 correct.append(assembler.pc)
 ass(JUMPZ)
 correct.append(assembler.pc)
 lit(0)
 correct.append(assembler.pc)
-lit_pc_rel(11008)
+lit_pc_rel(memory.get() + 11008)
 correct.append(assembler.pc)
 ass(JUMPZ)
-goto(11008)
+goto(memory.get() + 11008)
 correct.append(assembler.pc + word_bytes)
 
 lit(0)
 correct.append(assembler.pc)
-lit_pc_rel(11008 + word_bytes * 8)
+lit_pc_rel(memory.get() + 11008 + word_bytes * 8)
 correct.append(assembler.pc)
 ass(JUMPZ)
-goto(11008 + word_bytes * 8)
+goto(memory.get() + 11008 + word_bytes * 8)
 correct.append(assembler.pc + word_bytes)
 
-lit_pc_rel(608)
+lit_pc_rel(memory.get() + 608)
 correct.append(assembler.pc)
 ass(CALL)
-goto(608)
+goto(memory.get() + 608)
 correct.append(assembler.pc + word_bytes)
 
-lit_pc_rel(208)
+lit_pc_rel(memory.get() + 208)
 correct.append(assembler.pc)
 ass(CALL)
-goto(208)
+goto(memory.get() + 208)
 correct.append(assembler.pc + word_bytes)
 
-lit(304)
+lit(memory.get() + 304)
 correct.append(assembler.pc)
 ass(CALL)
-goto(304)
+goto(memory.get() + 304)
 correct.append(assembler.pc + word_bytes)
 
 ass(JUMP)
-goto(208 + word_bytes * 2)
+goto(memory.get() + 208 + word_bytes * 2)
 correct.append(assembler.pc + word_bytes)
 
 ass(JUMP)
-goto(608 + word_bytes * 2)
+goto(memory.get() + 608 + word_bytes * 2)
 correct.append(assembler.pc + word_bytes)
 
-lit(64)
+lit(memory.get() + 64)
 correct.append(assembler.pc)
-lit(32)
+lit(memory.get() + 32)
 correct.append(assembler.pc)
 lit(0)
 correct.append(assembler.pc)
@@ -110,7 +112,7 @@ correct.append(assembler.pc)
 ass(LOAD)
 correct.append(assembler.pc)
 ass(CALL)
-goto(64)
+goto(memory.get() + 64)
 correct.append(assembler.pc + word_bytes)
 
 # Test

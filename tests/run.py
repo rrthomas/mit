@@ -7,11 +7,13 @@
 # THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 # RISK.
 
+import sys
+
 from mit.globals import *
 
 
 # Test code
-final_pc = word_bytes
+final_pc = memory.get() + word_bytes
 ass(CALL, HALT)
 
 # Test

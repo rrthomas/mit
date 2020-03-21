@@ -9,6 +9,7 @@
 # RISK.
 
 import sys
+from ctypes import cast
 
 from mit.globals import *
 from mit.binding import libmit
@@ -26,11 +27,11 @@ breaks = []
 
 # Put address of buffer on stack for later
 lit(buffer)
-lit(16) # arbitary number > strlen(args[1])
 lit(LibMit.CURRENT_STATE)
 ass(JUMP, LIBMIT)
-lit(LibMit.NATIVE_ADDRESS_OF_RANGE)
+lit(LibMit.GET_MEMORY)
 ass(JUMP, LIBMIT)
+ass(ADD)
 
 # Test LibMit.NATIVE_POINTER_WORDS
 lit(LibMit.NATIVE_POINTER_WORDS)
@@ -88,8 +89,8 @@ S.push(arg1len) # push length back for next test
 
 # Run LibC.STRNCPY test
 trace(addr=breaks.pop(0))
-print("addr: {}".format(libmit.mit_native_address_of_range(VM.state, buffer, 0)))
-c_str = string_at(libmit.mit_native_address_of_range(VM.state, buffer, 0))
+print("addr: {:#x}".format(memory.get() + buffer))
+c_str = string_at(cast(memory.get() + buffer, c_char_p))
 print("arg 1 is {}, and should be {}".format(c_str, args[1]))
 if c_str != args[1]:
     print("Error in extra instruction tests: pc = {:#x}".format(pc.get()))

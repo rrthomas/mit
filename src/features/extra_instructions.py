@@ -63,10 +63,11 @@ class LibC(InstructionEnum):
         flag = (mit_word)O_TRUNC;
     '''))
 
-    OPEN = (StackEffect.of(['str', 'flags'], ['fd:int']), Code('''\
+    OPEN = (StackEffect.of(['str:char *', 'flags'], ['fd:int']), Code('''\
         {
-            char *s = (char *)mit_native_address_of_range(S, str, 0);
-            fd = s ? open(s, flags, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH) : -1;
+
+            fd = mit_address_range_valid(S, (mit_uword)str, 0) ?
+                open(str, flags, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH) : -1;
             set_binary_mode(fd, O_BINARY); // Best effort
         }
     '''))
@@ -77,25 +78,23 @@ class LibC(InstructionEnum):
     )
 
     READ = (
-        StackEffect.of(['buf', 'nbytes', 'fd:int'], ['nread:int']),
+        StackEffect.of(['buf:uint8_t *', 'nbytes', 'fd:int'], ['nread:int']),
         Code('''\
             {
                 nread = -1;
-                uint8_t *ptr = mit_native_address_of_range(S, buf, nbytes);
-                if (ptr)
-                    nread = read(fd, ptr, nbytes);
+                if (mit_address_range_valid(S, (mit_uword)buf, nbytes))
+                    nread = read(fd, buf, nbytes);
             }
         '''),
     )
 
     WRITE = (
-        StackEffect.of(['buf', 'nbytes', 'fd:int'], ['nwritten']),
+        StackEffect.of(['buf:uint8_t *', 'nbytes', 'fd:int'], ['nwritten']),
         Code('''\
             {
                 nwritten = -1;
-                uint8_t *ptr = mit_native_address_of_range(S, buf, nbytes);
-                if (ptr)
-                    nwritten = write(fd, ptr, nbytes);
+                if (mit_address_range_valid(S, (mit_uword)buf, nbytes))
+                    nwritten = write(fd, buf, nbytes);
             }
         '''),
     )
@@ -123,26 +122,14 @@ class LibC(InstructionEnum):
     )
 
     RENAME = (
-        StackEffect.of(['old_name', 'new_name'], ['ret:int']),
-        Code('''\
-            {
-                char *s1 = (char *)mit_native_address_of_range(S, old_name, 0);
-                char *s2 = (char *)mit_native_address_of_range(S, new_name, 0);
-                if (s1 == NULL || s2 == NULL)
-                    RAISE(MIT_ERROR_INVALID_MEMORY_READ);
-                ret = rename(s1, s2);
-            }
-        '''),
+        StackEffect.of(['old_name:char *', 'new_name:char *'], ['ret:int']),
+        Code('ret = rename(old_name, new_name);'),
     )
 
-    REMOVE = (StackEffect.of(['name'], ['ret:int']), Code('''\
-        {
-            char *s = (char *)mit_native_address_of_range(S, name, 0);
-            if (s == NULL)
-                RAISE(MIT_ERROR_INVALID_MEMORY_READ);
-            ret = remove(s);
-        }
-    '''))
+    REMOVE = (
+        StackEffect.of(['name:char *'], ['ret:int']),
+        Code('ret = remove(name);')
+    )
 
     # TODO: Expose stat(2). This requires struct mapping!
     FILE_SIZE = (
@@ -208,31 +195,31 @@ mit_lib.update({
         Code('state = S;'),
     ),
 
-    'NATIVE_ADDRESS_OF_RANGE': (
+    'ADDRESS_RANGE_VALID': (
         StackEffect.of(
             ['addr', 'len', 'inner_state:mit_state *'],
-            ['ptr:uint8_t *'],
+            ['flag'],
         ),
-        Code('ptr = mit_native_address_of_range(inner_state, addr, len);'),
+        Code('flag = mit_address_range_valid(inner_state, addr, len);'),
     ),
 
     'LOAD': (
         StackEffect.of(
-            ['addr', 'size', 'inner_state:mit_state *'],
+            ['addr', 'size'],
             ['value', 'ret:int'],
         ),
         Code('''\
             value = 0;
-            ret = mit_load(inner_state, addr, size, &value);
+            ret = mit_load(addr, size, &value);
         '''),
     ),
 
     'STORE': (
         StackEffect.of(
-            ['value', 'addr', 'size', 'inner_state:mit_state *'],
+            ['value', 'addr', 'size'],
             ['ret:int'],
         ),
-        Code('ret = mit_store(inner_state, addr, size, value);'),
+        Code('ret = mit_store(addr, size, value);'),
     ),
 
     'LOAD_STACK': (

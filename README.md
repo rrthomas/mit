@@ -3,14 +3,13 @@
 Maintainer: Reuben Thomas <rrt@sc3d.org>  
 https://github.com/rrthomas/mit  
 
-Mit is a simple virtual machine designed for study and experiment. It uses
-a byte-stream code designed for efficient execution which is binary portable
-between implementations. It has been implemented in C for POSIX systems.
-Mit is designed to be embedded in other programs; Python 3 bindings are
-provided that demonstrate this ability and provide a convenient REPL and
-debugger. In the C implementation, all memory references are bounds checked.
-An I/O library is implemented; access to native code routines is also
-possible, allowing Mit and C programs to call each other.
+Mit is a simple virtual machine designed for study and experiment. It uses a
+byte-stream code designed for efficient execution which is binary portable
+between implementations. It has been implemented in C for POSIX systems. Mit
+is designed to be embedded in other programs; Python 3 bindings are provided
+that demonstrate this ability and provide a convenient REPL and debugger. An
+I/O library is implemented; access to native code routines is also possible,
+allowing Mit and C programs to call each other.
 
 This package comprises the definition of the Mit virtual machine and an
 implementation in ISO C99 using POSIX APIs.
