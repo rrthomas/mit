@@ -136,12 +136,13 @@ class State:
     def _report_step_error(self, e, done, addr):
         ret = e.args[0]
         print("Error code {} was returned".format(ret), end='')
-        print(" after {} step{}".format(done, 's' if done > 1 else ''), end='')
+        print(" after {} step{}".format(done, 's' if done != 1 else ''), end='')
         if addr is not None:
             print(" at pc={:#x}".format(
                 self.registers["pc"].get()),
                 end='',
             )
+        print()
         if ret != 0 and ret != enums.MitErrorCode.HALT:
             raise
 
