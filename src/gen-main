@@ -165,7 +165,7 @@ Option('version',
        parse_code=Code('''\
            {
                printf(PACKAGE_NAME " " VERSION " (%d-byte word, %s-endian)\\n"
-                      "Copyright (c) Mit authors 1994-2019.\\n"
+                      "Copyright (c) Mit authors 1994-2020.\\n"
                       PACKAGE_NAME " comes with ABSOLUTELY NO WARRANTY.\\n"
                       "You may redistribute copies of " PACKAGE_NAME "\\n"
                       "under the terms of the MIT/X11 License.\\n",
