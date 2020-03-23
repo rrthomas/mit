@@ -424,8 +424,8 @@ init_code = Code('''\
     // getpagesize() is obsolete, but gnulib provides it, and
     // sysconf(_SC_PAGESIZE) does not work on some platforms.
     mit_uword page_size = getpagesize();
-    memory_words = MIT_WORD_BYTES == 2 ? 0x1000U : 0x100000U;
-    mit_uword stack_words = MIT_WORD_BYTES == 2 ? 1024U : 16384U;
+    memory_words = 0x100000U;
+    mit_uword stack_words = 16384U;
 ''')
 handlers_code = Code()
 exit_code = Code()

@@ -40,17 +40,14 @@
 
 // Types and constants
 // Define MIT_WORD_BIT as a number literal so we can token paste it below
-#if MIT_WORD_BYTES == 2
-#define MIT_WORD_BIT 16
-#define MIT_SIZE_WORD 1
-#elif MIT_WORD_BYTES == 4
+#if MIT_WORD_BYTES == 4
 #define MIT_WORD_BIT 32
 #define MIT_SIZE_WORD 2
 #elif MIT_WORD_BYTES == 8
 #define MIT_WORD_BIT 64
 #define MIT_SIZE_WORD 3
 #else
-#error "MIT_WORD_BYTES must be 2, 4 or 8!"
+#error "MIT_WORD_BYTES must be 4 or 8!"
 #endif
 
 typedef uint8_t mit_byte;
@@ -191,7 +188,6 @@ static int load(mit_uword addr, unsigned size, mit_word *val_ptr)
             return MIT_ERROR_UNALIGNED_ADDRESS;
         val = (mit_uword)*((uint16_t *)((uint8_t *)addr));
         break;
-#if MIT_SIZE_WORD >= 2
     case 2:
         if (unlikely(!is_aligned(addr, size)))
             return MIT_ERROR_UNALIGNED_ADDRESS;
@@ -203,7 +199,6 @@ static int load(mit_uword addr, unsigned size, mit_word *val_ptr)
             return MIT_ERROR_UNALIGNED_ADDRESS;
         val = (mit_uword)*((uint64_t *)((uint8_t *)addr));
         break;
-#endif
 #endif
 #pragma GCC diagnostic pop
     default:
@@ -227,7 +222,6 @@ static int store(mit_uword addr, unsigned size, mit_word val)
             return MIT_ERROR_UNALIGNED_ADDRESS;
         *(uint16_t *)addr = (uint16_t)val;
         break;
-#if MIT_SIZE_WORD >= 2
     case 2:
         if (unlikely(!is_aligned(addr, size)))
             return MIT_ERROR_UNALIGNED_ADDRESS;
@@ -239,7 +233,6 @@ static int store(mit_uword addr, unsigned size, mit_word val)
             return MIT_ERROR_UNALIGNED_ADDRESS;
         *(uint64_t *)addr = (uint64_t)val;
         break;
-#endif
 #endif
 #pragma GCC diagnostic pop
     default:

@@ -45,7 +45,7 @@ class State:
 
          - args - list of str - command-line arguments to register.
     '''
-    def __new__(cls, memory_words=1024*1024 if word_bytes > 2 else 8*1024, stack_words=1024, args=None):
+    def __new__(cls, memory_words=1024*1024, stack_words=1024, args=None):
         '''Create the VM state.'''
         state = super().__new__(cls)
         state.state = libmit.mit_new_state(memory_words, stack_words)
