@@ -40,8 +40,12 @@ except:
 
 
 class State:
-    '''A VM state.'''
-    def __new__(cls, memory_words=1024*1024 if word_bytes > 2 else 8*1024, stack_words=1024):
+    '''
+    A VM state.
+
+         - args - list of str - command-line arguments to register.
+    '''
+    def __new__(cls, memory_words=1024*1024 if word_bytes > 2 else 8*1024, stack_words=1024, args=None):
         '''Create the VM state.'''
         state = super().__new__(cls)
         state.state = libmit.mit_new_state(memory_words, stack_words)
@@ -55,6 +59,10 @@ class State:
         state.M = Memory(state.state)
         state.M_word = WordMemory(state.state)
         state.S = Stack(state.state)
+        if args is None:
+            args = []
+        args.insert(0, b"mit-shell")
+        state.register_args(*args)
         return state
 
     def __del__(self):
@@ -110,17 +118,12 @@ class State:
         libmitfeatures.mit_extra_instruction(self.state)
         self.registers["ir"].set(0) # Skip to next instruction
 
-    def run(self, args=None, optimize=True):
+    def run(self, optimize=True):
         '''
         Run until `halt` or error.
 
-         - args - list of str - command-line arguments to register.
          - optimize - bool - if True, run with optimization.
         '''
-        if args is None:
-            args = []
-        args.insert(0, b"mit-shell")
-        self.register_args(*args)
         while True:
             try:
                 if optimize == True:
