@@ -23,7 +23,7 @@ from . import enums
 from .binding import (
     libmit, libmitfeatures,
     Error, VMError, is_aligned,
-    word_bytes, size_word, opcode_mask,
+    word_bytes, size_word, word_mask, opcode_mask,
     c_word, c_uword, c_void_p, c_char_p, byref,
     hex0x_word_width,
 )
@@ -326,7 +326,7 @@ class Stack:
 
     def __str__(self):
         return '[{}]'.format(', '.join(
-            ['{v} ({v:#x})'.format(v=v) for v in self])
+            ['{} ({:#x})'.format(v, v & word_mask) for v in self])
         )
 
     def __repr__(self):
