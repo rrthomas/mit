@@ -203,25 +203,6 @@ mit_lib.update({
         Code('flag = mit_address_range_valid(inner_state, addr, len);'),
     ),
 
-    'LOAD': (
-        StackEffect.of(
-            ['addr', 'size'],
-            ['value', 'ret:int'],
-        ),
-        Code('''\
-            value = 0;
-            ret = mit_load(addr, size, &value);
-        '''),
-    ),
-
-    'STORE': (
-        StackEffect.of(
-            ['value', 'addr', 'size'],
-            ['ret:int'],
-        ),
-        Code('ret = mit_store(addr, size, value);'),
-    ),
-
     'LOAD_STACK': (
         StackEffect.of(
             ['pos', 'inner_state:mit_state *'],
