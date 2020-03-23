@@ -12,8 +12,8 @@ Registers: a variable for each register; also a list, 'registers'
 Memory: M, M_word
 Stack: S
 Managing the VM state: load, save
-Controlling and observing execution: run, step
-Examining memory: dump, disassemble
+Controlling and observing execution: run, step, trace
+Examining memory: dump, disassemble, dump_files
 '''
 
 import os
@@ -286,6 +286,19 @@ class State:
                 ascii += c if c.isprintable() else '.'
             p += chunk
             print(" |{0:.{1}}|".format(ascii, chunk), file=file)
+
+    def dump_files(self, basename, length=None):
+        '''
+        Dump memory as assembly to `basename.asm` and as hex to `basename.hex`.
+        '''
+        if length is None:
+            length = self.M.memory_words()
+        asm_file = '{}.asm'.format(basename)
+        with open(asm_file, 'w') as h:
+            self.disassemble(self.registers['memory'].get(), length, file=h)
+        hex_file = '{}.hex'.format(basename)
+        with open(hex_file, 'w') as h:
+            self.dump(self.registers['memory'].get(), length, file=h)
 
 
 class Register:

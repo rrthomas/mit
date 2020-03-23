@@ -15,7 +15,7 @@ Returns a vars table containing:
 Registers: a variable for each register; also a list 'registers'
 Managing the VM state: load, save
 Controlling and observing execution: run, step, trace
-Memory: M[], M_word[], dump
+Memory: M[], M_word[], dump, dump_files
 Assembly: Assembler, Disassembler, assembler,
     word, bytes, instruction, lit, lit_pc_rel, label, goto
 Abbreviations: ass=assembler.instruction, dis=self.disassemble
@@ -36,7 +36,7 @@ vars().update({
     for name in [
         "M", "M_word", "S", "registers",
         "load", "run", "step", "trace",
-        "dump", "disassemble",
+        "dump", "disassemble", "dump_files",
     ]
 })
 
