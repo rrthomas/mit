@@ -84,15 +84,63 @@ Instruction = instruction_enum(
         'PUSH_STACK_DEPTH': Code('n = S->stack_depth;'),
 
         'LOAD': Code('''\
-            int ret = load(addr, size, &val);
-            if (ret != 0)
-                RAISE(ret);'''
+            switch (size) {
+            case 0:
+                val = (mit_uword)*((uint8_t *)addr);
+                break;
+        #pragma GCC diagnostic push
+        #pragma GCC diagnostic ignored "-Wcast-align"
+            case 1:
+                if (unlikely(!is_aligned(addr, size)))
+                    RAISE(MIT_ERROR_UNALIGNED_ADDRESS);
+                val = (mit_uword)*((uint16_t *)((uint8_t *)addr));
+                break;
+            case 2:
+                if (unlikely(!is_aligned(addr, size)))
+                    RAISE(MIT_ERROR_UNALIGNED_ADDRESS);
+                val = (mit_uword)*((uint32_t *)((uint8_t *)addr));
+                break;
+        #if MIT_SIZE_WORD >= 3
+            case 3:
+                if (unlikely(!is_aligned(addr, size)))
+                    RAISE(MIT_ERROR_UNALIGNED_ADDRESS);
+                val = (mit_uword)*((uint64_t *)((uint8_t *)addr));
+                break;
+        #endif
+        #pragma GCC diagnostic pop
+            default:
+                RAISE(MIT_ERROR_BAD_SIZE);
+            }'''
         ),
 
         'STORE': Code('''\
-            int ret = store(addr, size, val);
-            if (ret != 0)
-                RAISE(ret);'''
+            switch (size) {
+            case 0:
+                *(uint8_t *)addr = (uint8_t)val;
+                break;
+        #pragma GCC diagnostic push
+        #pragma GCC diagnostic ignored "-Wcast-align"
+            case 1:
+                if (unlikely(!is_aligned(addr, size)))
+                    RAISE(MIT_ERROR_UNALIGNED_ADDRESS);
+                *(uint16_t *)addr = (uint16_t)val;
+                break;
+            case 2:
+                if (unlikely(!is_aligned(addr, size)))
+                    RAISE(MIT_ERROR_UNALIGNED_ADDRESS);
+                *(uint32_t *)addr = (uint32_t)val;
+                break;
+        #if MIT_SIZE_WORD >= 3
+            case 3:
+                if (unlikely(!is_aligned(addr, size)))
+                    RAISE(MIT_ERROR_UNALIGNED_ADDRESS);
+                *(uint64_t *)addr = (uint64_t)val;
+                break;
+        #endif
+        #pragma GCC diagnostic pop
+            default:
+                RAISE(MIT_ERROR_BAD_SIZE);
+            }'''
         ),
 
         'LIT': Code('FETCH_PC(n);'),
