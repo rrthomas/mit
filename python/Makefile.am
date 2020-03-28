@@ -18,6 +18,7 @@ mit_pkgpython_PYTHON =				\
 	mit/extra_errors.py			\
 	mit/globals.py				\
 	mit/ipython_suppress_traceback.py	\
+	mit/memory.py				\
 	mit/state.py				\
 	mit/assembler.py
 nodist_mit_pkgpython_PYTHON = mit/binding.py mit/enums.py mit/extra_enums.py

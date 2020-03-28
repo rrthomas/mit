@@ -48,6 +48,7 @@ static mit_word _fetch_pc(mit_state *S)
     (w) = (_fetch_pc(S))                                        \
 
 // Perform the action of NEXT.
-#define DO_NEXT  FETCH_PC(S->ir)
+#define DO_NEXT                                 \
+    FETCH_PC(S->ir)
 
 #endif

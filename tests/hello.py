@@ -1,6 +1,6 @@
 # Hello world demo/test.
 #
-# (c) Mit authors 2018-2019
+# (c) Mit authors 2018-2020
 #
 # The package is distributed under the MIT/X11 License.
 #
@@ -16,7 +16,7 @@ from mit.globals import *
 code_len = 0
 # Hack: two-pass assembly to calculate code_len
 for i in range(2):
-    goto(memory.get() + 0)
+    goto(M.addr)
     lit(code_len)
     lit(14)
     lit(LibC.STDOUT)

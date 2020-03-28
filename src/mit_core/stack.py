@@ -29,7 +29,7 @@ def type_words(type):
     ret = type_wordses.get(type, TYPE_SIZE_UNKNOWN)
     if ret is None:
         import sys
-        print('type_words: "{}"'.format(type), type_wordses, file=sys.stderr)
+        print('type {} not found; type_words: "{}"'.format(type, type_wordses), file=sys.stderr)
     return ret
 
 def load_stack(name, depth=0, type='mit_word'):

@@ -27,7 +27,6 @@ class RegisterEnum(AutoNumber):
         self.type = type
 
 register = {r: () for r in spec['Register']}
-register['memory'] = ('mit_word *',)
 register['stack'] = ('mit_word * restrict',)
 Register = unique(RegisterEnum('Register', register))
 Register.__doc__ = 'VM registers.'
@@ -85,13 +84,13 @@ Instruction = instruction_enum(
         'PUSH_STACK_DEPTH': Code('n = S->stack_depth;'),
 
         'LOAD': Code('''\
-            int ret = load(addr, size, &x);
+            int ret = load(addr, size, &val);
             if (ret != 0)
                 RAISE(ret);'''
         ),
 
         'STORE': Code('''\
-            int ret = store(addr, size, x);
+            int ret = store(addr, size, val);
             if (ret != 0)
                 RAISE(ret);'''
         ),

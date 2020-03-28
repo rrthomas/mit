@@ -123,14 +123,8 @@ c_ptrdiff_t = c_ssize_t
 mit_error = errcheck(MitErrorCode)
 
 # mit.h
-libmit.mit_get_memory.argtypes = [c_void_p]
-libmit.mit_get_memory.restype = POINTER(c_word)
-
 libmit.mit_get_stack.argtypes = [c_void_p]
 libmit.mit_get_stack.restype = POINTER(c_word)
-
-libmit.mit_get_memory_words.argtypes = [c_void_p]
-libmit.mit_get_memory_words.restype = c_uword
 
 libmit.mit_get_stack_words.argtypes = [c_void_p]
 libmit.mit_get_stack_words.restype = c_uword
@@ -149,8 +143,6 @@ libmit.mit_pop_stack.errcheck = mit_error
 libmit.mit_push_stack.argtypes = [c_void_p, c_word]
 libmit.mit_push_stack.errcheck = mit_error
 
-libmit.mit_address_range_valid.argtypes = [c_void_p, c_uword, c_uword]
-
 libmit.mit_run.restype = c_word
 libmit.mit_run.argtypes = [c_void_p]
 libmit.mit_run.errcheck = mit_error
@@ -160,21 +152,13 @@ libmit.mit_single_step.argtypes = [c_void_p]
 libmit.mit_single_step.errcheck = mit_error
 
 libmit.mit_new_state.restype = c_void_p
-libmit.mit_new_state.argtypes = [c_size_t, c_size_t]
+libmit.mit_new_state.argtypes = [c_size_t]
 
 libmit.mit_free_state.restype = None
 libmit.mit_free_state.argtypes = [c_void_p]
 
-libmit.mit_align.restype = c_uword
-libmit.mit_align.argtypes = [c_uword, c_uint]
-
-libmit.mit_is_aligned.argtypes = [c_uword, c_uint]
-
-def align(addr):
-    return int(libmit.mit_align(addr, size_word))
-
 def is_aligned(addr):
-    return libmit.mit_is_aligned(addr, size_word)
+    return (addr & ((1 << size_word) - 1)) == 0
 
 # features.h
 libmitfeatures.mit_register_args.argtypes = [c_int, c_void_p]
@@ -183,9 +167,6 @@ libmitfeatures.mit_register_args.errcheck = errcheck(RegisterArgsErrorCode)
 libmitfeatures.mit_extra_instruction.restype = c_word
 libmitfeatures.mit_extra_instruction.argtypes = [c_void_p]
 libmitfeatures.mit_extra_instruction.errcheck = mit_error
-
-libmitfeatures.mit_core_dump.restype = c_char_p
-libmitfeatures.mit_core_dump.argtypes = [c_void_p]
 
 libmitfeatures.mit_specializer_run.restype = c_word
 libmitfeatures.mit_specializer_run.argtypes = [c_void_p]

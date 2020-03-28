@@ -13,7 +13,7 @@ from mit_test import *
 
 
 # Test results
-last_word = memory.get() + (M.memory_words() - 1) * word_bytes
+last_word = M_word.addr + (len(M_word) - 1) * word_bytes
 magic_number = 0xf201
 correct = [
     [magic_number],
@@ -40,8 +40,8 @@ correct = [
     [last_word + (word_bytes - 2) * endism + 1 * (1 - endism)],
     [last_word + (word_bytes - 2) * endism + 1 * (1 - endism), 0],
     [0xf2],
-    [0xf2, memory.get() + M.memory_words() * word_bytes - ((word_bytes - 1) * endism + 1)],
-    [0xf2, memory.get() + M.memory_words() * word_bytes - ((word_bytes - 1) * endism + 1), 0],
+    [0xf2, M.addr + len(M) - ((word_bytes - 1) * endism + 1)],
+    [0xf2, M.addr + len(M) - ((word_bytes - 1) * endism + 1), 0],
     [],
     [last_word],
     [last_word, size_word],
@@ -73,7 +73,7 @@ ass(POP)
 lit(last_word + (word_bytes - 2) * endism + 1 * (1 - endism))
 lit(0)
 ass(LOAD)
-lit(memory.get() + M.memory_words() * word_bytes - ((word_bytes - 1) * endism + 1))
+lit(M.addr + len(M) - ((word_bytes - 1) * endism + 1))
 lit(0)
 ass(STORE)
 lit(last_word)

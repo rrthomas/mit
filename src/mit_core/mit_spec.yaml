@@ -26,8 +26,6 @@ Register:
   - pc
   - ir
   - stack_depth
-  - memory
-  - memory_words
   - stack
   - stack_words
 
@@ -71,10 +69,10 @@ Instruction:
   LOAD:
     opcode: 0x8
     args: ['addr', 'size']
-    results: ['x']
+    results: ['val']
   STORE:
     opcode: 0x9
-    args: ['x', 'addr', 'size']
+    args: ['val', 'addr', 'size']
     results: []
   LIT:
     opcode: 0xa

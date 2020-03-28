@@ -1,6 +1,6 @@
 # Test run().
 #
-# (c) Mit authors 1995-2019
+# (c) Mit authors 1995-2020
 #
 # The package is distributed under the MIT/X11 License.
 #
@@ -13,7 +13,7 @@ from mit.globals import *
 
 
 # Test code
-final_pc = memory.get() + word_bytes
+final_pc = M.addr + word_bytes
 ass(CALL, HALT)
 
 # Test

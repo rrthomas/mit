@@ -53,10 +53,8 @@ vars().update({
 
 # Add a default length to `save()`.
 def _save(file, addr=None, length=None):
-    if addr is None:
-        addr = registers['memory'].get()
-        if length is None:
-            length = assembler.pc - registers['memory'].get()
+    if addr is None and length is None:
+        length = assembler.pc - VM.M.addr
     VM.save(file, addr, length // word_bytes)
 vars()['save'] = _save
 

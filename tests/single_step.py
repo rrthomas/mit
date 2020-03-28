@@ -1,6 +1,6 @@
 # Test single_step() and `next`.
 #
-# (c) Mit authors 1994-2019
+# (c) Mit authors 1994-2020
 #
 # The package is distributed under the MIT/X11 License.
 #
@@ -17,7 +17,7 @@ for i in range(iterations):
     print("pc = {:#x}".format(pc.get()))
     step(auto_NEXT=False)
 
-final_pc = memory.get() + iterations * word_bytes
+final_pc = M.addr + iterations * word_bytes
 print("pc should now be {}".format(final_pc))
 if pc.get() != final_pc:
     print("Error in single_step() tests: pc = {:#x}".format(pc.get()))

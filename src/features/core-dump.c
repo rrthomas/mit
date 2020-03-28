@@ -22,7 +22,7 @@
 #include "state.h"
 
 
-const char *mit_core_dump(mit_state *S)
+const char *mit_core_dump(mit_word *addr, mit_uword words)
 {
     // Ignore errors; best effort only, in the middle of an error exit
     char file_format[] = "mit-core.%lu";
@@ -30,7 +30,7 @@ const char *mit_core_dump(mit_state *S)
     sprintf(file, "mit-core.%lu", (unsigned long)getpid());
     FILE *fp = fopen(file, "wb");
     if (fp != NULL) {
-        (void)fwrite(S->memory, 1, S->memory_words, fp);
+        (void)fwrite(addr, sizeof(mit_word), words, fp);
         (void)fclose(fp);
         return file;
     }

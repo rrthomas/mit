@@ -35,7 +35,7 @@ from .binding import (
     opcode_bit, opcode_mask,
     c_uword, c_word,
     word_min, word_max, uword_max,
-    align, is_aligned,
+    is_aligned,
 )
 from .state import State
 from .assembler import Assembler, Disassembler

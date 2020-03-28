@@ -24,7 +24,7 @@ UNDEFINED = 1 + max(Instruction)
 
 # Test results and data
 result = []
-invalid_address = VM.M.memory_words() * word_bytes + 1000
+invalid_address = VM.M.addr + len(VM.M) + 1000
 test = []
 test_pc = []
 
@@ -46,7 +46,7 @@ test.append('Try to load from unaligned address')
 test_pc.append(label())
 result.append(MitErrorCode.UNALIGNED_ADDRESS)
 print('Test "{}": pc = {}'.format(test[-1], test_pc[-1]))
-lit(memory.get() + 1)
+lit(VM.M.addr + 1)
 lit(size_word)
 ass(LOAD)
 
@@ -54,7 +54,7 @@ test.append('Try to load with an invalid/unsupported size')
 test_pc.append(label())
 result.append(MitErrorCode.BAD_SIZE)
 print('Test "{}": pc = {}'.format(test[-1], test_pc[-1]))
-lit(memory.get() + 0)
+lit(VM.M.addr)
 lit(42)
 ass(LOAD)
 
@@ -63,7 +63,7 @@ test_pc.append(label())
 result.append(MitErrorCode.BAD_SIZE)
 print('Test "{}": pc = {}'.format(test[-1], test_pc[-1]))
 lit(0)
-lit(memory.get() + 0)
+lit(VM.M.addr)
 lit(42)
 ass(STORE)
 

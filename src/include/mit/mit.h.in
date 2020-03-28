@@ -110,17 +110,6 @@ typedef struct mit_state mit_state;
 extern const unsigned mit_opcode_bit;
 extern const unsigned mit_opcode_mask;
 
-// Utility macros and functions
-#define MIT_ROUND_UP(n, N) \
-    (((n) - 1) - ((n) - 1) % (N) + (N))
-/* Evaluate `n` aligned to the next `N`-byte boundary. */
-
-mit_uword mit_align(mit_uword n, unsigned size);
-/* Return `n` aligned to the next 2^`size`-byte boundary. */
-
-int mit_is_aligned(mit_uword n, unsigned size);
-/* Return 1 if `n` is a multiple of 2^`size`, or `0` if not. */
-
 // Inline functions
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-function"
@@ -133,15 +122,9 @@ _GL_ATTRIBUTE_CONST static int is_aligned(mit_uword addr, unsigned size)
 {
     return (addr & ((1 << size) - 1)) == 0;
 }
-#pragma GCC diagnostic pop
 
 
 // Memory access
-
-int mit_address_range_valid(mit_state *S, mit_uword addr, mit_uword len);
-/* Return 1 if all addresses in the range [addr, addr+len] are valid,
-   or 0 otherwise.
-*/
 
 int mit_load(mit_uword addr, unsigned size, mit_word *val_ptr);
 /* Copy 1 << `size` bytes from `addr` to `val_ptr`.
@@ -163,17 +146,6 @@ int mit_store(mit_uword addr, unsigned size, mit_word val);
 */
 
 // Inline functions
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-function"
-_GL_ATTRIBUTE_PURE static int
-address_range_valid(mit_word * restrict memory, mit_uword memory_words,
-                    mit_uword addr, mit_uword len)
-{
-    return likely((uint8_t *)addr >= (uint8_t *)memory &&
-                  (mit_uword)((uint8_t *)addr - (uint8_t *)memory) <= memory_words * MIT_WORD_BYTES &&
-                  len < memory_words * MIT_WORD_BYTES - ((uint8_t *)addr - (uint8_t *)memory));
-}
-
 static int load(mit_uword addr, unsigned size, mit_word *val_ptr)
 {
     mit_word val;
@@ -242,6 +214,7 @@ static int store(mit_uword addr, unsigned size, mit_word val)
     return MIT_ERROR_OK;
 }
 #pragma GCC diagnostic pop
+#pragma GCC diagnostic pop
 
 
 // Stack access
@@ -306,17 +279,15 @@ static int store_stack(mit_word * restrict stack, mit_uword stack_depth,
 
 // VM instantiation and control
 
-mit_state *mit_new_state(size_t memory_words, size_t stack_words);
+mit_state *mit_new_state(size_t stack_words);
 /* Create and initialize a virtual machine state.
 
-   - memory_words - number of words of memory required (may be 0)
    - stack_words - number of words of stack space required (may be 0)
 
    Return a pointer to a new state, or `NULL` if memory cannot be allocated,
    or if any requested size is larger than `MIT_UWORD_MAX`.
 
-   The memory and stack are zeroed, and the registers are initialized as per
-   the spec.
+   The stack is zeroed, and the registers are initialized as per the spec.
 */
 
 void mit_free_state(mit_state *S);

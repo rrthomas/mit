@@ -77,7 +77,7 @@ try:
             ass(JUMP)
             M_word[patch] = label() - patch
     ass(CALL, HALT)
-    M_word[memory.get() + word_bytes] = label() - memory.get() # Patch data pointer.
+    M_word[M_word.addr + word_bytes] = label() - M_word.addr # Patch data pointer.
 except ErrorCode as e:
     if e.args[0] == MitError.INVALID_MEMORY_WRITE:
         sys.exit(2)

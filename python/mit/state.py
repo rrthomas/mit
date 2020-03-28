@@ -18,16 +18,17 @@ Examining memory: dump, disassemble, dump_files
 
 import os
 import sys
-from ctypes import cast
+from ctypes import create_string_buffer
 
 from . import enums
 from .binding import (
     libmit, libmitfeatures,
     Error, VMError, is_aligned,
-    word_bytes, size_word, word_mask, opcode_mask,
+    word_bytes, word_mask, opcode_mask,
     c_word, c_uword, c_void_p, c_char_p, byref,
     hex0x_word_width,
 )
+from .memory import Memory
 from .assembler import Assembler, Disassembler
 
 
@@ -43,27 +44,41 @@ class State:
     '''
     A VM state.
 
+         - stack_words - int - number of words of stack space.
          - args - list of str - command-line arguments to register.
+         - memory - ctypes.Array of c_char - main memory.
+
+    Note: For some reason, an array created as a "multiple" of c_char does
+    not have the right type. ctypes.create_string_buffer must be used.
     '''
     def __new__(cls, memory_words=1024*1024, stack_words=1024, args=None):
-        '''Create the VM state.'''
+        '''
+        Create the VM state.
+
+         - memory_words - int - number of words of main memory.
+        '''
         state = super().__new__(cls)
-        state.state = libmit.mit_new_state(memory_words, stack_words)
+        state.state = libmit.mit_new_state(stack_words)
         if state.state is None:
             raise Error("error creating virtual machine state")
         state.registers = {
             register.name: Register(state.state, register)
             for register in enums.Register
         }
-        state.registers['pc'].set(state.registers['memory'].get())
-        state.M = Memory(state.state)
-        state.M_word = WordMemory(state.state)
+        if memory_words is not None:
+            state.set_memory(create_string_buffer(memory_words * word_bytes))
         state.S = Stack(state.state)
         if args is None:
             args = []
         args.insert(0, b"mit-shell")
         state.register_args(*args)
         return state
+
+    def set_memory(self, memory):
+        self.memory = memory
+        self.M = Memory(self.memory)
+        self.registers['pc'].set(self.M.addr)
+        self.M_word = Memory(self.memory, element_size=word_bytes)
 
     def __del__(self):
         libmit.mit_free_state(self.state)
@@ -74,13 +89,12 @@ class State:
         state['registers'] = {
             name: register.get()
             for name, register in self.registers.items()
-            if name not in set(['memory', 'memory_words', 'stack', 'stack_words'])
+            if name not in ('stack', 'stack_words')
         }
+        del state['memory']
         del state['M']
         del state['M_word']
-        state['M_word'] = self.M_word[self.registers['memory'].get():
-                                      self.registers['memory'].get() +
-                                      self.M.memory_words() * word_bytes]
+        state['M'] = bytes(self.M.buffer)[0:-1] # Remove trailing NUL
         del state['S']
         state['S'] = self.S[0:self.registers["stack_depth"].get()]
         del state['state']
@@ -89,14 +103,12 @@ class State:
         return state
 
     def __getnewargs__(self):
-        return (self.M.memory_words(), libmit.mit_get_stack_words(self.state))
+        return (libmit.mit_get_stack_words(self.state),)
 
     def __setstate__(self, state):
         for name, value in state['registers'].items():
             self.registers[name].set(value)
-        self.M_word[self.registers['memory'].get():
-                    self.registers['memory'].get() +
-                    self.M.memory_words() * word_bytes] = state['M_word']
+        self.set_memory(create_string_buffer(state['M']))
         for item in state['S']: self.S.push(item)
         if 'argv' in state:
             self.register_args(*state['argv'])
@@ -224,12 +236,12 @@ class State:
             data = h.read()
         data = strip_hashbang(data)
         length = len(data)
-        if length > self.M.memory_words() * word_bytes:
+        if length > len(self.M):
             raise Error('file {} is too big to fit in memory'.format(file))
         if length % word_bytes != 0:
             raise Error('file {} is not a whole number of words'.format(file))
         if addr is None:
-            addr = self.registers['memory'].get()
+            addr = self.M.addr
         self.M[addr:addr + length] = data
         return length // word_bytes
 
@@ -239,9 +251,9 @@ class State:
         '''
         assert length is not None
         if addr is None:
-            addr = self.registers['memory'].get()
+            addr = self.M.addr
         if (not is_aligned(addr) or
-            not libmit.mit_address_range_valid(self.state, addr, length * word_bytes)):
+            addr < self.M.addr or addr + length * word_bytes > self.M.addr + len(self.M)):
             raise Error("invalid or unaligned address")
 
         with open(file, 'wb') as h:
@@ -279,7 +291,7 @@ class State:
             while i < chunk and p < end:
                 if i % 8 == 0:
                     print(" ", end='', file=file)
-                byte = self.M[p + i]
+                byte = M[p + i]
                 print("{:02x} ".format(byte), end='', file=file)
                 i += 1
                 c = chr(byte)
@@ -287,18 +299,16 @@ class State:
             p += chunk
             print(" |{0:.{1}}|".format(ascii, chunk), file=file)
 
-    def dump_files(self, basename, length=None):
+    def dump_files(self, basename, addr, length):
         '''
         Dump memory as assembly to `basename.asm` and as hex to `basename.hex`.
         '''
-        if length is None:
-            length = self.M.memory_words()
         asm_file = '{}.asm'.format(basename)
         with open(asm_file, 'w') as h:
-            self.disassemble(self.registers['memory'].get(), length, file=h)
+            self.disassemble(addr, length, file=h)
         hex_file = '{}.hex'.format(basename)
         with open(hex_file, 'w') as h:
-            self.dump(self.registers['memory'].get(), length, file=h)
+            self.dump(addr, length, file=h)
 
 
 class Register:
@@ -389,106 +399,3 @@ class Stack:
         v = c_word()
         ret = libmit.mit_pop_stack(self.state, byref(v))
         return v.value
-
-
-class AbstractMemory:
-    '''
-    A view of VM memory (abstract superclass).
-
-     - element_size - the number of bytes read/written at a time.
-
-    Memory addresses are specified in bytes. Only addresses that are multiples
-    of `element_size` are valid.
-
-    Memory address slices' `start` and `stop` fields must be valid addresses.
-    The `step` field must be `1` or `element_size`; either will be treated as
-    `element_size`, i.e. only the valid addresses will be accessed.
-
-    `len()` counts the valid addresses, i.e. the length is measured in
-    elements. Use `memory_words()` for the number of words.
-    '''
-    def __init__(self, state, element_size):
-        self.state = state
-        self.element_size = element_size
-
-    def memory_words(self):
-        return int(libmit.mit_get_memory_words(self.state))
-
-    def _slice_to_range(self, index):
-        '''
-        Returns a range that represents the valid addresses in `index`.
-        '''
-        memory = cast(libmit.mit_get_memory(self.state), c_void_p).value
-        index = range(*slice(
-            index.start - memory,
-            index.stop - memory,
-            index.step
-        ).indices(self.memory_words() * word_bytes))
-        assert index.start % self.element_size == 0
-        assert index.stop % self.element_size == 0
-        assert index.step in (1, self.element_size)
-        return range(index.start + memory, index.stop + memory, self.element_size)
-
-    def __getitem__(self, index):
-        if isinstance(index, slice):
-            return [self[i] for i in self._slice_to_range(index)]
-        else:
-            return self.load(index)
-
-    def __setitem__(self, index, value):
-        if isinstance(index, slice):
-            it = iter(value)
-            for i in self._slice_to_range(index):
-                self[i] = next(it)
-            assert len(list(it)) == 0
-        else:
-            self.store(index, value)
-
-    def load(self, index):
-        '''
-        Return the value at `index`.
-        This is an abstract method, which must be overridden.
-        '''
-        raise NotImplementedError
-
-    def store(self):
-        '''
-        Store `value` at `index`.
-        This is an abstract method, which must be overridden.
-        '''
-        raise NotImplementedError
-
-    def __len__(self):
-        '''
-        Returns the number of valid addresses. Note that this might not be the
-        same as the number of bytes.
-        '''
-        return self.memory_words() * word_bytes // self.element_size
-
-
-class Memory(AbstractMemory):
-    '''A VM memory (byte-accessed).'''
-    def __init__(self, state):
-        super().__init__(state, 1)
-
-    def load(self, index):
-        word = c_word()
-        libmit.mit_load(index, 0, byref(word))
-        return word.value
-
-    def store(self, index, value):
-        libmit.mit_store(index, 0, value)
-
-
-class WordMemory(AbstractMemory):
-    '''A VM memory (word-accessed).'''
-    def __init__(self, state):
-        super().__init__(state, word_bytes)
-
-    def load(self, index):
-        word = c_word()
-        libmit.mit_load(index, size_word, byref(word))
-        return word.value
-
-    def store(self, index, value):
-        libmit.mit_store(index, size_word, value)

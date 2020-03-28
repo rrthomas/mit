@@ -3,7 +3,7 @@
 # The test program contains an infinite loop, but this is only executed
 # once.
 #
-# (c) Mit authors 1994-2019
+# (c) Mit authors 1994-2020
 #
 # The package is distributed under the MIT/X11 License.
 #
@@ -19,81 +19,81 @@ from mit.globals import *
 correct = []
 
 # Code
-lit(memory.get() + 96)
+lit(M.addr + 96)
 correct.append(assembler.pc)
 ass(JUMP)
-goto(memory.get() + 96)
+goto(M.addr + 96)
 correct.append(assembler.pc + word_bytes)
 
-lit_pc_rel(memory.get() + 48)
+lit_pc_rel(M.addr + 48)
 correct.append(assembler.pc)
 ass(JUMP)
-goto(memory.get() + 48)
+goto(M.addr + 48)
 correct.append(assembler.pc + word_bytes)
 
-lit_pc_rel(memory.get() + 10000)
+lit_pc_rel(M.addr + 10000)
 correct.append(assembler.pc)
 ass(JUMP)
-goto(memory.get() + 10000)
+goto(M.addr + 10000)
 correct.append(assembler.pc + word_bytes)
 
 lit(1)
 correct.append(assembler.pc)
-lit(memory.get() + 9999)
+lit(M.addr + 9999)
 correct.append(assembler.pc)
 ass(JUMPZ)
 correct.append(assembler.pc)
 lit(1)
 correct.append(assembler.pc)
-lit(memory.get() + 0)
+lit(M.addr)
 correct.append(assembler.pc)
 ass(JUMPZ)
 correct.append(assembler.pc)
 lit(0)
 correct.append(assembler.pc)
-lit_pc_rel(memory.get() + 11008)
+lit_pc_rel(M.addr + 11008)
 correct.append(assembler.pc)
 ass(JUMPZ)
-goto(memory.get() + 11008)
+goto(M.addr + 11008)
 correct.append(assembler.pc + word_bytes)
 
 lit(0)
 correct.append(assembler.pc)
-lit_pc_rel(memory.get() + 11008 + word_bytes * 8)
+lit_pc_rel(M.addr + 11008 + word_bytes * 8)
 correct.append(assembler.pc)
 ass(JUMPZ)
-goto(memory.get() + 11008 + word_bytes * 8)
+goto(M.addr + 11008 + word_bytes * 8)
 correct.append(assembler.pc + word_bytes)
 
-lit_pc_rel(memory.get() + 608)
+lit_pc_rel(M.addr + 608)
 correct.append(assembler.pc)
 ass(CALL)
-goto(memory.get() + 608)
+goto(M.addr + 608)
 correct.append(assembler.pc + word_bytes)
 
-lit_pc_rel(memory.get() + 208)
+lit_pc_rel(M.addr + 208)
 correct.append(assembler.pc)
 ass(CALL)
-goto(memory.get() + 208)
+goto(M.addr + 208)
 correct.append(assembler.pc + word_bytes)
 
-lit(memory.get() + 304)
+lit(M.addr + 304)
 correct.append(assembler.pc)
 ass(CALL)
-goto(memory.get() + 304)
+goto(M.addr + 304)
 correct.append(assembler.pc + word_bytes)
 
 ass(JUMP)
-goto(memory.get() + 208 + word_bytes * 2)
+goto(M.addr + 208 + word_bytes * 2)
 correct.append(assembler.pc + word_bytes)
 
 ass(JUMP)
-goto(memory.get() + 608 + word_bytes * 2)
+goto(M.addr + 608 + word_bytes * 2)
 correct.append(assembler.pc + word_bytes)
 
-lit(memory.get() + 64)
+lit(M.addr + 64)
 correct.append(assembler.pc)
-lit(memory.get() + 32)
+lit(M.addr + 32)
 correct.append(assembler.pc)
 lit(0)
 correct.append(assembler.pc)
@@ -112,7 +112,7 @@ correct.append(assembler.pc)
 ass(LOAD)
 correct.append(assembler.pc)
 ass(CALL)
-goto(memory.get() + 64)
+goto(M.addr + 64)
 correct.append(assembler.pc + word_bytes)
 
 # Test
