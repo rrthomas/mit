@@ -35,19 +35,6 @@ const unsigned mit_opcode_bit = MIT_OPCODE_BIT;
 const unsigned mit_opcode_mask = MIT_OPCODE_MASK;
 
 
-// Memory
-
-int mit_load(mit_uword addr, unsigned size, mit_word *val_ptr)
-{
-    return load(addr, size, val_ptr);
-}
-
-int mit_store(mit_uword addr, unsigned size, mit_word val)
-{
-    return store(addr, size, val);
-}
-
-
 // Stacks
 
 int mit_load_stack(mit_state *S, mit_uword pos, mit_word *val_ptr)

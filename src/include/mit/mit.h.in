@@ -126,7 +126,7 @@ _GL_ATTRIBUTE_CONST static int is_aligned(mit_uword addr, unsigned size)
 
 // Memory access
 
-int mit_load(mit_uword addr, unsigned size, mit_word *val_ptr);
+// Inline functions
 /* Copy 1 << `size` bytes from `addr` to `val_ptr`.
 
    `size` must be between 0 and log2(MIT_WORD_BYTES) inclusive.
@@ -134,18 +134,6 @@ int mit_load(mit_uword addr, unsigned size, mit_word *val_ptr);
 
    Return 0 if OK, or error code if `addr` is invalid or unaligned.
 */
-
-int mit_store(mit_uword addr, unsigned size, mit_word val);
-/* Store the 1 << `size` least-significant bytes of `val` at virtual address
-   `addr`.
-
-   `size` must be between 0 and log2(MIT_WORD_BYTES) inclusive.
-   `addr` must be 1 << `size`-aligned.
-
-   Return 0 if OK, or error code if `addr` is invalid or unaligned.
-*/
-
-// Inline functions
 static int load(mit_uword addr, unsigned size, mit_word *val_ptr)
 {
     mit_word val;
@@ -181,6 +169,15 @@ static int load(mit_uword addr, unsigned size, mit_word *val_ptr)
     return MIT_ERROR_OK;
 }
 
+
+/* Store the 1 << `size` least-significant bytes of `val` at virtual address
+   `addr`.
+
+   `size` must be between 0 and log2(MIT_WORD_BYTES) inclusive.
+   `addr` must be 1 << `size`-aligned.
+
+   Return 0 if OK, or error code if `addr` is invalid or unaligned.
+*/
 static int store(mit_uword addr, unsigned size, mit_word val)
 {
     switch (size) {

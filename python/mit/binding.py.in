@@ -129,11 +129,6 @@ libmit.mit_get_stack.restype = POINTER(c_word)
 libmit.mit_get_stack_words.argtypes = [c_void_p]
 libmit.mit_get_stack_words.restype = c_uword
 
-libmit.mit_load.argtypes = [c_uword, c_uint, POINTER(c_word)]
-libmit.mit_load.errcheck = mit_error
-libmit.mit_store.argtypes = [c_uword, c_uint, c_word]
-libmit.mit_store.errcheck = mit_error
-
 libmit.mit_load_stack.argtypes = [c_void_p, c_uword, POINTER(c_word)]
 libmit.mit_load_stack.errcheck = mit_error
 libmit.mit_store_stack.argtypes = [c_void_p, c_uword, c_word]
