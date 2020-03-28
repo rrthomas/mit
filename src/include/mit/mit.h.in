@@ -113,11 +113,6 @@ extern const unsigned mit_opcode_mask;
 // Inline functions
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-function"
-_GL_ATTRIBUTE_CONST static mit_uword align(mit_uword addr, unsigned size)
-{
-    return (addr + ((1 << size) - 1)) & -(1 << size);
-}
-
 _GL_ATTRIBUTE_CONST static int is_aligned(mit_uword addr, unsigned size)
 {
     return (addr & ((1 << size) - 1)) == 0;
