@@ -16,7 +16,6 @@ Controlling and observing execution: run, step, trace
 Examining memory: dump, disassemble, dump_files
 '''
 
-import os
 import sys
 from ctypes import create_string_buffer
 
@@ -30,14 +29,6 @@ from .binding import (
 )
 from .memory import Memory
 from .assembler import Assembler, Disassembler
-
-
-# Set up binary I/O flag
-O_BINARY = 0
-try:
-    O_BINARY = os.O_BINARY
-except:
-    pass
 
 
 class State:
