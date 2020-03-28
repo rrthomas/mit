@@ -44,7 +44,7 @@
 
 \title{The Mit Virtual Machine}
 \author{Reuben Thomas}
-\date{23rd March 2020}
+\date{28th March 2020}
 
 \begin{document}
 \maketitle
@@ -299,7 +299,6 @@ These instructions manage the stack:
 \inst{pop}{x —}{Remove \spic{x} from the stack.}
 \inst{dup}{\x{u}\dots\x0 u — \x{u}\dots\x0 \x{u}}{Remove \spic{u}. Copy \x{u} to the top of the stack.}
 \inst{swap}{\x{u+1}\dots\x0 u — \x0 \x{u}\dots\x1 \x{u+1}}{Exchange the top stack word with the \spic{u+1}th.}
-\inst{push\_stack\_depth}{— u}{\spic{u} is the value of {\tt stack\_depth}, the number of words on the stack.}
 \end{description}
 
 
@@ -410,7 +409,7 @@ Table~\ref{opcodetable} lists the instruction opcodes in numerical order. Table~
 \opcodetbl{5}{dup}			{15}{mul}
 \opcodetbl{6}{swap}			{16}{divmod}
 \smallskip% For some reason needs to be here rather than after the next line
-\opcodetbl{7}{push\_stack\_depth}	{17}{udivmod}
+\opcodetbl{7}{\rm (undefined)}	{17}{udivmod}
 \opcodetbl{8}{load}			{18}{not}
 \opcodetbl{9}{store}			{19}{and}
 \opcodetbl{a}{lit}			{1a}{or}

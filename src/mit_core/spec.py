@@ -81,8 +81,6 @@ Instruction = instruction_enum(
         'DUP': Code(),
         'SWAP': Code(),
 
-        'PUSH_STACK_DEPTH': Code('n = S->stack_depth;'),
-
         'LOAD': Code('''\
             switch (size) {
             case 0:

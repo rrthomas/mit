@@ -62,10 +62,6 @@ Instruction:
     opcode: 0x6
     args: ['x', 'ITEMS', 'y', 'COUNT']
     results: ['y', 'ITEMS', 'x']
-  PUSH_STACK_DEPTH:
-    opcode: 0x7
-    args: []
-    results: ['n']
   LOAD:
     opcode: 0x8
     args: ['addr', 'size']
