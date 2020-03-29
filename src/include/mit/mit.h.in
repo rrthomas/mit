@@ -210,15 +210,4 @@ mit_word mit_single_step(mit_state * restrict S);
 mit_word mit_internal_extra_instruction(mit_state *S);
 /* Execute an internal instruction, given by `S->ir`. */
 
-#if HAVE_ARITHMETIC_RSHIFT
-#define ARSHIFT(n, p) \
-    ((mit_word)(n) >> (p))
-#else
-#define ARSHIFT(n, p) \
-    (((n) >> (p)) | ((mit_uword)(-((mit_word)(n) < 0)) << (MIT_WORD_BIT - (p))))
-#endif
-/* Arithmetic right shift `n` by `p` places (the behaviour of >> on signed
-   quantities is implementation-defined in C99).
-*/
-
 #endif

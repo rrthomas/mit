@@ -15,16 +15,25 @@
 #include "state.h"
 
 
-// RAISE(error): the code should RAISE any error before writing any state,
-// so that if an error is raised, the state of the VM is not changed.
+// Arithmetic right shift `n` by `p` places (the behaviour of >> on signed
+// quantities is implementation-defined in C99).
+#if HAVE_ARITHMETIC_RSHIFT
+#define ARSHIFT(n, p) \
+    ((mit_word)(n) >> (p))
+#else
+#define ARSHIFT(n, p) \
+    (((n) >> (p)) | ((mit_uword)(-((mit_word)(n) < 0)) << (MIT_WORD_BIT - (p))))
+#endif
+
+// Raise an error during the execution of an instruction.
+// RAISE must be called before writing any state.
 #define RAISE(code)                                           \
     do {                                                      \
         error = (code);                                       \
         goto error;                                           \
     } while (0)
 
-// CHECK_ALIGNED(addr): check a VM address is valid, raising an error if
-// not.
+// Check a VM address is valid, raising an error if not.
 #define CHECK_ALIGNED(addr)                                   \
     if (!is_aligned((addr), MIT_SIZE_WORD))                   \
         RAISE(MIT_ERROR_UNALIGNED_ADDRESS);
@@ -42,8 +51,7 @@ static mit_word _fetch_pc(mit_state *S)
 }
 #pragma GCC diagnostic pop
 
-// FETCH_PC(w): fetch the word at `pc`, assign it to `w`, and increment `pc`
-// by a word.
+// Fetch the word at `pc`, assign it to `w`, and increment `pc` by a word.
 #define FETCH_PC(w)                                             \
     (w) = (_fetch_pc(S))                                        \
 
