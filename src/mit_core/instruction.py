@@ -45,7 +45,7 @@ class InstructionEnum(Enum):
         '''
         assert effect is None or isinstance(effect, StackEffect), effect
         self.effect = effect
-        assert isinstance(code, Code)
+        assert isinstance(code, Code), code
         self.code = code
         if opcode is not None:
             self.opcode = opcode

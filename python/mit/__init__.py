@@ -25,7 +25,7 @@ from .enums import (
     Register, Instruction, TERMINAL_OPCODES, InternalExtraInstruction,
     MitErrorCode
 )
-from .extra_enums import LibMit, LibC, LibInstruction
+from .extra_enums import LibC, LibMitfeatures, LibInstruction
 from .binding import (
     Error, VMError,
     endism, word_bytes,

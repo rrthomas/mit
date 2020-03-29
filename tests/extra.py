@@ -28,14 +28,14 @@ breaks = []
 lit(buffer)
 
 # Test LibMit.ARGC
-lit(LibMit.ARGC)
-ass(JUMP, LIBMIT)
+lit(LibMitfeatures.ARGC)
+ass(JUMP, LIBMITFEATURES)
 breaks.append(label() + word_bytes)
 
 # Test LibMit.ARG
 lit(1)
-lit(LibMit.ARG)
-ass(JUMP, LIBMIT)
+lit(LibMitfeatures.ARG)
+ass(JUMP, LIBMITFEATURES)
 lit(0)
 ass(DUP)
 lit(LibC.STRLEN)

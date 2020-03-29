@@ -15,7 +15,8 @@ from functools import total_ordering
 from .code_util import Code, unrestrict, disable_warnings
 
 
-type_wordses = {'mit_word': 1, 'mit_uword': 1} # Enough for the core
+# Enough for the core
+type_wordses = {'mit_word': 1, 'mit_uword': 1, 'mit_word *': 1, 'mit_state *': 1}
 
 # Set to 0 to allow type_words to work without types information
 TYPE_SIZE_UNKNOWN = None
