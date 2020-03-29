@@ -33,7 +33,7 @@ RUN apt-get update -qq && \
   hevea
 
 # Create test user and the environment
-RUN useradd "${TEST_USER}"
+RUN adduser "${TEST_USER}"
 WORKDIR "${WORK_DIR}"
 COPY . .
 RUN chown -R "${TEST_USER}:${TEST_USER}" "${WORK_DIR}"
