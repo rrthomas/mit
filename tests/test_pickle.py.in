@@ -14,7 +14,7 @@ from mit.globals import *
 
 # Load pforth image and run it, defining a new word
 load("@top_srcdir@/src/specializer/pforth/src/mit/pforth")
-VM.register_args('test', '--evaluate', ': FOO   ." hello!" CR ;')
+register_args('test', '--evaluate', ': FOO   ." hello!" CR ;')
 VM.run()
 
 # Pickle the VM
@@ -24,7 +24,7 @@ s = pickle.dumps(VM)
 # Unpickle the VM
 VM2 = pickle.loads(s)
 VM2.registers['pc'].set(VM2.M.addr)
-VM2.register_args('test', '--evaluate', 'FOO')
+register_args('test', '--evaluate', 'FOO')
 VM2.run()
 
 

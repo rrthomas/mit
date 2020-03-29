@@ -22,7 +22,6 @@ from ctypes import (
 from ctypes.util import find_library
 
 from .enums import MitErrorCode
-from .extra_errors import RegisterArgsErrorCode
 
 
 library_file = find_library("mit@PACKAGE_SUFFIX@")
@@ -156,8 +155,24 @@ def is_aligned(addr):
     return (addr & ((1 << size_word) - 1)) == 0
 
 # features.h
-libmitfeatures.mit_register_args.argtypes = [c_int, c_void_p]
-libmitfeatures.mit_register_args.errcheck = errcheck(RegisterArgsErrorCode)
+vars().update([(c, cty.in_dll(libmitfeatures, "mit_{}".format(c)))
+               for (c, cty) in [
+                       ("argc", c_int),
+                       ("argv", POINTER(c_char_p)),
+               ]])
+
+def register_args(*args):
+    arg_strings = c_char_p * len(args)
+    bargs = []
+    for arg in args:
+        if type(arg) == str:
+            arg = bytes(arg, 'utf-8')
+        elif type(arg) == int:
+            arg = bytes(arg)
+        bargs.append(arg)
+    global argc, argv
+    argv.contents = arg_strings(*bargs)
+    argc.value = len(bargs)
 
 libmitfeatures.mit_extra_instruction.restype = c_word
 libmitfeatures.mit_extra_instruction.argtypes = [c_void_p]

@@ -578,8 +578,8 @@ int main(int argc, char *argv[])
         die("could not allocate virtual machine state");
     if (atexit(exit_function) != 0)
         die("could not register atexit handler");
-    if (mit_register_args(argc, (const char **)argv) != 0)
-        die("could not register command-line arguments");
+    mit_argc = argc;
+    mit_argv = &argv[0];
     S->pc = (mit_uword)memory;
 
     // Load object file and report any error

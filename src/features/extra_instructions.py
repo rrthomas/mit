@@ -20,18 +20,12 @@ class LibMitfeatures(InstructionEnum):
     'Function codes for the external extra instruction LIBMITFEATURES.'
 
     ARGC = (StackEffect.of([], ['argc']), Code('''\
-        argc = (mit_word)mit_argc();'''
-    ))
-
-    ARG = (StackEffect.of(['u'], ['arg:const char *']), Code('''\
-        arg = mit_argv((int)u);
+        argc = (mit_word)mit_argc;
     '''))
 
-    REGISTER_ARGS = (
-        # Note: actually "char *argv[]", but we can't express that.
-        StackEffect.of(['argc:int', 'argv:const char **'], ['ret:int']),
-        Code('ret = mit_register_args(argc, argv);'),
-    )
+    ARGV = (StackEffect.of([], ['argv:char **']), Code('''\
+        argv = mit_argv;
+    '''))
 
     EXTRA_INSTRUCTION = (StackEffect.of(['state:mit_state *'], ['ret']),
         Code('ret = mit_extra_instruction(state);'),

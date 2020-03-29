@@ -24,8 +24,8 @@ from .binding import (
     libmit, libmitfeatures,
     Error, VMError, is_aligned,
     word_bytes, word_mask, opcode_mask,
-    c_word, c_uword, c_void_p, c_char_p, byref,
-    hex0x_word_width,
+    c_word, c_uword, c_void_p, byref,
+    hex0x_word_width, register_args,
 )
 from .memory import Memory
 from .assembler import Assembler, Disassembler
@@ -62,7 +62,7 @@ class State:
         if args is None:
             args = []
         args.insert(0, b"mit-shell")
-        state.register_args(*args)
+        register_args(*args)
         return state
 
     def set_memory(self, memory):
@@ -102,20 +102,7 @@ class State:
         self.set_memory(create_string_buffer(state['M']))
         for item in state['S']: self.S.push(item)
         if 'argv' in state:
-            self.register_args(*state['argv'])
-
-    def register_args(self, *args):
-        argc = len(args)
-        arg_strings = c_char_p * argc
-        bargs = []
-        for arg in args:
-            if type(arg) == str:
-                arg = bytes(arg, 'utf-8')
-            elif type(arg) == int:
-                arg = bytes(arg)
-            bargs.append(arg)
-        self.argv = arg_strings(*bargs)
-        assert libmitfeatures.mit_register_args(argc, self.argv) == 0
+            register_args(*state['argv'])
 
     def do_extra_instruction(self):
         libmitfeatures.mit_extra_instruction(self.state)

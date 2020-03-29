@@ -15,7 +15,6 @@ mit_pkgpythondir = $(pkgpythondir)@PACKAGE_SUFFIX@
 mit_pkgpython_PYTHON =				\
 	mit/__init__.py				\
 	mit/autonumber.py			\
-	mit/extra_errors.py			\
 	mit/globals.py				\
 	mit/ipython_suppress_traceback.py	\
 	mit/memory.py				\

@@ -49,7 +49,6 @@ libmitfeatures@PACKAGE_SUFFIX@_la_SOURCES += %D%/extra-instructions.c
 
 EXTRA_DIST += \
 	%D%/extra_instructions.py \
-	%D%/extra_errors.py \
 	%D%/gen-extra-instructions \
 	%D%/gen-extra-opcodes \
 	%D%/gen-type-sizes \
