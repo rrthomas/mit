@@ -14,16 +14,18 @@ from mit.globals import *
 
 # Load pforth image and run it, defining a new word
 load("@top_srcdir@/src/specializer/pforth/src/mit/pforth")
-run(['--evaluate', ': FOO ;'])
+VM.register_args('test', '--evaluate', ': FOO   ." hello!" CR ;')
+VM.run()
 
 # Pickle the VM
-pc.set(0)
 ir.set(0)
 s = pickle.dumps(VM)
 
 # Unpickle the VM
 VM2 = pickle.loads(s)
-VM2.run(['--evaluate', 'FOO'])
+VM2.registers['pc'].set(VM2.M.addr)
+VM2.register_args('test', '--evaluate', 'FOO')
+VM2.run()
 
 
 print("Pickle tests ran OK")

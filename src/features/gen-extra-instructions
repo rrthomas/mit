@@ -35,7 +35,6 @@ code.append('''
 
     #include "config.h"'''
 )
-code.append('')
 
 for lib in LibInstruction:
     code.append(lib.includes)

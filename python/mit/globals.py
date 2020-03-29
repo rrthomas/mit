@@ -15,7 +15,7 @@ Returns a vars table containing:
 Registers: a variable for each register; also a list 'registers'
 Managing the VM state: load, save
 Controlling and observing execution: run, step, trace
-Memory: M[], M_word[], dump
+Memory: M[], M_word[], dump, dump_files
 Assembly: Assembler, Disassembler, assembler,
     word, bytes, instruction, lit, lit_pc_rel, label, goto
 Abbreviations: ass=assembler.instruction, dis=self.disassemble
@@ -36,7 +36,7 @@ vars().update({
     for name in [
         "M", "M_word", "S", "registers",
         "load", "run", "step", "trace",
-        "dump", "disassemble",
+        "dump", "disassemble", "dump_files",
     ]
 })
 
@@ -52,10 +52,10 @@ vars().update({
 })
 
 # Add a default length to `save()`.
-def _save(file, address=0, length=None):
-    if length is None:
-        length = assembler.pc - address
-    VM.save(file, address, length // word_bytes)
+def _save(file, addr=None, length=None):
+    if addr is None and length is None:
+        length = assembler.pc - VM.M.addr
+    VM.save(file, addr, length // word_bytes)
 vars()['save'] = _save
 
 # Abbreviations and disambiguations

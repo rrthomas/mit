@@ -1,2 +1,2 @@
 [SEE ALSO]
-.BR mit-dump (1), mit-shell (1)
+.BR mit-shell (1)

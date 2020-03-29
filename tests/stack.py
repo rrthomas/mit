@@ -1,6 +1,6 @@
 # Test the stack instructions.
 #
-# (c) Mit authors 1994-2019
+# (c) Mit authors 1994-2020
 #
 # The package is distributed under the MIT/X11 License.
 #
@@ -37,11 +37,6 @@ correct = [
     [2, 1, 0],
     [2, 1, 1],
     [2, 1, 2],
-    [2, 1, 2, 0],
-    [2, 1, 2, 2],
-    [2, 1, 2, 2, 0],
-    [2, 1, 2, 2, 2],
-    [2, 1, 2, 2, 2, 5],
 ]
 
 # Test code
@@ -69,11 +64,6 @@ lit(1)
 lit(0)
 ass(DUP)
 ass(DUP)
-lit(0)
-ass(DUP)
-lit(0)
-ass(DUP)
-ass(PUSH_STACK_DEPTH)
 
 # Test
 run_test("stack", VM, correct)

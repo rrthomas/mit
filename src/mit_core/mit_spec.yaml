@@ -26,6 +26,8 @@ Register:
   - pc
   - ir
   - stack_depth
+  - stack
+  - stack_words
 
 # VM instruction instructions
 Instruction:
@@ -60,17 +62,13 @@ Instruction:
     opcode: 0x6
     args: ['x', 'ITEMS', 'y', 'COUNT']
     results: ['y', 'ITEMS', 'x']
-  PUSH_STACK_DEPTH:
-    opcode: 0x7
-    args: []
-    results: ['n']
   LOAD:
     opcode: 0x8
     args: ['addr', 'size']
-    results: ['x']
+    results: ['val']
   STORE:
     opcode: 0x9
-    args: ['x', 'addr', 'size']
+    args: ['val', 'addr', 'size']
     results: []
   LIT:
     opcode: 0xa
@@ -154,8 +152,8 @@ Instruction:
     results: ['r']
   SIGN_EXTEND:
     opcode: 0x1f
-    args: ['n1', 'size']
-    results: ['n2']
+    args: ['u', 'size']
+    results: ['n']
 
 InternalExtraInstruction:
   HALT:

@@ -40,17 +40,14 @@
 
 // Types and constants
 // Define MIT_WORD_BIT as a number literal so we can token paste it below
-#if MIT_WORD_BYTES == 2
-#define MIT_WORD_BIT 16
-#define MIT_SIZE_WORD 1
-#elif MIT_WORD_BYTES == 4
+#if MIT_WORD_BYTES == 4
 #define MIT_WORD_BIT 32
 #define MIT_SIZE_WORD 2
 #elif MIT_WORD_BYTES == 8
 #define MIT_WORD_BIT 64
 #define MIT_SIZE_WORD 3
 #else
-#error "MIT_WORD_BYTES must be 2, 4 or 8!"
+#error "MIT_WORD_BYTES must be 4 or 8!"
 #endif
 
 typedef uint8_t mit_byte;
@@ -113,152 +110,12 @@ typedef struct mit_state mit_state;
 extern const unsigned mit_opcode_bit;
 extern const unsigned mit_opcode_mask;
 
-// Utility macros and functions
-#define MIT_ROUND_UP(n, N) \
-    (((n) - 1) - ((n) - 1) % (N) + (N))
-/* Evaluate `n` aligned to the next `N`-byte boundary. */
-
-mit_uword mit_align(mit_uword n, unsigned size);
-/* Return `n` aligned to the next 2^`size`-byte boundary. */
-
-int mit_is_aligned(mit_uword n, unsigned size);
-/* Return 1 if `n` is a multiple of 2^`size`, or `0` if not. */
-
 // Inline functions
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-function"
-_GL_ATTRIBUTE_CONST static mit_uword align(mit_uword addr, unsigned size)
-{
-    return (addr + ((1 << size) - 1)) & -(1 << size);
-}
-
 _GL_ATTRIBUTE_CONST static int is_aligned(mit_uword addr, unsigned size)
 {
     return (addr & ((1 << size) - 1)) == 0;
-}
-#pragma GCC diagnostic pop
-
-
-// Memory access
-
-uint8_t *mit_native_address_of_range(mit_state *S, mit_uword addr, mit_uword len);
-/* Return a host pointer to the VM address `addr`, or `NULL` if any address
-   in the range [addr, addr+len] is invalid.
-*/
-
-int mit_load(mit_state *S, mit_uword addr, unsigned size, mit_word *val_ptr);
-/* Copy 1 << `size` bytes from `addr` to `val_ptr`.
-
-   `size` must be between 0 and log2(MIT_WORD_BYTES) inclusive.
-   `addr` must be 1 << `size`-aligned.
-
-   Return 0 if OK, or error code if `addr` is invalid or unaligned.
-*/
-
-int mit_store(mit_state *S, mit_uword addr, unsigned size, mit_word val);
-/* Store the 1 << `size` least-significant bytes of `val` at virtual address
-   `addr`.
-
-   `size` must be between 0 and log2(MIT_WORD_BYTES) inclusive.
-   `addr` must be 1 << `size`-aligned.
-
-   Return 0 if OK, or error code if `addr` is invalid or unaligned.
-*/
-
-// Inline functions
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-function"
-_GL_ATTRIBUTE_PURE static uint8_t *
-native_address_of_range(mit_word * restrict memory, mit_uword memory_words,
-                        mit_uword addr, mit_uword len)
-{
-    if (unlikely(addr >= memory_words * MIT_WORD_BYTES || len > memory_words * MIT_WORD_BYTES - addr))
-        return NULL;
-    return ((uint8_t *)memory) + addr;
-}
-
-static int load(mit_word * restrict memory, mit_uword memory_words,
-                mit_uword addr, unsigned size, mit_word *val_ptr)
-{
-    if (unlikely(addr >= memory_words * MIT_WORD_BYTES))
-        return MIT_ERROR_INVALID_MEMORY_READ;
-
-    mit_word val;
-    switch (size) {
-    case 0:
-        if (unlikely(!is_aligned(addr, size)))
-            return MIT_ERROR_UNALIGNED_ADDRESS;
-        val = (mit_uword)*((uint8_t *)memory + addr);
-        break;
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wcast-align"
-    case 1:
-        if (unlikely(!is_aligned(addr, size)))
-            return MIT_ERROR_UNALIGNED_ADDRESS;
-        val = (mit_uword)*((uint16_t *)((uint8_t *)memory + addr));
-        break;
-#if MIT_SIZE_WORD >= 2
-    case 2:
-        if (unlikely(!is_aligned(addr, size)))
-            return MIT_ERROR_UNALIGNED_ADDRESS;
-        val = (mit_uword)*((uint32_t *)((uint8_t *)memory + addr));
-        break;
-#if MIT_SIZE_WORD >= 3
-    case 3:
-        if (unlikely(!is_aligned(addr, size)))
-            return MIT_ERROR_UNALIGNED_ADDRESS;
-        val = (mit_uword)*((uint64_t *)((uint8_t *)memory + addr));
-        break;
-#endif
-#endif
-#pragma GCC diagnostic pop
-    default:
-        return MIT_ERROR_BAD_SIZE;
-    }
-
-    *val_ptr = val;
-    return MIT_ERROR_OK;
-}
-
-static int store(mit_word * restrict memory, mit_uword memory_words,
-                 mit_uword addr, unsigned size, mit_word val)
-{
-    if (unlikely(addr >= memory_words * MIT_WORD_BYTES))
-        return MIT_ERROR_INVALID_MEMORY_WRITE;
-
-    switch (size) {
-    case 0:
-        if (unlikely(!is_aligned(addr, size)))
-            return MIT_ERROR_UNALIGNED_ADDRESS;
-        ((uint8_t *)memory)[addr] = (uint8_t)val;
-        break;
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wcast-align"
-    case 1:
-        if (unlikely(!is_aligned(addr, size)))
-            return MIT_ERROR_UNALIGNED_ADDRESS;
-        *((uint16_t *)((uint8_t *)memory + addr)) = (uint16_t)val;
-        break;
-#if MIT_SIZE_WORD >= 2
-    case 2:
-        if (unlikely(!is_aligned(addr, size)))
-            return MIT_ERROR_UNALIGNED_ADDRESS;
-        *((uint32_t *)((uint8_t *)memory + addr)) = (uint32_t)val;
-        break;
-#if MIT_SIZE_WORD >= 3
-    case 3:
-        if (unlikely(!is_aligned(addr, size)))
-            return MIT_ERROR_UNALIGNED_ADDRESS;
-        *((uint64_t *)((uint8_t *)memory + addr)) = (uint64_t)val;
-        break;
-#endif
-#endif
-#pragma GCC diagnostic pop
-    default:
-        return MIT_ERROR_BAD_SIZE;
-    }
-
-    return MIT_ERROR_OK;
 }
 #pragma GCC diagnostic pop
 
@@ -325,17 +182,15 @@ static int store_stack(mit_word * restrict stack, mit_uword stack_depth,
 
 // VM instantiation and control
 
-mit_state *mit_new_state(size_t memory_words, size_t stack_words);
+mit_state *mit_new_state(size_t stack_words);
 /* Create and initialize a virtual machine state.
 
-   - memory_words - number of words of memory required (may be 0)
    - stack_words - number of words of stack space required (may be 0)
 
    Return a pointer to a new state, or `NULL` if memory cannot be allocated,
    or if any requested size is larger than `MIT_UWORD_MAX`.
 
-   The memory and stack are zeroed, and the registers are initialized as per
-   the spec.
+   The stack is zeroed, and the registers are initialized as per the spec.
 */
 
 void mit_free_state(mit_state *S);

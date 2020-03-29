@@ -183,13 +183,11 @@ AC_CONFIG_FILES([
         src/features/mit/features.h
         python/Makefile
         python/mit/binding.py
-        python/mit-dump-include.man
         python/mit-shell-include.man
         tests/Makefile
         tests/test_pickle.py
         doc/Makefile
 ])
-AC_CONFIG_FILES([python/mit-dump], [chmod +x python/mit-dump])
 AC_CONFIG_FILES([python/mit-shell], [chmod +x python/mit-shell])
 AC_CONFIG_FILES([tests/test-mit-shell], [chmod +x tests/test-mit-shell])
 AC_OUTPUT

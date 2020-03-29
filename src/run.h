@@ -35,7 +35,7 @@ static mit_word _fetch_pc(mit_state *S)
 {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wcast-align"
-    mit_word w = *(mit_word *)((uint8_t *)S->memory + S->pc);
+    mit_word w = *(mit_word *)(S->pc);
 #pragma GCC diagnostic pop
     S->pc += MIT_WORD_BYTES;
     return w;
@@ -45,13 +45,10 @@ static mit_word _fetch_pc(mit_state *S)
 // FETCH_PC(w): fetch the word at `pc`, assign it to `w`, and increment `pc`
 // by a word.
 #define FETCH_PC(w)                                             \
-    if (unlikely(S->pc >= S->memory_words * MIT_WORD_BYTES)) {  \
-        RAISE(MIT_ERROR_INVALID_MEMORY_READ);                   \
-    } else {                                                    \
-        (w) = (_fetch_pc(S));                                   \
-    }
+    (w) = (_fetch_pc(S))                                        \
 
 // Perform the action of NEXT.
-#define DO_NEXT  FETCH_PC(S->ir)
+#define DO_NEXT                                 \
+    FETCH_PC(S->ir)
 
 #endif

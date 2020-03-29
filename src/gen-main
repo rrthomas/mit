@@ -165,7 +165,7 @@ Option('version',
        parse_code=Code('''\
            {
                printf(PACKAGE_NAME " " VERSION " (%d-byte word, %s-endian)\\n"
-                      "Copyright (c) Mit authors 1994-2019.\\n"
+                      "Copyright (c) Mit authors 1994-2020.\\n"
                       PACKAGE_NAME " comes with ABSOLUTELY NO WARRANTY.\\n"
                       "You may redistribute copies of " PACKAGE_NAME "\\n"
                       "under the terms of the MIT/X11 License.\\n",
@@ -209,7 +209,7 @@ Feature(# Extra instructions
         if (error == MIT_ERROR_INVALID_OPCODE)
             if ((S->ir & MIT_OPCODE_MASK) == MIT_INSTRUCTION_JUMP) {
                 error = mit_extra_instruction(S);
-                if (error == 0) {
+                if (error == MIT_ERROR_OK) {
                     S->ir = 0;
                     continue;
                 }
@@ -218,12 +218,17 @@ Feature(# Extra instructions
 )
 
 Feature(# Auto-extend stack
-    init=Code('bool auto_extend_stack = true;'),
+    top_level=Code('''
+        static mit_uword round_up(mit_uword n, mit_uword multiple)
+        {
+            return (n - 1) - (n - 1) % multiple + multiple;
+        }
+    '''),    init=Code('bool auto_extend_stack = true;'),
     handler=Code('''\
         if (error == MIT_ERROR_STACK_OVERFLOW)
             if (auto_extend_stack == true) {
-                S->stack_words = MIT_ROUND_UP(S->stack_words + 1,
-                                              page_size / MIT_WORD_BYTES);
+                S->stack_words = round_up(S->stack_words + 1,
+                                          page_size / MIT_WORD_BYTES);
                 if (safe_alloc_realloc_n((void *)&S->stack, MIT_WORD_BYTES,
                                          S->stack_words) == 0)
                     continue;
@@ -304,7 +309,7 @@ Feature(# VM core dump
 
         static void do_core_dump(void)
         {
-            const char *filename = mit_core_dump(S);
+            const char *filename = mit_core_dump(memory, memory_words);
             if (filename != NULL)
                 warn("core dumped to %s", filename);
         }
@@ -416,6 +421,7 @@ getopt_code.append('{0, 0, 0, 0}')
 # Features
 top_level_code = Code('''\
     mit_word (*run_fn)(mit_state *) = mit_run;
+    mit_word *memory;
     mit_uword memory_words;
 ''')
 init_code = Code('''\
@@ -424,8 +430,8 @@ init_code = Code('''\
     // getpagesize() is obsolete, but gnulib provides it, and
     // sysconf(_SC_PAGESIZE) does not work on some platforms.
     mit_uword page_size = getpagesize();
-    memory_words = MIT_WORD_BYTES == 2 ? 0x1000U : 0x100000U;
-    mit_uword stack_words = MIT_WORD_BYTES == 2 ? 1024U : 16384U;
+    memory_words = 0x100000U;
+    mit_uword stack_words = 16384U;
 ''')
 handlers_code = Code()
 exit_code = Code()
@@ -564,13 +570,17 @@ int main(int argc, char *argv[])
         usage();
 
     // Set up VM
-    S = mit_new_state(memory_words, stack_words);
+    memory = calloc(memory_words, MIT_WORD_BYTES);
+    if (memory == NULL)
+        die("could not allocate virtual machine memory");
+    S = mit_new_state(stack_words);
     if (S == NULL)
         die("could not allocate virtual machine state");
     if (atexit(exit_function) != 0)
         die("could not register atexit handler");
     if (mit_register_args(argc, (const char **)argv) != 0)
         die("could not register command-line arguments");
+    S->pc = (mit_uword)memory;
 
     // Load object file and report any error
     {
@@ -583,10 +593,9 @@ int main(int argc, char *argv[])
         off_t len = fleno(fp);
         if (len == -1)
             die("error finding size of file %s", argv[0]);
-        uint8_t *ptr = mit_native_address_of_range(S, 0, len);
-        if (ptr == NULL)
+        if (len > memory_words * MIT_WORD_BYTES)
             die("file %s is too big to fit in memory", argv[0]);
-        if ((off_t)fread(ptr, 1, len, fp) != len)
+        if ((off_t)fread(memory, 1, len, fp) != len)
             die("error reading file %s", argv[0]);
         if (fclose(fp) == EOF)
             die("error closing file %s", argv[0]);

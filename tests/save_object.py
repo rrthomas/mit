@@ -16,11 +16,11 @@ VM = State(memory_words)
 
 
 # Test data
-VM.M_word[0] = 0x01020304
-VM.M_word[word_bytes] = 0x05060708
+VM.M_word[VM.M_word.addr] = 0x01020304
+VM.M_word[VM.M_word.addr + word_bytes] = 0x05060708
 
 # Test results
-addr = [(memory_words + 1) * word_bytes, 0, 0]
+addr = [VM.M_word.addr + (memory_words + 1) * word_bytes, VM.M_word.addr, VM.M_word.addr]
 length = [2, 5000, 2]
 correct = ["invalid or unaligned address", "invalid or unaligned address", None]
 
@@ -42,12 +42,13 @@ for i in range(3):
         sys.exit(1)
 
 RANGE = 4
-assert VM.load("saveobj", RANGE * word_bytes) == length[2]
+load_length = VM.load("saveobj", VM.M_word.addr + RANGE * word_bytes)
+assert load_length == length[2], load_length
 os.remove("saveobj")
 
 for i in range(RANGE):
-    old = VM.M_word[i * word_bytes]
-    new = VM.M_word[(i + RANGE) * word_bytes]
+    old = VM.M_word[VM.M_word.addr + i * word_bytes]
+    new = VM.M_word[VM.M_word.addr + (i + RANGE) * word_bytes]
     print("Word {} of memory is {}; should be {}".format(i, new, old))
     if new != old:
         print("Error in State.save() tests: loaded file does not match data saved")

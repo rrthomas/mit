@@ -27,13 +27,7 @@ class RegisterEnum(AutoNumber):
         self.type = type
 
 register = {r: () for r in spec['Register']}
-register.update({
-    # Registers that are not part of the spec
-    'memory': ('mit_word *'),
-    'stack': ('mit_word * restrict'),
-    'memory_words': (),
-    'stack_words': (),
-})
+register['stack'] = ('mit_word * restrict',)
 Register = unique(RegisterEnum('Register', register))
 Register.__doc__ = 'VM registers.'
 
@@ -87,18 +81,64 @@ Instruction = instruction_enum(
         'DUP': Code(),
         'SWAP': Code(),
 
-        'PUSH_STACK_DEPTH': Code('n = S->stack_depth;'),
-
         'LOAD': Code('''\
-            int ret = load(S->memory, S->memory_words, addr, size, &x);
-            if (ret != 0)
-                RAISE(ret);'''
+            switch (size) {
+            case 0:
+                val = (mit_uword)*((uint8_t *)addr);
+                break;
+        #pragma GCC diagnostic push
+        #pragma GCC diagnostic ignored "-Wcast-align"
+            case 1:
+                if (unlikely(!is_aligned(addr, size)))
+                    RAISE(MIT_ERROR_UNALIGNED_ADDRESS);
+                val = (mit_uword)*((uint16_t *)((uint8_t *)addr));
+                break;
+            case 2:
+                if (unlikely(!is_aligned(addr, size)))
+                    RAISE(MIT_ERROR_UNALIGNED_ADDRESS);
+                val = (mit_uword)*((uint32_t *)((uint8_t *)addr));
+                break;
+        #if MIT_SIZE_WORD >= 3
+            case 3:
+                if (unlikely(!is_aligned(addr, size)))
+                    RAISE(MIT_ERROR_UNALIGNED_ADDRESS);
+                val = (mit_uword)*((uint64_t *)((uint8_t *)addr));
+                break;
+        #endif
+        #pragma GCC diagnostic pop
+            default:
+                RAISE(MIT_ERROR_BAD_SIZE);
+            }'''
         ),
 
         'STORE': Code('''\
-            int ret = store(S->memory, S->memory_words, addr, size, x);
-            if (ret != 0)
-                RAISE(ret);'''
+            switch (size) {
+            case 0:
+                *(uint8_t *)addr = (uint8_t)val;
+                break;
+        #pragma GCC diagnostic push
+        #pragma GCC diagnostic ignored "-Wcast-align"
+            case 1:
+                if (unlikely(!is_aligned(addr, size)))
+                    RAISE(MIT_ERROR_UNALIGNED_ADDRESS);
+                *(uint16_t *)addr = (uint16_t)val;
+                break;
+            case 2:
+                if (unlikely(!is_aligned(addr, size)))
+                    RAISE(MIT_ERROR_UNALIGNED_ADDRESS);
+                *(uint32_t *)addr = (uint32_t)val;
+                break;
+        #if MIT_SIZE_WORD >= 3
+            case 3:
+                if (unlikely(!is_aligned(addr, size)))
+                    RAISE(MIT_ERROR_UNALIGNED_ADDRESS);
+                *(uint64_t *)addr = (uint64_t)val;
+                break;
+        #endif
+        #pragma GCC diagnostic pop
+            default:
+                RAISE(MIT_ERROR_BAD_SIZE);
+            }'''
         ),
 
         'LIT': Code('FETCH_PC(n);'),
@@ -135,20 +175,23 @@ Instruction = instruction_enum(
         ),
 
         'NOT': Code('r = ~x;'),
-            'AND': Code('r = x & y;'),
-            'OR': Code('r = x | y;'),
-            'XOR': Code('r = x ^ y;'),
+        'AND': Code('r = x & y;'),
+        'OR': Code('r = x | y;'),
+        'XOR': Code('r = x ^ y;'),
 
-        'LSHIFT': Code('r = n < (mit_word)MIT_WORD_BIT ? x << n : 0;'),
-            'RSHIFT': Code('''\
+        'LSHIFT': Code('''\
+            r = n < (mit_word)MIT_WORD_BIT ?
+                (mit_word)((mit_uword)x << n) : 0;'''
+        ),
+        'RSHIFT': Code('''\
             r = n < (mit_word)MIT_WORD_BIT ?
                 (mit_word)((mit_uword)x >> n) : 0;'''
-            ),
-            'ARSHIFT': Code('r = ARSHIFT(x, n);'),
+        ),
+        'ARSHIFT': Code('r = ARSHIFT(x, n);'),
 
         'SIGN_EXTEND': Code('''\
-            n2 = n1 << (MIT_WORD_BYTES - (1 << size)) * MIT_BYTE_BIT;
-            n2 = ARSHIFT(n2, (MIT_WORD_BYTES - (1 << size)) * MIT_BYTE_BIT);'''
+            n = u << (MIT_WORD_BYTES - (1 << size)) * MIT_BYTE_BIT;
+            n = ARSHIFT(n, (MIT_WORD_BYTES - (1 << size)) * MIT_BYTE_BIT);'''
         ),
     },
 )

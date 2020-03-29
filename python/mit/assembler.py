@@ -10,7 +10,7 @@ RISK.
 '''
 
 from .binding import (
-    align, is_aligned,
+    is_aligned,
     word_bytes, word_bit, word_mask, sign_bit,
     opcode_bit, opcode_mask,
     hex0x_word_width,
@@ -179,7 +179,8 @@ class Assembler:
         for b in bytes:
             self.state.M[self.pc] = b
             self.pc += 1
-        self.pc = align(self.pc)
+        # Align `pc`
+        self.pc = ((self.pc - 1) & word_mask) + word_bytes
 
     def _fetch(self):
         '''

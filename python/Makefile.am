@@ -9,8 +9,8 @@
 
 PYTHON_ENVIRONMENT = export PYTHONPATH=$(abs_top_srcdir)/python:$(abs_top_srcdir)/src:$(abs_top_builddir)/src:$(abs_top_srcdir)/src/features;
 
-bin_SCRIPTS = mit@PACKAGE_SUFFIX@-dump mit@PACKAGE_SUFFIX@-shell
-man_MANS = mit@PACKAGE_SUFFIX@-dump.1 mit@PACKAGE_SUFFIX@-shell.1
+bin_SCRIPTS = mit@PACKAGE_SUFFIX@-shell
+man_MANS = mit@PACKAGE_SUFFIX@-shell.1
 mit_pkgpythondir = $(pkgpythondir)@PACKAGE_SUFFIX@
 mit_pkgpython_PYTHON =				\
 	mit/__init__.py				\
@@ -18,6 +18,7 @@ mit_pkgpython_PYTHON =				\
 	mit/extra_errors.py			\
 	mit/globals.py				\
 	mit/ipython_suppress_traceback.py	\
+	mit/memory.py				\
 	mit/state.py				\
 	mit/assembler.py
 nodist_mit_pkgpython_PYTHON = mit/binding.py mit/enums.py mit/extra_enums.py
@@ -68,16 +69,9 @@ loc:
 		test -f $$file.in.bak && mv $$file.in.bak $$file.in || true; \
 	done
 if USING_PACKAGE_SUFFIX
-mit@PACKAGE_SUFFIX@-dump: mit-dump
-	cp mit-dump $@
-	chmod +x $@
-
 mit@PACKAGE_SUFFIX@-shell: mit-shell
 	cp mit-shell $@
 	chmod +x $@
-
-mit@PACKAGE_SUFFIX@-dump.1: mit-dump.1
-	cp mit-dump.1 $@
 
 mit@PACKAGE_SUFFIX@-shell.1: mit-shell.1
 	cp mit-shell.1 $@
@@ -85,12 +79,10 @@ endif
 
 EXTRA_DIST = \
 	gen-extra-enums			\
-	mit-dump-include.man.in		\
 	mit-shell-include.man.in	\
 	$(man_MANS)			\
 	mit/binding.py.in		\
 	mit/enums.py.in			\
-	mit-dump.in			\
 	mit-shell.in
 
 DISTCLEANFILES = $(bin_SCRIPTS) $(man_MANS) mit/enums.py

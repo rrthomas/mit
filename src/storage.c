@@ -35,37 +35,6 @@ const unsigned mit_opcode_bit = MIT_OPCODE_BIT;
 const unsigned mit_opcode_mask = MIT_OPCODE_MASK;
 
 
-// Utility functions
-
-_GL_ATTRIBUTE_CONST mit_uword mit_align(mit_uword addr, unsigned size)
-{
-    return align(addr, size);
-}
-
-_GL_ATTRIBUTE_CONST int mit_is_aligned(mit_uword addr, unsigned size)
-{
-    return is_aligned(addr, size);
-}
-
-
-// Memory
-
-_GL_ATTRIBUTE_PURE uint8_t *mit_native_address_of_range(mit_state *S, mit_uword addr, mit_uword len)
-{
-    return native_address_of_range(S->memory, S->memory_words, addr, len);
-}
-
-int mit_load(mit_state *S, mit_uword addr, unsigned size, mit_word *val_ptr)
-{
-    return load(S->memory, S->memory_words, addr, size, val_ptr);
-}
-
-int mit_store(mit_state *S, mit_uword addr, unsigned size, mit_word val)
-{
-    return store(S->memory, S->memory_words, addr, size, val);
-}
-
-
 // Stacks
 
 int mit_load_stack(mit_state *S, mit_uword pos, mit_word *val_ptr)
@@ -97,25 +66,18 @@ int mit_push_stack(mit_state *S, mit_word val)
 
 // Initialisation and memory management
 
-mit_state *mit_new_state(size_t memory_words, size_t stack_words)
+mit_state *mit_new_state(size_t stack_words)
 {
     mit_state *S = calloc(1, sizeof(mit_state));
     if (S == NULL)
         return NULL;
 
-    if (memory_words > 0 &&
-        (S->memory = calloc(memory_words, sizeof(mit_word))) == NULL)
-        return NULL;
-
     if (stack_words > 0 &&
-        (S->stack = calloc(stack_words, sizeof(mit_word))) == NULL) {
-        FREE(S->memory);
+        (S->stack = calloc(stack_words, sizeof(mit_word))) == NULL)
         return NULL;
-    }
 
     S->pc = 0;
     S->stack_depth = 0;
-    S->memory_words = memory_words;
     S->stack_words = stack_words;
 
     return S;
@@ -123,7 +85,6 @@ mit_state *mit_new_state(size_t memory_words, size_t stack_words)
 
 void mit_free_state(mit_state *S)
 {
-    free(S->memory);
     free(S->stack);
     free(S);
 }

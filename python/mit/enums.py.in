@@ -1,6 +1,6 @@
 # Enumerations from the C API.
 #
-# (c) Mit authors 2018-2019
+# (c) Mit authors 2018-2020
 #
 # The package is distributed under the MIT/X11 License.
 #
@@ -59,82 +59,3 @@ MitErrorCode = enum(
     'VM error codes returned by e.g. `mit_run()`.',
     spec['ErrorCode'],
 )
-
-@unique
-class LibMit(IntEnum):
-    '''
-    Function codes for the external extra instruction LIBMIT.
-    '''
-    CURRENT_STATE = 0x0
-    NATIVE_ADDRESS_OF_RANGE = 0x1
-    LOAD = 0x2
-    STORE = 0x3
-    NEW_STATE = 0x4
-    REALLOC_MEMORY = 0x5
-    REALLOC_STACK = 0x6
-    DESTROY = 0x7
-    RUN = 0x8
-    SINGLE_STEP = 0x9
-    LOAD_OBJECT = 0xa
-    SAVE_OBJECT = 0xb
-    REGISTER_ARGS = 0xc
-    GET_PC = 0xd
-    SET_PC = 0xe
-    GET_IR = 0xf
-    SET_IR = 0x10
-    GET_BAD = 0x11
-    SET_BAD = 0x12
-    GET_STACK_DEPTH = 0x13
-    SET_STACK_DEPTH = 0x14
-    GET_MEMORY = 0x15
-    GET_STACK = 0x16
-    GET_MEMORY_BYTES = 0x17
-    GET_STACK_WORDS = 0x18
-
-@unique
-class LibC(IntEnum):
-    '''
-    Function codes for the external extra instruction LIBC.
-    '''
-    ARGC = 0x0
-    ARG = 0x1
-    EXIT = 0x2
-    STRLEN = 0x3
-    STRNCPY = 0x4
-    STDIN = 0x5
-    STDOUT = 0x6
-    STDERR = 0x7
-    O_RDONLY = 0x8
-    O_WRONLY = 0x9
-    O_RDWR = 0xa
-    O_CREAT = 0xb
-    O_TRUNC = 0xc
-    OPEN = 0xd
-    CLOSE = 0xe
-    READ = 0xf
-    WRITE = 0x10
-    SEEK_SET = 0x11
-    SEEK_CUR = 0x12
-    SEEK_END = 0x13
-    LSEEK = 0x14
-    FDATASYNC = 0x15
-    RENAME = 0x16
-    REMOVE = 0x17
-    FILE_SIZE = 0x18
-    RESIZE_FILE = 0x19
-    FILE_STATUS = 0x1a
-
-@unique
-class LibInstruction(Enum):
-    '''
-    External extra instruction opcodes.
-    '''
-    def __init__(self, library, opcode):
-        self.library = library
-        self.opcode = opcode
-
-    def __int__(self):
-        return self.opcode
-
-    LIBMIT = (LibMit, 0x1)
-    LIBC = (LibC, 0x2)

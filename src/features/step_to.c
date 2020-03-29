@@ -24,18 +24,20 @@ mit_word mit_step_to(
     int auto_NEXT
 )
 {
-    mit_word error = 0;
+    mit_word error = MIT_ERROR_OK;
     mit_uword n = *n_ptr, done;
     for (done = 0;
-         error == 0 && ((n == 0 && state->pc != addr) || done < n);
+         error == MIT_ERROR_OK && ((n == 0 && state->pc != addr) || done < n);
          done++) {
         if (auto_NEXT && state->ir == 0)
             error = mit_single_step(state);
-        if (error == 0)
+        if (error == MIT_ERROR_OK)
             error = mit_single_step(state);
-        if (error == 1 && (state->ir & MIT_OPCODE_MASK) == MIT_INSTRUCTION_JUMP) {
+        if (error == MIT_ERROR_INVALID_OPCODE &&
+            (state->ir & MIT_OPCODE_MASK) == MIT_INSTRUCTION_JUMP) {
             error = mit_extra_instruction(state);
-            state->ir = 0; // Skip to next instruction
+            if (error == MIT_ERROR_OK)
+                state->ir = 0; // Skip to next instruction
         }
     }
     *n_ptr = done;

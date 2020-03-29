@@ -63,12 +63,9 @@ class LibC(InstructionEnum):
         flag = (mit_word)O_TRUNC;
     '''))
 
-    OPEN = (StackEffect.of(['str', 'flags'], ['fd:int']), Code('''\
-        {
-            char *s = (char *)mit_native_address_of_range(S, str, 0);
-            fd = s ? open(s, flags, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH) : -1;
-            set_binary_mode(fd, O_BINARY); // Best effort
-        }
+    OPEN = (StackEffect.of(['str:char *', 'flags'], ['fd:int']), Code('''\
+        fd = open(str, flags, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
+        set_binary_mode(fd, O_BINARY); // Best effort
     '''))
 
     CLOSE = (
@@ -77,27 +74,13 @@ class LibC(InstructionEnum):
     )
 
     READ = (
-        StackEffect.of(['buf', 'nbytes', 'fd:int'], ['nread:int']),
-        Code('''\
-            {
-                nread = -1;
-                uint8_t *ptr = mit_native_address_of_range(S, buf, nbytes);
-                if (ptr)
-                    nread = read(fd, ptr, nbytes);
-            }
-        '''),
+        StackEffect.of(['buf:void *', 'nbytes', 'fd:int'], ['nread:int']),
+        Code('nread = read(fd, buf, nbytes);'),
     )
 
     WRITE = (
-        StackEffect.of(['buf', 'nbytes', 'fd:int'], ['nwritten']),
-        Code('''\
-            {
-                nwritten = -1;
-                uint8_t *ptr = mit_native_address_of_range(S, buf, nbytes);
-                if (ptr)
-                    nwritten = write(fd, ptr, nbytes);
-            }
-        '''),
+        StackEffect.of(['buf:void *', 'nbytes', 'fd:int'], ['nwritten']),
+        Code('nwritten = write(fd, buf, nbytes);'),
     )
 
     SEEK_SET = (StackEffect.of([], ['whence']), Code('''\
@@ -123,26 +106,14 @@ class LibC(InstructionEnum):
     )
 
     RENAME = (
-        StackEffect.of(['old_name', 'new_name'], ['ret:int']),
-        Code('''\
-            {
-                char *s1 = (char *)mit_native_address_of_range(S, old_name, 0);
-                char *s2 = (char *)mit_native_address_of_range(S, new_name, 0);
-                if (s1 == NULL || s2 == NULL)
-                    RAISE(MIT_ERROR_INVALID_MEMORY_READ);
-                ret = rename(s1, s2);
-            }
-        '''),
+        StackEffect.of(['old_name:char *', 'new_name:char *'], ['ret:int']),
+        Code('ret = rename(old_name, new_name);'),
     )
 
-    REMOVE = (StackEffect.of(['name'], ['ret:int']), Code('''\
-        {
-            char *s = (char *)mit_native_address_of_range(S, name, 0);
-            if (s == NULL)
-                RAISE(MIT_ERROR_INVALID_MEMORY_READ);
-            ret = remove(s);
-        }
-    '''))
+    REMOVE = (
+        StackEffect.of(['name:char *'], ['ret:int']),
+        Code('ret = remove(name);')
+    )
 
     # TODO: Expose stat(2). This requires struct mapping!
     FILE_SIZE = (
@@ -208,33 +179,6 @@ mit_lib.update({
         Code('state = S;'),
     ),
 
-    'NATIVE_ADDRESS_OF_RANGE': (
-        StackEffect.of(
-            ['addr', 'len', 'inner_state:mit_state *'],
-            ['ptr:uint8_t *'],
-        ),
-        Code('ptr = mit_native_address_of_range(inner_state, addr, len);'),
-    ),
-
-    'LOAD': (
-        StackEffect.of(
-            ['addr', 'size', 'inner_state:mit_state *'],
-            ['value', 'ret:int'],
-        ),
-        Code('''\
-            value = 0;
-            ret = mit_load(inner_state, addr, size, &value);
-        '''),
-    ),
-
-    'STORE': (
-        StackEffect.of(
-            ['value', 'addr', 'size', 'inner_state:mit_state *'],
-            ['ret:int'],
-        ),
-        Code('ret = mit_store(inner_state, addr, size, value);'),
-    ),
-
     'LOAD_STACK': (
         StackEffect.of(
             ['pos', 'inner_state:mit_state *'],
@@ -275,12 +219,10 @@ mit_lib.update({
 
     'NEW_STATE': (
         StackEffect.of(
-            ['memory_words', 'stack_words'],
+            ['stack_words'],
             ['new_state:mit_state *'],
         ),
-        Code('''\
-            new_state = mit_new_state((size_t)memory_words, (size_t)stack_words);
-        '''),
+        Code('new_state = mit_new_state((size_t)stack_words);'),
     ),
 
     'FREE_STATE': (
@@ -296,11 +238,6 @@ mit_lib.update({
     'SINGLE_STEP': (
         StackEffect.of(['inner_state:mit_state *'], ['ret']),
         Code('ret = mit_single_step(inner_state);'),
-    ),
-
-    'NATIVE_POINTER_WORDS': (
-        StackEffect.of([], ['n']),
-        Code('n = MAX(sizeof(void *), sizeof(mit_word)) / sizeof(mit_word);'),
     ),
 
 
@@ -328,8 +265,8 @@ mit_lib.update({
     ),
 
     'CORE_DUMP': (
-        StackEffect.of(['state:mit_state *'], ['file:const char *']),
-        Code('file = mit_core_dump(state);'),
+        StackEffect.of(['addr:mit_word *', 'len:mit_uword'], ['file:const char *']),
+        Code('file = mit_core_dump(addr, len);'),
     ),
 
     'SPECIALIZER_RUN': (
@@ -393,14 +330,13 @@ class Library(InstructionEnum):
 @unique
 class LibInstruction(Library):
     '''External extra instruction opcodes.'''
-    LIBMIT = (0x01, LibMit, '''\
+    LIBMIT = (0x01, LibMit, '''
 #include "minmax.h"
-
 #include "mit/mit.h"
 #include "mit/features.h"
 ''',
               ['mit_word *'])
-    LIBC = (0x02, LibC, '''\
+    LIBC = (0x02, LibC, '''
 #include <stdlib.h>
 #include <stdbool.h>
 #include <unistd.h>
