@@ -593,7 +593,7 @@ int main(int argc, char *argv[])
         off_t len = fleno(fp);
         if (len == -1)
             die("error finding size of file %s", argv[0]);
-        if (len > memory_words * MIT_WORD_BYTES)
+        if ((size_t)len > memory_words * MIT_WORD_BYTES)
             die("file %s is too big to fit in memory", argv[0]);
         if ((off_t)fread(memory, 1, len, fp) != len)
             die("error reading file %s", argv[0]);
