@@ -269,7 +269,7 @@ class State:
             while i < chunk and p < end:
                 if i % 8 == 0:
                     print(" ", end='', file=file)
-                byte = M[p + i]
+                byte = self.M[p + i]
                 print("{:02x} ".format(byte), end='', file=file)
                 i += 1
                 c = chr(byte)
