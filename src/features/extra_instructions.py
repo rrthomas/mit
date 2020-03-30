@@ -36,31 +36,6 @@ class LibMitfeatures(InstructionEnum):
         Code('file = mit_core_dump(addr, len);'),
     )
 
-    SPECIALIZER_RUN = (
-        StackEffect.of(['state:mit_state *'], ['ret']),
-        Code('ret = mit_specializer_run(state);'),
-    )
-
-    PROFILE_INIT = (
-        StackEffect.of([], []),
-        Code('mit_profile_init();'),
-    )
-
-    PROFILE_RUN = (
-        StackEffect.of(['state:mit_state *'], ['ret']),
-        Code('ret = mit_profile_run(state);'),
-    )
-
-    PROFILE_DUMP = (
-        StackEffect.of(['fd:int'], ['ret:int']),
-        Code('ret = mit_profile_dump(fd);'),
-    )
-
-    STEP_TO = (
-        StackEffect.of(['state:mit_state *', 'n:mit_uword *', 'addr', 'auto_NEXT:int'], ['ret']),
-        Code('ret = mit_step_to(state, n, addr, auto_NEXT);'),
-    )
-
 
 @unique
 class LibC(InstructionEnum):

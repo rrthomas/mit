@@ -329,7 +329,7 @@ Feature(# VM core dump
 
 Feature(# Optimizing interpreter and profiling
     top_level=Code('''
-        static void set_run_function(mit_word (*new_run_fn)(mit_state *))
+        static void set_run_function(mit_fn *new_run_fn)
         {
             if (run_fn == new_run_fn ||
                 (run_fn == mit_profile_run && new_run_fn == mit_specializer_run))
@@ -420,7 +420,7 @@ getopt_code.append('{0, 0, 0, 0}')
 
 # Features
 top_level_code = Code('''\
-    mit_word (*run_fn)(mit_state *) = mit_run;
+    mit_fn *run_fn = mit_run;
     mit_word *memory;
     mit_uword memory_words;
 ''')
@@ -603,7 +603,7 @@ int main(int argc, char *argv[])
 
     // Run
     for (;;) {
-        mit_word error = run_fn(S);''',
+        mit_word error = S->run_fn(S);''',
                  handlers_code,
                  exit_code),
             '''

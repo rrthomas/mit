@@ -15,6 +15,8 @@ struct mit_state {
 #define R(reg, type, return_type) type reg;
 #include "mit/registers.h"
 #undef R
+    mit_fn *run_fn;
+    void *extra_state;
 };
 
 #endif

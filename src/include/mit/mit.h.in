@@ -196,6 +196,18 @@ mit_state *mit_new_state(size_t stack_words);
 void mit_free_state(mit_state *S);
 /* Free the given state, deallocating its memory. */
 
+typedef mit_word mit_fn(mit_state * restrict S);
+/* The type of a function that mutates the VM.
+
+   The most important type of `mit_fn` is a run function, which runs code
+   like `mit_run`. A run function should set `run_fn`, usually to itself, so
+   that nested VMs can use the same run function via the `MIT_RUN`
+   instruction. Run functions can use the `extra_state` member of
+   `mit_state` to share extra state between nested invocations.
+
+   A `mit_fn` that is not a run function may return `MIT_ERROR_OK`.
+*/
+
 mit_word mit_run(mit_state * restrict S);
 /* Start the execution cycle in the given state as described in the spec.
    If an error is raised, the code is returned.
