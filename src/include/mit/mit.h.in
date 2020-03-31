@@ -74,6 +74,30 @@ typedef uintmax_t mit_max_stack_item_t;
 typedef mit_uword mit_max_stack_item_t;
 #endif
 
+// Forward declaration
+typedef struct mit_state mit_state;
+
+typedef mit_word mit_fn(mit_state * restrict S);
+/* The type of a function that mutates the VM.
+
+   The most important type of `mit_fn` is a run function, which runs code
+   like `mit_run`. A run function should set `run_fn`, usually to itself, so
+   that nested VMs can use the same run function via the `MIT_RUN`
+   instruction. Run functions can use the `extra_state` member of
+   `mit_state` to share extra state between nested invocations.
+
+   A `mit_fn` that is not a run function may return `MIT_ERROR_OK`.
+*/
+
+// VM State
+struct mit_state {
+#define R(reg, type, return_type) type reg;
+#include <mit@PACKAGE_SUFFIX@/registers.h>
+#undef R
+    mit_fn *run_fn;
+    void *extra_state;
+};
+
 // Constants (for easy FFI binding)
 extern const unsigned mit_word_bytes;
 extern const unsigned mit_endism;
@@ -86,21 +110,11 @@ extern const mit_uword mit_uword_max;
 extern const mit_word mit_word_min;
 extern const mit_word mit_word_max;
 
-
 // Implementation-defined errors
 enum {
     MIT_ERROR_STARTUP_ERROR = 128,
     MIT_ERROR_DUMPED_CORE_ON_SIGNAL = 129,
 };
-
-// VM registers
-typedef struct mit_state mit_state;
-
-#define R(reg, type, return_type)                       \
-    return_type mit_get_ ## reg(mit_state *S);          \
-    void mit_set_ ## reg(mit_state *S, type val);
-#include <mit@PACKAGE_SUFFIX@/registers.h>
-#undef R
 
 // Instructions
 #if MIT_OPCODE_BIT < 5 || MIT_OPCODE_BIT > 8
@@ -195,18 +209,6 @@ mit_state *mit_new_state(size_t stack_words);
 
 void mit_free_state(mit_state *S);
 /* Free the given state, deallocating its memory. */
-
-typedef mit_word mit_fn(mit_state * restrict S);
-/* The type of a function that mutates the VM.
-
-   The most important type of `mit_fn` is a run function, which runs code
-   like `mit_run`. A run function should set `run_fn`, usually to itself, so
-   that nested VMs can use the same run function via the `MIT_RUN`
-   instruction. Run functions can use the `extra_state` member of
-   `mit_state` to share extra state between nested invocations.
-
-   A `mit_fn` that is not a run function may return `MIT_ERROR_OK`.
-*/
 
 mit_word mit_run(mit_state * restrict S);
 /* Start the execution cycle in the given state as described in the spec.

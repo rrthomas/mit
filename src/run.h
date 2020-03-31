@@ -12,9 +12,6 @@
 #define MIT_RUN
 
 
-#include "state.h"
-
-
 // Arithmetic right shift `n` by `p` places (the behaviour of >> on signed
 // quantities is implementation-defined in C99).
 #if HAVE_ARITHMETIC_RSHIFT

@@ -12,8 +12,6 @@
 #include "mit/mit.h"
 #include "mit/features.h"
 
-#include "state.h"
-
 
 // Single-step for `*n_ptr` steps (excluding NEXT when `pc` does not change),
 // or until `pc` = `addr`.

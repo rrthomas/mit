@@ -206,7 +206,7 @@ for register in Register:
     get_code = Code()
     get_code.extend(pop_code)
     get_code.extend(push_stack(
-        'mit_get_{}(inner_state)'.format(register.name),
+        'inner_state->{}'.format(register.name),
         type=register.type,
     ))
     internal_extra_instructions['GET_{}'.format(register.name.upper())] = get_code
@@ -216,7 +216,7 @@ for register in Register:
     set_code.append('{} value;'.format(register.type))
     set_code.extend(pop_stack('value', register.type))
     set_code.append('''\
-        mit_set_{}(inner_state, value);'''.format(register.name),
+        inner_state->{} = value;'''.format(register.name),
     )
     internal_extra_instructions['SET_{}'.format(register.name.upper())] = set_code
 

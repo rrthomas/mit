@@ -17,8 +17,6 @@
 
 #include "mit/mit.h"
 
-#include "state.h"
-
 
 // Constants
 const unsigned mit_word_bytes = MIT_WORD_BYTES;
@@ -89,13 +87,3 @@ void mit_free_state(mit_state *S)
     free(S->stack);
     free(S);
 }
-
-#define R(reg, type, return_type)                                   \
-    _GL_ATTRIBUTE_PURE return_type mit_get_ ## reg(mit_state *S) {  \
-        return S->reg;                                              \
-    }                                                               \
-    void mit_set_ ## reg(mit_state *S, type val) {                  \
-        S->reg = val;                                               \
-    }
-#include "mit/registers.h"
-#undef R

@@ -474,7 +474,6 @@ initial_code = Code('''
 #include "mit/features.h"
 
 #include "warn.h"
-#include "state.h"
 
 
 // Error messages

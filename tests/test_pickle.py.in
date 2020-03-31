@@ -18,12 +18,12 @@ register_args('test', '--evaluate', ': FOO   ." hello!" CR ;')
 VM.run()
 
 # Pickle the VM
-ir.set(0)
+VM.ir = 0
 s = pickle.dumps(VM)
 
 # Unpickle the VM
 VM2 = pickle.loads(s)
-VM2.registers['pc'].set(VM2.M.addr)
+VM2.pc = VM2.M.addr
 register_args('test', '--evaluate', 'FOO')
 VM2.run()
 
