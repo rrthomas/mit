@@ -22,11 +22,6 @@ extern char **mit_argv;
 
 mit_word mit_extra_instruction(mit_state * restrict S);
 
-const char *mit_core_dump(mit_word *addr, mit_uword length);
-/* Save `length` words of memory from `addr`, returning the filename on
-   success, or NULL otherwise.
-*/
-
 mit_word mit_specializer_run(mit_state * restrict S);
 /* Like `mit_run`, but (hopefully) faster. */
 

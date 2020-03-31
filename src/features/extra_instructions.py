@@ -31,11 +31,6 @@ class LibMitfeatures(InstructionEnum):
         Code('ret = mit_extra_instruction(state);'),
     )
 
-    CORE_DUMP = (
-        StackEffect.of(['addr:mit_word *', 'len:mit_uword'], ['file:const char *']),
-        Code('file = mit_core_dump(addr, len);'),
-    )
-
 
 @unique
 class LibC(InstructionEnum):

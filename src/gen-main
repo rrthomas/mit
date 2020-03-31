@@ -119,42 +119,6 @@ Option('no-auto-extend',
        parse_code=Code('auto_extend_stack = false;'),
 )
 
-default_max_backtrace = 16
-Option('backtrace',
-       '''show registers and top N stack items on error
-                            [default {}; 0 to show entire stack]'''.format(default_max_backtrace),
-       arg='optional_argument', arg_name='N',
-       parse_code=Code('''\
-       {
-           backtrace = true;
-           if (optarg) {
-               char *endptr;
-               max_backtrace = parse_unsigned(optarg, &endptr);
-               if (*optarg == '\\0' || *endptr != '\\0')
-                   die("invalid maximum backtrace size");
-           }
-       }
-       '''),
-)
-
-Option('core-dump',
-       'dump core on memory error',
-       short_name='c',
-       parse_code=Code('''
-           {
-               core_dump = true;
-
-               // Set signal handlers for core dump
-       #ifdef SIGQUIT
-               sig_catch(SIGQUIT, sig_core_dump);
-       #endif
-       #ifdef SIGABRT
-               sig_catch(SIGABRT, sig_core_dump);
-       #endif
-           }
-       '''),
-)
-
 Option('help',
        'display this help message and exit',
        parse_code=Code('usage();'),
@@ -242,88 +206,6 @@ Feature(# Error message on error exit
             // Cast error to size_t for printing because we might not be
             // able to print mit_uword.
             warn("error %zu: %s", (size_t)error, error_msg[error]);
-    '''),
-)
-
-Feature(# Register and stack backtrace
-    top_level=Code('''
-        #define MAX_STACK_ITEM_STRLEN (sizeof(mit_max_stack_item_t) * 2)
-
-        static void stack_item_to_str(mit_max_stack_item_t x, unsigned size, char s[MAX_STACK_ITEM_STRLEN])
-        {
-            static const char hex[] = "0123456789abcdef";
-            for (unsigned i = 0, digits = size * 2; i < digits; i++) {
-                s[digits - i - 1] = hex[x & 0xf];
-                x >>= 4;
-            }
-        }
-
-        static unsigned long parse_unsigned(const char *s, char **endp)
-        {
-            return (s[0] == '0' && (s[1] == 'X' || s[1] == 'x')) ?
-                strtoul(s + 2, endp, 16) : strtoul(s, endp, 10);
-        }
-    '''),
-    init=Code('''
-        bool backtrace = false;
-        unsigned long default_max_backtrace = {};
-        unsigned long max_backtrace = default_max_backtrace;
-    '''.format(default_max_backtrace)),
-    exit=disable_warnings(
-        ['-Wpointer-to-int-cast'], Code('''
-        if (error != MIT_ERROR_HALT && backtrace == true) {
-            fprintf(stderr, "\\nRegisters:\\n");
-            char str[MAX_STACK_ITEM_STRLEN];
-            #define R(name, type, return_type) \\
-            stack_item_to_str((mit_max_stack_item_t)S->name, sizeof(S->name), &str[0]); \\
-            fprintf(stderr, #name "=0x%.*s\\n", (int)(sizeof(S->name) * 2), str);
-            #include "mit/registers.h"
-            #undef R
-            if (S->stack_depth <= S->stack_words) {
-                fprintf(stderr, "\\nStack:\\n");
-                mit_uword items = MIN(max_backtrace, S->stack_depth);
-                if (max_backtrace == 0)
-                    items = S->stack_depth;
-                for (mit_uword pos = 0; pos < items; pos++) {
-                    mit_word w;
-                    if (load_stack(S->stack, S->stack_depth, pos, &w) == 0) {
-                        stack_item_to_str(w, (int)sizeof(mit_uword), &str[0]);
-                        fprintf(stderr, "0x%.*s\\n", (int)(sizeof(mit_uword) * 2), str);
-                    }
-                }
-            }
-        }
-    ''')),
-)
-
-Feature(# VM core dump
-    top_level=Code('''
-        static void sig_catch(int sig, void (*handler)(int))
-        {
-            struct sigaction sa;
-            sa.sa_handler = handler;
-            sa.sa_flags = 0;
-            sigemptyset(&sa.sa_mask);
-            sigaction(sig, &sa, NULL); // ignore error: none possible
-        }
-
-        static void do_core_dump(void)
-        {
-            const char *filename = mit_core_dump(memory, memory_words);
-            if (filename != NULL)
-                warn("core dumped to %s", filename);
-        }
-
-        static void sig_core_dump(_GL_UNUSED_PARAMETER int sig)
-        {
-            do_core_dump();
-            exit(MIT_ERROR_DUMPED_CORE_ON_SIGNAL);
-        }
-    '''),
-    init=Code('bool core_dump = false;'),
-    exit=Code('''
-        if (error != MIT_ERROR_HALT && core_dump)
-            do_core_dump();
     '''),
 )
 
