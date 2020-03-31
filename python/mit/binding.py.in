@@ -17,11 +17,11 @@ from ctypes import (
     c_uint64, c_int64,
     c_size_t, c_ssize_t,
     c_void_p,
-    POINTER, byref, CDLL,
+    POINTER, byref, CDLL, Structure,
 )
 from ctypes.util import find_library
 
-from .enums import MitErrorCode
+from .enums import MitErrorCode, Register
 
 
 library_file = find_library("mit@PACKAGE_SUFFIX@")
@@ -105,6 +105,17 @@ elif word_bytes == 8:
 else:
     raise Exception("Could not make Python C type matching WORD (size {})".format(word_bytes))
 
+mit_state_fields = [
+    (register.name, c_uword)
+    for register in Register
+]
+mit_state_fields.extend([
+    ('stack', POINTER(c_word)),
+    ('run_fn', c_void_p),
+    ('extra_state', c_void_p),
+])
+class c_mit_state(Structure):
+    _fields_ = mit_state_fields
 
 # Constants that require VM types
 vars().update([(c, cty.in_dll(libmit, "mit_{}".format(c)).value)
@@ -122,34 +133,28 @@ c_ptrdiff_t = c_ssize_t
 mit_error = errcheck(MitErrorCode)
 
 # mit.h
-libmit.mit_get_stack.argtypes = [c_void_p]
-libmit.mit_get_stack.restype = POINTER(c_word)
-
-libmit.mit_get_stack_words.argtypes = [c_void_p]
-libmit.mit_get_stack_words.restype = c_uword
-
-libmit.mit_load_stack.argtypes = [c_void_p, c_uword, POINTER(c_word)]
+libmit.mit_load_stack.argtypes = [POINTER(c_mit_state), c_uword, POINTER(c_word)]
 libmit.mit_load_stack.errcheck = mit_error
-libmit.mit_store_stack.argtypes = [c_void_p, c_uword, c_word]
+libmit.mit_store_stack.argtypes = [POINTER(c_mit_state), c_uword, c_word]
 libmit.mit_store_stack.errcheck = mit_error
-libmit.mit_pop_stack.argtypes = [c_void_p, POINTER(c_word)]
+libmit.mit_pop_stack.argtypes = [POINTER(c_mit_state), POINTER(c_word)]
 libmit.mit_pop_stack.errcheck = mit_error
-libmit.mit_push_stack.argtypes = [c_void_p, c_word]
+libmit.mit_push_stack.argtypes = [POINTER(c_mit_state), c_word]
 libmit.mit_push_stack.errcheck = mit_error
 
 libmit.mit_run.restype = c_word
-libmit.mit_run.argtypes = [c_void_p]
+libmit.mit_run.argtypes = [POINTER(c_mit_state)]
 libmit.mit_run.errcheck = mit_error
 
 libmit.mit_single_step.restype = c_word
-libmit.mit_single_step.argtypes = [c_void_p]
+libmit.mit_single_step.argtypes = [POINTER(c_mit_state)]
 libmit.mit_single_step.errcheck = mit_error
 
-libmit.mit_new_state.restype = c_void_p
+libmit.mit_new_state.restype = POINTER(c_mit_state)
 libmit.mit_new_state.argtypes = [c_size_t]
 
 libmit.mit_free_state.restype = None
-libmit.mit_free_state.argtypes = [c_void_p]
+libmit.mit_free_state.argtypes = [POINTER(c_mit_state)]
 
 def is_aligned(addr):
     return (addr & ((1 << size_word) - 1)) == 0
@@ -175,15 +180,15 @@ def register_args(*args):
     argc.value = len(bargs)
 
 libmitfeatures.mit_extra_instruction.restype = c_word
-libmitfeatures.mit_extra_instruction.argtypes = [c_void_p]
+libmitfeatures.mit_extra_instruction.argtypes = [POINTER(c_mit_state)]
 libmitfeatures.mit_extra_instruction.errcheck = mit_error
 
 libmitfeatures.mit_specializer_run.restype = c_word
-libmitfeatures.mit_specializer_run.argtypes = [c_void_p]
+libmitfeatures.mit_specializer_run.argtypes = [POINTER(c_mit_state)]
 libmitfeatures.mit_specializer_run.errcheck = mit_error
 
 libmitfeatures.mit_profile_run.restype = c_word
-libmitfeatures.mit_profile_run.argtypes = [c_void_p]
+libmitfeatures.mit_profile_run.argtypes = [POINTER(c_mit_state)]
 libmitfeatures.mit_profile_run.errcheck = mit_error
 
 libmitfeatures.mit_profile_init.restype = None
@@ -192,5 +197,5 @@ libmitfeatures.mit_profile_init.argtypes = None
 libmitfeatures.mit_profile_dump.argtypes = [c_int]
 
 libmitfeatures.mit_step_to.restype = c_word
-libmitfeatures.mit_step_to.argtypes = [c_void_p, POINTER(c_uword), c_uword, c_int]
+libmitfeatures.mit_step_to.argtypes = [POINTER(c_mit_state), POINTER(c_uword), c_uword, c_int]
 libmitfeatures.mit_step_to.errcheck = mit_error

@@ -1,7 +1,7 @@
 '''
 Convenient globals.
 
-(c) Mit authors 2019
+(c) Mit authors 2019-2020
 
 The package is distributed under the MIT/X11 License.
 
@@ -12,7 +12,6 @@ Make the state accessible through global variables and functions.
 
 Returns a vars table containing:
 
-Registers: a variable for each register; also a list 'registers'
 Managing the VM state: load, save
 Controlling and observing execution: run, step, trace
 Memory: M[], M_word[], dump, dump_files
@@ -25,16 +24,14 @@ The instruction opcodes are available as constants.
 
 from . import *
 
-VM = State()
 
-# Registers.
-vars().update(VM.registers)
+VM = State()
 
 # Bits of the VM.
 vars().update({
     name: VM.__getattribute__(name)
     for name in [
-        "M", "M_word", "S", "registers",
+        "M", "M_word", "S",
         "load", "run", "step", "trace",
         "dump", "disassemble", "dump_files",
     ]

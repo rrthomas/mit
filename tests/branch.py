@@ -117,10 +117,10 @@ correct.append(assembler.pc + word_bytes)
 
 # Test
 for i, correct_pc in enumerate(correct):
-    print("Instruction {}: pc = {} should be {}\n".format(i, pc.get(), correct_pc))
+    print("Instruction {}: pc = {} should be {}\n".format(i, VM.pc, correct_pc))
     trace()
-    if pc.get() != correct_pc:
-        print("Error in branch tests: pc = {:#x}".format(pc.get()))
+    if int(VM.pc) != correct_pc:
+        print("Error in branch tests: pc = {:#x}".format(VM.pc))
         sys.exit(1)
 
 print("Branch tests ran OK")

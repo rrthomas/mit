@@ -18,7 +18,6 @@ assembler = Assembler(VM)
 lit = assembler.lit
 label = assembler.label
 ass = assembler.instruction
-vars().update(VM.registers)
 vars().update(Instruction.__members__)
 UNDEFINED = 1 + max(Instruction)
 
@@ -85,11 +84,11 @@ error = 0
 def do_tests(run_fn):
     global error
     for i, pc_value in enumerate(test_pc):
-        stack_depth.set(0)    # reset stack pointer
+        VM.stack_depth = 0 # reset stack pointer
 
         print('Test "{}"'.format(test[i]))
-        ir.set(0)
-        pc.set(pc_value)
+        VM.ir = 0
+        VM.pc = pc_value
         res = 0
         try:
             run_fn()
@@ -97,7 +96,7 @@ def do_tests(run_fn):
             res = e.args[0]
 
         if result[i] != res:
-             print('Error in errors tests: test "{}" failed; pc = {}'.format(test[i], pc.get()))
+             print('Error in errors tests: test "{}" failed; pc = {}'.format(test[i], VM.pc))
              print("Error code is {}; should be {}".format(res, result[i]))
              error += 1
         print()

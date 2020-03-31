@@ -20,9 +20,9 @@ ass(CALL, HALT)
 ret = run() # will raise an exception on error
 print("run() returned without an exception")
 
-print("pc should now be {}".format(final_pc))
-if pc.get() != final_pc:
-    print("Error in run() tests: pc = {:#x}".format(pc.get()))
+print("pc should now be {:#x}".format(final_pc))
+if VM.pc != final_pc:
+    print("Error in run() tests: pc = {:#x}".format(VM.pc))
     sys.exit(1)
 
 print("run() tests ran OK")

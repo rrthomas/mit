@@ -57,8 +57,8 @@ class Disassembler:
         '''
         self.state = state
         if pc is None:
-            self.pc = self.state.registers["pc"].get()
-            self.ir = self.state.registers["ir"].get()
+            self.pc = self.state.pc
+            self.ir = self.state.pc
         else:
             self.pc = pc
             self.ir = ir
@@ -150,7 +150,7 @@ class Assembler:
         '''
         self.state = state
         if pc is None:
-            self.pc = self.state.registers["pc"].get()
+            self.pc = self.state.pc
         else:
             self.pc = pc
         assert is_aligned(self.pc)
