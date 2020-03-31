@@ -13,8 +13,6 @@
 #include <string.h>
 #include <limits.h>
 
-#include "safe-alloc.h"
-
 #include "mit/mit.h"
 
 

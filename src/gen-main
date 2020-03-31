@@ -338,8 +338,6 @@ initial_code = Code('''
 #include "unused-parameter.h"
 #include "progname.h"
 #include "binary-io.h"
-#include "minmax.h"
-#include "safe-alloc.h"
 
 #include "mit/mit.h"
 #include "mit/features.h"

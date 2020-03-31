@@ -193,7 +193,6 @@ class Library(InstructionEnum):
 class LibInstruction(Library):
     '''External extra instruction opcodes.'''
     LIBMITFEATURES = (0x01, LibMitfeatures, '''
-#include "minmax.h"
 #include "mit/mit.h"
 #include "mit/features.h"
 ''',

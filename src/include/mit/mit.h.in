@@ -15,7 +15,6 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <inttypes.h>
-#include <byteswap.h>
 #include <limits.h>
 
 #include <mit@PACKAGE_SUFFIX@/opcodes.h>
