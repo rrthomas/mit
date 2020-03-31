@@ -195,8 +195,6 @@ Feature(# Parse number of words (for --memory and --stack)
 Feature(# Error message on error exit
     exit=Code('''
         if (error != MIT_ERROR_HALT)
-            // Cast error to size_t for printing because we might not be
-            // able to print mit_uword.
             warn("error %zu: %s", (size_t)error, error_msg[error]);
     '''),
 )
