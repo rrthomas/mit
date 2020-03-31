@@ -82,16 +82,17 @@ Option('memory',
        short_name='m',
        arg='required_argument', arg_name='N',
        parse_code=Code('''\
-       {
-           size_t max = SIZE_MAX / MIT_WORD_BYTES;
-           char *endptr;
-           errno = 0;
-           uintmax_t size = strtoumax(optarg, &endptr, 10);
-           if (*optarg == '\\0' || *endptr != '\\0' || size == 0 || size > (uintmax_t)max)
-               die("memory size must be a positive number up to %zu", max);
-           memory_words = (mit_uword)size;
-       }
-     ''')
+           memory_words = parse_num_words("memory size must be a positive number up to %zu");
+       ''')
+)
+
+Option('stack',
+       ['size of stack in words [default %zu]', '(size_t)stack_words'],
+       short_name='s',
+       arg='required_argument', arg_name='N',
+       parse_code=Code('''\
+           stack_words = parse_num_words("stack size must be a positive number up to %zu");
+       ''')
 )
 
 Option('optimize',
@@ -114,11 +115,6 @@ Option('profile',
 )
 
 Doc('\nMiscellaneous:')
-Option('no-auto-extend',
-       'do not automatically extend the stack',
-       parse_code=Code('auto_extend_stack = false;'),
-)
-
 Option('help',
        'display this help message and exit',
        parse_code=Code('usage();'),
@@ -181,22 +177,18 @@ Feature(# Extra instructions
     '''),
 )
 
-Feature(# Auto-extend stack
+Feature(# Parse number of words (for --memory and --stack)
     top_level=Code('''
-        static mit_uword round_up(mit_uword n, mit_uword multiple)
+        static mit_uword parse_num_words(const char *errfmt)
         {
-            return (n - 1) - (n - 1) % multiple + multiple;
+            size_t max = SIZE_MAX / MIT_WORD_BYTES;
+            char *endptr;
+            errno = 0;
+            uintmax_t size = strtoumax(optarg, &endptr, 10);
+            if (*optarg == '\\0' || *endptr != '\\0' || size == 0 || size > (uintmax_t)max)
+                die(errfmt, max);
+            return (mit_uword)size;
         }
-    '''),    init=Code('bool auto_extend_stack = true;'),
-    handler=Code('''\
-        if (error == MIT_ERROR_STACK_OVERFLOW)
-            if (auto_extend_stack == true) {
-                S->stack_words = round_up(S->stack_words + 1,
-                                          page_size / MIT_WORD_BYTES);
-                if (safe_alloc_realloc_n((void *)&S->stack, MIT_WORD_BYTES,
-                                         S->stack_words) == 0)
-                    continue;
-            }
     '''),
 )
 
@@ -304,16 +296,13 @@ getopt_code.append('{0, 0, 0, 0}')
 top_level_code = Code('''\
     mit_fn *run_fn = mit_run;
     mit_word *memory;
-    mit_uword memory_words;
+    mit_uword memory_words, stack_words;
 ''')
 init_code = Code('''\
     set_program_name(argv[0]);
 
-    // getpagesize() is obsolete, but gnulib provides it, and
-    // sysconf(_SC_PAGESIZE) does not work on some platforms.
-    mit_uword page_size = getpagesize();
     memory_words = 0x100000U;
-    mit_uword stack_words = 16384U;
+    stack_words = 16384U;
 ''')
 handlers_code = Code()
 exit_code = Code()
