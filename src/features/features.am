@@ -16,8 +16,7 @@ mit_pkginclude_HEADERS += %D%/mit/features.h
 # Simple features
 
 libmitfeatures@PACKAGE_SUFFIX@_la_SOURCES += \
-	%D%/args.c \
-	%D%/step_to.c
+	%D%/args.c
 
 %D%/args.lo: %D%/mit/extra-opcodes.h
 

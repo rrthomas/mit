@@ -195,7 +195,3 @@ libmitfeatures.mit_profile_init.restype = None
 libmitfeatures.mit_profile_init.argtypes = None
 
 libmitfeatures.mit_profile_dump.argtypes = [c_int]
-
-libmitfeatures.mit_step_to.restype = c_word
-libmitfeatures.mit_step_to.argtypes = [POINTER(c_mit_state), POINTER(c_uword), c_uword, c_int]
-libmitfeatures.mit_step_to.errcheck = mit_error

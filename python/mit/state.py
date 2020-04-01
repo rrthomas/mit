@@ -136,38 +136,18 @@ class State:
                 else:
                     raise
 
-    def _report_step_error(self, e, done, addr):
-        ret = e.args[0]
-        print("Error code {} was returned".format(ret), end='')
-        print(" after {} step{}".format(done, 's' if done != 1 else ''), end='')
-        if addr is not None:
-            print(" at pc={:#x}".format(self.pc), end='')
-        print()
-        if ret not in (enums.MitErrorCode.OK, enums.MitErrorCode.HALT):
-            raise
-        return ret
+    def _print_trace_info(self):
+        print("step: pc={:#x} ir={:#x} instruction={}".format(
+            self.registers["pc"].get(),
+            self.registers["ir"].get(),
+            Disassembler(self).disassemble(),
+        ))
+        print(str(self.S))
 
-    def step(self, n=1, addr=None, auto_NEXT=True):
+    def step(self, n=1, addr=None, trace=False, auto_NEXT=True):
         '''
         Single-step for n steps (excluding NEXT when pc does not change), or
         until pc=addr.
-        '''
-        if addr is None:
-            assert n != 0
-            addr = 0
-        else:
-            n = 0
-
-        n_ptr = c_uword(n)
-        try:
-            libmitfeatures.mit_step_to(self.state, byref(n_ptr), addr, auto_NEXT)
-        except VMError as e:
-            self._report_step_error(e, n_ptr.value, addr)
-
-    def trace(self, n=1, addr=None, auto_NEXT=True):
-        '''
-        Single-step (see `step`), printing the instruction being executed, and
-        pc, ir, and the stack after each instruction.
         '''
         done = 0
         ret = 0
@@ -175,25 +155,38 @@ class State:
             if auto_NEXT and self.ir == 0:
                 libmit.mit_single_step(self.state) # safe to assume no error
             if self.pc == addr: break
-            print("trace: instruction={}".format(
-                Disassembler(self).disassemble(),
-            ))
+            if trace:
+                print("trace: instruction={}".format(
+                    Disassembler(self).disassemble(),
+                ))
             try:
                 libmit.mit_single_step(self.state)
             except VMError as e:
                 if (
                     e.args[0] == 1 and (
-                        self.ir & opcode_mask ==
-                        enums.Instruction.JUMP
+                        self.ir & opcode_mask == enums.Instruction.JUMP
                     )
                 ):
                     self.do_extra_instruction()
                 else:
-                    if self._report_step_error(e, done, addr) == enums.MitErrorCode.HALT:
+                    ret = e.args[0]
+                    print("Error code {} was returned".format(ret), end='')
+                    print(" after {} step{}".format(done, 's' if done != 1 else ''), end='')
+                    if addr is not None:
+                        print(" at pc={:#x}".format(self.pc), end='')
+                    print()
+                    if ret == enums.MitErrorCode.HALT:
                         return
-            print("pc={:#x} ir={:#x}".format(self.pc, self.ir))
-            print(str(self.S))
+                    elif ret != enums.MitErrorCode.OK:
+                        raise
+            if trace:
+                print("pc={:#x} ir={:#x}".format(self.pc, self.ir))
+                print(str(self.S))
             done += 1
+
+    def trace(self, n=1, addr=None, auto_NEXT=True):
+        'A convenience wrapper for `step(trace=True)`.'
+        self.step(n=n, addr=addr, trace=True, auto_NEXT=auto_NEXT)
 
     def load(self, file, addr=None):
         '''
