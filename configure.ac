@@ -51,6 +51,17 @@ AC_PATH_PROG([SLOCCOUNT], [sloccount], [true])
 AM_CONDITIONAL([HAVE_LATEXMK], [test "$ac_cv_path_LATEXMK" != "true"])
 gl_INIT
 
+# Test whether we have cygpath
+# Code adapted from automake's init.m4
+if test -z "$CYGPATH_M"; then
+  if (cygpath --version) >/dev/null 2>/dev/null; then
+    CYGPATH_M='cygpath -m'
+  else
+    CYGPATH_M=echo
+  fi
+fi
+AC_SUBST([CYGPATH_M])
+
 # help2man
 # Set a value even if not found, so that an invocation via build-aux/missing works
 AC_PATH_PROG([HELP2MAN], [help2man], [help2man])
