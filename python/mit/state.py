@@ -143,8 +143,9 @@ class State:
         if addr is not None:
             print(" at pc={:#x}".format(self.pc), end='')
         print()
-        if ret != 0 and ret != enums.MitErrorCode.HALT:
+        if ret not in (enums.MitErrorCode.OK, enums.MitErrorCode.HALT):
             raise
+        return ret
 
     def step(self, n=1, addr=None, auto_NEXT=True):
         '''
@@ -188,7 +189,8 @@ class State:
                 ):
                     self.do_extra_instruction()
                 else:
-                    self._report_step_error(e, done, addr)
+                    if self._report_step_error(e, done, addr) == enums.MitErrorCode.HALT:
+                        return
             print("pc={:#x} ir={:#x}".format(self.pc, self.ir))
             print(str(self.S))
             done += 1
