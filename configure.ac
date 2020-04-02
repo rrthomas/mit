@@ -124,6 +124,20 @@ AC_SUBST([objdir])
 # Check features
 AX_C_ARITHMETIC_RSHIFT
 
+# Thread-local storage
+case $host in
+  # Disable by default on some platforms
+  # MingW/MSYS: see https://sourceforge.net/p/mingw-w64/bugs/827/
+  # macOS: segfault when a library with a _Thread_local is dlopened (e.g. in Python)
+  *mingw32|*msys|*darwin*) AC_MSG_WARN([Thread-local storage is disabled by default on this platform]);;
+  *) AX_TLS ;;
+esac
+AS_IF([test "$ac_cv_tls" = "" -o "$ac_cv_tls" = "none"],
+  AC_MSG_WARN([Define THREAD_LOCAL to a storage specifier if desired.]))
+AC_ARG_VAR([THREAD_LOCAL],
+  [storage specifier for thread-local storage [default: auto-detected]])
+: "${THREAD_LOCAL=$ac_cv_tls}"
+
 # Check endianness
 AC_C_BIGENDIAN
 AC_SUBST([WORDS_BIGENDIAN])

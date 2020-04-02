@@ -18,15 +18,16 @@ Examining memory: dump, disassemble, dump_files
 '''
 
 import sys
-from ctypes import create_string_buffer, cast, byref, POINTER
+from ctypes import create_string_buffer, byref
 
 from . import enums
 from .binding import (
-    libmit, libmitfeatures,
+    libmit, libmitfeatures, run, run_ptr,
     Error, VMError, is_aligned,
     word_bytes, word_mask, opcode_mask,
     c_word, c_uword, c_mit_state,
     hex0x_word_width, register_args,
+    run_specializer,
 )
 from .memory import Memory
 from .assembler import Assembler, Disassembler
@@ -121,12 +122,11 @@ class State:
 
          - optimize - bool - if True, run with optimization.
         '''
+        if optimize:
+            run_ptr.contents = run_specializer
         while True:
             try:
-                if optimize == True:
-                    libmitfeatures.mit_specializer_run(self.state)
-                else:
-                    libmit.mit_run(self.state)
+                run(self.state)
             except VMError as e:
                 if e.args[0] == enums.MitErrorCode.HALT:
                     return

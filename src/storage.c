@@ -75,7 +75,6 @@ mit_state *mit_new_state(size_t stack_words)
     S->pc = 0;
     S->stack_depth = 0;
     S->stack_words = stack_words;
-    S->run_fn = mit_run;
 
     return S;
 }

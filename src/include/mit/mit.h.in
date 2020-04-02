@@ -31,6 +31,9 @@
 #define unlikely(x) (x)
 #endif
 
+// Thread-local storage
+#define MIT_THREAD_LOCAL @THREAD_LOCAL@
+
 // Build-time parameters
 #define MIT_WORD_BYTES @WORD_BYTES@
 #define MIT_ENDISM @ENDISM@
@@ -76,25 +79,14 @@ typedef mit_uword mit_max_stack_item_t;
 // Forward declaration
 typedef struct mit_state mit_state;
 
+// The type of a function that mutates the VM
 typedef mit_word mit_fn(mit_state * restrict S);
-/* The type of a function that mutates the VM.
-
-   The most important type of `mit_fn` is a run function, which runs code
-   like `mit_run`. A run function should set `run_fn`, usually to itself, so
-   that nested VMs can use the same run function via the `MIT_RUN`
-   instruction. Run functions can use the `extra_state` member of
-   `mit_state` to share extra state between nested invocations.
-
-   A `mit_fn` that is not a run function may return `MIT_ERROR_OK`.
-*/
 
 // VM State
 struct mit_state {
 #define R(reg, type, return_type) type reg;
 #include <mit@PACKAGE_SUFFIX@/registers.h>
 #undef R
-    mit_fn *run_fn;
-    void *extra_state;
 };
 
 // Constants (for easy FFI binding)
@@ -209,9 +201,18 @@ mit_state *mit_new_state(size_t stack_words);
 void mit_free_state(mit_state *S);
 /* Free the given state, deallocating its memory. */
 
-mit_word mit_run(mit_state * restrict S);
+extern @THREAD_LOCAL@ mit_fn *mit_run;
+/* Execute VM code. Defaults to `mit_run_simple`. Can be set to any
+   compatible function, which thereby propagates to nested VMs via the `RUN`
+   extra instruction. This allows a different implementation (optimized,
+   profiling) to be used globally.
+*/
+
+mit_word mit_run_simple(mit_state * restrict S);
 /* Start the execution cycle in the given state as described in the spec.
    If an error is raised, the code is returned.
+
+   This is the default naive implementation.
 */
 
 mit_word mit_single_step(mit_state * restrict S);

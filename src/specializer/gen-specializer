@@ -321,9 +321,9 @@ code.append('''
 
     #define NUM_LABELS {num_labels}
     // The number of times we guessed correctly at each specializer label.
-    static unsigned long long state_guess_correct[NUM_LABELS];
+    static MIT_THREAD_LOCAL unsigned long long state_guess_correct[NUM_LABELS];
     // The number of times we guessed wrong at each specializer label.
-    static unsigned long long state_guess_wrong[NUM_LABELS];
+    static MIT_THREAD_LOCAL unsigned long long state_guess_wrong[NUM_LABELS];
 
     // Extra data to be included in profile files.
     static const struct label {{
@@ -350,7 +350,7 @@ code.append('};')
 # in successive builds of mit. We add suitable labels in `simulate-jit`
 # to compensate; see the definition of `ROOT_LABEL`.
 code.append('''
-    void mit_profile_init(void)
+    void mit_profile_reset(void)
     {
         for (unsigned i = 0; i < NUM_LABELS; i++)
             state_guess_correct[i] = state_guess_wrong[i] = 0;
@@ -404,8 +404,8 @@ code.append('''
 ''')
 
 for profiling, fn in [
-    (False, 'mit_specializer_run'),
-    (True, 'mit_profile_run'),
+    (False, 'mit_run_specializer'),
+    (True, 'mit_run_profile'),
 ]:
     code.append('')
     code.append('mit_word {}(mit_state * restrict real_S) {{'.format(fn))

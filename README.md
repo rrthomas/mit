@@ -12,7 +12,7 @@ I/O library is implemented; access to native code routines is also possible,
 allowing Mit and C programs to call each other.
 
 This package comprises the definition of the Mit virtual machine and an
-implementation in ISO C99 using POSIX APIs.
+implementation in ISO C11 using POSIX APIs.
 
 The package is distributed under the MIT/X11 License (see the file
 `COPYING`). Note that some files are in the public domain, notably the

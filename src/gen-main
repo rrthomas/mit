@@ -100,7 +100,7 @@ Option('stack',
 Option('optimize',
        'use optimizing interpreter',
        short_name='O',
-       parse_code=Code('set_run_function(mit_specializer_run);'),
+       parse_code=Code('set_run_function(mit_run_specializer);'),
 )
 
 Option('profile',
@@ -109,8 +109,7 @@ Option('profile',
        arg='required_argument', arg_name='FILE',
        parse_code=Code('''\
        {
-           mit_profile_init();
-           set_run_function(mit_profile_run);
+           set_run_function(mit_run_profile);
            profile_file = optarg;
        }
        '''),
@@ -215,13 +214,9 @@ Feature(# Optimizing interpreter and profiling
     top_level=Code('''
         static void set_run_function(mit_fn *new_run_fn)
         {
-            if (run_fn == new_run_fn ||
-                (run_fn == mit_profile_run && new_run_fn == mit_specializer_run))
-                ;
-            else if (run_fn == mit_run)
-                run_fn = new_run_fn;
-            else
-                die("incompatible execution options given; see %s --help", program_name);
+            if (mit_run == mit_run_simple ||
+                (mit_run == mit_run_specializer && new_run_fn == mit_run_profile))
+                mit_run = new_run_fn;
         }
     '''),
     init=Code('char *profile_file = NULL;'),
@@ -311,7 +306,6 @@ getopt_code.append('{0, 0, 0, 0}')
 
 # Features
 top_level_code = Code('''\
-    mit_fn *run_fn = mit_run;
     mit_word *memory;
     mit_uword memory_words, stack_words;
 ''')
@@ -490,9 +484,8 @@ int main(int argc, char *argv[])
     }
 
     // Run
-    S->run_fn = run_fn;
     for (;;) {
-        mit_word error = S->run_fn(S);''',
+        mit_word error = mit_run(S);''',
                  handlers_code,
                  exit_code),
             '''

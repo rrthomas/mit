@@ -243,7 +243,7 @@ internal_extra_instructions.update({
 
     'FREE_STATE': Code('mit_free_state(inner_state);'),
 
-    'RUN': Code('ret = (mit_word)inner_state->run_fn(inner_state);'),
+    'RUN': Code('ret = mit_run(inner_state);'),
 
     'SINGLE_STEP': Code('ret = mit_single_step(inner_state);'),
 })

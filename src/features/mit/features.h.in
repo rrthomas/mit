@@ -22,15 +22,14 @@ extern char **mit_argv;
 
 mit_word mit_extra_instruction(mit_state * restrict S);
 
-mit_word mit_specializer_run(mit_state * restrict S);
-/* Like `mit_run`, but (hopefully) faster. */
+mit_word mit_run_specializer(mit_state * restrict S);
+/* Like `mit_run_simple`, but (hopefully) faster. */
 
-// N.B. The profiler is global to the process.
-void mit_profile_init(void);
-/* Initialize the profiler. Must be called before `mit_profile_run` or
-   `mit_profile_dump`. */
-mit_word mit_profile_run(mit_state * restrict S);
-/* Like `mit_specializer_run`, but record profiling information. */
+// N.B. The profiler is per-thread, not per-`mit_state`.
+void mit_profile_reset(void);
+/* Clears the profile. */
+mit_word mit_run_profile(mit_state * restrict S);
+/* Like `mit_run_specializer`, but records profiling information. */
 int mit_profile_dump(int fd);
 /* Dump profiling information to file descriptor `fd`. */
 
