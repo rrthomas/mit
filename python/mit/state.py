@@ -175,10 +175,7 @@ class State:
                     if addr is not None:
                         print(" at pc={:#x}".format(self.pc), end='')
                     print()
-                    if ret == enums.MitErrorCode.HALT:
-                        return
-                    elif ret != enums.MitErrorCode.OK:
-                        raise
+                    raise
             if trace:
                 print("pc={:#x} ir={:#x}".format(self.pc, self.ir))
                 print(str(self.S))
