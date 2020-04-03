@@ -223,7 +223,7 @@ for register in Register:
 internal_extra_instructions.update({
     'HALT': Code('RAISE(MIT_ERROR_HALT);'),
 
-    'CURRENT_STATE': Code('state = S;'),
+    'THIS_STATE': Code('state = S;'),
 
     'LOAD_STACK': Code('''\
         value = 0;

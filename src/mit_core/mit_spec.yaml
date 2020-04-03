@@ -180,7 +180,7 @@ InternalExtraInstruction:
     opcode: 0xa
   SET_STACK_WORDS:
     opcode: 0xb
-  CURRENT_STATE:
+  THIS_STATE:
     opcode: 0xc
     args: []
     results: ['state:mit_state *']
