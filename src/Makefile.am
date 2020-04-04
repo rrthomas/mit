@@ -1,6 +1,6 @@
 # Source Makefile.am
 #
-# (c) Mit authors 2011-2019
+# (c) Mit authors 2011-2020
 #
 # The package is distributed under the MIT/X11 License.
 #
@@ -29,21 +29,19 @@ nodist_libmit@PACKAGE_SUFFIX@_la_SOURCES = $(C_SRCS) $(nodist_LIB_SRCS)
 libmit@PACKAGE_SUFFIX@_la_LIBADD = $(top_builddir)/lib/libgnu.la
 libmit@PACKAGE_SUFFIX@_la_LDFLAGS = -no-undefined -export-symbols-regex '^mit_.*'
 
-noinst_LTLIBRARIES = libutil.la
-libutil_la_SOURCES = warn.h warn.c
-
 bin_PROGRAMS = mit@PACKAGE_SUFFIX@$(EXEEXT)
 MIT_BINARY = $(abs_builddir)/mit@PACKAGE_SUFFIX@$(EXEEXT)
 man_MANS = mit@PACKAGE_SUFFIX@.1
-mit@PACKAGE_SUFFIX@_LDADD = libmit@PACKAGE_SUFFIX@.la libmitfeatures@PACKAGE_SUFFIX@.la $(top_builddir)/lib/libgnu.la libutil.la
+mit@PACKAGE_SUFFIX@_LDADD = libmit@PACKAGE_SUFFIX@.la libmitfeatures@PACKAGE_SUFFIX@.la $(top_builddir)/lib/libgnu.la
 nodist_mit@PACKAGE_SUFFIX@_SOURCES = main.c
+mit@PACKAGE_SUFFIX@_SOURCES = warn.c warn.h
 mit_pkgincludedir = $(pkgincludedir)@PACKAGE_SUFFIX@
 nodist_mit_pkginclude_HEADERS = include/mit/opcodes.h include/mit/registers.h
 mit_pkginclude_HEADERS = include/mit/mit.h
 noinst_HEADERS = run.h
 
-storage.lo: include/mit/mit.h include/mit/registers.h
-storage.lo main.o: include/mit/opcodes.h
+warn.o storage.lo: include/mit/mit.h include/mit/registers.h
+warn.o storage.lo main.o: include/mit/opcodes.h
 instructions.lo main.o: main.c include/mit/mit.h include/mit/registers.h
 main.o: warn.h
 
