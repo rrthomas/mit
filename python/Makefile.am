@@ -40,10 +40,8 @@ all-local: $(nodist_mit_pkgpython_PYTHON)
 		--output=$@ ./$*; \
 	fi
 
-mit/binding.py: $(top_builddir)/config.status mit/binding.py.in
-	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
-
 mit/enums.py: $(top_srcdir)/src/mit_core/mit_spec.yaml Makefile mit/enums.py.in
+	@$(MKDIR_P) mit
 	@rm -f $@ $@.tmp
 	$(AM_V_GEN)$(inplace_edit) $(srcdir)/'$@.in' >$@.tmp
 	$(AM_V_at)mv $@.tmp $@
@@ -81,7 +79,7 @@ EXTRA_DIST = \
 	gen-extra-enums			\
 	mit-shell-include.man.in	\
 	$(man_MANS)			\
-	mit/binding.py.in		\
+	mit/binding.py			\
 	mit/enums.py.in			\
 	mit-profile.in			\
 	mit-shell.in

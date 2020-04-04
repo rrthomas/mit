@@ -192,7 +192,6 @@ AC_CONFIG_FILES([
         src/mit_core/params.py
         src/features/mit/features.h
         python/Makefile
-        python/mit/binding.py
         python/mit-shell-include.man
         tests/Makefile
         tests/test_pickle.py
