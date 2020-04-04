@@ -35,7 +35,7 @@
 #define MIT_THREAD_LOCAL @THREAD_LOCAL@
 
 // Build-time parameters
-#define MIT_WORD_BYTES @WORD_BYTES@
+#define MIT_WORD_BYTES @SIZEOF_SIZE_T@
 #define MIT_OPCODE_BIT @OPCODE_BIT@
 
 // Types and constants

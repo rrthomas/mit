@@ -121,9 +121,6 @@ AC_SUBST([PY_LOG_ENV])
 # Accessing in-tree shared libraries
 AC_SUBST([objdir])
 
-# Check features
-AX_C_ARITHMETIC_RSHIFT
-
 # Thread-local storage
 case $host in
   # Disable by default on some platforms
@@ -138,12 +135,15 @@ AC_ARG_VAR([THREAD_LOCAL],
   [storage specifier for thread-local storage [default: auto-detected]])
 : "${THREAD_LOCAL=$ac_cv_tls}"
 
-# Check endianness
+# Check features
 AC_C_BIGENDIAN
-
-# Check word size
-AC_CHECK_SIZEOF([size_t])
-AC_SUBST([WORD_BYTES], [$ac_cv_sizeof_size_t])
+AC_CHECK_SIZEOF([size_t]) # word_bytes
+SIZEOF_SIZE_T=$ac_cv_sizeof_size_t
+AC_SUBST([SIZEOF_SIZE_T])
+AX_C_ARITHMETIC_RSHIFT
+AC_CHECK_SIZEOF([intmax_t]) # largest stack item
+SIZEOF_INTMAX_T=$ac_cv_sizeof_intmax_t
+AC_SUBST([SIZEOF_INTMAX_T])
 
 # Set byte size
 AC_SUBST([MIT_BYTE_BIT], [8])
@@ -153,11 +153,6 @@ default_opcode_bit=$MIT_BYTE_BIT
 AC_ARG_VAR([OPCODE_BIT],
   [value of MIT_OPCODE_BIT [default: $default_opcode_bit]])
 : "${OPCODE_BIT=$default_opcode_bit}"
-
-# Get size of largest integer
-AC_CHECK_SIZEOF([intmax_t])
-SIZEOF_INTMAX_T=$ac_cv_sizeof_intmax_t
-AC_SUBST([SIZEOF_INTMAX_T])
 
 # Package suffix for side-by-side installation of multiple builds
 AC_ARG_ENABLE([package-suffix],
@@ -176,7 +171,7 @@ if test "$gl_package_suffix" = yes; then
   else
     endism_text=le
   fi
-  PACKAGE_SUFFIX=-$endism_text-$WORD_BYTES
+  PACKAGE_SUFFIX=-$endism_text-$ac_cv_sizeof_size_t
 fi
 AC_SUBST([PACKAGE_SUFFIX])
 AM_CONDITIONAL([USING_PACKAGE_SUFFIX], [test "$gl_package_suffix" = "yes"])
@@ -184,7 +179,7 @@ AM_CONDITIONAL([USING_PACKAGE_SUFFIX], [test "$gl_package_suffix" = "yes"])
 # pForth tests, run if the pforth source tree is present and Mit is
 # configured compatibly with pForth.
 AM_CONDITIONAL([USING_PFORTH],
-   [test -d src/specializer/pforth -a "$WORD_BYTES" = 4 -a "$ac_cv_c_bigendian" != "yes"])
+   [test -d src/specializer/pforth -a "$SIZEOF_SIZE_T" = 4 -a "$ac_cv_c_bigendian" != "yes"])
 
 # Generate output files
 AC_CONFIG_HEADERS([config.h])
