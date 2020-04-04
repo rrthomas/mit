@@ -143,12 +143,7 @@ AC_C_BIGENDIAN
 
 # Check word size
 AC_CHECK_SIZEOF([size_t])
-# Use a configure variable to substitute this in mit.h.in, where we can't
-# include config.h, as mit.h is a public header.
-SIZEOF_SIZE_T=$ac_cv_sizeof_size_t
-AC_SUBST([SIZEOF_SIZE_T])
-WORD_BYTES=$SIZEOF_SIZE_T
-AC_SUBST([WORD_BYTES])
+AC_SUBST([WORD_BYTES], [$ac_cv_sizeof_size_t])
 
 # Set byte size
 AC_SUBST([MIT_BYTE_BIT], [8])
