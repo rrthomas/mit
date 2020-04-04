@@ -9,9 +9,6 @@
 
 mit_pkginclude_HEADERS += %D%/mit/features.h
 
-%D%/mit/features.h: $(top_builddir)/config.status %D%/mit/features.h.in
-	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
-
 
 # Simple features
 
