@@ -83,6 +83,7 @@ EXTRA_DIST = \
 	$(man_MANS)			\
 	mit/binding.py.in		\
 	mit/enums.py.in			\
+	mit-profile.in			\
 	mit-shell.in
 
 DISTCLEANFILES = $(bin_SCRIPTS) $(man_MANS) mit/enums.py

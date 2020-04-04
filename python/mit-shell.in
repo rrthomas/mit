@@ -24,9 +24,7 @@ parser.add_argument(
     version='''\
 %(prog)s @VERSION@
 Copyright (c) Mit authors 2019-2020.
-@PACKAGE_NAME@ comes with ABSOLUTELY NO WARRANTY.
-You may redistribute copies of @PACKAGE_NAME@
-under the terms of the MIT/X11 License.'''
+This program is in the public domain.'''
 )
 args = parser.parse_args()
 

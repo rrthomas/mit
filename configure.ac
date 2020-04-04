@@ -213,6 +213,7 @@ AC_CONFIG_FILES([
         tests/test_pickle.py
         doc/Makefile
 ])
+AC_CONFIG_FILES([python/mit-profile], [chmod +x python/mit-profile])
 AC_CONFIG_FILES([python/mit-shell], [chmod +x python/mit-shell])
 AC_CONFIG_FILES([tests/test-mit-shell], [chmod +x tests/test-mit-shell])
 AC_OUTPUT

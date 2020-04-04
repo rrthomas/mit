@@ -61,7 +61,7 @@ PROFILE_PFORTH_ARGS=make.fs
 specialize-mit: mit@PACKAGE_SUFFIX@$(EXEEXT)
 	export LD_LIBRARY_PATH=$(abs_top_builddir)/src/@objdir@:$(abs_top_builddir)/src/%D%/@objdir@:$$LD_LIBRARY_PATH; \
 	cd %D%/pforth/src/mit && \
-	$(MIT_BINARY) --profile=$(abs_srcdir)/%D%/profile.json pforth $(PROFILE_PFORTH_ARGS) && \
+	$(abs_top_builddir)/python/mit-profile $(abs_builddir)/%D%/profile.json pforth $(PROFILE_PFORTH_ARGS) && \
 	cd $(abs_builddir) && \
 	$(MAKE)
 

@@ -27,7 +27,7 @@ from .binding import (
     word_bytes, word_mask, opcode_mask,
     c_word, c_uword, c_mit_state,
     hex0x_word_width, register_args,
-    run_specializer,
+    run_specializer, run_profile,
 )
 from .memory import Memory
 from .assembler import Assembler, Disassembler
@@ -116,13 +116,18 @@ class State:
         libmitfeatures.mit_extra_instruction(self.state)
         self.ir = 0 # Skip to next instruction
 
-    def run(self, optimize=True):
+    def run(self, optimize=True, profile=False):
         '''
         Run until `halt` or error.
 
          - optimize - bool - if True, run with optimization.
+         - profile - bool - if True, run with profiling.
+
         '''
-        if optimize:
+        assert optimize or not profile
+        if profile:
+            run_ptr.contents = run_profile
+        elif optimize:
             run_ptr.contents = run_specializer
         while True:
             try:

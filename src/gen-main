@@ -100,19 +100,7 @@ Option('stack',
 Option('optimize',
        'use optimizing interpreter',
        short_name='O',
-       parse_code=Code('set_run_function(mit_run_specializer);'),
-)
-
-Option('profile',
-       '''write execution profile to FILE
-                            (implies --optimize)''',
-       arg='required_argument', arg_name='FILE',
-       parse_code=Code('''\
-       {
-           set_run_function(mit_run_profile);
-           profile_file = optarg;
-       }
-       '''),
+       parse_code=Code('mit_run = mit_run_specializer;'),
 )
 
 Doc('\nMiscellaneous:')
@@ -207,32 +195,6 @@ Feature(# Error message on error exit
     exit=Code('''
         if (error != MIT_ERROR_HALT)
             warn("error %zd: %s", error, error_to_msg(error));
-    '''),
-)
-
-Feature(# Optimizing interpreter and profiling
-    top_level=Code('''
-        static void set_run_function(mit_fn *new_run_fn)
-        {
-            if (mit_run == mit_run_simple ||
-                (mit_run == mit_run_specializer && new_run_fn == mit_run_profile))
-                mit_run = new_run_fn;
-        }
-    '''),
-    init=Code('char *profile_file = NULL;'),
-    exit=Code('''
-        if (profile_file != NULL) {{
-            FILE *fp = fopen(profile_file, "w");
-            if (fp == NULL)
-                warn("could not open file %s", profile_file);
-            else {{
-                if (mit_profile_dump(fileno(fp)) == -1)
-                    warn("error writing profile data");
-                else
-                    warn("wrote profile data to %s", profile_file);
-                fclose(fp);
-            }}
-        }}
     '''),
 )
 
