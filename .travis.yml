@@ -63,6 +63,7 @@ jobs:
       <<: *test_in_container
     - env:
         - ASAN=yes
+        - LSAN_OPTIONS="verbosity=1:log_threads=1"
       addons:
         apt:
           packages:
