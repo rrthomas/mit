@@ -67,6 +67,7 @@ loc:
 	for file in $(nodist_mit_pkgpython_PYTHON); do \
 		test -f $$file.in.bak && mv $$file.in.bak $$file.in || true; \
 	done
+
 if USING_PACKAGE_SUFFIX
 mit@PACKAGE_SUFFIX@-shell: mit-shell
 	cp mit-shell $@
