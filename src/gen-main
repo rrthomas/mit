@@ -133,72 +133,6 @@ execution halts normally, the exit status is 0. Note that the VM code may
 cause an exit with a different status.''')
 
 
-# Features
-
-class Feature:
-    '''
-    A command-line option.
-
-     - top_level - Code - additional top-level code for the option
-     - init - Code - declarations inside main, and initialisation
-     - handler - Code - code added to the error handler (in Feature order).
-       A handler should "continue" if it does not want execution to stop.
-     - exit - Code - code run immediately before exit
-    '''
-    features = []
-    def __init__(self, top_level=None, init=None, handler=None, exit=None):
-        self.features.append(self)
-        self.top_level = top_level
-        self.init = init
-        self.handler = handler
-        self.exit = exit
-
-Feature(# Extra instructions
-    handler=Code('''\
-        if (error == MIT_ERROR_INVALID_OPCODE)
-            if ((S->ir & MIT_OPCODE_MASK) == MIT_INSTRUCTION_JUMP) {
-                error = mit_extra_instruction(S);
-                if (error == MIT_ERROR_OK) {
-                    S->ir = 0;
-                    continue;
-                }
-            }
-    '''),
-)
-
-Feature(# Parse number of words (for --memory and --stack)
-    top_level=Code('''
-        static mit_uword parse_num_words(const char *errfmt)
-        {
-            size_t max = SIZE_MAX / MIT_WORD_BYTES;
-            char *endptr;
-            errno = 0;
-            uintmax_t size = strtoumax(optarg, &endptr, 10);
-            if (*optarg == '\\0' || *endptr != '\\0' || size == 0 || size > (uintmax_t)max)
-                die(errfmt, max);
-            return (mit_uword)size;
-        }
-    '''),
-)
-
-Feature(# Error message on error exit
-    top_level=Code('''
-    static const char *error_to_msg(int code)
-    {
-        for (size_t i = 0; i < sizeof(error_msg) / sizeof(error_msg[0]); i++) {
-            if (error_msg[i].code == code)
-                return error_msg[i].msg;
-        }
-        return "unknown error";
-    }
-    '''),
-    exit=Code('''
-        if (error != MIT_ERROR_HALT)
-            warn("error %zd: %s", error, error_to_msg(error));
-    '''),
-)
-
-
 # Generate output
 
 # Errors
@@ -242,7 +176,7 @@ for element in Doc.elements:
 getopt_code = Code()
 shortopts = ''
 short_options_code = Code()
-long_options_code = Code()
+long_options_code = Code('')
 else_code = ''
 for i, option in enumerate(Option.options):
     getopt_code.append('{{"{long_name}", {arg}, NULL, \'{short_name}\'}},'.format(
@@ -255,7 +189,7 @@ for i, option in enumerate(Option.options):
         elif option.arg == 'optional_argument':
             shortopts += '::'
         short_options_code.append('''\
-            if (c == '{short_name}')
+            else if (c == '{short_name}')
                 longindex = {index};'''.format(
                     short_name = option.short_name,
                     index = i
@@ -265,52 +199,23 @@ for i, option in enumerate(Option.options):
         long_options_code.append(option.parse_code)
         else_code = 'else '
 getopt_code.append('{0, 0, 0, 0}')
-
-# Features
-top_level_code = Code('''\
-    mit_word *memory;
-    mit_uword memory_words, stack_words;
-''')
-init_code = Code('''\
-    set_program_name(argv[0]);
-
-    memory_words = 0x100000U;
-    stack_words = 16384U;
-''')
-handlers_code = Code()
-exit_code = Code()
-for feature in Feature.features:
-    if feature.top_level:
-        top_level_code.extend(feature.top_level)
-    if feature.init:
-        init_code.extend(feature.init)
-    if feature.handler:
-        handlers_code.extend(feature.handler)
-    if feature.exit:
-        exit_code.extend(feature.exit)
+short_options_assignment = Code('const char *shortopts = "+:{}";'.format(shortopts))
 
 # main.c
 code = copyright_banner(GENERATOR_PROGRAM, PURPOSE, COPYRIGHT_YEARS)
-initial_code = Code('''
+code.extend(Code('''
 
 #include "config.h"
 
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdlib.h>
-#include <stdbool.h>
-#include <stdint.h>
 #include <inttypes.h>
 #include <errno.h>
-#include <signal.h>
 #include <getopt.h>
 #include <unistd.h>
-#include <fcntl.h>
-#include <sys/stat.h>
 
-#include "unused-parameter.h"
 #include "progname.h"
-#include "binary-io.h"
 
 #include "mit/mit.h"
 #include "mit/features.h"
@@ -328,22 +233,33 @@ struct {
               '''\
 };
 
-// Options table
+static const char *error_to_msg(int code)
+{
+    for (size_t i = 0; i < sizeof(error_msg) / sizeof(error_msg[0]); i++) {
+        if (error_msg[i].code == code)
+            return error_msg[i].msg;
+    }
+    return "unknown error";
+}
+
+
+// Command-line options
 struct option longopts[] = {''',
               getopt_code,
               '''\
 };
 
-static mit_state *S;
-
-static void exit_function(void)
+static mit_uword parse_num_words(const char *errfmt)
 {
-    mit_free_state(S);
-}''')
-code.extend(initial_code)
+    size_t max = SIZE_MAX / MIT_WORD_BYTES;
+    char *endptr;
+    errno = 0;
+    uintmax_t size = strtoumax(optarg, &endptr, 10);
+    if (*optarg == '\\0' || *endptr != '\\0' || size == 0 || size > (uintmax_t)max)
+        die(errfmt, max);
+    return (mit_uword)size;
+}
 
-code.extend(top_level_code)
-code.extend(Code('''
 static off_t fleno(FILE *fp)
 {
   off_t pos = ftello(fp);
@@ -370,6 +286,11 @@ static int skip_hashbang(FILE *fp)
     return 0;
 }
 
+// Global state
+static mit_state *S;
+mit_word *memory;
+mit_uword memory_words, stack_words;
+
 static void usage(void)
 {
     printf("Usage: %s [OPTION...] [OBJECT-FILE ARGUMENT...]\\n"
@@ -382,15 +303,24 @@ static void usage(void)
     exit(EXIT_SUCCESS);
 }
 
+
+static void exit_function(void)
+{
+    mit_free_state(S);
+}
+
 int main(int argc, char *argv[])
 {
-''',
-              init_code,
-              Code('''
+    set_program_name(argv[0]);
+
+    memory_words = 0x100000U;
+    stack_words = 16384U;
+
     // Options string starts with '+' to stop option processing at first
     // non-option, then leading ':' so as to return ':' for a missing arg,
     // not '?'
-    const char *shortopts = "+:{}";'''.format(shortopts)),
+    ''',
+              short_options_assignment,
               Code('''
     for (;;) {
         int this_optind = optind ? optind : 1, longindex = -1;
@@ -403,10 +333,10 @@ int main(int argc, char *argv[])
         else if (c == '?')
             die("unrecognised option '%s'\\nTry '%s --help' for more information.", argv[this_optind], program_name);
 '''),
-              short_options_code,
-              long_options_code,
+              Code(short_options_code),
+              Code(long_options_code),
               Code('}'),
-              Code('''
+              '''
     // If invoked without an object file, give usage message and exit
     argc -= optind;
     argv += optind;
@@ -447,13 +377,20 @@ int main(int argc, char *argv[])
 
     // Run
     for (;;) {
-        mit_word error = mit_run(S);''',
-                 handlers_code,
-                 exit_code),
-            '''
+        mit_word error = mit_run(S);
+        if (error == MIT_ERROR_INVALID_OPCODE
+            && (S->ir & MIT_OPCODE_MASK) == MIT_INSTRUCTION_JUMP) {
+            error = mit_extra_instruction(S);
+            if (error == MIT_ERROR_OK) {
+                S->ir = 0;
+                continue;
+            }
+        }
+        if (error != MIT_ERROR_HALT)
+            warn("error %zd: %s", error, error_to_msg(error));
         return error == MIT_ERROR_HALT ? 0 : error;
     }
-}''',
+}'''
 ))
 
 print(code)
