@@ -143,10 +143,10 @@ AC_C_BIGENDIAN
 AC_SUBST([WORDS_BIGENDIAN])
 if test "$ac_cv_c_bigendian" = "yes"; then
   WORDS_BIGENDIAN=1
-  endism_text=le
+  endism_text=be
 else
   WORDS_BIGENDIAN=0
-  endism_text=be
+  endism_text=le
 fi
 : "${ENDISM=$WORDS_BIGENDIAN}"
 AC_SUBST([ENDISM])
