@@ -36,8 +36,6 @@
 
 // Build-time parameters
 #define MIT_WORD_BYTES @WORD_BYTES@
-#define MIT_ENDISM @ENDISM@
-#define MIT_HOST_ENDISM @WORDS_BIGENDIAN@
 #define MIT_OPCODE_BIT @OPCODE_BIT@
 
 // Types and constants
@@ -91,7 +89,6 @@ struct mit_state {
 
 // Constants (for easy FFI binding)
 extern const unsigned mit_word_bytes;
-extern const unsigned mit_endism;
 extern const unsigned mit_size_word;
 extern const unsigned mit_byte_bit;
 extern const unsigned mit_byte_mask;

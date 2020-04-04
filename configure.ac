@@ -140,16 +140,6 @@ AC_ARG_VAR([THREAD_LOCAL],
 
 # Check endianness
 AC_C_BIGENDIAN
-AC_SUBST([WORDS_BIGENDIAN])
-if test "$ac_cv_c_bigendian" = "yes"; then
-  WORDS_BIGENDIAN=1
-  endism_text=be
-else
-  WORDS_BIGENDIAN=0
-  endism_text=le
-fi
-: "${ENDISM=$WORDS_BIGENDIAN}"
-AC_SUBST([ENDISM])
 
 # Check word size
 AC_CHECK_SIZEOF([size_t])
@@ -177,7 +167,7 @@ AC_SUBST([SIZEOF_INTMAX_T])
 # Package suffix for side-by-side installation of multiple builds
 AC_ARG_ENABLE([package-suffix],
   [AS_HELP_STRING([--enable-package-suffix],
-                  [add suffix containing values of ENDISM and WORD_BYTES, e.g. "-le-8", to binaries, libraries, include directories etc., enabling side-by-side installation of multiple builds.])],
+                  [add suffix denoting the endianness and word size, e.g. "-le-8", to binaries, libraries, include directories etc., enabling side-by-side installation of multiple builds.])],
   [case $enableval in
      yes|no) ;;
      *)      AC_MSG_ERROR([bad value $enableval for package-suffix option]) ;;
@@ -186,6 +176,11 @@ AC_ARG_ENABLE([package-suffix],
   [gl_package_suffix=no]
 )
 if test "$gl_package_suffix" = yes; then
+  if test "$ac_cv_c_bigendian" = "yes"; then
+    endism_text=be
+  else
+    endism_text=le
+  fi
   PACKAGE_SUFFIX=-$endism_text-$WORD_BYTES
 fi
 AC_SUBST([PACKAGE_SUFFIX])
@@ -194,7 +189,7 @@ AM_CONDITIONAL([USING_PACKAGE_SUFFIX], [test "$gl_package_suffix" = "yes"])
 # pForth tests, run if the pforth source tree is present and Mit is
 # configured compatibly with pForth.
 AM_CONDITIONAL([USING_PFORTH],
-   [test -d src/specializer/pforth -a "$WORD_BYTES" = 4 -a "$ENDISM" = 0])
+   [test -d src/specializer/pforth -a "$WORD_BYTES" = 4 -a "$ac_cv_c_bigendian" != "yes"])
 
 # Generate output files
 AC_CONFIG_HEADERS([config.h])

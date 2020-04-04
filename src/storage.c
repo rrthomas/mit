@@ -18,7 +18,6 @@
 
 // Constants
 const unsigned mit_word_bytes = MIT_WORD_BYTES;
-const unsigned mit_endism = MIT_ENDISM;
 const unsigned mit_size_word = MIT_SIZE_WORD;
 const unsigned mit_byte_bit = 8;
 const unsigned mit_byte_mask = MIT_BYTE_MASK;

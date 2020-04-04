@@ -118,7 +118,7 @@ Option('version',
                       PACKAGE_NAME " comes with ABSOLUTELY NO WARRANTY.\\n"
                       "You may redistribute copies of " PACKAGE_NAME "\\n"
                       "under the terms of the MIT/X11 License.\\n",
-                      MIT_WORD_BYTES, MIT_ENDISM ? "big" : "little");
+                      MIT_WORD_BYTES, ENDISM_STRING);
                exit(EXIT_SUCCESS);
            }
        ''')
@@ -244,6 +244,12 @@ static const char *error_to_msg(int code)
 
 
 // Command-line options
+#ifdef WORDS_BIGENDIAN
+#define ENDISM_STRING "big"
+#else
+#define ENDISM_STRING "little"
+#endif
+
 struct option longopts[] = {''',
               getopt_code,
               '''\

@@ -2,6 +2,4 @@
 
 word_bytes = @WORD_BYTES@
 word_bit = @MIT_BYTE_BIT@ * word_bytes
-endism = @ENDISM@
-host_endism = @WORDS_BIGENDIAN@
 opcode_bit = @OPCODE_BIT@
