@@ -11,6 +11,4 @@
 # We can't easily test mit-shell directly, as there's no way to tell to run
 # code (or quit) after starting. Instead, just load the mit module and exit,
 # which is equivalent to starting mit-shell.
-# Note, we do not add @PACKAGE_SUFFIX@ to the module name, as the in-place
-# version is just called "mit".
 @PYTHON@ -c "from mit.globals import *"

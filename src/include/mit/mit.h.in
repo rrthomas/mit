@@ -17,7 +17,7 @@
 #include <inttypes.h>
 #include <limits.h>
 
-#include <mit@PACKAGE_SUFFIX@/opcodes.h>
+#include <mit/opcodes.h>
 
 
 // Optimization
@@ -83,7 +83,7 @@ typedef mit_word mit_fn(mit_state * restrict S);
 // VM State
 struct mit_state {
 #define R(reg, type, return_type) type reg;
-#include <mit@PACKAGE_SUFFIX@/registers.h>
+#include <mit/registers.h>
 #undef R
 };
 

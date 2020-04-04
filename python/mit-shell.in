@@ -30,4 +30,4 @@ args = parser.parse_args()
 
 # Run IPython
 ipython_opts = '@IPYTHON_OPTS@'.split()
-subprocess.run(['@IPYTHON@', '-i'] + ipython_opts + ['-c', 'from mit@PACKAGE_SUFFIX@.globals import *'])
+subprocess.run(['@IPYTHON@', '-i'] + ipython_opts + ['-c', 'from mit.globals import *'])

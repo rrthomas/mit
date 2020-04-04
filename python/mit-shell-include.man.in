@@ -1,2 +1,2 @@
 [NAME]
-mit-shell@PACKAGE_SUFFIX@ - Run Mit@PACKAGE_SUFFIX@ in a Python REPL with debugging facilities
+mit-shell@PACKAGE_SUFFIX@ - Run Mit in a Python REPL with debugging facilities

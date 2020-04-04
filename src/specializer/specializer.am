@@ -28,7 +28,7 @@
 # of `make specialize-mit` will improve performance significantly.
 
 
-nodist_libmitfeatures@PACKAGE_SUFFIX@_la_SOURCES += %D%/specializer.c
+nodist_libmitfeatures_la_SOURCES += %D%/specializer.c
 
 TEST_EXTENSIONS = .pforth
 PFORTH_LOG_COMPILER = $(SHELL)

@@ -23,14 +23,14 @@ from ctypes.util import find_library
 from .enums import MitErrorCode, Register
 
 
-library_file = find_library("mit@PACKAGE_SUFFIX@")
-features_library_file = find_library("mitfeatures@PACKAGE_SUFFIX@")
+library_file = find_library("mit")
+features_library_file = find_library("mitfeatures")
 if not library_file:
     # For Windows
     # TODO: Do this portably
     # TODO: Substitute version when library is versioned
-    library_file = find_library("libmit@PACKAGE_SUFFIX@-0")
-    features_library_file = find_library("libmitfeatures@PACKAGE_SUFFIX@-0")
+    library_file = find_library("libmit-0")
+    features_library_file = find_library("libmitfeatures-0")
 assert(library_file)
 assert(features_library_file)
 libmit = CDLL(library_file)

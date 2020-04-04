@@ -11,7 +11,7 @@ PYTHON_ENVIRONMENT = export PYTHONPATH=$(abs_top_srcdir)/python:$(abs_top_srcdir
 
 bin_SCRIPTS = mit@PACKAGE_SUFFIX@-shell
 man_MANS = mit@PACKAGE_SUFFIX@-shell.1
-mit_pkgpythondir = $(pkgpythondir)@PACKAGE_SUFFIX@
+mit_pkgpythondir = $(pkgpythondir)
 mit_pkgpython_PYTHON =				\
 	mit/__init__.py				\
 	mit/autonumber.py			\

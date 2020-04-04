@@ -162,7 +162,7 @@ AC_SUBST([SIZEOF_INTMAX_T])
 # Package suffix for side-by-side installation of multiple builds
 AC_ARG_ENABLE([package-suffix],
   [AS_HELP_STRING([--enable-package-suffix],
-                  [add suffix denoting the endianness and word size, e.g. "-le-8", to binaries, libraries, include directories etc., enabling side-by-side installation of multiple builds.])],
+                  [add suffix denoting the endianness and word size, e.g. "-le-8", to binaries and man pages, enabling side-by-side installation of multiple builds.])],
   [case $enableval in
      yes|no) ;;
      *)      AC_MSG_ERROR([bad value $enableval for package-suffix option]) ;;
