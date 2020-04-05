@@ -16,4 +16,4 @@ fi
 # Can't use libraries in-tree on macOS, so "make install", and don't "make
 # distcheck".
 if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then sudo make install; fi
-( make check || ( cat tests/test-suite.log; false ) ) && if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then make distcheck; fi
+( make check || ( cat tests/test-suite.log; false ) ) && if [[ "$TRAVIS_OS_NAME" != "osx" ]]; then make distcheck; fi
