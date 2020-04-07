@@ -1,3 +1,3 @@
 ((latex-mode . ((eval . (add-hook 'after-save-hook
-                                  (lambda () (start-process "LaTeX make" nil "make"))
+                                  (lambda () (TeX-command-menu "LaTeX make"))
                                   nil t)))))
