@@ -9,16 +9,11 @@
 
 mit_pkginclude_HEADERS += %D%/mit/features.h
 
-%D%/mit/features.h: $(top_builddir)/config.status %D%/mit/features.h.in
-	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
-
 
 # Simple features
 
-libmitfeatures@PACKAGE_SUFFIX@_la_SOURCES += \
-	%D%/args.c \
-	%D%/core-dump.c \
-	%D%/step_to.c
+libmitfeatures_la_SOURCES += \
+	%D%/args.c
 
 %D%/args.lo: %D%/mit/extra-opcodes.h
 
@@ -26,7 +21,7 @@ libmitfeatures@PACKAGE_SUFFIX@_la_SOURCES += \
 # Library extra instructions
 
 nodist_mit_pkginclude_HEADERS += %D%/mit/extra-opcodes.h
-libmitfeatures@PACKAGE_SUFFIX@_la_SOURCES += %D%/extra-instructions.c
+libmitfeatures_la_SOURCES += %D%/extra-instructions.c
 
 # Note: we grep config.log because the generated header file has the symbols
 # sorted lexically, and we need the output in the same order as the input.

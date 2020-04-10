@@ -13,16 +13,11 @@
 #include <string.h>
 #include <limits.h>
 
-#include "safe-alloc.h"
-
 #include "mit/mit.h"
-
-#include "state.h"
 
 
 // Constants
 const unsigned mit_word_bytes = MIT_WORD_BYTES;
-const unsigned mit_endism = MIT_ENDISM;
 const unsigned mit_size_word = MIT_SIZE_WORD;
 const unsigned mit_byte_bit = 8;
 const unsigned mit_byte_mask = MIT_BYTE_MASK;
@@ -88,13 +83,3 @@ void mit_free_state(mit_state *S)
     free(S->stack);
     free(S);
 }
-
-#define R(reg, type, return_type)                                   \
-    _GL_ATTRIBUTE_PURE return_type mit_get_ ## reg(mit_state *S) {  \
-        return S->reg;                                              \
-    }                                                               \
-    void mit_set_ ## reg(mit_state *S, type val) {                  \
-        S->reg = val;                                               \
-    }
-#include "mit/registers.h"
-#undef R

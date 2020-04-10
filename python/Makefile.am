@@ -11,11 +11,10 @@ PYTHON_ENVIRONMENT = export PYTHONPATH=$(abs_top_srcdir)/python:$(abs_top_srcdir
 
 bin_SCRIPTS = mit@PACKAGE_SUFFIX@-shell
 man_MANS = mit@PACKAGE_SUFFIX@-shell.1
-mit_pkgpythondir = $(pkgpythondir)@PACKAGE_SUFFIX@
+mit_pkgpythondir = $(pkgpythondir)
 mit_pkgpython_PYTHON =				\
 	mit/__init__.py				\
 	mit/autonumber.py			\
-	mit/extra_errors.py			\
 	mit/globals.py				\
 	mit/ipython_suppress_traceback.py	\
 	mit/memory.py				\
@@ -24,10 +23,10 @@ mit_pkgpython_PYTHON =				\
 nodist_mit_pkgpython_PYTHON = mit/binding.py mit/enums.py mit/extra_enums.py
 
 install_edit = sed \
-	-e 's|@pkgdatadir[@]|'`$(CYGPATH_W) $(pkgdatadir)`'|g'
+	-e 's|@pkgdatadir[@]|'`$(CYGPATH_M) $(pkgdatadir)`'|g'
 
 inplace_edit = sed \
-	-e 's|@pkgdatadir[@]|$(top_srcdir)/src/mit_core|g'
+	-e 's|@pkgdatadir[@]|'`$(CYGPATH_M) $(abs_top_srcdir)/src/mit_core`'|g'
 
 all-local: $(nodist_mit_pkgpython_PYTHON)
 
@@ -41,10 +40,8 @@ all-local: $(nodist_mit_pkgpython_PYTHON)
 		--output=$@ ./$*; \
 	fi
 
-mit/binding.py: $(top_builddir)/config.status mit/binding.py.in
-	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
-
 mit/enums.py: $(top_srcdir)/src/mit_core/mit_spec.yaml Makefile mit/enums.py.in
+	@$(MKDIR_P) mit
 	@rm -f $@ $@.tmp
 	$(AM_V_GEN)$(inplace_edit) $(srcdir)/'$@.in' >$@.tmp
 	$(AM_V_at)mv $@.tmp $@
@@ -68,6 +65,7 @@ loc:
 	for file in $(nodist_mit_pkgpython_PYTHON); do \
 		test -f $$file.in.bak && mv $$file.in.bak $$file.in || true; \
 	done
+
 if USING_PACKAGE_SUFFIX
 mit@PACKAGE_SUFFIX@-shell: mit-shell
 	cp mit-shell $@
@@ -81,8 +79,9 @@ EXTRA_DIST = \
 	gen-extra-enums			\
 	mit-shell-include.man.in	\
 	$(man_MANS)			\
-	mit/binding.py.in		\
+	mit/binding.py			\
 	mit/enums.py.in			\
+	mit-profile.in			\
 	mit-shell.in
 
 DISTCLEANFILES = $(bin_SCRIPTS) $(man_MANS) mit/enums.py

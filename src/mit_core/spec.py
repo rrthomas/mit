@@ -15,7 +15,7 @@ import yaml
 from .autonumber import AutoNumber
 from .code_util import Code
 from .instruction import InstructionEnum
-from .stack import StackEffect
+from .stack import StackEffect, pop_stack, push_stack
 
 
 with open(os.path.join(os.path.dirname(__file__), 'mit_spec.yaml')) as f:
@@ -39,7 +39,7 @@ def instruction_enum(enum_name, docstring, spec, code):
         ((
             name,
             (
-                StackEffect.of(i['args'], i['results']),
+                StackEffect.of(i['args'], i['results']) if 'args' in i else None,
                 code[name],
                 i['opcode'],
                 i.get('terminal', False),
@@ -196,11 +196,61 @@ Instruction = instruction_enum(
     },
 )
 
+internal_extra_instructions = {}
+
+for register in Register:
+    pop_code = Code()
+    pop_code.append('mit_state *inner_state;')
+    pop_code.extend(pop_stack('inner_state', type='mit_state *'))
+
+    get_code = Code()
+    get_code.extend(pop_code)
+    get_code.extend(push_stack(
+        'inner_state->{}'.format(register.name),
+        type=register.type,
+    ))
+    internal_extra_instructions['GET_{}'.format(register.name.upper())] = get_code
+
+    set_code = Code()
+    set_code.extend(pop_code)
+    set_code.append('{} value;'.format(register.type))
+    set_code.extend(pop_stack('value', register.type))
+    set_code.append('''\
+        inner_state->{} = value;'''.format(register.name),
+    )
+    internal_extra_instructions['SET_{}'.format(register.name.upper())] = set_code
+
+internal_extra_instructions.update({
+    'HALT': Code('RAISE(MIT_ERROR_HALT);'),
+
+    'THIS_STATE': Code('state = S;'),
+
+    'LOAD_STACK': Code('''\
+        value = 0;
+        ret = mit_load_stack(inner_state, pos, &value);
+    '''),
+
+    'STORE_STACK': Code('ret = mit_store_stack(inner_state, pos, value);'),
+
+    'POP_STACK': Code('''\
+        value = 0;
+        ret = mit_pop_stack(inner_state, &value);
+    '''),
+
+    'PUSH_STACK': Code('ret = mit_push_stack(inner_state, value);'),
+
+    'NEW_STATE': Code('new_state = mit_new_state((size_t)stack_words);'),
+
+    'FREE_STATE': Code('mit_free_state(inner_state);'),
+
+    'RUN': Code('ret = mit_run(inner_state);'),
+
+    'SINGLE_STEP': Code('ret = mit_single_step(inner_state);'),
+})
+
 InternalExtraInstruction = instruction_enum(
     'InternalExtraInstruction',
     'Internal extra instruction opcodes.',
     spec['InternalExtraInstruction'],
-    {
-        'HALT': Code('RAISE(MIT_ERROR_HALT);'),
-    },
+    internal_extra_instructions,
 )

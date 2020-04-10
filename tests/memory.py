@@ -8,6 +8,8 @@
 # THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 # RISK.
 
+from sys import byteorder
+
 from mit.globals import *
 from mit_test import *
 
@@ -15,6 +17,7 @@ from mit_test import *
 # Test results
 last_word = M_word.addr + (len(M_word) - 1) * word_bytes
 magic_number = 0xf201
+endism = 0 if byteorder == 'little' else 1
 correct = [
     [magic_number],
     [magic_number, last_word],

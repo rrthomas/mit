@@ -43,11 +43,7 @@ code.append('''
     #include "mit/extra-opcodes.h"
 
     #include "run.h"
-
-    enum {
-        MIT_ERROR_EXTRA_INVALID_LIBRARY = 16,
-        MIT_ERROR_EXTRA_INVALID_FUNCTION = 17,
-    };'''
+'''
 )
 
 for lib in LibInstruction:
@@ -61,7 +57,7 @@ for lib in LibInstruction:
 
     body_code = Code()
     body_code.extend(dispatch(lib.library, Code(
-        'RAISE(MIT_ERROR_EXTRA_INVALID_FUNCTION);'
+        'RAISE(MIT_EXTRA_INSTRUCTION_ERROR_INVALID_FUNCTION);'
     )))
     body_code.append('')
     code.append(body_code)
@@ -83,7 +79,7 @@ code.append('')
 body_code = Code()
 body_code.append('mit_uword opcode = S->ir >> mit_opcode_bit;')
 body_code.extend(dispatch(LibInstruction, Code(
-    'return MIT_ERROR_EXTRA_INVALID_LIBRARY;'
+    'return MIT_EXTRA_INSTRUCTION_ERROR_INVALID_LIBRARY;'
 )))
 body_code.append('return error;')
 code.append(body_code)

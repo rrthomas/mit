@@ -51,6 +51,17 @@ AC_PATH_PROG([SLOCCOUNT], [sloccount], [true])
 AM_CONDITIONAL([HAVE_LATEXMK], [test "$ac_cv_path_LATEXMK" != "true"])
 gl_INIT
 
+# Test whether we have cygpath
+# Code adapted from automake's init.m4
+if test -z "$CYGPATH_M"; then
+  if (cygpath --version) >/dev/null 2>/dev/null; then
+    CYGPATH_M='cygpath -m'
+  else
+    CYGPATH_M=echo
+  fi
+fi
+AC_SUBST([CYGPATH_M])
+
 # help2man
 # Set a value even if not found, so that an invocation via build-aux/missing works
 AC_PATH_PROG([HELP2MAN], [help2man], [help2man])
@@ -82,7 +93,7 @@ AC_ARG_ENABLE([gcc-warnings],
 if test "$gl_gcc_warnings" = yes; then
   dnl Set up the list of undesired warnings.
   nw=
-  nw="$nw -Wvla"              # Require C99, so variable-length arrays are OK
+  nw="$nw -Wvla"              # We require C99, so variable-length arrays are OK
   nw="$nw -Wsystem-headers"   # Don’t let system headers trigger warnings
   nw="$nw -Wimplicit-fallthrough=5" # We want to allow "fallthrough" comments.
 
@@ -110,30 +121,29 @@ AC_SUBST([PY_LOG_ENV])
 # Accessing in-tree shared libraries
 AC_SUBST([objdir])
 
+# Thread-local storage
+case $host in
+  # Disable by default on some platforms
+  # MingW/MSYS: see https://sourceforge.net/p/mingw-w64/bugs/827/
+  # macOS: segfault when a library with a _Thread_local is dlopened (e.g. in Python)
+  *mingw32|*msys|*darwin*) AC_MSG_WARN([Thread-local storage is disabled by default on this platform]);;
+  *) AX_TLS ;;
+esac
+AS_IF([test "$ac_cv_tls" = "" -o "$ac_cv_tls" = "none"],
+  AC_MSG_WARN([Define THREAD_LOCAL to a storage specifier if desired.]))
+AC_ARG_VAR([THREAD_LOCAL],
+  [storage specifier for thread-local storage [default: auto-detected]])
+: "${THREAD_LOCAL=$ac_cv_tls}"
+
 # Check features
-AX_C_ARITHMETIC_RSHIFT
-
-# Check endianness
 AC_C_BIGENDIAN
-AC_SUBST([WORDS_BIGENDIAN])
-if test "$ac_cv_c_bigendian" = "yes"; then
-  WORDS_BIGENDIAN=1
-  endism_text=le
-else
-  WORDS_BIGENDIAN=0
-  endism_text=be
-fi
-: "${ENDISM=$WORDS_BIGENDIAN}"
-AC_SUBST([ENDISM])
-
-# Check word size
-AC_CHECK_SIZEOF([size_t])
-# Use a configure variable to substitute this in mit.h.in, where we can't
-# include config.h, as mit.h is a public header.
+AC_CHECK_SIZEOF([size_t]) # word_bytes
 SIZEOF_SIZE_T=$ac_cv_sizeof_size_t
 AC_SUBST([SIZEOF_SIZE_T])
-WORD_BYTES=$SIZEOF_SIZE_T
-AC_SUBST([WORD_BYTES])
+AX_C_ARITHMETIC_RSHIFT
+AC_CHECK_SIZEOF([intmax_t]) # largest stack item
+SIZEOF_INTMAX_T=$ac_cv_sizeof_intmax_t
+AC_SUBST([SIZEOF_INTMAX_T])
 
 # Set byte size
 AC_SUBST([MIT_BYTE_BIT], [8])
@@ -144,15 +154,10 @@ AC_ARG_VAR([OPCODE_BIT],
   [value of MIT_OPCODE_BIT [default: $default_opcode_bit]])
 : "${OPCODE_BIT=$default_opcode_bit}"
 
-# Get size of largest integer
-AC_CHECK_SIZEOF([intmax_t])
-SIZEOF_INTMAX_T=$ac_cv_sizeof_intmax_t
-AC_SUBST([SIZEOF_INTMAX_T])
-
 # Package suffix for side-by-side installation of multiple builds
 AC_ARG_ENABLE([package-suffix],
   [AS_HELP_STRING([--enable-package-suffix],
-                  [add suffix containing values of ENDISM and WORD_BYTES, e.g. "-le-8", to binaries, libraries, include directories etc., enabling side-by-side installation of multiple builds.])],
+                  [add suffix denoting the endianness and word size, e.g. "-le-8", to binaries and man pages, enabling side-by-side installation of multiple builds.])],
   [case $enableval in
      yes|no) ;;
      *)      AC_MSG_ERROR([bad value $enableval for package-suffix option]) ;;
@@ -161,7 +166,12 @@ AC_ARG_ENABLE([package-suffix],
   [gl_package_suffix=no]
 )
 if test "$gl_package_suffix" = yes; then
-  PACKAGE_SUFFIX=-$endism_text-$WORD_BYTES
+  if test "$ac_cv_c_bigendian" = "yes"; then
+    endism_text=be
+  else
+    endism_text=le
+  fi
+  PACKAGE_SUFFIX=-$endism_text-$ac_cv_sizeof_size_t
 fi
 AC_SUBST([PACKAGE_SUFFIX])
 AM_CONDITIONAL([USING_PACKAGE_SUFFIX], [test "$gl_package_suffix" = "yes"])
@@ -169,7 +179,7 @@ AM_CONDITIONAL([USING_PACKAGE_SUFFIX], [test "$gl_package_suffix" = "yes"])
 # pForth tests, run if the pforth source tree is present and Mit is
 # configured compatibly with pForth.
 AM_CONDITIONAL([USING_PFORTH],
-   [test -d src/specializer/pforth -a "$WORD_BYTES" = 4 -a "$ENDISM" = 0])
+   [test -d src/specializer/pforth -a "$SIZEOF_SIZE_T" = 4 -a "$ac_cv_c_bigendian" != "yes"])
 
 # Generate output files
 AC_CONFIG_HEADERS([config.h])
@@ -180,14 +190,13 @@ AC_CONFIG_FILES([
         src/Makefile
         src/include/mit/mit.h
         src/mit_core/params.py
-        src/features/mit/features.h
         python/Makefile
-        python/mit/binding.py
         python/mit-shell-include.man
         tests/Makefile
         tests/test_pickle.py
         doc/Makefile
 ])
+AC_CONFIG_FILES([python/mit-profile], [chmod +x python/mit-profile])
 AC_CONFIG_FILES([python/mit-shell], [chmod +x python/mit-shell])
 AC_CONFIG_FILES([tests/test-mit-shell], [chmod +x tests/test-mit-shell])
 AC_OUTPUT

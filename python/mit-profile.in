@@ -1,0 +1,55 @@
+#!@PYTHON@
+# -*- python -*-
+#
+# (c) Mit authors 2020
+#
+# This file is in the public domain.
+#
+# THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
+# RISK.
+
+import argparse
+
+from mit.globals import *
+from mit.binding import libmitfeatures
+
+
+# Process command-line arguments
+parser = argparse.ArgumentParser(
+    prog='mit-profile',
+    description='Run Mit with profiling.',
+    formatter_class=argparse.RawDescriptionHelpFormatter
+)
+parser.add_argument(
+    '--version',
+    action='version',
+    version='''\
+%(prog)s @VERSION@
+Copyright (c) Mit authors 2020.
+This program is in the public domain.'''
+)
+parser.add_argument(
+    'profile_file',
+    metavar='PROFILE-FILE',
+    help='profile file to output',
+)
+parser.add_argument(
+    'object_file',
+    metavar='OBJECT-FILE',
+    help='object file to use',
+)
+parser.add_argument(
+    'arguments',
+    metavar='ARGUMENT',
+    nargs='*',
+    help='arguments to Mit program',
+)
+args = parser.parse_args()
+
+# Run Mit with profiling
+load(args.object_file)
+args.arguments.insert(0, parser.prog)
+register_args(*args.arguments)
+run(profile=True)
+with open(args.profile_file, 'wb') as h:
+    libmitfeatures.mit_profile_dump(h.fileno())

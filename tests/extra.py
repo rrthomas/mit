@@ -1,4 +1,5 @@
-# Test extra instructions (libc and mit functions).
+# Test internal extra instructions and libc and libmit external extra
+# instructions.
 # TODO: test file routines.
 #
 # (c) Mit authors 1994-2020
@@ -12,13 +13,13 @@ import sys
 from ctypes import cast
 
 from mit.globals import *
-from mit.binding import libmit
+from mit.binding import libmit, register_args
 from ctypes import sizeof, c_char_p, string_at
 
 
 # Data for ARGC/ARGV tests
 args = [b"foo", b"bard", b"basilisk"]
-VM.register_args(*args)
+register_args(*args)
 
 # Test code
 buffer = M.addr + 0x200
@@ -28,14 +29,17 @@ breaks = []
 lit(buffer)
 
 # Test LibMit.ARGC
-lit(LibMit.ARGC)
-ass(JUMP, LIBMIT)
+lit(LibMitfeatures.ARGC)
+ass(JUMP, LIBMITFEATURES)
 breaks.append(label() + word_bytes)
 
-# Test LibMit.ARG
-lit(1)
-lit(LibMit.ARG)
-ass(JUMP, LIBMIT)
+# Test LibMit.ARGV
+lit(LibMitfeatures.ARGV)
+ass(JUMP, LIBMITFEATURES)
+lit(word_bytes)
+ass(ADD)
+lit(size_word)
+ass(LOAD)
 lit(0)
 ass(DUP)
 lit(LibC.STRLEN)
@@ -56,7 +60,7 @@ if argc != len(args):
     print("Error in extra instruction tests: pc = {:#x}".format(pc.get()))
     sys.exit(1)
 
-# Run LibC.ARG test
+# Run LibC.ARGV test
 trace(addr=breaks.pop(0))
 arg1len = S.pop()
 print("arg 1's length is {}, and should be {}".format(arg1len, len(args[1])))

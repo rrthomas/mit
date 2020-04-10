@@ -1,19 +1,16 @@
 # Source Makefile.am
 #
-# (c) Mit authors 2011-2019
+# (c) Mit authors 2011-2020
 #
 # The package is distributed under the MIT/X11 License.
 #
 # THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 # RISK.
 
-WORD_BYTES = @WORD_BYTES@
-ENDISM = @ENDISM@
-
-AM_CPPFLAGS = -I$(abs_top_builddir)/lib -I$(abs_top_srcdir)/lib -I$(abs_builddir)/include -I$(abs_srcdir)/include -I$(abs_builddir)/features $(WARN_CFLAGS)
+AM_CPPFLAGS = -I$(abs_top_builddir)/lib -I$(abs_top_srcdir)/lib -I$(abs_builddir)/include -I$(abs_srcdir)/include -I$(abs_builddir)/features -I$(abs_srcdir)/features $(WARN_CFLAGS)
 PYTHON_WITH_PATH = export PYTHONPATH=$(abs_top_srcdir)/python:$(abs_top_srcdir)/src:$(abs_top_builddir)/src:$(abs_top_srcdir)/src/specializer:$(abs_top_builddir)/src/specializer:$(abs_top_srcdir)/src/features:$(abs_top_builddir)/src/features; $(PYTHON)
 
-lib_LTLIBRARIES = libmit@PACKAGE_SUFFIX@.la
+lib_LTLIBRARIES = libmit.la
 C_SRCS = storage.c
 nodist_LIB_SRCS = include/mit/registers.h include/mit/opcodes.h instructions.c
 pkgdata_DATA = mit_core/mit_spec.yaml
@@ -25,25 +22,23 @@ LIB_CORE_SRCS = \
 	mit_core/code_util.py \
 	mit_core/instruction_gen.py \
 	mit_core/params.py.in
-nodist_libmit@PACKAGE_SUFFIX@_la_SOURCES = $(C_SRCS) $(nodist_LIB_SRCS)
-libmit@PACKAGE_SUFFIX@_la_LIBADD = $(top_builddir)/lib/libgnu.la
-libmit@PACKAGE_SUFFIX@_la_LDFLAGS = -no-undefined -export-symbols-regex '^mit_.*'
-
-noinst_LTLIBRARIES = libutil.la
-libutil_la_SOURCES = warn.h warn.c
+nodist_libmit_la_SOURCES = $(C_SRCS) $(nodist_LIB_SRCS)
+libmit_la_LIBADD = $(top_builddir)/lib/libgnu.la
+libmit_la_LDFLAGS = -no-undefined -export-symbols-regex '^mit_.*'
 
 bin_PROGRAMS = mit@PACKAGE_SUFFIX@$(EXEEXT)
 MIT_BINARY = $(abs_builddir)/mit@PACKAGE_SUFFIX@$(EXEEXT)
 man_MANS = mit@PACKAGE_SUFFIX@.1
-mit@PACKAGE_SUFFIX@_LDADD = libmit@PACKAGE_SUFFIX@.la libmitfeatures@PACKAGE_SUFFIX@.la $(top_builddir)/lib/libgnu.la libutil.la
+mit@PACKAGE_SUFFIX@_LDADD = libmit.la libmitfeatures.la $(top_builddir)/lib/libgnu.la
 nodist_mit@PACKAGE_SUFFIX@_SOURCES = main.c
-mit_pkgincludedir = $(pkgincludedir)@PACKAGE_SUFFIX@
+mit@PACKAGE_SUFFIX@_SOURCES = warn.c warn.h
+mit_pkgincludedir = $(pkgincludedir)
 nodist_mit_pkginclude_HEADERS = include/mit/opcodes.h include/mit/registers.h
 mit_pkginclude_HEADERS = include/mit/mit.h
-noinst_HEADERS = run.h state.h
+noinst_HEADERS = run.h
 
-storage.lo: include/mit/mit.h include/mit/registers.h
-storage.lo main.o: include/mit/opcodes.h
+warn.o storage.lo: include/mit/mit.h include/mit/registers.h
+warn.o storage.lo main.o: include/mit/opcodes.h
 instructions.lo main.o: main.c include/mit/mit.h include/mit/registers.h
 main.o: warn.h
 
@@ -54,7 +49,7 @@ include/mit/mit.h: $(top_builddir)/config.status include/mit/mit.h.in include/mi
 	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
 
 # Depend on mit@PACKAGE_SUFFIX@$(EXEEXT) rather than explicitly make-ing it, as otherwise
-# we break parallel builds, as libmit@PACKAGE_SUFFIX@.la can be built twice in parallel,
+# we break parallel builds, as libmit.la can be built twice in parallel,
 # which can fail. Set distcleancheck_listfiles below to fix distcheck.
 mit@PACKAGE_SUFFIX@.1: mit@PACKAGE_SUFFIX@$(EXEEXT) $(top_builddir)/build-aux/man-include.man mit-include.man
 ## Exit gracefully if mit.1 is not writeable, such as during distcheck!
@@ -66,14 +61,11 @@ mit@PACKAGE_SUFFIX@.1: mit@PACKAGE_SUFFIX@$(EXEEXT) $(top_builddir)/build-aux/ma
 		--output=$@ $(MIT_BINARY); \
 	fi
 
-include/mit@PACKAGE_SUFFIX@:
+include/mit:
 	cd include && if test ! -e mit@PACKAGE_SUFFIX@; then $(LN_S) mit mit@PACKAGE_SUFFIX@; fi
 
 include/mit/registers.h: gen-registers mit_core/mit_spec.yaml mit_core/spec.py
 	$(MKDIR_P) include/mit
-	if test "@PACKAGE_SUFFIX@" != ""; then \
-		$(MAKE) include/mit@PACKAGE_SUFFIX@; \
-	fi
 	$(PYTHON_WITH_PATH) $(srcdir)/gen-registers > include/mit/registers.h || ( rm -f include/mit/registers.h; exit 1 )
 
 include/mit/opcodes.h: gen-opcodes mit_core/mit_spec.yaml mit_core/spec.py mit_core/instruction.py
@@ -109,7 +101,7 @@ distclean-local:
 DISTCLEANFILES = mit@PACKAGE_SUFFIX@.1 \
 	$(nodist_LIB_SRCS) \
 	$(nodist_mit@PACKAGE_SUFFIX@_SOURCES) \
-	include/mit@PACKAGE_SUFFIX@
+	include/mit
 # Ignore built files that are part of the distribution (specifically,
 # mit.1)
 distcleancheck_listfiles = \
@@ -117,13 +109,13 @@ distcleancheck_listfiles = \
 	    sh '{}' ';'
 
 # Features
-lib_LTLIBRARIES += libmitfeatures@PACKAGE_SUFFIX@.la
-libmitfeatures@PACKAGE_SUFFIX@_la_SOURCES =
-nodist_libmitfeatures@PACKAGE_SUFFIX@_la_SOURCES =
-libmitfeatures@PACKAGE_SUFFIX@_la_LIBADD = libmit@PACKAGE_SUFFIX@.la $(top_builddir)/lib/libgnu.la
-libmitfeatures@PACKAGE_SUFFIX@_la_LDFLAGS = -no-undefined -export-symbols-regex '^mit_.*'
+lib_LTLIBRARIES += libmitfeatures.la
+libmitfeatures_la_SOURCES =
+nodist_libmitfeatures_la_SOURCES =
+libmitfeatures_la_LIBADD = libmit.la $(top_builddir)/lib/libgnu.la
+libmitfeatures_la_LDFLAGS = -no-undefined -export-symbols-regex '^mit_.*'
 
-$(libmitfeatures@PACKAGE_SUFFIX@_la_SOURCES): include/mit/mit.h
+$(libmitfeatures_la_SOURCES): include/mit/mit.h
 
 include features/features.am
 include specializer/specializer.am

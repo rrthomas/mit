@@ -27,7 +27,7 @@ def word_to_bytes(w):
     for i in range(word_bytes):
         l.append(w & byte_mask)
         w >>= byte_bit
-    if endism == 1:
+    if sys.byteorder == 'big':
         l.reverse()
     return bytes(l)
 

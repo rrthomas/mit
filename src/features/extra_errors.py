@@ -1,6 +1,6 @@
 # Features API errors
 #
-# (c) Mit authors 2019
+# (c) Mit authors 2019-2020
 #
 # The package is distributed under the MIT/X11 License.
 #
@@ -10,6 +10,7 @@
 from enum import IntEnum, unique
 
 @unique
-class RegisterArgsErrorCode(IntEnum):
-    'Error codes returned by `mit_register_args`.'
-    TOO_FEW_ARGUMENTS = -1
+class ExtraInstructionErrorCode(IntEnum):
+    'Error codes returned by `mit_extra_instruction`.'
+    INVALID_LIBRARY = 16
+    INVALID_FUNCTION = 17

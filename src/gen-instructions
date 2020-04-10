@@ -58,6 +58,8 @@ code.append('''
     #include "run.h"
 
 
+    MIT_THREAD_LOCAL mit_fn *mit_run = mit_run_simple;
+
     _GL_ATTRIBUTE_PURE mit_word mit_internal_extra_instruction(mit_state *S)
     {'''
 )
@@ -135,7 +137,7 @@ code.append('''\
         return run_or_step(S, false);
     }
 
-    mit_word mit_run(mit_state * restrict S)
+    mit_word mit_run_simple(mit_state * restrict S)
     {
         return run_or_step(S, true);
     }'''

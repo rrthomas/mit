@@ -12,13 +12,30 @@ from enum import Enum, unique
 from mit_core.code_util import Code
 from mit_core.instruction import InstructionEnum
 from mit_core.stack import StackEffect
-from mit_core.spec import Register
-from mit_core.stack import pop_stack, push_stack
+from mit_core.stack import pop_stack
+
+
+@unique
+class LibMitfeatures(InstructionEnum):
+    'Function codes for the external extra instruction LIBMITFEATURES.'
+
+    ARGC = (StackEffect.of([], ['argc']), Code('''\
+        argc = (mit_word)mit_argc;
+    '''))
+
+    ARGV = (StackEffect.of([], ['argv:char **']), Code('''\
+        argv = mit_argv;
+    '''))
+
+    EXTRA_INSTRUCTION = (StackEffect.of(['state:mit_state *'], ['ret']),
+        Code('ret = mit_extra_instruction(state);'),
+    )
 
 
 @unique
 class LibC(InstructionEnum):
     'Function codes for the external extra instruction LIBC.'
+
     EXIT = (StackEffect.of(['ret_code'], []), Code('''\
         exit(ret_code);
     '''))
@@ -143,161 +160,6 @@ class LibC(InstructionEnum):
         '''),
     )
 
-mit_lib = {}
-
-for register in Register:
-    pop_code = Code()
-    pop_code.append('mit_state *inner_state;')
-    pop_code.extend(pop_stack('inner_state', type='mit_state *'))
-
-    get_code = Code()
-    get_code.extend(pop_code)
-    get_code.extend(push_stack(
-        'mit_get_{}(inner_state)'.format(register.name),
-        type=register.type
-    ))
-    mit_lib['GET_{}'.format(register.name.upper())] = (
-        None, get_code,
-    )
-
-    set_code = Code()
-    set_code.extend(pop_code)
-    set_code.append('{} value;'.format(register.type))
-    set_code.extend(pop_stack('value', register.type))
-    set_code.append('''\
-        mit_set_{}(inner_state, value);'''.format(register.name),
-    )
-    mit_lib['SET_{}'.format(register.name.upper())] = (
-        None, set_code,
-    )
-
-mit_lib.update({
-    # libmit functions
-
-    'CURRENT_STATE': (
-        StackEffect.of([], ['state:mit_state *']),
-        Code('state = S;'),
-    ),
-
-    'LOAD_STACK': (
-        StackEffect.of(
-            ['pos', 'inner_state:mit_state *'],
-            ['value', 'ret:int'],
-        ),
-        Code('''\
-            value = 0;
-            ret = mit_load_stack(inner_state, pos, &value);
-        '''),
-    ),
-
-    'STORE_STACK': (
-        StackEffect.of(
-            ['value', 'pos', 'inner_state:mit_state *'],
-            ['ret:int'],
-        ),
-        Code('ret = mit_store_stack(inner_state, pos, value);'),
-    ),
-
-    'POP_STACK': (
-        StackEffect.of(
-            ['inner_state:mit_state*'],
-            ['value', 'ret:int'],
-        ),
-        Code('''\
-            value = 0;
-            ret = mit_pop_stack(inner_state, &value);
-        ''')
-    ),
-
-    'PUSH_STACK': (
-        StackEffect.of(
-            ['value', 'inner_state:mit_state *'],
-            ['ret:int'],
-        ),
-        Code('ret = mit_push_stack(inner_state, value);'),
-    ),
-
-    'NEW_STATE': (
-        StackEffect.of(
-            ['stack_words'],
-            ['new_state:mit_state *'],
-        ),
-        Code('new_state = mit_new_state((size_t)stack_words);'),
-    ),
-
-    'FREE_STATE': (
-        StackEffect.of(['inner_state:mit_state *'], []),
-        Code('mit_free_state(inner_state);'),
-    ),
-
-    'RUN': (
-        StackEffect.of(['inner_state:mit_state *'], ['ret']),
-        Code('ret = mit_run(inner_state);'),
-    ),
-
-    'SINGLE_STEP': (
-        StackEffect.of(['inner_state:mit_state *'], ['ret']),
-        Code('ret = mit_single_step(inner_state);'),
-    ),
-
-
-    # libmitfeatures functions
-
-    'ARGC': (
-        StackEffect.of([], ['argc']),
-        Code('argc = (mit_word)mit_argc();'),
-    ),
-
-    'ARG': (
-        StackEffect.of(['u'], ['arg:const char *']),
-        Code('arg = mit_argv((int)u);'),
-    ),
-
-    'REGISTER_ARGS': (
-        # Note: actually "char *argv[]", but we can't express that.
-        StackEffect.of(['argc:int', 'argv:const char **'], ['ret:int']),
-        Code('ret = mit_register_args(argc, argv);'),
-    ),
-
-    'EXTRA_INSTRUCTION': (
-        StackEffect.of(['state:mit_state *'], ['ret']),
-        Code('ret = mit_extra_instruction(state);'),
-    ),
-
-    'CORE_DUMP': (
-        StackEffect.of(['addr:mit_word *', 'len:mit_uword'], ['file:const char *']),
-        Code('file = mit_core_dump(addr, len);'),
-    ),
-
-    'SPECIALIZER_RUN': (
-        StackEffect.of(['state:mit_state *'], ['ret']),
-        Code('ret = mit_specializer_run(state);'),
-    ),
-
-    'PROFILE_INIT': (
-        StackEffect.of([], []),
-        Code('mit_profile_init();'),
-    ),
-
-    'PROFILE_RUN': (
-        StackEffect.of(['state:mit_state *'], ['ret']),
-        Code('ret = mit_profile_run(state);'),
-    ),
-
-    'PROFILE_DUMP': (
-        StackEffect.of(['fd:int'], ['ret:int']),
-        Code('ret = mit_profile_dump(fd);'),
-    ),
-
-    'STEP_TO': (
-        StackEffect.of(['state:mit_state *', 'n:mit_uword *', 'addr', 'auto_NEXT:int'], ['ret']),
-        Code('ret = mit_step_to(state, n, addr, auto_NEXT);'),
-    ),
-})
-
-LibMit = InstructionEnum('LibMit', mit_lib)
-LibMit.__doc__ = 'Function codes for the external extra instruction LIBMIT.'
-
 
 class Library(InstructionEnum):
     '''Wrap an Instruction enumeration as a library.'''
@@ -330,8 +192,7 @@ class Library(InstructionEnum):
 @unique
 class LibInstruction(Library):
     '''External extra instruction opcodes.'''
-    LIBMIT = (0x01, LibMit, '''
-#include "minmax.h"
+    LIBMITFEATURES = (0x01, LibMitfeatures, '''
 #include "mit/mit.h"
 #include "mit/features.h"
 ''',

@@ -8,8 +8,10 @@
 # THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 # RISK.
 
-from mit_core.spec import MitErrorCode
 from mit_core.code_util import Code, copyright_banner, disable_warnings
+from mit_core.spec import MitErrorCode
+
+from features.extra_errors import ExtraInstructionErrorCode
 
 
 GENERATOR_PROGRAM = 'gen-main'
@@ -82,79 +84,26 @@ Option('memory',
        short_name='m',
        arg='required_argument', arg_name='N',
        parse_code=Code('''\
-       {
-           size_t max = SIZE_MAX / MIT_WORD_BYTES;
-           char *endptr;
-           errno = 0;
-           uintmax_t size = strtoumax(optarg, &endptr, 10);
-           if (*optarg == '\\0' || *endptr != '\\0' || size == 0 || size > (uintmax_t)max)
-               die("memory size must be a positive number up to %zu", max);
-           memory_words = (mit_uword)size;
-       }
-     ''')
+           memory_words = parse_num_words("memory size must be a positive number up to %zu");
+       ''')
+)
+
+Option('stack',
+       ['size of stack in words [default %zu]', '(size_t)stack_words'],
+       short_name='s',
+       arg='required_argument', arg_name='N',
+       parse_code=Code('''\
+           stack_words = parse_num_words("stack size must be a positive number up to %zu");
+       ''')
 )
 
 Option('optimize',
        'use optimizing interpreter',
        short_name='O',
-       parse_code=Code('set_run_function(mit_specializer_run);'),
-)
-
-Option('profile',
-       '''write execution profile to FILE
-                            (implies --optimize)''',
-       arg='required_argument', arg_name='FILE',
-       parse_code=Code('''\
-       {
-           mit_profile_init();
-           set_run_function(mit_profile_run);
-           profile_file = optarg;
-       }
-       '''),
+       parse_code=Code('mit_run = mit_run_specializer;'),
 )
 
 Doc('\nMiscellaneous:')
-Option('no-auto-extend',
-       'do not automatically extend the stack',
-       parse_code=Code('auto_extend_stack = false;'),
-)
-
-default_max_backtrace = 16
-Option('backtrace',
-       '''show registers and top N stack items on error
-                            [default {}; 0 to show entire stack]'''.format(default_max_backtrace),
-       arg='optional_argument', arg_name='N',
-       parse_code=Code('''\
-       {
-           backtrace = true;
-           if (optarg) {
-               char *endptr;
-               max_backtrace = parse_unsigned(optarg, &endptr);
-               if (*optarg == '\\0' || *endptr != '\\0')
-                   die("invalid maximum backtrace size");
-           }
-       }
-       '''),
-)
-
-Option('core-dump',
-       'dump core on memory error',
-       short_name='c',
-       parse_code=Code('''
-           {
-               core_dump = true;
-
-               // Set signal handlers for core dump
-       #ifdef SIGQUIT
-               sig_catch(SIGQUIT, sig_core_dump);
-       #endif
-       #ifdef SIGABRT
-               sig_catch(SIGABRT, sig_core_dump);
-       #endif
-           }
-       '''),
-)
-
 Option('help',
        'display this help message and exit',
        parse_code=Code('usage();'),
@@ -169,7 +118,7 @@ Option('version',
                       PACKAGE_NAME " comes with ABSOLUTELY NO WARRANTY.\\n"
                       "You may redistribute copies of " PACKAGE_NAME "\\n"
                       "under the terms of the MIT/X11 License.\\n",
-                      MIT_WORD_BYTES, MIT_ENDISM ? "big" : "little");
+                      MIT_WORD_BYTES, ENDISM_STRING);
                exit(EXIT_SUCCESS);
            }
        ''')
@@ -184,188 +133,21 @@ execution halts normally, the exit status is 0. Note that the VM code may
 cause an exit with a different status.''')
 
 
-# Features
-
-class Feature:
-    '''
-    A command-line option.
-
-     - top_level - Code - additional top-level code for the option
-     - init - Code - declarations inside main, and initialisation
-     - handler - Code - code added to the error handler (in Feature order).
-       A handler should "continue" if it does not want execution to stop.
-     - exit - Code - code run immediately before exit
-    '''
-    features = []
-    def __init__(self, top_level=None, init=None, handler=None, exit=None):
-        self.features.append(self)
-        self.top_level = top_level
-        self.init = init
-        self.handler = handler
-        self.exit = exit
-
-Feature(# Extra instructions
-    handler=Code('''\
-        if (error == MIT_ERROR_INVALID_OPCODE)
-            if ((S->ir & MIT_OPCODE_MASK) == MIT_INSTRUCTION_JUMP) {
-                error = mit_extra_instruction(S);
-                if (error == MIT_ERROR_OK) {
-                    S->ir = 0;
-                    continue;
-                }
-            }
-    '''),
-)
-
-Feature(# Auto-extend stack
-    top_level=Code('''
-        static mit_uword round_up(mit_uword n, mit_uword multiple)
-        {
-            return (n - 1) - (n - 1) % multiple + multiple;
-        }
-    '''),    init=Code('bool auto_extend_stack = true;'),
-    handler=Code('''\
-        if (error == MIT_ERROR_STACK_OVERFLOW)
-            if (auto_extend_stack == true) {
-                S->stack_words = round_up(S->stack_words + 1,
-                                          page_size / MIT_WORD_BYTES);
-                if (safe_alloc_realloc_n((void *)&S->stack, MIT_WORD_BYTES,
-                                         S->stack_words) == 0)
-                    continue;
-            }
-    '''),
-)
-
-Feature(# Error message on error exit
-    exit=Code('''
-        if (error != MIT_ERROR_HALT)
-            // Cast error to size_t for printing because we might not be
-            // able to print mit_uword.
-            warn("error %zu: %s", (size_t)error, error_msg[error]);
-    '''),
-)
-
-Feature(# Register and stack backtrace
-    top_level=Code('''
-        #define MAX_STACK_ITEM_STRLEN (sizeof(mit_max_stack_item_t) * 2)
-
-        static void stack_item_to_str(mit_max_stack_item_t x, unsigned size, char s[MAX_STACK_ITEM_STRLEN])
-        {
-            static const char hex[] = "0123456789abcdef";
-            for (unsigned i = 0, digits = size * 2; i < digits; i++) {
-                s[digits - i - 1] = hex[x & 0xf];
-                x >>= 4;
-            }
-        }
-
-        static unsigned long parse_unsigned(const char *s, char **endp)
-        {
-            return (s[0] == '0' && (s[1] == 'X' || s[1] == 'x')) ?
-                strtoul(s + 2, endp, 16) : strtoul(s, endp, 10);
-        }
-    '''),
-    init=Code('''
-        bool backtrace = false;
-        unsigned long default_max_backtrace = {};
-        unsigned long max_backtrace = default_max_backtrace;
-    '''.format(default_max_backtrace)),
-    exit=disable_warnings(
-        ['-Wpointer-to-int-cast'], Code('''
-        if (error != MIT_ERROR_HALT && backtrace == true) {
-            fprintf(stderr, "\\nRegisters:\\n");
-            char str[MAX_STACK_ITEM_STRLEN];
-            #define R(name, type, return_type) \\
-            stack_item_to_str((mit_max_stack_item_t)S->name, sizeof(S->name), &str[0]); \\
-            fprintf(stderr, #name "=0x%.*s\\n", (int)(sizeof(S->name) * 2), str);
-            #include "mit/registers.h"
-            #undef R
-            if (S->stack_depth <= S->stack_words) {
-                fprintf(stderr, "\\nStack:\\n");
-                mit_uword items = MIN(max_backtrace, S->stack_depth);
-                if (max_backtrace == 0)
-                    items = S->stack_depth;
-                for (mit_uword pos = 0; pos < items; pos++) {
-                    mit_word w;
-                    if (load_stack(S->stack, S->stack_depth, pos, &w) == 0) {
-                        stack_item_to_str(w, (int)sizeof(mit_uword), &str[0]);
-                        fprintf(stderr, "0x%.*s\\n", (int)(sizeof(mit_uword) * 2), str);
-                    }
-                }
-            }
-        }
-    ''')),
-)
-
-Feature(# VM core dump
-    top_level=Code('''
-        static void sig_catch(int sig, void (*handler)(int))
-        {
-            struct sigaction sa;
-            sa.sa_handler = handler;
-            sa.sa_flags = 0;
-            sigemptyset(&sa.sa_mask);
-            sigaction(sig, &sa, NULL); // ignore error: none possible
-        }
-
-        static void do_core_dump(void)
-        {
-            const char *filename = mit_core_dump(memory, memory_words);
-            if (filename != NULL)
-                warn("core dumped to %s", filename);
-        }
-
-        static void sig_core_dump(_GL_UNUSED_PARAMETER int sig)
-        {
-            do_core_dump();
-            exit(MIT_ERROR_DUMPED_CORE_ON_SIGNAL);
-        }
-    '''),
-    init=Code('bool core_dump = false;'),
-    exit=Code('''
-        if (error != MIT_ERROR_HALT && core_dump)
-            do_core_dump();
-    '''),
-)
-
-Feature(# Optimizing interpreter and profiling
-    top_level=Code('''
-        static void set_run_function(mit_word (*new_run_fn)(mit_state *))
-        {
-            if (run_fn == new_run_fn ||
-                (run_fn == mit_profile_run && new_run_fn == mit_specializer_run))
-                ;
-            else if (run_fn == mit_run)
-                run_fn = new_run_fn;
-            else
-                die("incompatible execution options given; see %s --help", program_name);
-        }
-    '''),
-    init=Code('char *profile_file = NULL;'),
-    exit=Code('''
-        if (profile_file != NULL) {{
-            FILE *fp = fopen(profile_file, "w");
-            if (fp == NULL)
-                warn("could not open file %s", profile_file);
-            else {{
-                if (mit_profile_dump(fileno(fp)) == -1)
-                    warn("error writing profile data");
-                else
-                    warn("wrote profile data to %s", profile_file);
-                fclose(fp);
-            }}
-        }}
-    '''),
-)
-
-
 # Generate output
 
 # Errors
-error_enum = Code()
-for error in MitErrorCode:
-    error_enum.append('"{}",'.format(
-        error.name.lower().translate(str.maketrans('_', ' '))
-    ))
+def enum_to_error_table(error_enum):
+    code = Code()
+    for error in error_enum:
+        code.append('{{{}, "{}"}},'.format(
+            error.value,
+            error.name.lower().translate(str.maketrans('_', ' ')),
+        ))
+    return code
+
+error_enums = Code()
+error_enums.extend(enum_to_error_table(MitErrorCode))
+error_enums.extend(enum_to_error_table(ExtraInstructionErrorCode))
 
 # Command-line documentation
 help_code = Code()
@@ -394,7 +176,7 @@ for element in Doc.elements:
 getopt_code = Code()
 shortopts = ''
 short_options_code = Code()
-long_options_code = Code()
+long_options_code = Code('')
 else_code = ''
 for i, option in enumerate(Option.options):
     getopt_code.append('{{"{long_name}", {arg}, NULL, \'{short_name}\'}},'.format(
@@ -407,7 +189,7 @@ for i, option in enumerate(Option.options):
         elif option.arg == 'optional_argument':
             shortopts += '::'
         short_options_code.append('''\
-            if (c == '{short_name}')
+            else if (c == '{short_name}')
                 longindex = {index};'''.format(
                     short_name = option.short_name,
                     index = i
@@ -417,89 +199,73 @@ for i, option in enumerate(Option.options):
         long_options_code.append(option.parse_code)
         else_code = 'else '
 getopt_code.append('{0, 0, 0, 0}')
-
-# Features
-top_level_code = Code('''\
-    mit_word (*run_fn)(mit_state *) = mit_run;
-    mit_word *memory;
-    mit_uword memory_words;
-''')
-init_code = Code('''\
-    set_program_name(argv[0]);
-
-    // getpagesize() is obsolete, but gnulib provides it, and
-    // sysconf(_SC_PAGESIZE) does not work on some platforms.
-    mit_uword page_size = getpagesize();
-    memory_words = 0x100000U;
-    mit_uword stack_words = 16384U;
-''')
-handlers_code = Code()
-exit_code = Code()
-for feature in Feature.features:
-    if feature.top_level:
-        top_level_code.extend(feature.top_level)
-    if feature.init:
-        init_code.extend(feature.init)
-    if feature.handler:
-        handlers_code.extend(feature.handler)
-    if feature.exit:
-        exit_code.extend(feature.exit)
+short_options_assignment = Code('const char *shortopts = "+:{}";'.format(shortopts))
 
 # main.c
 code = copyright_banner(GENERATOR_PROGRAM, PURPOSE, COPYRIGHT_YEARS)
-initial_code = Code('''
+code.extend(Code('''
 
 #include "config.h"
 
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdlib.h>
-#include <stdbool.h>
-#include <stdint.h>
 #include <inttypes.h>
 #include <errno.h>
-#include <signal.h>
 #include <getopt.h>
 #include <unistd.h>
-#include <fcntl.h>
-#include <sys/stat.h>
 
-#include "unused-parameter.h"
 #include "progname.h"
-#include "binary-io.h"
-#include "minmax.h"
-#include "safe-alloc.h"
 
 #include "mit/mit.h"
 #include "mit/features.h"
 
 #include "warn.h"
-#include "state.h"
 
 
 // Error messages
-const char *error_msg[] = {
+struct {
+    int code;
+    const char *msg;
+} error_msg[] = {
 ''',
-             error_enum,
-             '''\
+              error_enums,
+              '''\
 };
 
-// Options table
+static const char *error_to_msg(int code)
+{
+    for (size_t i = 0; i < sizeof(error_msg) / sizeof(error_msg[0]); i++) {
+        if (error_msg[i].code == code)
+            return error_msg[i].msg;
+    }
+    return "unknown error";
+}
+
+
+// Command-line options
+#ifdef WORDS_BIGENDIAN
+#define ENDISM_STRING "big"
+#else
+#define ENDISM_STRING "little"
+#endif
+
 struct option longopts[] = {''',
               getopt_code,
               '''\
 };
 
-static mit_state *S;
-
-static void exit_function(void)
+static mit_uword parse_num_words(const char *errfmt)
 {
-    mit_free_state(S);
-}''')
-code.extend(initial_code)
+    size_t max = SIZE_MAX / MIT_WORD_BYTES;
+    char *endptr;
+    errno = 0;
+    uintmax_t size = strtoumax(optarg, &endptr, 10);
+    if (*optarg == '\\0' || *endptr != '\\0' || size == 0 || size > (uintmax_t)max)
+        die(errfmt, max);
+    return (mit_uword)size;
+}
 
-code.extend(top_level_code)
-code.extend(Code('''
 static off_t fleno(FILE *fp)
 {
   off_t pos = ftello(fp);
@@ -526,6 +292,11 @@ static int skip_hashbang(FILE *fp)
     return 0;
 }
 
+// Global state
+static mit_state *S;
+mit_word *memory;
+mit_uword memory_words, stack_words;
+
 static void usage(void)
 {
     printf("Usage: %s [OPTION...] [OBJECT-FILE ARGUMENT...]\\n"
@@ -538,15 +309,24 @@ static void usage(void)
     exit(EXIT_SUCCESS);
 }
 
+
+static void exit_function(void)
+{
+    mit_free_state(S);
+}
+
 int main(int argc, char *argv[])
 {
-''',
-              init_code,
-              Code('''
+    set_program_name(argv[0]);
+
+    memory_words = 0x100000U;
+    stack_words = 16384U;
+
     // Options string starts with '+' to stop option processing at first
     // non-option, then leading ':' so as to return ':' for a missing arg,
     // not '?'
-    const char *shortopts = "+:{}";'''.format(shortopts)),
+    ''',
+              short_options_assignment,
               Code('''
     for (;;) {
         int this_optind = optind ? optind : 1, longindex = -1;
@@ -559,10 +339,10 @@ int main(int argc, char *argv[])
         else if (c == '?')
             die("unrecognised option '%s'\\nTry '%s --help' for more information.", argv[this_optind], program_name);
 '''),
-              short_options_code,
-              long_options_code,
+              Code(short_options_code),
+              Code(long_options_code),
               Code('}'),
-              Code('''
+              '''
     // If invoked without an object file, give usage message and exit
     argc -= optind;
     argv += optind;
@@ -578,8 +358,8 @@ int main(int argc, char *argv[])
         die("could not allocate virtual machine state");
     if (atexit(exit_function) != 0)
         die("could not register atexit handler");
-    if (mit_register_args(argc, (const char **)argv) != 0)
-        die("could not register command-line arguments");
+    mit_argc = argc;
+    mit_argv = &argv[0];
     S->pc = (mit_uword)memory;
 
     // Load object file and report any error
@@ -593,7 +373,7 @@ int main(int argc, char *argv[])
         off_t len = fleno(fp);
         if (len == -1)
             die("error finding size of file %s", argv[0]);
-        if (len > memory_words * MIT_WORD_BYTES)
+        if ((size_t)len > memory_words * MIT_WORD_BYTES)
             die("file %s is too big to fit in memory", argv[0]);
         if ((off_t)fread(memory, 1, len, fp) != len)
             die("error reading file %s", argv[0]);
@@ -603,13 +383,20 @@ int main(int argc, char *argv[])
 
     // Run
     for (;;) {
-        mit_word error = run_fn(S);''',
-                 handlers_code,
-                 exit_code),
-            '''
+        mit_word error = mit_run(S);
+        if (error == MIT_ERROR_INVALID_OPCODE
+            && (S->ir & MIT_OPCODE_MASK) == MIT_INSTRUCTION_JUMP) {
+            error = mit_extra_instruction(S);
+            if (error == MIT_ERROR_OK) {
+                S->ir = 0;
+                continue;
+            }
+        }
+        if (error != MIT_ERROR_HALT)
+            warn("error %zd: %s", error, error_to_msg(error));
         return error == MIT_ERROR_HALT ? 0 : error;
     }
-}''',
+}'''
 ))
 
 print(code)

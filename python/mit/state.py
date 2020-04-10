@@ -8,7 +8,8 @@ The package is distributed under the MIT/X11 License.
 THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 RISK.
 
-Registers: a variable for each register; also a list, 'registers'
+The mit_state: state
+Registers: a variable for each register
 Memory: M, M_word
 Stack: S
 Managing the VM state: load, save
@@ -17,15 +18,16 @@ Examining memory: dump, disassemble, dump_files
 '''
 
 import sys
-from ctypes import create_string_buffer
+from ctypes import create_string_buffer, byref
 
 from . import enums
 from .binding import (
-    libmit, libmitfeatures,
+    libmit, libmitfeatures, run, run_ptr,
     Error, VMError, is_aligned,
     word_bytes, word_mask, opcode_mask,
-    c_word, c_uword, c_void_p, c_char_p, byref,
-    hex0x_word_width,
+    c_word, c_uword, c_mit_state,
+    hex0x_word_width, register_args,
+    run_specializer, run_profile,
 )
 from .memory import Memory
 from .assembler import Assembler, Disassembler
@@ -52,34 +54,40 @@ class State:
         state.state = libmit.mit_new_state(stack_words)
         if state.state is None:
             raise Error("error creating virtual machine state")
-        state.registers = {
-            register.name: Register(state.state, register)
-            for register in enums.Register
-        }
         if memory_words is not None:
             state.set_memory(create_string_buffer(memory_words * word_bytes))
         state.S = Stack(state.state)
         if args is None:
             args = []
         args.insert(0, b"mit-shell")
-        state.register_args(*args)
+        register_args(*args)
         return state
 
     def set_memory(self, memory):
         self.memory = memory
         self.M = Memory(self.memory)
-        self.registers['pc'].set(self.M.addr)
+        self.pc = self.M.addr
         self.M_word = Memory(self.memory, element_size=word_bytes)
 
     def __del__(self):
         libmit.mit_free_state(self.state)
 
+    def __getattr__(self, name):
+        if name in enums.Register.__members__:
+            return self.state.contents.__getattribute__(name)
+        raise AttributeError
+
+    def __setattr__(self, name, value):
+        if name in enums.Register.__members__:
+            self.state.contents.__setattr__(name, value)
+        else:
+            super().__setattr__(name, value)
+
     def __getstate__(self):
         state = self.__dict__.copy()
-        del state['registers']
         state['registers'] = {
-            name: register.get()
-            for name, register in self.registers.items()
+            name: self.__getattr__(name)
+            for name in enums.Register.__members__
             if name not in ('stack', 'stack_words')
         }
         del state['memory']
@@ -87,127 +95,100 @@ class State:
         del state['M_word']
         state['M'] = bytes(self.M.buffer)[0:-1] # Remove trailing NUL
         del state['S']
-        state['S'] = self.S[0:self.registers["stack_depth"].get()]
+        state['S'] = self.S[0:self.stack_depth]
         del state['state']
         if 'argv' in state:
             state['argv'] = [cstr for cstr in state['argv']]
         return state
 
     def __getnewargs__(self):
-        return (libmit.mit_get_stack_words(self.state),)
+        return (self.stack_words,)
 
     def __setstate__(self, state):
         for name, value in state['registers'].items():
-            self.registers[name].set(value)
+            self.__setattr__(name, value)
         self.set_memory(create_string_buffer(state['M']))
         for item in state['S']: self.S.push(item)
         if 'argv' in state:
-            self.register_args(*state['argv'])
-
-    def register_args(self, *args):
-        argc = len(args)
-        arg_strings = c_char_p * argc
-        bargs = []
-        for arg in args:
-            if type(arg) == str:
-                arg = bytes(arg, 'utf-8')
-            elif type(arg) == int:
-                arg = bytes(arg)
-            bargs.append(arg)
-        self.argv = arg_strings(*bargs)
-        assert libmitfeatures.mit_register_args(argc, self.argv) == 0
+            register_args(*state['argv'])
 
     def do_extra_instruction(self):
         libmitfeatures.mit_extra_instruction(self.state)
-        self.registers["ir"].set(0) # Skip to next instruction
+        self.ir = 0 # Skip to next instruction
 
-    def run(self, optimize=True):
+    def run(self, optimize=True, profile=False):
         '''
         Run until `halt` or error.
 
          - optimize - bool - if True, run with optimization.
+         - profile - bool - if True, run with profiling.
+
         '''
+        assert optimize or not profile
+        if profile:
+            run_ptr.contents = run_profile
+        elif optimize:
+            run_ptr.contents = run_specializer
         while True:
             try:
-                if optimize == True:
-                    libmitfeatures.mit_specializer_run(self.state)
-                else:
-                    libmit.mit_run(self.state)
+                run(self.state)
             except VMError as e:
                 if e.args[0] == enums.MitErrorCode.HALT:
                     return
-                elif (
-                    e.args[0] == 1 and (
-                        self.registers["ir"].get() & opcode_mask ==
-                        enums.Instruction.JUMP
-                    )
-                ):
+                elif (e.args[0] == 1 and
+                      self.ir & opcode_mask == enums.Instruction.JUMP):
                     self.do_extra_instruction()
                 else:
                     raise
 
-    def _report_step_error(self, e, done, addr):
-        ret = e.args[0]
-        print("Error code {} was returned".format(ret), end='')
-        print(" after {} step{}".format(done, 's' if done != 1 else ''), end='')
-        if addr is not None:
-            print(" at pc={:#x}".format(
-                self.registers["pc"].get()),
-                end='',
-            )
-        print()
-        if ret != 0 and ret != enums.MitErrorCode.HALT:
-            raise
+    def _print_trace_info(self):
+        print("step: pc={:#x} ir={:#x} instruction={}".format(
+            self.registers["pc"].get(),
+            self.registers["ir"].get(),
+            Disassembler(self).disassemble(),
+        ))
+        print(str(self.S))
 
-    def step(self, n=1, addr=None, auto_NEXT=True):
+    def step(self, n=1, addr=None, trace=False, auto_NEXT=True):
         '''
         Single-step for n steps (excluding NEXT when pc does not change), or
         until pc=addr.
         '''
-        if addr is None:
-            assert n != 0
-            addr = 0
-        else:
-            n = 0
-
-        n_ptr = c_uword(n)
-        try:
-            libmitfeatures.mit_step_to(self.state, byref(n_ptr), addr, auto_NEXT)
-        except VMError as e:
-            self._report_step_error(e, n_ptr.value, addr)
-
-    def trace(self, n=1, addr=None, auto_NEXT=True):
-        '''
-        Single-step (see `step`), printing the instruction being executed, and
-        pc, ir, and the stack after each instruction.
-        '''
         done = 0
         ret = 0
         while addr is not None or done < n:
-            if auto_NEXT and self.registers["ir"].get() == 0:
+            if auto_NEXT and self.ir == 0:
                 libmit.mit_single_step(self.state) # safe to assume no error
-            if self.registers["pc"].get() == addr: break
-            print("trace: instruction={}".format(
-                Disassembler(self).disassemble(),
-            ))
+            if self.pc == addr: break
+            if trace:
+                print("trace: instruction={}".format(
+                    Disassembler(self).disassemble(),
+                ))
             try:
                 libmit.mit_single_step(self.state)
             except VMError as e:
                 if (
                     e.args[0] == 1 and (
-                        self.registers["ir"].get() & opcode_mask ==
-                        enums.Instruction.JUMP
+                        self.ir & opcode_mask == enums.Instruction.JUMP
                     )
                 ):
                     self.do_extra_instruction()
                 else:
-                    self._report_step_error(e, done, addr)
-            print("pc={:#x} ir={:#x}".format(
-                self.registers["pc"].get(),
-                self.registers["ir"].get(),
-            ))
-            print(str(self.S))
+                    ret = e.args[0]
+                    print("Error code {} was returned".format(ret), end='')
+                    print(" after {} step{}".format(done, 's' if done != 1 else ''), end='')
+                    if addr is not None:
+                        print(" at pc={:#x}".format(self.pc), end='')
+                    print()
+                    raise
+            if trace:
+                print("pc={:#x} ir={:#x}".format(self.pc, self.ir))
+                print(str(self.S))
             done += 1
+
+    def trace(self, n=1, addr=None, auto_NEXT=True):
+        'A convenience wrapper for `step(trace=True)`.'
+        self.step(n=n, addr=addr, trace=True, auto_NEXT=auto_NEXT)
 
     def load(self, file, addr=None):
         '''
@@ -267,7 +248,7 @@ class State:
         '''
         chunk = 16
         if start is None:
-            start = max(0, self.registers["pc"].get())
+            start = max(0, self.pc)
         start -= start % chunk
         if length is not None:
             end = start + length * word_bytes
@@ -282,7 +263,7 @@ class State:
             while i < chunk and p < end:
                 if i % 8 == 0:
                     print(" ", end='', file=file)
-                byte = M[p + i]
+                byte = self.M[p + i]
                 print("{:02x} ".format(byte), end='', file=file)
                 i += 1
                 c = chr(byte)
@@ -302,47 +283,11 @@ class State:
             self.dump(addr, length, file=h)
 
 
-class Register:
-    '''
-    A VM register.
-
-     - state - a c_void_p which is a mit_state *.
-     - register - an enums.Register indicating which register this is.
-    '''
-    def __init__(self, state, register):
-        self.state = state
-        self.register = register
-        self.getter = libmit["mit_get_{}".format(register.name)]
-        self.getter.restype = c_uword
-        self.getter.argtypes = [c_void_p]
-        self.setter = libmit["mit_set_{}".format(register.name)]
-        self.setter.restype = None
-        self.setter.argtypes = [c_void_p, c_uword]
-
-    def __index__(self):
-        return self.get()
-
-    def __int__(self):
-        return self.__index__()
-
-    def __str__(self):
-        return str(hex(int(self)))
-
-    def __repr__(self):
-        return str(self)
-
-    def get(self):
-        return int(self.getter(self.state))
-
-    def set(self, v):
-        self.setter(self.state, v)
-
-
 class Stack:
     '''
     VM stack.
 
-     - state - a c_void_p which is a mit_state *.
+     - state - a POINTER(c_mit_state).
 
     When specifying stack indices, this class uses the Python convention, so
     0 is the base of the stack. In contrast, the C API (`mit_load_stack()`
@@ -350,7 +295,6 @@ class Stack:
     '''
     def __init__(self, state):
         self.state = state
-        self.stack_depth = Register(state, enums.Register.stack_depth)
 
     def __str__(self):
         return '[{}]'.format(', '.join(
@@ -361,7 +305,7 @@ class Stack:
         return self.__str__()
 
     def __len__(self):
-        return self.stack_depth.get()
+        return self.state.contents.stack_depth
 
     def __getitem__(self, index):
         if isinstance(index, slice):

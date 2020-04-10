@@ -15,10 +15,9 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <inttypes.h>
-#include <byteswap.h>
 #include <limits.h>
 
-#include <mit@PACKAGE_SUFFIX@/opcodes.h>
+#include <mit/opcodes.h>
 
 
 // Optimization
@@ -32,10 +31,11 @@
 #define unlikely(x) (x)
 #endif
 
+// Thread-local storage
+#define MIT_THREAD_LOCAL @THREAD_LOCAL@
+
 // Build-time parameters
-#define MIT_WORD_BYTES @WORD_BYTES@
-#define MIT_ENDISM @ENDISM@
-#define MIT_HOST_ENDISM @WORDS_BIGENDIAN@
+#define MIT_WORD_BYTES @SIZEOF_SIZE_T@
 #define MIT_OPCODE_BIT @OPCODE_BIT@
 
 // Types and constants
@@ -74,9 +74,21 @@ typedef uintmax_t mit_max_stack_item_t;
 typedef mit_uword mit_max_stack_item_t;
 #endif
 
+// Forward declaration
+typedef struct mit_state mit_state;
+
+// The type of a function that mutates the VM
+typedef mit_word mit_fn(mit_state * restrict S);
+
+// VM State
+struct mit_state {
+#define R(reg, type, return_type) type reg;
+#include <mit/registers.h>
+#undef R
+};
+
 // Constants (for easy FFI binding)
 extern const unsigned mit_word_bytes;
-extern const unsigned mit_endism;
 extern const unsigned mit_size_word;
 extern const unsigned mit_byte_bit;
 extern const unsigned mit_byte_mask;
@@ -86,21 +98,11 @@ extern const mit_uword mit_uword_max;
 extern const mit_word mit_word_min;
 extern const mit_word mit_word_max;
 
-
 // Implementation-defined errors
 enum {
     MIT_ERROR_STARTUP_ERROR = 128,
     MIT_ERROR_DUMPED_CORE_ON_SIGNAL = 129,
 };
-
-// VM registers
-typedef struct mit_state mit_state;
-
-#define R(reg, type, return_type)                       \
-    return_type mit_get_ ## reg(mit_state *S);          \
-    void mit_set_ ## reg(mit_state *S, type val);
-#include <mit@PACKAGE_SUFFIX@/registers.h>
-#undef R
 
 // Instructions
 #if MIT_OPCODE_BIT < 5 || MIT_OPCODE_BIT > 8
@@ -196,9 +198,18 @@ mit_state *mit_new_state(size_t stack_words);
 void mit_free_state(mit_state *S);
 /* Free the given state, deallocating its memory. */
 
-mit_word mit_run(mit_state * restrict S);
+extern @THREAD_LOCAL@ mit_fn *mit_run;
+/* Execute VM code. Defaults to `mit_run_simple`. Can be set to any
+   compatible function, which thereby propagates to nested VMs via the `RUN`
+   extra instruction. This allows a different implementation (optimized,
+   profiling) to be used globally.
+*/
+
+mit_word mit_run_simple(mit_state * restrict S);
 /* Start the execution cycle in the given state as described in the spec.
    If an error is raised, the code is returned.
+
+   This is the default naive implementation.
 */
 
 mit_word mit_single_step(mit_state * restrict S);
@@ -209,16 +220,5 @@ mit_word mit_single_step(mit_state * restrict S);
 
 mit_word mit_internal_extra_instruction(mit_state *S);
 /* Execute an internal instruction, given by `S->ir`. */
-
-#if HAVE_ARITHMETIC_RSHIFT
-#define ARSHIFT(n, p) \
-    ((mit_word)(n) >> (p))
-#else
-#define ARSHIFT(n, p) \
-    (((n) >> (p)) | ((mit_uword)(-((mit_word)(n) < 0)) << (MIT_WORD_BIT - (p))))
-#endif
-/* Arithmetic right shift `n` by `p` places (the behaviour of >> on signed
-   quantities is implementation-defined in C99).
-*/
 
 #endif
