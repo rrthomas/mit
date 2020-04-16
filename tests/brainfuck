@@ -36,12 +36,12 @@ parser.add_argument(
 args = parser.parse_args()
 
 
-def inc(): ass(LIT_1); ass(ADD)
-def dec(): ass(LIT_1); ass(NEGATE); ass(ADD)
-def dup(): ass(LIT_0); ass(DUP)
-def over(): ass(LIT_1); ass(DUP)
-def loadb(): ass(LIT_0); ass(LOAD)
-def storeb(): ass(LIT_0); ass(STORE)
+def inc(): lit(1); ass(ADD)
+def dec(): lit(1); ass(NEGATE); ass(ADD)
+def dup(): lit(0); ass(DUP)
+def over(): lit(1); ass(DUP)
+def loadb(): lit(0); ass(LOAD)
+def storeb(): lit(0); ass(STORE)
 
 try:
     lit_pc_rel(0) # Data pointer.
@@ -53,16 +53,16 @@ try:
         elif c == '-': dup(); loadb(); dec(); over(); storeb()
         elif c == '.':
             dup() # buffer
-            ass(LIT_1) # length
+            lit(1) # length
             lit(LibC.STDOUT); ass(JUMP, LIBC)
             lit(LibC.WRITE); ass(JUMP, LIBC)
-            ass(LIT_1); ass(POP)
+            lit(1); ass(POP)
         elif c == ',':
             dup() # buffer
-            ass(LIT_1) # length
+            lit(1) # length
             lit(LibC.STDIN); ass(JUMP, LIBC)
             lit(LibC.READ); ass(JUMP, LIBC)
-            ass(LIT_1); ass(POP)
+            lit(1); ass(POP)
         elif c == '[':
             loop = label()
             dup()
