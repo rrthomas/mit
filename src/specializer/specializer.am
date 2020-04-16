@@ -41,7 +41,7 @@ bench:
 
 if USING_PFORTH
 specializer/pforth/config.status: specializer/pforth/configure
-specializer/pforth/configure:
+specializer/pforth/configure: specializer/pforth/configure.ac
 	cd specializer/pforth && \
 	autoreconf -i && \
 	./configure --build=mit BUILD_EXECUTOR=$(MIT_BINARY) BUILD_EXECUTOR_FLAGS=-O
