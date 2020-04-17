@@ -37,7 +37,7 @@ args = parser.parse_args()
 # Get instruction counts from profile and compute order
 profile.load(args.profile_file)
 instruction_counts = {instruction.opcode: 0 for instruction in Instruction}
-for instruction, count in profile.counts().items():
+for instruction, count in profile.instruction_counts().items():
     instruction_counts[instruction.opcode] += count
 instruction_order = sorted(
     Instruction,

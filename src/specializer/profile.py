@@ -109,7 +109,9 @@ def random_trace():
             label = get_label(label.if_wrong)
 
 
-def counts():
+# Analysis functions.
+
+def instruction_counts():
     '''
     Returns a dict from Instruction to count.
     '''
@@ -118,3 +120,21 @@ def counts():
     for label in profile:
         counts[label.guess] += label.correct_count
     return counts
+
+def total_instructions():
+    return sum(count for _, count in instruction_counts().items())
+
+def label_counts():
+    total_count = sum(label.total_count for label in profile)
+
+    fallback_count = sum(
+        label.correct_count
+        for label in profile
+        if label.if_correct == -1
+    ) + sum (
+        label.wrong_count
+        for label in profile
+        if label.if_wrong == -1
+    )
+
+    return total_count, fallback_count
