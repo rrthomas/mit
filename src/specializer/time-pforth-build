@@ -20,7 +20,7 @@ parser = argparse.ArgumentParser(
     description='Time pForth building itself.',
 )
 parser.add_argument('-n', '--times', type=int, metavar='N', default=1,
-                    help='repeat build N times [default 1]')
+                    help='repeat build N times [default %(default)s]')
 args = parser.parse_args()
 
 # Check required environment variables are set

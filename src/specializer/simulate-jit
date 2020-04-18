@@ -30,7 +30,7 @@ parser.add_argument(
     type=int,
     default=400,
     metavar='N',
-    help='generate approximately N labels',
+    help='generate approximately N labels [default %(default)s]',
 )
 parser.add_argument(
     '--svg-file',
