@@ -8,7 +8,6 @@
 # RISK.
 
 import os
-from os import environ as env
 import sys
 import argparse
 import subprocess
@@ -24,20 +23,20 @@ parser.add_argument('-n', '--times', type=int, metavar='N', default=1,
 args = parser.parse_args()
 
 # Check required environment variables are set
-assert env.get('srcdir') is not None
-assert env.get('abs_top_srcdir') is not None
-assert env.get('TIME_BINARY') is not None
-assert env.get('MIT_BINARY') is not None
+assert os.getenv('srcdir') is not None
+assert os.getenv('abs_top_srcdir') is not None
+assert os.getenv('TIME_BINARY') is not None
+assert os.getenv('MIT_BINARY') is not None
 
-os.chdir(os.path.join(env['srcdir'], 'specializer/pforth/src/mit'))
+os.chdir(os.path.join(os.environ['srcdir'], 'specializer/pforth/src/mit'))
 
 # Build pForth the given number of times with given options
-subprocess.check_call(env['TIME_BINARY'].split() +
-                      [os.path.join(env['abs_top_srcdir'],
+subprocess.check_call(os.environ['TIME_BINARY'].split() +
+                      [os.path.join(os.environ['abs_top_srcdir'],
                                     'build-aux/repeat'),
                        str(args.times),
-                       env['MIT_BINARY']] +
-                      env.get('MIT_OPTIONS', '').split() +
+                       os.environ['MIT_BINARY']] +
+                      os.getenv('MIT_OPTIONS', '').split() +
                       ['pforth', 'make.fs'])
 
 # Check the result once (assume it built the same each time!)
