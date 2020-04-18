@@ -20,6 +20,7 @@ RUN apt-get update -qq && \
   automake \
   autoconf \
   libtool \
+  libtool-bin \
   help2man \
   ipython3 \
   python3-yaml \
