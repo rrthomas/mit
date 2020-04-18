@@ -21,16 +21,7 @@ values = [
 # Test
 correct = []
 for n, v in enumerate(values):
-    if n == 0:
-        ass(LIT_0)
-    elif n == 1:
-        ass(LIT_1)
-    elif n == 2:
-        ass(LIT_2)
-    elif n == 3:
-        ass(LIT_3)
-    else:
-        lit(v)
+    lit(v)
     correct.append(values[:n+1])
 
 run_test("literals", VM, correct)

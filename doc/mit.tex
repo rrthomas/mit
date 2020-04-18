@@ -44,7 +44,7 @@
 
 \title{The Mit Virtual Machine}
 \author{Reuben Thomas}
-\date{28th March 2020}
+\date{16th April 2020}
 
 \begin{document}
 \maketitle
@@ -306,10 +306,6 @@ These instructions manage the stack:
 \begin{description}
 \inst{lit}{— n}{The word pointed to by {\tt pc} is pushed on to the stack, and {\tt pc} is incremented to point to the following word.}
 \inst{lit\_pc\_rel}{— n}{Like {\tt lit}, except that the initial value of {\tt pc} is added to the value pushed on to the stack.}
-\inst{lit\_0}{— $0$}{Push $0$ on to the stack.}
-\inst{lit\_1}{— $1$}{Push $1$ on to the stack.}
-\inst{lit\_2}{— $2$}{Push $2$ on to the stack.}
-\inst{lit\_3}{— $3$}{Push $3$ on to the stack.}
 \end{description}
 
 
@@ -408,15 +404,15 @@ Table~\ref{opcodetable} lists the instruction opcodes in numerical order. Table~
 \opcodetbl{5}{dup}			{15}{mul}
 \opcodetbl{6}{swap}			{16}{divmod}
 \smallskip% For some reason needs to be here rather than after the next line
-\opcodetbl{7}{\rm (undefined)}	{17}{udivmod}
+\opcodetbl{7}{\rm (undefined)}		{17}{udivmod}
 \opcodetbl{8}{load}			{18}{not}
 \opcodetbl{9}{store}			{19}{and}
 \opcodetbl{a}{lit}			{1a}{or}
 \opcodetbl{b}{lit\_pc\_rel}		{1b}{xor}
-\opcodetbl{c}{lit\_0}			{1c}{lshift}
-\opcodetbl{d}{lit\_1}			{1d}{rshift}
-\opcodetbl{e}{lit\_2}			{1e}{arshift}
-\opcodetbl{f}{lit\_3}			{1f}{sign\_extend}
+\opcodetbl{c}{\rm (undefined)}		{1c}{lshift}
+\opcodetbl{d}{\rm (undefined)}		{1d}{rshift}
+\opcodetbl{e}{\rm (undefined)}		{1e}{arshift}
+\opcodetbl{f}{\rm (undefined)}		{1f}{sign\_extend}
  \bottomrule
 \end{tabular}
 \caption{\label{opcodetable}Instruction opcodes}

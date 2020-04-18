@@ -148,11 +148,6 @@ Instruction = instruction_enum(
             n += S->pc - MIT_WORD_BYTES;'''
         ),
 
-        'LIT_0': Code(),
-        'LIT_1': Code(),
-        'LIT_2': Code(),
-        'LIT_3': Code(),
-
         'LT': Code('flag = a < b;'),
         'ULT': Code('flag = (mit_uword)a < (mit_uword)b;'),
 

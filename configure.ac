@@ -68,6 +68,19 @@ AC_PATH_PROG([HELP2MAN], [help2man], [help2man])
 
 # Timing/profiling
 AC_PATH_PROG([TIME], [time])
+AC_PATH_PROG([OPERF], [operf])
+AS_IF([test "$ac_cv_path_OPERF" != ""], [
+  AX_CPU_VENDOR
+  case $ax_cv_cpu_vendor in
+    Intel)
+      OPERF_OPTIONS="--events INST_RETIRED:100000";;
+    AMD)
+      OPERF_OPTIONS="--events RETIRED_INSTRUCTIONS:200000";;
+    *)
+      AC_MSG_WARN([Don't know how to run operf on this arch]);;
+  esac
+])
+AC_SUBST([OPERF_OPTIONS])
 
 # Optimization
 AX_CC_MAXOPT
