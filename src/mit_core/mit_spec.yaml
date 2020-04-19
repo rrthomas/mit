@@ -134,10 +134,6 @@ Instruction:
     opcode: 0x1e
     args: ['x', 'n']
     results: ['r']
-  SIGN_EXTEND:
-    opcode: 0x1f
-    args: ['u', 'size']
-    results: ['n']
 
 InternalExtraInstruction:
   HALT:

@@ -183,11 +183,6 @@ Instruction = instruction_enum(
                 (mit_word)((mit_uword)x >> n) : 0;'''
         ),
         'ARSHIFT': Code('r = ARSHIFT(x, n);'),
-
-        'SIGN_EXTEND': Code('''\
-            n = u << (MIT_WORD_BYTES - (1 << size)) * MIT_BYTE_BIT;
-            n = ARSHIFT(n, (MIT_WORD_BYTES - (1 << size)) * MIT_BYTE_BIT);'''
-        ),
     },
 )
 

@@ -92,7 +92,7 @@ for instruction in Instruction:
                 name=instruction.name,
                 count=count,
             )] = _gen_variadic_instruction(instruction, count)
-    elif instruction.name in ('LOAD', 'STORE', 'SIGN_EXTEND'):
+    elif instruction.name in ('LOAD', 'STORE'):
         for size in range(4):
             specialized_instructions['{name}_WITH_{size}'.format(
                 name=instruction.name,

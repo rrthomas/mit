@@ -393,9 +393,5 @@
   {"path": "", "guess": "LSHIFT", "if_correct": 392, "if_wrong": 393, "correct_count": 3672201, "wrong_count": 7412480},
   {"path": "LSHIFT", "guess": "NEXT", "if_correct": 1, "if_wrong": 0, "correct_count": 3672201, "wrong_count": 0},
   {"path": "", "guess": "RSHIFT", "if_correct": 0, "if_wrong": 394, "correct_count": 628, "wrong_count": 7411852},
-  {"path": "", "guess": "ARSHIFT", "if_correct": 0, "if_wrong": 395, "correct_count": 0, "wrong_count": 7411852},
-  {"path": "", "guess": "SIGN_EXTEND_WITH_0", "if_correct": 0, "if_wrong": 396, "correct_count": 0, "wrong_count": 7411852},
-  {"path": "", "guess": "SIGN_EXTEND_WITH_1", "if_correct": 0, "if_wrong": 397, "correct_count": 0, "wrong_count": 7411852},
-  {"path": "", "guess": "SIGN_EXTEND_WITH_2", "if_correct": 0, "if_wrong": 398, "correct_count": 0, "wrong_count": 7411852},
-  {"path": "", "guess": "SIGN_EXTEND_WITH_3", "if_correct": 0, "if_wrong": -1, "correct_count": 0, "wrong_count": 7411852}
+  {"path": "", "guess": "ARSHIFT", "if_correct": 0, "if_wrong": -1, "correct_count": 0, "wrong_count": 7411852}
 ]

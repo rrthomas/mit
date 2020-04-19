@@ -33,13 +33,6 @@ correct = [
     [magic_number],
     [magic_number, 1],
     [],
-    [last_word + (word_bytes - 2) * endism],
-    [last_word + (word_bytes - 2) * endism, 1],
-    [magic_number],
-    [magic_number, 1],
-    [magic_number | -0x10000],
-    [magic_number | -0x10000, 1],
-    [],
     [last_word + (word_bytes - 2) * endism + 1 * (1 - endism)],
     [last_word + (word_bytes - 2) * endism + 1 * (1 - endism), 0],
     [0xf2],
@@ -64,13 +57,6 @@ ass(POP)
 lit(last_word + (word_bytes - 2) * endism)
 lit(1)
 ass(LOAD)
-lit(1)
-ass(POP)
-lit(last_word + (word_bytes - 2) * endism)
-lit(1)
-ass(LOAD)
-lit(1)
-ass(SIGN_EXTEND)
 lit(1)
 ass(POP)
 lit(last_word + (word_bytes - 2) * endism + 1 * (1 - endism))
