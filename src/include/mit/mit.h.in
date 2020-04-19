@@ -101,7 +101,6 @@ extern const mit_word mit_word_max;
 // Implementation-defined errors
 enum {
     MIT_ERROR_STARTUP_ERROR = 128,
-    MIT_ERROR_DUMPED_CORE_ON_SIGNAL = 129,
 };
 
 // Instructions
