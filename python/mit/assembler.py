@@ -18,8 +18,8 @@ from .binding import (
 from .enums import Instruction, InternalExtraInstruction, TERMINAL_OPCODES
 from .extra_enums import LibInstruction
 
-LIT = Instruction.LIT
-LIT_PC_REL = Instruction.LIT_PC_REL
+PUSH = Instruction.PUSH
+PUSHREL = Instruction.PUSHREL
 JUMP = Instruction.JUMP
 CALL = Instruction.CALL
 
@@ -88,15 +88,15 @@ class Disassembler:
                 name = mnemonic[opcode].lower()
             except KeyError:
                 name = "undefined opcode {:#x}".format(opcode)
-            if opcode == LIT or opcode == LIT_PC_REL:
+            if opcode == PUSH or opcode == PUSHREL:
                 initial_pc = self.pc
                 value = self._fetch()
                 signed_value = value
                 if value & sign_bit:
                     signed_value -= 1 << word_bit
-                if opcode == LIT:
+                if opcode == PUSH:
                     comment = ' ({:#x}={})'.format(value, signed_value)
-                else: # opcode == LIT_PC_REL
+                else: # opcode == PUSHREL
                     comment = ' ({:#x})'.format(initial_pc + signed_value)
             if opcode in TERMINAL_OPCODES:
                 # Call `self._fetch()` later, not now.
@@ -228,11 +228,11 @@ class Assembler:
             self.i_shift += opcode_bit
 
     def lit(self, value):
-        self.instruction(LIT)
+        self.instruction(PUSH)
         self.word(value)
 
     def lit_pc_rel(self, value):
-        self.instruction(LIT_PC_REL)
+        self.instruction(PUSHREL)
         self.word(value - self.pc)
 
     def goto(self, pc):

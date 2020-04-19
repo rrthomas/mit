@@ -70,70 +70,70 @@ Instruction:
     opcode: 0x9
     args: ['val', 'addr', 'size']
     results: []
-  LIT:
-    opcode: 0xa
+  PUSH:
+    opcode: 0x10
     args: []
     results: ['n']
-  LIT_PC_REL:
-    opcode: 0xb
-    args: []
-    results: ['n']
-  LT:
+  PUSHREL:
     opcode: 0x11
-    args: ['a', 'b']
-    results: ['flag']
-  ULT:
-    opcode: 0x12
-    args: ['a', 'b']
-    results: ['flag']
-  NEGATE:
-    opcode: 0x13
-    args: ['a']
-    results: ['r']
-  ADD:
-    opcode: 0x14
-    args: ['a', 'b']
-    results: ['r']
-  MUL:
-    opcode: 0x15
-    args: ['a', 'b']
-    results: ['r']
-  DIVMOD:
-    opcode: 0x16
-    args: ['a', 'b']
-    results: ['q', 'r']
-  UDIVMOD:
-    opcode: 0x17
-    args: ['a', 'b']
-    results: ['q', 'r']
+    args: []
+    results: ['n']
   NOT:
-    opcode: 0x18
+    opcode: 0x12
     args: ['x']
     results: ['r']
   AND:
-    opcode: 0x19
+    opcode: 0x13
     args: ['x', 'y']
     results: ['r']
   OR:
-    opcode: 0x1a
+    opcode: 0x14
     args: ['x', 'y']
     results: ['r']
   XOR:
-    opcode: 0x1b
+    opcode: 0x15
     args: ['x', 'y']
     results: ['r']
+  LT:
+    opcode: 0x16
+    args: ['a', 'b']
+    results: ['flag']
+  ULT:
+    opcode: 0x17
+    args: ['a', 'b']
+    results: ['flag']
   LSHIFT:
-    opcode: 0x1c
+    opcode: 0x18
     args: ['x', 'n']
     results: ['r']
   RSHIFT:
-    opcode: 0x1d
+    opcode: 0x19
     args: ['x', 'n']
     results: ['r']
   ARSHIFT:
-    opcode: 0x1e
+    opcode: 0x1a
     args: ['x', 'n']
     results: ['r']
+  NEGATE:
+    opcode: 0x1b
+    args: ['a']
+    results: ['r']
+  ADD:
+    opcode: 0x1c
+    args: ['a', 'b']
+    results: ['r']
+  MUL:
+    opcode: 0x1d
+    args: ['a', 'b']
+    results: ['r']
+  DIVMOD:
+    opcode: 0x1e
+    args: ['a', 'b']
+    results: ['q', 'r']
+  UDIVMOD:
+    opcode: 0x1f
+    args: ['a', 'b']
+    results: ['q', 'r']
 
 InternalExtraInstruction:
   HALT:

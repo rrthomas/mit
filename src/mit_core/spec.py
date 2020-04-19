@@ -141,15 +141,30 @@ Instruction = instruction_enum(
             }'''
         ),
 
-        'LIT': Code('FETCH_PC(n);'),
+        'PUSH': Code('FETCH_PC(n);'),
 
-        'LIT_PC_REL': Code('''\
+        'PUSHREL': Code('''\
             FETCH_PC(n);
             n += S->pc - MIT_WORD_BYTES;'''
         ),
 
+        'NOT': Code('r = ~x;'),
+        'AND': Code('r = x & y;'),
+        'OR': Code('r = x | y;'),
+        'XOR': Code('r = x ^ y;'),
+
         'LT': Code('flag = a < b;'),
         'ULT': Code('flag = (mit_uword)a < (mit_uword)b;'),
+
+        'LSHIFT': Code('''\
+            r = n < (mit_word)MIT_WORD_BIT ?
+                (mit_word)((mit_uword)x << n) : 0;'''
+        ),
+        'RSHIFT': Code('''\
+            r = n < (mit_word)MIT_WORD_BIT ?
+                (mit_word)((mit_uword)x >> n) : 0;'''
+        ),
+        'ARSHIFT': Code('r = ARSHIFT(x, n);'),
 
         'NEGATE': Code('r = -a;'),
         'ADD': Code('r = a + b;'),
@@ -168,21 +183,6 @@ Instruction = instruction_enum(
             q = (mit_word)((mit_uword)a / (mit_uword)b);
             r = (mit_word)((mit_uword)a % (mit_uword)b);'''
         ),
-
-        'NOT': Code('r = ~x;'),
-        'AND': Code('r = x & y;'),
-        'OR': Code('r = x | y;'),
-        'XOR': Code('r = x ^ y;'),
-
-        'LSHIFT': Code('''\
-            r = n < (mit_word)MIT_WORD_BIT ?
-                (mit_word)((mit_uword)x << n) : 0;'''
-        ),
-        'RSHIFT': Code('''\
-            r = n < (mit_word)MIT_WORD_BIT ?
-                (mit_word)((mit_uword)x >> n) : 0;'''
-        ),
-        'ARSHIFT': Code('r = ARSHIFT(x, n);'),
     },
 )
 

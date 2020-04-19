@@ -42,17 +42,16 @@
 \newcommand{\opcodetblone}[2]{0x#1 & {\tt #2} \\}
 
 
-\title{The Mit Virtual Machine}
+\title{The Mit virtual machine}
 \author{Reuben Thomas}
-\date{16th April 2020}
+\date{19th April 2020}
 
 \begin{document}
 \maketitle
 
 \subsection*{Typographical conventions}
 
-Instructions and registers are shown in {\tt typewriter} font;
-interface calls are shown in {\bf bold} type.
+Instructions and registers are shown in {\tt typewriter} font.
 
 Addresses are given in bytes and refer to the VM address space except where
 stated. Addresses are written in hexadecimal; hex numbers are prefixed with
@@ -301,16 +300,26 @@ These instructions manage the stack:
 \end{description}
 
 
-\subsection{Literals}
+\subsection{Memory}
+
+These instructions fetch and store quantities to and from memory. If an invalid or unaligned address is accessed, the appropriate error is raised (see section~\ref{errors}).
 
 \begin{description}
-\inst{lit}{— n}{The word pointed to by {\tt pc} is pushed on to the stack, and {\tt pc} is incremented to point to the following word.}
-\inst{lit\_pc\_rel}{— n}{Like {\tt lit}, except that the initial value of {\tt pc} is added to the value pushed on to the stack.}
+\inst{load}{addr size — x}{Load the $2^{\spic{size}}$-byte quantity \spic{x} stored at \spic{addr}, which must be a multiple of $2^{\spic{size}}$. Any unused high-order bits are set to zero.}
+\inst{store}{x addr size —}{Store the $2^{\spic{size}}$ least-significant bytes of \spic{x} at \spic{addr}, which must be a multiple of $2^{\spic{size}}$.}
 \end{description}
 
 
-\subsection{Logic and shifts}
-\label{logicshifts}
+\subsection{Immediate constants}
+
+\begin{description}
+\inst{push}{— n}{The word pointed to by {\tt pc} is pushed on to the stack, and {\tt pc} is incremented to point to the following word.}
+\inst{pushrel}{— n}{Like {\tt push}, except that the initial value of {\tt pc} is added to the value pushed on to the stack.}
+\end{description}
+
+
+\subsection{Logic}
+\label{logic}
 
 Logic functions:
 
@@ -322,24 +331,24 @@ Logic functions:
 \inst{xor}{\x1 \x2 — \x3}{\x3 is the bit-by-bit exclusive-or of \x1 with \x2.}
 \end{description}
 
-Shifts:
-
-\nopagebreak
-\begin{description}
-\inst{lshift}{\x1 u — \x2}{Perform a logical left shift of \spic{u} bit-places on \x1, giving \x2. Put zero into the least significant bits vacated by the shift. If \spic{u} is greater than or equal to the number of bits in a word, \x2 is zero.}
-\inst{rshift}{\x1 u — \x2}{Perform a logical right shift of \spic{u} bit-places on \x1, giving \x2. Put zero into the most significant bits vacated by the shift. If \spic{u} is greater than or equal to the number of bits in a word, \x2 is zero.}
-\inst{arshift}{\x1 u — \x2}{Perform an arithmetic right shift of \spic{u} bit-places on \x1, giving \x2. Copy the original most-significant bits into the most significant bits vacated by the shift. If \spic{u} is greater than or equal to the number of bits in a word, all the bits of \x2 are the same as the original most-significant bit.}
-\end{description}
-
 
 \subsection{Comparison}
 
-These words compare two numbers on the stack, returning a flag (for equality, use {\tt xor}; see section~\ref{logicshifts}):
+These words compare two numbers on the stack, returning a flag (for equality, use {\tt xor}; see section~\ref{logic}):
 
 \nopagebreak
 \begin{description}
 \inst{lt}{\n1 \n2 — flag}{\spic{flag} is $1$ if and only if \n1 is less than \n2.}
 \inst{ult}{\U1 \U2 — flag}{\spic{flag} is $1$ if and only if \U1 is less than \U2.}
+\end{description}
+
+
+\subsection{Shifts}
+
+\begin{description}
+\inst{lshift}{\x1 u — \x2}{Perform a logical left shift of \spic{u} bit-places on \x1, giving \x2. Put zero into the least significant bits vacated by the shift. If \spic{u} is greater than or equal to the number of bits in a word, \x2 is zero.}
+\inst{rshift}{\x1 u — \x2}{Perform a logical right shift of \spic{u} bit-places on \x1, giving \x2. Put zero into the most significant bits vacated by the shift. If \spic{u} is greater than or equal to the number of bits in a word, \x2 is zero.}
+\inst{arshift}{\x1 u — \x2}{Perform an arithmetic right shift of \spic{u} bit-places on \x1, giving \x2. Copy the original most-significant bits into the most significant bits vacated by the shift. If \spic{u} is greater than or equal to the number of bits in a word, all the bits of \x2 are the same as the original most-significant bit.}
 \end{description}
 
 
@@ -369,16 +378,6 @@ $9$ if division by zero is attempted):
 \end{description}
 
 
-\subsection{Memory}
-
-These instructions fetch and store quantities to and from memory. If an invalid or unaligned address is accessed, the appropriate error is raised (see section~\ref{errors}).
-
-\nopagebreak
-\begin{description}
-\inst{load}{addr size — x}{Load the $2^{\spic{size}}$-byte quantity \spic{x} stored at \spic{addr}, which must be a multiple of $2^{\spic{size}}$. Any unused high-order bits are set to zero.}
-\inst{store}{x addr size —}{Store the $2^{\spic{size}}$ least-significant bytes of \spic{x} at \spic{addr}, which must be a multiple of $2^{\spic{size}}$.}
-\end{description}
-
 
 \subsection{Instruction encoding}
 \label{encoding}
@@ -395,23 +394,23 @@ Table~\ref{opcodetable} lists the instruction opcodes in numerical order. Table~
 \begin{center}
 \begin{tabular}{*{2}{cc}} \toprule
 \bf Opcode & \bf Instruction & \bf Opcode & \bf Instruction \\ \midrule
-\opcodetbl{0}{next}			{10}{\rm (undefined)}
-\opcodetbl{1}{jump}			{11}{lt}
-\opcodetbl{2}{jumpz}			{12}{ult}
-\opcodetbl{3}{call}			{13}{negate}
-\opcodetbl{4}{pop}			{14}{add}
-\opcodetbl{5}{dup}			{15}{mul}
-\opcodetbl{6}{swap}			{16}{divmod}
+\opcodetbl{0}{next}			{10}{push}
+\opcodetbl{1}{jump}			{11}{pushrel}
+\opcodetbl{2}{jumpz}			{12}{not}
+\opcodetbl{3}{call}			{13}{and}
+\opcodetbl{4}{pop}			{14}{or}
+\opcodetbl{5}{dup}			{15}{xor}
+\opcodetbl{6}{swap}			{16}{lt}
 \smallskip% For some reason needs to be here rather than after the next line
-\opcodetbl{7}{\rm (undefined)}		{17}{udivmod}
-\opcodetbl{8}{load}			{18}{not}
-\opcodetbl{9}{store}			{19}{and}
-\opcodetbl{a}{lit}			{1a}{or}
-\opcodetbl{b}{lit\_pc\_rel}		{1b}{xor}
-\opcodetbl{c}{\rm (undefined)}		{1c}{lshift}
-\opcodetbl{d}{\rm (undefined)}		{1d}{rshift}
-\opcodetbl{e}{\rm (undefined)}		{1e}{arshift}
-\opcodetbl{f}{\rm (undefined)}		{1f}{\rm (undefined)}
+\opcodetbl{7}{\rm (undefined)}		{17}{ult}
+\opcodetbl{8}{load}			{18}{lshift}
+\opcodetbl{9}{store}			{19}{rshift}
+\opcodetbl{a}{\rm (undefined)}		{1a}{arshift}
+\opcodetbl{b}{\rm (undefined)}		{1b}{negate}
+\opcodetbl{c}{\rm (undefined)}		{1c}{add}
+\opcodetbl{d}{\rm (undefined)}		{1d}{mul}
+\opcodetbl{e}{\rm (undefined)}		{1e}{divmod}
+\opcodetbl{f}{\rm (undefined)}		{1f}{udivmod}
  \bottomrule
 \end{tabular}
 \caption{\label{opcodetable}Instruction opcodes}
