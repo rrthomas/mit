@@ -58,7 +58,7 @@ class Disassembler:
         self.state = state
         if pc is None:
             self.pc = self.state.pc
-            self.ir = self.state.pc
+            self.ir = self.state.ir
         else:
             self.pc = pc
             self.ir = ir
