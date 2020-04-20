@@ -32,7 +32,7 @@
 
 // Check a VM address is valid, raising an error if not.
 #define CHECK_ALIGNED(addr)                                   \
-    if (!is_aligned((addr), MIT_SIZE_WORD))                   \
+    if (!is_aligned((addr), MIT_WORD_BYTES))                  \
         RAISE(MIT_ERROR_UNALIGNED_ADDRESS);
 
 #pragma GCC diagnostic push

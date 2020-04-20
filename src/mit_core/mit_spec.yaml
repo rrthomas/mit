@@ -17,8 +17,7 @@ ErrorCode:
   INVALID_MEMORY_READ: 5
   INVALID_MEMORY_WRITE: 6
   UNALIGNED_ADDRESS: 7
-  BAD_SIZE: 8
-  DIVISION_BY_ZERO: 9
+  DIVISION_BY_ZERO: 8
   HALT: 127
 
 # VM registers
@@ -64,11 +63,35 @@ Instruction:
     results: ['y', 'ITEMS', 'x']
   LOAD:
     opcode: 0x8
-    args: ['addr', 'size']
+    args: ['addr']
     results: ['val']
   STORE:
     opcode: 0x9
-    args: ['val', 'addr', 'size']
+    args: ['val', 'addr']
+    results: []
+  LOAD1:
+    opcode: 0xa
+    args: ['addr']
+    results: ['val']
+  STORE1:
+    opcode: 0xb
+    args: ['val', 'addr']
+    results: []
+  LOAD2:
+    opcode: 0xc
+    args: ['addr']
+    results: ['val']
+  STORE2:
+    opcode: 0xd
+    args: ['val', 'addr']
+    results: []
+  LOAD4:
+    opcode: 0xe
+    args: ['addr']
+    results: ['val']
+  STORE4:
+    opcode: 0xf
+    args: ['val', 'addr']
     results: []
   PUSH:
     opcode: 0x10

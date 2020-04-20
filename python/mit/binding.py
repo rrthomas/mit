@@ -86,7 +86,7 @@ def errcheck(error_enum):
 # Constants (all of type unsigned)
 vars().update([(c, c_uint.in_dll(libmit, "mit_{}".format(c)).value)
                for c in [
-                       "word_bytes", "size_word",
+                       "word_bytes",
                        "byte_bit", "byte_mask", "word_bit",
                        "opcode_bit", "opcode_mask",
                ]])
@@ -162,7 +162,7 @@ libmit.mit_free_state.restype = None
 libmit.mit_free_state.argtypes = [POINTER(c_mit_state)]
 
 def is_aligned(addr):
-    return (addr & ((1 << size_word) - 1)) == 0
+    return (addr & (word_bytes - 1)) == 0
 
 # features.h
 vars().update([(c, cty.in_dll(libmitfeatures, "mit_{}".format(c)))

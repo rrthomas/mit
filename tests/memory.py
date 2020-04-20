@@ -21,52 +21,40 @@ endism = 0 if byteorder == 'little' else 1
 correct = [
     [magic_number],
     [magic_number, last_word],
-    [magic_number, last_word, size_word],
     [],
     [last_word],
-    [last_word, size_word],
     [magic_number],
     [magic_number, 1],
     [],
     [last_word + (word_bytes - 2) * endism],
-    [last_word + (word_bytes - 2) * endism, 1],
     [magic_number],
     [magic_number, 1],
     [],
     [last_word + (word_bytes - 2) * endism + 1 * (1 - endism)],
-    [last_word + (word_bytes - 2) * endism + 1 * (1 - endism), 0],
     [0xf2],
     [0xf2, M.addr + len(M) - ((word_bytes - 1) * endism + 1)],
-    [0xf2, M.addr + len(M) - ((word_bytes - 1) * endism + 1), 0],
     [],
     [last_word],
-    [last_word, size_word],
     [(0xf2 << (word_bit - byte_bit)) | magic_number | -(word_mask + 1)],
 ]
 
 # Test code
 lit(magic_number)
 lit(last_word)
-lit(size_word)
 ass(STORE)
 lit(last_word)
-lit(size_word)
 ass(LOAD)
 lit(1)
 ass(POP)
 lit(last_word + (word_bytes - 2) * endism)
-lit(1)
-ass(LOAD)
+ass(LOAD2)
 lit(1)
 ass(POP)
 lit(last_word + (word_bytes - 2) * endism + 1 * (1 - endism))
-lit(0)
-ass(LOAD)
+ass(LOAD1)
 lit(M.addr + len(M) - ((word_bytes - 1) * endism + 1))
-lit(0)
-ass(STORE)
+ass(STORE1)
 lit(last_word)
-lit(size_word)
 ass(LOAD)
 
 # Test

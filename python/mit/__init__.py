@@ -29,7 +29,6 @@ from .extra_enums import LibC, LibMitfeatures, LibInstruction
 from .binding import (
     Error, VMError,
     word_bytes,
-    size_word,
     byte_bit, byte_mask,
     word_bit, word_mask, sign_bit,
     opcode_bit, opcode_mask,

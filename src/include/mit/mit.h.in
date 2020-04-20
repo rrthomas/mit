@@ -15,7 +15,6 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <inttypes.h>
-#include <limits.h>
 
 #include <mit/opcodes.h>
 
@@ -58,8 +57,6 @@ typedef uint8_t mit_byte;
 #define MIT_UWORD_MAX MIT_WORD_MASK
 #define MIT_WORD_MIN ((mit_word)(MIT_UWORD_MAX << (MIT_WORD_BIT - 1)))
 #define MIT_WORD_MAX ((mit_word)(MIT_UWORD_MAX >> 1))
-#define _reverse_endianness(bits, n) bswap_ ## bits(n)
-#define reverse_endianness(bits, n) _reverse_endianness(bits, n)
 
 #define _bits_type_name(prefix, bits) prefix ## bits ## _t
 #define bits_type_name(prefix, bits) _bits_type_name(prefix, bits)
@@ -89,7 +86,6 @@ struct mit_state {
 
 // Constants (for easy FFI binding)
 extern const unsigned mit_word_bytes;
-extern const unsigned mit_size_word;
 extern const unsigned mit_byte_bit;
 extern const unsigned mit_byte_mask;
 extern const unsigned mit_word_bit;
@@ -116,7 +112,7 @@ extern const unsigned mit_opcode_mask;
 #pragma GCC diagnostic ignored "-Wunused-function"
 _GL_ATTRIBUTE_CONST static int is_aligned(mit_uword addr, unsigned size)
 {
-    return (addr & ((1 << size) - 1)) == 0;
+    return (addr & (size - 1)) == 0;
 }
 #pragma GCC diagnostic pop
 

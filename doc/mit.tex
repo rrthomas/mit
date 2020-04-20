@@ -82,7 +82,7 @@ Some parameters may take a range of values, but are fixed for a particular virtu
 \begin{tabular}{cp{3.75in}} \toprule
 \bf Parameter & \bf Meaning \\
  \midrule
-{\tt word\_bytes} & The number of bytes in a word. Must be in the range $2$ to $32$ inclusive, and a power of $2$. \\
+{\tt word\_bytes} & The number of bytes in a word. Must be $4$ or $8$. \\
 {\tt instruction\_bits} & The number of bits in an instruction. Must be in the range $5$ to $8$ inclusive. \\
  \bottomrule
 \end{tabular}
@@ -157,8 +157,7 @@ $4$ & Invalid stack write. \\
 $5$ & Invalid memory read. \\
 $6$ & Invalid memory write. \\
 $7$ & Address alignment error: raised when an instruction is given a valid address, but insufficiently aligned. \\
-$8$ & Invalid size (greater than $\log_2{\tt word\_bytes}$). \\
-$9$ & Division by zero attempted (see section~\ref{arithmetic}). \\
+$8$ & Division by zero attempted (see section~\ref{arithmetic}). \\
 $127$ & A {\tt halt} instruction was executed. \\
  \bottomrule
 \end{tabular}
@@ -202,7 +201,6 @@ are a representation of the top-most items on the stack, and are written
 \begin{tabular}{cl} \toprule
 \bf Symbol & \bf Data type \\ \midrule
 \spic{flag} & a Boolean flag, $0$ for false or non-zero for true \\
-\spic{size} & an integer in the range $0$ to $\log_2{\tt word\_bytes}$ inclusive \\
 \spic{n} & signed number \\
 \spic{u} & unsigned number \\
 \spic{n{\tt |}u} & number (signed or unsigned) \\
@@ -228,7 +226,6 @@ shows the subtype relationships. The subtype relation is transitive.
 \spic{u} $\Rightarrow$ \spic{x} \\
 \spic{n} $\Rightarrow$ \spic{x} \\
 \spic{flag} $\Rightarrow$ \spic{u} \\
-\spic{size} $\Rightarrow$ \spic{u} \\
 \spic{a-addr} $\Rightarrow$ \spic{addr} $\Rightarrow$ \spic{u} \\
  \bottomrule
 \end{tabular}
@@ -305,8 +302,14 @@ These instructions manage the stack:
 These instructions fetch and store quantities to and from memory. If an invalid or unaligned address is accessed, the appropriate error is raised (see section~\ref{errors}).
 
 \begin{description}
-\inst{load}{addr size — x}{Load the $2^{\spic{size}}$-byte quantity \spic{x} stored at \spic{addr}, which must be a multiple of $2^{\spic{size}}$. Any unused high-order bits are set to zero.}
-\inst{store}{x addr size —}{Store the $2^{\spic{size}}$ least-significant bytes of \spic{x} at \spic{addr}, which must be a multiple of $2^{\spic{size}}$.}
+\inst{load}{addr — x}{Load the word \spic{x} stored at \spic{addr}, which must be a multiple of {\tt word\_bytes}.}
+\inst{store}{x addr —}{Store \spic{x} at \spic{addr}, which must be a multiple of {\tt word\_bytes}.}
+\inst{load1}{addr — x}{Load the byte \spic{x} stored at \spic{addr}. Unused high-order bits are set to zero.}
+\inst{store1}{x addr —}{Store the least-significant byte of \spic{x} at \spic{addr}.}
+\inst{load2}{addr — x}{Load the $2$-byte quantity \spic{x} stored at \spic{addr}, which must be a multiple of $2$. Unused high-order bits are set to zero.}
+\inst{store2}{x addr —}{Store the $2$ least-significant bytes of \spic{x} at \spic{addr}, which must be a multiple of $2$.}
+\inst{load4}{addr — x}{Load the $4$-byte quantity \spic{x} stored at \spic{addr}, which must be a multiple of $4$. Any unused high-order bits are set to zero.}
+\inst{store4}{x addr —}{Store the $4$ least-significant bytes of \spic{x} at \spic{addr}, which must be a multiple of $4$.}
 \end{description}
 
 
@@ -405,12 +408,12 @@ Table~\ref{opcodetable} lists the instruction opcodes in numerical order. Table~
 \opcodetbl{7}{\rm (undefined)}		{17}{ult}
 \opcodetbl{8}{load}			{18}{lshift}
 \opcodetbl{9}{store}			{19}{rshift}
-\opcodetbl{a}{\rm (undefined)}		{1a}{arshift}
-\opcodetbl{b}{\rm (undefined)}		{1b}{negate}
-\opcodetbl{c}{\rm (undefined)}		{1c}{add}
-\opcodetbl{d}{\rm (undefined)}		{1d}{mul}
-\opcodetbl{e}{\rm (undefined)}		{1e}{divmod}
-\opcodetbl{f}{\rm (undefined)}		{1f}{udivmod}
+\opcodetbl{a}{load1}			{1a}{arshift}
+\opcodetbl{b}{store1}			{1b}{negate}
+\opcodetbl{c}{load2}			{1c}{add}
+\opcodetbl{d}{store2}			{1d}{mul}
+\opcodetbl{e}{load4}			{1e}{divmod}
+\opcodetbl{f}{store4}			{1f}{udivmod}
  \bottomrule
 \end{tabular}
 \caption{\label{opcodetable}Instruction opcodes}

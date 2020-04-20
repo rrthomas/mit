@@ -11,14 +11,12 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <limits.h>
 
 #include "mit/mit.h"
 
 
 // Constants
 const unsigned mit_word_bytes = MIT_WORD_BYTES;
-const unsigned mit_size_word = MIT_SIZE_WORD;
 const unsigned mit_byte_bit = 8;
 const unsigned mit_byte_mask = MIT_BYTE_MASK;
 const unsigned mit_word_bit = MIT_WORD_BIT;

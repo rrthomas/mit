@@ -40,8 +40,6 @@ def inc(): lit(1); ass(ADD)
 def dec(): lit(1); ass(NEGATE); ass(ADD)
 def dup(): lit(0); ass(DUP)
 def over(): lit(1); ass(DUP)
-def loadb(): lit(0); ass(LOAD)
-def storeb(): lit(0); ass(STORE)
 
 try:
     lit_pc_rel(0) # Data pointer.
@@ -49,8 +47,8 @@ try:
     for c in sys.stdin.read():
         if c == '>': inc()
         elif c == '<': dec()
-        elif c == '+': dup(); loadb(); inc(); over(); storeb()
-        elif c == '-': dup(); loadb(); dec(); over(); storeb()
+        elif c == '+': dup(); ass(LOAD1); inc(); over(); ass(STORE1)
+        elif c == '-': dup(); ass(LOAD1); dec(); over(); ass(STORE1)
         elif c == '.':
             dup() # buffer
             lit(1) # length
@@ -66,7 +64,7 @@ try:
         elif c == '[':
             loop = label()
             dup()
-            loadb()
+            ass(LOAD1)
             lit_pc_rel(0)
             patch = assembler.pc - word_bytes
             ass(JUMPZ)
