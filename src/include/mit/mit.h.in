@@ -209,8 +209,8 @@ mit_word mit_run_simple(mit_state * restrict S);
 
 mit_word mit_single_step(mit_state * restrict S);
 /* Execute a single pass of the execution cycle in the given state.
-   Return MIT_ERROR_HALT if execution completes without error, or the error
-   code.
+   Return MIT_ERROR_SINGLE_STEP_COMPLETED if execution completes without
+   error, or the error code.
 */
 
 mit_word mit_internal_extra_instruction(mit_state *S);

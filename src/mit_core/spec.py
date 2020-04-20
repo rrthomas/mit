@@ -202,7 +202,8 @@ for register in Register:
     internal_extra_instructions['SET_{}'.format(register.name.upper())] = set_code
 
 internal_extra_instructions.update({
-    'HALT': Code('RAISE(MIT_ERROR_HALT);'),
+    # FIXME: Implement manually, so n is popped before RAISE
+    'HALT': Code('RAISE(n);'),
 
     'THIS_STATE': Code('state = S;'),
 

@@ -74,6 +74,7 @@ try:
             lit_pc_rel(loop)
             ass(JUMP)
             M_word[patch] = label() - patch
+    lit(MitErrorCode.OK)
     ass(CALL, HALT)
     M_word[M_word.addr + word_bytes] = label() - M_word.addr # Patch data pointer.
 except ErrorCode as e:

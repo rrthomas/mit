@@ -73,6 +73,7 @@ body_code.extend(dispatch(InternalExtraInstruction, Code(
 code.append(body_code)
 
 code.append('''
+        error = MIT_ERROR_INSTRUCTION_COMPLETED;
     error:
         return error;
     }'''
@@ -109,6 +110,10 @@ code.append(Code(*['''\
     do {''',
     body_code,
     '',
+    Code('''\
+    error = MIT_ERROR_INSTRUCTION_COMPLETED;
+    continue;
+    '''),
     'error:',
     Code('''\
         if (error != MIT_ERROR_OK) {
@@ -118,12 +123,12 @@ code.append(Code(*['''\
 
         if (error == MIT_ERROR_INVALID_OPCODE &&
             (S->ir & MIT_OPCODE_MASK) == MIT_INSTRUCTION_CALL &&
-            (error = mit_internal_extra_instruction(S)) == MIT_ERROR_OK) {
+            (error = mit_internal_extra_instruction(S)) == MIT_ERROR_INSTRUCTION_COMPLETED) {
             S->ir = 0;
         }'''
     ),
     '''\
-    } while (likely(run == true) && likely(error == MIT_ERROR_OK));
+    } while (likely(run == true) && likely(error == MIT_ERROR_INSTRUCTION_COMPLETED));
 
     *real_S = state;
     return error;''',

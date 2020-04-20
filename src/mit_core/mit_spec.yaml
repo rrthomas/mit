@@ -10,15 +10,15 @@
 # Error codes
 ErrorCode:
   OK: 0
-  INVALID_OPCODE: 1
-  STACK_OVERFLOW: 2
-  INVALID_STACK_READ: 3
-  INVALID_STACK_WRITE: 4
-  INVALID_MEMORY_READ: 5
-  INVALID_MEMORY_WRITE: 6
-  UNALIGNED_ADDRESS: 7
-  DIVISION_BY_ZERO: 8
-  HALT: 127
+  INVALID_OPCODE: -1
+  STACK_OVERFLOW: -2
+  INVALID_STACK_READ: -3
+  INVALID_STACK_WRITE: -4
+  INVALID_MEMORY_READ: -5
+  INVALID_MEMORY_WRITE: -6
+  UNALIGNED_ADDRESS: -7
+  DIVISION_BY_ZERO: -8
+  INSTRUCTION_COMPLETED: -127
 
 # VM registers
 Register:
@@ -161,7 +161,7 @@ Instruction:
 InternalExtraInstruction:
   HALT:
     opcode: 0x1
-    args: []
+    args: ['n']
     results: []
   GET_PC:
     opcode: 0x2

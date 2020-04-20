@@ -392,9 +392,9 @@ int main(int argc, char *argv[])
                 continue;
             }
         }
-        if (error != MIT_ERROR_HALT)
+        if (error != MIT_ERROR_OK)
             warn("error %zd: %s", error, error_to_msg(error));
-        return error == MIT_ERROR_HALT ? 0 : error;
+        return error >= 0 ? error : 127 - error;
     }
 }'''
 ))

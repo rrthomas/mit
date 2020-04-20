@@ -13,7 +13,8 @@ from mit.globals import *
 
 
 # Test code
-final_pc = M.addr + word_bytes
+final_pc = M.addr + word_bytes * 2
+lit(MitErrorCode.OK)
 ass(CALL, HALT)
 
 # Test
