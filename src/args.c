@@ -10,7 +10,6 @@
 #include "config.h"
 
 #include "mit/mit.h"
-#include "mit/features.h"
 
 
 // Command line arguments

@@ -219,3 +219,11 @@ InternalExtraInstruction:
     opcode: 0x14
     args: ['inner_state:mit_state *']
     results: ['ret']
+  ARGC:
+    opcode: 0x100
+    args: []
+    results: ['argc']
+  ARGV:
+    opcode: 0x101
+    args: []
+    results: ['argv:char **']

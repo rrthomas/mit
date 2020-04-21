@@ -10,14 +10,6 @@
 pkginclude_HEADERS += %D%/mit/features.h
 
 
-# Simple features
-
-libmitfeatures_la_SOURCES += \
-	%D%/args.c
-
-%D%/args.lo: %D%/mit/extra-opcodes.h
-
-
 # Library extra instructions
 
 nodist_pkginclude_HEADERS += %D%/mit/extra-opcodes.h

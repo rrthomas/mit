@@ -227,4 +227,9 @@ mit_word mit_run_profile(mit_state * restrict S);
 int mit_profile_dump(int fd);
 /* Dump profiling information to file descriptor `fd`. */
 
+extern int mit_argc;
+/* The registered value of `argc`. */
+extern char **mit_argv;
+/* The registered value of `argv`. */
+
 #endif

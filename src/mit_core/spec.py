@@ -228,6 +228,10 @@ internal_extra_instructions.update({
     'RUN': Code('ret = mit_run(inner_state);'),
 
     'SINGLE_STEP': Code('ret = mit_single_step(inner_state);'),
+
+    'ARGC': Code('argc = (mit_word)mit_argc;'),
+
+    'ARGV': Code('argv = mit_argv;'),
 })
 
 InternalExtraInstruction = instruction_enum(

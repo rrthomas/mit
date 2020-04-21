@@ -28,14 +28,12 @@ breaks = []
 # Put address of buffer on stack for later
 lit(buffer)
 
-# Test LibMit.ARGC
-lit(LibMitfeatures.ARGC)
-ass(JUMP, LIBMITFEATURES)
+# Test ARGC
+ass(CALL, ARGC)
 breaks.append(label() + word_bytes)
 
-# Test LibMit.ARGV
-lit(LibMitfeatures.ARGV)
-ass(JUMP, LIBMITFEATURES)
+# Test ARGV
+ass(CALL, ARGV)
 lit(word_bytes)
 ass(ADD)
 ass(LOAD)

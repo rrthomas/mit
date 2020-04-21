@@ -15,11 +15,6 @@
 #ifndef MIT_FEATURES
 #define MIT_FEATURES
 
-extern int mit_argc;
-/* The registered value of `argc`. */
-extern char **mit_argv;
-/* The registered value of `argv`. */
-
 mit_word mit_extra_instruction(mit_state * restrict S);
 
 #endif

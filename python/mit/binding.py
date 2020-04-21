@@ -174,8 +174,7 @@ libmit.mit_profile_dump.argtypes = [c_int]
 def is_aligned(addr):
     return (addr & (word_bytes - 1)) == 0
 
-# features.h
-vars().update([(c, cty.in_dll(libmitfeatures, "mit_{}".format(c)))
+vars().update([(c, cty.in_dll(libmit, "mit_{}".format(c)))
                for (c, cty) in [
                        ("argc", c_int),
                        ("argv", POINTER(c_char_p)),
@@ -194,6 +193,7 @@ def register_args(*args):
     argv.contents = arg_strings(*bargs)
     argc.value = len(bargs)
 
+# features.h
 libmitfeatures.mit_extra_instruction.restype = c_word
 libmitfeatures.mit_extra_instruction.argtypes = [POINTER(c_mit_state)]
 libmitfeatures.mit_extra_instruction.errcheck = mit_error

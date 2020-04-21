@@ -19,14 +19,6 @@ from mit_core.stack import pop_stack
 class LibMitfeatures(InstructionEnum):
     'Function codes for the external extra instruction LIBMITFEATURES.'
 
-    ARGC = (StackEffect.of([], ['argc']), Code('''\
-        argc = (mit_word)mit_argc;
-    '''))
-
-    ARGV = (StackEffect.of([], ['argv:char **']), Code('''\
-        argv = mit_argv;
-    '''))
-
     EXTRA_INSTRUCTION = (StackEffect.of(['state:mit_state *'], ['ret']),
         Code('ret = mit_extra_instruction(state);'),
     )
