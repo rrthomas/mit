@@ -36,10 +36,6 @@ class LibMitfeatures(InstructionEnum):
 class LibC(InstructionEnum):
     'Function codes for the external extra instruction LIBC.'
 
-    EXIT = (StackEffect.of(['ret_code'], []), Code('''\
-        exit(ret_code);
-    '''))
-
     STRLEN = (StackEffect.of(['s:const char *'], ['len']), Code('''\
         len = (mit_word)(mit_uword)strlen(s);
     '''))
