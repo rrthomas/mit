@@ -32,9 +32,8 @@ man_MANS = mit@PACKAGE_SUFFIX@.1
 mit@PACKAGE_SUFFIX@_LDADD = libmit.la libmitfeatures.la $(top_builddir)/lib/libgnu.la
 nodist_mit@PACKAGE_SUFFIX@_SOURCES = main.c
 mit@PACKAGE_SUFFIX@_SOURCES = warn.c warn.h
-mit_pkgincludedir = $(pkgincludedir)
-nodist_mit_pkginclude_HEADERS = include/mit/opcodes.h include/mit/registers.h
-mit_pkginclude_HEADERS = include/mit/mit.h
+nodist_pkginclude_HEADERS = include/mit/opcodes.h include/mit/registers.h
+pkginclude_HEADERS = include/mit/mit.h
 noinst_HEADERS = run.h
 
 warn.o storage.lo: include/mit/mit.h include/mit/registers.h
