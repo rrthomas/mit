@@ -30,7 +30,7 @@
 # oprofile, and report the best.
 
 
-nodist_libmitfeatures_la_SOURCES += %D%/specializer.c
+nodist_libmit_la_SOURCES += %D%/specializer.c
 
 TEST_EXTENSIONS = .pforth
 PFORTH_LOG_COMPILER = $(SHELL)

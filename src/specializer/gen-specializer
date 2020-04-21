@@ -314,7 +314,6 @@ code.append('''
     #include <unistd.h>
 
     #include "mit/mit.h"
-    #include "mit/features.h"
 
     #include "run.h"
 

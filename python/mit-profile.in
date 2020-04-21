@@ -11,7 +11,7 @@
 import argparse
 
 from mit.globals import *
-from mit.binding import libmitfeatures
+from mit.binding import libmitspecializer
 
 
 # Process command-line arguments
@@ -52,4 +52,4 @@ args.arguments.insert(0, parser.prog)
 register_args(*args.arguments)
 run(profile=True)
 with open(args.profile_file, 'wb') as h:
-    libmitfeatures.mit_profile_dump(h.fileno())
+    libmitspecializer.mit_profile_dump(h.fileno())
