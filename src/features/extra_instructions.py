@@ -187,7 +187,6 @@ class LibInstruction(Library):
               ['mit_word *'])
     LIBC = (0x02, LibC, '''
 #include <stdlib.h>
-#include <stdbool.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/types.h>
