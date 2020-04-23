@@ -215,8 +215,6 @@ code.extend(Code('''
 #include <getopt.h>
 #include <unistd.h>
 
-#include "progname.h"
-
 #include "mit/mit.h"
 #include "mit/features.h"
 
@@ -296,6 +294,7 @@ static int skip_hashbang(FILE *fp)
 static mit_state *S;
 mit_word *memory;
 mit_uword memory_words, stack_words;
+const char *program_name;
 
 static void usage(void)
 {
@@ -312,7 +311,8 @@ static void usage(void)
 
 int main(int argc, char *argv[])
 {
-    set_program_name(argv[0]);
+    // Unfortunately the gnulib module progname is not GPL, not LGPL.
+    program_name = argv[0];
 
     memory_words = 0x100000U;
     stack_words = 16384U;
