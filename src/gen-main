@@ -215,6 +215,8 @@ code.extend(Code('''
 #include <getopt.h>
 #include <unistd.h>
 
+#include "getprogname.h"
+
 #include "mit/mit.h"
 #include "mit/features.h"
 
@@ -311,8 +313,7 @@ static void usage(void)
 
 int main(int argc, char *argv[])
 {
-    // Unfortunately the gnulib module progname is not GPL, not LGPL.
-    program_name = argv[0];
+    program_name = getprogname();
 
     memory_words = 0x100000U;
     stack_words = 16384U;
