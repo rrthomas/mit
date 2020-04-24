@@ -18,28 +18,31 @@ from spec import Instruction
 class State:
     '''
     Accumulates information about the effect of executing instructions.
-     - tos_constant - int - the constant value on the top of the stack,
-       or `None` if unknown.
      - stack_pos - int - the stack depth change.
      - stack_min - int - the minimal `stack_pos` encountered so far.
        Typically this will have occurred in the middle of an instruction,
        after popping but before pushing.
      - stack_max - int - the maximal `stack_pos` encountered so far.
+     - max_cached_depth - the maximum `cached_depth()` at any point along this
+       Path. In general, this will have occurred in the middle of an
+       instruction, after popping but before pushing. This may be larger than
+       the maximum of `cached_depth()` between instructions. This may be
+       smaller than `stack_max - stack_min`.
      - i_bits - int - the number of bits of `ir` executed since the last
        terminal instruction.
     '''
     def __init__(
         self,
-        tos_constant=None,
         stack_pos=0,
         stack_min=0,
         stack_max=0,
+        max_cached_depth=0,
         i_bits=0,
     ):
-        self.tos_constant = tos_constant
         self.stack_pos = stack_pos
         self.stack_min = stack_min
         self.stack_max = stack_max
+        self.max_cached_depth = max_cached_depth
         self.i_bits = i_bits
 
     def cached_depth(self):
@@ -61,29 +64,23 @@ class State:
          - instruction - a Instruction.
         '''
         assert isinstance(instruction, Instruction)
-        # Update `tos_constant`.
-        tos_constant = None
-        if (len(instruction.effect.results.items) > 0 and
-            instruction.effect.results.items[-1].expr is not None
-        ):
-            tos_constant = int(instruction.effect.results.items[-1].expr)
-        elif instruction == Instruction.NEXT:
-            tos_constant = self.tos_constant
         # Simulate popping arguments.
         stack_pos = self.stack_pos - len(instruction.effect.args.items)
         stack_min = min(self.stack_min, stack_pos)
+        cd1 = stack_pos - stack_min
         # Simulate pushing results.
         stack_pos += len(instruction.effect.results.items)
         stack_max = max(self.stack_max, stack_pos)
+        cd2 = stack_pos - stack_min
         # Simulate consuming `ir`.
         i_bits = self.i_bits + opcode_bit
         if instruction.terminal:
             i_bits = 0
         return State(
-            tos_constant=tos_constant,
             stack_pos=stack_pos,
             stack_min=stack_min,
             stack_max=stack_max,
+            max_cached_depth=max(self.max_cached_depth, cd1, cd2),
             i_bits=i_bits,
         )
 

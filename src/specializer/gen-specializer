@@ -39,26 +39,49 @@ parser.add_argument(
 args = parser.parse_args()
 
 
+def _opcode_test(multiguess):
+    '''
+    Returns a C expression representing the condition "`ir` begins with
+    `multiguess`".
+     - multiguess - list of Instruction.
+    '''
+    assert type(multiguess) is list
+    opcode_value = 0 # Bit pattern to match.
+    opcode_bits = 0 # Number of bits to match.
+    for instruction in multiguess:
+        assert opcode_bits is not None
+        opcode_value |= instruction.opcode << opcode_bits
+        opcode_bits += opcode_bit
+        if instruction.terminal:
+            opcode_bits = None # Must match all bits.
+    # Generate the guess condition.
+    if opcode_bits is None:
+        return 'S->ir == {:#x}'.format(opcode_value)
+    else:
+        mask = (1 << opcode_bits) - 1
+        return '(S->ir & {:#x}) == {:#x}'.format(mask, opcode_value)
+
+
 class Label:
     '''
      - index - int - the index of this Label.
-     - name - str - The C identifier of this Label.
      - path - Path - the instruction sequence just executed.
      - preguess - list of Instruction - the longest unique probable
        continuation.
      - guess - Instruction - the most probable next instruction.
-     - if_correct - int - the Label index to jump to if `guess` is correct.
-     - if_wrong - int - the Label index to jump to if `guess` is wrong.
+     - if_correct - int - the Label index to jump to if `guess` is correct,
+       or `None` for the fallback label.
+     - if_wrong - int - the Label index to jump to if `guess` is wrong,
+       or `None` for the fallback label.
     '''
     def __init__(
         self,
         index,
-        name,
-        path=None,
-        preguess=None,
-        guess=None,
-        if_correct=None,
-        if_wrong=None,
+        path,
+        preguess,
+        guess,
+        if_correct,
+        if_wrong,
     ):
         '''
          - path - str (space-separated Instruction names).
@@ -66,47 +89,41 @@ class Label:
          - guess - str (Instruction name).
         '''
         self.index = index
-        self.name = name
-        self.path = None if path is None else Path(tuple(
-            Instruction[name] for name in path.split()
-        ))
-        self.preguess = None if preguess is None else [
-            Instruction[name] for name in preguess.split()]
-        self.guess = None if guess is None else Instruction[guess]
+        self.path = Path(tuple(Instruction[name] for name in path.split()))
+        self.preguess = [Instruction[name] for name in preguess.split()]
+        self.guess = Instruction[guess]
         self.if_correct = if_correct
         self.if_wrong = if_wrong
+
+    def name(self):
+        '''Returns the C identifier of this Label.'''
+        return 'A_{}'.format(self.index)
 
     def cache_state(self):
         '''Returns a fresh CacheState describing this Label.'''
         return CacheState(self.cached_depth(), self.checked_depth())
 
     def cached_depth(self):
-        return 0 if self.path is None else self.path.state.cached_depth()
+        return self.path.state.cached_depth()
 
     def checked_depth(self):
-        return 0 if self.path is None else self.path.state.checked_depth()
+        return self.path.state.checked_depth()
 
-    def goto(self, cache_state):
-        '''
-        Returns a Code to jump to this Label.
-         - cache_state - The CacheState before the goto. This method generates
-           code to flush the cache to meet the expectations at this Label.
-        '''
-        code = Code()
-        code.extend(cache_state.flush(self.cache_state()))
-        code.append('goto {};'.format(self.name))
-        return code
+    def max_cached_depth(self):
+        return self.path.state.step(self.guess).max_cached_depth
 
     def generate_code(self, profiling=False, no_preguess=False):
         '''
         Returns a Code to place at this Label.
-        Also returns the peak value of `CacheState.cached_depth`.
+         - profiling - bool - `True` to increment `state_guess_correct` when
+           executing the instruction.
+        Returns a Code.
         '''
         # Generate the Code for the branch where `self.guess` is correct.
         c_code = Code()
         if profiling:
             c_code.append('state_guess_correct[{}]++;'.format(self.index))
-        state = State(tos_constant=self.path.state.tos_constant)
+        state = State()
         cache_state = self.cache_state()
         state = state.step(self.guess)
         c_code.extend(Code('''\
@@ -117,39 +134,21 @@ class Label:
                 gen_case(self.guess, cache_state),
             '}',
         ))
-        c_code.extend(label_by_index(self.if_correct).goto(cache_state))
+        c_code.extend(goto_label_by_index(cache_state, self.if_correct))
         pops = -state.stack_min
         pushes = state.stack_max - state.stack_min
-        max_cached_depth = (
-            max(self.cached_depth(), -state.stack_min) +
-            state.stack_max
-        )
         # Generate the code for the branch where the guess is wrong.
         w_code = Code()
         if profiling:
             w_code.append('state_guess_wrong[{}]++;'.format(self.index))
         cache_state = self.cache_state()
-        w_code.extend(label_by_index(self.if_wrong).goto(cache_state))
+        w_code.extend(goto_label_by_index(cache_state, self.if_wrong))
         # Compute the bit string of Instruction opcodes to guess.
-        opcode_value = 0 # Bit pattern to match.
-        opcode_bits = 0 # Number of bits to match.
         multiguess = [self.guess]
-        if not no_preguess:
-            multiguess.extend(label_by_index(self.if_correct).preguess)
-        for instruction in multiguess:
-            assert opcode_bits is not None
-            opcode_value |= instruction.opcode << opcode_bits
-            opcode_bits += opcode_bit
-            if instruction.terminal:
-                opcode_bits = None # Must match all bits.
-        # Generate the guess condition.
-        if not no_preguess and self.preguess[:len(multiguess)] == multiguess:
-            opcode_test = '1'
-        elif opcode_bits is None:
-            opcode_test = 'S->ir == {:#x}'.format(opcode_value)
-        else:
-            mask = (1 << opcode_bits) - 1
-            opcode_test = '(S->ir & {:#x}) == {:#x}'.format(mask, opcode_value)
+        if not no_preguess and self.if_correct is not None:
+            multiguess.extend(labels[self.if_correct].preguess)
+        opcode_test = _opcode_test(multiguess)
+        # Compute the guard condition.
         cache_state = self.cache_state()
         guard_code = self.guess.guard.format(
             stack_0=cache_state.lvalue(0),
@@ -172,7 +171,7 @@ class Label:
             '}',
         )
         code.extend(w_code)
-        return (code, max_cached_depth)
+        return code
 
 
 # Load the labels file, which tells us what control-flow graph to generate.
@@ -180,7 +179,6 @@ with open(args.labels_filename, "rb") as h:
     labels = [
         Label(
             index,
-            'A_{}'.format(index),
             obj['path'],
             obj['preguess'],
             obj['guess'],
@@ -191,10 +189,27 @@ with open(args.labels_filename, "rb") as h:
             in enumerate(json.load(h))
     ]
 
-def label_by_index(index):
+
+# The peak depth to which we cache stack slots in C locals.
+max_cached_depth = max(label.max_cached_depth() for label in labels)
+
+
+def goto_label_by_index(cache_state, index):
+    '''
+    Returns a Code representing a jump to the specified Label.
+     - index - int - the index of the Label, or `None` for `FALLBACK`.
+    '''
+    code = Code()
     if index is None:
-        return Label(len(labels), 'A_FALLBACK')
-    return labels[index]
+        # Jump to the fallback label.
+        code.extend(cache_state.flush(CacheState(0, 0)))
+        code.append('goto A_FALLBACK;')
+    else:
+        # Jump to a Label.
+        label = labels[index]
+        code.extend(cache_state.flush(label.cache_state()))
+        code.append('goto {};'.format(label.name()))
+    return code
 
 
 def gen_labels_code(profiling=False):
@@ -226,19 +241,10 @@ def gen_labels_code(profiling=False):
         //    there must be no side effects before a RAISE, except on `ir` and
         //    `pc`, which will be reset as described above.
     '''))
-    max_cached_depth = 0
     for label in labels:
         code.append('')
-        code.append('{label_name}:'.format(label_name=label.name))
-        label_code, cached_depth = label.generate_code(
-            profiling,
-            args.no_preguess or profiling
-        )
-        code.append(disable_warnings(
-            ['-Wunsafe-loop-optimizations'],
-            label_code,
-        ))
-        max_cached_depth = max(max_cached_depth, cached_depth)
+        code.append('{label_name}:'.format(label_name=label.name()))
+        code.append(label.generate_code(profiling, args.no_preguess or profiling))
     code.append('')
     code.append('''\
         A_FALLBACK:
@@ -270,8 +276,10 @@ def gen_labels_code(profiling=False):
         }
     ''')
     code.append(switch_code)
-
-    return code, max_cached_depth
+    return disable_warnings(
+        ['-Wunsafe-loop-optimizations'],
+        code,
+    )
 
 def gen_body_code(profiling=False):
     code = Code()
@@ -280,9 +288,6 @@ def gen_body_code(profiling=False):
         mit_state *const S = &state;
         int error = MIT_ERROR_INSTRUCTION_COMPLETED;
     ''')
-    # Generate the code for the labels first, so as to compute
-    # `max_cached_depth`.
-    labels_code, max_cached_depth = gen_labels_code(profiling)
     if max_cached_depth > 0:
         cache_state = CacheState(max_cached_depth, 0)
         # Initialize the cache variables to avoid (incorrect) uninitialized
@@ -294,7 +299,7 @@ def gen_body_code(profiling=False):
             )
         ))
     code.append('do {')
-    code.extend(labels_code)
+    code.extend(gen_labels_code(profiling=profiling))
     code.append('''\
         } while (error == MIT_ERROR_INSTRUCTION_COMPLETED);
         *real_S = state;
@@ -344,10 +349,6 @@ code.append(Code(',\n'.join([
     for l in labels
 ])))
 code.append('};')
-# Currently, A_FALLBACK is "infectious": if it is used by a particular
-# build of mit, then it ends up in the profile file, and therefore
-# in successive builds of mit. We add suitable labels in `simulate-jit`
-# to compensate; see the definition of `ROOT_LABEL`.
 code.append('''
     void mit_profile_reset(void)
     {
