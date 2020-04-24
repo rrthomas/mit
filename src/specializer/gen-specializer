@@ -110,14 +110,7 @@ class Label:
         return self.path.state.checked_depth()
 
     def max_cached_depth(self):
-        '''
-        Computes the peak value of `CacheState.cached_depth` at any point
-        in the code for this Label.
-        '''
-        # TODO: Simplify. `self.path.state.step(self.guess).cached_depth`?
-        state = State()
-        state = state.step(self.guess)
-        return max(self.cached_depth(), -state.stack_min) + state.stack_max
+        return self.path.state.step(self.guess).max_cached_depth
 
     def generate_code(self, profiling=False, no_preguess=False):
         '''
