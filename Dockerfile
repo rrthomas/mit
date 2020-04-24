@@ -21,6 +21,7 @@ RUN apt-get update -qq && \
   autoconf \
   libtool \
   libtool-bin \
+  libltdl-dev \
   help2man \
   oprofile \
   python3-setuptools \

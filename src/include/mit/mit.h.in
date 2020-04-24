@@ -16,6 +16,9 @@
 #include <inttypes.h>
 #include <sys/types.h>
 
+// FIXME: For Hash_table; but we can't install hash.h
+#include "hash.h"
+
 #include <mit/opcodes.h>
 
 
@@ -65,6 +68,15 @@ mit_fn_t mit_run_simple;
 
 // Like `mit_run_simple`, but (hopefully) faster.
 mit_fn_t mit_run_fast;
+
+// The table of traps.
+extern MIT_THREAD_LOCAL Hash_table *mit_traps;
+
+// Register a trap module.
+int mit_register_trap(const char *file, Hash_table *traps);
+
+// Register installed trap modules.
+int mit_register_traps(void);
 
 // N.B. The profiler is per-thread.
 // Clear the profile.

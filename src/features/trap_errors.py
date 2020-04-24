@@ -12,5 +12,5 @@ from enum import IntEnum, unique
 @unique
 class TrapErrorCode(IntEnum):
     'Error codes returned by `mit_trap`.'
-    INVALID_LIBRARY = 16
-    INVALID_FUNCTION = 17
+    INVALID_LIBRARY = -16
+    INVALID_FUNCTION = -17

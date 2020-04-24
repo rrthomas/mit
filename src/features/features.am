@@ -13,8 +13,6 @@ pkginclude_HEADERS += %D%/mit/features.h
 # Traps
 
 nodist_pkginclude_HEADERS += %D%/mit/trap-codes.h
-# FIXME: temporarily build traps.c into libmit, to avoid a
-# recursive dependency between libmit and libmitfeatures.
 nodist_libmit_la_SOURCES += %D%/traps.c
 
 # Note: we grep config.log because the generated header file has the symbols

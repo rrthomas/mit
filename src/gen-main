@@ -347,6 +347,8 @@ int main(int argc, char *argv[])
     if (stack == NULL)
         die("could not allocate virtual machine stack");
     mit_uword_t stack_depth = 0;
+    if (mit_register_traps() != MIT_ERROR_OK)
+        die("error registering traps");
 
     // Load object file and report any error
     {

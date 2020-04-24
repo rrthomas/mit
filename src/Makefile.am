@@ -7,7 +7,7 @@
 # THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 # RISK.
 
-AM_CPPFLAGS = -I$(abs_top_builddir)/lib -I$(abs_top_srcdir)/lib -I$(abs_builddir)/include -I$(abs_srcdir)/include -I$(abs_srcdir)/features $(WARN_CFLAGS)
+AM_CPPFLAGS = -I$(abs_top_builddir)/lib -I$(abs_top_srcdir)/lib -I$(abs_builddir)/include -I$(abs_srcdir)/include -I$(abs_srcdir)/features $(WARN_CFLAGS) -DPATH_PKGLIBDIR="\"$(pkglibdir)\"" $(LTDLINCL)
 PYTHON_WITH_PATH = export PYTHONPATH=$(abs_top_srcdir)/src:$(abs_top_builddir)/src:$(abs_top_srcdir)/src/specializer:$(abs_top_builddir)/src/specializer:$(abs_top_srcdir)/src/features:$(abs_top_builddir)/src/features; $(PYTHON)
 
 # Source files that should be distributed that Automake won't otherwise find
@@ -26,9 +26,9 @@ DIST_SRCS = \
 # libmit
 lib_LTLIBRARIES = libmit.la
 pkgdata_DATA = spec.yaml
-libmit_la_SOURCES = args.c
+libmit_la_SOURCES = args.c trap.c
 nodist_libmit_la_SOURCES = instructions.c
-libmit_la_LIBADD = $(top_builddir)/lib/libgnu.la
+libmit_la_LIBADD = $(top_builddir)/lib/libgnu.la $(LIBLTDL)
 libmit_la_LDFLAGS = -no-undefined -export-symbols-regex '^mit_.*'
 nodist_pkginclude_HEADERS = include/mit/opcodes.h include/mit/mit.h
 pkginclude_HEADERS =
@@ -46,12 +46,16 @@ mit@PACKAGE_SUFFIX@_SOURCES = warn.c warn.h
 # Auto-generation of dependencies does not work in this case.
 warn.o constants.lo stack.lo args.lo main.o: include/mit/opcodes.h
 instructions.lo main.o: main.c
+trap.lo: features/mit/trap-codes.h
 
 .c.s:
 	$(COMPILE) -c -S -o $@ $<
 
 spec.yaml: gen-yaml-spec spec.py
 	$(PYTHON_WITH_PATH) $(srcdir)/gen-yaml-spec > spec.yaml || ( rm -f spec.yaml; exit 1 )
+
+include/mit/mit.h: $(top_builddir)/config.status include/mit/mit.h.in
+	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
 
 # The man page depends on the binary because it is built by running the binary.
 mit@PACKAGE_SUFFIX@.1: mit@PACKAGE_SUFFIX@$(EXEEXT) $(top_builddir)/build-aux/man-include.man mit-include.man
