@@ -164,7 +164,7 @@ class Label:
         code = Code(
             '// History: {}'.format(' '.join(i.name for i in self.path)),
             '// Future: {}'.format(' '.join(i.name for i in self.preguess)),
-            'assert(error == MIT_ERROR_INSTRUCTION_COMPLETED);',
+            'assert(error == MIT_ERROR_BREAK);',
             'assert(cached_depth == {});'.format(self.cached_depth()),
             'if ({}) {{'.format(' && '.join(tests)),
             c_code,
@@ -227,7 +227,7 @@ def gen_labels_code(profiling=False):
         //
         // The calling convention at each A_XXX label is as follows:
         //
-        //  - On entry, `error` is `MIT_ERROR_INSTRUCTION_COMPLETED`. `cached_depth` is a
+        //  - On entry, `error` is `MIT_ERROR_BREAK`. `cached_depth` is a
         //    compile-time constant indicating how many top stack items are in
         //    C variables.
         //  - Before running the `Instruction.code` for an
@@ -248,7 +248,7 @@ def gen_labels_code(profiling=False):
     code.append('')
     code.append('''\
         A_FALLBACK:
-            assert(error == MIT_ERROR_INSTRUCTION_COMPLETED);
+            assert(error == MIT_ERROR_BREAK);
             assert(cached_depth == 0);
             *real_S = state;
             error = mit_single_step(real_S);
@@ -286,7 +286,7 @@ def gen_body_code(profiling=False):
     code.append('''\
         mit_state state = *real_S;
         mit_state *const S = &state;
-        int error = MIT_ERROR_INSTRUCTION_COMPLETED;
+        int error = MIT_ERROR_BREAK;
     ''')
     if max_cached_depth > 0:
         cache_state = CacheState(max_cached_depth, 0)
@@ -301,7 +301,7 @@ def gen_body_code(profiling=False):
     code.append('do {')
     code.extend(gen_labels_code(profiling=profiling))
     code.append('''\
-        } while (error == MIT_ERROR_INSTRUCTION_COMPLETED);
+        } while (error == MIT_ERROR_BREAK);
         *real_S = state;
         return error;
     ''')

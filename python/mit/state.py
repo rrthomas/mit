@@ -160,7 +160,7 @@ class State:
                     libmit.mit_single_step(self.state)
                     return
                 except VMError as e:
-                    if e.args[0] != enums.MitErrorCode.INSTRUCTION_COMPLETED:
+                    if e.args[0] != enums.MitErrorCode.BREAK:
                         raise
             if self.pc == addr: break
             if trace:
@@ -177,7 +177,7 @@ class State:
                     )
                 ):
                     self.do_extra_instruction()
-                elif e.args[0] != enums.MitErrorCode.INSTRUCTION_COMPLETED:
+                elif e.args[0] != enums.MitErrorCode.BREAK:
                     ret = e.args[0]
                     print("Error code {} was returned".format(ret), end='')
                     print(" after {} step{}".format(done, 's' if done != 1 else ''), end='')
