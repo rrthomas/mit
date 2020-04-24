@@ -39,6 +39,29 @@ parser.add_argument(
 args = parser.parse_args()
 
 
+def _opcode_test(multiguess):
+    '''
+    Returns a C expression representing the condition "`ir` begins with
+    `multiguess`".
+     - multiguess - list of Instruction.
+    '''
+    assert type(multiguess) is list
+    opcode_value = 0 # Bit pattern to match.
+    opcode_bits = 0 # Number of bits to match.
+    for instruction in multiguess:
+        assert opcode_bits is not None
+        opcode_value |= instruction.opcode << opcode_bits
+        opcode_bits += opcode_bit
+        if instruction.terminal:
+            opcode_bits = None # Must match all bits.
+    # Generate the guess condition.
+    if opcode_bits is None:
+        return 'S->ir == {:#x}'.format(opcode_value)
+    else:
+        mask = (1 << opcode_bits) - 1
+        return '(S->ir & {:#x}) == {:#x}'.format(mask, opcode_value)
+
+
 class Label:
     '''
      - index - int - the index of this Label.
@@ -131,25 +154,11 @@ class Label:
         cache_state = self.cache_state()
         w_code.extend(label_by_index(self.if_wrong).goto(cache_state))
         # Compute the bit string of Instruction opcodes to guess.
-        opcode_value = 0 # Bit pattern to match.
-        opcode_bits = 0 # Number of bits to match.
         multiguess = [self.guess]
         if not no_preguess:
             multiguess.extend(label_by_index(self.if_correct).preguess)
-        for instruction in multiguess:
-            assert opcode_bits is not None
-            opcode_value |= instruction.opcode << opcode_bits
-            opcode_bits += opcode_bit
-            if instruction.terminal:
-                opcode_bits = None # Must match all bits.
-        # Generate the guess condition.
-        if not no_preguess and self.preguess[:len(multiguess)] == multiguess:
-            opcode_test = '1'
-        elif opcode_bits is None:
-            opcode_test = 'S->ir == {:#x}'.format(opcode_value)
-        else:
-            mask = (1 << opcode_bits) - 1
-            opcode_test = '(S->ir & {:#x}) == {:#x}'.format(mask, opcode_value)
+        opcode_test = _opcode_test(multiguess)
+	# Compute the guard condition.
         cache_state = self.cache_state()
         guard_code = self.guess.guard.format(
             stack_0=cache_state.lvalue(0),
