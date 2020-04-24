@@ -115,7 +115,7 @@ class Label:
         in the code for this Label.
         '''
         # TODO: Simplify. `self.path.state.step(self.guess).cached_depth`?
-        state = State(tos_constant=self.path.state.tos_constant)
+        state = State()
         state = state.step(self.guess)
         return max(self.cached_depth(), -state.stack_min) + state.stack_max
 
@@ -130,7 +130,7 @@ class Label:
         c_code = Code()
         if profiling:
             c_code.append('state_guess_correct[{}]++;'.format(self.index))
-        state = State(tos_constant=self.path.state.tos_constant)
+        state = State()
         cache_state = self.cache_state()
         state = state.step(self.guess)
         c_code.extend(Code('''\
@@ -155,7 +155,7 @@ class Label:
         if not no_preguess and self.if_correct is not None:
             multiguess.extend(labels[self.if_correct].preguess)
         opcode_test = _opcode_test(multiguess)
-	# Compute the guard condition.
+        # Compute the guard condition.
         cache_state = self.cache_state()
         guard_code = self.guess.guard.format(
             stack_0=cache_state.lvalue(0),
