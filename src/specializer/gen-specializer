@@ -65,7 +65,6 @@ def _opcode_test(multiguess):
 class Label:
     '''
      - index - int - the index of this Label.
-     - name - str - The C identifier of this Label.
      - path - Path - the instruction sequence just executed.
      - preguess - list of Instruction - the longest unique probable
        continuation.
@@ -78,7 +77,6 @@ class Label:
     def __init__(
         self,
         index,
-        name,
         path,
         preguess,
         guess,
@@ -91,12 +89,15 @@ class Label:
          - guess - str (Instruction name).
         '''
         self.index = index
-        self.name = name
         self.path = Path(tuple(Instruction[name] for name in path.split()))
         self.preguess = [Instruction[name] for name in preguess.split()]
         self.guess = Instruction[guess]
         self.if_correct = if_correct
         self.if_wrong = if_wrong
+
+    def name(self):
+        '''Returns the C identifier of this Label.'''
+        return 'A_{}'.format(self.index)
 
     def cache_state(self):
         '''Returns a fresh CacheState describing this Label.'''
@@ -182,7 +183,6 @@ with open(args.labels_filename, "rb") as h:
     labels = [
         Label(
             index,
-            'A_{}'.format(index),
             obj['path'],
             obj['preguess'],
             obj['guess'],
@@ -212,7 +212,7 @@ def goto_label_by_index(cache_state, index):
         # Jump to a Label.
         label = labels[index]
         code.extend(cache_state.flush(label.cache_state()))
-        code.append('goto {};'.format(label.name))
+        code.append('goto {};'.format(label.name()))
     return code
 
 
@@ -247,7 +247,7 @@ def gen_labels_code(profiling=False):
     '''))
     for label in labels:
         code.append('')
-        code.append('{label_name}:'.format(label_name=label.name))
+        code.append('{label_name}:'.format(label_name=label.name()))
         code.append(disable_warnings(
             ['-Wunsafe-loop-optimizations'],
             label.generate_code(profiling, args.no_preguess or profiling),
