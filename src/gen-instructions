@@ -81,7 +81,6 @@ code.append('''
 
 body_code = Code()
 body_code.append('''\
-    error = MIT_ERROR_OK;
     mit_byte opcode = S->ir & MIT_OPCODE_MASK;
     initial_pc = S->pc;
     initial_ir = S->ir;
