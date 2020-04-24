@@ -70,18 +70,20 @@ class Label:
      - preguess - list of Instruction - the longest unique probable
        continuation.
      - guess - Instruction - the most probable next instruction.
-     - if_correct - int - the Label index to jump to if `guess` is correct.
-     - if_wrong - int - the Label index to jump to if `guess` is wrong.
+     - if_correct - int - the Label index to jump to if `guess` is correct,
+       or `None` for the fallback label.
+     - if_wrong - int - the Label index to jump to if `guess` is wrong,
+       or `None` for the fallback label.
     '''
     def __init__(
         self,
         index,
         name,
-        path=None,
-        preguess=None,
-        guess=None,
-        if_correct=None,
-        if_wrong=None,
+        path,
+        preguess,
+        guess,
+        if_correct,
+        if_wrong,
     ):
         '''
          - path - str (space-separated Instruction names).
@@ -90,12 +92,9 @@ class Label:
         '''
         self.index = index
         self.name = name
-        self.path = None if path is None else Path(tuple(
-            Instruction[name] for name in path.split()
-        ))
-        self.preguess = None if preguess is None else [
-            Instruction[name] for name in preguess.split()]
-        self.guess = None if guess is None else Instruction[guess]
+        self.path = Path(tuple(Instruction[name] for name in path.split()))
+        self.preguess = [Instruction[name] for name in preguess.split()]
+        self.guess = Instruction[guess]
         self.if_correct = if_correct
         self.if_wrong = if_wrong
 
@@ -104,10 +103,10 @@ class Label:
         return CacheState(self.cached_depth(), self.checked_depth())
 
     def cached_depth(self):
-        return 0 if self.path is None else self.path.state.cached_depth()
+        return self.path.state.cached_depth()
 
     def checked_depth(self):
-        return 0 if self.path is None else self.path.state.checked_depth()
+        return self.path.state.checked_depth()
 
     def max_cached_depth(self):
         '''
@@ -118,17 +117,6 @@ class Label:
         state = State(tos_constant=self.path.state.tos_constant)
         state = state.step(self.guess)
         return max(self.cached_depth(), -state.stack_min) + state.stack_max
-
-    def goto(self, cache_state):
-        '''
-        Returns a Code to jump to this Label.
-         - cache_state - The CacheState before the goto. This method generates
-           code to flush the cache to meet the expectations at this Label.
-        '''
-        code = Code()
-        code.extend(cache_state.flush(self.cache_state()))
-        code.append('goto {};'.format(self.name))
-        return code
 
     def generate_code(self, profiling=False, no_preguess=False):
         '''
@@ -149,7 +137,7 @@ class Label:
                 gen_case(self.guess, cache_state),
             '}',
         ))
-        c_code.extend(label_by_index(self.if_correct).goto(cache_state))
+        c_code.extend(goto_label_by_index(cache_state, self.if_correct))
         pops = -state.stack_min
         pushes = state.stack_max - state.stack_min
         # Generate the code for the branch where the guess is wrong.
@@ -157,11 +145,11 @@ class Label:
         if profiling:
             w_code.append('state_guess_wrong[{}]++;'.format(self.index))
         cache_state = self.cache_state()
-        w_code.extend(label_by_index(self.if_wrong).goto(cache_state))
+        w_code.extend(goto_label_by_index(cache_state, self.if_wrong))
         # Compute the bit string of Instruction opcodes to guess.
         multiguess = [self.guess]
-        if not no_preguess:
-            multiguess.extend(label_by_index(self.if_correct).preguess)
+        if not no_preguess and self.if_correct is not None:
+            multiguess.extend(labels[self.if_correct].preguess)
         opcode_test = _opcode_test(multiguess)
 	# Compute the guard condition.
         cache_state = self.cache_state()
@@ -210,10 +198,22 @@ with open(args.labels_filename, "rb") as h:
 max_cached_depth = max(label.max_cached_depth() for label in labels)
 
 
-def label_by_index(index):
+def goto_label_by_index(cache_state, index):
+    '''
+    Returns a Code representing a jump to the specified Label.
+     - index - int - the index of the Label, or `None` for `FALLBACK`.
+    '''
+    code = Code()
     if index is None:
-        return Label(len(labels), 'A_FALLBACK')
-    return labels[index]
+        # Jump to the fallback label.
+        code.extend(cache_state.flush(CacheState(0, 0)))
+        code.append('goto A_FALLBACK;')
+    else:
+        # Jump to a Label.
+        label = labels[index]
+        code.extend(cache_state.flush(label.cache_state()))
+        code.append('goto {};'.format(label.name))
+    return code
 
 
 def gen_labels_code(profiling=False):
