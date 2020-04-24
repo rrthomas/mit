@@ -122,6 +122,9 @@ class Label:
     def generate_code(self, profiling=False, no_preguess=False):
         '''
         Returns a Code to place at this Label.
+         - profiling - bool - `True` to increment `state_guess_correct` when
+           executing the instruction.
+        Returns a Code.
         '''
         # Generate the Code for the branch where `self.guess` is correct.
         c_code = Code()
@@ -248,10 +251,7 @@ def gen_labels_code(profiling=False):
     for label in labels:
         code.append('')
         code.append('{label_name}:'.format(label_name=label.name()))
-        code.append(disable_warnings(
-            ['-Wunsafe-loop-optimizations'],
-            label.generate_code(profiling, args.no_preguess or profiling),
-        ))
+        code.append(label.generate_code(profiling, args.no_preguess or profiling))
     code.append('')
     code.append('''\
         A_FALLBACK:
@@ -283,7 +283,10 @@ def gen_labels_code(profiling=False):
         }
     ''')
     code.append(switch_code)
-    return code
+    return disable_warnings(
+        ['-Wunsafe-loop-optimizations'],
+        code,
+    )
 
 def gen_body_code(profiling=False):
     code = Code()
