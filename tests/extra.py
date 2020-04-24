@@ -28,17 +28,14 @@ breaks = []
 # Put address of buffer on stack for later
 lit(buffer)
 
-# Test LibMit.ARGC
-lit(LibMitfeatures.ARGC)
-ass(JUMP, LIBMITFEATURES)
+# Test ARGC
+ass(CALL, ARGC)
 breaks.append(label() + word_bytes)
 
-# Test LibMit.ARGV
-lit(LibMitfeatures.ARGV)
-ass(JUMP, LIBMITFEATURES)
+# Test ARGV
+ass(CALL, ARGV)
 lit(word_bytes)
 ass(ADD)
-lit(size_word)
 ass(LOAD)
 lit(0)
 ass(DUP)
@@ -57,7 +54,7 @@ trace(addr=breaks.pop(0))
 argc = S.pop()
 print("argc is {}, and should be {}".format(argc, len(args)))
 if argc != len(args):
-    print("Error in extra instruction tests: pc = {:#x}".format(pc.get()))
+    print("Error in extra instruction tests: pc = {:#x}".format(VM.pc))
     sys.exit(1)
 
 # Run LibC.ARGV test
@@ -65,7 +62,7 @@ trace(addr=breaks.pop(0))
 arg1len = S.pop()
 print("arg 1's length is {}, and should be {}".format(arg1len, len(args[1])))
 if arg1len != len(args[1]):
-    print("Error in extra instruction tests: pc = {:#x}".format(pc.get()))
+    print("Error in extra instruction tests: pc = {:#x}".format(VM.pc))
     sys.exit(1)
 S.push(arg1len) # push length back for next test
 
@@ -75,7 +72,7 @@ print("addr: {:#x}".format(buffer))
 c_str = string_at(cast(buffer, c_char_p))
 print("arg 1 is {}, and should be {}".format(c_str, args[1]))
 if c_str != args[1]:
-    print("Error in extra instruction tests: pc = {:#x}".format(pc.get()))
+    print("Error in extra instruction tests: pc = {:#x}".format(VM.pc))
     sys.exit(1)
 
 print("extra instruction tests ran OK")

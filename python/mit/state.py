@@ -122,7 +122,6 @@ class State:
 
          - optimize - bool - if True, run with optimization.
          - profile - bool - if True, run with profiling.
-
         '''
         assert optimize or not profile
         if profile:
@@ -132,10 +131,9 @@ class State:
         while True:
             try:
                 run(self.state)
+                return
             except VMError as e:
-                if e.args[0] == enums.MitErrorCode.HALT:
-                    return
-                elif (e.args[0] == 1 and
+                if (e.args[0] == enums.MitErrorCode.INVALID_OPCODE and
                       self.ir & opcode_mask == enums.Instruction.JUMP):
                     self.do_extra_instruction()
                 else:
@@ -158,7 +156,12 @@ class State:
         ret = 0
         while addr is not None or done < n:
             if auto_NEXT and self.ir == 0:
-                libmit.mit_single_step(self.state) # safe to assume no error
+                try:
+                    libmit.mit_single_step(self.state)
+                    return
+                except VMError as e:
+                    if e.args[0] != enums.MitErrorCode.INSTRUCTION_COMPLETED:
+                        raise
             if self.pc == addr: break
             if trace:
                 print("trace: instruction={}".format(
@@ -166,14 +169,15 @@ class State:
                 ))
             try:
                 libmit.mit_single_step(self.state)
+                return
             except VMError as e:
                 if (
-                    e.args[0] == 1 and (
+                    e.args[0] == enums.MitErrorCode.INVALID_OPCODE and (
                         self.ir & opcode_mask == enums.Instruction.JUMP
                     )
                 ):
                     self.do_extra_instruction()
-                else:
+                elif e.args[0] != enums.MitErrorCode.INSTRUCTION_COMPLETED:
                     ret = e.args[0]
                     print("Error code {} was returned".format(ret), end='')
                     print(" after {} step{}".format(done, 's' if done != 1 else ''), end='')

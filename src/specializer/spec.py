@@ -92,15 +92,6 @@ for instruction in Instruction:
                 name=instruction.name,
                 count=count,
             )] = _gen_variadic_instruction(instruction, count)
-    elif instruction.name in ('LOAD', 'STORE', 'SIGN_EXTEND'):
-        for size in range(4):
-            specialized_instructions['{name}_WITH_{size}'.format(
-                name=instruction.name,
-                size=size,
-            )] = _gen_ordinary_instruction(
-                instruction,
-                '{{stack_0}} == {}'.format(size),
-            )
     elif instruction.name == 'JUMPZ':
         specialized_instructions['JUMPZ_TAKEN'] = _gen_ordinary_instruction(
             instruction,

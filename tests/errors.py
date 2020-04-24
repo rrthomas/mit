@@ -46,25 +46,7 @@ test_pc.append(label())
 result.append(MitErrorCode.UNALIGNED_ADDRESS)
 print('Test "{}": pc = {}'.format(test[-1], test_pc[-1]))
 lit(VM.M.addr + 1)
-lit(size_word)
 ass(LOAD)
-
-test.append('Try to load with an invalid/unsupported size')
-test_pc.append(label())
-result.append(MitErrorCode.BAD_SIZE)
-print('Test "{}": pc = {}'.format(test[-1], test_pc[-1]))
-lit(VM.M.addr)
-lit(42)
-ass(LOAD)
-
-test.append('Try to store with an invalid/unsupported size')
-test_pc.append(label())
-result.append(MitErrorCode.BAD_SIZE)
-print('Test "{}": pc = {}'.format(test[-1], test_pc[-1]))
-lit(0)
-lit(VM.M.addr)
-lit(42)
-ass(STORE)
 
 if UNDEFINED < (1 << opcode_bit):
     test.append('Try to execute invalid opcode')
@@ -108,14 +90,16 @@ do_tests(step_trace)
 print("Running tests with run (optimized)")
 do_tests(VM.run)
 
-# Try to write to an invalid stack location (can't do this with virtual code)
+test.append("Try to write to an invalid stack location (can't do this with virtual code)")
 try:
     libmit.mit_store_stack(VM.state, 4, 0)
     ret = 0
 except VMError as e:
     ret = e.args[0]
-if ret != 4:
-    print('Error in errors test: test "{}" failed'.format(test[i]))
+if ret != MitErrorCode.INVALID_STACK_WRITE:
+    print('Error in errors test: test "{}" failed; result is {}, should be {}'.format(
+        test[-1], ret, MitErrorCode.INVALID_STACK_WRITE,
+    ))
     error += 1
 
 if error != 0:

@@ -38,7 +38,6 @@ assert(libmit)
 libmitfeatures = CDLL(features_library_file)
 assert(libmitfeatures)
 
-
 # Errors
 class Error(Exception):
     '''
@@ -86,7 +85,7 @@ def errcheck(error_enum):
 # Constants (all of type unsigned)
 vars().update([(c, c_uint.in_dll(libmit, "mit_{}".format(c)).value)
                for c in [
-                       "word_bytes", "size_word",
+                       "word_bytes",
                        "byte_bit", "byte_mask", "word_bit",
                        "opcode_bit", "opcode_mask",
                ]])
@@ -138,6 +137,12 @@ mit_error = errcheck(MitErrorCode)
 # for some reason we can't call it when bound as a pointer.
 vars()["_run"] = c_mit_fn.in_dll(libmit, "mit_run")
 vars()["run_ptr"] = POINTER(c_mit_fn).in_dll(libmit, "mit_run")
+vars().update([(c, cty.in_dll(libmit, "mit_{}".format(c)))
+               for (c, cty) in [
+                       ("run_specializer", c_mit_fn),
+                       ("run_profile", c_mit_fn),
+               ]])
+
 # Cannot add errcheck to a CFUNCTYPE, so wrap it manually.
 def run(state):
     return mit_error(_run(state))
@@ -161,16 +166,18 @@ libmit.mit_new_state.argtypes = [c_size_t]
 libmit.mit_free_state.restype = None
 libmit.mit_free_state.argtypes = [POINTER(c_mit_state)]
 
-def is_aligned(addr):
-    return (addr & ((1 << size_word) - 1)) == 0
+libmit.mit_profile_reset.restype = None
+libmit.mit_profile_reset.argtypes = None
 
-# features.h
-vars().update([(c, cty.in_dll(libmitfeatures, "mit_{}".format(c)))
+libmit.mit_profile_dump.argtypes = [c_int]
+
+def is_aligned(addr):
+    return (addr & (word_bytes - 1)) == 0
+
+vars().update([(c, cty.in_dll(libmit, "mit_{}".format(c)))
                for (c, cty) in [
                        ("argc", c_int),
                        ("argv", POINTER(c_char_p)),
-                       ("run_specializer", c_mit_fn),
-                       ("run_profile", c_mit_fn),
                ]])
 
 def register_args(*args):
@@ -186,11 +193,7 @@ def register_args(*args):
     argv.contents = arg_strings(*bargs)
     argc.value = len(bargs)
 
+# features.h
 libmitfeatures.mit_extra_instruction.restype = c_word
 libmitfeatures.mit_extra_instruction.argtypes = [POINTER(c_mit_state)]
 libmitfeatures.mit_extra_instruction.errcheck = mit_error
-
-libmitfeatures.mit_profile_reset.restype = None
-libmitfeatures.mit_profile_reset.argtypes = None
-
-libmitfeatures.mit_profile_dump.argtypes = [c_int]

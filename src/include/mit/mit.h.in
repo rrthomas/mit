@@ -15,7 +15,6 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <inttypes.h>
-#include <limits.h>
 
 #include <mit/opcodes.h>
 
@@ -58,8 +57,6 @@ typedef uint8_t mit_byte;
 #define MIT_UWORD_MAX MIT_WORD_MASK
 #define MIT_WORD_MIN ((mit_word)(MIT_UWORD_MAX << (MIT_WORD_BIT - 1)))
 #define MIT_WORD_MAX ((mit_word)(MIT_UWORD_MAX >> 1))
-#define _reverse_endianness(bits, n) bswap_ ## bits(n)
-#define reverse_endianness(bits, n) _reverse_endianness(bits, n)
 
 #define _bits_type_name(prefix, bits) prefix ## bits ## _t
 #define bits_type_name(prefix, bits) _bits_type_name(prefix, bits)
@@ -89,7 +86,6 @@ struct mit_state {
 
 // Constants (for easy FFI binding)
 extern const unsigned mit_word_bytes;
-extern const unsigned mit_size_word;
 extern const unsigned mit_byte_bit;
 extern const unsigned mit_byte_mask;
 extern const unsigned mit_word_bit;
@@ -101,7 +97,6 @@ extern const mit_word mit_word_max;
 // Implementation-defined errors
 enum {
     MIT_ERROR_STARTUP_ERROR = 128,
-    MIT_ERROR_DUMPED_CORE_ON_SIGNAL = 129,
 };
 
 // Instructions
@@ -117,7 +112,7 @@ extern const unsigned mit_opcode_mask;
 #pragma GCC diagnostic ignored "-Wunused-function"
 _GL_ATTRIBUTE_CONST static int is_aligned(mit_uword addr, unsigned size)
 {
-    return (addr & ((1 << size) - 1)) == 0;
+    return (addr & (size - 1)) == 0;
 }
 #pragma GCC diagnostic pop
 
@@ -214,11 +209,27 @@ mit_word mit_run_simple(mit_state * restrict S);
 
 mit_word mit_single_step(mit_state * restrict S);
 /* Execute a single pass of the execution cycle in the given state.
-   Return MIT_ERROR_HALT if execution completes without error, or the error
-   code.
+   Return MIT_ERROR_SINGLE_STEP_COMPLETED if execution completes without
+   error, or the error code.
 */
 
 mit_word mit_internal_extra_instruction(mit_state *S);
 /* Execute an internal instruction, given by `S->ir`. */
+
+mit_word mit_run_specializer(mit_state * restrict S);
+/* Like `mit_run_simple`, but (hopefully) faster. */
+
+// N.B. The profiler is per-thread, not per-`mit_state`.
+void mit_profile_reset(void);
+/* Clears the profile. */
+mit_word mit_run_profile(mit_state * restrict S);
+/* Like `mit_run_specializer`, but records profiling information. */
+int mit_profile_dump(int fd);
+/* Dump profiling information to file descriptor `fd`. */
+
+extern int mit_argc;
+/* The registered value of `argc`. */
+extern char **mit_argv;
+/* The registered value of `argv`. */
 
 #endif

@@ -215,8 +215,6 @@ code.extend(Code('''
 #include <getopt.h>
 #include <unistd.h>
 
-#include "progname.h"
-
 #include "mit/mit.h"
 #include "mit/features.h"
 
@@ -296,6 +294,7 @@ static int skip_hashbang(FILE *fp)
 static mit_state *S;
 mit_word *memory;
 mit_uword memory_words, stack_words;
+const char *program_name;
 
 static void usage(void)
 {
@@ -310,14 +309,10 @@ static void usage(void)
 }
 
 
-static void exit_function(void)
-{
-    mit_free_state(S);
-}
-
 int main(int argc, char *argv[])
 {
-    set_program_name(argv[0]);
+    // Unfortunately the gnulib module progname is not GPL, not LGPL.
+    program_name = argv[0];
 
     memory_words = 0x100000U;
     stack_words = 16384U;
@@ -356,8 +351,6 @@ int main(int argc, char *argv[])
     S = mit_new_state(stack_words);
     if (S == NULL)
         die("could not allocate virtual machine state");
-    if (atexit(exit_function) != 0)
-        die("could not register atexit handler");
     mit_argc = argc;
     mit_argv = &argv[0];
     S->pc = (mit_uword)memory;
@@ -382,20 +375,21 @@ int main(int argc, char *argv[])
     }
 
     // Run
-    for (;;) {
-        mit_word error = mit_run(S);
-        if (error == MIT_ERROR_INVALID_OPCODE
-            && (S->ir & MIT_OPCODE_MASK) == MIT_INSTRUCTION_JUMP) {
-            error = mit_extra_instruction(S);
-            if (error == MIT_ERROR_OK) {
-                S->ir = 0;
-                continue;
-            }
-        }
-        if (error != MIT_ERROR_HALT)
-            warn("error %zd: %s", error, error_to_msg(error));
-        return error == MIT_ERROR_HALT ? 0 : error;
+    mit_word error;
+    do {
+        S->ir = 0;
+        error = mit_run(S);
+    } while (error == MIT_ERROR_INVALID_OPCODE
+             && (S->ir & MIT_OPCODE_MASK) == MIT_INSTRUCTION_JUMP
+             && (error = mit_extra_instruction(S)) == MIT_ERROR_OK);
+
+    if (error < 0 && error >= -127) {
+        warn("error %zd: %s", error, error_to_msg(error));
+        error = 127 - error;
     }
+
+    mit_free_state(S);
+    return error;
 }'''
 ))
 

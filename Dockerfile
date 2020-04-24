@@ -25,6 +25,7 @@ RUN apt-get update -qq && \
   ipython3 \
   python3-yaml \
   python3.8 \
+  sloccount \
   texlive-latex-extra \
   texlive-science \
   texlive-fonts-recommended \

@@ -82,74 +82,80 @@ Instruction = instruction_enum(
         'SWAP': Code(),
 
         'LOAD': Code('''\
-            switch (size) {
-            case 0:
-                val = (mit_uword)*((uint8_t *)addr);
-                break;
-        #pragma GCC diagnostic push
-        #pragma GCC diagnostic ignored "-Wcast-align"
-            case 1:
-                if (unlikely(!is_aligned(addr, size)))
-                    RAISE(MIT_ERROR_UNALIGNED_ADDRESS);
-                val = (mit_uword)*((uint16_t *)((uint8_t *)addr));
-                break;
-            case 2:
-                if (unlikely(!is_aligned(addr, size)))
-                    RAISE(MIT_ERROR_UNALIGNED_ADDRESS);
-                val = (mit_uword)*((uint32_t *)((uint8_t *)addr));
-                break;
-        #if MIT_SIZE_WORD >= 3
-            case 3:
-                if (unlikely(!is_aligned(addr, size)))
-                    RAISE(MIT_ERROR_UNALIGNED_ADDRESS);
-                val = (mit_uword)*((uint64_t *)((uint8_t *)addr));
-                break;
-        #endif
-        #pragma GCC diagnostic pop
-            default:
-                RAISE(MIT_ERROR_BAD_SIZE);
-            }'''
+            if (unlikely(!is_aligned(addr, MIT_WORD_BYTES)))
+                RAISE(MIT_ERROR_UNALIGNED_ADDRESS);
+            val = *(mit_word *)addr;'''
         ),
 
         'STORE': Code('''\
-            switch (size) {
-            case 0:
-                *(uint8_t *)addr = (uint8_t)val;
-                break;
-        #pragma GCC diagnostic push
-        #pragma GCC diagnostic ignored "-Wcast-align"
-            case 1:
-                if (unlikely(!is_aligned(addr, size)))
-                    RAISE(MIT_ERROR_UNALIGNED_ADDRESS);
-                *(uint16_t *)addr = (uint16_t)val;
-                break;
-            case 2:
-                if (unlikely(!is_aligned(addr, size)))
-                    RAISE(MIT_ERROR_UNALIGNED_ADDRESS);
-                *(uint32_t *)addr = (uint32_t)val;
-                break;
-        #if MIT_SIZE_WORD >= 3
-            case 3:
-                if (unlikely(!is_aligned(addr, size)))
-                    RAISE(MIT_ERROR_UNALIGNED_ADDRESS);
-                *(uint64_t *)addr = (uint64_t)val;
-                break;
-        #endif
-        #pragma GCC diagnostic pop
-            default:
-                RAISE(MIT_ERROR_BAD_SIZE);
-            }'''
+            if (unlikely(!is_aligned(addr, MIT_WORD_BYTES)))
+                RAISE(MIT_ERROR_UNALIGNED_ADDRESS);
+            *(mit_word *)addr = val;'''
         ),
 
-        'LIT': Code('FETCH_PC(n);'),
+        'LOAD1': Code('val = (mit_uword)*((uint8_t *)addr);'),
+        'STORE1': Code('*(uint8_t *)addr = (uint8_t)val;'),
 
-        'LIT_PC_REL': Code('''\
+        'LOAD2': Code('''\
+        #pragma GCC diagnostic push
+        #pragma GCC diagnostic ignored "-Wcast-align"
+            if (unlikely(!is_aligned(addr, 2)))
+                RAISE(MIT_ERROR_UNALIGNED_ADDRESS);
+            val = (mit_uword)*((uint16_t *)((uint8_t *)addr));
+        #pragma GCC diagnostic pop'''
+        ),
+
+        'STORE2': Code('''\
+        #pragma GCC diagnostic push
+        #pragma GCC diagnostic ignored "-Wcast-align"
+            if (unlikely(!is_aligned(addr, 2)))
+                RAISE(MIT_ERROR_UNALIGNED_ADDRESS);
+            *(uint16_t *)addr = (uint16_t)val;
+        #pragma GCC diagnostic pop'''
+        ),
+
+        'LOAD4': Code('''\
+        #pragma GCC diagnostic push
+        #pragma GCC diagnostic ignored "-Wcast-align"
+            if (unlikely(!is_aligned(addr, 4)))
+                RAISE(MIT_ERROR_UNALIGNED_ADDRESS);
+            val = (mit_uword)*((uint32_t *)((uint8_t *)addr));
+        #pragma GCC diagnostic pop'''
+        ),
+
+        'STORE4': Code('''\
+        #pragma GCC diagnostic push
+        #pragma GCC diagnostic ignored "-Wcast-align"
+            if (unlikely(!is_aligned(addr, 4)))
+                RAISE(MIT_ERROR_UNALIGNED_ADDRESS);
+            *(uint32_t *)addr = (uint32_t)val;
+        #pragma GCC diagnostic pop'''
+        ),
+
+        'PUSH': Code('FETCH_PC(n);'),
+
+        'PUSHREL': Code('''\
             FETCH_PC(n);
             n += S->pc - MIT_WORD_BYTES;'''
         ),
 
+        'NOT': Code('r = ~x;'),
+        'AND': Code('r = x & y;'),
+        'OR': Code('r = x | y;'),
+        'XOR': Code('r = x ^ y;'),
+
         'LT': Code('flag = a < b;'),
         'ULT': Code('flag = (mit_uword)a < (mit_uword)b;'),
+
+        'LSHIFT': Code('''\
+            r = n < (mit_word)MIT_WORD_BIT ?
+                (mit_word)((mit_uword)x << n) : 0;'''
+        ),
+        'RSHIFT': Code('''\
+            r = n < (mit_word)MIT_WORD_BIT ?
+                (mit_word)((mit_uword)x >> n) : 0;'''
+        ),
+        'ARSHIFT': Code('r = ARSHIFT(x, n);'),
 
         'NEGATE': Code('r = -a;'),
         'ADD': Code('r = a + b;'),
@@ -167,26 +173,6 @@ Instruction = instruction_enum(
                 RAISE(MIT_ERROR_DIVISION_BY_ZERO);
             q = (mit_word)((mit_uword)a / (mit_uword)b);
             r = (mit_word)((mit_uword)a % (mit_uword)b);'''
-        ),
-
-        'NOT': Code('r = ~x;'),
-        'AND': Code('r = x & y;'),
-        'OR': Code('r = x | y;'),
-        'XOR': Code('r = x ^ y;'),
-
-        'LSHIFT': Code('''\
-            r = n < (mit_word)MIT_WORD_BIT ?
-                (mit_word)((mit_uword)x << n) : 0;'''
-        ),
-        'RSHIFT': Code('''\
-            r = n < (mit_word)MIT_WORD_BIT ?
-                (mit_word)((mit_uword)x >> n) : 0;'''
-        ),
-        'ARSHIFT': Code('r = ARSHIFT(x, n);'),
-
-        'SIGN_EXTEND': Code('''\
-            n = u << (MIT_WORD_BYTES - (1 << size)) * MIT_BYTE_BIT;
-            n = ARSHIFT(n, (MIT_WORD_BYTES - (1 << size)) * MIT_BYTE_BIT);'''
         ),
     },
 )
@@ -216,7 +202,8 @@ for register in Register:
     internal_extra_instructions['SET_{}'.format(register.name.upper())] = set_code
 
 internal_extra_instructions.update({
-    'HALT': Code('RAISE(MIT_ERROR_HALT);'),
+    # FIXME: Implement manually, so n is popped before RAISE
+    'HALT': Code('RAISE(n);'),
 
     'THIS_STATE': Code('state = S;'),
 
@@ -241,6 +228,10 @@ internal_extra_instructions.update({
     'RUN': Code('ret = mit_run(inner_state);'),
 
     'SINGLE_STEP': Code('ret = mit_single_step(inner_state);'),
+
+    'ARGC': Code('argc = (mit_word)mit_argc;'),
+
+    'ARGV': Code('argv = mit_argv;'),
 })
 
 InternalExtraInstruction = instruction_enum(

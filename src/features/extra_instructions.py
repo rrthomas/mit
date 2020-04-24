@@ -19,14 +19,6 @@ from mit_core.stack import pop_stack
 class LibMitfeatures(InstructionEnum):
     'Function codes for the external extra instruction LIBMITFEATURES.'
 
-    ARGC = (StackEffect.of([], ['argc']), Code('''\
-        argc = (mit_word)mit_argc;
-    '''))
-
-    ARGV = (StackEffect.of([], ['argv:char **']), Code('''\
-        argv = mit_argv;
-    '''))
-
     EXTRA_INSTRUCTION = (StackEffect.of(['state:mit_state *'], ['ret']),
         Code('ret = mit_extra_instruction(state);'),
     )
@@ -35,10 +27,6 @@ class LibMitfeatures(InstructionEnum):
 @unique
 class LibC(InstructionEnum):
     'Function codes for the external extra instruction LIBC.'
-
-    EXIT = (StackEffect.of(['ret_code'], []), Code('''\
-        exit(ret_code);
-    '''))
 
     STRLEN = (StackEffect.of(['s:const char *'], ['len']), Code('''\
         len = (mit_word)(mit_uword)strlen(s);
@@ -199,7 +187,6 @@ class LibInstruction(Library):
               ['mit_word *'])
     LIBC = (0x02, LibC, '''
 #include <stdlib.h>
-#include <stdbool.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/types.h>

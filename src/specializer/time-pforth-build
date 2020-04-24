@@ -29,6 +29,10 @@ assert os.getenv('TIME_BINARY') is not None
 assert os.getenv('MIT_BINARY') is not None
 
 os.chdir(os.path.join(os.environ['srcdir'], 'specializer/pforth/src/mit'))
+try:
+    os.remove('pforth-new')
+except FileNotFoundError:
+    pass
 
 # Build pForth the given number of times with given options
 subprocess.check_call(os.environ['TIME_BINARY'].split() +

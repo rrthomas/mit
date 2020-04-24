@@ -23,6 +23,7 @@ for i in range(2):
     ass(JUMP, LIBC)
     lit(LibC.WRITE)
     ass(JUMP, LIBC)
+    lit(MitErrorCode.OK)
     ass(CALL, HALT)
     code_len = assembler.pc
 

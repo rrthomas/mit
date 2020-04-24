@@ -17,7 +17,7 @@ from .code_util import Code, unrestrict, disable_warnings
 
 # Enough for the core
 # FIXME: Should be able to assume pointers fit in a word
-type_wordses = {'mit_word': 1, 'mit_uword': 1, 'mit_word *': 1, 'mit_state *': 1, 'mit_fn *': 1}
+type_wordses = {'mit_word': 1, 'mit_uword': 1, 'mit_word *': 1, 'mit_state *': 1, 'mit_fn *': 1, 'char **':1}
 
 # Set to 0 to allow type_words to work without types information
 TYPE_SIZE_UNKNOWN = None

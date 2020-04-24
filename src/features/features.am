@@ -7,20 +7,12 @@
 # THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 # RISK.
 
-mit_pkginclude_HEADERS += %D%/mit/features.h
-
-
-# Simple features
-
-libmitfeatures_la_SOURCES += \
-	%D%/args.c
-
-%D%/args.lo: %D%/mit/extra-opcodes.h
+pkginclude_HEADERS += %D%/mit/features.h
 
 
 # Library extra instructions
 
-nodist_mit_pkginclude_HEADERS += %D%/mit/extra-opcodes.h
+nodist_pkginclude_HEADERS += %D%/mit/extra-opcodes.h
 libmitfeatures_la_SOURCES += %D%/extra-instructions.c
 
 # Note: we grep config.log because the generated header file has the symbols

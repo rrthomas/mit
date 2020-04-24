@@ -30,7 +30,7 @@
 # oprofile, and report the best.
 
 
-nodist_libmitfeatures_la_SOURCES += %D%/specializer.c
+nodist_libmit_la_SOURCES += %D%/specializer.c
 
 TEST_EXTENSIONS = .pforth
 PFORTH_LOG_COMPILER = $(SHELL)
@@ -42,12 +42,13 @@ bench:
 	$(MAKE) check TESTS="$(BENCH_TESTS)"
 
 if USING_PFORTH
+specializer/pforth/src/highlevel.fs: specializer/pforth/config.status
 specializer/pforth/config.status: specializer/pforth/configure
 specializer/pforth/configure: specializer/pforth/configure.ac
 	cd specializer/pforth && \
 	autoreconf -i && \
 	./configure --build=mit BUILD_EXECUTOR=$(MIT_BINARY) BUILD_EXECUTOR_FLAGS=-O
-check_DATA = specializer/pforth/config.status
+check_DATA = specializer/pforth/src/highlevel.fs
 
 TESTS = \
 	%D%/build-pforth.pforth

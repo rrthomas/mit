@@ -10,16 +10,15 @@
 # Error codes
 ErrorCode:
   OK: 0
-  INVALID_OPCODE: 1
-  STACK_OVERFLOW: 2
-  INVALID_STACK_READ: 3
-  INVALID_STACK_WRITE: 4
-  INVALID_MEMORY_READ: 5
-  INVALID_MEMORY_WRITE: 6
-  UNALIGNED_ADDRESS: 7
-  BAD_SIZE: 8
-  DIVISION_BY_ZERO: 9
-  HALT: 127
+  INVALID_OPCODE: -1
+  STACK_OVERFLOW: -2
+  INVALID_STACK_READ: -3
+  INVALID_STACK_WRITE: -4
+  INVALID_MEMORY_READ: -5
+  INVALID_MEMORY_WRITE: -6
+  UNALIGNED_ADDRESS: -7
+  DIVISION_BY_ZERO: -8
+  INSTRUCTION_COMPLETED: -127
 
 # VM registers
 Register:
@@ -64,85 +63,105 @@ Instruction:
     results: ['y', 'ITEMS', 'x']
   LOAD:
     opcode: 0x8
-    args: ['addr', 'size']
+    args: ['addr']
     results: ['val']
   STORE:
     opcode: 0x9
-    args: ['val', 'addr', 'size']
+    args: ['val', 'addr']
     results: []
-  LIT:
+  LOAD1:
     opcode: 0xa
-    args: []
-    results: ['n']
-  LIT_PC_REL:
+    args: ['addr']
+    results: ['val']
+  STORE1:
     opcode: 0xb
+    args: ['val', 'addr']
+    results: []
+  LOAD2:
+    opcode: 0xc
+    args: ['addr']
+    results: ['val']
+  STORE2:
+    opcode: 0xd
+    args: ['val', 'addr']
+    results: []
+  LOAD4:
+    opcode: 0xe
+    args: ['addr']
+    results: ['val']
+  STORE4:
+    opcode: 0xf
+    args: ['val', 'addr']
+    results: []
+  PUSH:
+    opcode: 0x10
     args: []
     results: ['n']
-  LT:
+  PUSHREL:
     opcode: 0x11
-    args: ['a', 'b']
-    results: ['flag']
-  ULT:
-    opcode: 0x12
-    args: ['a', 'b']
-    results: ['flag']
-  NEGATE:
-    opcode: 0x13
-    args: ['a']
-    results: ['r']
-  ADD:
-    opcode: 0x14
-    args: ['a', 'b']
-    results: ['r']
-  MUL:
-    opcode: 0x15
-    args: ['a', 'b']
-    results: ['r']
-  DIVMOD:
-    opcode: 0x16
-    args: ['a', 'b']
-    results: ['q', 'r']
-  UDIVMOD:
-    opcode: 0x17
-    args: ['a', 'b']
-    results: ['q', 'r']
+    args: []
+    results: ['n']
   NOT:
-    opcode: 0x18
+    opcode: 0x12
     args: ['x']
     results: ['r']
   AND:
-    opcode: 0x19
+    opcode: 0x13
     args: ['x', 'y']
     results: ['r']
   OR:
-    opcode: 0x1a
+    opcode: 0x14
     args: ['x', 'y']
     results: ['r']
   XOR:
-    opcode: 0x1b
+    opcode: 0x15
     args: ['x', 'y']
     results: ['r']
+  LT:
+    opcode: 0x16
+    args: ['a', 'b']
+    results: ['flag']
+  ULT:
+    opcode: 0x17
+    args: ['a', 'b']
+    results: ['flag']
   LSHIFT:
-    opcode: 0x1c
+    opcode: 0x18
     args: ['x', 'n']
     results: ['r']
   RSHIFT:
-    opcode: 0x1d
+    opcode: 0x19
     args: ['x', 'n']
     results: ['r']
   ARSHIFT:
-    opcode: 0x1e
+    opcode: 0x1a
     args: ['x', 'n']
     results: ['r']
-  SIGN_EXTEND:
+  NEGATE:
+    opcode: 0x1b
+    args: ['a']
+    results: ['r']
+  ADD:
+    opcode: 0x1c
+    args: ['a', 'b']
+    results: ['r']
+  MUL:
+    opcode: 0x1d
+    args: ['a', 'b']
+    results: ['r']
+  DIVMOD:
+    opcode: 0x1e
+    args: ['a', 'b']
+    results: ['q', 'r']
+  UDIVMOD:
     opcode: 0x1f
-    args: ['u', 'size']
-    results: ['n']
+    args: ['a', 'b']
+    results: ['q', 'r']
 
 InternalExtraInstruction:
   HALT:
     opcode: 0x1
-    args: []
+    args: ['n']
     results: []
   GET_PC:
     opcode: 0x2
@@ -200,3 +219,11 @@ InternalExtraInstruction:
     opcode: 0x14
     args: ['inner_state:mit_state *']
     results: ['ret']
+  ARGC:
+    opcode: 0x100
+    args: []
+    results: ['argc']
+  ARGV:
+    opcode: 0x101
+    args: []
+    results: ['argv:char **']

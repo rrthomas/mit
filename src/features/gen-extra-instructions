@@ -86,6 +86,7 @@ code.append(body_code)
 
 code.append('')
 code.append('''
+    error = MIT_ERROR_INSTRUCTION_COMPLETED;
     error:
         return error;
     }'''
