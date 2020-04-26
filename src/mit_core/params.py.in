@@ -2,4 +2,3 @@
 
 word_bytes = @SIZEOF_SIZE_T@
 word_bit = @MIT_BYTE_BIT@ * word_bytes
-opcode_bit = @OPCODE_BIT@

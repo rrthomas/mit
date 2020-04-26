@@ -35,7 +35,6 @@
 
 // Build-time parameters
 #define MIT_WORD_BYTES @SIZEOF_SIZE_T@
-#define MIT_OPCODE_BIT @OPCODE_BIT@
 
 // Types and constants
 // Define MIT_WORD_BIT as a number literal so we can token paste it below
@@ -100,9 +99,7 @@ enum {
 };
 
 // Instructions
-#if MIT_OPCODE_BIT < 5 || MIT_OPCODE_BIT > 8
-#error "MIT_OPCODE_BIT must be in the range 5 to 8 inclusive!"
-#endif
+#define MIT_OPCODE_BIT 8
 #define MIT_OPCODE_MASK ((1 << MIT_OPCODE_BIT) - 1)
 extern const unsigned mit_opcode_bit;
 extern const unsigned mit_opcode_mask;

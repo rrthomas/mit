@@ -49,6 +49,8 @@ def instruction_enum(enum_name, docstring, spec, code):
     enum.__doc__ = docstring
     return enum
 
+opcode_bit = 8
+
 Instruction = instruction_enum(
     'Instruction',
     'VM instruction opcodes.',

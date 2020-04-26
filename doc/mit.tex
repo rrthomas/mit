@@ -44,7 +44,7 @@
 
 \title{The Mit virtual machine}
 \author{Reuben Thomas}
-\date{19th April 2020}
+\date{26th April 2020}
 
 \begin{document}
 \maketitle
@@ -53,14 +53,12 @@
 
 Instructions and registers are shown in {\tt typewriter} font.
 
-Addresses are given in bytes and refer to the VM address space except where
-stated. Addresses are written in hexadecimal; hex numbers are prefixed with
-“0x”.
+Addresses are given in bytes. Addresses are written in hexadecimal; hex numbers are prefixed with “0x”.
 
 
 \section{Introduction}
 
-Mit is a simple virtual machine for study and experiment. It is a stack machine, based on the more complex register machine Mite~\cite{mite0}.
+Mit is a simple virtual machine. It is a stack machine, based on the more complex register machine Mite~\cite{mite0}.
 This paper gives a full description of Mit.
 
 Mit is conceptually (and usually in fact) a library, embedded in other programs.
@@ -69,26 +67,9 @@ Mit is conceptually (and usually in fact) a library, embedded in other programs.
 \section{Architecture}
 
 The address unit is the byte, which is eight bits.
-Most of the quantities on which Mit operates are fixed-size words, which are stored in memory in either big- or little-endian order.
+Most of the quantities on which Mit operates are fixed-size words, which are stored in memory in either big- or little-endian order. The number of bytes in a word is called {\tt word\_bytes}, and must be $4$ or $8$.
+
 The choice of byte and word size enable efficient implementation on the vast majority of machine architectures.
-
-
-\subsection{Parameters}
-
-Some parameters may take a range of values, but are fixed for a particular virtual machine instance. They are listed in table~\ref{paramtable}.
-
-\begin{table}[htbp]
-\begin{center}
-\begin{tabular}{cp{3.75in}} \toprule
-\bf Parameter & \bf Meaning \\
- \midrule
-{\tt word\_bytes} & The number of bytes in a word. Must be $4$ or $8$. \\
-{\tt instruction\_bits} & The number of bits in an instruction. Must be in the range $5$ to $8$ inclusive. \\
- \bottomrule
-\end{tabular}
-\caption{\label{paramtable}Parameters}
-\end{center}
-\end{table}
 
 
 \subsection{Registers}
@@ -128,8 +109,8 @@ Execution proceeds as follows:
 
 \begin{tabbing}
 \hspace{0.5in}\=begin\=\+\+ \\*
-let \textbf{opcode} be the least significant {\tt instruction\_bits} bits of {\tt ir} \\*
-shift {\tt ir} logically {\tt instruction\_bits} bits to the right \\*
+let \textbf{opcode} be the least significant $8$ bits of {\tt ir} \\*
+shift {\tt ir} logically $8$ bits to the right \\*
 execute the instruction given by \textbf{opcode} \- \\*
 repeat
 \end{tabbing}
@@ -384,7 +365,7 @@ $-8$ if division by zero is attempted):
 \subsection{Instruction encoding}
 \label{encoding}
 
-Instructions are encoded as {\tt instruction\_bits}-bit opcodes; opcodes are packed into words, which are executed starting at the least-significant bits.
+Instructions are encoded as $8$-bit opcodes; opcodes are packed into words, which are executed starting at the least-significant bits.
 
 
 \subsection{Instruction opcodes}

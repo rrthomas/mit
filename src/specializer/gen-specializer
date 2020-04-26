@@ -10,7 +10,7 @@
 import argparse, json, textwrap
 
 from mit_core.code_util import Code, copyright_banner, disable_warnings
-from mit_core.params import opcode_bit
+from mit_core.spec import opcode_bit
 from specializer import CacheState, gen_case
 from spec import Instruction
 from path import Path, State

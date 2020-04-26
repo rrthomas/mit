@@ -161,12 +161,6 @@ AC_SUBST([SIZEOF_INTMAX_T])
 # Set byte size
 AC_SUBST([MIT_BYTE_BIT], [8])
 
-# Set instruction opcode size
-default_opcode_bit=$MIT_BYTE_BIT
-AC_ARG_VAR([OPCODE_BIT],
-  [value of MIT_OPCODE_BIT [default: $default_opcode_bit]])
-: "${OPCODE_BIT=$default_opcode_bit}"
-
 # Package suffix for side-by-side installation of multiple builds
 AC_ARG_ENABLE([package-suffix],
   [AS_HELP_STRING([--enable-package-suffix],

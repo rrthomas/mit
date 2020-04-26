@@ -69,8 +69,6 @@ jobs:
           packages:
             - *default_deps
             - [python3.8]
-    - env:
-        - OPCODE_BIT=5
 
 
 before_install:
