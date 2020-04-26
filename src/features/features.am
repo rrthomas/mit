@@ -13,11 +13,13 @@ pkginclude_HEADERS += %D%/mit/features.h
 # Library extra instructions
 
 nodist_pkginclude_HEADERS += %D%/mit/extra-opcodes.h
-libmitfeatures_la_SOURCES += %D%/extra-instructions.c
+# FIXME: temporarily build extra-instructions.c into libmit, to avoid a
+# recursive dependency between libmit and libmitfeatures.
+libmit_la_SOURCES = %D%/extra-instructions.c
 
 # Note: we grep config.log because the generated header file has the symbols
 # sorted lexically, and we need the output in the same order as the input.
-%D%/type_sizes.py: $(top_builddir)/config.status %D%/gen-type-sizes %D%/collate-type-sizes include/mit/registers.h %D%/extra_instructions.py mit_core/instruction.py
+%D%/type_sizes.py: $(top_builddir)/config.status %D%/gen-type-sizes %D%/collate-type-sizes include/mit/registers.h include/mit/opcodes.h %D%/extra_instructions.py mit_core/instruction.py
 	cd %D% && \
 	$(PYTHON_WITH_PATH) $(abs_srcdir)/%D%/gen-type-sizes > type-sizes.ac && \
 	autoconf type-sizes.ac > type-sizes && \

@@ -102,7 +102,8 @@ class Path:
         self.instructions = instructions
         self.state = State()
         for instruction in instructions:
-            self.state = self.state.step(instruction)
+            if instruction.effect is not None:
+                self.state = self.state.step(instruction)
 
     def _opcodes(self):
         return [i.opcode for i in self.instructions]

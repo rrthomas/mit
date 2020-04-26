@@ -24,19 +24,14 @@ from .enums import MitErrorCode, Register
 
 
 library_file = find_library("mit")
-features_library_file = find_library("mitfeatures")
 if not library_file:
     # For Windows
     # TODO: Do this portably
     # TODO: Substitute version when library is versioned
     library_file = find_library("libmit-0")
-    features_library_file = find_library("libmitfeatures-0")
 assert(library_file)
-assert(features_library_file)
 libmit = CDLL(library_file)
 assert(libmit)
-libmitfeatures = CDLL(features_library_file)
-assert(libmitfeatures)
 
 # Errors
 class Error(Exception):
@@ -194,6 +189,6 @@ def register_args(*args):
     argc.value = len(bargs)
 
 # features.h
-libmitfeatures.mit_extra_instruction.restype = c_word
-libmitfeatures.mit_extra_instruction.argtypes = [POINTER(c_mit_state)]
-libmitfeatures.mit_extra_instruction.errcheck = mit_error
+libmit.mit_extra_instruction.restype = c_word
+libmit.mit_extra_instruction.argtypes = [POINTER(c_mit_state)]
+libmit.mit_extra_instruction.errcheck = mit_error

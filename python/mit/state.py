@@ -22,7 +22,7 @@ from ctypes import create_string_buffer, byref
 
 from . import enums
 from .binding import (
-    libmit, libmitfeatures, run, run_ptr,
+    libmit, run, run_ptr,
     Error, VMError, is_aligned,
     word_bytes, word_mask, opcode_mask,
     c_word, c_uword, c_mit_state,
@@ -112,10 +112,6 @@ class State:
         if 'argv' in state:
             register_args(*state['argv'])
 
-    def do_extra_instruction(self):
-        libmitfeatures.mit_extra_instruction(self.state)
-        self.ir = 0 # Skip to next instruction
-
     def run(self, optimize=True, profile=False):
         '''
         Run until `halt` or error.
@@ -128,16 +124,7 @@ class State:
             run_ptr.contents = run_profile
         elif optimize:
             run_ptr.contents = run_specializer
-        while True:
-            try:
-                run(self.state)
-                return
-            except VMError as e:
-                if (e.args[0] == enums.MitErrorCode.INVALID_OPCODE and
-                      self.ir & opcode_mask == enums.Instruction.JUMP):
-                    self.do_extra_instruction()
-                else:
-                    raise
+        run(self.state)
 
     def _print_trace_info(self):
         print("step: pc={:#x} ir={:#x} instruction={}".format(
@@ -171,13 +158,7 @@ class State:
                 libmit.mit_single_step(self.state)
                 return
             except VMError as e:
-                if (
-                    e.args[0] == enums.MitErrorCode.INVALID_OPCODE and (
-                        self.ir & opcode_mask == enums.Instruction.JUMP
-                    )
-                ):
-                    self.do_extra_instruction()
-                elif e.args[0] != enums.MitErrorCode.BREAK:
+                if e.args[0] != enums.MitErrorCode.BREAK:
                     ret = e.args[0]
                     print("Error code {} was returned".format(ret), end='')
                     print(" after {} step{}".format(done, 's' if done != 1 else ''), end='')

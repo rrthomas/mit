@@ -34,10 +34,11 @@ class InstructionEnum(mit_core.instruction.InstructionEnum):
         super().__init__(effect, code, opcode, terminal)
         self.guard = guard
         assert not self.is_variadic
-        assert all(
-            item.size == Size(1)
-            for item in effect.by_name.values()
-        ), instruction
+        if effect is not None:
+            assert all(
+                item.size == Size(1)
+                for item in effect.by_name.values()
+            ), instruction
 
     def __repr__(self):
         return self.name
@@ -117,4 +118,5 @@ GUESS_LIMITING = frozenset([
     Instruction.JUMP,
     Instruction.JUMPZ_TAKEN,
     Instruction.CALL,
+    Instruction.TRAP,
 ])

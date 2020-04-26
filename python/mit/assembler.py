@@ -195,7 +195,7 @@ class Assembler:
         Appends an instruction opcode.
 
          - opcode - An Instruction or an `opcode_bit`-bit integer.
-         - extra_opcode - optional - if `opcode` is `JUMP` or `CALL`, the
+         - extra_opcode - optional - if `opcode` is `CALL`, the
            extra opcode for an extra instruction.  This can be any type that
            can be converted to an int; it is typically an IntEnum value.
         '''
@@ -203,7 +203,7 @@ class Assembler:
         extended_opcode = int(opcode)
         assert 0 <= extended_opcode <= opcode_mask
         if extra_opcode is not None:
-            assert extended_opcode in (CALL, JUMP)
+            assert extended_opcode in (CALL,)
             extended_opcode |= (int(extra_opcode) << opcode_bit)
 
         # Store the extended opcode, starting a new word if necessary.

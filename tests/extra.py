@@ -40,16 +40,18 @@ ass(LOAD)
 lit(0)
 ass(DUP)
 lit(LibC.STRLEN)
-ass(JUMP, LIBC)
+lit(LIBC)
+ass(TRAP)
 breaks.append(label() + word_bytes)
 
 # Test LibC.STRNCPY
 lit(LibC.STRNCPY)
-ass(JUMP, LIBC)
+lit(LIBC)
+ass(TRAP)
 breaks.append(label() + word_bytes)
 
 
-# Run LibC.ARGC test
+# Run ARGC test
 trace(addr=breaks.pop(0))
 argc = S.pop()
 print("argc is {}, and should be {}".format(argc, len(args)))
@@ -57,7 +59,7 @@ if argc != len(args):
     print("Error in extra instruction tests: pc = {:#x}".format(VM.pc))
     sys.exit(1)
 
-# Run LibC.ARGV test
+# Run ARGV test
 trace(addr=breaks.pop(0))
 arg1len = S.pop()
 print("arg 1's length is {}, and should be {}".format(arg1len, len(args[1])))

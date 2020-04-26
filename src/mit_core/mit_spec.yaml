@@ -61,6 +61,8 @@ Instruction:
     opcode: 0x6
     args: ['x', 'ITEMS', 'y', 'COUNT']
     results: ['y', 'ITEMS', 'x']
+  TRAP:
+    opcode: 0x7
   LOAD:
     opcode: 0x8
     args: ['addr']

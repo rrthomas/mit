@@ -83,6 +83,14 @@ Instruction = instruction_enum(
         'DUP': Code(),
         'SWAP': Code(),
 
+        'TRAP': Code('''\
+            {
+                mit_word inner_error = mit_extra_instruction(S);
+                if (inner_error != MIT_ERROR_OK)
+                    RAISE(inner_error);
+            }
+        '''),
+
         'LOAD': Code('''\
             if (unlikely(!is_aligned(addr, MIT_WORD_BYTES)))
                 RAISE(MIT_ERROR_UNALIGNED_ADDRESS);

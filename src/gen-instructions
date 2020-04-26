@@ -54,6 +54,7 @@ code.append('''
     #include <stdbool.h>
 
     #include "mit/mit.h"
+    #include "mit/features.h"
 
     #include "run.h"
 

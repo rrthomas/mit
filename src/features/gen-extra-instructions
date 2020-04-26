@@ -33,7 +33,10 @@ COPYRIGHT_YEARS = '1994-2019'
 code = copyright_banner(GENERATOR_PROGRAM, PURPOSE, COPYRIGHT_YEARS)
 code.append('''
 
-    #include "config.h"'''
+    #include "config.h"
+
+    #include "mit/mit.h"
+    #include "mit/features.h"'''
 )
 
 for lib in LibInstruction:
@@ -77,7 +80,10 @@ code.append('''\
 code.append('')
 
 body_code = Code()
-body_code.append('mit_uword opcode = S->ir >> mit_opcode_bit;')
+body_code.append('''\
+    mit_uword opcode;
+    if ((error = mit_pop_stack(S, (mit_word *)&opcode)) != MIT_ERROR_OK)
+        return error;''')
 body_code.extend(dispatch(LibInstruction, Code(
     'return MIT_EXTRA_INSTRUCTION_ERROR_INVALID_LIBRARY;'
 )))

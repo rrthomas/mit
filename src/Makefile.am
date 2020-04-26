@@ -29,7 +29,7 @@ libmit_la_LDFLAGS = -no-undefined -export-symbols-regex '^mit_.*'
 bin_PROGRAMS = mit@PACKAGE_SUFFIX@$(EXEEXT)
 MIT_BINARY = $(abs_builddir)/mit@PACKAGE_SUFFIX@$(EXEEXT)
 man_MANS = mit@PACKAGE_SUFFIX@.1
-mit@PACKAGE_SUFFIX@_LDADD = libmit.la libmitfeatures.la $(top_builddir)/lib/libgnu.la
+mit@PACKAGE_SUFFIX@_LDADD = libmit.la $(top_builddir)/lib/libgnu.la
 nodist_mit@PACKAGE_SUFFIX@_SOURCES = main.c
 mit@PACKAGE_SUFFIX@_SOURCES = warn.c warn.h
 nodist_pkginclude_HEADERS = include/mit/opcodes.h include/mit/registers.h
@@ -108,11 +108,11 @@ distcleancheck_listfiles = \
 	    sh '{}' ';'
 
 # Features
-lib_LTLIBRARIES += libmitfeatures.la
-libmitfeatures_la_SOURCES =
-nodist_libmitfeatures_la_SOURCES =
-libmitfeatures_la_LIBADD = libmit.la $(top_builddir)/lib/libgnu.la
-libmitfeatures_la_LDFLAGS = -no-undefined -export-symbols-regex '^mit_.*'
+# lib_LTLIBRARIES += libmitfeatures.la
+# libmitfeatures_la_SOURCES =
+# nodist_libmitfeatures_la_SOURCES =
+# libmitfeatures_la_LIBADD = libmit.la $(top_builddir)/lib/libgnu.la
+# libmitfeatures_la_LDFLAGS = -no-undefined -export-symbols-regex '^mit_.*'
 
 $(libmitfeatures_la_SOURCES): include/mit/mit.h
 

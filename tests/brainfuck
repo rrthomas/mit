@@ -40,6 +40,7 @@ def inc(): lit(1); ass(ADD)
 def dec(): lit(1); ass(NEGATE); ass(ADD)
 def dup(): lit(0); ass(DUP)
 def over(): lit(1); ass(DUP)
+def libc(fn): lit(fn); lit(LIBC); ass(TRAP)
 
 try:
     lit_pc_rel(0) # Data pointer.
@@ -52,14 +53,14 @@ try:
         elif c == '.':
             dup() # buffer
             lit(1) # length
-            lit(LibC.STDOUT); ass(JUMP, LIBC)
-            lit(LibC.WRITE); ass(JUMP, LIBC)
+            libc(LibC.STDOUT)
+            libc(LibC.WRITE)
             lit(1); ass(POP)
         elif c == ',':
             dup() # buffer
             lit(1) # length
-            lit(LibC.STDIN); ass(JUMP, LIBC)
-            lit(LibC.READ); ass(JUMP, LIBC)
+            libc(LibC.STDIN)
+            libc(LibC.READ)
             lit(1); ass(POP)
         elif c == '[':
             loop = label()

@@ -249,9 +249,14 @@ call and return (subroutine return is {\tt jump}):
 \subsection{Extra instructions}
 \label{extra}
 
-Since {\tt ir} must be $0$ when {\tt next} is performed, the rest of an instruction word following {\tt next}, {\tt jump} and {\tt call} must normally be all zero bits.
+Since {\tt ir} must be $0$ when {\tt next} is performed, the rest of an instruction word following {\tt next}, {\tt jump} and {\tt call} must normally be all zero bits. Non-zero values are reserved for the Mit specification.
 
-Non-zero values following {\tt next} and {\tt call} are reserved for the Mit specification; non-zero values following {\tt jump} may be used by implementations to implement extra functionality.
+An implementation may implement extra functionality using the {\tt trap} instruction:
+
+\nopagebreak
+\begin{description}
+\inst{trap}{}{Perform arbitrary actions. Note in particular that {\tt trap} may change the stack.}
+\end{description}
 
 When an extra instruction is performed, the original instruction is considered to have completed executing.
 
@@ -385,7 +390,7 @@ Table~\ref{opcodetable} lists the instruction opcodes in numerical order. Table~
 \opcodetbl{5}{dup}			{15}{xor}
 \opcodetbl{6}{swap}			{16}{lt}
 \smallskip% For some reason needs to be here rather than after the next line
-\opcodetbl{7}{\rm (undefined)}		{17}{ult}
+\opcodetbl{7}{trap}			{17}{ult}
 \opcodetbl{8}{load}			{18}{lshift}
 \opcodetbl{9}{store}			{19}{rshift}
 \opcodetbl{a}{load1}			{1a}{arshift}

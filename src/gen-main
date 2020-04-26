@@ -218,7 +218,6 @@ code.extend(Code('''
 #include "getprogname.h"
 
 #include "mit/mit.h"
-#include "mit/features.h"
 
 #include "warn.h"
 
@@ -377,12 +376,8 @@ int main(int argc, char *argv[])
 
     // Run
     mit_word error;
-    do {
-        S->ir = 0;
-        error = mit_run(S);
-    } while (error == MIT_ERROR_INVALID_OPCODE
-             && (S->ir & MIT_OPCODE_MASK) == MIT_INSTRUCTION_JUMP
-             && (error = mit_extra_instruction(S)) == MIT_ERROR_OK);
+    S->ir = 0;
+    error = mit_run(S);
 
     if (error < 0 && error >= -127) {
         warn("error %zd: %s", error, error_to_msg(error));
