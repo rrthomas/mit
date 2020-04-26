@@ -25,7 +25,7 @@ libmit_la_SOURCES = %D%/extra-instructions.c
 	autoconf type-sizes.ac > type-sizes && \
 	CONFIG_SITE= CC="$(CC)" CPPFLAGS="$(CPPFLAGS) -I$(abs_builddir)/%D% -I$(abs_srcdir)/%D% -I$(abs_top_builddir) $(AM_CPPFLAGS)" $(SHELL) type-sizes && \
 	$(GREP) "^#define SIZEOF" config.log | cut -d " " -f 3 | \
-		( $(PYTHON_WITH_PATH) $(abs_srcdir)/%D%/collate-type-sizes > type_sizes.py ) || ( rm -f type_sizes.py; exit 1 )
+		( $(PYTHON_WITH_PATH) $(abs_srcdir)/%D%/collate-type-sizes > type_sizes.py ) || ( rm -f type_sizes.py; cat config.log; exit 1 )
 
 %D%/extra-instructions.c: %D%/gen-extra-instructions %D%/mit/features.h %D%/mit/extra-opcodes.h %D%/extra_instructions.py mit_core/instruction.py mit_core/stack.py mit_core/instruction_gen.py %D%/type_sizes.py
 	cd %D% && \
