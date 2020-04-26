@@ -47,6 +47,7 @@ mit/enums.py: $(top_srcdir)/src/mit_core/mit_spec.yaml Makefile mit/enums.py.in
 	$(AM_V_at)mv $@.tmp $@
 
 mit/extra_enums.py: gen-extra-enums $(top_srcdir)/src/features/extra_instructions.py
+	@$(MKDIR_P) mit
 	$(PYTHON_ENVIRONMENT) $(PYTHON) $(srcdir)/gen-extra-enums > mit/extra_enums.py || ( rm -f mit/extra_enums.py; exit 1 )
 
 install-data-hook: mit/enums.py
