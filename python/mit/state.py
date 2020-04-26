@@ -127,12 +127,12 @@ class State:
         run(self.state)
 
     def _print_trace_info(self):
-        print("step: pc={:#x} ir={:#x} instruction={}".format(
+        self.trace_print("step: pc={:#x} ir={:#x} instruction={}".format(
             self.registers["pc"].get(),
             self.registers["ir"].get(),
             Disassembler(self).disassemble(),
         ))
-        print(str(self.S))
+        self.trace_print(str(self.S))
 
     def step(self, n=1, addr=None, trace=False, auto_NEXT=True):
         '''
@@ -151,7 +151,7 @@ class State:
                         raise
             if self.pc == addr: break
             if trace:
-                print("trace: instruction={}".format(
+                self.trace_print("trace: instruction={}".format(
                     Disassembler(self).disassemble(),
                 ))
             try:
@@ -167,9 +167,12 @@ class State:
                     print()
                     raise
             if trace:
-                print("pc={:#x} ir={:#x}".format(self.pc, self.ir))
-                print(str(self.S))
+                self.trace_print("pc={:#x} ir={:#x}".format(self.pc, self.ir))
+                self.trace_print(str(self.S))
             done += 1
+
+    def trace_print(self, *args):
+        print(*args, file=sys.stderr)
 
     def trace(self, n=1, addr=None, auto_NEXT=True):
         'A convenience wrapper for `step(trace=True)`.'
