@@ -187,8 +187,3 @@ def register_args(*args):
     global argc, argv
     argv.contents = arg_strings(*bargs)
     argc.value = len(bargs)
-
-# features.h
-libmit.mit_extra_instruction.restype = c_word
-libmit.mit_extra_instruction.argtypes = [POINTER(c_mit_state)]
-libmit.mit_extra_instruction.errcheck = mit_error

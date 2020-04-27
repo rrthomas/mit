@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Calculate type sizes for extra instructions.
+# Calculate type sizes.
 #
 # (c) Mit authors 2019-2020
 #
@@ -15,7 +15,7 @@ from pprint import pformat
 import mit_core.stack
 mit_core.stack.TYPE_SIZE_UNKNOWN = 0
 
-from extra_instructions import *
+from traps import *
 
 
 # Read list of types

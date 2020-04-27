@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-# Generate code for extra instructions.
+# Generate code for traps.
 #
-# (c) Mit authors 1994-2019
+# (c) Mit authors 1994-2020
 #
 # The package is distributed under the MIT/X11 License.
 #
@@ -21,12 +21,12 @@ mit_core.stack.type_wordses.update(
      for type, size in type_sizes.items()}
 )
 
-from extra_instructions import *
+from traps import *
 
 
-GENERATOR_PROGRAM = 'gen-extra-instructions'
-PURPOSE = 'Execute extra instructions.'
-COPYRIGHT_YEARS = '1994-2019'
+GENERATOR_PROGRAM = 'gen-traps'
+PURPOSE = 'Execute traps.'
+COPYRIGHT_YEARS = '1994-2020'
 
 
 # Write the output file
@@ -43,7 +43,7 @@ for lib in LibInstruction:
     code.append(lib.includes)
 
 code.append('''
-    #include "mit/extra-opcodes.h"
+    #include "mit/trap-codes.h"
 
     #include "run.h"
 '''
@@ -52,7 +52,7 @@ code.append('''
 for lib in LibInstruction:
     code.append('')
     code.append('''\
-        static mit_word extra_{}(mit_state * restrict S, mit_word opcode)
+        static mit_word trap_{}(mit_state * restrict S, mit_word opcode)
         {{
             mit_word error = MIT_ERROR_OK;'''.format(str.lower(lib.name))
     )
@@ -60,7 +60,7 @@ for lib in LibInstruction:
 
     body_code = Code()
     body_code.extend(dispatch(lib.library, Code(
-        'RAISE(MIT_EXTRA_INSTRUCTION_ERROR_INVALID_FUNCTION);'
+        'RAISE(MIT_TRAP_ERROR_INVALID_FUNCTION);'
     )))
     body_code.append('')
     code.append(body_code)
@@ -73,7 +73,7 @@ for lib in LibInstruction:
 
 code.append('')
 code.append('''\
-    mit_word mit_extra_instruction(mit_state * restrict S)
+    mit_word mit_trap(mit_state * restrict S)
     {
         mit_word error = MIT_ERROR_OK;'''
 )
@@ -85,7 +85,7 @@ body_code.append('''\
     if ((error = mit_pop_stack(S, (mit_word *)&opcode)) != MIT_ERROR_OK)
         return error;''')
 body_code.extend(dispatch(LibInstruction, Code(
-    'return MIT_EXTRA_INSTRUCTION_ERROR_INVALID_LIBRARY;'
+    'return MIT_TRAP_ERROR_INVALID_LIBRARY;'
 )))
 body_code.append('return error;')
 code.append(body_code)

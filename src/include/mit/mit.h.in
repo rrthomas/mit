@@ -210,8 +210,8 @@ mit_word mit_single_step(mit_state * restrict S);
    code.
 */
 
-mit_word mit_internal_extra_instruction(mit_state *S);
-/* Execute an internal instruction, given by `S->ir`. */
+mit_word mit_extra_instruction(mit_state * restrict S);
+/* Execute an  instruction, given by `S->ir`. */
 
 mit_word mit_run_specializer(mit_state * restrict S);
 /* Like `mit_run_simple`, but (hopefully) faster. */

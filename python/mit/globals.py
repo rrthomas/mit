@@ -63,7 +63,7 @@ dis = disassemble
 
 # Opcodes
 vars().update(Instruction.__members__)
-vars().update(InternalExtraInstruction.__members__)
+vars().update(ExtraInstruction.__members__)
 vars().update(LibInstruction.__members__)
 vars().update({
     lib.library.__name__: lib.library

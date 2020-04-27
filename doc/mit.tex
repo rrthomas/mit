@@ -123,7 +123,7 @@ If an error occurs during execution (see section~\ref{errors}), the state of the
 
 When Mit encounters certain abnormal situations, such as an attempt to access an invalid address, or divide by zero, an {\bf error} is {\bf raised}, and execution terminates. If the error is non-zero, the effect of the current instruction is undone (see section~\ref{execution}). An {\bf error code} is returned to the caller.
 
-Execution can be terminated explicitly by performing a {\tt halt} instruction (see section~\ref{halt}), which raises an error.
+Execution can be terminated explicitly by performing a {\tt halt} instruction (see section~\ref{extra}), which raises an error.
 
 Error codes are signed numbers. $0$ to $-127$ are reserved for the specification; other error codes may be used by implementations. The meanings of those that may be raised by Mit are shown in table~\ref{errortable}.
 
@@ -206,12 +206,20 @@ of type and suffix appears more than once in a stack effect, it refers each time
 Ellipsis is used for indeterminate numbers of specified types of item.
 
 
-\subsection{Instruction fetch}
+\subsection{Extra instructions}
+\label{extra}
 
-If an invalid or unaligned address is accessed when loading {\tt ir}, the appropriate error is raised (see section~\ref{errors}).
+Extra instructions are introduced by the instruction {\tt extra}:
 
 \begin{description}
-\inst{next}{—}{Load the word pointed to by {\tt pc} into {\tt ir} then add {\tt word\_bytes} to {\tt pc}.}
+\inst{extra}{{\rm see below}}{Perform extra instruction {\tt ir}; if {\tt ir} is not the opcode of a valid extra instruction, raise error $-1$.}
+\end{description}
+
+The following extra instructions are defined:
+
+\begin{description}
+\inst{next}{—}{Load the word pointed to by {\tt pc} into {\tt ir}, then add {\tt word\_bytes} to {\tt pc}. If an invalid or unaligned address is accessed when loading {\tt ir}, the appropriate error is raised (see section~\ref{errors}).}
+\inst{halt}{n —}{Raise error $n$.}
 \end{description}
 
 
@@ -229,28 +237,14 @@ call and return (subroutine return is {\tt jump}):
 \end{description}
 
 
-\subsection{Extra instructions}
-\label{extra}
-
-Since {\tt ir} must be $0$ when {\tt next} is performed, the rest of an instruction word following {\tt next}, {\tt jump} and {\tt call} must normally be all zero bits. Non-zero values are reserved for the Mit specification.
+\subsection{Trap}
+\label{trap}
 
 An implementation may implement extra functionality using the {\tt trap} instruction:
 
 \nopagebreak
 \begin{description}
-\inst{trap}{}{Perform arbitrary actions. Note in particular that {\tt trap} may change the stack.}
-\end{description}
-
-When an extra instruction is performed, the original instruction is considered to have completed executing.
-
-\subsubsection{Termination}
-\label{halt}
-
-This instruction terminates execution (see section~\ref{errors}):
-
-\nopagebreak
-\begin{description}
-\inst{halt}{n —}{Raise error $n$.}
+\inst{trap}{{\rm undefined}}{Perform arbitrary actions. Note in particular that {\tt trap} may change the stack.}
 \end{description}
 
 
@@ -359,13 +353,13 @@ Instructions are encoded as $8$-bit opcodes; opcodes are packed into words, whic
 \subsection{Instruction opcodes}
 \label{opcodes}
 
-Table~\ref{opcodetable} lists the instruction opcodes in numerical order. Table~\ref{extraopcodetable} lists the extra instruction opcodes (following {\tt call}; see section~\ref{extra}). Other instruction opcodes are undefined.
+Table~\ref{opcodetable} lists the instruction opcodes, and table~\ref{extraopcodetable} the extra instruction opcodes (see section~\ref{extra}). Other instruction opcodes are invalid.
 
 \begin{table}[htb]
 \begin{center}
 \begin{tabular}{*{2}{cc}} \toprule
 \bf Opcode & \bf Instruction & \bf Opcode & \bf Instruction \\ \midrule
-\opcodetbl{0}{next}			{10}{push}
+\opcodetbl{0}{extra}			{10}{push}
 \opcodetbl{1}{jump}			{11}{pushrel}
 \opcodetbl{2}{jumpz}			{12}{not}
 \opcodetbl{3}{call}			{13}{and}
@@ -392,6 +386,7 @@ Table~\ref{opcodetable} lists the instruction opcodes in numerical order. Table~
 \begin{center}
 \begin{tabular}{*{1}{cc}} \toprule
 \bf Opcode & \bf Instruction \\ \midrule
+\opcodetblone{0}{next}
 \opcodetblone{1}{halt}
  \bottomrule
 \end{tabular}
@@ -403,7 +398,7 @@ Table~\ref{opcodetable} lists the instruction opcodes in numerical order. Table~
 
 \begin{itemize}
 \item Implementations should provide an \textbf{API} to create and run virtual machine instances, and provide access to its registers, stack and memory.
-\item Implementations can add \textbf{extra instructions} to provide extra computational primitives, and to offer access to system facilities, previously written code, native libraries and so on.
+\item Implementations can add \textbf{traps} (see section~\ref{trap}) to provide extra computational primitives, and to offer access to system facilities, previously written code, native libraries and so on.
 \end{itemize}
 
 

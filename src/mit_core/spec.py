@@ -56,7 +56,9 @@ Instruction = instruction_enum(
     'VM instruction opcodes.',
     spec['Instruction'],
     {
-        'NEXT': Code('DO_NEXT;'),
+        'EXTRA': Code('''\
+            if ((error = mit_extra_instruction(S)) != MIT_ERROR_BREAK)
+                RAISE(error);'''),
 
         'JUMP': Code('''\
             S->pc = (mit_uword)addr;
@@ -85,7 +87,7 @@ Instruction = instruction_enum(
 
         'TRAP': Code('''\
             {
-                mit_word inner_error = mit_extra_instruction(S);
+                mit_word inner_error = mit_trap(S);
                 if (inner_error != MIT_ERROR_OK)
                     RAISE(inner_error);
             }
@@ -187,7 +189,7 @@ Instruction = instruction_enum(
     },
 )
 
-internal_extra_instructions = {}
+extra_instructions = {}
 
 for register in Register:
     pop_code = Code()
@@ -200,7 +202,7 @@ for register in Register:
         'inner_state->{}'.format(register.name),
         type=register.type,
     ))
-    internal_extra_instructions['GET_{}'.format(register.name.upper())] = get_code
+    extra_instructions['GET_{}'.format(register.name.upper())] = get_code
 
     set_code = Code()
     set_code.extend(pop_code)
@@ -209,9 +211,11 @@ for register in Register:
     set_code.append('''\
         inner_state->{} = value;'''.format(register.name),
     )
-    internal_extra_instructions['SET_{}'.format(register.name.upper())] = set_code
+    extra_instructions['SET_{}'.format(register.name.upper())] = set_code
 
-internal_extra_instructions.update({
+extra_instructions.update({
+    'NEXT': Code('DO_NEXT;'),
+
     # FIXME: Implement manually, so n is popped before RAISE
     'HALT': Code('RAISE(n);'),
 
@@ -244,9 +248,9 @@ internal_extra_instructions.update({
     'ARGV': Code('argv = mit_argv;'),
 })
 
-InternalExtraInstruction = instruction_enum(
-    'InternalExtraInstruction',
-    'Internal extra instruction opcodes.',
-    spec['InternalExtraInstruction'],
-    internal_extra_instructions,
+ExtraInstruction = instruction_enum(
+    'ExtraInstruction',
+    'Extra instruction opcodes.',
+    spec['ExtraInstruction'],
+    extra_instructions,
 )

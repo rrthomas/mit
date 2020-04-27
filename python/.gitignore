@@ -1,7 +1,7 @@
 *.man
 __pycache__/
 /mit/enums.py
-/mit/extra_enums.py
+/mit/trap_enums.py
 /mit-profile
 /mit-*shell
 /mit-*shell.1

@@ -9,7 +9,7 @@
 
 import argparse
 
-from mit_core.spec import Instruction, InternalExtraInstruction
+from mit_core.spec import Instruction, ExtraInstruction
 from mit_core.code_util import Code, copyright_banner
 from mit_core.instruction_gen import dispatch
 
@@ -45,21 +45,23 @@ code.append('''
 
     MIT_THREAD_LOCAL mit_fn *mit_run = mit_run_simple;
 
-    _GL_ATTRIBUTE_PURE mit_word mit_internal_extra_instruction(mit_state *S)
+    _GL_ATTRIBUTE_PURE mit_word mit_extra_instruction(mit_state *S)
     {'''
 )
 
 body_code = Code()
 body_code.append('mit_word error = MIT_ERROR_OK;')
-body_code.append('mit_uword opcode = S->ir >> MIT_OPCODE_BIT;')
-body_code.extend(dispatch(InternalExtraInstruction, Code(
+body_code.append('mit_uword opcode = S->ir;')
+body_code.append('S->ir = 0;')
+body_code.extend(dispatch(ExtraInstruction, Code(
     'RAISE(MIT_ERROR_INVALID_OPCODE);',
 )))
 code.append(body_code)
 
 code.append('''
-        error = MIT_ERROR_BREAK;
+        return MIT_ERROR_BREAK;
     error:
+        S->ir = opcode;
         return error;
     }'''
 )
@@ -100,15 +102,9 @@ code.append(Code(*['''\
     '''),
     'error:',
     Code('''\
-        if (error != MIT_ERROR_OK) {
+        if (error != MIT_ERROR_OK) { // FIXME: surely MIT_ERROR_BREAK???
             S->pc = initial_pc;
             S->ir = initial_ir;
-        }
-
-        if (error == MIT_ERROR_INVALID_OPCODE &&
-            (S->ir & MIT_OPCODE_MASK) == MIT_INSTRUCTION_CALL &&
-            (error = mit_internal_extra_instruction(S)) == MIT_ERROR_BREAK) {
-            S->ir = 0;
         }'''
     ),
     '''\

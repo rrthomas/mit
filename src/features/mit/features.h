@@ -15,6 +15,6 @@
 #ifndef MIT_FEATURES
 #define MIT_FEATURES
 
-mit_word mit_extra_instruction(mit_state * restrict S);
+mit_word mit_trap(mit_state * restrict S);
 
 #endif

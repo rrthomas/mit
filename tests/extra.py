@@ -1,5 +1,4 @@
-# Test internal extra instructions and libc and libmit external extra
-# instructions.
+# Test extra instructions and libc and libmit traps.
 # TODO: test file routines.
 #
 # (c) Mit authors 1994-2020
@@ -28,11 +27,11 @@ breaks = []
 lit(buffer)
 
 # Test ARGC
-ass(CALL, ARGC)
+ass(EXTRA, ARGC)
 breaks.append(label() + word_bytes)
 
 # Test ARGV
-ass(CALL, ARGV)
+ass(EXTRA, ARGV)
 lit(word_bytes)
 ass(ADD)
 ass(LOAD)
@@ -55,7 +54,7 @@ trace(addr=breaks.pop(0))
 argc = S.pop()
 print("argc is {}, and should be {}".format(argc, len(args)))
 if argc != len(args):
-    print("Error in extra instruction tests: pc = {:#x}".format(VM.pc))
+    print("Error in extra instruction and trap tests: pc = {:#x}".format(VM.pc))
     sys.exit(1)
 
 # Run ARGV test
@@ -63,7 +62,7 @@ trace(addr=breaks.pop(0))
 arg1len = S.pop()
 print("arg 1's length is {}, and should be {}".format(arg1len, len(args[1])))
 if arg1len != len(args[1]):
-    print("Error in extra instruction tests: pc = {:#x}".format(VM.pc))
+    print("Error in extra instruction and trap tests: pc = {:#x}".format(VM.pc))
     sys.exit(1)
 S.push(arg1len) # push length back for next test
 
@@ -76,4 +75,4 @@ if c_str != args[1]:
     print("Error in extra instruction tests: pc = {:#x}".format(VM.pc))
     sys.exit(1)
 
-print("extra instruction tests ran OK")
+print("extra instruction and trap tests ran OK")

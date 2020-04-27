@@ -27,7 +27,7 @@ def gen_case(instruction):
     '''
     effect = instruction.effect
     code = Code()
-    if instruction.terminal:
+    if instruction.terminal and instruction.name != 'EXTRA':
         code.append(
             'if (unlikely(S->ir != 0)) RAISE(MIT_ERROR_INVALID_OPCODE);'
         )

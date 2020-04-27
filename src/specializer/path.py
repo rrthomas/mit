@@ -61,7 +61,7 @@ class State:
     def step(self, instruction):
         '''
         Returns the State that results from executing `instruction` in this
-        State. Raises ValueError if `instruction` is variadic.
+        State.
          - instruction - a Instruction.
         '''
         assert isinstance(instruction, Instruction)
@@ -102,8 +102,7 @@ class Path:
         self.instructions = instructions
         self.state = State()
         for instruction in instructions:
-            if instruction.effect is not None:
-                self.state = self.state.step(instruction)
+            self.state = self.state.step(instruction)
 
     def _opcodes(self):
         return [i.opcode for i in self.instructions]

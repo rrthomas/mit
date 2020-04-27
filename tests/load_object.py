@@ -81,7 +81,7 @@ load_test(obj = b'#!/usr/bin/mit\n' + object_file())
 correct = [-128, 12345, MitErrorCode.OK]
 for n in correct:
     lit(n)
-ass(CALL, HALT)
+ass(EXTRA, HALT)
 save(test_file_name, length=assembler.label() - M.addr)
 res = try_load(test_file_name)
 print("; should be {}".format(0))

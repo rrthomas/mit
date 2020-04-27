@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Generate extra instruction opcodes list.
+# Generate trap codes list.
 #
 # (c) Mit authors 2018-2020
 #
@@ -12,18 +12,18 @@ from mit_core.code_util import Code, copyright_banner, enum_to_c
 import mit_core.stack
 mit_core.stack.TYPE_SIZE_UNKNOWN = 0
 
-from extra_instructions import *
-from extra_errors import ExtraInstructionErrorCode
+from traps import *
+from trap_errors import TrapErrorCode
 
 
-GENERATOR_PROGRAM = 'gen-extra-opcodes'
-PURPOSE = 'Extra instruction opcodes.'
+GENERATOR_PROGRAM = 'gen-trap-codes'
+PURPOSE = 'Trap codes.'
 COPYRIGHT_YEARS = '2018-2020'
 
 code = copyright_banner(GENERATOR_PROGRAM, PURPOSE, COPYRIGHT_YEARS)
 code.append('''
-#ifndef MIT_EXTRA_OPCODES
-#define MIT_EXTRA_OPCODES
+#ifndef MIT_TRAP_CODES
+#define MIT_TRAP_CODES
 
 
 #define INSTRUCTION(name, opcode) name = opcode,
@@ -36,7 +36,7 @@ for lib_instruction in LibInstruction:
     code.append('')
 code.append('#undef INSTRUCTION')
 code.append('')
-code.extend(enum_to_c(ExtraInstructionErrorCode))
+code.extend(enum_to_c(TrapErrorCode))
 code.append('')
 code.append('#endif')
 

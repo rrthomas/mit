@@ -10,7 +10,7 @@ RISK.
 '''
 
 from mit_core.code_util import Code
-from mit_core.spec import Instruction
+from mit_core.spec import Instruction, ExtraInstruction
 from mit_core.stack import StackEffect, Size
 import mit_core.instruction
 
@@ -102,9 +102,11 @@ for instruction in Instruction:
             instruction,
             '{stack_1} != 0',
         )
-    else:
+    elif instruction.effect is not None:
         specialized_instructions[instruction.name] = \
             _gen_ordinary_instruction(instruction)
+specialized_instructions['NEXT'] = \
+    _gen_ordinary_instruction(ExtraInstruction.NEXT)
 
 Instruction = InstructionEnum(
     'Instruction',
@@ -118,5 +120,4 @@ GUESS_LIMITING = frozenset([
     Instruction.JUMP,
     Instruction.JUMPZ_TAKEN,
     Instruction.CALL,
-    Instruction.TRAP,
 ])

@@ -11,7 +11,7 @@
 from mit_core.code_util import Code, copyright_banner, disable_warnings
 from mit_core.spec import MitErrorCode
 
-from features.extra_errors import ExtraInstructionErrorCode
+from features.trap_errors import TrapErrorCode
 
 
 GENERATOR_PROGRAM = 'gen-main'
@@ -147,7 +147,7 @@ def enum_to_error_table(error_enum):
 
 error_enums = Code()
 error_enums.extend(enum_to_error_table(MitErrorCode))
-error_enums.extend(enum_to_error_table(ExtraInstructionErrorCode))
+error_enums.extend(enum_to_error_table(TrapErrorCode))
 
 # Command-line documentation
 help_code = Code()
