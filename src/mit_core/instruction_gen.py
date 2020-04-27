@@ -54,24 +54,18 @@ def gen_case(instruction):
         code.extend(effect.store_results())
     return code
 
-def dispatch(instructions, undefined_case, order=None):
+def dispatch(instructions, undefined_case):
     '''
     Generate dispatch code for some Instructions.
 
      - instructions - InstructionEnum.
      - undefined_case - Code - the fallback behaviour.
-     - order - sequence of elements of `instructions` - an ordering to use to
-       improve the dispatch code.
     '''
     assert issubclass(instructions, InstructionEnum)
     assert isinstance(undefined_case, Code)
     code = Code()
     else_text = ''
-    if order is None:
-        order = instructions
-    else:
-        assert set(order) == set(instructions)
-    for (_, instruction) in enumerate(order):
+    for (_, instruction) in enumerate(instructions):
         code.append(
             '{else_text}if (opcode == {prefix}_{instruction}) {{'.format(
                 else_text=else_text,

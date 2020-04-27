@@ -26,24 +26,8 @@ parser = argparse.ArgumentParser(
     prog=GENERATOR_PROGRAM,
     description='Generate naive interpreter',
 )
-parser.add_argument(
-    'profile_file',
-    metavar='PROFILE-FILE',
-    help='profile file to use',
-)
 args = parser.parse_args()
 
-
-# Get instruction counts from profile and compute order
-profile.load(args.profile_file)
-instruction_counts = {instruction.opcode: 0 for instruction in Instruction}
-for instruction, count in profile.instruction_counts().items():
-    instruction_counts[instruction.opcode] += count
-instruction_order = sorted(
-    Instruction,
-    key=lambda i: instruction_counts[i.opcode],
-    reverse=True,
-)
 
 # Write the output file
 code = copyright_banner(GENERATOR_PROGRAM, PURPOSE, COPYRIGHT_YEARS)
@@ -94,7 +78,7 @@ body_code.append('''\
 body_code.extend(dispatch(Instruction, Code(
     '/* Undefined instruction. */',
     'RAISE(MIT_ERROR_INVALID_OPCODE);',
-), instruction_order))
+)))
 
 code.append('''
     static mit_word run_or_step(mit_state * restrict real_S, bool run)
