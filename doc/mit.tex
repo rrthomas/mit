@@ -7,6 +7,7 @@
 \usepackage[british]{babel}
 \usepackage[utf8x]{inputenc}
 \usepackage{newpxtext,booktabs,hyperref}
+\frenchspacing
 
 
 % Macros for this document
@@ -44,7 +45,7 @@
 
 \title{The Mit virtual machine}
 \author{Reuben Thomas}
-\date{26th April 2020}
+\date{27th April 2020}
 
 \begin{document}
 \maketitle
@@ -94,7 +95,7 @@ The registers are word quantities; they are listed, with their functions, in tab
 
 \subsection{Memory}
 
-Mit's memory consists of discontiguous words in a single flat address space. The address of a word is that of the byte in it with the lowest address.
+Mit's memory consists of discontiguous words in a flat address space. The address of a word is that of the byte in it with the lowest address.
 
 
 \subsection{Stack}
@@ -170,12 +171,14 @@ Underneath is the description.
 of a stack before and after the instruction is executed.
 An instruction only affects the items shown in its
 stack effects. The brackets and dashes serve merely to delimit the stack
-effect and to separate \spic{before} from \spic{after}. {\bf Stack pictures}
+effect and to separate \spic{before} from \spic{after}.
+
+{\bf Stack pictures}
 are a representation of the top-most items on the stack, and are written
 
 \centerline{\spic{i$_1$ i$_2$\dots i$_{n-1}$ i$_n$}}
 
-\noindent where the \spic{i$_k$} are stack items, each of which occupies a whole number of words,\footnote{In this specification, each stack item occupies \emph{precisely} one word.} with \spic{i$_n$} being on top of the stack. The symbols denoting different types of stack item are shown in table~\ref{typetable}.
+\noindent where the \spic{i$_k$} are stack items, each of which occupies a word, with \spic{i$_n$} being on top of the stack. The symbols denoting different types of stack item are shown in table~\ref{typetable}.
 
 \begin{table}[htbp]
 \begin{center}
@@ -191,26 +194,6 @@ are a representation of the top-most items on the stack, and are written
 \bottomrule
 \end{tabular}
 \caption{\label{typetable}Types used in stack effects}
-\end{center}
-\end{table}
-
-Types are only used to indicate how instructions treat their arguments and
-results; Mit does not distinguish between stack items of different types. In
-stack pictures the most general argument types with which each instruction can
-be supplied are given; subtypes may be substituted. Using the phrase ``$i
-\Rightarrow j$'' to denote ``$i$\/ is a subtype of $j$\/'', table~\ref{reltable}
-shows the subtype relationships. The subtype relation is transitive.
-
-\begin{table}[htbp]
-\begin{center}
-\begin{tabular}{c} \toprule
-\spic{u} $\Rightarrow$ \spic{x} \\
-\spic{n} $\Rightarrow$ \spic{x} \\
-\spic{flag} $\Rightarrow$ \spic{u} \\
-\spic{a-addr} $\Rightarrow$ \spic{addr} $\Rightarrow$ \spic{u} \\
- \bottomrule
-\end{tabular}
-\caption{\label{reltable}The subtype relation}
 \end{center}
 \end{table}
 
