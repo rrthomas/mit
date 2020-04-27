@@ -23,6 +23,7 @@ RUN apt-get update -qq && \
   libtool-bin \
   help2man \
   ipython3 \
+  oprofile \
   python3-yaml \
   python3.8 \
   sloccount \
