@@ -10,11 +10,10 @@
 # RISK.
 
 import sys
-from ctypes import cast
+from ctypes import cast, c_char_p, string_at
 
 from mit.globals import *
-from mit.binding import libmit, register_args
-from ctypes import sizeof, c_char_p, string_at
+from mit.binding import register_args
 
 
 # Data for ARGC/ARGV tests
