@@ -1,4 +1,4 @@
-# External extra instructions.
+# TRAP functions.
 #
 # (c) Mit authors 1994-2020
 #
@@ -16,17 +16,8 @@ from mit_core.stack import pop_stack
 
 
 @unique
-class LibMitfeatures(InstructionEnum):
-    'Function codes for the external extra instruction LIBMITFEATURES.'
-
-    EXTRA_INSTRUCTION = (StackEffect.of(['state:mit_state *'], ['ret']),
-        Code('ret = mit_extra_instruction(state);'),
-    )
-
-
-@unique
 class LibC(InstructionEnum):
-    'Function codes for the external extra instruction LIBC.'
+    'Function codes for the LIBC trap.'
 
     STRLEN = (StackEffect.of(['s:const char *'], ['len']), Code('''\
         len = (mit_word)(mit_uword)strlen(s);
@@ -158,7 +149,7 @@ class Library(InstructionEnum):
                 mit_word function;''',
             pop_stack('function'),
             '''
-                int ret = extra_{}(S, function);
+                int ret = trap_{}(S, function);
                 if (ret != 0)
                     RAISE(ret);
             }}'''.format(self.name.lower())
@@ -179,13 +170,7 @@ class Library(InstructionEnum):
 
 @unique
 class LibInstruction(Library):
-    '''External extra instruction opcodes.'''
-    LIBMITFEATURES = (0x01, LibMitfeatures, '''
-#include "mit/mit.h"
-#include "mit/features.h"
-''',
-              ['mit_word *'])
-    LIBC = (0x02, LibC, '''
+    LIBC = (0x0, LibC, '''
 #include <stdlib.h>
 #include <unistd.h>
 #include <fcntl.h>
@@ -193,4 +178,5 @@ class LibInstruction(Library):
 #include <sys/stat.h>
 #include <string.h>
 #include "binary-io.h"
+#include "mit/mit.h"
 ''')

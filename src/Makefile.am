@@ -11,7 +11,7 @@ AM_CPPFLAGS = -I$(abs_top_builddir)/lib -I$(abs_top_srcdir)/lib -I$(abs_builddir
 PYTHON_WITH_PATH = export PYTHONPATH=$(abs_top_srcdir)/python:$(abs_top_srcdir)/src:$(abs_top_builddir)/src:$(abs_top_srcdir)/src/specializer:$(abs_top_builddir)/src/specializer:$(abs_top_srcdir)/src/features:$(abs_top_builddir)/src/features; $(PYTHON)
 
 lib_LTLIBRARIES = libmit.la
-C_SRCS = storage.c args.c
+C_SRCS = constants.c stack.c args.c
 nodist_LIB_SRCS = include/mit/registers.h include/mit/opcodes.h instructions.c
 pkgdata_DATA = mit_core/mit_spec.yaml
 LIB_CORE_SRCS = \
@@ -29,15 +29,15 @@ libmit_la_LDFLAGS = -no-undefined -export-symbols-regex '^mit_.*'
 bin_PROGRAMS = mit@PACKAGE_SUFFIX@$(EXEEXT)
 MIT_BINARY = $(abs_builddir)/mit@PACKAGE_SUFFIX@$(EXEEXT)
 man_MANS = mit@PACKAGE_SUFFIX@.1
-mit@PACKAGE_SUFFIX@_LDADD = libmit.la libmitfeatures.la $(top_builddir)/lib/libgnu.la
+mit@PACKAGE_SUFFIX@_LDADD = libmit.la $(top_builddir)/lib/libgnu.la
 nodist_mit@PACKAGE_SUFFIX@_SOURCES = main.c
 mit@PACKAGE_SUFFIX@_SOURCES = warn.c warn.h
 nodist_pkginclude_HEADERS = include/mit/opcodes.h include/mit/registers.h
 pkginclude_HEADERS = include/mit/mit.h
 noinst_HEADERS = run.h
 
-warn.o storage.lo: include/mit/mit.h include/mit/registers.h
-warn.o storage.lo main.o: include/mit/opcodes.h
+warn.o storage.lo args.lo: include/mit/mit.h include/mit/registers.h
+warn.o storage.lo args.lo main.o: include/mit/opcodes.h
 instructions.lo main.o: main.c include/mit/mit.h include/mit/registers.h
 main.o: warn.h
 
@@ -71,8 +71,8 @@ include/mit/opcodes.h: gen-opcodes mit_core/mit_spec.yaml mit_core/spec.py mit_c
 	$(MKDIR_P) include/mit
 	$(PYTHON_WITH_PATH) $(srcdir)/gen-opcodes > include/mit/opcodes.h || ( rm -f include/mit/opcodes.h; exit 1 )
 
-instructions.c: gen-instructions mit_core/mit_spec.yaml mit_core/spec.py mit_core/instruction.py mit_core/stack.py mit_core/code_util.py mit_core/instruction_gen.py specializer/profile.json specializer/profile.py
-	$(PYTHON_WITH_PATH) $(srcdir)/gen-instructions $(srcdir)/specializer/profile.json > instructions.c || ( rm -f instructions.c; exit 1 )
+instructions.c: gen-instructions mit_core/mit_spec.yaml mit_core/spec.py mit_core/instruction.py mit_core/stack.py mit_core/code_util.py mit_core/instruction_gen.py
+	$(PYTHON_WITH_PATH) $(srcdir)/gen-instructions > instructions.c || ( rm -f instructions.c; exit 1 )
 
 main.c: gen-main
 	$(PYTHON_WITH_PATH) $(srcdir)/gen-main > main.c || ( rm -f main.c; exit 1 )
@@ -108,11 +108,11 @@ distcleancheck_listfiles = \
 	    sh '{}' ';'
 
 # Features
-lib_LTLIBRARIES += libmitfeatures.la
-libmitfeatures_la_SOURCES =
-nodist_libmitfeatures_la_SOURCES =
-libmitfeatures_la_LIBADD = libmit.la $(top_builddir)/lib/libgnu.la
-libmitfeatures_la_LDFLAGS = -no-undefined -export-symbols-regex '^mit_.*'
+# lib_LTLIBRARIES += libmitfeatures.la
+# libmitfeatures_la_SOURCES =
+# nodist_libmitfeatures_la_SOURCES =
+# libmitfeatures_la_LIBADD = libmit.la $(top_builddir)/lib/libgnu.la
+# libmitfeatures_la_LDFLAGS = -no-undefined -export-symbols-regex '^mit_.*'
 
 $(libmitfeatures_la_SOURCES): include/mit/mit.h
 

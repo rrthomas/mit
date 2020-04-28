@@ -20,11 +20,13 @@ for i in range(2):
     lit(code_len)
     lit(14)
     lit(LibC.STDOUT)
-    ass(JUMP, LIBC)
+    lit(LIBC)
+    ass(TRAP)
     lit(LibC.WRITE)
-    ass(JUMP, LIBC)
+    lit(LIBC)
+    ass(TRAP)
     lit(MitErrorCode.OK)
-    ass(CALL, HALT)
+    ass(EXTRA, HALT)
     code_len = assembler.pc
 
 ass_bytes(b"Hello, world!\n")

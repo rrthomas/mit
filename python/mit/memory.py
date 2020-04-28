@@ -58,6 +58,6 @@ class Memory:
         return self._view.__getitem__(self._address_to_index(addr))
 
     def __setitem__(self, addr, value):
-        if isinstance(value, int):
-            value = value & word_mask
+        if not isinstance(value, bytes):
+            value = int(value) & word_mask
         self._view.__setitem__(self._address_to_index(addr), value)

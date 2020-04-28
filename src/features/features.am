@@ -1,6 +1,6 @@
 # Features Makefile.am
 #
-# (c) Mit authors 2019
+# (c) Mit authors 2019-2020
 #
 # The package is distributed under the MIT/X11 License.
 #
@@ -10,43 +10,45 @@
 pkginclude_HEADERS += %D%/mit/features.h
 
 
-# Library extra instructions
+# Traps
 
-nodist_pkginclude_HEADERS += %D%/mit/extra-opcodes.h
-libmitfeatures_la_SOURCES += %D%/extra-instructions.c
+nodist_pkginclude_HEADERS += %D%/mit/trap-codes.h
+# FIXME: temporarily build traps.c into libmit, to avoid a
+# recursive dependency between libmit and libmitfeatures.
+libmit_la_SOURCES = %D%/traps.c
 
 # Note: we grep config.log because the generated header file has the symbols
 # sorted lexically, and we need the output in the same order as the input.
-%D%/type_sizes.py: $(top_builddir)/config.status %D%/gen-type-sizes %D%/collate-type-sizes include/mit/registers.h %D%/extra_instructions.py mit_core/instruction.py
+%D%/type_sizes.py: $(top_builddir)/config.status %D%/gen-type-sizes %D%/collate-type-sizes include/mit/registers.h include/mit/opcodes.h %D%/traps.py mit_core/instruction.py
 	cd %D% && \
 	$(PYTHON_WITH_PATH) $(abs_srcdir)/%D%/gen-type-sizes > type-sizes.ac && \
 	autoconf type-sizes.ac > type-sizes && \
 	CONFIG_SITE= CC="$(CC)" CPPFLAGS="$(CPPFLAGS) -I$(abs_builddir)/%D% -I$(abs_srcdir)/%D% -I$(abs_top_builddir) $(AM_CPPFLAGS)" $(SHELL) type-sizes && \
 	$(GREP) "^#define SIZEOF" config.log | cut -d " " -f 3 | \
-		( $(PYTHON_WITH_PATH) $(abs_srcdir)/%D%/collate-type-sizes > type_sizes.py ) || ( rm -f type-sizes.ac type-sizes type_sizes.py; exit 1 )
+		( $(PYTHON_WITH_PATH) $(abs_srcdir)/%D%/collate-type-sizes > type_sizes.py ) || ( rm -f type_sizes.py; cat config.log; exit 1 )
 
-%D%/extra-instructions.c: %D%/gen-extra-instructions %D%/mit/features.h %D%/mit/extra-opcodes.h %D%/extra_instructions.py mit_core/instruction.py mit_core/stack.py mit_core/instruction_gen.py %D%/type_sizes.py
+%D%/traps.c: %D%/gen-traps %D%/mit/features.h %D%/mit/trap-codes.h %D%/traps.py mit_core/instruction.py mit_core/stack.py mit_core/instruction_gen.py %D%/type_sizes.py
 	cd %D% && \
-	$(PYTHON_WITH_PATH) $(abs_srcdir)/%D%/gen-extra-instructions > extra-instructions.c || ( rm -f extra-instructions.c; exit 1 )
+	$(PYTHON_WITH_PATH) $(abs_srcdir)/%D%/gen-traps > traps.c || ( rm -f traps.c; exit 1 )
 
-%D%/mit/extra-opcodes.h: %D%/gen-extra-opcodes %D%/extra_instructions.py mit_core/instruction.py mit_core/instruction_gen.py
+%D%/mit/trap-codes.h: %D%/gen-trap-codes %D%/traps.py mit_core/instruction.py mit_core/instruction_gen.py
 	$(MKDIR_P) %D%/mit && \
 	cd %D% && \
-	$(PYTHON_WITH_PATH) $(abs_srcdir)/%D%/gen-extra-opcodes > mit/extra-opcodes.h || ( rm -f mit/extra-opcodes.h; exit 1 )
+	$(PYTHON_WITH_PATH) $(abs_srcdir)/%D%/gen-trap-codes > mit/trap-codes.h || ( rm -f mit/trap-codes.h; exit 1 )
 
 EXTRA_DIST += \
-	%D%/extra_instructions.py \
-	%D%/extra_errors.py \
-	%D%/gen-extra-instructions \
-	%D%/gen-extra-opcodes \
+	%D%/traps.py \
+	%D%/trap_errors.py \
+	%D%/gen-traps \
+	%D%/gen-trap-codes \
 	%D%/gen-type-sizes \
 	%D%/collate-type-sizes
 
 DISTCLEANLOCALDIRS += %D%/autom4te.cache %D%/__pycache__
 
 DISTCLEANFILES += \
-	%D%/mit/extra-opcodes.h \
-	%D%/extra-instructions.c \
+	%D%/mit/trap-codes.h \
+	%D%/traps.c \
 	%D%/type-sizes.ac \
 	%D%/type-sizes \
 	%D%/config.log \

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# (c) Mit authors 1994-2019
+# (c) Mit authors 1994-2020
 #
 # The package is distributed under the MIT/X11 License.
 #
@@ -9,7 +9,7 @@
 
 import argparse
 
-from mit_core.spec import Instruction, InternalExtraInstruction
+from mit_core.spec import Instruction
 from mit_core.code_util import Code, copyright_banner
 from mit_core.instruction_gen import dispatch
 
@@ -18,7 +18,7 @@ import profile
 
 GENERATOR_PROGRAM = 'gen-instructions'
 PURPOSE = 'Run the virtual machine main loop (naive version).'
-COPYRIGHT_YEARS = '1994-2019'
+COPYRIGHT_YEARS = '1994-2020'
 
 
 # Command-line arguments.
@@ -26,24 +26,8 @@ parser = argparse.ArgumentParser(
     prog=GENERATOR_PROGRAM,
     description='Generate naive interpreter',
 )
-parser.add_argument(
-    'profile_file',
-    metavar='PROFILE-FILE',
-    help='profile file to use',
-)
 args = parser.parse_args()
 
-
-# Get instruction counts from profile and compute order
-profile.load(args.profile_file)
-instruction_counts = {instruction.opcode: 0 for instruction in Instruction}
-for instruction, count in profile.instruction_counts().items():
-    instruction_counts[instruction.opcode] += count
-instruction_order = sorted(
-    Instruction,
-    key=lambda i: instruction_counts[i.opcode],
-    reverse=True,
-)
 
 # Write the output file
 code = copyright_banner(GENERATOR_PROGRAM, PURPOSE, COPYRIGHT_YEARS)
@@ -54,34 +38,17 @@ code.append('''
     #include <stdbool.h>
 
     #include "mit/mit.h"
+    #include "mit/features.h"
 
     #include "run.h"
 
 
     MIT_THREAD_LOCAL mit_fn *mit_run = mit_run_simple;
-
-    _GL_ATTRIBUTE_PURE mit_word mit_internal_extra_instruction(mit_state *S)
-    {'''
-)
-
-body_code = Code()
-body_code.append('mit_word error = MIT_ERROR_OK;')
-body_code.append('mit_uword opcode = S->ir >> MIT_OPCODE_BIT;')
-body_code.extend(dispatch(InternalExtraInstruction, Code(
-    'RAISE(MIT_ERROR_INVALID_OPCODE);',
-)))
-code.append(body_code)
-
-code.append('''
-        error = MIT_ERROR_INSTRUCTION_COMPLETED;
-    error:
-        return error;
-    }'''
+'''
 )
 
 body_code = Code()
 body_code.append('''\
-    error = MIT_ERROR_OK;
     mit_byte opcode = S->ir & MIT_OPCODE_MASK;
     initial_pc = S->pc;
     initial_ir = S->ir;
@@ -94,7 +61,7 @@ body_code.append('''\
 body_code.extend(dispatch(Instruction, Code(
     '/* Undefined instruction. */',
     'RAISE(MIT_ERROR_INVALID_OPCODE);',
-), instruction_order))
+)))
 
 code.append('''
     static mit_word run_or_step(mit_state * restrict real_S, bool run)
@@ -111,24 +78,16 @@ code.append(Code(*['''\
     body_code,
     '',
     Code('''\
-    error = MIT_ERROR_INSTRUCTION_COMPLETED;
+    error = MIT_ERROR_BREAK;
     continue;
     '''),
     'error:',
     Code('''\
-        if (error != MIT_ERROR_OK) {
-            S->pc = initial_pc;
-            S->ir = initial_ir;
-        }
-
-        if (error == MIT_ERROR_INVALID_OPCODE &&
-            (S->ir & MIT_OPCODE_MASK) == MIT_INSTRUCTION_CALL &&
-            (error = mit_internal_extra_instruction(S)) == MIT_ERROR_INSTRUCTION_COMPLETED) {
-            S->ir = 0;
-        }'''
+        S->pc = initial_pc;
+        S->ir = initial_ir;'''
     ),
     '''\
-    } while (likely(run == true) && likely(error == MIT_ERROR_INSTRUCTION_COMPLETED));
+    } while (likely(run == true) && likely(error == MIT_ERROR_BREAK));
 
     *real_S = state;
     return error;''',

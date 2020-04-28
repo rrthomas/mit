@@ -10,7 +10,7 @@
 from enum import IntEnum, unique
 
 @unique
-class ExtraInstructionErrorCode(IntEnum):
-    'Error codes returned by `mit_extra_instruction`.'
+class TrapErrorCode(IntEnum):
+    'Error codes returned by `mit_trap`.'
     INVALID_LIBRARY = 16
     INVALID_FUNCTION = 17

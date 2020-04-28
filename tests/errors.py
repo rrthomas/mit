@@ -10,7 +10,7 @@
 import sys
 
 from mit import *
-from mit.binding import libmit, libmitfeatures
+from mit.binding import libmit
 
 
 VM = State(memory_words=4096, stack_words=3)

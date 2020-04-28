@@ -235,7 +235,8 @@ ROOT_LABEL = Label(Path(()), None, None)
 
 # Make Labels exemplifying the whole instruction set, to improve profiling.
 for instruction in Instruction:
-    ROOT_LABEL.construct(instruction)
+    if instruction.effect is not None:
+        ROOT_LABEL.construct(instruction)
 
 
 # Do the Markov Monte-Carlo simulation.

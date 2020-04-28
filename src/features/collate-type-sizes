@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-# Calculate type sizes for extra instructions.
+# Calculate type sizes.
 #
-# (c) Mit authors 2019
+# (c) Mit authors 2019-2020
 #
 # The package is distributed under the MIT/X11 License.
 #
@@ -15,7 +15,7 @@ from pprint import pformat
 import mit_core.stack
 mit_core.stack.TYPE_SIZE_UNKNOWN = 0
 
-from extra_instructions import *
+from traps import *
 
 
 # Read list of types
@@ -26,11 +26,15 @@ for line in open('type-sizes.ac').readlines():
         types.append(m.group(1))
 
 # Read sizes from stdin
-sizes = [line.rstrip() for line in sys.stdin]
+sizes = [int(line.rstrip()) for line in sys.stdin]
 
 # Make output dict
 assert len(types) == len(sizes)
-type_size = {type: int(size) for (type, size) in zip(types, sizes)}
+type_size = {}
+for (type, size) in zip(types, sizes):
+    if size == 0:
+        raise ValueError(f"Invalid type `{type}'")
+    type_size[type] = size
 
 # Print output
 print('type_sizes = ' + pformat(type_size))

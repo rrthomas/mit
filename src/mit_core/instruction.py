@@ -23,8 +23,8 @@ class InstructionEnum(Enum):
      - code - Code.
      - opcode - int or None - opcode number, defaults to the number of
        instructions before adding this one.
-     - terminal - bool - this instruction is terminal: `ir` must be zero on
-       entry.
+     - terminal - bool - this instruction is terminal: the rest of `ir` is its
+       argument.
      - is_variadic - bool - true if this instruction is variadic.
 
     C variables are created for the arguments and results; the arguments are

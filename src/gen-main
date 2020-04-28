@@ -11,7 +11,7 @@
 from mit_core.code_util import Code, copyright_banner, disable_warnings
 from mit_core.spec import MitErrorCode
 
-from features.extra_errors import ExtraInstructionErrorCode
+from features.trap_errors import TrapErrorCode
 
 
 GENERATOR_PROGRAM = 'gen-main'
@@ -147,7 +147,7 @@ def enum_to_error_table(error_enum):
 
 error_enums = Code()
 error_enums.extend(enum_to_error_table(MitErrorCode))
-error_enums.extend(enum_to_error_table(ExtraInstructionErrorCode))
+error_enums.extend(enum_to_error_table(TrapErrorCode))
 
 # Command-line documentation
 help_code = Code()
@@ -210,13 +210,14 @@ code.extend(Code('''
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdlib.h>
+#include <string.h>
 #include <inttypes.h>
-#include <errno.h>
 #include <getopt.h>
 #include <unistd.h>
 
+#include "getprogname.h"
+
 #include "mit/mit.h"
-#include "mit/features.h"
 
 #include "warn.h"
 
@@ -257,7 +258,6 @@ static mit_uword parse_num_words(const char *errfmt)
 {
     size_t max = SIZE_MAX / MIT_WORD_BYTES;
     char *endptr;
-    errno = 0;
     uintmax_t size = strtoumax(optarg, &endptr, 10);
     if (*optarg == '\\0' || *endptr != '\\0' || size == 0 || size > (uintmax_t)max)
         die(errfmt, max);
@@ -268,9 +268,9 @@ static off_t fleno(FILE *fp)
 {
   off_t pos = ftello(fp);
   if (pos != -1 && fseeko(fp, 0, SEEK_END) == 0) {
-    off_t len = ftello(fp);
-    if (len != -1 && fseeko(fp, pos, SEEK_SET) == 0)
-      return len;
+    off_t end = ftello(fp);
+    if (end != -1 && fseeko(fp, pos, SEEK_SET) == 0)
+      return end - pos;
   }
   return -1;
 }
@@ -285,8 +285,8 @@ static int skip_hashbang(FILE *fp)
         for (int res; (res = getc(fp)) != '\\n'; )
             if (res == EOF)
                 return -1;
-    }
-    rewind(fp);
+    } else
+        rewind(fp);
     return 0;
 }
 
@@ -311,8 +311,7 @@ static void usage(void)
 
 int main(int argc, char *argv[])
 {
-    // Unfortunately the gnulib module progname is not GPL, not LGPL.
-    program_name = argv[0];
+    program_name = getprogname();
 
     memory_words = 0x100000U;
     stack_words = 16384U;
@@ -348,9 +347,12 @@ int main(int argc, char *argv[])
     memory = calloc(memory_words, MIT_WORD_BYTES);
     if (memory == NULL)
         die("could not allocate virtual machine memory");
-    S = mit_new_state(stack_words);
-    if (S == NULL)
-        die("could not allocate virtual machine state");
+    mit_state state;
+    S = &state;
+    memset(S, 0, sizeof(*S));
+    if ((S->stack = calloc(stack_words, MIT_WORD_BYTES)) == NULL)
+        die("could not allocate virtual machine stack");
+    S->stack_words = stack_words;
     mit_argc = argc;
     mit_argv = &argv[0];
     S->pc = (mit_uword)memory;
@@ -376,19 +378,16 @@ int main(int argc, char *argv[])
 
     // Run
     mit_word error;
-    do {
-        S->ir = 0;
-        error = mit_run(S);
-    } while (error == MIT_ERROR_INVALID_OPCODE
-             && (S->ir & MIT_OPCODE_MASK) == MIT_INSTRUCTION_JUMP
-             && (error = mit_extra_instruction(S)) == MIT_ERROR_OK);
+    S->ir = 0;
+    error = mit_run(S);
 
     if (error < 0 && error >= -127) {
         warn("error %zd: %s", error, error_to_msg(error));
         error = 127 - error;
     }
 
-    mit_free_state(S);
+    free(S->stack);
+    free(memory);
     return error;
 }'''
 ))

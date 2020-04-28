@@ -15,6 +15,7 @@ import yaml
 from .autonumber import AutoNumber
 from .code_util import Code
 from .instruction import InstructionEnum
+from .instruction_gen import dispatch
 from .stack import StackEffect, pop_stack, push_stack
 
 
@@ -49,12 +50,14 @@ def instruction_enum(enum_name, docstring, spec, code):
     enum.__doc__ = docstring
     return enum
 
+opcode_bit = 8
+
 Instruction = instruction_enum(
     'Instruction',
     'VM instruction opcodes.',
     spec['Instruction'],
     {
-        'NEXT': Code('DO_NEXT;'),
+        'EXTRA': Code(), # Code is computed later
 
         'JUMP': Code('''\
             S->pc = (mit_uword)addr;
@@ -80,6 +83,14 @@ Instruction = instruction_enum(
         'POP': Code(),
         'DUP': Code(),
         'SWAP': Code(),
+
+        'TRAP': Code('''\
+            {
+                mit_word inner_error = mit_trap(S);
+                if (inner_error != MIT_ERROR_OK)
+                    RAISE(inner_error);
+            }
+        '''),
 
         'LOAD': Code('''\
             if (unlikely(!is_aligned(addr, MIT_WORD_BYTES)))
@@ -177,7 +188,7 @@ Instruction = instruction_enum(
     },
 )
 
-internal_extra_instructions = {}
+extra_instructions = {}
 
 for register in Register:
     pop_code = Code()
@@ -190,7 +201,7 @@ for register in Register:
         'inner_state->{}'.format(register.name),
         type=register.type,
     ))
-    internal_extra_instructions['GET_{}'.format(register.name.upper())] = get_code
+    extra_instructions['GET_{}'.format(register.name.upper())] = get_code
 
     set_code = Code()
     set_code.extend(pop_code)
@@ -199,13 +210,22 @@ for register in Register:
     set_code.append('''\
         inner_state->{} = value;'''.format(register.name),
     )
-    internal_extra_instructions['SET_{}'.format(register.name.upper())] = set_code
+    extra_instructions['SET_{}'.format(register.name.upper())] = set_code
 
-internal_extra_instructions.update({
-    # FIXME: Implement manually, so n is popped before RAISE
-    'HALT': Code('RAISE(n);'),
+halt_code = Code()
+halt_code.append('mit_word n;')
+halt_code.extend(pop_stack('n'))
+halt_code.append('RAISE(n);')
+halt_code
 
-    'THIS_STATE': Code('state = S;'),
+extra_instructions.update({
+    'NEXT': Code('DO_NEXT;'),
+
+    'HALT': halt_code,
+
+    'SIZEOF_STATE': Code('size = sizeof(mit_state);'),
+
+    'THIS_STATE': Code('this_state = S;'),
 
     'LOAD_STACK': Code('''\
         value = 0;
@@ -221,10 +241,6 @@ internal_extra_instructions.update({
 
     'PUSH_STACK': Code('ret = mit_push_stack(inner_state, value);'),
 
-    'NEW_STATE': Code('new_state = mit_new_state((size_t)stack_words);'),
-
-    'FREE_STATE': Code('mit_free_state(inner_state);'),
-
     'RUN': Code('ret = mit_run(inner_state);'),
 
     'SINGLE_STEP': Code('ret = mit_single_step(inner_state);'),
@@ -234,9 +250,20 @@ internal_extra_instructions.update({
     'ARGV': Code('argv = mit_argv;'),
 })
 
-InternalExtraInstruction = instruction_enum(
-    'InternalExtraInstruction',
-    'Internal extra instruction opcodes.',
-    spec['InternalExtraInstruction'],
-    internal_extra_instructions,
+ExtraInstruction = instruction_enum(
+    'ExtraInstruction',
+    'Extra instruction opcodes.',
+    spec['ExtraInstruction'],
+    extra_instructions,
 )
+
+# Inject code for EXTRA
+extra_code = Code('''\
+    mit_uword extra_opcode = S->ir;
+    S->ir = 0;
+'''
+)
+extra_code.extend(dispatch(ExtraInstruction, Code(
+    'RAISE(MIT_ERROR_INVALID_OPCODE);',
+), 'extra_opcode'))
+Instruction.EXTRA.code = extra_code

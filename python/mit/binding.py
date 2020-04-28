@@ -24,19 +24,14 @@ from .enums import MitErrorCode, Register
 
 
 library_file = find_library("mit")
-features_library_file = find_library("mitfeatures")
 if not library_file:
     # For Windows
     # TODO: Do this portably
     # TODO: Substitute version when library is versioned
     library_file = find_library("libmit-0")
-    features_library_file = find_library("libmitfeatures-0")
 assert(library_file)
-assert(features_library_file)
 libmit = CDLL(library_file)
 assert(libmit)
-libmitfeatures = CDLL(features_library_file)
-assert(libmitfeatures)
 
 # Errors
 class Error(Exception):
@@ -103,15 +98,11 @@ elif word_bytes == 8:
 else:
     raise Exception("Could not make Python C type matching WORD (size {})".format(word_bytes))
 
-mit_state_fields = [
-    (register.name, c_uword)
-    for register in Register
-]
-mit_state_fields.extend([
-    ('stack', POINTER(c_word)),
-])
 class c_mit_state(Structure):
-    _fields_ = mit_state_fields
+    _fields_ = [
+        (register.name, c_uword)
+        for register in Register
+    ]
 
 c_mit_fn = CFUNCTYPE(c_word, POINTER(c_mit_state))
 
@@ -160,12 +151,6 @@ libmit.mit_single_step.restype = c_word
 libmit.mit_single_step.argtypes = [POINTER(c_mit_state)]
 libmit.mit_single_step.errcheck = mit_error
 
-libmit.mit_new_state.restype = POINTER(c_mit_state)
-libmit.mit_new_state.argtypes = [c_size_t]
-
-libmit.mit_free_state.restype = None
-libmit.mit_free_state.argtypes = [POINTER(c_mit_state)]
-
 libmit.mit_profile_reset.restype = None
 libmit.mit_profile_reset.argtypes = None
 
@@ -192,8 +177,3 @@ def register_args(*args):
     global argc, argv
     argv.contents = arg_strings(*bargs)
     argc.value = len(bargs)
-
-# features.h
-libmitfeatures.mit_extra_instruction.restype = c_word
-libmitfeatures.mit_extra_instruction.argtypes = [POINTER(c_mit_state)]
-libmitfeatures.mit_extra_instruction.errcheck = mit_error

@@ -47,10 +47,10 @@ TERMINAL_OPCODES = frozenset({
     for name, i in spec['Instruction'].items() if i.get('terminal')
 })
 
-InternalExtraInstruction = enum(
-    'InternalExtraInstruction',
-    'Internal extra instruction opcodes.',
-    spec['InternalExtraInstruction'],
+ExtraInstruction = enum(
+    'ExtraInstruction',
+    'Extra instruction opcodes.',
+    spec['ExtraInstruction'],
     value_extractor=lambda i: i['opcode'],
 )
 

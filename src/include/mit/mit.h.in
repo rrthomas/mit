@@ -35,16 +35,13 @@
 
 // Build-time parameters
 #define MIT_WORD_BYTES @SIZEOF_SIZE_T@
-#define MIT_OPCODE_BIT @OPCODE_BIT@
 
 // Types and constants
 // Define MIT_WORD_BIT as a number literal so we can token paste it below
 #if MIT_WORD_BYTES == 4
 #define MIT_WORD_BIT 32
-#define MIT_SIZE_WORD 2
 #elif MIT_WORD_BYTES == 8
 #define MIT_WORD_BIT 64
-#define MIT_SIZE_WORD 3
 #else
 #error "MIT_WORD_BYTES must be 4 or 8!"
 #endif
@@ -100,9 +97,7 @@ enum {
 };
 
 // Instructions
-#if MIT_OPCODE_BIT < 5 || MIT_OPCODE_BIT > 8
-#error "MIT_OPCODE_BIT must be in the range 5 to 8 inclusive!"
-#endif
+#define MIT_OPCODE_BIT 8
 #define MIT_OPCODE_MASK ((1 << MIT_OPCODE_BIT) - 1)
 extern const unsigned mit_opcode_bit;
 extern const unsigned mit_opcode_mask;
@@ -118,6 +113,11 @@ _GL_ATTRIBUTE_CONST static int is_aligned(mit_uword addr, unsigned size)
 
 
 // Stack access
+
+// These routines are used for bindings to other languages, and for the
+// extra instructions. Internally, libmit uses the inline functions in
+// mit.h.
+//
 
 int mit_load_stack(mit_state *S, mit_uword pos, mit_word *val_ptr);
 /* Load the word position `pos` on the stack into the word pointed to by
@@ -177,21 +177,7 @@ static int store_stack(mit_word * restrict stack, mit_uword stack_depth,
 #pragma GCC diagnostic pop
 
 
-// VM instantiation and control
-
-mit_state *mit_new_state(size_t stack_words);
-/* Create and initialize a virtual machine state.
-
-   - stack_words - number of words of stack space required (may be 0)
-
-   Return a pointer to a new state, or `NULL` if memory cannot be allocated,
-   or if any requested size is larger than `MIT_UWORD_MAX`.
-
-   The stack is zeroed, and the registers are initialized as per the spec.
-*/
-
-void mit_free_state(mit_state *S);
-/* Free the given state, deallocating its memory. */
+// VM control
 
 extern @THREAD_LOCAL@ mit_fn *mit_run;
 /* Execute VM code. Defaults to `mit_run_simple`. Can be set to any
@@ -209,12 +195,9 @@ mit_word mit_run_simple(mit_state * restrict S);
 
 mit_word mit_single_step(mit_state * restrict S);
 /* Execute a single pass of the execution cycle in the given state.
-   Return MIT_ERROR_SINGLE_STEP_COMPLETED if execution completes without
-   error, or the error code.
+   Return MIT_ERROR_BREAK if execution completes without error, or the error
+   code.
 */
-
-mit_word mit_internal_extra_instruction(mit_state *S);
-/* Execute an internal instruction, given by `S->ir`. */
 
 mit_word mit_run_specializer(mit_state * restrict S);
 /* Like `mit_run_simple`, but (hopefully) faster. */

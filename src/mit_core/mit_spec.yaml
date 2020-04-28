@@ -18,7 +18,7 @@ ErrorCode:
   INVALID_MEMORY_WRITE: -6
   UNALIGNED_ADDRESS: -7
   DIVISION_BY_ZERO: -8
-  INSTRUCTION_COMPLETED: -127
+  BREAK: -127
 
 # VM registers
 Register:
@@ -30,10 +30,8 @@ Register:
 
 # VM instruction instructions
 Instruction:
-  NEXT:
+  EXTRA:
     opcode: 0x0
-    args: []
-    results: []
     terminal: true
   JUMP:
     opcode: 0x1
@@ -61,6 +59,8 @@ Instruction:
     opcode: 0x6
     args: ['x', 'ITEMS', 'y', 'COUNT']
     results: ['y', 'ITEMS', 'x']
+  TRAP:
+    opcode: 0x7
   LOAD:
     opcode: 0x8
     args: ['addr']
@@ -158,65 +158,65 @@ Instruction:
     args: ['a', 'b']
     results: ['q', 'r']
 
-InternalExtraInstruction:
+ExtraInstruction:
+  NEXT:
+    opcode: 0x0
+    args: []
+    results: []
+  # FIXME: improve code generation so the stack effects of the following can
+  # be specified
   HALT:
     opcode: 0x1
-    args: ['n']
-    results: []
-  GET_PC:
+  SIZEOF_STATE:
     opcode: 0x2
-  SET_PC:
-    opcode: 0x3
-  GET_IR:
-    opcode: 0x4
-  SET_IR:
-    opcode: 0x5
-  GET_STACK_DEPTH:
-    opcode: 0x6
-  SET_STACK_DEPTH:
-    opcode: 0x7
-  GET_STACK:
-    opcode: 0x8
-  SET_STACK:
-    opcode: 0x9
-  GET_STACK_WORDS:
-    opcode: 0xa
-  SET_STACK_WORDS:
-    opcode: 0xb
-  THIS_STATE:
-    opcode: 0xc
     args: []
-    results: ['state:mit_state *']
-  LOAD_STACK:
+    results: ['size']
+  THIS_STATE:
+    opcode: 0x3
+    args: []
+    results: ['this_state:mit_state *']
+  GET_PC:
+    opcode: 0x4
+  SET_PC:
+    opcode: 0x5
+  GET_IR:
+    opcode: 0x6
+  SET_IR:
+    opcode: 0x7
+  GET_STACK_DEPTH:
+    opcode: 0x8
+  SET_STACK_DEPTH:
+    opcode: 0x9
+  GET_STACK:
+    opcode: 0xa
+  SET_STACK:
+    opcode: 0xb
+  GET_STACK_WORDS:
+    opcode: 0xc
+  SET_STACK_WORDS:
     opcode: 0xd
+  LOAD_STACK:
+    opcode: 0xe
     args: ['pos', 'inner_state:mit_state *']
     results: ['value', 'ret']
   STORE_STACK:
-    opcode: 0xe
+    opcode: 0xf
     args: ['value', 'pos', 'inner_state:mit_state *']
     results: ['ret']
   POP_STACK:
-    opcode: 0xf
+    opcode: 0x10
     args: ['inner_state:mit_state *']
     results: ['value', 'ret']
   PUSH_STACK:
-    opcode: 0x10
+    opcode: 0x11
     args: ['value', 'inner_state:mit_state *']
     results: ['ret']
-  NEW_STATE:
-    opcode: 0x11
-    args: ['stack_words']
-    results: ['new_state:mit_state *']
-  FREE_STATE:
-    opcode: 0x12
-    args: ['inner_state:mit_state *']
-    results: []
   RUN:
-    opcode: 0x13
+    opcode: 0x12
     args: ['inner_state:mit_state *']
     results: ['ret']
   SINGLE_STEP:
-    opcode: 0x14
+    opcode: 0x13
     args: ['inner_state:mit_state *']
     results: ['ret']
   ARGC:

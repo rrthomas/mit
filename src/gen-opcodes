@@ -8,7 +8,7 @@
 # THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 # RISK.
 
-from mit_core.spec import Instruction, InternalExtraInstruction, MitErrorCode
+from mit_core.spec import Instruction, ExtraInstruction, MitErrorCode
 from mit_core.code_util import Code, copyright_banner, enum_to_c
 
 
@@ -30,7 +30,7 @@ code.append('''
 code.append('')
 code.extend(enum_to_c(Instruction, lambda i: i.opcode))
 code.append('')
-code.extend(enum_to_c(InternalExtraInstruction, lambda i: i.opcode))
+code.extend(enum_to_c(ExtraInstruction, lambda i: i.opcode))
 code.append('')
 code.extend(enum_to_c(MitErrorCode))
 code.append('')

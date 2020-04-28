@@ -1,6 +1,6 @@
 # Helper module for Mit tests.
 #
-# (c) Mit authors 1994-2019
+# (c) Mit authors 1994-2020
 #
 # The package is distributed under the MIT/X11 License.
 #
@@ -21,14 +21,11 @@ def run_test(name, state, correct):
     for i, stack in enumerate(correct):
         stack = cast_to_word(stack)
         print(Disassembler(state).__next__())
-        state.step()
-        print("Data stack: {}".format(state.S))
-        print("Correct stack: {}\n".format(stack))
+        state.trace()
+        print(f"Data stack: {state.S}")
+        print(f"Correct stack: {stack}\n")
         if stack != list(state.S):
-            print("Error in {} tests: pc = {:#x}".format(
-                name,
-                state.registers["pc"].get()
-            ))
+            print(f"Error in {name} tests: pc = {state.pc:#x}")
             sys.exit(1)
 
-    print("{} tests ran OK".format(name.capitalize()))
+    print(f"{name.capitalize()} tests ran OK")

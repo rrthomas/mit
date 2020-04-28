@@ -10,7 +10,7 @@ RISK.
 '''
 
 from mit_core.code_util import Code
-from mit_core.spec import Instruction
+from mit_core.spec import Instruction, ExtraInstruction
 from mit_core.stack import StackEffect, Size
 import mit_core.instruction
 
@@ -34,10 +34,11 @@ class InstructionEnum(mit_core.instruction.InstructionEnum):
         super().__init__(effect, code, opcode, terminal)
         self.guard = guard
         assert not self.is_variadic
-        assert all(
-            item.size == Size(1)
-            for item in effect.by_name.values()
-        ), instruction
+        if effect is not None:
+            assert all(
+                item.size == Size(1)
+                for item in effect.by_name.values()
+            ), instruction
 
     def __repr__(self):
         return self.name
@@ -101,9 +102,15 @@ for instruction in Instruction:
             instruction,
             '{stack_1} != 0',
         )
-    else:
+    elif instruction.effect is not None:
         specialized_instructions[instruction.name] = \
             _gen_ordinary_instruction(instruction)
+# NEXT is the one extra instruction we want the specializer to know about.
+# It works as a special case because its opcode is the same as EXTRA's;
+# we also need to mark it as terminal.
+ExtraInstruction.NEXT.terminal = True
+specialized_instructions['NEXT'] = \
+    _gen_ordinary_instruction(ExtraInstruction.NEXT)
 
 Instruction = InstructionEnum(
     'Instruction',

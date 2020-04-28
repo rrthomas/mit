@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Calculate type sizes for extra instructions.
+# Calculate type sizes.
 #
 # (c) Mit authors 2019
 #
@@ -14,7 +14,7 @@ from mit_core.code_util import Code
 import mit_core.stack
 mit_core.stack.TYPE_SIZE_UNKNOWN = 0
 
-from extra_instructions import LibInstruction
+from traps import LibInstruction
 
 
 code = Code()

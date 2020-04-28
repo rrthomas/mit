@@ -15,25 +15,20 @@ from .binding import (
     opcode_bit, opcode_mask,
     hex0x_word_width,
 )
-from .enums import Instruction, InternalExtraInstruction, TERMINAL_OPCODES
-from .extra_enums import LibInstruction
+from .enums import Instruction, ExtraInstruction, TERMINAL_OPCODES
+from .trap_enums import LibInstruction
 
 PUSH = Instruction.PUSH
 PUSHREL = Instruction.PUSHREL
-JUMP = Instruction.JUMP
-CALL = Instruction.CALL
+EXTRA = Instruction.EXTRA
 
 mnemonic = {
     instruction.value: instruction.name
     for instruction in Instruction
 }
-internal_extra_mnemonic = {
+extra_mnemonic = {
     instruction.value: instruction.name
-    for instruction in InternalExtraInstruction
-}
-external_extra_mnemonic = {
-    instruction.opcode: instruction.name
-    for instruction in LibInstruction
+    for instruction in ExtraInstruction
 }
 
 
@@ -98,18 +93,13 @@ class Disassembler:
                     comment = ' ({:#x}={})'.format(value, signed_value)
                 else: # opcode == PUSHREL
                     comment = ' ({:#x})'.format(initial_pc + signed_value)
-            if opcode in TERMINAL_OPCODES:
+            if opcode == EXTRA:
                 # Call `self._fetch()` later, not now.
-                if self.ir != 0:
-                    comment = 'invalid extra instruction'
-                    try:
-                        if opcode == CALL:
-                            comment = internal_extra_mnemonic[self.ir]
-                        elif opcode == JUMP:
-                            comment = external_extra_mnemonic[self.ir]
-                    except KeyError:
-                        pass
-                    comment = ' ({})'.format(comment)
+                comment = extra_mnemonic.get(
+                    self.ir,
+                    'invalid extra instruction'
+                )
+                comment = f' ({comment})'
                 self.ir = 0
         except IndexError:
             name = "invalid address!"
@@ -195,7 +185,7 @@ class Assembler:
         Appends an instruction opcode.
 
          - opcode - An Instruction or an `opcode_bit`-bit integer.
-         - extra_opcode - optional - if `opcode` is `JUMP` or `CALL`, the
+         - extra_opcode - optional - if `opcode` is `EXTRA`, the
            extra opcode for an extra instruction.  This can be any type that
            can be converted to an int; it is typically an IntEnum value.
         '''
@@ -203,7 +193,7 @@ class Assembler:
         extended_opcode = int(opcode)
         assert 0 <= extended_opcode <= opcode_mask
         if extra_opcode is not None:
-            assert extended_opcode in (CALL, JUMP)
+            assert extended_opcode in (EXTRA,)
             extended_opcode |= (int(extra_opcode) << opcode_bit)
 
         # Store the extended opcode, starting a new word if necessary.

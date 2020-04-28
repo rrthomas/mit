@@ -18,11 +18,11 @@ Examining memory: dump, disassemble, dump_files
 '''
 
 import sys
-from ctypes import create_string_buffer, byref
+from ctypes import create_string_buffer, byref, addressof
 
 from . import enums
 from .binding import (
-    libmit, libmitfeatures, run, run_ptr,
+    libmit, run, run_ptr,
     Error, VMError, is_aligned,
     word_bytes, word_mask, opcode_mask,
     c_word, c_uword, c_mit_state,
@@ -37,9 +37,9 @@ class State:
     '''
     A VM state.
 
-         - stack_words - int - number of words of stack space.
          - args - list of str - command-line arguments to register.
          - memory - ctypes.Array of c_char - main memory.
+         - stack - ctypes.Array of c_char - stack.
 
     Note: For some reason, an array created as a "multiple" of c_char does
     not have the right type. ctypes.create_string_buffer must be used.
@@ -49,11 +49,14 @@ class State:
         Create the VM state.
 
          - memory_words - int - number of words of main memory.
+         - stack_words - int - number of words of stack space.
         '''
         state = super().__new__(cls)
-        state.state = libmit.mit_new_state(stack_words)
-        if state.state is None:
-            raise Error("error creating virtual machine state")
+        state.state = c_mit_state()
+        state._stack = create_string_buffer(stack_words * word_bytes)
+        if stack_words is not None:
+            state.stack = addressof(state._stack)
+            state.stack_words = stack_words
         if memory_words is not None:
             state.set_memory(create_string_buffer(memory_words * word_bytes))
         state.S = Stack(state.state)
@@ -69,17 +72,14 @@ class State:
         self.pc = self.M.addr
         self.M_word = Memory(self.memory, element_size=word_bytes)
 
-    def __del__(self):
-        libmit.mit_free_state(self.state)
-
     def __getattr__(self, name):
         if name in enums.Register.__members__:
-            return self.state.contents.__getattribute__(name)
+            return self.state.__getattribute__(name)
         raise AttributeError
 
     def __setattr__(self, name, value):
         if name in enums.Register.__members__:
-            self.state.contents.__setattr__(name, value)
+            self.state.__setattr__(name, value)
         else:
             super().__setattr__(name, value)
 
@@ -96,6 +96,7 @@ class State:
         state['M'] = bytes(self.M.buffer)[0:-1] # Remove trailing NUL
         del state['S']
         state['S'] = self.S[0:self.stack_depth]
+        del state['_stack']
         del state['state']
         if 'argv' in state:
             state['argv'] = [cstr for cstr in state['argv']]
@@ -112,10 +113,6 @@ class State:
         if 'argv' in state:
             register_args(*state['argv'])
 
-    def do_extra_instruction(self):
-        libmitfeatures.mit_extra_instruction(self.state)
-        self.ir = 0 # Skip to next instruction
-
     def run(self, optimize=True, profile=False):
         '''
         Run until `halt` or error.
@@ -128,24 +125,15 @@ class State:
             run_ptr.contents = run_profile
         elif optimize:
             run_ptr.contents = run_specializer
-        while True:
-            try:
-                run(self.state)
-                return
-            except VMError as e:
-                if (e.args[0] == enums.MitErrorCode.INVALID_OPCODE and
-                      self.ir & opcode_mask == enums.Instruction.JUMP):
-                    self.do_extra_instruction()
-                else:
-                    raise
+        run(self.state)
 
     def _print_trace_info(self):
-        print("step: pc={:#x} ir={:#x} instruction={}".format(
+        self.trace_print("step: pc={:#x} ir={:#x} instruction={}".format(
             self.registers["pc"].get(),
             self.registers["ir"].get(),
             Disassembler(self).disassemble(),
         ))
-        print(str(self.S))
+        self.trace_print(str(self.S))
 
     def step(self, n=1, addr=None, trace=False, auto_NEXT=True):
         '''
@@ -160,24 +148,18 @@ class State:
                     libmit.mit_single_step(self.state)
                     return
                 except VMError as e:
-                    if e.args[0] != enums.MitErrorCode.INSTRUCTION_COMPLETED:
+                    if e.args[0] != enums.MitErrorCode.BREAK:
                         raise
             if self.pc == addr: break
             if trace:
-                print("trace: instruction={}".format(
+                self.trace_print("trace: instruction={}".format(
                     Disassembler(self).disassemble(),
                 ))
             try:
                 libmit.mit_single_step(self.state)
                 return
             except VMError as e:
-                if (
-                    e.args[0] == enums.MitErrorCode.INVALID_OPCODE and (
-                        self.ir & opcode_mask == enums.Instruction.JUMP
-                    )
-                ):
-                    self.do_extra_instruction()
-                elif e.args[0] != enums.MitErrorCode.INSTRUCTION_COMPLETED:
+                if e.args[0] != enums.MitErrorCode.BREAK:
                     ret = e.args[0]
                     print("Error code {} was returned".format(ret), end='')
                     print(" after {} step{}".format(done, 's' if done != 1 else ''), end='')
@@ -186,9 +168,12 @@ class State:
                     print()
                     raise
             if trace:
-                print("pc={:#x} ir={:#x}".format(self.pc, self.ir))
-                print(str(self.S))
+                self.trace_print("pc={:#x} ir={:#x}".format(self.pc, self.ir))
+                self.trace_print(str(self.S))
             done += 1
+
+    def trace_print(self, *args):
+        print(*args, file=sys.stderr)
 
     def trace(self, n=1, addr=None, auto_NEXT=True):
         'A convenience wrapper for `step(trace=True)`.'
@@ -291,7 +276,7 @@ class Stack:
     '''
     VM stack.
 
-     - state - a POINTER(c_mit_state).
+     - state - a c_mit_state.
 
     When specifying stack indices, this class uses the Python convention, so
     0 is the base of the stack. In contrast, the C API (`mit_load_stack()`
@@ -309,7 +294,7 @@ class Stack:
         return self.__str__()
 
     def __len__(self):
-        return self.state.contents.stack_depth
+        return self.state.stack_depth
 
     def __getitem__(self, index):
         if isinstance(index, slice):

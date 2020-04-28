@@ -19,7 +19,7 @@ def try_load(file):
         ret = 0
     except VMError as e:
         ret = e.args[0]
-    print("State.load() returns {}".format(ret), end='')
+    print(f"State.load() returns {ret}", end='')
     return ret
 
 def word_to_bytes(w):
@@ -52,14 +52,14 @@ def load_test(obj, error_code=0):
     '''
     with open(test_file_name, 'wb') as h: h.write(obj)
     res = try_load(test_file_name)
-    print("; should be {}".format(error_code))
+    print(f"; should be {error_code}")
     if res != error_code:
-        print('Error in State.load() test "{}"'.format(test))
+        print(f'Error in State.load() test "{test}"')
         sys.exit(1)
     if error_code == 0:
-        print("Word 0 of memory is {:#x}; should be {:#x}".format(M_word[M_word.addr], test_word()))
+        print(f"Word 0 of memory is {M_word[M_word.addr]:#x}; should be {test_word():#x}")
         if M_word[M_word.addr] != test_word():
-            print('Error in State.load() test "{}"'.format(test))
+            print(f'Error in State.load() test "{test}"')
             sys.exit(1)
 
 
@@ -78,25 +78,26 @@ load_test(obj = b'#!/usr/bin/mit\n' + object_file())
 
 
 # Test ability to load & run saved file with assembler-generated contents
-correct = [-128, 12345, MitErrorCode.OK]
+correct = [-128, 12345]
 for n in correct:
     lit(n)
-ass(CALL, HALT)
-save(test_file_name, length=assembler.label() - M.addr)
+lit(MitErrorCode.OK)
+ass(EXTRA, HALT)
+save(test_file_name, length=label() - M.addr)
 res = try_load(test_file_name)
-print("; should be {}".format(0))
-if res != 0:
-    print('Error in State.load() test "{}"'.format(test))
+print(f"; should be {MitErrorCode.OK}")
+if res != MitErrorCode.OK:
+    print(f'Error in State.load() test "{test}"')
     sys.exit(1)
 try:
     run()
 except VMError as e:
-    print('Error in State.load() test "{}"; error: {}'.format(test, e.args[1]))
+    print(f'Error in State.load() test "{test}"; error {e.args[0]}: {e.args[1]}')
     sys.exit(1)
-print("Data stack: {}".format(S))
-print("Correct stack: {}".format(correct))
+print(f"Data stack: {S}")
+print(f"Correct stack: {correct}")
 if correct != list(S):
-    print("Error in State.load() tests: pc = {:#x}".format(VM.pc))
+    print(f"Error in State.load() tests: pc = {VM.pc:#x}")
     sys.exit(1)
 
 

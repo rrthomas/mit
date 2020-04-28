@@ -20,7 +20,7 @@ mit_pkgpython_PYTHON =				\
 	mit/memory.py				\
 	mit/state.py				\
 	mit/assembler.py
-nodist_mit_pkgpython_PYTHON = mit/binding.py mit/enums.py mit/extra_enums.py
+nodist_mit_pkgpython_PYTHON = mit/binding.py mit/enums.py mit/trap_enums.py
 
 install_edit = sed \
 	-e 's|@pkgdatadir[@]|'`$(CYGPATH_M) $(pkgdatadir)`'|g'
@@ -46,8 +46,9 @@ mit/enums.py: $(top_srcdir)/src/mit_core/mit_spec.yaml Makefile mit/enums.py.in
 	$(AM_V_GEN)$(inplace_edit) $(srcdir)/'$@.in' >$@.tmp
 	$(AM_V_at)mv $@.tmp $@
 
-mit/extra_enums.py: gen-extra-enums $(top_srcdir)/src/features/extra_instructions.py
-	$(PYTHON_ENVIRONMENT) $(PYTHON) $(srcdir)/gen-extra-enums > mit/extra_enums.py || ( rm -f mit/extra_enums.py; exit 1 )
+mit/trap_enums.py: gen-trap-enums $(top_srcdir)/src/features/traps.py
+	@$(MKDIR_P) mit
+	$(PYTHON_ENVIRONMENT) $(PYTHON) $(srcdir)/gen-trap-enums > mit/trap_enums.py || ( rm -f mit/trap_enums.py; exit 1 )
 
 install-data-hook: mit/enums.py
 	@$(install_edit) $(top_srcdir)/python/mit/enums.py.in > enums.py.tmp
@@ -76,7 +77,7 @@ mit@PACKAGE_SUFFIX@-shell.1: mit-shell.1
 endif
 
 EXTRA_DIST = \
-	gen-extra-enums			\
+	gen-trap-enums			\
 	mit-shell-include.man.in	\
 	$(man_MANS)			\
 	mit/binding.py			\

@@ -11,7 +11,8 @@ RISK.
 
 import re, functools
 
-from mit_core.params import opcode_bit, word_bit
+from mit_core.params import word_bit
+from mit_core.spec import opcode_bit
 from spec import Instruction
 
 
@@ -60,7 +61,7 @@ class State:
     def step(self, instruction):
         '''
         Returns the State that results from executing `instruction` in this
-        State. Raises ValueError if `instruction` is variadic.
+        State.
          - instruction - a Instruction.
         '''
         assert isinstance(instruction, Instruction)
