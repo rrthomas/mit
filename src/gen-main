@@ -268,9 +268,9 @@ static off_t fleno(FILE *fp)
 {
   off_t pos = ftello(fp);
   if (pos != -1 && fseeko(fp, 0, SEEK_END) == 0) {
-    off_t len = ftello(fp);
-    if (len != -1 && fseeko(fp, pos, SEEK_SET) == 0)
-      return len;
+    off_t end = ftello(fp);
+    if (end != -1 && fseeko(fp, pos, SEEK_SET) == 0)
+      return end - pos;
   }
   return -1;
 }
@@ -285,8 +285,8 @@ static int skip_hashbang(FILE *fp)
         for (int res; (res = getc(fp)) != '\\n'; )
             if (res == EOF)
                 return -1;
-    }
-    rewind(fp);
+    } else
+        rewind(fp);
     return 0;
 }
 
