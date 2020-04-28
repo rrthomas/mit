@@ -15,6 +15,7 @@ import yaml
 from .autonumber import AutoNumber
 from .code_util import Code
 from .instruction import InstructionEnum
+from .instruction_gen import dispatch
 from .stack import StackEffect, pop_stack, push_stack
 
 
@@ -56,9 +57,7 @@ Instruction = instruction_enum(
     'VM instruction opcodes.',
     spec['Instruction'],
     {
-        'EXTRA': Code('''\
-            if ((error = mit_extra_instruction(S)) != MIT_ERROR_BREAK)
-                RAISE(error);'''),
+        'EXTRA': Code(), # Code is computed later
 
         'JUMP': Code('''\
             S->pc = (mit_uword)addr;
@@ -219,7 +218,7 @@ extra_instructions.update({
     # FIXME: Implement manually, so n is popped before RAISE
     'HALT': Code('RAISE(n);'),
 
-    'THIS_STATE': Code('state = S;'),
+    'THIS_STATE': Code('this_state = S;'),
 
     'LOAD_STACK': Code('''\
         value = 0;
@@ -254,3 +253,14 @@ ExtraInstruction = instruction_enum(
     spec['ExtraInstruction'],
     extra_instructions,
 )
+
+# Inject code for EXTRA
+extra_code = Code('''\
+    mit_uword extra_opcode = S->ir;
+    S->ir = 0;
+'''
+)
+extra_code.extend(dispatch(ExtraInstruction, Code(
+    'RAISE(MIT_ERROR_INVALID_OPCODE);',
+), 'extra_opcode'))
+Instruction.EXTRA.code = extra_code

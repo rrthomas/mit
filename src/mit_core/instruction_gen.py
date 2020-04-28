@@ -48,18 +48,17 @@ def gen_case(instruction):
     code.extend(instruction.code)
     if effect is not None:
         # Store the results from C variables.
-        code.append('S->stack_depth += {};'.format(
-            effect.results.size - effect.args.size
-        ))
+        code.append(f'S->stack_depth += {effect.results.size - effect.args.size};')
         code.extend(effect.store_results())
     return code
 
-def dispatch(instructions, undefined_case):
+def dispatch(instructions, undefined_case, opcode='opcode'):
     '''
     Generate dispatch code for some Instructions.
 
      - instructions - InstructionEnum.
      - undefined_case - Code - the fallback behaviour.
+     - opcode - str - a C expression for the opcode.
     '''
     assert issubclass(instructions, InstructionEnum)
     assert isinstance(undefined_case, Code)
@@ -67,16 +66,12 @@ def dispatch(instructions, undefined_case):
     else_text = ''
     for (_, instruction) in enumerate(instructions):
         code.append(
-            '{else_text}if (opcode == {prefix}_{instruction}) {{'.format(
-                else_text=else_text,
-                prefix=c_symbol(instructions.__name__),
-                instruction=instruction.name,
-            ),
+            f'{else_text}if ({opcode} == {c_symbol(instructions.__name__)}_{instruction.name}) {{'
         )
         code.append(gen_case(instruction))
         code.append('}')
         else_text = 'else '
-    code.append('{}{{'.format(else_text))
+    code.append(f'{else_text}{{')
     code.append(undefined_case)
     code.append('}')
     return code

@@ -190,7 +190,7 @@ ExtraInstruction:
   THIS_STATE:
     opcode: 0xc
     args: []
-    results: ['state:mit_state *']
+    results: ['this_state:mit_state *']
   LOAD_STACK:
     opcode: 0xd
     args: ['pos', 'inner_state:mit_state *']

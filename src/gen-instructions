@@ -9,7 +9,7 @@
 
 import argparse
 
-from mit_core.spec import Instruction, ExtraInstruction
+from mit_core.spec import Instruction
 from mit_core.code_util import Code, copyright_banner
 from mit_core.instruction_gen import dispatch
 
@@ -44,28 +44,7 @@ code.append('''
 
 
     MIT_THREAD_LOCAL mit_fn *mit_run = mit_run_simple;
-
-    _GL_ATTRIBUTE_PURE mit_word mit_extra_instruction(mit_state *S)
-    {'''
-)
-
-body_code = Code()
-body_code.append('''\
-    mit_word error;
-    mit_uword opcode = S->ir;
-    S->ir = 0;'''
-)
-body_code.extend(dispatch(ExtraInstruction, Code(
-    'RAISE(MIT_ERROR_INVALID_OPCODE);',
-)))
-code.append(body_code)
-
-code.append('''
-        return MIT_ERROR_BREAK;
-    error:
-        S->ir = opcode;
-        return error;
-    }'''
+'''
 )
 
 body_code = Code()
