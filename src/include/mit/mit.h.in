@@ -114,6 +114,11 @@ _GL_ATTRIBUTE_CONST static int is_aligned(mit_uword addr, unsigned size)
 
 // Stack access
 
+// These routines are used for bindings to other languages, and for the
+// extra instructions. Internally, libmit uses the inline functions in
+// mit.h.
+//
+
 int mit_load_stack(mit_state *S, mit_uword pos, mit_word *val_ptr);
 /* Load the word position `pos` on the stack into the word pointed to by
    `val_ptr`.
@@ -172,7 +177,7 @@ static int store_stack(mit_word * restrict stack, mit_uword stack_depth,
 #pragma GCC diagnostic pop
 
 
-// VM instantiation and control
+// VM control
 
 extern @THREAD_LOCAL@ mit_fn *mit_run;
 /* Execute VM code. Defaults to `mit_run_simple`. Can be set to any

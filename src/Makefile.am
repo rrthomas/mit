@@ -11,7 +11,7 @@ AM_CPPFLAGS = -I$(abs_top_builddir)/lib -I$(abs_top_srcdir)/lib -I$(abs_builddir
 PYTHON_WITH_PATH = export PYTHONPATH=$(abs_top_srcdir)/python:$(abs_top_srcdir)/src:$(abs_top_builddir)/src:$(abs_top_srcdir)/src/specializer:$(abs_top_builddir)/src/specializer:$(abs_top_srcdir)/src/features:$(abs_top_builddir)/src/features; $(PYTHON)
 
 lib_LTLIBRARIES = libmit.la
-C_SRCS = storage.c args.c
+C_SRCS = constants.c stack.c args.c
 nodist_LIB_SRCS = include/mit/registers.h include/mit/opcodes.h instructions.c
 pkgdata_DATA = mit_core/mit_spec.yaml
 LIB_CORE_SRCS = \

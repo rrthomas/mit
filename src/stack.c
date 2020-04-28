@@ -1,4 +1,4 @@
-// Manage storage for the state, registers and memory.
+// Stack manipulation.
 //
 // (c) Mit authors 1994-2020
 //
@@ -11,21 +11,6 @@
 
 #include "mit/mit.h"
 
-
-// Constants
-const unsigned mit_word_bytes = MIT_WORD_BYTES;
-const unsigned mit_byte_bit = 8;
-const unsigned mit_byte_mask = MIT_BYTE_MASK;
-const unsigned mit_word_bit = MIT_WORD_BIT;
-const mit_uword mit_word_mask = MIT_WORD_MASK;
-const mit_uword mit_uword_max = MIT_UWORD_MAX;
-const mit_word mit_word_min = MIT_WORD_MIN;
-const mit_word mit_word_max = MIT_WORD_MAX;
-const unsigned mit_opcode_bit = MIT_OPCODE_BIT;
-const unsigned mit_opcode_mask = MIT_OPCODE_MASK;
-
-
-// Stacks
 
 int mit_load_stack(mit_state *S, mit_uword pos, mit_word *val_ptr)
 {
