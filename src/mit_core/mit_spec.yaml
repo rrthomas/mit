@@ -163,10 +163,10 @@ ExtraInstruction:
     opcode: 0x0
     args: []
     results: []
+  # FIXME: improve code generation so the stack effects of the following can
+  # be specified
   HALT:
     opcode: 0x1
-    args: ['n']
-    results: []
   GET_PC:
     opcode: 0x2
   SET_PC:

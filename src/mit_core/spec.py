@@ -212,11 +212,15 @@ for register in Register:
     )
     extra_instructions['SET_{}'.format(register.name.upper())] = set_code
 
+halt_code = Code()
+halt_code.append('mit_word n;')
+halt_code.extend(pop_stack('n'))
+halt_code.append('RAISE(n);')
+extra_instructions['HALT'] = halt_code
+
+
 extra_instructions.update({
     'NEXT': Code('DO_NEXT;'),
-
-    # FIXME: Implement manually, so n is popped before RAISE
-    'HALT': Code('RAISE(n);'),
 
     'THIS_STATE': Code('this_state = S;'),
 
