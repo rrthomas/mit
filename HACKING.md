@@ -23,6 +23,19 @@ make; for example:
 make check TIME="operf --events INST_RETIRED:100000"
 ```
 
+## Using Docker
+
+To run a non-native version of mit; for example, to run 32-bit Mit on a 64-bit machine, which is currently necessary to run pForth, Docker is recommended. A `Dockerfile` is provided to run 32-bit Mit.
+
+See `.travis.yml` for the recipe used to test Mit on arches unsupported by Travis.
+
+To develop Mit, it's more convenient to use a bind mount to share a git checkout between the host system (editor etc.) and Docker container, thus:
+
+```
+docker build --build-arg BASE_IMAGE=i386/ubuntu --tag test - < Dockerfile
+docker run --interactive --tty --mount type=bind,source="$(pwd)",target=/work test /bin/bash
+```
+
 ## Making a release
 
 To make a release, run `make release` in the top-level directory. This
