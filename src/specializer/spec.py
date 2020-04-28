@@ -105,6 +105,10 @@ for instruction in Instruction:
     elif instruction.effect is not None:
         specialized_instructions[instruction.name] = \
             _gen_ordinary_instruction(instruction)
+# NEXT is the one extra instruction we want the specializer to know about.
+# It works as a special case because its opcode is the same as EXTRA's;
+# we also need to mark it as terminal.
+ExtraInstruction.NEXT.terminal = True
 specialized_instructions['NEXT'] = \
     _gen_ordinary_instruction(ExtraInstruction.NEXT)
 

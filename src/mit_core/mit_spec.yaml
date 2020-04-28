@@ -163,8 +163,6 @@ ExtraInstruction:
     opcode: 0x0
     args: []
     results: []
-    # FIXME: All ExtraInstructions are terminal!
-    terminal: true
   HALT:
     opcode: 0x1
     args: ['n']
