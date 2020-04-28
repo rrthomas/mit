@@ -174,20 +174,6 @@ static int store_stack(mit_word * restrict stack, mit_uword stack_depth,
 
 // VM instantiation and control
 
-mit_state *mit_new_state(size_t stack_words);
-/* Create and initialize a virtual machine state.
-
-   - stack_words - number of words of stack space required (may be 0)
-
-   Return a pointer to a new state, or `NULL` if memory cannot be allocated,
-   or if any requested size is larger than `MIT_UWORD_MAX`.
-
-   The stack is zeroed, and the registers are initialized as per the spec.
-*/
-
-void mit_free_state(mit_state *S);
-/* Free the given state, deallocating its memory. */
-
 extern @THREAD_LOCAL@ mit_fn *mit_run;
 /* Execute VM code. Defaults to `mit_run_simple`. Can be set to any
    compatible function, which thereby propagates to nested VMs via the `RUN`

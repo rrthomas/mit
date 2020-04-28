@@ -216,11 +216,14 @@ halt_code = Code()
 halt_code.append('mit_word n;')
 halt_code.extend(pop_stack('n'))
 halt_code.append('RAISE(n);')
-extra_instructions['HALT'] = halt_code
-
+halt_code
 
 extra_instructions.update({
     'NEXT': Code('DO_NEXT;'),
+
+    'HALT': halt_code,
+
+    'SIZEOF_STATE': Code('size = sizeof(mit_state);'),
 
     'THIS_STATE': Code('this_state = S;'),
 
@@ -237,10 +240,6 @@ extra_instructions.update({
     '''),
 
     'PUSH_STACK': Code('ret = mit_push_stack(inner_state, value);'),
-
-    'NEW_STATE': Code('new_state = mit_new_state((size_t)stack_words);'),
-
-    'FREE_STATE': Code('mit_free_state(inner_state);'),
 
     'RUN': Code('ret = mit_run(inner_state);'),
 

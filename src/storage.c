@@ -9,9 +9,6 @@
 
 #include "config.h"
 
-#include <stdlib.h>
-#include <string.h>
-
 #include "mit/mit.h"
 
 
@@ -54,30 +51,4 @@ int mit_push_stack(mit_state *S, mit_word val)
 
     (S->stack_depth)++;
     return store_stack(S->stack, S->stack_depth, 0, val);
-}
-
-
-// Initialisation and memory management
-
-mit_state *mit_new_state(size_t stack_words)
-{
-    mit_state *S = calloc(1, sizeof(mit_state));
-    if (S == NULL)
-        return NULL;
-
-    if (stack_words > 0 &&
-        (S->stack = calloc(stack_words, sizeof(mit_word))) == NULL)
-        return NULL;
-
-    S->pc = 0;
-    S->stack_depth = 0;
-    S->stack_words = stack_words;
-
-    return S;
-}
-
-void mit_free_state(mit_state *S)
-{
-    free(S->stack);
-    free(S);
 }

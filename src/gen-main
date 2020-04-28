@@ -210,8 +210,8 @@ code.extend(Code('''
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdlib.h>
+#include <string.h>
 #include <inttypes.h>
-#include <errno.h>
 #include <getopt.h>
 #include <unistd.h>
 
@@ -258,7 +258,6 @@ static mit_uword parse_num_words(const char *errfmt)
 {
     size_t max = SIZE_MAX / MIT_WORD_BYTES;
     char *endptr;
-    errno = 0;
     uintmax_t size = strtoumax(optarg, &endptr, 10);
     if (*optarg == '\\0' || *endptr != '\\0' || size == 0 || size > (uintmax_t)max)
         die(errfmt, max);
@@ -348,9 +347,12 @@ int main(int argc, char *argv[])
     memory = calloc(memory_words, MIT_WORD_BYTES);
     if (memory == NULL)
         die("could not allocate virtual machine memory");
-    S = mit_new_state(stack_words);
-    if (S == NULL)
-        die("could not allocate virtual machine state");
+    mit_state state;
+    S = &state;
+    memset(S, 0, sizeof(*S));
+    if ((S->stack = calloc(stack_words, MIT_WORD_BYTES)) == NULL)
+        die("could not allocate virtual machine stack");
+    S->stack_words = stack_words;
     mit_argc = argc;
     mit_argv = &argv[0];
     S->pc = (mit_uword)memory;
@@ -384,7 +386,8 @@ int main(int argc, char *argv[])
         error = 127 - error;
     }
 
-    mit_free_state(S);
+    free(S->stack);
+    free(memory);
     return error;
 }'''
 ))

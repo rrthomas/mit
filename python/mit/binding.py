@@ -98,15 +98,11 @@ elif word_bytes == 8:
 else:
     raise Exception("Could not make Python C type matching WORD (size {})".format(word_bytes))
 
-mit_state_fields = [
-    (register.name, c_uword)
-    for register in Register
-]
-mit_state_fields.extend([
-    ('stack', POINTER(c_word)),
-])
 class c_mit_state(Structure):
-    _fields_ = mit_state_fields
+    _fields_ = [
+        (register.name, c_uword)
+        for register in Register
+    ]
 
 c_mit_fn = CFUNCTYPE(c_word, POINTER(c_mit_state))
 
@@ -154,12 +150,6 @@ libmit.mit_push_stack.errcheck = mit_error
 libmit.mit_single_step.restype = c_word
 libmit.mit_single_step.argtypes = [POINTER(c_mit_state)]
 libmit.mit_single_step.errcheck = mit_error
-
-libmit.mit_new_state.restype = POINTER(c_mit_state)
-libmit.mit_new_state.argtypes = [c_size_t]
-
-libmit.mit_free_state.restype = None
-libmit.mit_free_state.argtypes = [POINTER(c_mit_state)]
 
 libmit.mit_profile_reset.restype = None
 libmit.mit_profile_reset.argtypes = None
