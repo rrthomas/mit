@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# (c) Mit authors 1994-2019
+# (c) Mit authors 1994-2020
 #
 # The package is distributed under the MIT/X11 License.
 #
@@ -18,7 +18,7 @@ import profile
 
 GENERATOR_PROGRAM = 'gen-instructions'
 PURPOSE = 'Run the virtual machine main loop (naive version).'
-COPYRIGHT_YEARS = '1994-2019'
+COPYRIGHT_YEARS = '1994-2020'
 
 
 # Command-line arguments.
@@ -50,9 +50,11 @@ code.append('''
 )
 
 body_code = Code()
-body_code.append('mit_word error = MIT_ERROR_OK;')
-body_code.append('mit_uword opcode = S->ir;')
-body_code.append('S->ir = 0;')
+body_code.append('''\
+    mit_word error;
+    mit_uword opcode = S->ir;
+    S->ir = 0;'''
+)
 body_code.extend(dispatch(ExtraInstruction, Code(
     'RAISE(MIT_ERROR_INVALID_OPCODE);',
 )))
@@ -102,10 +104,8 @@ code.append(Code(*['''\
     '''),
     'error:',
     Code('''\
-        if (error != MIT_ERROR_OK) { // FIXME: surely MIT_ERROR_BREAK???
-            S->pc = initial_pc;
-            S->ir = initial_ir;
-        }'''
+        S->pc = initial_pc;
+        S->ir = initial_ir;'''
     ),
     '''\
     } while (likely(run == true) && likely(error == MIT_ERROR_BREAK));
