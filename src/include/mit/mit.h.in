@@ -40,10 +40,8 @@
 // Define MIT_WORD_BIT as a number literal so we can token paste it below
 #if MIT_WORD_BYTES == 4
 #define MIT_WORD_BIT 32
-#define MIT_SIZE_WORD 2
 #elif MIT_WORD_BYTES == 8
 #define MIT_WORD_BIT 64
-#define MIT_SIZE_WORD 3
 #else
 #error "MIT_WORD_BYTES must be 4 or 8!"
 #endif
