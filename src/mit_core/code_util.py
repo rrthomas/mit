@@ -142,6 +142,6 @@ def copyright_banner(generator_program, purpose, copyright_years, comment='//'):
         {comment}
         {comment} The package is distributed under the MIT/X11 License.
         {comment}
-        {comment} THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
+        {comment} THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER'S
         {comment} RISK.
     ''')
