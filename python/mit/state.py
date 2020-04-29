@@ -127,14 +127,6 @@ class State:
             run_ptr.contents = run_specializer
         run(self.state)
 
-    def _print_trace_info(self):
-        self.trace_print("step: pc={:#x} ir={:#x} instruction={}".format(
-            self.registers["pc"].get(),
-            self.registers["ir"].get(),
-            Disassembler(self).disassemble(),
-        ))
-        self.trace_print(str(self.S))
-
     def step(self, n=1, addr=None, trace=False, auto_NEXT=True):
         '''
         Single-step for n steps (excluding NEXT when pc does not change), or
