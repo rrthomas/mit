@@ -11,8 +11,7 @@ RISK.
 
 import re, functools
 
-from mit_core.params import word_bit
-from mit_core.spec import opcode_bit
+from mit_core.spec import opcode_bit, word_bit
 from spec import Instruction
 
 

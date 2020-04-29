@@ -11,6 +11,7 @@ import os
 from enum import Enum, IntEnum, unique
 
 from .autonumber import AutoNumber
+from .params import word_bytes
 from .code_util import Code
 from .instruction import InstructionEnum
 from .instruction_gen import dispatch
@@ -18,6 +19,7 @@ from .stack import StackEffect, pop_stack, push_stack
 
 
 # Global constants (see module params for build-time parameters)
+word_bit = word_bytes * 8
 opcode_bit = 8
 
 class RegisterEnum(AutoNumber):
