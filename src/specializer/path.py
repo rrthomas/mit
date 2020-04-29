@@ -9,12 +9,14 @@ THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 RISK.
 '''
 
+from dataclasses import dataclass
 import re, functools
 
 from mit_core.spec import opcode_bit, word_bit
 from spec import Instruction
 
 
+@dataclass
 class State:
     '''
     Accumulates information about the effect of executing instructions.
@@ -31,19 +33,11 @@ class State:
      - i_bits - int - the number of bits of `ir` executed since the last
        terminal instruction.
     '''
-    def __init__(
-        self,
-        stack_pos=0,
-        stack_min=0,
-        stack_max=0,
-        max_cached_depth=0,
-        i_bits=0,
-    ):
-        self.stack_pos = stack_pos
-        self.stack_min = stack_min
-        self.stack_max = stack_max
-        self.max_cached_depth = max_cached_depth
-        self.i_bits = i_bits
+    stack_pos: int = 0
+    stack_min: int = 0
+    stack_max: int = 0
+    max_cached_depth: int = 0
+    i_bits: int = 0
 
     def cached_depth(self):
         '''
