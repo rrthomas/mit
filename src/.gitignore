@@ -15,3 +15,4 @@ __pycache__/
 /main.c
 /include/mit/mit.h
 /mit_core/params.py
+/mit_core/mit_spec.yaml

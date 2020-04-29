@@ -44,6 +44,10 @@ main.o: warn.h
 .c.s:
 	$(COMPILE) -c -S -o $@ $<
 
+mit_core/mit_spec.yaml: gen-yaml-spec mit_core/spec.py
+	$(MKDIR_P) mit_core
+	$(PYTHON_WITH_PATH) $(srcdir)/gen-yaml-spec > mit_core/mit_spec.yaml || ( rm -f mit_core/mit_spec.yaml; exit 1 )
+
 include/mit/mit.h: $(top_builddir)/config.status include/mit/mit.h.in include/mit/registers.h include/mit/opcodes.h
 	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
 
@@ -63,15 +67,15 @@ mit@PACKAGE_SUFFIX@.1: mit@PACKAGE_SUFFIX@$(EXEEXT) $(top_builddir)/build-aux/ma
 include/mit:
 	cd include && if test ! -e mit@PACKAGE_SUFFIX@; then $(LN_S) mit mit@PACKAGE_SUFFIX@; fi
 
-include/mit/registers.h: gen-registers mit_core/mit_spec.yaml mit_core/spec.py
+include/mit/registers.h: gen-registers mit_core/spec.py
 	$(MKDIR_P) include/mit
 	$(PYTHON_WITH_PATH) $(srcdir)/gen-registers > include/mit/registers.h || ( rm -f include/mit/registers.h; exit 1 )
 
-include/mit/opcodes.h: gen-opcodes mit_core/mit_spec.yaml mit_core/spec.py mit_core/instruction.py
+include/mit/opcodes.h: gen-opcodes mit_core/spec.py mit_core/instruction.py
 	$(MKDIR_P) include/mit
 	$(PYTHON_WITH_PATH) $(srcdir)/gen-opcodes > include/mit/opcodes.h || ( rm -f include/mit/opcodes.h; exit 1 )
 
-instructions.c: gen-instructions mit_core/mit_spec.yaml mit_core/spec.py mit_core/instruction.py mit_core/stack.py mit_core/code_util.py mit_core/instruction_gen.py
+instructions.c: gen-instructions mit_core/spec.py mit_core/instruction.py mit_core/stack.py mit_core/code_util.py mit_core/instruction_gen.py
 	$(PYTHON_WITH_PATH) $(srcdir)/gen-instructions > instructions.c || ( rm -f instructions.c; exit 1 )
 
 main.c: gen-main
@@ -79,18 +83,18 @@ main.c: gen-main
 
 loc:
 	$(SLOCCOUNT) \
-	$(C_SRCS) \
-	$(LIB_CORE_SRCS) \
-	gen-registers gen-opcodes gen-instructions gen-main
+	    $(C_SRCS) \
+	    $(LIB_CORE_SRCS) \
+	    gen-registers gen-opcodes gen-instructions gen-main gen-yaml-spec
 
 EXTRA_DIST = \
-	$(pkgdata_DATA) \
 	$(LIB_CORE_SRCS) \
 	$(C_SRCS) \
 	gen-registers \
 	gen-opcodes \
 	gen-instructions \
 	gen-main \
+	gen-yaml-spec \
 	mit-include.man
 
 DISTCLEANLOCALDIRS = mit_core/__pycache__
@@ -99,6 +103,7 @@ distclean-local:
 
 DISTCLEANFILES = mit@PACKAGE_SUFFIX@.1 \
 	$(nodist_LIB_SRCS) \
+	$(pkgdata_DATA) \
 	$(nodist_mit@PACKAGE_SUFFIX@_SOURCES) \
 	include/mit
 # Ignore built files that are part of the distribution (specifically,
