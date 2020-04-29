@@ -78,7 +78,7 @@ def errcheck(error_enum):
 
 
 # Constants (all of type unsigned)
-vars().update([(c, c_uint.in_dll(libmit, "mit_{}".format(c)).value)
+vars().update([(c, c_uint.in_dll(libmit, f"mit_{c}").value)
                for c in [
                        "word_bytes",
                        "byte_bit", "byte_mask", "word_bit",
@@ -96,7 +96,7 @@ elif word_bytes == 8:
     c_word = c_int64
     c_uword = c_uint64
 else:
-    raise Exception("Could not make Python C type matching WORD (size {})".format(word_bytes))
+    raise Exception(f"Could not make Python C type matching WORD (size {word_bytes})")
 
 class c_mit_state(Structure):
     _fields_ = [
@@ -108,7 +108,7 @@ c_mit_fn = CFUNCTYPE(c_word, POINTER(c_mit_state))
 
 
 # Constants that require VM types
-vars().update([(c, cty.in_dll(libmit, "mit_{}".format(c)).value)
+vars().update([(c, cty.in_dll(libmit, f"mit_{c}").value)
                for (c, cty) in [
                        ("word_mask", c_uword),
                        ("uword_max", c_uword),
@@ -128,7 +128,7 @@ mit_error = errcheck(MitErrorCode)
 # for some reason we can't call it when bound as a pointer.
 vars()["_run"] = c_mit_fn.in_dll(libmit, "mit_run")
 vars()["run_ptr"] = POINTER(c_mit_fn).in_dll(libmit, "mit_run")
-vars().update([(c, cty.in_dll(libmit, "mit_{}".format(c)))
+vars().update([(c, cty.in_dll(libmit, f"mit_{c}"))
                for (c, cty) in [
                        ("run_specializer", c_mit_fn),
                        ("run_profile", c_mit_fn),
@@ -159,7 +159,7 @@ libmit.mit_profile_dump.argtypes = [c_int]
 def is_aligned(addr):
     return (addr & (word_bytes - 1)) == 0
 
-vars().update([(c, cty.in_dll(libmit, "mit_{}".format(c)))
+vars().update([(c, cty.in_dll(libmit, f"mit_{c}"))
                for (c, cty) in [
                        ("argc", c_int),
                        ("argv", POINTER(c_char_p)),

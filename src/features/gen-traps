@@ -51,10 +51,10 @@ code.append('''
 
 for lib in LibInstruction:
     code.append('')
-    code.append('''\
-        static mit_word trap_{}(mit_state * restrict S, mit_word opcode)
+    code.append(f'''\
+        static mit_word trap_{lib.name.lower()}(mit_state * restrict S, mit_word opcode)
         {{
-            mit_word error = MIT_ERROR_OK;'''.format(str.lower(lib.name))
+            mit_word error = MIT_ERROR_OK;'''
     )
     code.append('')
 

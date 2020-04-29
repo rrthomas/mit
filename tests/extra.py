@@ -52,27 +52,27 @@ breaks.append(label() + word_bytes)
 # Run ARGC test
 trace(addr=breaks.pop(0))
 argc = S.pop()
-print("argc is {}, and should be {}".format(argc, len(args)))
+print(f"argc is {argc}, and should be {len(args)}")
 if argc != len(args):
-    print("Error in extra instruction and trap tests: pc = {:#x}".format(VM.pc))
+    print(f"Error in extra instruction and trap tests: pc = {VM.pc:#x}")
     sys.exit(1)
 
 # Run ARGV test
 trace(addr=breaks.pop(0))
 arg1len = S.pop()
-print("arg 1's length is {}, and should be {}".format(arg1len, len(args[1])))
+print(f"arg 1's length is {arg1len}, and should be {len(args[1])}")
 if arg1len != len(args[1]):
-    print("Error in extra instruction and trap tests: pc = {:#x}".format(VM.pc))
+    print(f"Error in extra instruction and trap tests: pc = {VM.pc:#x}")
     sys.exit(1)
 S.push(arg1len) # push length back for next test
 
 # Run LibC.STRNCPY test
 trace(addr=breaks.pop(0))
-print("addr: {:#x}".format(buffer))
+print(f"addr: {buffer:#x}")
 c_str = string_at(cast(buffer, c_char_p))
-print("arg 1 is {}, and should be {}".format(c_str, args[1]))
+print(f"arg 1 is {c_str}, and should be {args[1]}")
 if c_str != args[1]:
-    print("Error in extra instruction tests: pc = {:#x}".format(VM.pc))
+    print(f"Error in extra instruction tests: pc = {VM.pc:#x}")
     sys.exit(1)
 
 print("extra instruction and trap tests ran OK")

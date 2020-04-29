@@ -29,7 +29,7 @@ for lib in LibInstruction:
 code.append('"')
 for type in list(set([type for lib in LibInstruction
                       for type in lib.types()])):
-    code.append('AC_CHECK_SIZEOF([{}])'.format(type))
+    code.append(f'AC_CHECK_SIZEOF([{type}])')
 
 # We don't need this header, but autoconf insists we define it.
 code.append('AC_CONFIG_HEADERS([type-sizes.h])')

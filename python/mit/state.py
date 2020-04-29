@@ -144,23 +144,21 @@ class State:
                         raise
             if self.pc == addr: break
             if trace:
-                self.trace_print("trace: instruction={}".format(
-                    Disassembler(self).disassemble(),
-                ))
+                self.trace_print(f"trace: instruction={Disassembler(self).disassemble()}")
             try:
                 libmit.mit_single_step(self.state)
                 return
             except VMError as e:
                 if e.args[0] != enums.MitErrorCode.BREAK:
                     ret = e.args[0]
-                    print("Error code {} was returned".format(ret), end='')
+                    print(f"Error code {ret} was returned", end='')
                     print(" after {} step{}".format(done, 's' if done != 1 else ''), end='')
                     if addr is not None:
-                        print(" at pc={:#x}".format(self.pc), end='')
+                        print(f" at pc={self.pc:#x}", end='')
                     print()
                     raise
             if trace:
-                self.trace_print("pc={:#x} ir={:#x}".format(self.pc, self.ir))
+                self.trace_print(f"pc={self.pc:#x} ir={self.ir:#x}")
                 self.trace_print(str(self.S))
             done += 1
 
@@ -190,9 +188,9 @@ class State:
         data = strip_hashbang(data)
         length = len(data)
         if length > len(self.M):
-            raise Error('file {} is too big to fit in memory'.format(file))
+            raise Error(f'file {file} is too big to fit in memory')
         if length % word_bytes != 0:
-            raise Error('file {} is not a whole number of words'.format(file))
+            raise Error(f'file {file} is not a whole number of words')
         if addr is None:
             addr = self.M.addr
         self.M[addr:addr + length] = data
@@ -245,21 +243,21 @@ class State:
                 if i % 8 == 0:
                     print(" ", end='', file=file)
                 byte = self.M[p + i]
-                print("{:02x} ".format(byte), end='', file=file)
+                print(f"{byte:02x} ", end='', file=file)
                 i += 1
                 c = chr(byte)
                 ascii += c if c.isprintable() else '.'
             p += chunk
-            print(" |{0:.{1}}|".format(ascii, chunk), file=file)
+            print(f" |{ascii:.{chunk}}|", file=file)
 
     def dump_files(self, basename, addr, length):
         '''
         Dump memory as assembly to `basename.asm` and as hex to `basename.hex`.
         '''
-        asm_file = '{}.asm'.format(basename)
+        asm_file = f'{basename}.asm'
         with open(asm_file, 'w') as h:
             self.disassemble(addr, length, file=h)
-        hex_file = '{}.hex'.format(basename)
+        hex_file = f'{basename}.hex'
         with open(hex_file, 'w') as h:
             self.dump(addr, length, file=h)
 
@@ -279,7 +277,7 @@ class Stack:
 
     def __str__(self):
         return '[{}]'.format(', '.join(
-            ['{} ({:#x})'.format(v, v & word_mask) for v in self])
+            [f'{v} ({v & word_mask:#x})' for v in self])
         )
 
     def __repr__(self):

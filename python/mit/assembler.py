@@ -82,7 +82,7 @@ class Disassembler:
             try:
                 name = mnemonic[opcode].lower()
             except KeyError:
-                name = "undefined opcode {:#x}".format(opcode)
+                name = f"undefined opcode {opcode:#x}"
             if opcode == PUSH or opcode == PUSHREL:
                 initial_pc = self.pc
                 value = self._fetch()
@@ -90,9 +90,9 @@ class Disassembler:
                 if value & sign_bit:
                     signed_value -= 1 << word_bit
                 if opcode == PUSH:
-                    comment = ' ({:#x}={})'.format(value, signed_value)
+                    comment = f' ({value:#x}={signed_value})'
                 else: # opcode == PUSHREL
-                    comment = ' ({:#x})'.format(initial_pc + signed_value)
+                    comment = f' ({initial_pc + signed_value:#x})'
             if opcode == EXTRA:
                 # Call `self._fetch()` later, not now.
                 comment = extra_mnemonic.get(
@@ -103,7 +103,7 @@ class Disassembler:
                 self.ir = 0
         except IndexError:
             name = "invalid address!"
-        return '{}{}'.format(name, comment)
+        return f'{name}{comment}'
 
     def __next__(self):
         pc_str = ('{:#0' + str(hex0x_word_width) + 'x}').format(self.pc)
@@ -111,7 +111,7 @@ class Disassembler:
         if self.ir == 0:
             self.ir = self._fetch()
             addr = pc_str
-        return '{}: {}'.format(addr, self.disassemble())
+        return f'{addr}: {self.disassemble()}'
 
     def goto(self, pc):
         '''

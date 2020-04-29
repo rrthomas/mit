@@ -51,15 +51,8 @@ class Label:
         self.total_count = correct_count + wrong_count
 
     def __repr__(self):
-        return 'Label({}, {!r}, {!r}, {}, {}, {}, {})'.format(
-            self.index,
-            self.path,
-            self.guess,
-            self.if_correct,
-            self.if_wrong,
-            self.correct_count,
-            self.wrong_count,
-        )
+        return f"Label({self.index}, {self.path!r}, {self.guess!r}, {self.if_correct}, " \
+            "{self.if_wrong}, {self.correct_count}, {self.wrong_count})"
 
 
 def load(filename):

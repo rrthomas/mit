@@ -31,7 +31,7 @@ def type_words(type):
     ret = type_wordses.get(type, TYPE_SIZE_UNKNOWN)
     if ret is None:
         import sys
-        print('type {} not found; type_words: "{}"'.format(type, type_wordses), file=sys.stderr)
+        print(f'type {type} not found; type_words: "{type_wordses}"', file=sys.stderr)
     return ret
 
 def load_stack(name, depth=0, type='mit_word'):
@@ -43,18 +43,16 @@ def load_stack(name, depth=0, type='mit_word'):
     '''
     code = Code()
     code.append(
-        'mit_max_stack_item_t temp = (mit_uword)(*UNCHECKED_STACK(S->stack, S->stack_depth, {}));'
-        .format(depth)
+        f'mit_max_stack_item_t temp = (mit_uword)(*UNCHECKED_STACK(S->stack, S->stack_depth, {depth}));'
     )
     for i in range(1, type_words(type)):
         code.append('temp <<= MIT_WORD_BIT;')
         code.append(
-            'temp |= (mit_uword)(*UNCHECKED_STACK(S->stack, S->stack_depth, {}));'
-            .format(depth + i)
+            f'temp |= (mit_uword)(*UNCHECKED_STACK(S->stack, S->stack_depth, {depth + i}));'
         )
     code.extend(disable_warnings(
         ['-Wint-to-pointer-cast'],
-        Code('{} = ({})temp;').format(name, type)
+        Code(f'{name} = ({type})temp;'),
     ))
     return Code('{', code, '}')
 
@@ -68,13 +66,11 @@ def store_stack(value, depth=0, type='mit_word'):
     code = Code()
     code.extend(disable_warnings(
         ['-Wpointer-to-int-cast', '-Wbad-function-cast'],
-        Code('mit_max_stack_item_t temp = (mit_max_stack_item_t){};')
-            .format(value),
+        Code(f'mit_max_stack_item_t temp = (mit_max_stack_item_t){value};'),
     ))
     for i in reversed(range(1, type_words(type))):
         code.append(
-            '*UNCHECKED_STACK(S->stack, S->stack_depth, {}) = (mit_uword)(temp & MIT_WORD_MASK);'
-            .format(depth + i)
+            f'*UNCHECKED_STACK(S->stack, S->stack_depth, {depth + i}) = (mit_uword)(temp & MIT_WORD_MASK);'
         )
         code.append('temp >>= MIT_WORD_BIT;')
     code.append(
@@ -90,14 +86,14 @@ def pop_stack(name, type='mit_word'):
     code = Code()
     code.extend(check_underflow(Size(type_words(type))))
     code.extend(load_stack(name, type=type))
-    code.append('S->stack_depth -= {};'.format(type_words(type)))
+    code.append(f'S->stack_depth -= {type_words(type)};')
     return code
 
 def push_stack(value, type='mit_word'):
     code = Code()
     code.extend(check_overflow(Size(0), Size(type_words(type))))
     code.extend(store_stack(value, depth=-type_words(type), type=type))
-    code.append('S->stack_depth += {};'.format(type_words(type)))
+    code.append(f'S->stack_depth += {type_words(type)};')
     return code
 
 
@@ -125,12 +121,11 @@ class Size:
             return value
         if type(value) is int:
             return Size(value)
-        raise TypeError('cannot convert {} to Size'.format(type(value)))
+        raise TypeError(f'cannot convert {type(value)} to Size')
 
     def __int__(self):
         if self.count != 0:
-            raise ValueError('{} cannot be represented as an integer'.format(
-                self))
+            raise ValueError(f'{self} cannot be represented as an integer')
         return self.size
 
     def __index__(self):
@@ -222,7 +217,7 @@ class StackItem:
                 self.size == item.size)
 
     def __repr__(self):
-        return "{}:{}".format(self.name, self.type)
+        return f"{self.name}:{self.type}"
 
     def __hash__(self):
         return hash((self.name, self.type, self.size))
@@ -264,7 +259,7 @@ class StackPicture:
         return ' '.join(i.name for i in self.items)
 
     def __repr__(self):
-        return 'StackPicture.of(\'{}\')'.format(str(self))
+        return f'StackPicture.of(\'{str(self)}\')'
 
     @staticmethod
     def of(strs):
@@ -315,10 +310,10 @@ class StackEffect:
         self.by_name = {i.name: i for i in args.items + results.items}
 
     def __str__(self):
-        return '{} -- {}'.format(self.args, self.results)
+        return f'{self.args} -- {self.results}'
 
     def __repr__(self):
-        return 'StackEffect.of(\'{}\', \'{}\')'.format(self.args, self.results)
+        return f'StackEffect.of(\'{self.args}\', \'{self.results}\')'
 
     @staticmethod
     def of(args, results):
@@ -337,7 +332,7 @@ class StackEffect:
             '{} {}{};'.format(
                 item.type,
                 item.name,
-                ' = {}'.format(item.expr) if item.expr is not None else '',
+                f' = {item.expr}' if item.expr is not None else '',
             )
             for item in self.by_name.values()
             if item.name != 'ITEMS'
@@ -380,14 +375,10 @@ def check_underflow(num_pops):
     assert num_pops >= 0, num_pops
     if num_pops == 0: return Code()
     tests = []
-    tests.append(
-        'unlikely(S->stack_depth < (mit_uword)({}))'
-        .format(num_pops.size)
-    )
+    tests.append(f'unlikely(S->stack_depth < (mit_uword)({num_pops.size}))')
     if num_pops.count == 1:
         tests.append(
-            'unlikely(S->stack_depth - (mit_uword)({}) < (mit_uword)(COUNT))'
-            .format(num_pops.size)
+            f'unlikely(S->stack_depth - (mit_uword)({num_pops.size}) < (mit_uword)(COUNT))'
         )
     return Code(
         'if ({}) {{'.format(' || '.join(tests)),
@@ -412,7 +403,7 @@ def check_overflow(num_pops, num_pushes):
     if depth_change <= 0: return Code()
     # Ensure comparison will not overflow
     assert depth_change.count == 0
-    return Code('''\
-        if (unlikely(S->stack_words - S->stack_depth < {}))
-            RAISE(MIT_ERROR_STACK_OVERFLOW);'''.format(depth_change)
+    return Code(f'''\
+        if (unlikely(S->stack_words - S->stack_depth < {depth_change}))
+            RAISE(MIT_ERROR_STACK_OVERFLOW);'''
     )

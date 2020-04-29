@@ -19,14 +19,14 @@ COPYRIGHT_YEARS = '2018-2019'
 
 max_instruction = max([i.opcode for i in Instruction])
 code = copyright_banner(GENERATOR_PROGRAM, PURPOSE, COPYRIGHT_YEARS)
-code.append('''
+code.append(f'''
 #ifndef MIT_OPCODES
 #define MIT_OPCODES
 
 
-#define MIT_NUM_OPCODES {}
+#define MIT_NUM_OPCODES {max_instruction + 1}
 
-'''.format(max_instruction + 1))
+''')
 code.append('')
 code.extend(enum_to_c(Instruction, lambda i: i.opcode))
 code.append('')

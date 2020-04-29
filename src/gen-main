@@ -37,7 +37,7 @@ class Doc:
         if not isinstance(docstring, list):
             docstring = [docstring]
         if docstring[0][:1] != '"' or docstring[0][-1:] != '"':
-            docstring[0] = '"{}"'.format(repr(docstring[0])[1:-1])
+            docstring[0] = f'"{repr(docstring[0])[1:-1]}"'
         self._docstring = docstring
 
     @property
@@ -156,21 +156,18 @@ for element in Doc.elements:
         arg = ''
         if element.arg_name: arg = element.arg_name
         if element.arg == 'optional_argument':
-            arg = '[{}]'.format(arg)
+            arg = f'[{arg}]'
         help_code.append('    printf("  %-26s", "--{long_name}{short_opt} {arg}");'.format(
             long_name=element.long_name,
-            short_opt=', -{}'.format(element.short_name) if element.short_name else '',
+            short_opt=f', -{element.short_name}' if element.short_name else '',
             arg=arg,
         ))
-        help_code.append('    printf({});'.format(element.docstring))
+        help_code.append(f'    printf({element.docstring});')
         help_code.append('    putchar(\'\\n\');')
     elif isinstance(element, Arg):
-        help_code.append('printf("  %-26s%s\\n", "{arg}", {docstring});'.format(
-            arg=element.arg,
-            docstring=element.docstring
-        ))
+        help_code.append(f'printf("  %-26s%s\\n", "{element.arg}", {element.docstring});')
     elif isinstance(element, Doc):
-        help_code.append('    printf({}"\\n");'.format(element.docstring))
+        help_code.append(f'    printf({element.docstring}"\\n");')
 
 # Command-line options
 getopt_code = Code()
@@ -188,18 +185,16 @@ for i, option in enumerate(Option.options):
             shortopts += ':'
         elif option.arg == 'optional_argument':
             shortopts += '::'
-        short_options_code.append('''\
-            else if (c == '{short_name}')
-                longindex = {index};'''.format(
-                    short_name = option.short_name,
-                    index = i
-                ))
+        short_options_code.append(f'''\
+            else if (c == '{option.short_name}')
+                longindex = {i};'''
+        )
     if option.parse_code:
-        long_options_code.append('{}if (longindex == {})'.format(else_code, i))
+        long_options_code.append(f'{else_code}if (longindex == {i})')
         long_options_code.append(option.parse_code)
         else_code = 'else '
 getopt_code.append('{0, 0, 0, 0}')
-short_options_assignment = Code('const char *shortopts = "+:{}";'.format(shortopts))
+short_options_assignment = Code(f'const char *shortopts = "+:{shortopts}";')
 
 # main.c
 code = copyright_banner(GENERATOR_PROGRAM, PURPOSE, COPYRIGHT_YEARS)

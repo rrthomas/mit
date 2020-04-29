@@ -148,11 +148,11 @@ class Library(InstructionEnum):
             {
                 mit_word function;''',
             pop_stack('function'),
-            '''
-                int ret = trap_{}(S, function);
+            f'''
+                int ret = trap_{self.name.lower()}(S, function);
                 if (ret != 0)
                     RAISE(ret);
-            }}'''.format(self.name.lower())
+            }}'''
         ), opcode=opcode)
         self.library = library
         self.includes = includes

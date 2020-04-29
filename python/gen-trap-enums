@@ -44,12 +44,8 @@ lib_code = Code(
 )
 lib_code.append('')
 for lib in traps.LibInstruction:
-    lib_code.append('{} = ({}, {:#x})'.format(
-        lib.name,
-        lib.library.__name__,
-        lib.opcode,
-    ))
-    code.extend(enum_to_python(lib.library, lambda i: "{:#x}".format(i.opcode)))
+    lib_code.append(f'{lib.name} = ({lib.library.__name__}, {lib.opcode:#x})')
+    code.extend(enum_to_python(lib.library, lambda i: f"{i.opcode:#x}"))
     code.append('')
 code.append('''\
     @unique

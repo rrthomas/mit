@@ -46,5 +46,5 @@ output = f.getvalue()
 correct_file = re.sub(".py$", ".correct", sys.argv[0])
 correct = open(correct_file, "rb").read()
 
-print("Output:\n{}\n\nCorrect:\n{}".format(output,correct))
+print(f"Output:\n{output}\n\nCorrect:\n{correct}")
 assert(output == correct)

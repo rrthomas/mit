@@ -56,10 +56,10 @@ def _opcode_test(multiguess):
             opcode_bits = None # Must match all bits.
     # Generate the guess condition.
     if opcode_bits is None:
-        return 'S->ir == {:#x}'.format(opcode_value)
+        return f'S->ir == {opcode_value:#x}'
     else:
         mask = (1 << opcode_bits) - 1
-        return '(S->ir & {:#x}) == {:#x}'.format(mask, opcode_value)
+        return f'(S->ir & {mask:#x}) == {opcode_value:#x}'
 
 
 class Label:
@@ -97,7 +97,7 @@ class Label:
 
     def name(self):
         '''Returns the C identifier of this Label.'''
-        return 'A_{}'.format(self.index)
+        return f'A_{self.index}'
 
     def cache_state(self):
         '''Returns a fresh CacheState describing this Label.'''
@@ -122,7 +122,7 @@ class Label:
         # Generate the Code for the branch where `self.guess` is correct.
         c_code = Code()
         if profiling:
-            c_code.append('state_guess_correct[{}]++;'.format(self.index))
+            c_code.append(f'state_guess_correct[{self.index}]++;')
         state = State()
         cache_state = self.cache_state()
         state = state.step(self.guess)
@@ -130,7 +130,7 @@ class Label:
             initial_pc = S->pc;
             initial_ir = S->ir;
             S->ir >>= MIT_OPCODE_BIT;''',
-            '{{ // {}'.format(self.guess.name),
+            f'{{ // {self.guess.name}',
                 gen_case(self.guess, cache_state),
             '}',
         ))
@@ -140,7 +140,7 @@ class Label:
         # Generate the code for the branch where the guess is wrong.
         w_code = Code()
         if profiling:
-            w_code.append('state_guess_wrong[{}]++;'.format(self.index))
+            w_code.append(f'state_guess_wrong[{self.index}]++;')
         cache_state = self.cache_state()
         w_code.extend(goto_label_by_index(cache_state, self.if_wrong))
         # Compute the bit string of Instruction opcodes to guess.
@@ -155,17 +155,17 @@ class Label:
             stack_1=cache_state.lvalue(1),
         )
         tests = [
-            '({})'.format(opcode_test),
-            'likely({})'.format(cache_state.underflow_test(pops)),
-            'likely({})'.format(cache_state.overflow_test(pops, pushes)),
-            '({})'.format(guard_code),
+            f'({opcode_test})',
+            f'likely({cache_state.underflow_test(pops)})',
+            f'likely({cache_state.overflow_test(pops, pushes)})',
+            f'({guard_code})',
         ]
         # Generate the main Code.
         code = Code(
             '// History: {}'.format(' '.join(i.name for i in self.path)),
             '// Future: {}'.format(' '.join(i.name for i in self.preguess)),
             'assert(error == MIT_ERROR_BREAK);',
-            'assert(cached_depth == {});'.format(self.cached_depth()),
+            f'assert(cached_depth == {self.cached_depth()});',
             'if ({}) {{'.format(' && '.join(tests)),
             c_code,
             '}',
@@ -208,7 +208,7 @@ def goto_label_by_index(cache_state, index):
         # Jump to a Label.
         label = labels[index]
         code.extend(cache_state.flush(label.cache_state()))
-        code.append('goto {};'.format(label.name()))
+        code.append(f'goto {label.name()};')
     return code
 
 
@@ -243,7 +243,7 @@ def gen_labels_code(profiling=False):
     '''))
     for label in labels:
         code.append('')
-        code.append('{label_name}:'.format(label_name=label.name()))
+        code.append(f'{label.name()}:')
         code.append(label.generate_code(profiling, args.no_preguess or profiling))
     code.append('')
     code.append('''\
@@ -263,7 +263,7 @@ def gen_labels_code(profiling=False):
     switch_code = Code()
     cache_state = CacheState(max_cached_depth, 0)
     while cache_state.cached_depth > 0:
-        switch_code.append('case {}:'.format(cache_state.cached_depth))
+        switch_code.append(f'case {cache_state.cached_depth}:')
         case_code = Code()
         case_code.extend(cache_state.flush(cache_state.cached_depth - 1))
         case_code.append('// Falls through.')
@@ -294,7 +294,7 @@ def gen_body_code(profiling=False):
         # variable warning.
         code.append('mit_word {};'.format(
             ', '.join(
-                '{} = 0'.format(cache_state.var(pos))
+                f'{cache_state.var(pos)} = 0'
                 for pos in reversed(range(max_cached_depth))
             )
         ))
@@ -310,7 +310,7 @@ def gen_body_code(profiling=False):
 
 # Generate the code for the entire source file.
 code = copyright_banner(GENERATOR_PROGRAM, PURPOSE, COPYRIGHT_YEARS)
-code.append('''
+code.append(f'''
 
     #include "config.h"
 
@@ -323,7 +323,7 @@ code.append('''
     #include "run.h"
 
 
-    #define NUM_LABELS {num_labels}
+    #define NUM_LABELS {len(labels)}
     // The number of times we guessed correctly at each specializer label.
     static MIT_THREAD_LOCAL unsigned long long state_guess_correct[NUM_LABELS];
     // The number of times we guessed wrong at each specializer label.
@@ -335,7 +335,7 @@ code.append('''
         const char *guess;
         int correct_label;
         int wrong_label;
-    }} label_data[NUM_LABELS] = {{'''.format(num_labels=len(labels))
+    }} label_data[NUM_LABELS] = {{'''
 )
 def label_to_c(l):
     return -1 if l is None else l
@@ -408,7 +408,7 @@ for profiling, fn in [
     (True, 'mit_run_profile'),
 ]:
     code.append('')
-    code.append('mit_word {}(mit_state * restrict real_S) {{'.format(fn))
+    code.append(f'mit_word {fn}(mit_state * restrict real_S) {{')
     code.append(gen_body_code(profiling))
     code.append('}')
 

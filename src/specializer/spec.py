@@ -66,16 +66,16 @@ def _gen_ordinary_instruction(instruction, guard='1'):
     )
 
 def _gen_variadic_instruction(instruction, count):
-    replacement = ['x{}'.format(i) for i in range(count)]
+    replacement = [f'x{i}' for i in range(count)]
     code = Code()
-    code.append('assert(COUNT == {});'.format(count))
+    code.append(f'assert(COUNT == {count});')
     if count > 0:
         code.append('// Suppress warnings about possibly unused variables.')
         for i in range(count):
-            code.append('(void)x{};'.format(i))
+            code.append(f'(void)x{i};')
     code.extend(instruction.code)
     return (
-        '{{stack_0}} == {}'.format(count),
+        f'{{stack_0}} == {count}',
         StackEffect.of(
             _replace_items(instruction.effect.args, replacement),
             _replace_items(instruction.effect.results, replacement),
@@ -89,10 +89,8 @@ specialized_instructions = {}
 for instruction in Instruction:
     if instruction.is_variadic:
         for count in range(4):
-            specialized_instructions['{name}_WITH_{count}'.format(
-                name=instruction.name,
-                count=count,
-            )] = _gen_variadic_instruction(instruction, count)
+            specialized_instructions[f'{instruction.name}_WITH_{count}'] = \
+                _gen_variadic_instruction(instruction, count)
     elif instruction.name == 'JUMPZ':
         specialized_instructions['JUMPZ_TAKEN'] = _gen_ordinary_instruction(
             instruction,

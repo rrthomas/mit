@@ -99,9 +99,9 @@ class Label:
         self._right_children_of_left_descendants = set() # of Instruction.
         self.counts = {i: 0 for i in Instruction}
         if args.verbose:
-            print('Constructing {!r}'.format(self))
-            print('    right_parent = {!r}'.format(right_parent))
-            print('    left_ancestor = {!r}'.format(left_ancestor))
+            print(f'Constructing {self!r}')
+            print(f'    right_parent = {right_parent!r}')
+            print(f'    left_ancestor = {left_ancestor!r}')
         if self.is_root():
             # Check the invariants.
             assert right_parent is None
@@ -191,8 +191,8 @@ class Label:
                 # To maintain LEFT, we must construct a new Label.
                 if args.verbose:
                     print("Constructing common left ancestor")
-                    print("other = {}".format(other))
-                    print("similar = {}".format(similar))
+                    print(f"other = {other}")
+                    print(f"similar = {similar}")
                 other = Label(common_path, left_ancestor, other)
         return Label(new_path, self, other)
 
@@ -316,7 +316,7 @@ for label in Label.ALL:
 
 def write_svg(filename):
     if args.verbose:
-        print("Generating '{}'...".format(filename))
+        print(f"Generating '{filename}'…")
     import pydot
     g = pydot.Dot(
         'labels',
@@ -332,11 +332,11 @@ def write_svg(filename):
             # EITHER: number the states
             #str(i),
             # OR: name the states.
-            '('+' '.join(instruction.name for instruction in l.path)+')',
+            '(' + ' '.join(instruction.name for instruction in l.path) + ')',
             shape='star' if l.is_root() else 'ellipse',
             style='filled',
             fillcolor='' if l.is_root()
-                else '/pastel19/{}'.format(1 + l.path[-1].opcode % 9),
+                else f'/pastel19/{1 + l.path[-1].opcode % 9}',
         )
         nodes[l] = n
         g.add_node(nodes[l])
@@ -363,7 +363,7 @@ def write_svg(filename):
     # i.e. not our fault. Works with other engines.
     g.write_svg(filename, prog='dot' if len(Label.ALL)<=200 else 'neato')
     if args.verbose:
-        print("Wrote '{}'".format(filename))
+        print(f"Wrote '{filename}'")
 
 
 # Diagnostic output.
@@ -385,8 +385,8 @@ if args.verbose:
     for l in Label.ALL:
         histogram[len(l.right_children)] += 1
     for i, count in enumerate(histogram):
-        print('{} labels have {} right children'.format(count, i))
-    print("tick_count = {}".format(tick_count))
+        print(f'{count} labels have {i} right children')
+    print(f"tick_count = {tick_count}")
 
 if args.svg_file is not None:
     write_svg(args.svg_file)
@@ -407,7 +407,7 @@ class State:
         self.case = case
 
     def __repr__(self):
-        return 'State({}, {})'.format(self.index, self.case)
+        return f'State({self.index}, {self.case})'
 
     def __eq__(self, other):
         return self.index == other.index and self.case == other.case
@@ -438,7 +438,7 @@ class Goto(Code):
         self.target = target
 
     def __repr__(self):
-        return 'goto {}'.format(self.target)
+        return f'goto {self.target}'
 
 class If(Code):
     '''
@@ -460,7 +460,7 @@ class If(Code):
         self.w = w
 
     def __repr__(self):
-        return 'if {} goto {} else goto {}'.format(self.guess, self.c, self.w)
+        return f'if {self.guess} goto {self.c} else goto {self.w}'
 
 
 # For a Label with `n` right_children, make Codes for `n+1` States.
@@ -531,7 +531,7 @@ def walk(state):
         return
     number = len(reachable_states)
     if args.verbose:
-        print('Allocating number {} for state {}'.format(number, state))
+        print(f'Allocating number {number} for state {state}')
     reachable_states.append(state)
     state_to_number[state] = number
     code = state_to_code[state]
@@ -566,4 +566,4 @@ def row_for_state(state):
 with open(args.labels_filename, 'w') as f:
     json.dump([row_for_state(s) for s in reachable_states], f, indent=2)
 if args.verbose:
-    print('Wrote {}'.format(args.labels_filename))
+    print(f'Wrote {args.labels_filename}')
