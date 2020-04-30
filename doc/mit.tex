@@ -231,9 +231,9 @@ call and return (subroutine return is {\tt jump}):
 
 \nopagebreak
 \begin{description}
-\inst{jump}{a-addr —}{If {\tt ir} is not $0$, raise error $-1$. Set {\tt pc} to \spic{a-addr}. Perform the action of {\tt next}.}
-\inst{jumpz}{flag a-addr —}{If \spic{flag} is false then set {\tt pc} to \spic{a-addr} and perform the action of {\tt next}.}
-\inst{call}{\aaddr1 — \aaddr2}{If {\tt ir} is not $0$, raise error $-1$. Exchange {\tt pc} with the top stack value. Perform the action of {\tt next}.}
+\inst{jump}{a-addr —}{If {\tt ir} is not $0$, raise error $-1$. Set {\tt pc} to \spic{a-addr}.}
+\inst{jumpz}{flag a-addr —}{If \spic{flag} is false then set {\tt pc} to \spic{a-addr} and set {\tt ir} to $0$.}
+\inst{call}{\aaddr1 — \aaddr2}{If {\tt ir} is not $0$, raise error $-1$. Exchange {\tt pc} with the top stack value.}
 \end{description}
 
 

@@ -30,8 +30,4 @@
     } while (0)
 
 
-// Perform the action of NEXT.
-#define DO_NEXT                                 \
-    S->ir = *S->pc++
-
 #endif

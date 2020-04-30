@@ -67,7 +67,6 @@ class Instruction(InstructionEnum):
             if (unlikely(addr % MIT_WORD_BYTES != 0))
                 RAISE(MIT_ERROR_UNALIGNED_ADDRESS);
             S->pc = (mit_word *)addr;
-            DO_NEXT;
         '''),
         0x1,
         True,
@@ -80,7 +79,7 @@ class Instruction(InstructionEnum):
                 if (unlikely(addr % MIT_WORD_BYTES != 0))
                     RAISE(MIT_ERROR_UNALIGNED_ADDRESS);
                 S->pc = (mit_word *)addr;
-                DO_NEXT;
+                S->ir = 0;
             }
         '''),
         0x2,
@@ -93,7 +92,6 @@ class Instruction(InstructionEnum):
                  RAISE(MIT_ERROR_UNALIGNED_ADDRESS);
              ret_addr = (mit_uword)S->pc;
              S->pc = (mit_word *)addr;
-             DO_NEXT;
         '''),
         0x3,
         True,
@@ -341,7 +339,7 @@ class ExtraInstruction(InstructionEnum):
 
     NEXT = (
         StackEffect.of([], []),
-        Code('DO_NEXT;'),
+        Code('S->ir = *(mit_word *)S->pc++;'),
         0x0,
     )
 
