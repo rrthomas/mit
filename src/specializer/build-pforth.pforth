@@ -1,2 +1,2 @@
 #!/bin/sh
-MIT_OPTIONS=-O $srcdir/specializer/time-pforth-build
+$srcdir/specializer/time-pforth-build

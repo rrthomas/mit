@@ -96,10 +96,9 @@ Option('stack',
        ''')
 )
 
-Option('optimize',
-       'use optimizing interpreter',
-       short_name='O',
-       parse_code=Code('mit_run = mit_run_specializer;'),
+Option('no-optimize',
+       'use the naive interpreter',
+       parse_code=Code('mit_run = mit_run_simple;'),
 )
 
 Doc('\nMiscellaneous:')
@@ -309,6 +308,7 @@ int main(int argc, char *argv[])
 
     memory_words = 0x100000U;
     stack_words = 16384U;
+    mit_run = mit_run_specializer;
 
     // Options string starts with '+' to stop option processing at first
     // non-option, then leading ':' so as to return ':' for a missing arg,

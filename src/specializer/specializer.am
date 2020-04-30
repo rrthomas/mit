@@ -62,7 +62,7 @@ specializer/pforth/config.status: specializer/pforth/configure
 specializer/pforth/configure: specializer/pforth/configure.ac
 	cd specializer/pforth && \
 	autoreconf -i && \
-	./configure --build=mit BUILD_EXECUTOR=$(MIT_BINARY) BUILD_EXECUTOR_FLAGS=-O
+	./configure --build=mit BUILD_EXECUTOR=$(MIT_BINARY)
 check_DATA = specializer/pforth/src/highlevel.fs
 
 TESTS = \
