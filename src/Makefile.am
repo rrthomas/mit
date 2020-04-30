@@ -59,7 +59,7 @@ mit@PACKAGE_SUFFIX@.1: mit@PACKAGE_SUFFIX@$(EXEEXT) $(top_builddir)/build-aux/ma
 	  $(top_srcdir)/build-aux/missing --run $(HELP2MAN) --no-info \
 		--name="Virtual machine" \
 		--include=$(top_builddir)/build-aux/man-include.man \
-		--include=$(srcdir)/mit-include.man \
+		--include=$(builddir)/mit-include.man \
 		--output=$@ $(MIT_BINARY); \
 	fi
 
@@ -94,7 +94,7 @@ EXTRA_DIST = \
 	gen-instructions \
 	gen-main \
 	gen-yaml-spec \
-	mit-include.man
+	mit-include.man.in
 
 DISTCLEANLOCALDIRS = __pycache__
 distclean-local:
