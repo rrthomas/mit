@@ -7,8 +7,8 @@
 // THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 // RISK.
 
-#ifndef MIT_RUN
-#define MIT_RUN
+#ifndef MIT_RUN_H
+#define MIT_RUN_H
 
 
 // Arithmetic right shift `n` by `p` places (the behaviour of >> on signed
