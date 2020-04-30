@@ -265,8 +265,8 @@ class Instruction(InstructionEnum):
         StackEffect.of(['x', 'n'], ['r']),
         Code('''\
             r = n < (mit_word)MIT_WORD_BIT ?
-                (mit_word)((mit_uword)x << n) : 0;'''
-        ),
+                (mit_word)((mit_uword)x << n) : 0;
+        '''),
         0x18,
     )
 
@@ -274,8 +274,8 @@ class Instruction(InstructionEnum):
         StackEffect.of(['x', 'n'], ['r']),
         Code('''\
             r = n < (mit_word)MIT_WORD_BIT ?
-                (mit_word)((mit_uword)x >> n) : 0;'''
-        ),
+                (mit_word)((mit_uword)x >> n) : 0;
+        '''),
         0x19,
     )
 
@@ -309,8 +309,8 @@ class Instruction(InstructionEnum):
             if (b == 0)
                 RAISE(MIT_ERROR_DIVISION_BY_ZERO);
             q = a / b;
-            r = a % b;'''
-        ),
+            r = a % b;
+        '''),
         0x1e,
     )
 
@@ -320,8 +320,8 @@ class Instruction(InstructionEnum):
             if (b == 0)
                 RAISE(MIT_ERROR_DIVISION_BY_ZERO);
             q = (mit_word)((mit_uword)a / (mit_uword)b);
-            r = (mit_word)((mit_uword)a % (mit_uword)b);'''
-        ),
+            r = (mit_word)((mit_uword)a % (mit_uword)b);
+        '''),
         0x1f,
     )
 
@@ -501,8 +501,7 @@ for register in Register:
 extra_code = Code('''\
     mit_uword extra_opcode = S->ir;
     S->ir = 0;
-'''
-)
+''')
 extra_code.extend(dispatch(ExtraInstruction, Code(
     'RAISE(MIT_ERROR_INVALID_OPCODE);',
 ), 'extra_opcode'))
