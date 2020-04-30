@@ -64,10 +64,11 @@ class Instruction(InstructionEnum):
     JUMP = (
         StackEffect.of(['addr'], []),
         Code('''\
+            if (unlikely(addr % MIT_WORD_BYTES != 0))
+                RAISE(MIT_ERROR_UNALIGNED_ADDRESS);
             S->pc = (mit_word *)addr;
-            CHECK_ALIGNED(S->pc);
-            DO_NEXT;'''
-        ),
+            DO_NEXT;
+        '''),
         0x1,
         True,
     )
@@ -76,8 +77,9 @@ class Instruction(InstructionEnum):
         StackEffect.of(['flag', 'addr'], []),
         Code('''\
             if (flag == 0) {
+                if (unlikely(addr % MIT_WORD_BYTES != 0))
+                    RAISE(MIT_ERROR_UNALIGNED_ADDRESS);
                 S->pc = (mit_word *)addr;
-                CHECK_ALIGNED(S->pc);
                 DO_NEXT;
             }
         '''),
@@ -87,11 +89,12 @@ class Instruction(InstructionEnum):
     CALL = (
         StackEffect.of(['addr'], ['ret_addr']),
         Code('''\
-            ret_addr = (mit_uword)S->pc;
-            S->pc = (mit_word *)addr;
-            CHECK_ALIGNED(S->pc);
-            DO_NEXT;'''
-        ),
+             if (unlikely(addr % MIT_WORD_BYTES != 0))
+                 RAISE(MIT_ERROR_UNALIGNED_ADDRESS);
+             ret_addr = (mit_uword)S->pc;
+             S->pc = (mit_word *)addr;
+             DO_NEXT;
+        '''),
         0x3,
         True,
     )
@@ -129,20 +132,20 @@ class Instruction(InstructionEnum):
     LOAD = (
         StackEffect.of(['addr'], ['val']),
         Code('''\
-            if (unlikely(!is_aligned(addr, MIT_WORD_BYTES)))
+            if (unlikely(addr % MIT_WORD_BYTES != 0))
                 RAISE(MIT_ERROR_UNALIGNED_ADDRESS);
-            val = *(mit_word *)addr;'''
-        ),
+            val = *(mit_word *)addr;
+        '''),
         0x8,
     )
 
     STORE = (
         StackEffect.of(['val', 'addr'], []),
         Code('''\
-            if (unlikely(!is_aligned(addr, MIT_WORD_BYTES)))
+            if (unlikely(addr % MIT_WORD_BYTES != 0))
                 RAISE(MIT_ERROR_UNALIGNED_ADDRESS);
-            *(mit_word *)addr = val;'''
-        ),
+            *(mit_word *)addr = val;
+        '''),
         0x9,
     )
 
@@ -163,11 +166,11 @@ class Instruction(InstructionEnum):
         Code('''\
             #pragma GCC diagnostic push
             #pragma GCC diagnostic ignored "-Wcast-align"
-                if (unlikely(!is_aligned(addr, 2)))
+                if (unlikely(addr % 2 != 0))
                     RAISE(MIT_ERROR_UNALIGNED_ADDRESS);
                 val = (mit_uword)*((uint16_t *)((uint8_t *)addr));
-            #pragma GCC diagnostic pop'''
-        ),
+            #pragma GCC diagnostic pop
+        '''),
         0xc,
     )
 
@@ -176,11 +179,11 @@ class Instruction(InstructionEnum):
         Code('''\
             #pragma GCC diagnostic push
             #pragma GCC diagnostic ignored "-Wcast-align"
-                if (unlikely(!is_aligned(addr, 2)))
+                if (unlikely(addr % 2 != 0))
                     RAISE(MIT_ERROR_UNALIGNED_ADDRESS);
                 *(uint16_t *)addr = (uint16_t)val;
-            #pragma GCC diagnostic pop'''
-        ),
+            #pragma GCC diagnostic pop
+        '''),
         0xd,
     )
 
@@ -189,11 +192,11 @@ class Instruction(InstructionEnum):
         Code('''\
             #pragma GCC diagnostic push
             #pragma GCC diagnostic ignored "-Wcast-align"
-                if (unlikely(!is_aligned(addr, 4)))
+                if (unlikely(addr % 4 != 0))
                     RAISE(MIT_ERROR_UNALIGNED_ADDRESS);
                 val = (mit_uword)*((uint32_t *)((uint8_t *)addr));
-            #pragma GCC diagnostic pop'''
-        ),
+            #pragma GCC diagnostic pop
+        '''),
         0xe,
     )
 
@@ -202,11 +205,11 @@ class Instruction(InstructionEnum):
         Code('''\
             #pragma GCC diagnostic push
             #pragma GCC diagnostic ignored "-Wcast-align"
-                if (unlikely(!is_aligned(addr, 4)))
+                if (unlikely(addr % 4 != 0))
                     RAISE(MIT_ERROR_UNALIGNED_ADDRESS);
                 *(uint32_t *)addr = (uint32_t)val;
-            #pragma GCC diagnostic pop'''
-        ),
+            #pragma GCC diagnostic pop
+        '''),
         0xf,
     )
 

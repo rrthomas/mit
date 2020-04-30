@@ -102,15 +102,6 @@ enum {
 extern const unsigned mit_opcode_bit;
 extern const unsigned mit_opcode_mask;
 
-// Inline functions
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-function"
-_GL_ATTRIBUTE_CONST static int is_aligned(mit_uword addr, unsigned size)
-{
-    return (addr & (size - 1)) == 0;
-}
-#pragma GCC diagnostic pop
-
 
 // Stack access
 

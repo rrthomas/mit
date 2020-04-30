@@ -29,10 +29,6 @@
         goto error;                                           \
     } while (0)
 
-// Check a VM address is valid, raising an error if not.
-#define CHECK_ALIGNED(addr)                                   \
-    if (!is_aligned((mit_uword)(addr), MIT_WORD_BYTES))       \
-        RAISE(MIT_ERROR_UNALIGNED_ADDRESS);
 
 // Perform the action of NEXT.
 #define DO_NEXT                                 \
