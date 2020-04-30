@@ -1,5 +1,4 @@
-// Macros for the inner loop and instruction actions; see
-// mit_core/instruction.py for documentation.
+// Macros for the inner loop and instruction actions.
 //
 // (c) Mit authors 1994-2020
 //
