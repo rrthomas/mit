@@ -32,28 +32,11 @@
 
 // Check a VM address is valid, raising an error if not.
 #define CHECK_ALIGNED(addr)                                   \
-    if (!is_aligned((addr), MIT_WORD_BYTES))                  \
+    if (!is_aligned((mit_uword)(addr), MIT_WORD_BYTES))       \
         RAISE(MIT_ERROR_UNALIGNED_ADDRESS);
-
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-function"
-static mit_word _fetch_pc(mit_state *S)
-{
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wcast-align"
-    mit_word w = *(mit_word *)(S->pc);
-#pragma GCC diagnostic pop
-    S->pc += MIT_WORD_BYTES;
-    return w;
-}
-#pragma GCC diagnostic pop
-
-// Fetch the word at `pc`, assign it to `w`, and increment `pc` by a word.
-#define FETCH_PC(w)                                             \
-    (w) = (_fetch_pc(S))                                        \
 
 // Perform the action of NEXT.
 #define DO_NEXT                                 \
-    FETCH_PC(S->ir)
+    S->ir = *S->pc++
 
 #endif

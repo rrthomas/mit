@@ -350,7 +350,7 @@ int main(int argc, char *argv[])
     S->stack_words = stack_words;
     mit_argc = argc;
     mit_argv = &argv[0];
-    S->pc = (mit_uword)memory;
+    S->pc = memory;
 
     // Load object file and report any error
     {

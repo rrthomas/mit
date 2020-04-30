@@ -29,7 +29,7 @@ class RegisterEnum(AutoNumber):
 @unique
 class Register(RegisterEnum):
     '''VM registers.'''
-    pc = ()
+    pc = ('mit_word *')
     ir = ()
     stack_depth = ()
     stack = ('mit_word * restrict',)
@@ -64,7 +64,7 @@ class Instruction(InstructionEnum):
     JUMP = (
         StackEffect.of(['addr'], []),
         Code('''\
-            S->pc = (mit_uword)addr;
+            S->pc = (mit_word *)addr;
             CHECK_ALIGNED(S->pc);
             DO_NEXT;'''
         ),
@@ -76,7 +76,7 @@ class Instruction(InstructionEnum):
         StackEffect.of(['flag', 'addr'], []),
         Code('''\
             if (flag == 0) {
-                S->pc = (mit_uword)addr;
+                S->pc = (mit_word *)addr;
                 CHECK_ALIGNED(S->pc);
                 DO_NEXT;
             }
@@ -87,10 +87,10 @@ class Instruction(InstructionEnum):
     CALL = (
         StackEffect.of(['addr'], ['ret_addr']),
         Code('''\
-                ret_addr = S->pc;
-                S->pc = (mit_uword)addr;
-                CHECK_ALIGNED(S->pc);
-                DO_NEXT;'''
+            ret_addr = (mit_uword)S->pc;
+            S->pc = (mit_word *)addr;
+            CHECK_ALIGNED(S->pc);
+            DO_NEXT;'''
         ),
         0x3,
         True,
@@ -212,16 +212,16 @@ class Instruction(InstructionEnum):
 
     PUSH = (
         StackEffect.of([], ['n']),
-        Code('FETCH_PC(n);'),
+        Code('n = *S->pc++;'),
         0x10,
     )
 
     PUSHREL = (
         StackEffect.of([], ['n']),
         Code('''\
-            FETCH_PC(n);
-            n += S->pc - MIT_WORD_BYTES;'''
-        ),
+            n = (mit_uword)S->pc;
+            n += *S->pc++;
+        '''),
         0x11,
     )
 

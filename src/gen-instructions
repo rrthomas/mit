@@ -72,7 +72,8 @@ code.append(Code(*['''\
     mit_state state = *real_S;
     mit_state *const S = &state;
     mit_word error;
-    mit_uword initial_pc, initial_ir;
+    mit_word *initial_pc;
+    mit_uword initial_ir;
 
     do {''',
     body_code,

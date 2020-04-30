@@ -215,7 +215,8 @@ def goto_label_by_index(cache_state, index):
 def gen_labels_code(profiling=False):
     code = Code()
     code.append(Code('''\
-        mit_uword initial_pc, initial_ir;
+        mit_word *initial_pc;
+        mit_uword initial_ir;
         // The number of stack items cached in C variables.
         int cached_depth = 0;
 
