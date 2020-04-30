@@ -109,9 +109,13 @@ for instruction in Instruction:
 # NEXT is the one extra instruction we want the specializer to know about.
 # It works as a special case because its opcode is the same as EXTRA's;
 # we also need to mark it as terminal.
-ExtraInstruction.NEXT.terminal = True
-specialized_instructions['NEXT'] = \
-    _gen_ordinary_instruction(ExtraInstruction.NEXT)
+specialized_instructions['NEXT'] = (
+    '1',
+    StackEffect.of([], []),
+    Code(ExtraInstruction.NEXT.code),
+    Instruction.EXTRA.opcode,
+    True,
+)
 
 Instruction = InstructionEnum(
     'Instruction',
