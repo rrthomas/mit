@@ -9,8 +9,8 @@ THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 RISK.
 '''
 
-from mit_core.code_util import Code
-from mit_core.stack import Size
+from code_util import Code
+from stack import Size
 
 
 # TODO: Unify with path.State?

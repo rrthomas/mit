@@ -9,10 +9,10 @@
 
 import argparse, json, textwrap
 
-from mit_core.code_util import Code, copyright_banner, disable_warnings
-from mit_core.spec import opcode_bit
+from code_util import Code, copyright_banner, disable_warnings
+from spec import opcode_bit
 from specializer import CacheState, gen_case
-from spec import Instruction
+from specializer_spec import Instruction
 from path import Path, State
 
 

@@ -9,13 +9,13 @@ THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 RISK.
 '''
 
-from mit_core.code_util import Code
-from mit_core.spec import Instruction, ExtraInstruction
-from mit_core.stack import StackEffect, Size
-import mit_core.instruction
+from code_util import Code
+from spec import Instruction, ExtraInstruction
+from stack import StackEffect, Size
+import instruction
 
 
-class InstructionEnum(mit_core.instruction.InstructionEnum):
+class InstructionEnum(instruction.InstructionEnum):
     '''
     Specialized VM instruction descriptor.
     

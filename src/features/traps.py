@@ -9,10 +9,9 @@
 
 from enum import Enum, unique
 
-from mit_core.code_util import Code
-from mit_core.instruction import InstructionEnum
-from mit_core.stack import StackEffect
-from mit_core.stack import pop_stack
+from code_util import Code
+from instruction import InstructionEnum
+from stack import StackEffect, pop_stack
 
 
 @unique

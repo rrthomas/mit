@@ -19,7 +19,7 @@ libmit_la_SOURCES = %D%/traps.c
 
 # Note: we grep config.log because the generated header file has the symbols
 # sorted lexically, and we need the output in the same order as the input.
-%D%/type_sizes.py: $(top_builddir)/config.status %D%/gen-type-sizes %D%/collate-type-sizes include/mit/registers.h include/mit/opcodes.h %D%/traps.py mit_core/instruction.py
+%D%/type_sizes.py: $(top_builddir)/config.status %D%/gen-type-sizes %D%/collate-type-sizes include/mit/registers.h include/mit/opcodes.h %D%/traps.py instruction.py
 	cd %D% && \
 	$(PYTHON_WITH_PATH) $(abs_srcdir)/%D%/gen-type-sizes > type-sizes.ac && \
 	autoconf type-sizes.ac > type-sizes && \
@@ -27,11 +27,11 @@ libmit_la_SOURCES = %D%/traps.c
 	$(GREP) "^#define SIZEOF" config.log | cut -d " " -f 3 | \
 		( $(PYTHON_WITH_PATH) $(abs_srcdir)/%D%/collate-type-sizes > type_sizes.py ) || ( rm -f type_sizes.py; cat config.log; exit 1 )
 
-%D%/traps.c: %D%/gen-traps %D%/mit/features.h %D%/mit/trap-codes.h %D%/traps.py mit_core/instruction.py mit_core/stack.py mit_core/instruction_gen.py %D%/type_sizes.py
+%D%/traps.c: %D%/gen-traps %D%/mit/features.h %D%/mit/trap-codes.h %D%/traps.py instruction.py stack.py instruction_gen.py %D%/type_sizes.py
 	cd %D% && \
 	$(PYTHON_WITH_PATH) $(abs_srcdir)/%D%/gen-traps > traps.c || ( rm -f traps.c; exit 1 )
 
-%D%/mit/trap-codes.h: %D%/gen-trap-codes %D%/traps.py mit_core/instruction.py mit_core/instruction_gen.py
+%D%/mit/trap-codes.h: %D%/gen-trap-codes %D%/traps.py instruction.py instruction_gen.py
 	$(MKDIR_P) %D%/mit && \
 	cd %D% && \
 	$(PYTHON_WITH_PATH) $(abs_srcdir)/%D%/gen-trap-codes > mit/trap-codes.h || ( rm -f mit/trap-codes.h; exit 1 )

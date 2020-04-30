@@ -8,10 +8,10 @@
 # THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 # RISK.
 
-from yaml import add_representer, dump
+from yaml import dump
 
-from mit_core.code_util import Code, copyright_banner, unrestrict
-from mit_core.spec import Register, MitErrorCode, Instruction, ExtraInstruction
+from code_util import Code, copyright_banner, unrestrict
+from spec import Register, MitErrorCode, Instruction, ExtraInstruction
 
 
 GENERATOR_PROGRAM = 'gen-yaml-spec'

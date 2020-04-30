@@ -196,7 +196,7 @@ AC_CONFIG_FILES([
         lib/Makefile
         src/Makefile
         src/include/mit/mit.h
-        src/mit_core/params.py
+        src/params.py
         python/Makefile
         python/mit-shell-include.man
         tests/Makefile

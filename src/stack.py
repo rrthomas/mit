@@ -12,7 +12,7 @@ RISK.
 import re
 from functools import total_ordering
 
-from .code_util import Code, unrestrict, disable_warnings
+from code_util import Code, unrestrict, disable_warnings
 
 
 # Enough for the core

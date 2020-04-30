@@ -9,10 +9,9 @@
 
 import argparse
 
-from mit_core.spec import Instruction
-from mit_core.code_util import Code, copyright_banner
-from mit_core.instruction_gen import dispatch
-
+from spec import Instruction
+from code_util import Code, copyright_banner
+from instruction_gen import dispatch
 import profile
 
 

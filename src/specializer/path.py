@@ -12,8 +12,8 @@ RISK.
 from dataclasses import dataclass
 import re, functools
 
-from mit_core.spec import opcode_bit, word_bit
-from spec import Instruction
+from spec import opcode_bit, word_bit
+from specializer_spec import Instruction
 
 
 @dataclass

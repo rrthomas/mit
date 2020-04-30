@@ -12,7 +12,7 @@ RISK.
 import json, random
 from dataclasses import dataclass
 
-from spec import Instruction
+from specializer_spec import Instruction
 from path import Path
 
 

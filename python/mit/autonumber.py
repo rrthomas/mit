@@ -1,1 +1,1 @@
-../../src/mit_core/autonumber.py
+../../src/autonumber.py

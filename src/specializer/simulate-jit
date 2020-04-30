@@ -10,7 +10,7 @@
 import sys, functools, heapq, argparse, random, json
 from pprint import pprint
 
-from spec import Instruction, GUESS_LIMITING
+from specializer_spec import Instruction, GUESS_LIMITING
 from path import Path
 import profile
 

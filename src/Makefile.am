@@ -13,15 +13,15 @@ PYTHON_WITH_PATH = export PYTHONPATH=$(abs_top_srcdir)/python:$(abs_top_srcdir)/
 lib_LTLIBRARIES = libmit.la
 C_SRCS = constants.c stack.c args.c
 nodist_LIB_SRCS = include/mit/registers.h include/mit/opcodes.h instructions.c
-pkgdata_DATA = mit_core/mit_spec.yaml
+pkgdata_DATA = mit_spec.yaml
 LIB_CORE_SRCS = \
-	mit_core/autonumber.py \
-	mit_core/instruction.py \
-	mit_core/stack.py \
-	mit_core/spec.py \
-	mit_core/code_util.py \
-	mit_core/instruction_gen.py \
-	mit_core/params.py.in
+	autonumber.py \
+	instruction.py \
+	stack.py \
+	spec.py \
+	code_util.py \
+	instruction_gen.py \
+	params.py.in
 nodist_libmit_la_SOURCES = $(C_SRCS) $(nodist_LIB_SRCS)
 libmit_la_LIBADD = $(top_builddir)/lib/libgnu.la
 libmit_la_LDFLAGS = -no-undefined -export-symbols-regex '^mit_.*'
@@ -44,9 +44,8 @@ main.o: warn.h
 .c.s:
 	$(COMPILE) -c -S -o $@ $<
 
-mit_core/mit_spec.yaml: gen-yaml-spec mit_core/spec.py
-	$(MKDIR_P) mit_core
-	$(PYTHON_WITH_PATH) $(srcdir)/gen-yaml-spec > mit_core/mit_spec.yaml || ( rm -f mit_core/mit_spec.yaml; exit 1 )
+mit_spec.yaml: gen-yaml-spec spec.py
+	$(PYTHON_WITH_PATH) $(srcdir)/gen-yaml-spec > mit_spec.yaml || ( rm -f mit_spec.yaml; exit 1 )
 
 include/mit/mit.h: $(top_builddir)/config.status include/mit/mit.h.in include/mit/registers.h include/mit/opcodes.h
 	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
@@ -67,15 +66,15 @@ mit@PACKAGE_SUFFIX@.1: mit@PACKAGE_SUFFIX@$(EXEEXT) $(top_builddir)/build-aux/ma
 include/mit:
 	cd include && if test ! -e mit@PACKAGE_SUFFIX@; then $(LN_S) mit mit@PACKAGE_SUFFIX@; fi
 
-include/mit/registers.h: gen-registers mit_core/spec.py
+include/mit/registers.h: gen-registers spec.py
 	$(MKDIR_P) include/mit
 	$(PYTHON_WITH_PATH) $(srcdir)/gen-registers > include/mit/registers.h || ( rm -f include/mit/registers.h; exit 1 )
 
-include/mit/opcodes.h: gen-opcodes mit_core/spec.py mit_core/instruction.py
+include/mit/opcodes.h: gen-opcodes spec.py instruction.py
 	$(MKDIR_P) include/mit
 	$(PYTHON_WITH_PATH) $(srcdir)/gen-opcodes > include/mit/opcodes.h || ( rm -f include/mit/opcodes.h; exit 1 )
 
-instructions.c: gen-instructions mit_core/spec.py mit_core/instruction.py mit_core/stack.py mit_core/code_util.py mit_core/instruction_gen.py
+instructions.c: gen-instructions spec.py instruction.py stack.py code_util.py instruction_gen.py
 	$(PYTHON_WITH_PATH) $(srcdir)/gen-instructions > instructions.c || ( rm -f instructions.c; exit 1 )
 
 main.c: gen-main
@@ -97,7 +96,7 @@ EXTRA_DIST = \
 	gen-yaml-spec \
 	mit-include.man
 
-DISTCLEANLOCALDIRS = mit_core/__pycache__
+DISTCLEANLOCALDIRS = __pycache__
 distclean-local:
 	rm -rf $(DISTCLEANLOCALDIRS)
 

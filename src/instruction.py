@@ -11,8 +11,8 @@ RISK.
 
 from enum import Enum
 
-from .code_util import Code
-from .stack import StackEffect
+from code_util import Code
+from stack import StackEffect
 
 
 class InstructionEnum(Enum):

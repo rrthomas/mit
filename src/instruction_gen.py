@@ -11,9 +11,9 @@ RISK.
 The main entry point is dispatch().
 '''
 
-from .code_util import Code, c_symbol
-from .instruction import InstructionEnum
-from .stack import Size, check_underflow, check_overflow
+from code_util import Code, c_symbol
+from instruction import InstructionEnum
+from stack import Size, check_underflow, check_overflow
 
 
 def gen_case(instruction):
