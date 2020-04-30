@@ -68,7 +68,10 @@ def _gen_ordinary_instruction(instruction, guard='1'):
 def _gen_variadic_instruction(instruction, count):
     replacement = [f'x{i}' for i in range(count)]
     code = Code()
-    code.append(f'assert(COUNT == {count});')
+    code.append(f'''\
+        (void)COUNT; // Avoid a warning with -DNDEBUG
+        assert(COUNT == {count});
+    ''')
     if count > 0:
         code.append('// Suppress warnings about possibly unused variables.')
         for i in range(count):
