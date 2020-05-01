@@ -106,16 +106,6 @@ for instruction in Instruction:
     elif instruction.effect is not None:
         specialized_instructions[instruction.name] = \
             _gen_ordinary_instruction(instruction)
-# NEXT is the one extra instruction we want the specializer to know about.
-# It works as a special case because its opcode is the same as EXTRA's;
-# we also need to mark it as terminal.
-specialized_instructions['NEXT'] = (
-    '1',
-    StackEffect.of([], []),
-    Code(ExtraInstruction.NEXT.code),
-    Instruction.EXTRA.opcode,
-    True,
-)
 
 Instruction = InstructionEnum(
     'Instruction',

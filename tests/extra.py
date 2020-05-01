@@ -27,11 +27,11 @@ breaks = []
 lit(buffer)
 
 # Test ARGC
-ass(EXTRA, ARGC)
+ass(NEXT, ARGC)
 breaks.append(label() + word_bytes)
 
 # Test ARGV
-ass(EXTRA, ARGV)
+ass(NEXT, ARGV)
 lit(word_bytes)
 ass(ADD)
 ass(LOAD)

@@ -30,7 +30,7 @@ class RegisterEnum(AutoNumber):
 class Register(RegisterEnum):
     '''VM registers.'''
     pc = ('mit_word *')
-    ir = ()
+    ir = ('mit_word')
     stack_depth = ()
     stack = ('mit_word * restrict')
     stack_words = ()
@@ -51,14 +51,41 @@ class MitErrorCode(IntEnum):
 
 
 @unique
+class ImmediateInstruction(InstructionEnum):
+    EXTRA = (
+        None,
+        Code(), # Computed below.
+        0x0,
+    )
+
+    JUMPI = (
+        StackEffect.of([], []),
+        Code('''\
+            S->pc += S->ir;
+            S->ir = 0;
+        '''),
+        0x1,
+    )
+
+    CALLI = (
+        StackEffect.of([], ['ret_addr']),
+        Code('''\
+            ret_addr = (mit_uword)S->pc;
+            S->pc += S->ir;
+            S->ir = 0;
+        '''),
+        0x3,
+    )
+
+@unique
 class Instruction(InstructionEnum):
     '''VM instructions.'''
 
-    EXTRA = (
-        None,
-        Code(), # Code is computed below.
+    NEXT = (
+        StackEffect.of([], []),
+        Code('S->ir = *(mit_word *)S->pc++;'),
         0x0,
-        True,
+        ImmediateInstruction.EXTRA,
     )
 
     JUMP = (
@@ -69,7 +96,7 @@ class Instruction(InstructionEnum):
             S->pc = (mit_word *)addr;
         '''),
         0x1,
-        True,
+        ImmediateInstruction.JUMPI,
     )
 
     JUMPZ = (
@@ -88,13 +115,13 @@ class Instruction(InstructionEnum):
     CALL = (
         StackEffect.of(['addr'], ['ret_addr']),
         Code('''\
-             if (unlikely(addr % MIT_WORD_BYTES != 0))
-                 RAISE(MIT_ERROR_UNALIGNED_ADDRESS);
-             ret_addr = (mit_uword)S->pc;
-             S->pc = (mit_word *)addr;
+            if (unlikely(addr % MIT_WORD_BYTES != 0))
+                RAISE(MIT_ERROR_UNALIGNED_ADDRESS);
+            ret_addr = (mit_uword)S->pc;
+            S->pc = (mit_word *)addr;
         '''),
         0x3,
-        True,
+        ImmediateInstruction.CALLI,
     )
 
     POP = (
@@ -325,12 +352,6 @@ halt_code.append('RAISE(n);')
 class ExtraInstruction(InstructionEnum):
     '''VM extra instructions.'''
 
-    NEXT = (
-        StackEffect.of([], []),
-        Code('S->ir = *(mit_word *)S->pc++;'),
-        0x0,
-    )
-
     # FIXME: improve code generation so the stack effects of the following can
     # be specified
     HALT = (
@@ -486,7 +507,7 @@ for register in Register:
     ExtraInstruction[f'SET_{register.name.upper()}'].code = set_code
 
 
-# Inject code for Instruction.EXTRA
+# Inject code for ImmediateInstruction.EXTRA
 extra_code = Code('''\
     mit_uword extra_opcode = S->ir;
     S->ir = 0;
@@ -494,4 +515,4 @@ extra_code = Code('''\
 extra_code.extend(dispatch(ExtraInstruction, Code(
     'RAISE(MIT_ERROR_INVALID_OPCODE);',
 ), 'extra_opcode'))
-Instruction.EXTRA.code = extra_code
+ImmediateInstruction.EXTRA.code = extra_code

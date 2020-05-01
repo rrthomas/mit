@@ -26,7 +26,7 @@ for i in range(2):
     lit(LIBC)
     ass(TRAP)
     lit(MitErrorCode.OK)
-    ass(EXTRA, HALT)
+    ass(NEXT, HALT)
     code_len = assembler.pc
 
 ass_bytes(b"Hello, world!\n")

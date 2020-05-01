@@ -51,7 +51,7 @@ body_code.append('''\
     mit_byte opcode = S->ir & MIT_OPCODE_MASK;
     initial_pc = S->pc;
     initial_ir = S->ir;
-    S->ir >>= MIT_OPCODE_BIT;
+    S->ir = ARSHIFT(S->ir, MIT_OPCODE_BIT);
 
     // Check stack_depth is valid
     if (S->stack_depth > S->stack_words)

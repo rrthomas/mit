@@ -26,7 +26,7 @@ print(code)
 # FIXME: When we have PyYAML 5.1, use sort_keys=False
 # FIXME: Make the classes dumped directly representable
 def inst_spec(i):
-    spec = {'opcode': i.opcode, 'terminal': i.terminal}
+    spec = {'opcode': i.opcode, 'terminal': i.terminal is not None}
     if i.effect:
         spec['args'] = [item.name for item in i.effect.args.items]
         spec['results'] = [item.name for item in i.effect.results.items]

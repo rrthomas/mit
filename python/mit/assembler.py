@@ -1,7 +1,7 @@
 '''
 Mit assembler/disassembler
 
-(c) Mit authors 2019
+(c) Mit authors 2019-2020
 
 The package is distributed under the MIT/X11 License.
 
@@ -18,9 +18,11 @@ from .binding import (
 from .enums import Instruction, ExtraInstruction, TERMINAL_OPCODES
 from .trap_enums import LibInstruction
 
+NEXT = Instruction.NEXT
+JUMP = Instruction.JUMP
+CALL = Instruction.CALL
 PUSH = Instruction.PUSH
 PUSHREL = Instruction.PUSHREL
-EXTRA = Instruction.EXTRA
 
 mnemonic = {
     instruction.value: instruction.name
@@ -93,13 +95,17 @@ class Disassembler:
                     comment = f' ({value:#x}={signed_value})'
                 else: # opcode == PUSHREL
                     comment = f' ({initial_pc + signed_value:#x})'
-            if opcode == EXTRA:
+            elif opcode == NEXT:
                 # Call `self._fetch()` later, not now.
                 comment = extra_mnemonic.get(
                     self.ir,
                     'invalid extra instruction'
                 )
                 comment = f' ({comment})'
+                self.ir = 0
+            elif opcode in (JUMP, CALL) and self.ir != 0:
+                # Call `self._fetch()` later, not now.
+                comment = f' (to {self.pc + self.ir * word_bytes:#x})'
                 self.ir = 0
         except IndexError:
             name = "invalid address!"
@@ -180,20 +186,33 @@ class Assembler:
         self.word(0)
         self.i_shift = 0
 
+    def fit(self, extended_opcode):
+        '''
+        Determine whether the given extended opcode fits in the current word.
+        If so, return the updated word; otherwise, None.
+        '''
+        i = self.state.M_word[self.i_addr or self.pc]
+        i_shift = self.i_shift or 0
+        i |= extended_opcode << i_shift
+        i &= word_mask
+        sign_mask = (-1 if extended_opcode < 0 else 0) & (~word_mask)
+        if (i | sign_mask) >> i_shift == extended_opcode:
+            return i
+        return None
+
     def instruction(self, opcode, extra_opcode=None):
         '''
         Appends an instruction opcode.
 
          - opcode - An Instruction or an `opcode_bit`-bit integer.
-         - extra_opcode - optional - if `opcode` is `EXTRA`, the
-           extra opcode for an extra instruction.  This can be any type that
-           can be converted to an int; it is typically an IntEnum value.
+         - extra_opcode - int - if `opcode` is `NEXT`, `JUMP` or `CALL`,
+           the rest of the instruction word.
         '''
         # Compute the extended opcode.
         extended_opcode = int(opcode)
         assert 0 <= extended_opcode <= opcode_mask
         if extra_opcode is not None:
-            assert extended_opcode in (EXTRA,)
+            assert extended_opcode in (NEXT, JUMP, CALL)
             extended_opcode |= (int(extra_opcode) << opcode_bit)
 
         # Store the extended opcode, starting a new word if necessary.
@@ -201,11 +220,8 @@ class Assembler:
             # Start of a new word.
             assert self.i_shift is None
             self._fetch()
-        i = self.state.M_word[self.i_addr]
-        i |= extended_opcode << self.i_shift
-        i &= word_mask
-        if (i >> self.i_shift) != extended_opcode:
-            # Doesn't fit in the current word.
+        i = self.fit(extended_opcode)
+        if i is None: # Doesn't fit in the current word.
             self._fetch()
             i = extended_opcode
         self.state.M_word[self.i_addr] = i
@@ -216,6 +232,20 @@ class Assembler:
         else:
             assert extended_opcode == int(opcode)
             self.i_shift += opcode_bit
+
+    def jump_rel(self, addr, opcode=JUMP):
+        '''
+        Assemble a relative `jump` or `call` instruction to the given address.
+        '''
+        assert opcode in (JUMP, CALL)
+        assert is_aligned(addr)
+        word_offset = (addr - self.pc - word_bytes) // word_bytes
+        assert word_offset != 0, "attempt to jump to current `pc`"
+        if self.fit(int(opcode) | (word_offset << opcode_bit)):
+            self.instruction(opcode, word_offset)
+        else:
+            self.lit_pc_rel(addr)
+            self.instruction(opcode)
 
     def lit(self, value):
         self.instruction(PUSH)

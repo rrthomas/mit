@@ -129,7 +129,7 @@ class Label:
         c_code.extend(Code('''\
             initial_pc = S->pc;
             initial_ir = S->ir;
-            S->ir >>= MIT_OPCODE_BIT;''',
+            S->ir = ARSHIFT(S->ir, MIT_OPCODE_BIT);''',
             f'{{ // {self.guess.name}',
                 gen_case(self.guess, cache_state),
             '}',

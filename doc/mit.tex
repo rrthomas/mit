@@ -111,7 +111,7 @@ Execution proceeds as follows:
 \begin{tabbing}
 \hspace{0.5in}\=begin\=\+\+ \\*
 let \textbf{opcode} be the least significant $8$ bits of {\tt ir} \\*
-shift {\tt ir} logically $8$ bits to the right \\*
+shift {\tt ir} arithmetically $8$ bits to the right \\*
 execute the instruction given by \textbf{opcode} \- \\*
 repeat
 \end{tabbing}
@@ -226,8 +226,7 @@ The following extra instructions are defined:
 \subsection{Control}
 \label{control}
 
-These instructions implement unconditional and conditional branches, and subroutine
-call and return (subroutine return is {\tt jump}):
+These instructions implement unconditional and conditional branches, and subroutine call and return (subroutine return is {\tt jump}):
 
 \nopagebreak
 \begin{description}
@@ -235,6 +234,8 @@ call and return (subroutine return is {\tt jump}):
 \inst{jumpz}{flag a-addr —}{If \spic{flag} is false then set {\tt pc} to \spic{a-addr} and set {\tt ir} to $0$.}
 \inst{call}{\aaddr1 — \aaddr2}{If {\tt ir} is not $0$, raise error $-1$. Exchange {\tt pc} with the top stack value.}
 \end{description}
+
+There are also variants {\tt jumpi} and {\tt calli}, which take the address encoded as a {\tt pc}-relative number of words in the remainder of {\tt ir}.
 
 
 \subsection{Trap}

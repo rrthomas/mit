@@ -82,7 +82,7 @@ correct = [-128, 12345]
 for n in correct:
     lit(n)
 lit(MitErrorCode.OK)
-ass(EXTRA, HALT)
+ass(NEXT, HALT)
 save(test_file_name, length=label() - M.addr)
 res = try_load(test_file_name)
 print(f"; should be {MitErrorCode.OK}")

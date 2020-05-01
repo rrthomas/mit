@@ -76,7 +76,7 @@ try:
             ass(JUMP)
             M_word[patch] = label() - patch
     lit(MitErrorCode.OK)
-    ass(EXTRA, HALT)
+    ass(NEXT, HALT)
     M_word[M_word.addr + word_bytes] = label() - M_word.addr # Patch data pointer.
 except ErrorCode as e:
     if e.args[0] == MitError.INVALID_MEMORY_WRITE:

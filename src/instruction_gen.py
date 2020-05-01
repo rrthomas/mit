@@ -27,10 +27,6 @@ def gen_case(instruction):
     '''
     effect = instruction.effect
     code = Code()
-    if instruction.terminal and instruction.name != 'EXTRA':
-        code.append(
-            'if (unlikely(S->ir != 0)) RAISE(MIT_ERROR_INVALID_OPCODE);'
-        )
     if effect is not None:
         # Load the arguments into C variables.
         code.extend(effect.declare_vars())
@@ -50,6 +46,14 @@ def gen_case(instruction):
         # Store the results from C variables.
         code.append(f'S->stack_depth += {effect.results.size - effect.args.size};')
         code.extend(effect.store_results())
+    if instruction.terminal and instruction.terminal != True:
+        code = Code(
+            'if (S->ir != 0) {',
+            gen_case(instruction.terminal),
+            '} else {',
+            code,
+            '}',
+        )
     return code
 
 def dispatch(instructions, undefined_case, opcode='opcode'):

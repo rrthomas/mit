@@ -19,9 +19,7 @@ from mit.globals import *
 correct = []
 
 # Code
-lit(M.addr + 96)
-correct.append(assembler.pc)
-ass(JUMP)
+jump_rel(M.addr + 96)
 goto(M.addr + 96)
 correct.append(assembler.pc)
 
@@ -51,9 +49,8 @@ ass(JUMPZ)
 correct.append(assembler.pc)
 lit(0)
 correct.append(assembler.pc)
-lit_pc_rel(M.addr + 11008)
-correct.append(assembler.pc)
-ass(JUMPZ)
+label() # Ensure that jump_rel will be able to assemble the jump using immediate operand
+jump_rel(M.addr + 11008)
 goto(M.addr + 11008)
 correct.append(assembler.pc)
 
@@ -65,9 +62,8 @@ ass(JUMPZ)
 goto(M.addr + 11008 + word_bytes * 8)
 correct.append(assembler.pc)
 
-lit_pc_rel(M.addr + 608)
-correct.append(assembler.pc)
-ass(CALL)
+label() # Ensure that jump_rel will be able to assemble the jump using immediate operand
+jump_rel(M.addr + 608, CALL)
 goto(M.addr + 608)
 correct.append(assembler.pc)
 
@@ -114,7 +110,7 @@ correct.append(assembler.pc)
 # Test
 for i, correct_pc in enumerate(correct):
     trace()
-    print(f"Instruction {i}: pc = {VM.pc:#x} should be {correct_pc:#x}")
+    print(f"Instruction {i}: pc = {VM.pc:#x} should be {correct_pc:#x}", file=sys.stderr)
     if int(VM.pc) != correct_pc:
         print(f"Error in branch tests: pc = {VM.pc:#x}")
         sys.exit(1)
