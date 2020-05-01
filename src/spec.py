@@ -162,12 +162,9 @@ class Instruction(InstructionEnum):
     LOAD2 = (
         StackEffect.of(['addr'], ['val']),
         Code('''\
-            #pragma GCC diagnostic push
-            #pragma GCC diagnostic ignored "-Wcast-align"
-                if (unlikely(addr % 2 != 0))
-                    RAISE(MIT_ERROR_UNALIGNED_ADDRESS);
-                val = (mit_uword)*((uint16_t *)((uint8_t *)addr));
-            #pragma GCC diagnostic pop
+            if (unlikely(addr % 2 != 0))
+                RAISE(MIT_ERROR_UNALIGNED_ADDRESS);
+            val = (mit_uword)*((uint16_t *)addr);
         '''),
         0xc,
     )
@@ -175,12 +172,9 @@ class Instruction(InstructionEnum):
     STORE2 = (
         StackEffect.of(['val', 'addr'], []),
         Code('''\
-            #pragma GCC diagnostic push
-            #pragma GCC diagnostic ignored "-Wcast-align"
-                if (unlikely(addr % 2 != 0))
-                    RAISE(MIT_ERROR_UNALIGNED_ADDRESS);
-                *(uint16_t *)addr = (uint16_t)val;
-            #pragma GCC diagnostic pop
+            if (unlikely(addr % 2 != 0))
+                RAISE(MIT_ERROR_UNALIGNED_ADDRESS);
+            *(uint16_t *)addr = (uint16_t)val;
         '''),
         0xd,
     )
@@ -188,12 +182,9 @@ class Instruction(InstructionEnum):
     LOAD4 = (
         StackEffect.of(['addr'], ['val']),
         Code('''\
-            #pragma GCC diagnostic push
-            #pragma GCC diagnostic ignored "-Wcast-align"
-                if (unlikely(addr % 4 != 0))
-                    RAISE(MIT_ERROR_UNALIGNED_ADDRESS);
-                val = (mit_uword)*((uint32_t *)((uint8_t *)addr));
-            #pragma GCC diagnostic pop
+            if (unlikely(addr % 4 != 0))
+                RAISE(MIT_ERROR_UNALIGNED_ADDRESS);
+            val = (mit_uword)*((uint32_t *)addr);
         '''),
         0xe,
     )
@@ -201,12 +192,9 @@ class Instruction(InstructionEnum):
     STORE4 = (
         StackEffect.of(['val', 'addr'], []),
         Code('''\
-            #pragma GCC diagnostic push
-            #pragma GCC diagnostic ignored "-Wcast-align"
-                if (unlikely(addr % 4 != 0))
-                    RAISE(MIT_ERROR_UNALIGNED_ADDRESS);
-                *(uint32_t *)addr = (uint32_t)val;
-            #pragma GCC diagnostic pop
+            if (unlikely(addr % 4 != 0))
+                RAISE(MIT_ERROR_UNALIGNED_ADDRESS);
+            *(uint32_t *)addr = (uint32_t)val;
         '''),
         0xf,
     )
