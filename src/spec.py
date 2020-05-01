@@ -32,7 +32,7 @@ class Register(RegisterEnum):
     pc = ('mit_word *')
     ir = ()
     stack_depth = ()
-    stack = ('mit_word * restrict',)
+    stack = ('mit_word * restrict')
     stack_words = ()
 
 @unique
