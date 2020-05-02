@@ -67,6 +67,17 @@ class ImmediateInstruction(InstructionEnum):
         0x1,
     )
 
+    JUMPZI = (
+        StackEffect.of(['flag'], []),
+        Code('''\
+            if (flag == 0) {
+                S->pc += S->ir;
+                S->ir = 0;
+            }
+        '''),
+        0x2,
+    )
+
     CALLI = (
         StackEffect.of([], ['ret_addr']),
         Code('''\
@@ -110,6 +121,7 @@ class Instruction(InstructionEnum):
             }
         '''),
         0x2,
+        ImmediateInstruction.JUMPZI
     )
 
     CALL = (

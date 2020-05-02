@@ -45,7 +45,7 @@
 
 \title{The Mit virtual machine}
 \author{Reuben Thomas}
-\date{27th April 2020}
+\date{2nd May 2020}
 
 \begin{document}
 \maketitle
@@ -235,7 +235,7 @@ These instructions implement unconditional and conditional branches, and subrout
 \inst{call}{\aaddr1 — \aaddr2}{If {\tt ir} is not $0$, raise error $-1$. Exchange {\tt pc} with the top stack value.}
 \end{description}
 
-There are also variants {\tt jumpi} and {\tt calli}, which take the address encoded as a {\tt pc}-relative number of words in the remainder of {\tt ir}.
+There are also variants {\tt jumpi}, {\tt jumpzi} and {\tt calli}, which take the address encoded as a {\tt pc}-relative number of words in the remainder of {\tt ir}.
 
 
 \subsection{Trap}

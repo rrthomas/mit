@@ -56,9 +56,8 @@ correct.append(assembler.pc)
 
 lit(0)
 correct.append(assembler.pc)
-lit_pc_rel(M.addr + 11008 + word_bytes * 8)
-correct.append(assembler.pc)
-ass(JUMPZ)
+label() # Ensure that jump_rel will be able to assemble the jump using immediate operand
+jump_rel(M.addr + 11008 + word_bytes * 8, JUMPZ)
 goto(M.addr + 11008 + word_bytes * 8)
 correct.append(assembler.pc)
 

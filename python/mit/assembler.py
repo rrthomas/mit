@@ -20,6 +20,7 @@ from .trap_enums import LibInstruction
 
 NEXT = Instruction.NEXT
 JUMP = Instruction.JUMP
+JUMPZ = Instruction.JUMPZ
 CALL = Instruction.CALL
 PUSH = Instruction.PUSH
 PUSHREL = Instruction.PUSHREL
@@ -103,7 +104,7 @@ class Disassembler:
                 )
                 comment = f' ({comment})'
                 self.ir = 0
-            elif opcode in (JUMP, CALL) and self.ir != 0:
+            elif opcode in (JUMP, JUMPZ, CALL) and self.ir != 0:
                 # Call `self._fetch()` later, not now.
                 comment = f' (to {self.pc + self.ir * word_bytes:#x})'
                 self.ir = 0
@@ -205,14 +206,14 @@ class Assembler:
         Appends an instruction opcode.
 
          - opcode - An Instruction or an `opcode_bit`-bit integer.
-         - extra_opcode - int - if `opcode` is `NEXT`, `JUMP` or `CALL`,
-           the rest of the instruction word.
+         - extra_opcode - int - if `opcode` is `NEXT`, `JUMP`, `JUMPZ` or
+           `CALL`, the rest of the instruction word.
         '''
         # Compute the extended opcode.
         extended_opcode = int(opcode)
         assert 0 <= extended_opcode <= opcode_mask
         if extra_opcode is not None:
-            assert extended_opcode in (NEXT, JUMP, CALL)
+            assert extended_opcode in (NEXT, JUMP, JUMPZ, CALL)
             extended_opcode |= (int(extra_opcode) << opcode_bit)
 
         # Store the extended opcode, starting a new word if necessary.
@@ -235,12 +236,13 @@ class Assembler:
 
     def jump_rel(self, addr, opcode=JUMP):
         '''
-        Assemble a relative `jump` or `call` instruction to the given address.
+        Assemble a relative `jump`, `jumpz` or `call` instruction to the given
+        address.
         '''
-        assert opcode in (JUMP, CALL)
+        assert opcode in (JUMP, JUMPZ, CALL)
         assert is_aligned(addr)
         word_offset = (addr - self.pc - word_bytes) // word_bytes
-        assert word_offset != 0, "attempt to jump to current `pc`"
+        assert word_offset != 0, "immediate branch offset cannot be 0"
         if self.fit(int(opcode) | (word_offset << opcode_bit)):
             self.instruction(opcode, word_offset)
         else:
