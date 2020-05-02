@@ -138,10 +138,8 @@ vars().update([(c, cty.in_dll(libmit, f"mit_{c}"))
 def run(state):
     return mit_error(_run(state))
 
-libmit.mit_load_stack.argtypes = [POINTER(c_mit_state), c_uword, POINTER(c_word)]
-libmit.mit_load_stack.errcheck = mit_error
-libmit.mit_store_stack.argtypes = [POINTER(c_mit_state), c_uword, c_word]
-libmit.mit_store_stack.errcheck = mit_error
+libmit.mit_stack_position.argtypes = [POINTER(c_mit_state), c_uword]
+libmit.mit_stack_position.restype = POINTER(c_word)
 libmit.mit_pop_stack.argtypes = [POINTER(c_mit_state), POINTER(c_word)]
 libmit.mit_pop_stack.errcheck = mit_error
 libmit.mit_push_stack.argtypes = [POINTER(c_mit_state), c_word]

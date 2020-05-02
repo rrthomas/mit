@@ -90,16 +90,6 @@ do_tests(step_trace)
 print("Running tests with run (optimized)")
 do_tests(VM.run)
 
-test.append("Try to write to an invalid stack location (can't do this with virtual code)")
-try:
-    libmit.mit_store_stack(VM.state, 4, 0)
-    ret = 0
-except VMError as e:
-    ret = e.args[0]
-if ret != MitErrorCode.INVALID_STACK_WRITE:
-    print(f'Error in errors test: test "{test[-1]}" failed; result is {ret}, should be {MitErrorCode.INVALID_STACK_WRITE}')
-    error += 1
-
 if error != 0:
     sys.exit(error)
 

@@ -110,17 +110,9 @@ extern const unsigned mit_opcode_mask;
 // mit.h.
 //
 
-int mit_load_stack(mit_state *S, mit_uword pos, mit_word *val_ptr);
-/* Load the word position `pos` on the stack into the word pointed to by
-   `val_ptr`.
-
-   Return 0 if OK, or error code if `pos` is invalid.
-*/
-
-int mit_store_stack(mit_state *S, mit_uword pos, mit_word val);
-/* Store the word `val` into the word at position `pos` on the stack.
-
-   Return 0 if OK, or error code if `addr` is invalid.
+mit_word *mit_stack_position(mit_state *S, mit_uword pos);
+/* Return the address of element `pos` on the stack, or NULL if `pos` is
+   invalid.
 */
 
 int mit_pop_stack(mit_state *S, mit_word *val_ptr);

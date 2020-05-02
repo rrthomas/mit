@@ -444,19 +444,12 @@ class ExtraInstruction(InstructionEnum):
         0xd,
     )
 
-    LOAD_STACK = (
-        StackEffect.of(['pos', 'inner_state:mit_state *'], ['value', 'ret']),
+    STACK_POSITION = (
+        StackEffect.of(['pos', 'inner_state:mit_state *'], ['ret:mit_word *']),
         Code('''\
-           value = 0;
-           ret = mit_load_stack(inner_state, pos, &value);
+           ret = mit_stack_position(inner_state, pos);
         '''),
         0xe,
-    )
-
-    STORE_STACK = (
-        StackEffect.of(['value', 'pos', 'inner_state:mit_state *'], ['ret']),
-        Code('ret = mit_store_stack(inner_state, pos, value);'),
-        0xf,
     )
 
     POP_STACK = (
@@ -465,25 +458,25 @@ class ExtraInstruction(InstructionEnum):
             value = 0;
             ret = mit_pop_stack(inner_state, &value);
         '''),
-        0x10,
+        0xf,
     )
 
     PUSH_STACK = (
         StackEffect.of(['value', 'inner_state:mit_state *'], ['ret']),
         Code('ret = mit_push_stack(inner_state, value);'),
-        0x11,
+        0x10,
     )
 
     RUN = (
         StackEffect.of(['inner_state:mit_state *'], ['ret']),
         Code('ret = mit_run(inner_state);'),
-        0x12,
+        0x11,
     )
 
     SINGLE_STEP = (
         StackEffect.of(['inner_state:mit_state *'], ['ret']),
         Code('ret = mit_single_step(inner_state);'),
-        0x13,
+        0x12,
     )
 
     ARGC = (

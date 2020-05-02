@@ -269,7 +269,7 @@ class Stack:
      - state - a c_mit_state.
 
     When specifying stack indices, this class uses the Python convention, so
-    0 is the base of the stack. In contrast, the C API (`mit_load_stack()`
+    0 is the base of the stack. In contrast, the C API (`mit_stack_position()`
     etc.) use the convention that 0 is the top of the stack.
     '''
     def __init__(self, state):
@@ -290,16 +290,21 @@ class Stack:
         if isinstance(index, slice):
             return [self[i] for i in range(*index.indices(len(self)))]
         else:
-            v = c_word()
-            libmit.mit_load_stack(self.state, len(self) - 1 - index, byref(v))
-            return v.value
+            ptr = libmit.mit_stack_position(self.state, len(self) - 1 - index)
+            if ptr is not None:
+                return ptr.contents.value
+            raise IndexError
 
     def __setitem__(self, index, value):
         if isinstance(index, slice):
             for i, v in zip(range(*index.indices(len(self))), value):
                 self[i] = v
         else:
-            libmit.mit_store_stack(self.state, len(self) - 1 - index, value)
+            ptr = libmit.mit_stack_position(self.state, len(self) - 1 - index)
+            if ptr is not None:
+                ptr.contents.value = value
+            else:
+                raise IndexError
 
     def __iter__(self):
         return (self[i] for i in range(len(self)))
