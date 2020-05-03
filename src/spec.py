@@ -354,12 +354,6 @@ class Instruction(InstructionEnum):
     )
 
 
-# Generate code for ExtraInstruction.HALT
-halt_code = Code()
-halt_code.append('mit_word n;')
-halt_code.extend(pop_stack('n'))
-halt_code.append('RAISE(n);')
-
 @unique
 class ExtraInstruction(InstructionEnum):
     '''VM extra instructions.'''
@@ -368,7 +362,7 @@ class ExtraInstruction(InstructionEnum):
     # be specified
     HALT = (
         None,
-        halt_code,
+        Code('mit_word n;', str(pop_stack('n')), 'RAISE(n);'),
         0x1,
     )
 
