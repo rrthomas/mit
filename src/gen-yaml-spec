@@ -23,7 +23,7 @@ code.append('')
 print(code)
 
 # Write YAML description.
-# FIXME: When we have PyYAML 5.1, use sort_keys=False
+# TODO: When we have PyYAML 5.1, use sort_keys=False
 # FIXME: Make the classes dumped directly representable
 def inst_spec(i):
     spec = {'opcode': i.opcode, 'terminal': i.terminal is not None}
