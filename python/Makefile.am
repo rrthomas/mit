@@ -40,7 +40,7 @@ all-local: $(nodist_mit_pkgpython_PYTHON)
 		--output=$@ ./$*; \
 	fi
 
-mit/enums.py: $(top_builddir)/src/mit_spec.yaml Makefile mit/enums.py.in
+mit/enums.py: $(top_builddir)/src/spec.yaml Makefile mit/enums.py.in
 	@$(MKDIR_P) mit
 	@rm -f $@ $@.tmp
 	$(AM_V_GEN)$(inplace_edit) $(srcdir)/'$@.in' >$@.tmp

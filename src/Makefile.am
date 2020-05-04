@@ -13,7 +13,7 @@ PYTHON_WITH_PATH = export PYTHONPATH=$(abs_top_srcdir)/python:$(abs_top_srcdir)/
 lib_LTLIBRARIES = libmit.la
 C_SRCS = constants.c stack.c args.c
 nodist_LIB_SRCS = include/mit/registers.h include/mit/opcodes.h instructions.c
-pkgdata_DATA = mit_spec.yaml
+pkgdata_DATA = spec.yaml
 LIB_CORE_SRCS = \
 	autonumber.py \
 	instruction.py \
@@ -44,8 +44,8 @@ main.o: warn.h
 .c.s:
 	$(COMPILE) -c -S -o $@ $<
 
-mit_spec.yaml: gen-yaml-spec spec.py
-	$(PYTHON_WITH_PATH) $(srcdir)/gen-yaml-spec > mit_spec.yaml || ( rm -f mit_spec.yaml; exit 1 )
+spec.yaml: gen-yaml-spec spec.py
+	$(PYTHON_WITH_PATH) $(srcdir)/gen-yaml-spec > spec.yaml || ( rm -f spec.yaml; exit 1 )
 
 include/mit/mit.h: $(top_builddir)/config.status include/mit/mit.h.in include/mit/registers.h include/mit/opcodes.h
 	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
