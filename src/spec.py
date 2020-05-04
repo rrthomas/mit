@@ -89,14 +89,24 @@ class ImmediateInstruction(InstructionEnum):
     )
 
 @unique
-class Instruction(InstructionEnum):
-    '''VM instructions.'''
+class BasicInstruction(InstructionEnum):
+    '''VM basic instructions.'''
 
     NEXT = (
         StackEffect.of([], []),
         Code('S->ir = *(mit_word *)S->pc++;'),
         0x0,
         ImmediateInstruction.EXTRA,
+    )
+
+    NEXTFF = (
+        StackEffect.of([], []),
+        Code('''\
+            if (S->ir != -1)
+                RAISE(MIT_ERROR_INVALID_OPCODE);
+            S->ir = *(mit_word *)S->pc++;
+        '''),
+        0xff,
     )
 
     JUMP = (
@@ -352,6 +362,54 @@ class Instruction(InstructionEnum):
         '''),
         0x1f,
     )
+
+# Turn instruction codes into full opcodes
+for i in BasicInstruction:
+    if i.opcode != 0xff:
+        i.opcode = i.opcode << 2
+
+
+PushiInstruction = unique(InstructionEnum(
+    'PushiInstruction',
+    ((
+        f'PUSHI_{n}'.replace('-', 'M'),
+        (
+            StackEffect.of([], [f'n={n}']),
+            Code(),
+            ((n & 0x3f) << 2) | 0x2,
+        )
+    ) for n in range(-32, 32))
+))
+
+PushreliInstruction = unique(InstructionEnum(
+    'PushreliInstruction',
+    ((
+        f'PUSHRELI_{n}'.replace('-', 'M'),
+        (
+            StackEffect.of([], ['addr']),
+            Code(f'addr = (mit_uword)(S->pc + {n});'),
+            ((n & 0x7f) << 1) | 0x1,
+        )
+    ) for n in range(-64, 64) if n != -1)
+))
+
+
+# Full instruction enumeration.
+Instruction = unique(InstructionEnum(
+    'Instruction',
+    ((
+        i.name,
+        (
+            i.effect,
+            i.code,
+            i.opcode,
+            i.terminal,
+        )
+    ) for i in
+     list(BasicInstruction) + list(PushiInstruction) + list(PushreliInstruction)
+    )
+))
+Instruction.__docstring__ = 'All VM instructions.'
 
 
 @unique

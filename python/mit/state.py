@@ -135,7 +135,7 @@ class State:
         done = 0
         ret = 0
         while addr is not None or done < n:
-            if auto_NEXT and self.ir == 0:
+            if auto_NEXT and (self.ir == 0 or self.ir == word_mask):
                 try:
                     libmit.mit_single_step(self.state)
                     return

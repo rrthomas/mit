@@ -12,12 +12,12 @@ from mit.globals import *
 
 # Assemble test code
 
-# Address in next line = instructions + word_bytes × literals
-code_len = 0
+text_addr = 0
 # Hack: two-pass assembly to calculate code_len
 for i in range(2):
     goto(M.addr)
-    lit(code_len)
+    # Ensure the same length code is generated on each pass
+    lit(text_addr, force_long=True)
     lit(14)
     lit(LibC.STDOUT)
     lit(LIBC)
@@ -27,7 +27,7 @@ for i in range(2):
     ass(TRAP)
     lit(MitErrorCode.OK)
     ass(NEXT, HALT)
-    code_len = assembler.pc
+    text_addr = assembler.pc
 
 ass_bytes(b"Hello, world!\n")
 

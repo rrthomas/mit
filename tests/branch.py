@@ -66,6 +66,7 @@ jump_rel(M.addr + 608, CALL)
 goto(M.addr + 608)
 correct.append(assembler.pc)
 
+# On 4-byte Mit, the following takes 2 words, on 8-byte, 1, hence the "8" offset below
 lit_pc_rel(M.addr + 208)
 correct.append(assembler.pc)
 ass(CALL)
@@ -83,7 +84,7 @@ goto(M.addr + 208 + word_bytes * 2)
 correct.append(assembler.pc)
 
 ass(JUMP)
-goto(M.addr + 608 + word_bytes * 2)
+goto(M.addr + 608 + 8) # See above for the "8"
 correct.append(assembler.pc)
 
 lit(M.addr + 64)

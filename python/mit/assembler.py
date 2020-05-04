@@ -23,7 +23,11 @@ JUMP = Instruction.JUMP
 JUMPZ = Instruction.JUMPZ
 CALL = Instruction.CALL
 PUSH = Instruction.PUSH
+PUSHI_0 = Instruction.PUSHI_0
 PUSHREL = Instruction.PUSHREL
+PUSHRELI_0 = Instruction.PUSHRELI_0
+PUSHRELI_M2 = Instruction.PUSHRELI_M2
+NEXTFF = Instruction.NEXTFF
 
 mnemonic = {
     instruction.value: instruction.name
@@ -57,6 +61,8 @@ class Disassembler:
         if pc is None:
             self.pc = self.state.pc
             self.ir = self.state.ir
+            if self.ir & sign_bit:
+                ir = ir | (-1 & ~word_mask)
         else:
             self.pc = pc
             self.ir = ir
@@ -70,7 +76,7 @@ class Disassembler:
     def _fetch(self):
         if self.pc >= self.end:
             raise StopIteration
-        word = self.state.M_word[self.pc] & word_mask
+        word = self.state.M_word[self.pc]
         self.pc += word_bytes
         return word
 
@@ -96,11 +102,16 @@ class Disassembler:
                     comment = f' ({value:#x}={signed_value})'
                 else: # opcode == PUSHREL
                     comment = f' ({initial_pc + signed_value:#x})'
-            elif opcode == NEXT:
+            elif opcode & 1 == 1 and opcode != NEXTFF: # PUSHRELI
+                value = (opcode - PUSHRELI_0) >> 1
+                if opcode & 0x80:
+                    value |= -1 & ~0x7f
+                comment = f' ({self.pc + value * word_bytes:#x})'
+            elif opcode == NEXT and self.ir != 0:
                 # Call `self._fetch()` later, not now.
                 comment = extra_mnemonic.get(
                     self.ir,
-                    'invalid extra instruction'
+                    f'invalid extra instruction {self.ir:#x}'
                 )
                 comment = f' ({comment})'
                 self.ir = 0
@@ -249,13 +260,25 @@ class Assembler:
             self.lit_pc_rel(addr)
             self.instruction(opcode)
 
-    def lit(self, value):
-        self.instruction(PUSH)
-        self.word(value)
+    def lit(self, value, force_long=False):
+        value = int(value)
+        if not force_long and -32 <= value < 32:
+            self.instruction((PUSHI_0 + (value << 2)) & opcode_mask)
+        else:
+            self.instruction(PUSH)
+            self.word(value)
 
-    def lit_pc_rel(self, value):
-        self.instruction(PUSHREL)
-        self.word(value - self.pc)
+    def lit_pc_rel(self, value, force_long=False):
+        value = int(value)
+        offset = value - self.pc
+        if self.i_addr == None:
+            offset -= word_bytes
+        offset_words = offset // word_bytes
+        if not force_long and offset_words != -1 and -64 <= offset_words < 64:
+            self.instruction((PUSHRELI_0 + (offset_words << 1)) & opcode_mask)
+        else:
+            self.instruction(PUSHREL)
+            self.word(offset)
 
     def goto(self, pc):
         assert is_aligned(pc)
