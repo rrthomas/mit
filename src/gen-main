@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # Generate front-end.
+# TODO: When we can assume gengetopt 2.23, convert this back to C.
 #
 # Copyright (c) 1995-2020 Mit authors
 #
