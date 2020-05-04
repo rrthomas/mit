@@ -374,8 +374,8 @@ PushiInstruction = unique(InstructionEnum(
     ((
         f'PUSHI_{n}'.replace('-', 'M'),
         (
-            StackEffect.of([], [f'n={n}']),
-            Code(),
+            StackEffect.of([], ['n']),
+            Code(f'n = {n};'),
             ((n & 0x3f) << 2) | 0x2,
         )
     ) for n in range(-32, 32))

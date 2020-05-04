@@ -179,17 +179,14 @@ class StackItem:
     Public fields:
 
      - name - str
-     - expr - str, or `None` - an expression representing the item's value,
-       which for a result may mention the arguments.
      - type - str - C type of the item (ignore if `name` is 'ITEMS').
      - size - Size, or `None` if unknown - the number of words occupied by
        the item.
      - depth - if this StackItem is part of a StackPicture, the total size of
        the StackItems above this one, otherwise `None`.
     '''
-    def __init__(self, name, expr, type):
+    def __init__(self, name, type):
         self.name = name
-        self.expr = expr
         self.type = type
         if self.name == 'ITEMS':
             self.size = Size(0, count=1)
@@ -198,16 +195,14 @@ class StackItem:
         self.depth = None
 
     @staticmethod
-    def of(name_value_type):
+    def of(name_type):
         '''
-        `name_value_type` has the syntax `NAME[:TYPE][=VALUE]`, where `NAME`
-        is a C identifier, `TYPE` a C type (defaulting to `mit_word`), and
-        `VALUE` an integer (no default).
+        `name_type` has the syntax `NAME[:TYPE]`, where `NAME` is a C
+        identifier and `TYPE` a C type (defaulting to `mit_word`).
         '''
-        m = re.match('([^:=]+)(?::([^:=]+))?(?:=([^:=]+))?$', name_value_type)
+        m = re.match('([^:=]+)(?::([^:]+))?$', name_type)
         return StackItem(
             m.group(1),
-            m.group(3),
             m.group(2) or 'mit_word',
         )
 
@@ -329,11 +324,7 @@ class StackEffect:
         than 'ITEMS'.
         '''
         return Code(*[
-            '{} {}{};'.format(
-                item.type,
-                item.name,
-                f' = {item.expr}' if item.expr is not None else '',
-            )
+            f'{item.type} {item.name};'
             for item in self.by_name.values()
             if item.name != 'ITEMS'
         ])
