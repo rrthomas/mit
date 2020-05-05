@@ -13,8 +13,9 @@
 
 
 #include <stddef.h>
-#include <stdint.h>
+#include <limits.h>
 #include <inttypes.h>
+#include <sys/types.h>
 
 #include <mit/opcodes.h>
 
@@ -24,30 +25,23 @@
 
 // Build-time parameters
 #define MIT_WORD_BYTES @SIZEOF_SIZE_T@
-
-// Types and constants
-// Define MIT_WORD_BIT as a number literal so we can token paste it below
-#if MIT_WORD_BYTES == 4
-#define MIT_WORD_BIT 32
-#elif MIT_WORD_BYTES == 8
-#define MIT_WORD_BIT 64
-#else
+#if MIT_WORD_BYTES != 4 && MIT_WORD_BYTES != 8
 #error "MIT_WORD_BYTES must be 4 or 8!"
 #endif
 
-typedef uint8_t mit_byte;
+// Types and constants
 #define MIT_BYTE_BIT 8
 #define MIT_BYTE_MASK ((1 << MIT_BYTE_BIT) - 1)
+#define MIT_WORD_BIT (MIT_BYTE_BIT * MIT_WORD_BYTES)
 
-#define MIT_WORD_MASK ((mit_uword)((mit_word)-1))
-#define MIT_UWORD_MAX MIT_WORD_MASK
-#define MIT_WORD_MIN ((mit_word)(MIT_UWORD_MAX << (MIT_WORD_BIT - 1)))
-#define MIT_WORD_MAX ((mit_word)(MIT_UWORD_MAX >> 1))
+#define MIT_UWORD_MAX SIZE_MAX
+#define MIT_WORD_MASK MIT_UWORD_MAX
+#define MIT_WORD_MIN (-SSIZE_MAX - 1)
+#define MIT_WORD_MAX SSIZE_MAX
 
-#define _bits_type_name(prefix, bits) prefix ## bits ## _t
-#define bits_type_name(prefix, bits) _bits_type_name(prefix, bits)
-typedef bits_type_name(int, MIT_WORD_BIT) mit_word;
-typedef bits_type_name(uint, MIT_WORD_BIT) mit_uword;
+typedef unsigned char mit_byte;
+typedef ssize_t mit_word;
+typedef size_t mit_uword;
 
 // TODO: find largest type: bigger of long double and intmax_t?
 // Number in next line is sizeof(intmax_t)
