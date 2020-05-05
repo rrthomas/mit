@@ -95,9 +95,7 @@ extern const unsigned mit_opcode_mask;
 // Stack access
 
 // These routines are used for bindings to other languages, and for the
-// extra instructions. Internally, libmit uses the inline functions in
-// mit.h.
-//
+// extra instructions. Internally, libmit uses UNCHECKED_STACK, below.
 
 mit_word *mit_stack_position(mit_state *S, mit_uword pos);
 /* Return the address of element `pos` on the stack, or NULL if `pos` is
