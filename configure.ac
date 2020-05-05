@@ -158,9 +158,6 @@ AC_CHECK_SIZEOF([intmax_t]) # largest stack item
 SIZEOF_INTMAX_T=$ac_cv_sizeof_intmax_t
 AC_SUBST([SIZEOF_INTMAX_T])
 
-# Set byte size
-AC_SUBST([MIT_BYTE_BIT], [8])
-
 # Package suffix for side-by-side installation of multiple builds
 AC_ARG_ENABLE([package-suffix],
   [AS_HELP_STRING([--enable-package-suffix],

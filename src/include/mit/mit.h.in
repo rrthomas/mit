@@ -36,7 +36,7 @@
 #endif
 
 typedef uint8_t mit_byte;
-#define MIT_BYTE_BIT @MIT_BYTE_BIT@
+#define MIT_BYTE_BIT 8
 #define MIT_BYTE_MASK ((1 << MIT_BYTE_BIT) - 1)
 
 #define MIT_WORD_MASK ((mit_uword)((mit_word)-1))
