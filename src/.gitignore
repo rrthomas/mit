@@ -13,6 +13,7 @@ __pycache__/
 /mit-[bl]e-[48].1
 /instructions.c
 /main.c
+/run.h
 /include/mit/mit.h
 /params.py
 /spec.yaml

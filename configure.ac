@@ -195,6 +195,7 @@ AC_CONFIG_FILES([
         build-aux/man-include.man
         lib/Makefile
         src/Makefile
+        src/run.h
         src/include/mit/mit.h
         src/params.py
         src/mit-include.man

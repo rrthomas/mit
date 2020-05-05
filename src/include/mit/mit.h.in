@@ -19,17 +19,6 @@
 #include <mit/opcodes.h>
 
 
-// Optimization
-// Hint that `x` is usually true/false.
-// https://gcc.gnu.org/onlinedocs/gcc/Other-Builtins.html
-#if @HAVE___BUILTIN_EXPECT@ == 1
-#define likely(x) __builtin_expect(!!(x), 1)
-#define unlikely(x) __builtin_expect(!!(x), 0)
-#else
-#define likely(x) (x)
-#define unlikely(x) (x)
-#endif
-
 // Thread-local storage
 #define MIT_THREAD_LOCAL @THREAD_LOCAL@
 
@@ -134,30 +123,6 @@ int mit_push_stack(mit_state *S, mit_word val);
 // Unchecked macro: UNSAFE!
 #define UNCHECKED_STACK(stack, stack_depth, pos) \
     ((stack) + (stack_depth) - (mit_uword)(pos) - 1)
-
-// Inline functions
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-function"
-static int load_stack(mit_word * restrict stack, mit_uword stack_depth,
-                      mit_uword pos, mit_word *vp)
-{
-    if (unlikely(pos >= stack_depth))
-        return MIT_ERROR_INVALID_STACK_READ;
-
-    *vp = *UNCHECKED_STACK(stack, stack_depth, pos);
-    return MIT_ERROR_OK;
-}
-
-static int store_stack(mit_word * restrict stack, mit_uword stack_depth,
-                       mit_uword pos, mit_word v)
-{
-    if (unlikely(pos >= stack_depth))
-        return MIT_ERROR_INVALID_STACK_WRITE;
-
-    *UNCHECKED_STACK(stack, stack_depth, pos) = v;
-    return MIT_ERROR_OK;
-}
-#pragma GCC diagnostic pop
 
 
 // VM control

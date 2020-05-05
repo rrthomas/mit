@@ -11,6 +11,8 @@
 
 #include "mit/mit.h"
 
+#include "run.h"
+
 
 _GL_ATTRIBUTE_PURE mit_word *mit_stack_position(mit_state *S, mit_uword pos)
 {
