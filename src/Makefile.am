@@ -80,11 +80,20 @@ instructions.c: gen-instructions spec.py instruction.py stack.py code_util.py in
 main.c: gen-main
 	$(PYTHON_WITH_PATH) $(srcdir)/gen-main > main.c || ( rm -f main.c; exit 1 )
 
+# sloccount --autogen doesn't work (Debian bug #929000), so temporarily move
+# *.h.in during count.
 loc:
-	$(SLOCCOUNT) \
+	for file in $(pkginclude_HEADERS); do \
+	    test -f $$file.in && mv $$file.in $$file.in.bak || true; \
+	done && \
+	$(SLOCCOUNT) --autogen \
 	    $(C_SRCS) \
+	    $(pkginclude_HEADERS) \
 	    $(LIB_CORE_SRCS) \
 	    gen-registers gen-opcodes gen-instructions gen-main gen-yaml-spec
+	for file in $(pkginclude_HEADERS); do \
+	    test -f $$file.in.bak && mv $$file.in.bak $$file.in || true; \
+	done
 
 EXTRA_DIST = \
 	$(LIB_CORE_SRCS) \

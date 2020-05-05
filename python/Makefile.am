@@ -60,11 +60,11 @@ install-data-hook: mit/enums.py
 # *.py.in during count.
 loc:
 	for file in $(nodist_mit_pkgpython_PYTHON); do \
-		test -f $$file.in && mv $$file.in $$file.in.bak || true; \
+	    test -f $$file.in && mv $$file.in $$file.in.bak || true; \
 	done && \
 	$(SLOCCOUNT) --autogen $(bin_SCRIPTS) $(mit_pkgpython_PYTHON) $(nodist_mit_pkgpython_PYTHON); \
 	for file in $(nodist_mit_pkgpython_PYTHON); do \
-		test -f $$file.in.bak && mv $$file.in.bak $$file.in || true; \
+	    test -f $$file.in.bak && mv $$file.in.bak $$file.in || true; \
 	done
 
 if USING_PACKAGE_SUFFIX
