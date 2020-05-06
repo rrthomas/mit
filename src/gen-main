@@ -309,7 +309,7 @@ int main(int argc, char *argv[])
 
     memory_words = 0x100000U;
     stack_words = 16384U;
-    mit_run = mit_run_specializer;
+    mit_run = mit_run_fast;
 
     // Options string starts with '+' to stop option processing at first
     // non-option, then leading ':' so as to return ':' for a missing arg,

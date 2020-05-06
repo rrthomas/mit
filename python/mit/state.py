@@ -27,7 +27,7 @@ from .binding import (
     word_bytes, word_mask, opcode_mask,
     c_word, c_uword, c_mit_state,
     hex0x_word_width, register_args,
-    run_specializer, run_profile,
+    run_fast, run_profile,
 )
 from .memory import Memory
 from .assembler import Assembler, Disassembler
@@ -124,7 +124,7 @@ class State:
         if profile:
             run_ptr.contents = run_profile
         elif optimize:
-            run_ptr.contents = run_specializer
+            run_ptr.contents = run_fast
         run(self.state)
 
     def step(self, n=1, addr=None, trace=False, auto_NEXT=True):

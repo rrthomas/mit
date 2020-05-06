@@ -405,7 +405,7 @@ code.append('''
 ''')
 
 for profiling, fn in [
-    (False, 'mit_run_specializer'),
+    (False, 'mit_run_fast'),
     (True, 'mit_run_profile'),
 ]:
     code.append('')
