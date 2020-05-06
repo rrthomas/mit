@@ -1,0 +1,44 @@
+// Macros for the inner loop and instruction actions.
+//
+// (c) Mit authors 1994-2020
+//
+// The package is distributed under the MIT/X11 License.
+//
+// THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
+// RISK.
+
+#ifndef MIT_RUN_H
+#define MIT_RUN_H
+
+
+// Optimization
+// Hint that `x` is usually true/false.
+// https://gcc.gnu.org/onlinedocs/gcc/Other-Builtins.html
+#if @HAVE___BUILTIN_EXPECT@ == 1
+#define likely(x) __builtin_expect(!!(x), 1)
+#define unlikely(x) __builtin_expect(!!(x), 0)
+#else
+#define likely(x) (x)
+#define unlikely(x) (x)
+#endif
+
+// Arithmetic right shift `n` by `p` places (the behaviour of >> on signed
+// quantities is implementation-defined in C99).
+#if HAVE_ARITHMETIC_RSHIFT
+#define ARSHIFT(n, p) \
+    ((mit_word)(n) >> (p))
+#else
+#define ARSHIFT(n, p) \
+    (((n) >> (p)) | ((mit_uword)(-((mit_word)(n) < 0)) << (MIT_WORD_BIT - (p))))
+#endif
+
+// Raise an error during the execution of an instruction.
+// RAISE must be called before writing any state.
+#define RAISE(code)                                           \
+    do {                                                      \
+        error = (code);                                       \
+        goto error;                                           \
+    } while (0)
+
+
+#endif

@@ -12,12 +12,12 @@ from mit.globals import *
 
 # Assemble test code
 
-# Address in next line = instructions + word_bytes × literals
-code_len = 0
+text_addr = 0
 # Hack: two-pass assembly to calculate code_len
 for i in range(2):
     goto(M.addr)
-    lit(code_len)
+    # Ensure the same length code is generated on each pass
+    lit(text_addr, force_long=True)
     lit(14)
     lit(LibC.STDOUT)
     lit(LIBC)
@@ -26,8 +26,8 @@ for i in range(2):
     lit(LIBC)
     ass(TRAP)
     lit(MitErrorCode.OK)
-    ass(EXTRA, HALT)
-    code_len = assembler.pc
+    ass(NEXT, HALT)
+    text_addr = assembler.pc
 
 ass_bytes(b"Hello, world!\n")
 
@@ -46,5 +46,5 @@ output = f.getvalue()
 correct_file = re.sub(".py$", ".correct", sys.argv[0])
 correct = open(correct_file, "rb").read()
 
-print("Output:\n{}\n\nCorrect:\n{}".format(output,correct))
+print(f"Output:\n{output}\n\nCorrect:\n{correct}")
 assert(output == correct)

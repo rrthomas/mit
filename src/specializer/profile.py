@@ -10,11 +10,13 @@ RISK.
 '''
 
 import json, random
+from dataclasses import dataclass
 
-from spec import Instruction
+from specializer_spec import Instruction
 from path import Path
 
 
+@dataclass
 class Label:
     '''
     Represents a label of the interpreter that we profiled.
@@ -29,37 +31,16 @@ class Label:
      - wrong_count - int - the number of times `guess` was wrong.
      - total_count - int - `correct_count + wrong_count`.
     '''
-    def __init__(
-        self,
-        index,
-        path,
-        guess,
-        if_correct,
-        if_wrong,
-        correct_count,
-        wrong_count,
-    ):
-        assert isinstance(path, Path)
-        assert isinstance(guess, Instruction)
-        self.index = index
-        self.path = path
-        self.guess = guess
-        self.if_correct = if_correct
-        self.if_wrong = if_wrong
-        self.correct_count = correct_count
-        self.wrong_count = wrong_count
-        self.total_count = correct_count + wrong_count
+    index: int
+    path: Path
+    guess: Instruction
+    if_correct: int
+    if_wrong: int
+    correct_count: int
+    wrong_count: int
 
-    def __repr__(self):
-        return 'Label({}, {!r}, {!r}, {}, {}, {}, {})'.format(
-            self.index,
-            self.path,
-            self.guess,
-            self.if_correct,
-            self.if_wrong,
-            self.correct_count,
-            self.wrong_count,
-        )
+    def __post_init__(self):
+        self.total_count = self.correct_count + self.wrong_count
 
 
 def load(filename):

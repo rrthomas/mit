@@ -9,10 +9,9 @@
 
 from enum import Enum, unique
 
-from mit_core.code_util import Code
-from mit_core.instruction import InstructionEnum
-from mit_core.stack import StackEffect
-from mit_core.stack import pop_stack
+from code_util import Code
+from instruction import InstructionEnum
+from stack import StackEffect, pop_stack
 
 
 @unique
@@ -148,11 +147,11 @@ class Library(InstructionEnum):
             {
                 mit_word function;''',
             pop_stack('function'),
-            '''
-                int ret = trap_{}(S, function);
+            f'''
+                int ret = trap_{self.name.lower()}(S, function);
                 if (ret != 0)
                     RAISE(ret);
-            }}'''.format(self.name.lower())
+            }}'''
         ), opcode=opcode)
         self.library = library
         self.includes = includes

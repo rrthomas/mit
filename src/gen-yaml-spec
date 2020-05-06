@@ -1,0 +1,40 @@
+#!/usr/bin/env python3
+# Generate YAML spec.
+#
+# (c) Mit authors 2020
+#
+# The package is distributed under the MIT/X11 License.
+#
+# THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
+# RISK.
+
+from yaml import dump
+
+from code_util import Code, copyright_banner, unrestrict
+from spec import Register, MitErrorCode, Instruction, ExtraInstruction
+
+
+GENERATOR_PROGRAM = 'gen-yaml-spec'
+PURPOSE = 'Mit virtual machine specification.'
+COPYRIGHT_YEARS = '1994-2020'
+
+code = copyright_banner(GENERATOR_PROGRAM, PURPOSE, COPYRIGHT_YEARS, comment='#')
+code.append('')
+print(code)
+
+# Write YAML description.
+# TODO: When we have PyYAML 5.1, use sort_keys=False
+# FIXME: Make the classes dumped directly representable
+def inst_spec(i):
+    spec = {'opcode': i.opcode, 'terminal': i.terminal is not None}
+    if i.effect:
+        spec['args'] = [item.name for item in i.effect.args.items]
+        spec['results'] = [item.name for item in i.effect.results.items]
+    return spec
+
+print(dump({
+    'ErrorCode': {e.name: e.value for e in MitErrorCode},
+    'Register': [r.name for r in Register],
+    'Instruction': {i.name: inst_spec(i) for i in Instruction},
+    'ExtraInstruction': {i.name: inst_spec(i) for i in ExtraInstruction},
+}), end='')

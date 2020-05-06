@@ -24,7 +24,7 @@ def enum(enum_name, docstring, spec, value_extractor=lambda x: x):
     return enum
 
 
-with open(os.path.join('@pkgdatadir@', 'mit_spec.yaml'), encoding='utf-8') as f:
+with open(os.path.join('@pkgdatadir@', 'spec.yaml'), encoding='utf-8') as f:
     spec = yaml.safe_load(f.read())
 
 

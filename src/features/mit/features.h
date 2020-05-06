@@ -12,8 +12,8 @@
 #endif
 
 
-#ifndef MIT_FEATURES
-#define MIT_FEATURES
+#ifndef MIT_FEATURES_H
+#define MIT_FEATURES_H
 
 mit_word mit_trap(mit_state * restrict S);
 

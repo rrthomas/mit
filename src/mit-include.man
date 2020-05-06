@@ -1,2 +1,0 @@
-[SEE ALSO]
-.BR mit-shell (1)

@@ -9,8 +9,8 @@ THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 RISK.
 '''
 
-from mit_core.code_util import Code
-from mit_core.stack import Size
+from code_util import Code
+from stack import Size
 
 
 # TODO: Unify with path.State?
@@ -36,10 +36,7 @@ class CacheState:
         self.checked_depth = checked_depth
 
     def __repr__(self):
-        return 'CacheState({}, {})'.format(
-            self.cached_depth,
-            self.checked_depth,
-        )
+        return f'CacheState({self.cached_depth}, {self.checked_depth})'
 
     def underflow_test(self, num_pops):
         '''
@@ -49,7 +46,7 @@ class CacheState:
         '''
         assert type(num_pops) is int
         if self.cached_depth >= num_pops: return '1'
-        return 'S->stack_depth >= {}'.format(num_pops)
+        return f'S->stack_depth >= {num_pops}'
 
     def overflow_test(self, num_pops, num_pushes):
         '''
@@ -63,7 +60,7 @@ class CacheState:
         assert type(num_pushes) is int
         depth_change = num_pushes - num_pops
         if self.checked_depth >= depth_change: return '1'
-        return '(S->stack_words - S->stack_depth) >= {}'.format(depth_change)
+        return f'(S->stack_words - S->stack_depth) >= {depth_change}'
 
     def load_args(self, args):
         '''
@@ -73,7 +70,7 @@ class CacheState:
          - args - list of str.
         '''
         return Code(*[
-            '{} = {};'.format(item.name, self.lvalue(pos))
+            f'{item.name} = {self.lvalue(pos)};'
             for pos, item in enumerate(reversed(args.items))
         ])
 
@@ -85,7 +82,7 @@ class CacheState:
          - results - list of str.
         '''
         return Code(*[
-            '{} = {};'.format(self.lvalue(pos), item.name)
+            f'{self.lvalue(pos)} = {item.name};'
             for pos, item in enumerate(reversed(results.items))
         ])
 
@@ -103,7 +100,7 @@ class CacheState:
         if self.cached_depth < 0: self.cached_depth = 0
         self.checked_depth -= depth_change
         if self.checked_depth < 0: self.checked_depth = 0
-        return Code('cached_depth = {};').format(self.cached_depth)
+        return Code(f'cached_depth = {self.cached_depth};')
 
     def var(self, pos):
         '''
@@ -112,7 +109,7 @@ class CacheState:
         values between variables.
         '''
         assert 0 <= pos < self.cached_depth
-        return 'stack_{}'.format(self.cached_depth - 1 - pos)
+        return f'stack_{self.cached_depth - 1 - pos}'
 
     def lvalue(self, pos):
         '''
@@ -124,7 +121,7 @@ class CacheState:
             return self.var(pos)
         else:
             # The item is really on the stack.
-            return '*UNCHECKED_STACK(S->stack, S->stack_depth, {})'.format(pos)
+            return f'*UNCHECKED_STACK(S->stack, S->stack_depth, {pos})'
 
     def flush(self, goal=0):
         '''
@@ -143,9 +140,9 @@ class CacheState:
         if goal.cached_depth == self.cached_depth: return Code()
         code = Code()
         for pos in reversed(range(self.cached_depth)):
-            code.append('{} = {};'.format(goal.lvalue(pos), self.lvalue(pos)))
+            code.append(f'{goal.lvalue(pos)} = {self.lvalue(pos)};')
         self.cached_depth = goal.cached_depth
-        code.append('cached_depth = {};'.format(self.cached_depth))
+        code.append(f'cached_depth = {self.cached_depth};')
         return code
 
 
@@ -168,10 +165,7 @@ def gen_case(instruction, cache_state):
     num_results = len(instruction.effect.results.items)
     # Declare C variables for args and results.
     code.extend(Code(*[
-        'mit_word {}{};'.format(name,
-                                ' = {}'.format(item.expr)
-                                if item.expr is not None
-                                else '')
+        f'mit_word {name};'
         for name, item in instruction.effect.by_name.items()
     ]))
     # Load the arguments into their C variables.
@@ -180,10 +174,10 @@ def gen_case(instruction, cache_state):
     # Note: `S->stack_depth` and `cache_state` must be correct for RAISE().
     code.extend(instruction.code)
     # Update stack pointer and cache_state.
-    code.append('S->stack_depth -= {};'.format(num_args))
+    code.append(f'S->stack_depth -= {num_args};')
     code.extend(cache_state.add(-num_args))
     code.extend(cache_state.add(num_results))
-    code.append('S->stack_depth += {};'.format(num_results))
+    code.append(f'S->stack_depth += {num_results};')
     # Store the results from their C variables.
     code.extend(cache_state.store_results(instruction.effect.results))
     return code

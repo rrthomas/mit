@@ -127,14 +127,6 @@ class State:
             run_ptr.contents = run_specializer
         run(self.state)
 
-    def _print_trace_info(self):
-        self.trace_print("step: pc={:#x} ir={:#x} instruction={}".format(
-            self.registers["pc"].get(),
-            self.registers["ir"].get(),
-            Disassembler(self).disassemble(),
-        ))
-        self.trace_print(str(self.S))
-
     def step(self, n=1, addr=None, trace=False, auto_NEXT=True):
         '''
         Single-step for n steps (excluding NEXT when pc does not change), or
@@ -143,7 +135,7 @@ class State:
         done = 0
         ret = 0
         while addr is not None or done < n:
-            if auto_NEXT and self.ir == 0:
+            if auto_NEXT and (self.ir == 0 or self.ir == word_mask):
                 try:
                     libmit.mit_single_step(self.state)
                     return
@@ -152,23 +144,21 @@ class State:
                         raise
             if self.pc == addr: break
             if trace:
-                self.trace_print("trace: instruction={}".format(
-                    Disassembler(self).disassemble(),
-                ))
+                self.trace_print(f"trace: instruction={Disassembler(self).disassemble()}")
             try:
                 libmit.mit_single_step(self.state)
                 return
             except VMError as e:
                 if e.args[0] != enums.MitErrorCode.BREAK:
                     ret = e.args[0]
-                    print("Error code {} was returned".format(ret), end='')
+                    print(f"Error code {ret} was returned", end='')
                     print(" after {} step{}".format(done, 's' if done != 1 else ''), end='')
                     if addr is not None:
-                        print(" at pc={:#x}".format(self.pc), end='')
+                        print(f" at pc={self.pc:#x}", end='')
                     print()
                     raise
             if trace:
-                self.trace_print("pc={:#x} ir={:#x}".format(self.pc, self.ir))
+                self.trace_print(f"pc={self.pc:#x} ir={self.ir:#x}")
                 self.trace_print(str(self.S))
             done += 1
 
@@ -198,9 +188,9 @@ class State:
         data = strip_hashbang(data)
         length = len(data)
         if length > len(self.M):
-            raise Error('file {} is too big to fit in memory'.format(file))
+            raise Error(f'file {file} is too big to fit in memory')
         if length % word_bytes != 0:
-            raise Error('file {} is not a whole number of words'.format(file))
+            raise Error(f'file {file} is not a whole number of words')
         if addr is None:
             addr = self.M.addr
         self.M[addr:addr + length] = data
@@ -253,21 +243,21 @@ class State:
                 if i % 8 == 0:
                     print(" ", end='', file=file)
                 byte = self.M[p + i]
-                print("{:02x} ".format(byte), end='', file=file)
+                print(f"{byte:02x} ", end='', file=file)
                 i += 1
                 c = chr(byte)
                 ascii += c if c.isprintable() else '.'
             p += chunk
-            print(" |{0:.{1}}|".format(ascii, chunk), file=file)
+            print(f" |{ascii:.{chunk}}|", file=file)
 
     def dump_files(self, basename, addr, length):
         '''
         Dump memory as assembly to `basename.asm` and as hex to `basename.hex`.
         '''
-        asm_file = '{}.asm'.format(basename)
+        asm_file = f'{basename}.asm'
         with open(asm_file, 'w') as h:
             self.disassemble(addr, length, file=h)
-        hex_file = '{}.hex'.format(basename)
+        hex_file = f'{basename}.hex'
         with open(hex_file, 'w') as h:
             self.dump(addr, length, file=h)
 
@@ -279,7 +269,7 @@ class Stack:
      - state - a c_mit_state.
 
     When specifying stack indices, this class uses the Python convention, so
-    0 is the base of the stack. In contrast, the C API (`mit_load_stack()`
+    0 is the base of the stack. In contrast, the C API (`mit_stack_position()`
     etc.) use the convention that 0 is the top of the stack.
     '''
     def __init__(self, state):
@@ -287,7 +277,7 @@ class Stack:
 
     def __str__(self):
         return '[{}]'.format(', '.join(
-            ['{} ({:#x})'.format(v, v & word_mask) for v in self])
+            [f'{v} ({v & word_mask:#x})' for v in self])
         )
 
     def __repr__(self):
@@ -300,16 +290,21 @@ class Stack:
         if isinstance(index, slice):
             return [self[i] for i in range(*index.indices(len(self)))]
         else:
-            v = c_word()
-            libmit.mit_load_stack(self.state, len(self) - 1 - index, byref(v))
-            return v.value
+            ptr = libmit.mit_stack_position(self.state, len(self) - 1 - index)
+            if ptr is not None:
+                return ptr.contents.value
+            raise IndexError
 
     def __setitem__(self, index, value):
         if isinstance(index, slice):
             for i, v in zip(range(*index.indices(len(self))), value):
                 self[i] = v
         else:
-            libmit.mit_store_stack(self.state, len(self) - 1 - index, value)
+            ptr = libmit.mit_stack_position(self.state, len(self) - 1 - index)
+            if ptr is not None:
+                ptr.contents.value = value
+            else:
+                raise IndexError
 
     def __iter__(self):
         return (self[i] for i in range(len(self)))

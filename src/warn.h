@@ -7,8 +7,8 @@
 // THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 // RISK.
 
-#ifndef MIT_WARN
-#define MIT_WARN
+#ifndef MIT_WARN_H
+#define MIT_WARN_H
 
 
 #include <stdarg.h>

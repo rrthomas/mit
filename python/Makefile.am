@@ -26,7 +26,7 @@ install_edit = sed \
 	-e 's|@pkgdatadir[@]|'`$(CYGPATH_M) $(pkgdatadir)`'|g'
 
 inplace_edit = sed \
-	-e 's|@pkgdatadir[@]|'`$(CYGPATH_M) $(abs_top_srcdir)/src/mit_core`'|g'
+	-e 's|@pkgdatadir[@]|'`$(CYGPATH_M) $(abs_top_builddir)/src`'|g'
 
 all-local: $(nodist_mit_pkgpython_PYTHON)
 
@@ -40,7 +40,7 @@ all-local: $(nodist_mit_pkgpython_PYTHON)
 		--output=$@ ./$*; \
 	fi
 
-mit/enums.py: $(top_srcdir)/src/mit_core/mit_spec.yaml Makefile mit/enums.py.in
+mit/enums.py: $(top_builddir)/src/spec.yaml Makefile mit/enums.py.in
 	@$(MKDIR_P) mit
 	@rm -f $@ $@.tmp
 	$(AM_V_GEN)$(inplace_edit) $(srcdir)/'$@.in' >$@.tmp
@@ -60,11 +60,11 @@ install-data-hook: mit/enums.py
 # *.py.in during count.
 loc:
 	for file in $(nodist_mit_pkgpython_PYTHON); do \
-		test -f $$file.in && mv $$file.in $$file.in.bak || true; \
+	    test -f $$file.in && mv $$file.in $$file.in.bak || true; \
 	done && \
 	$(SLOCCOUNT) --autogen $(bin_SCRIPTS) $(mit_pkgpython_PYTHON) $(nodist_mit_pkgpython_PYTHON); \
 	for file in $(nodist_mit_pkgpython_PYTHON); do \
-		test -f $$file.in.bak && mv $$file.in.bak $$file.in || true; \
+	    test -f $$file.in.bak && mv $$file.in.bak $$file.in || true; \
 	done
 
 if USING_PACKAGE_SUFFIX

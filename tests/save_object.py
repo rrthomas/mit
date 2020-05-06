@@ -31,14 +31,14 @@ def try_save(file, address, length):
         err = None
     except Error as e:
         err = e.args[0]
-    print('State.save(\"{}\", {}, {}) raises error "{}"'.format(file, address, length, err), end='')
+    print(f'State.save(\"{file}\", {address}, {length}) raises error "{err}"', end='')
     return err
 
 for i in range(3):
     res = try_save("saveobj", addr[i], length[i])
-    print(' should be "{}"'.format(correct[i]))
+    print(f' should be "{correct[i]}"')
     if res != correct[i]:
-        print("Error in State.save() test {}".format(i + 1))
+        print(f"Error in State.save() test {i + 1}")
         sys.exit(1)
 
 RANGE = 4
@@ -49,7 +49,7 @@ os.remove("saveobj")
 for i in range(RANGE):
     old = VM.M_word[VM.M_word.addr + i * word_bytes]
     new = VM.M_word[VM.M_word.addr + (i + RANGE) * word_bytes]
-    print("Word {} of memory is {}; should be {}".format(i, new, old))
+    print(f"Word {i} of memory is {new}; should be {old}")
     if new != old:
         print("Error in State.save() tests: loaded file does not match data saved")
         sys.exit(1)

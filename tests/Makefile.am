@@ -17,11 +17,11 @@ TESTS =	\
 	arithmetic.py	\
 	branch.py	\
 	comparison.py	\
+	constants.py	\
 	extra.py	\
 	errors.py	\
 	hello.py	\
 	init.py		\
-	literals.py	\
 	load_object.py	\
 	logic.py	\
 	memory.py	\

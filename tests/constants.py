@@ -1,6 +1,7 @@
-# Test `lit`, and `lit_0` to `lit_3`; `lit_pc_rel` is tested by `branch.py`.
+# Test `push` and `pushi`; `pushrel` and `pushreli` are tested by
+# `branch.py`.
 #
-# (c) Mit authors 1994-2019
+# (c) Mit authors 1994-2020
 #
 # The package is distributed under the MIT/X11 License.
 #
@@ -24,4 +25,4 @@ for n, v in enumerate(values):
     lit(v)
     correct.append(values[:n+1])
 
-run_test("literals", VM, correct)
+run_test("constants", VM, correct)

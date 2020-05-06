@@ -12,6 +12,7 @@ addons:
     sources:
       - ubuntu-toolchain-r-test
     packages: &default_deps
+      - python3.8
       - texlive-latex-extra
       - texlive-science
       - texlive-fonts-recommended
@@ -64,11 +65,6 @@ jobs:
     - env:
         - ASAN=yes
         - LSAN_OPTIONS="verbosity=1:log_threads=1"
-      addons:
-        apt:
-          packages:
-            - *default_deps
-            - [python3.8]
 
 
 before_install:

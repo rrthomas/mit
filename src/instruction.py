@@ -11,8 +11,8 @@ RISK.
 
 from enum import Enum
 
-from .code_util import Code
-from .stack import StackEffect
+from code_util import Code
+from stack import StackEffect
 
 
 class InstructionEnum(Enum):
@@ -23,8 +23,9 @@ class InstructionEnum(Enum):
      - code - Code.
      - opcode - int or None - opcode number, defaults to the number of
        instructions before adding this one.
-     - terminal - bool - this instruction is terminal: the rest of `ir` is its
-       argument.
+     - terminal - Instruction or None - if given, this instruction is terminal: the
+       rest of `ir` is its argument, and the Instruction gives the
+       implementation for the case when `ir` is non-zero.
      - is_variadic - bool - true if this instruction is variadic.
 
     C variables are created for the arguments and results; the arguments are
@@ -37,7 +38,7 @@ class InstructionEnum(Enum):
         obj.opcode = len(cls.__members__)
         return obj
 
-    def __init__(self, effect, code, opcode=None, terminal=False):
+    def __init__(self, effect, code, opcode=None, terminal=None):
         '''
           - effect - tuple of two lists of str, acceptable to StackPicture.of(),
             or `None`, meaning that the instruction has an arbitrary stack
@@ -49,6 +50,8 @@ class InstructionEnum(Enum):
         self.code = code
         if opcode is not None:
             self.opcode = opcode
+        if terminal is not None:
+            assert isinstance(terminal, InstructionEnum), terminal
         self.terminal = terminal
         self.is_variadic = (
             self.effect is not None and

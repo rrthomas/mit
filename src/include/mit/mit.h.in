@@ -8,57 +8,40 @@
 // THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 // RISK.
 
-#ifndef MIT_MIT
-#define MIT_MIT
+#ifndef MIT_MIT_H
+#define MIT_MIT_H
 
 
 #include <stddef.h>
-#include <stdint.h>
+#include <limits.h>
 #include <inttypes.h>
+#include <sys/types.h>
 
 #include <mit/opcodes.h>
 
-
-// Optimization
-// Hint that `x` is usually true/false.
-// https://gcc.gnu.org/onlinedocs/gcc/Other-Builtins.html
-#if @HAVE___BUILTIN_EXPECT@ == 1
-#define likely(x) __builtin_expect(!!(x), 1)
-#define unlikely(x) __builtin_expect(!!(x), 0)
-#else
-#define likely(x) (x)
-#define unlikely(x) (x)
-#endif
 
 // Thread-local storage
 #define MIT_THREAD_LOCAL @THREAD_LOCAL@
 
 // Build-time parameters
 #define MIT_WORD_BYTES @SIZEOF_SIZE_T@
-
-// Types and constants
-// Define MIT_WORD_BIT as a number literal so we can token paste it below
-#if MIT_WORD_BYTES == 4
-#define MIT_WORD_BIT 32
-#elif MIT_WORD_BYTES == 8
-#define MIT_WORD_BIT 64
-#else
+#if MIT_WORD_BYTES != 4 && MIT_WORD_BYTES != 8
 #error "MIT_WORD_BYTES must be 4 or 8!"
 #endif
 
-typedef uint8_t mit_byte;
-#define MIT_BYTE_BIT @MIT_BYTE_BIT@
+// Types and constants
+#define MIT_BYTE_BIT 8
 #define MIT_BYTE_MASK ((1 << MIT_BYTE_BIT) - 1)
+#define MIT_WORD_BIT (MIT_BYTE_BIT * MIT_WORD_BYTES)
 
-#define MIT_WORD_MASK ((mit_uword)((mit_word)-1))
-#define MIT_UWORD_MAX MIT_WORD_MASK
-#define MIT_WORD_MIN ((mit_word)(MIT_UWORD_MAX << (MIT_WORD_BIT - 1)))
-#define MIT_WORD_MAX ((mit_word)(MIT_UWORD_MAX >> 1))
+#define MIT_UWORD_MAX SIZE_MAX
+#define MIT_WORD_MASK MIT_UWORD_MAX
+#define MIT_WORD_MIN (-SSIZE_MAX - 1)
+#define MIT_WORD_MAX SSIZE_MAX
 
-#define _bits_type_name(prefix, bits) prefix ## bits ## _t
-#define bits_type_name(prefix, bits) _bits_type_name(prefix, bits)
-typedef bits_type_name(int, MIT_WORD_BIT) mit_word;
-typedef bits_type_name(uint, MIT_WORD_BIT) mit_uword;
+typedef unsigned char mit_byte;
+typedef ssize_t mit_word;
+typedef size_t mit_uword;
 
 // TODO: find largest type: bigger of long double and intmax_t?
 // Number in next line is sizeof(intmax_t)
@@ -102,34 +85,15 @@ enum {
 extern const unsigned mit_opcode_bit;
 extern const unsigned mit_opcode_mask;
 
-// Inline functions
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-function"
-_GL_ATTRIBUTE_CONST static int is_aligned(mit_uword addr, unsigned size)
-{
-    return (addr & (size - 1)) == 0;
-}
-#pragma GCC diagnostic pop
-
 
 // Stack access
 
 // These routines are used for bindings to other languages, and for the
-// extra instructions. Internally, libmit uses the inline functions in
-// mit.h.
-//
+// extra instructions. Internally, libmit uses UNCHECKED_STACK, below.
 
-int mit_load_stack(mit_state *S, mit_uword pos, mit_word *val_ptr);
-/* Load the word position `pos` on the stack into the word pointed to by
-   `val_ptr`.
-
-   Return 0 if OK, or error code if `pos` is invalid.
-*/
-
-int mit_store_stack(mit_state *S, mit_uword pos, mit_word val);
-/* Store the word `val` into the word at position `pos` on the stack.
-
-   Return 0 if OK, or error code if `addr` is invalid.
+mit_word *mit_stack_position(mit_state *S, mit_uword pos);
+/* Return the address of element `pos` on the stack, or NULL if `pos` is
+   invalid.
 */
 
 int mit_pop_stack(mit_state *S, mit_word *val_ptr);
@@ -151,30 +115,6 @@ int mit_push_stack(mit_state *S, mit_word val);
 // Unchecked macro: UNSAFE!
 #define UNCHECKED_STACK(stack, stack_depth, pos) \
     ((stack) + (stack_depth) - (mit_uword)(pos) - 1)
-
-// Inline functions
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-function"
-static int load_stack(mit_word * restrict stack, mit_uword stack_depth,
-                      mit_uword pos, mit_word *vp)
-{
-    if (unlikely(pos >= stack_depth))
-        return MIT_ERROR_INVALID_STACK_READ;
-
-    *vp = *UNCHECKED_STACK(stack, stack_depth, pos);
-    return MIT_ERROR_OK;
-}
-
-static int store_stack(mit_word * restrict stack, mit_uword stack_depth,
-                       mit_uword pos, mit_word v)
-{
-    if (unlikely(pos >= stack_depth))
-        return MIT_ERROR_INVALID_STACK_WRITE;
-
-    *UNCHECKED_STACK(stack, stack_depth, pos) = v;
-    return MIT_ERROR_OK;
-}
-#pragma GCC diagnostic pop
 
 
 // VM control

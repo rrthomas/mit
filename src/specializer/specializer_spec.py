@@ -9,13 +9,13 @@ THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 RISK.
 '''
 
-from mit_core.code_util import Code
-from mit_core.spec import Instruction, ExtraInstruction
-from mit_core.stack import StackEffect, Size
-import mit_core.instruction
+from code_util import Code
+from spec import Instruction, ExtraInstruction
+from stack import StackEffect, Size
+import instruction
 
 
-class InstructionEnum(mit_core.instruction.InstructionEnum):
+class InstructionEnum(instruction.InstructionEnum):
     '''
     Specialized VM instruction descriptor.
     
@@ -66,16 +66,19 @@ def _gen_ordinary_instruction(instruction, guard='1'):
     )
 
 def _gen_variadic_instruction(instruction, count):
-    replacement = ['x{}'.format(i) for i in range(count)]
+    replacement = [f'x{i}' for i in range(count)]
     code = Code()
-    code.append('assert(COUNT == {});'.format(count))
+    code.append(f'''\
+        (void)COUNT; // Avoid a warning with -DNDEBUG
+        assert(COUNT == {count});
+    ''')
     if count > 0:
         code.append('// Suppress warnings about possibly unused variables.')
         for i in range(count):
-            code.append('(void)x{};'.format(i))
+            code.append(f'(void)x{i};')
     code.extend(instruction.code)
     return (
-        '{{stack_0}} == {}'.format(count),
+        f'{{stack_0}} == {count}',
         StackEffect.of(
             _replace_items(instruction.effect.args, replacement),
             _replace_items(instruction.effect.results, replacement),
@@ -89,28 +92,11 @@ specialized_instructions = {}
 for instruction in Instruction:
     if instruction.is_variadic:
         for count in range(4):
-            specialized_instructions['{name}_WITH_{count}'.format(
-                name=instruction.name,
-                count=count,
-            )] = _gen_variadic_instruction(instruction, count)
-    elif instruction.name == 'JUMPZ':
-        specialized_instructions['JUMPZ_TAKEN'] = _gen_ordinary_instruction(
-            instruction,
-            '{stack_1} == 0',
-        )
-        specialized_instructions['JUMPZ_UNTAKEN'] = _gen_ordinary_instruction(
-            instruction,
-            '{stack_1} != 0',
-        )
+            specialized_instructions[f'{instruction.name}_WITH_{count}'] = \
+                _gen_variadic_instruction(instruction, count)
     elif instruction.effect is not None:
         specialized_instructions[instruction.name] = \
             _gen_ordinary_instruction(instruction)
-# NEXT is the one extra instruction we want the specializer to know about.
-# It works as a special case because its opcode is the same as EXTRA's;
-# we also need to mark it as terminal.
-ExtraInstruction.NEXT.terminal = True
-specialized_instructions['NEXT'] = \
-    _gen_ordinary_instruction(ExtraInstruction.NEXT)
 
 Instruction = InstructionEnum(
     'Instruction',
@@ -122,6 +108,6 @@ Instruction = InstructionEnum(
 GUESS_LIMITING = frozenset([
     Instruction.NEXT,
     Instruction.JUMP,
-    Instruction.JUMPZ_TAKEN,
+    Instruction.JUMPZ,
     Instruction.CALL,
 ])

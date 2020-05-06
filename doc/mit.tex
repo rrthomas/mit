@@ -6,7 +6,7 @@
 \documentclass[a4paper]{article}
 \usepackage[british]{babel}
 \usepackage[utf8x]{inputenc}
-\usepackage{newpxtext,booktabs,hyperref}
+\usepackage{newpxtext,booktabs,hyperref,bytefield}
 \frenchspacing
 
 
@@ -45,7 +45,7 @@
 
 \title{The Mit virtual machine}
 \author{Reuben Thomas}
-\date{27th April 2020}
+\date{3rd May 2020}
 
 \begin{document}
 \maketitle
@@ -109,14 +109,14 @@ The stack is a LIFO stack of words used for passing values to instructions and r
 Execution proceeds as follows:
 
 \begin{tabbing}
-\hspace{0.5in}\=begin\=\+\+ \\*
+\hspace{0.2in}\=rep\=eat\+\+ \\*
 let \textbf{opcode} be the least significant $8$ bits of {\tt ir} \\*
-shift {\tt ir} logically $8$ bits to the right \\*
-execute the instruction given by \textbf{opcode} \- \\*
-repeat
+shift {\tt ir} arithmetically $8$ bits to the right \\*
+execute the instruction given by \textbf{opcode}, \\*
+\hspace{1em}or raise error $-1$ if the opcode is invalid \-
 \end{tabbing}
 
-If an error occurs during execution (see section~\ref{errors}), the state of the virtual machine is reset to its state at the start of the loop before the error is raised. This allows instructions to be restarted after handling the error, where desired.
+\noindent If an error occurs during execution (see section~\ref{errors}), the state of the virtual machine is reset to its state at the start of the loop before the error is raised. This allows instructions to be restarted after handling the error, where desired.
 
 \subsection{Errors and termination}
 \label{errors}
@@ -226,15 +226,17 @@ The following extra instructions are defined:
 \subsection{Control}
 \label{control}
 
-These instructions implement unconditional and conditional branches, and subroutine
-call and return (subroutine return is {\tt jump}):
+These instructions implement unconditional and conditional branches, and subroutine call and return (subroutine return is {\tt jump}):
 
 \nopagebreak
 \begin{description}
-\inst{jump}{a-addr —}{If {\tt ir} is not $0$, raise error $-1$. Set {\tt pc} to \spic{a-addr}. Perform the action of {\tt next}.}
-\inst{jumpz}{flag a-addr —}{If \spic{flag} is false then set {\tt pc} to \spic{a-addr} and perform the action of {\tt next}.}
-\inst{call}{\aaddr1 — \aaddr2}{If {\tt ir} is not $0$, raise error $-1$. Exchange {\tt pc} with the top stack value. Perform the action of {\tt next}.}
+\inst{nextff}{—}{If {\tt ir} does not have all its bits set, raise error $-1$. Perform the action of {\tt next}.}
+\inst{jump}{a-addr —}{If {\tt ir} is not $0$, raise error $-1$. Set {\tt pc} to \spic{a-addr}.}
+\inst{jumpz}{flag a-addr —}{If \spic{flag} is false then set {\tt pc} to \spic{a-addr} and set {\tt ir} to $0$.}
+\inst{call}{\aaddr1 — \aaddr2}{If {\tt ir} is not $0$, raise error $-1$. Exchange {\tt pc} with the top stack value.}
 \end{description}
+
+There are also variants {\tt jumpi}, {\tt jumpzi} and {\tt calli}, which take the address encoded as a {\tt pc}-relative number of words in the remainder of {\tt ir}.
 
 
 \subsection{Trap}
@@ -276,12 +278,14 @@ These instructions fetch and store quantities to and from memory. If an invalid 
 \end{description}
 
 
-\subsection{Immediate constants}
+\subsection{Constants}
 
 \begin{description}
 \inst{push}{— n}{The word pointed to by {\tt pc} is pushed on to the stack, and {\tt pc} is incremented to point to the following word.}
 \inst{pushrel}{— n}{Like {\tt push}, except that the initial value of {\tt pc} is added to the value pushed on to the stack.}
 \end{description}
+
+There are also variants {\tt pushi} and {\tt pushreli}, which encode a limited range of constants in the instruction opcode; see section~\ref{opcodes}.
 
 
 \subsection{Logic}
@@ -329,7 +333,7 @@ Negation and addition:
 
 \nopagebreak
 \begin{description}
-\inst{negate}{\n1 — \n2}{Negate \n1, giving its arithmetic inverse \n2.}
+\inst{negate}{\n1 — \n2}{Negate \n1, giving \n2.}
 \inst{add}{\noru1 \noru2 — \noru3}{Add \noru2 to \noru1, giving the sum \noru3.}
 \end{description}
 
@@ -347,8 +351,20 @@ $-8$ if division by zero is attempted):
 \subsection{Instruction encoding}
 \label{encoding}
 
-Instructions are encoded as $8$-bit opcodes; opcodes are packed into words, which are executed starting at the least-significant bits.
+Instructions are encoded as $8$-bit opcodes; opcodes are packed into words, which are executed starting at the least-significant bits. The opcodes have the following structure:
 
+\begin{center}
+  \begin{bytefield}[endianness=big,bitwidth=2em]{8}
+    \bitheader{0-7}\\
+    \bitbox{6}{instruction}\bitboxes*{1}{00}\\[1ex]
+    \bitbox{6}{{\tt pushi} operand}\bitboxes*{1}{10}\\[1ex]
+    \bitbox{7}{{\tt pushreli} operand}\bitbox{1}{1}\\
+    except\\[0.5ex]
+    \bitbox{8}{11111111 = {\tt nextff}}
+  \end{bytefield}
+\end{center}
+
+The operands for {\tt pushi} and {\tt pushreli} are interpreted as signed numbers; the operand of {\tt pushreli} is multiplied by {\tt word\_bytes}. Note that {\tt pushreli}’s immediate constant cannot be $-1$, as the corresponding opcode is used for {\tt nextff}.
 
 \subsection{Instruction opcodes}
 \label{opcodes}

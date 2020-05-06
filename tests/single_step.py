@@ -14,13 +14,13 @@ from mit.globals import *
 
 iterations = 10
 for i in range(iterations):
-    print("pc = {:#x}".format(VM.pc))
+    print(f"pc = {VM.pc:#x}")
     step(auto_NEXT=False)
 
 final_pc = M.addr + iterations * word_bytes
-print("pc should now be {}".format(final_pc))
+print(f"pc should now be {final_pc:#x}")
 if VM.pc != final_pc:
-    print("Error in single_step() tests: pc = {:#x}".format(VM.pc))
+    print(f"Error in single_step() tests: pc = {VM.pc:#x}")
     sys.exit(1)
 
 print("single_step() tests ran OK")

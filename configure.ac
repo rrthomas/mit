@@ -27,7 +27,7 @@ AC_PROG_CC_C99
 gl_EARLY
 AM_PROG_AR
 LT_INIT([win32-dll])
-AM_PATH_PYTHON([3.6])
+AM_PATH_PYTHON([3.7])
 AC_PATH_PROGS([IPYTHON], [ipython3 ipython])
 # Check detected/configured IPython, and set command-line options
 AS_IF([test "$IPYTHON" = ""],
@@ -158,9 +158,6 @@ AC_CHECK_SIZEOF([intmax_t]) # largest stack item
 SIZEOF_INTMAX_T=$ac_cv_sizeof_intmax_t
 AC_SUBST([SIZEOF_INTMAX_T])
 
-# Set byte size
-AC_SUBST([MIT_BYTE_BIT], [8])
-
 # Package suffix for side-by-side installation of multiple builds
 AC_ARG_ENABLE([package-suffix],
   [AS_HELP_STRING([--enable-package-suffix],
@@ -195,8 +192,10 @@ AC_CONFIG_FILES([
         build-aux/man-include.man
         lib/Makefile
         src/Makefile
+        src/run.h
         src/include/mit/mit.h
-        src/mit_core/params.py
+        src/params.py
+        src/mit-include.man
         python/Makefile
         python/mit-shell-include.man
         tests/Makefile

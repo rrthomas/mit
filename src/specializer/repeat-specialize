@@ -30,7 +30,7 @@ assert os.getenv('MIT_BINARY') is not None
 
 # Run specializer
 def copy_profile(n):
-    copy2('specializer/profile.json', 'specializer/profile-{}.json'.format(n))
+    copy2('specializer/profile.json', f'specializer/profile-{n}.json')
 
 def parse_count(lines):
     for i in range(len(lines)):
@@ -51,12 +51,13 @@ for i in range(args.times):
     if count < 0.99 * best_count:
         best_count = count
         best_iteration = i + 1
-    print('Iteration {}: count {} (best so far iteration {} with count {})'.format(
-        i + 1, count, best_iteration, best_count, file=sys.stderr
-    ))
+    print(
+        f'Iteration {i + 1}: count {count} (best so far iteration ' \
+        f'{best_iteration} with count {best_count})',
+        file=sys.stderr
+    )
 copy_profile(args.times)
 
 # Print result and copy best profile to profile.json
-print('Best iteration was {} with count {}'.format(best_iteration, best_count),
-      file=sys.stderr)
-copy2('specializer/profile-{}.json'.format(best_iteration), 'specializer/profile.json')
+print(f'Best iteration was {best_iteration} with count {best_count}', file=sys.stderr)
+copy2(f'specializer/profile-{best_iteration}.json', 'specializer/profile.json')

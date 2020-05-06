@@ -99,11 +99,7 @@ targets Mit.
 ## Running Mit object files
 
 The C implementation of Mit allows a hash-bang line to be prepended to an
-object file, so that they can be run directly. A suggested line is:
-
-```
-#!/usr/bin/env mit
-```
+object file, so that they can be run directly.
 
 
 ## Bugs and comments

@@ -8,8 +8,8 @@
 # THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 # RISK.
 
-from mit_core.code_util import Code, copyright_banner, unrestrict
-from mit_core.spec import Register
+from code_util import Code, copyright_banner, unrestrict
+from spec import Register
 
 
 GENERATOR_PROGRAM = 'gen-registers'
@@ -18,7 +18,6 @@ COPYRIGHT_YEARS = '1994-2020'
 
 code = copyright_banner(GENERATOR_PROGRAM, PURPOSE, COPYRIGHT_YEARS)
 code.append('')
-for register in Register:
-    code.append("R({}, {}, {})".format(
-        register.name, register.type, unrestrict(register.type)))
+for r in Register:
+    code.append(f"R({r.name}, {r.type}, {unrestrict(r.type)})")
 print(code)

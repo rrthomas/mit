@@ -10,9 +10,9 @@
 
 import re
 
-from mit_core.code_util import Code
-import mit_core.stack
-mit_core.stack.TYPE_SIZE_UNKNOWN = 0
+from code_util import Code
+import stack
+stack.TYPE_SIZE_UNKNOWN = 0
 
 from traps import LibInstruction
 
@@ -29,7 +29,7 @@ for lib in LibInstruction:
 code.append('"')
 for type in list(set([type for lib in LibInstruction
                       for type in lib.types()])):
-    code.append('AC_CHECK_SIZEOF([{}])'.format(type))
+    code.append(f'AC_CHECK_SIZEOF([{type}])')
 
 # We don't need this header, but autoconf insists we define it.
 code.append('AC_CONFIG_HEADERS([type-sizes.h])')

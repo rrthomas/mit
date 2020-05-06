@@ -44,5 +44,5 @@ correct_file = re.sub(".bf$", ".correct", brainfuck_file)
 correct = open(correct_file, "rb").read()
 os.remove(object_file)
 
-print("Output:\n{}\n\nCorrect:\n{}".format(output,correct))
+print(f"Output:\n{output}\n\nCorrect:\n{correct}")
 assert(output == correct)

@@ -43,7 +43,7 @@ def over(): lit(1); ass(DUP)
 def libc(fn): lit(fn); lit(LIBC); ass(TRAP)
 
 try:
-    lit_pc_rel(0) # Data pointer.
+    lit_pc_rel(0, force_long=True) # Data pointer.
     stack = [] # [(start of loop, word to patch)]
     for c in sys.stdin.read():
         if c == '>': inc()
@@ -66,7 +66,7 @@ try:
             loop = label()
             dup()
             ass(LOAD1)
-            lit_pc_rel(0)
+            lit_pc_rel(0, force_long=True)
             patch = assembler.pc - word_bytes
             ass(JUMPZ)
             stack.append((loop, patch))
@@ -76,7 +76,7 @@ try:
             ass(JUMP)
             M_word[patch] = label() - patch
     lit(MitErrorCode.OK)
-    ass(EXTRA, HALT)
+    ass(NEXT, HALT)
     M_word[M_word.addr + word_bytes] = label() - M_word.addr # Patch data pointer.
 except ErrorCode as e:
     if e.args[0] == MitError.INVALID_MEMORY_WRITE:

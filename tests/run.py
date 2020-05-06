@@ -13,17 +13,17 @@ from mit.globals import *
 
 
 # Test code
-final_pc = M.addr + word_bytes * 2
+final_pc = M.addr + word_bytes
 lit(MitErrorCode.OK)
-ass(EXTRA, HALT)
+ass(NEXT, HALT)
 
 # Test
 ret = run() # will raise an exception on error
 print("run() returned without an exception")
 
-print("pc should now be {:#x}".format(final_pc))
+print(f"pc should now be {final_pc:#x}")
 if VM.pc != final_pc:
-    print("Error in run() tests: pc = {:#x}".format(VM.pc))
+    print(f"Error in run() tests: pc = {VM.pc:#x}")
     sys.exit(1)
 
 print("run() tests ran OK")

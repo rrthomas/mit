@@ -9,10 +9,9 @@
 
 import argparse
 
-from mit_core.spec import Instruction
-from mit_core.code_util import Code, copyright_banner
-from mit_core.instruction_gen import dispatch
-
+from spec import Instruction
+from code_util import Code, copyright_banner
+from instruction_gen import dispatch
 import profile
 
 
@@ -52,7 +51,7 @@ body_code.append('''\
     mit_byte opcode = S->ir & MIT_OPCODE_MASK;
     initial_pc = S->pc;
     initial_ir = S->ir;
-    S->ir >>= MIT_OPCODE_BIT;
+    S->ir = ARSHIFT(S->ir, MIT_OPCODE_BIT);
 
     // Check stack_depth is valid
     if (S->stack_depth > S->stack_words)
@@ -72,7 +71,8 @@ code.append(Code(*['''\
     mit_state state = *real_S;
     mit_state *const S = &state;
     mit_word error;
-    mit_uword initial_pc, initial_ir;
+    mit_word *initial_pc;
+    mit_uword initial_ir;
 
     do {''',
     body_code,
