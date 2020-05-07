@@ -29,10 +29,10 @@ class RegisterEnum(AutoNumber):
 @unique
 class Register(RegisterEnum):
     '''VM registers.'''
-    pc = ('mit_word *')
-    ir = ('mit_word')
+    pc = ('mit_word *',)
+    ir = ('mit_word',)
     stack_depth = ()
-    stack = ('mit_word * restrict')
+    stack = ('mit_word * restrict',)
     stack_words = ()
 
 @unique
