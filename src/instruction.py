@@ -23,8 +23,8 @@ class InstructionEnum(Enum):
      - code - Code.
      - opcode - int or None - opcode number, defaults to the number of
        instructions before adding this one.
-     - terminal - Instruction or None - if given, this instruction is terminal: the
-       rest of `ir` is its argument, and the Instruction gives the
+     - terminal - Instruction or None - if given, this instruction is terminal:
+       the rest of `ir` is its argument, and the Instruction gives the
        implementation for the case when `ir` is non-zero.
      - is_variadic - bool - true if this instruction is variadic.
 
