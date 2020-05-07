@@ -33,7 +33,7 @@ To develop Mit, it's more convenient to use a bind mount to share a git checkout
 
 ```
 docker build --build-arg BASE_IMAGE=i386/ubuntu --tag test - < Dockerfile
-docker run --interactive --tty --mount type=bind,source="$(pwd)",target=/work test /bin/bash
+docker run --interactive --privileged --tty --mount type=bind,source="$(pwd)",target=/work test /bin/bash
 ```
 
 ## Making a release
