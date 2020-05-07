@@ -26,7 +26,6 @@ PUSH = Instruction.PUSH
 PUSHI_0 = Instruction.PUSHI_0
 PUSHREL = Instruction.PUSHREL
 PUSHRELI_0 = Instruction.PUSHRELI_0
-PUSHRELI_M2 = Instruction.PUSHRELI_M2
 NEXTFF = Instruction.NEXTFF
 
 mnemonic = {
@@ -248,7 +247,7 @@ class Assembler:
     def jump_rel(self, addr, opcode=JUMP):
         '''
         Assemble a relative `jump`, `jumpz` or `call` instruction to the given
-        address.
+        address. Selects the immediate form of the instruction if possible.
         '''
         assert opcode in (JUMP, JUMPZ, CALL)
         assert is_aligned(addr)
@@ -261,6 +260,10 @@ class Assembler:
             self.instruction(opcode)
 
     def lit(self, value, force_long=False):
+        '''
+        Assemble a `push` instruction that pushes the specified `value`.
+        Uses `pushi` if possible and `!force_long`.
+        '''
         value = int(value)
         if not force_long and -32 <= value < 32:
             self.instruction((PUSHI_0 + (value << 2)) & opcode_mask)
@@ -268,9 +271,13 @@ class Assembler:
             self.instruction(PUSH)
             self.word(value)
 
-    def lit_pc_rel(self, value, force_long=False):
-        value = int(value)
-        offset = value - self.pc
+    def lit_pc_rel(self, address, force_long=False):
+        '''
+        Assemble a `pushrel` instruction that pushes the specified `address`.
+        Uses `pushreli` if possible and `!force_long`.
+        '''
+        address = int(address)
+        offset = address - self.pc
         if self.i_addr == None:
             offset -= word_bytes
         offset_words = offset // word_bytes
