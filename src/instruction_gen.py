@@ -46,7 +46,7 @@ def gen_case(instruction):
         # Store the results from C variables.
         code.append(f'S->stack_depth += {effect.results.size - effect.args.size};')
         code.extend(effect.store_results())
-    if instruction.terminal and instruction.terminal != True:
+    if instruction.terminal is not None:
         code = Code(
             'if (S->ir != 0) {',
             gen_case(instruction.terminal),
