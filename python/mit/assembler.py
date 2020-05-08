@@ -244,6 +244,11 @@ class Assembler:
             assert extended_opcode == int(opcode)
             self.i_shift += opcode_bit
 
+    def goto(self, pc):
+        assert is_aligned(pc)
+        self.pc = pc
+        self.label()
+
     def jump_rel(self, addr, opcode=JUMP):
         '''
         Assemble a relative `jump`, `jumpz` or `call` instruction to the given
@@ -287,7 +292,5 @@ class Assembler:
             self.instruction(PUSHREL)
             self.word(offset)
 
-    def goto(self, pc):
-        assert is_aligned(pc)
-        self.pc = pc
-        self.label()
+    def extra(self, extra_opcode):
+        self.instruction(NEXT, extra_opcode)

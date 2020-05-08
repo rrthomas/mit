@@ -43,8 +43,8 @@ vars()['assembler'] = assembler
 vars().update({
     name: assembler.__getattribute__(name)
     for name in [
-        "instruction", "jump_rel", "lit", "lit_pc_rel",
-        "label", "goto"
+        "label", "goto", "instruction",
+        "jump_rel", "lit", "lit_pc_rel", "extra",
     ]
 })
 

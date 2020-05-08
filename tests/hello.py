@@ -26,7 +26,7 @@ for i in range(2):
     lit(LIBC)
     ass(TRAP)
     lit(MitErrorCode.OK)
-    ass(NEXT, HALT)
+    extra(HALT)
     text_addr = assembler.pc
 
 ass_bytes(b"Hello, world!\n")

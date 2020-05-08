@@ -15,7 +15,7 @@ from mit.globals import *
 # Test code
 final_pc = M.addr + word_bytes
 lit(MitErrorCode.OK)
-ass(NEXT, HALT)
+extra(HALT)
 
 # Test
 ret = run() # will raise an exception on error
