@@ -104,23 +104,6 @@ def enum_to_c(enum, value_extractor=lambda x: x.value):
         '};',
     )
 
-def enum_to_python(enum, value_extractor=lambda x: f"{x.value:#x}"):
-    '''
-    Convert an Enum to Python code; return a Code.
-     - enum - an Enum subclass.
-     - value_extractor - a function that takes an element `x` of `enum` and
-       return an str. Defaults to `x.value` formatted as hex.
-    '''
-    class_name = enum.__name__
-    code = Code("'''", enum.__doc__, "'''")
-    for member in enum:
-        code.append(f'{member.name} = {value_extractor(member)}')
-    return Code(
-        '@unique',
-        f'class {class_name}(IntEnum):',
-        code,
-    )
-
 def unrestrict(type):
     '''Return C type without any 'restrict'.'''
     return re.sub('restrict', '', type).strip()
