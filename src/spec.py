@@ -28,7 +28,7 @@ class RegisterEnum(AutoNumber):
         self.type = type
 
 @unique
-class Register(RegisterEnum):
+class Registers(RegisterEnum):
     '''VM registers.'''
     pc = ('mit_word *',)
     ir = ('mit_word',)
@@ -596,7 +596,7 @@ class ExtraInstructions(ActionEnum):
         0x101,
     )
 
-for register in Register:
+for register in Registers:
     pop_code = Code()
     pop_code.append('mit_state *inner_state;')
     pop_code.extend(pop_stack('inner_state', type='mit_state *'))

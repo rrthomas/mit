@@ -11,7 +11,7 @@
 from yaml import dump
 
 from code_util import Code, copyright_banner, unrestrict
-from spec import Register, MitErrorCode, Instructions, ExtraInstructions
+from spec import Registers, MitErrorCode, Instructions, ExtraInstructions
 
 
 GENERATOR_PROGRAM = 'gen-yaml-spec'
@@ -39,7 +39,7 @@ def instruction_spec(i):
 
 print(dump({
     'ErrorCode': {e.name: e.value for e in MitErrorCode},
-    'Register': [r.name for r in Register],
+    'Registers': [r.name for r in Registers],
     'Instructions': {i.name: instruction_spec(i) for i in Instructions},
     'ExtraInstructions': {i.name: action_spec(i) for i in ExtraInstructions},
 }), end='')

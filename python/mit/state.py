@@ -73,12 +73,12 @@ class State:
         self.M_word = Memory(self.memory, element_size=word_bytes)
 
     def __getattr__(self, name):
-        if name in enums.Register.__members__:
+        if name in enums.Registers.__members__:
             return self.state.__getattribute__(name)
         raise AttributeError
 
     def __setattr__(self, name, value):
-        if name in enums.Register.__members__:
+        if name in enums.Registers.__members__:
             self.state.__setattr__(name, value)
         else:
             super().__setattr__(name, value)
@@ -87,7 +87,7 @@ class State:
         state = self.__dict__.copy()
         state['registers'] = {
             name: self.__getattr__(name)
-            for name in enums.Register.__members__
+            for name in enums.Registers.__members__
             if name not in ('stack', 'stack_words')
         }
         del state['memory']
