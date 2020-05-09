@@ -12,7 +12,7 @@ RISK.
 import json, random
 from dataclasses import dataclass
 
-from specializer_spec import Instruction
+from specializer_spec import Instructions
 from path import Path
 
 
@@ -22,7 +22,7 @@ class Label:
     Represents a label of the interpreter that we profiled.
      - index - int - the index of this Label in `profile`.
      - path - Path - the canonical path to this Label.
-     - guess - Instruction - the guessed continuation.
+     - guess - Instructions - the guessed continuation.
      - if_correct - int - the index of the Label to jump to if `guess` is
        correct, or `-1` for the fallback label.
      - if_wrong - int - the index of the Label to jump to if `guess` is
@@ -33,7 +33,7 @@ class Label:
     '''
     index: int
     path: Path
-    guess: Instruction
+    guess: Instructions
     if_correct: int
     if_wrong: int
     correct_count: int
@@ -53,10 +53,10 @@ def load(filename):
             Label(
                 index,
                 Path(tuple(
-                    Instruction[name]
+                    Instructions[name]
                     for name in profile['path'].split()
                 )),
-                Instruction[profile['guess']],
+                Instructions[profile['guess']],
                 profile['if_correct'],
                 profile['if_wrong'],
                 profile['correct_count'],
@@ -79,7 +79,7 @@ def random_trace():
     while True:
         if label is None:
             # Fallback interpreter is modelled as uniformly random.
-            yield random.choice(list(Instruction))
+            yield random.choice(list(Instructions))
             label = ROOT_LABEL
         elif random.randrange(label.total_count) < label.correct_count:
             # Model a correct guess.
@@ -94,10 +94,10 @@ def random_trace():
 
 def instruction_counts():
     '''
-    Returns a dict from Instruction to count.
+    Returns a dict from Instructions to count.
     '''
     # Read trace, computing opcode counts
-    counts = {instruction: 0 for instruction in Instruction}
+    counts = {instruction: 0 for instruction in Instructions}
     for label in profile:
         counts[label.guess] += label.correct_count
     return counts

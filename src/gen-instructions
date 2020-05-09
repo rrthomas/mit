@@ -9,9 +9,8 @@
 
 import argparse
 
-from spec import Instruction
+from spec import Instructions
 from code_util import Code, copyright_banner
-from instruction_gen import dispatch
 import profile
 
 
@@ -57,7 +56,7 @@ body_code.append('''\
     if (S->stack_depth > S->stack_words)
         RAISE(MIT_ERROR_STACK_OVERFLOW);'''
 )
-body_code.extend(dispatch(Instruction, Code(
+body_code.extend(Instructions.dispatch(Code(
     '/* Undefined instruction. */',
     'RAISE(MIT_ERROR_INVALID_OPCODE);',
 )))

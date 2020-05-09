@@ -43,8 +43,8 @@ vars()['assembler'] = assembler
 vars().update({
     name: assembler.__getattribute__(name)
     for name in [
-        "instruction", "jump_rel", "lit", "lit_pc_rel",
-        "label", "goto"
+        "label", "goto", "instruction",
+        "jump_rel", "lit", "lit_pc_rel", "extra",
     ]
 })
 
@@ -62,10 +62,10 @@ ass = assembler.instruction
 dis = disassemble
 
 # Opcodes
-vars().update(Instruction.__members__)
-vars().update(ExtraInstruction.__members__)
-vars().update(LibInstruction.__members__)
+vars().update(Instructions.__members__)
+vars().update(ExtraInstructions.__members__)
+vars().update(LibInstructions.__members__)
 vars().update({
     lib.library.__name__: lib.library
-    for lib in LibInstruction
+    for lib in LibInstructions
 })

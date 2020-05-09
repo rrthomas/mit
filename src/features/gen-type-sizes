@@ -14,7 +14,7 @@ from code_util import Code
 import stack
 stack.TYPE_SIZE_UNKNOWN = 0
 
-from traps import LibInstruction
+from traps import LibInstructions
 
 
 code = Code()
@@ -24,10 +24,10 @@ AC_INIT([type-sizes], [0.1])
 ac_includes_default="\\
 #include \\"config.h\\"
 ''')
-for lib in LibInstruction:
+for lib in LibInstructions:
     code.append(re.sub('"', '\\"', lib.includes))
 code.append('"')
-for type in list(set([type for lib in LibInstruction
+for type in list(set([type for lib in LibInstructions
                       for type in lib.types()])):
     code.append(f'AC_CHECK_SIZEOF([{type}])')
 

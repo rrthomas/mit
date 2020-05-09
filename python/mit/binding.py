@@ -130,7 +130,7 @@ vars()["_run"] = c_mit_fn.in_dll(libmit, "mit_run")
 vars()["run_ptr"] = POINTER(c_mit_fn).in_dll(libmit, "mit_run")
 vars().update([(c, cty.in_dll(libmit, f"mit_{c}"))
                for (c, cty) in [
-                       ("run_specializer", c_mit_fn),
+                       ("run_fast", c_mit_fn),
                        ("run_profile", c_mit_fn),
                ]])
 

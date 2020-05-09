@@ -10,7 +10,7 @@
 import sys, functools, heapq, argparse, random, json
 from pprint import pprint
 
-from specializer_spec import Instruction, GUESS_LIMITING
+from specializer_spec import Instructions, GUESS_LIMITING
 from path import Path
 import profile
 
@@ -75,14 +75,14 @@ class Label:
      - path - Path - the canonical name of this Label.
      - right_parent - the Label whose `path` is `self.path[:-1]` (`None` for
        `ROOT_LABEL`).
-     - right_children - dict from Instruction to Label - the Labels
+     - right_children - dict from Instructions to Label - the Labels
        of which `self` is the `right_parent`.
      - left_ancestor - the Label whose `path` is `self.path[n:]` for the
        smallest `n>0` (`None` for `ROOT_LABEL`).
-     - left_descendants - dict from Instruction to Label - the Labels
+     - left_descendants - dict from Instructions to Label - the Labels
        of which `self` is the `left_ancestor`. Note that by "LEFT" the key is a
        single Instruction.
-     - counts - dict from Instruction to int - Until
+     - counts - dict from Instructions to int - Until
        `right_children[i]` is created, `counts[i]` is the number of times this
        Label is followed by the Instruction `i`. We don't bother to
        count thereafter.
@@ -97,7 +97,7 @@ class Label:
         self.right_children = {}
         self.left_descendants = {}
         self._right_children_of_left_descendants = set() # of Instruction.
-        self.counts = {i: 0 for i in Instruction}
+        self.counts = {i: 0 for i in Instructions}
         if args.verbose:
             print(f'Constructing {self!r}')
             print(f'    right_parent = {right_parent!r}')
@@ -234,8 +234,8 @@ ROOT_LABEL = Label(Path(()), None, None)
 
 
 # Make Labels exemplifying the whole instruction set, to improve profiling.
-for instruction in Instruction:
-    if instruction.effect is not None:
+for instruction in Instructions:
+    if instruction.action.effect is not None:
         ROOT_LABEL.construct(instruction)
 
 
@@ -381,7 +381,7 @@ if args.verbose:
         for l in Label.ALL
     )
     pprint(label_reversed_strs, width=499)
-    histogram = [0]*(1 + len(Instruction))
+    histogram = [0]*(1 + len(Instructions))
     for l in Label.ALL:
         histogram[len(l.right_children)] += 1
     for i, count in enumerate(histogram):
@@ -451,7 +451,7 @@ class If(Code):
     '''
     def __init__(self, path, guess, c, w):
         assert isinstance(path, Path)
-        assert isinstance(guess, Instruction)
+        assert isinstance(guess, Instructions)
         assert c is None or isinstance(c, State)
         assert w is None or isinstance(w, State)
         self.path = path
@@ -545,9 +545,9 @@ walk(State(0, 0))
 
 # File format is JSON, with the following contents:
 # [{
-#     "path": str - a space-separated list of Instruction names,
-#     "preguess": str - a space-separated list of Instruction names,
-#     "guess": str - an Instruction name,
+#     "path": str - a space-separated list of Instructions names,
+#     "preguess": str - a space-separated list of Instructions names,
+#     "guess": str - an Instructions name,
 #     "if_correct": int or None - a label index,
 #     "if_wrong": int or None - a label index,
 # }]

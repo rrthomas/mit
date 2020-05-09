@@ -18,8 +18,8 @@ assembler = Assembler(VM)
 lit = assembler.lit
 label = assembler.label
 ass = assembler.instruction
-vars().update(Instruction.__members__)
-UNDEFINED = 1 + max(Instruction)
+vars().update(Instructions.__members__)
+UNDEFINED = 1 + max(Instructions)
 
 # Test results and data
 result = []

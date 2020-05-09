@@ -9,7 +9,6 @@
 # RISK.
 
 from code_util import Code, copyright_banner
-from instruction_gen import *
 from params import word_bytes
 
 
@@ -39,7 +38,7 @@ code.append('''
     #include "mit/features.h"'''
 )
 
-for lib in LibInstruction:
+for lib in LibInstructions:
     code.append(lib.includes)
 
 code.append('''
@@ -49,7 +48,7 @@ code.append('''
 '''
 )
 
-for lib in LibInstruction:
+for lib in LibInstructions:
     code.append('')
     code.append(f'''\
         static mit_word trap_{lib.name.lower()}(mit_state * restrict S, mit_word opcode)
@@ -59,7 +58,7 @@ for lib in LibInstruction:
     code.append('')
 
     body_code = Code()
-    body_code.extend(dispatch(lib.library, Code(
+    body_code.extend(lib.library.dispatch(Code(
         'RAISE(MIT_TRAP_ERROR_INVALID_FUNCTION);'
     )))
     body_code.append('')
@@ -84,7 +83,7 @@ body_code.append('''\
     mit_uword opcode;
     if ((error = mit_pop_stack(S, (mit_word *)&opcode)) != MIT_ERROR_OK)
         return error;''')
-body_code.extend(dispatch(LibInstruction, Code(
+body_code.extend(LibInstructions.dispatch(Code(
     'return MIT_TRAP_ERROR_INVALID_LIBRARY;'
 )))
 body_code.append('return error;')

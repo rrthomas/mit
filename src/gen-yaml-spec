@@ -11,7 +11,7 @@
 from yaml import dump
 
 from code_util import Code, copyright_banner, unrestrict
-from spec import Register, MitErrorCode, Instruction, ExtraInstruction
+from spec import Register, MitErrorCode, Instructions, ExtraInstructions
 
 
 GENERATOR_PROGRAM = 'gen-yaml-spec'
@@ -25,16 +25,21 @@ print(code)
 # Write YAML description.
 # TODO: When we have PyYAML 5.1, use sort_keys=False
 # FIXME: Make the classes dumped directly representable
-def inst_spec(i):
-    spec = {'opcode': i.opcode, 'terminal': i.terminal is not None}
-    if i.effect:
-        spec['args'] = [item.name for item in i.effect.args.items]
-        spec['results'] = [item.name for item in i.effect.results.items]
+def action_spec(i):
+    spec = {'opcode': i.opcode}
+    if i.action.effect is not None:
+        spec['args'] = [item.name for item in i.action.effect.args.items]
+        spec['results'] = [item.name for item in i.action.effect.results.items]
+    return spec
+
+def instruction_spec(i):
+    spec = action_spec(i)
+    spec['terminal'] = i.action.terminal_action is not None
     return spec
 
 print(dump({
     'ErrorCode': {e.name: e.value for e in MitErrorCode},
     'Register': [r.name for r in Register],
-    'Instruction': {i.name: inst_spec(i) for i in Instruction},
-    'ExtraInstruction': {i.name: inst_spec(i) for i in ExtraInstruction},
+    'Instructions': {i.name: instruction_spec(i) for i in Instructions},
+    'ExtraInstructions': {i.name: action_spec(i) for i in ExtraInstructions},
 }), end='')
