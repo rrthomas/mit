@@ -20,11 +20,9 @@ for i in range(2):
     lit(text_addr, force_long=True)
     lit(14)
     lit(LibC.STDOUT)
-    lit(LIBC)
-    ass(TRAP)
+    trap(LIBC)
     lit(LibC.WRITE)
-    lit(LIBC)
-    ass(TRAP)
+    trap(LIBC)
     lit(MitErrorCode.OK)
     extra(HALT)
     text_addr = assembler.pc
@@ -33,9 +31,7 @@ ass_bytes(b"Hello, world!\n")
 
 
 # Test
-import sys
-import io
-import re
+import sys, io, re
 
 from redirect_stdout import stdout_redirector
 

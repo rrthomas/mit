@@ -79,13 +79,10 @@ code.append('''\
 code.append('')
 
 body_code = Code()
-body_code.append('''\
-    mit_uword opcode;
-    if ((error = mit_pop_stack(S, (mit_word *)&opcode)) != MIT_ERROR_OK)
-        return error;''')
+body_code.append('mit_uword code = S->ir;')
 body_code.extend(LibInstructions.dispatch(Code(
     'return MIT_TRAP_ERROR_INVALID_LIBRARY;'
-)))
+), 'code'))
 body_code.append('return error;')
 code.append(body_code)
 

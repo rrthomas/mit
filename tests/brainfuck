@@ -40,7 +40,7 @@ def inc(): lit(1); ass(ADD)
 def dec(): lit(1); ass(NEGATE); ass(ADD)
 def dup(): lit(0); ass(DUP)
 def over(): lit(1); ass(DUP)
-def libc(fn): lit(fn); lit(LIBC); ass(TRAP)
+def libc(fn): lit(fn); trap(LIBC)
 
 try:
     lit_pc_rel(0, force_long=True) # Data pointer.
@@ -72,6 +72,7 @@ try:
             stack.append((loop, patch))
         elif c == ']':
             loop, patch = stack.pop()
+            label()
             lit_pc_rel(loop)
             ass(JUMP)
             M_word[patch] = label() - patch
