@@ -148,36 +148,36 @@ class CacheState:
 
 def gen_case(instruction, cache_state):
     '''
-    Generate a Code for an Instruction. It is the caller's responsibility to
-    ensure that it's the right instruction to execute, and that the stack
-    won't underflow or overflow.
+    Generate a Code for a member of Instruction. It is the caller's
+    responsibility to ensure that it's the right instruction to execute, and
+    that the stack won't underflow or overflow.
 
     In the code, S is the mit_state, and errors are reported by calling
     RAISE(). When calling RAISE(), the C variable `cached_depth` will contain
     the number of stack items cached in C locals.
 
-     - instruction - Instruction.
+     - instruction - Instructions.
      - cache_state - CacheState - Which StackItems are cached.
        Updated in place.
     '''
     code = Code()
-    num_args = len(instruction.effect.args.items)
-    num_results = len(instruction.effect.results.items)
+    num_args = len(instruction.action.effect.args.items)
+    num_results = len(instruction.action.effect.results.items)
     # Declare C variables for args and results.
     code.extend(Code(*[
         f'mit_word {name};'
-        for name, item in instruction.effect.by_name.items()
+        for name, item in instruction.action.effect.by_name.items()
     ]))
     # Load the arguments into their C variables.
-    code.extend(cache_state.load_args(instruction.effect.args))
-    # Inline `instruction.code`.
+    code.extend(cache_state.load_args(instruction.action.effect.args))
+    # Inline `instruction.action.code`.
     # Note: `S->stack_depth` and `cache_state` must be correct for RAISE().
-    code.extend(instruction.code)
+    code.extend(instruction.action.code)
     # Update stack pointer and cache_state.
     code.append(f'S->stack_depth -= {num_args};')
     code.extend(cache_state.add(-num_args))
     code.extend(cache_state.add(num_results))
     code.append(f'S->stack_depth += {num_results};')
     # Store the results from their C variables.
-    code.extend(cache_state.store_results(instruction.effect.results))
+    code.extend(cache_state.store_results(instruction.action.effect.results))
     return code

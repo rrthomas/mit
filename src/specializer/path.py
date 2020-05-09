@@ -13,7 +13,7 @@ from dataclasses import dataclass
 import re, functools
 
 from spec import opcode_bit, word_bit
-from specializer_spec import Instruction
+from specializer_spec import Instructions
 
 
 @dataclass
@@ -55,20 +55,20 @@ class State:
         '''
         Returns the State that results from executing `instruction` in this
         State.
-         - instruction - a Instruction.
+         - instruction - a member of Instructions.
         '''
-        assert isinstance(instruction, Instruction)
+        assert isinstance(instruction, Instructions)
         # Simulate popping arguments.
-        stack_pos = self.stack_pos - len(instruction.effect.args.items)
+        stack_pos = self.stack_pos - len(instruction.action.effect.args.items)
         stack_min = min(self.stack_min, stack_pos)
         cd1 = stack_pos - stack_min
         # Simulate pushing results.
-        stack_pos += len(instruction.effect.results.items)
+        stack_pos += len(instruction.action.effect.results.items)
         stack_max = max(self.stack_max, stack_pos)
         cd2 = stack_pos - stack_min
         # Simulate consuming `ir`.
         i_bits = self.i_bits + opcode_bit
-        if instruction.terminal:
+        if instruction.action.terminal:
             i_bits = 0
         return State(
             stack_pos=stack_pos,

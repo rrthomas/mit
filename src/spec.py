@@ -8,13 +8,14 @@
 # RISK.
 
 import os
+from dataclasses import dataclass
 from enum import Enum, IntEnum, unique
 
 from autonumber import AutoNumber
 from params import word_bytes
 from code_util import Code
-from instruction import InstructionEnum
-from instruction_gen import dispatch
+from action import Action, ActionEnum
+from instruction import Instruction
 from stack import StackEffect, pop_stack, push_stack
 
 
@@ -50,51 +51,17 @@ class MitErrorCode(IntEnum):
     BREAK = -127
 
 
-@unique
-class ImmediateInstruction(InstructionEnum):
-    EXTRA = (
-        None,
-        Code(), # Computed below.
-        0x0,
-    )
-
-    JUMPI = (
-        StackEffect.of([], []),
-        Code('''\
-            S->pc += S->ir;
-            S->ir = 0;
-        '''),
-        0x1,
-    )
-
-    JUMPZI = (
-        StackEffect.of(['flag'], []),
-        Code('''\
-            if (flag == 0) {
-                S->pc += S->ir;
-                S->ir = 0;
-            }
-        '''),
-        0x2,
-    )
-
-    CALLI = (
-        StackEffect.of([], ['ret_addr']),
-        Code('''\
-            ret_addr = (mit_uword)S->pc;
-            S->pc += S->ir;
-            S->ir = 0;
-        '''),
-        0x3,
-    )
-
-basic_instructions = [
+# Core instructions.
+instructions = [
     {
         'name': 'NEXT',
         'effect': StackEffect.of([], []),
         'code': Code('S->ir = *(mit_word *)S->pc++;'),
         'opcode': 0x0,
-        'terminal': ImmediateInstruction.EXTRA,
+        'terminal': Action (
+            None,
+            Code(), # Computed below.
+        ),
     },
 
     {
@@ -117,7 +84,13 @@ basic_instructions = [
             S->pc = (mit_word *)addr;
         '''),
         'opcode': 0x1,
-        'terminal': ImmediateInstruction.JUMPI,
+        'terminal': Action(
+            StackEffect.of([], []),
+            Code('''\
+                S->pc += S->ir;
+                S->ir = 0;
+            '''),
+        ),
     },
 
     {
@@ -132,7 +105,15 @@ basic_instructions = [
             }
         '''),
         'opcode': 0x2,
-        'terminal': ImmediateInstruction.JUMPZI,
+        'terminal': Action(
+            StackEffect.of(['flag'], []),
+            Code('''\
+                if (flag == 0) {
+                    S->pc += S->ir;
+                    S->ir = 0;
+                }
+            '''),
+        ),
     },
 
     {
@@ -145,7 +126,14 @@ basic_instructions = [
             S->pc = (mit_word *)addr;
         '''),
         'opcode': 0x3,
-        'terminal': ImmediateInstruction.CALLI,
+        'terminal': Action(
+            StackEffect.of([], ['ret_addr']),
+            Code('''\
+                ret_addr = (mit_uword)S->pc;
+                S->pc += S->ir;
+                S->ir = 0;
+            '''),
+        ),
     },
 
     {
@@ -395,12 +383,13 @@ basic_instructions = [
 ]
 
 # Turn instruction codes into full opcodes
-for i in basic_instructions:
+for i in instructions:
     if i['opcode'] != 0xff:
         i['opcode'] <<= 2
 
 
-pushi_instructions = [
+# `pushi`
+instructions.extend([
     {
         'name': f'PUSHI_{n}'.replace('-', 'M'),
         'effect': StackEffect.of([], ['n']),
@@ -408,9 +397,10 @@ pushi_instructions = [
         'opcode': ((n & 0x3f) << 2) | 0x2,
     }
     for n in range(-32, 32)
-]
+])
 
-pushreli_instructions = [
+# `pushreli`
+instructions.extend([
     {
         'name': f'PUSHRELI_{n}'.replace('-', 'M'),
         'effect': StackEffect.of([], ['addr']),
@@ -418,155 +408,191 @@ pushreli_instructions = [
         'opcode': ((n & 0x7f) << 1) | 0x1,
     }
     for n in range(-64, 64) if n != -1
-]
+])
 
 
 # Full instruction enumeration.
-Instruction = unique(InstructionEnum(
-    'Instruction',
+Instructions = unique(ActionEnum(
+    'Instructions',
     ((
         i['name'],
         (
-            i['effect'],
-            i['code'],
+            Instruction(i['effect'], i['code'], i.get('terminal', None)),
             i['opcode'],
-            i.get('terminal', None),
         )
-    ) for i in
-     basic_instructions + pushi_instructions + pushreli_instructions
-    )
+    ) for i in instructions)
 ))
-Instruction.__docstring__ = 'VM instructions.'
+Instructions.__docstring__ = 'VM instructions.'
 
 
 @unique
-class ExtraInstruction(InstructionEnum):
+class ExtraInstructions(ActionEnum):
     '''VM extra instructions.'''
 
     # FIXME: improve code generation so the stack effects of the following can
     # be specified
     HALT = (
-        None,
-        Code('mit_word n;', str(pop_stack('n')), 'RAISE(n);'),
+        Action(
+            None,
+            Code('mit_word n;', str(pop_stack('n')), 'RAISE(n);'),
+        ),
         0x1,
     )
 
     SIZEOF_STATE = (
-        StackEffect.of([], ['size']),
-        Code('size = sizeof(mit_state);'),
+        Action(
+            StackEffect.of([], ['size']),
+            Code('size = sizeof(mit_state);'),
+        ),
         0x2,
     )
 
     THIS_STATE = (
-        StackEffect.of([], ['this_state:mit_state *']),
-        Code('this_state = S;'),
+        Action(
+            StackEffect.of([], ['this_state:mit_state *']),
+            Code('this_state = S;'),
+        ),
         0x3,
     )
 
     GET_PC = (
-        None,
-        Code(), # Code is computed below.
+        Action(
+            None,
+            Code(), # Code is computed below.
+        ),
         0x4,
     )
 
     SET_PC = (
-        None,
-        Code(), # Code is computed below.
+        Action(
+            None,
+            Code(), # Code is computed below.
+        ),
         0x5,
     )
 
     GET_IR = (
-        None,
-        Code(), # Code is computed below.
+        Action(
+            None,
+            Code(), # Code is computed below.
+        ),
         0x6,
     )
 
     SET_IR = (
-        None,
-        Code(), # Code is computed below.
+        Action(
+            None,
+            Code(), # Code is computed below.
+        ),
         0x7,
     )
 
     GET_STACK_DEPTH = (
-        None,
-        Code(), # Code is computed below.
+        Action(
+            None,
+            Code(), # Code is computed below.
+        ),
         0x8,
     )
 
     SET_STACK_DEPTH = (
-        None,
-        Code(), # Code is computed below.
+        Action(
+            None,
+            Code(), # Code is computed below.
+        ),
         0x9,
     )
 
     GET_STACK = (
-        None,
-        Code(), # Code is computed below.
+        Action(
+            None,
+            Code(), # Code is computed below.
+        ),
         0xa,
     )
 
     SET_STACK = (
-        None,
-        Code(), # Code is computed below.
+        Action(
+            None,
+            Code(), # Code is computed below.
+        ),
         0xb,
     )
 
     GET_STACK_WORDS = (
-        None,
-        Code(), # Code is computed below.
+        Action(
+            None,
+            Code(), # Code is computed below.
+        ),
         0xc,
     )
 
     SET_STACK_WORDS = (
-        None,
-        Code(), # Code is computed below.
+        Action(
+            None,
+            Code(), # Code is computed below.
+        ),
         0xd,
     )
 
     STACK_POSITION = (
-        StackEffect.of(['pos', 'inner_state:mit_state *'], ['ret:mit_word *']),
-        Code('''\
-           ret = mit_stack_position(inner_state, pos);
-        '''),
+        Action(
+            StackEffect.of(['pos', 'inner_state:mit_state *'], ['ret:mit_word *']),
+            Code('''\
+               ret = mit_stack_position(inner_state, pos);
+            '''),
+        ),
         0xe,
     )
 
     POP_STACK = (
-        StackEffect.of(['inner_state:mit_state *'], ['value', 'ret']),
-        Code('''\
-            value = 0;
-            ret = mit_pop_stack(inner_state, &value);
-        '''),
+        Action(
+            StackEffect.of(['inner_state:mit_state *'], ['value', 'ret']),
+            Code('''\
+                value = 0;
+                ret = mit_pop_stack(inner_state, &value);
+            '''),
+        ),
         0xf,
     )
 
     PUSH_STACK = (
-        StackEffect.of(['value', 'inner_state:mit_state *'], ['ret']),
-        Code('ret = mit_push_stack(inner_state, value);'),
+        Action(
+            StackEffect.of(['value', 'inner_state:mit_state *'], ['ret']),
+            Code('ret = mit_push_stack(inner_state, value);'),
+        ),
         0x10,
     )
 
     RUN = (
-        StackEffect.of(['inner_state:mit_state *'], ['ret']),
-        Code('ret = mit_run(inner_state);'),
+        Action(
+            StackEffect.of(['inner_state:mit_state *'], ['ret']),
+            Code('ret = mit_run(inner_state);'),
+        ),
         0x11,
     )
 
     SINGLE_STEP = (
-        StackEffect.of(['inner_state:mit_state *'], ['ret']),
-        Code('ret = mit_single_step(inner_state);'),
+        Action(
+            StackEffect.of(['inner_state:mit_state *'], ['ret']),
+            Code('ret = mit_single_step(inner_state);'),
+        ),
         0x12,
     )
 
     ARGC = (
-        StackEffect.of([], ['argc']),
-        Code('argc = (mit_word)mit_argc;'),
+        Action(
+            StackEffect.of([], ['argc']),
+            Code('argc = (mit_word)mit_argc;'),
+        ),
         0x100,
     )
 
     ARGV = (
-        StackEffect.of([], ['argv:char **']),
-        Code('argv = mit_argv;'),
+        Action(
+            StackEffect.of([], ['argv:char **']),
+            Code('argv = mit_argv;'),
+        ),
         0x101,
     )
 
@@ -581,22 +607,22 @@ for register in Register:
         f'inner_state->{register.name}',
         type=register.type,
     ))
-    ExtraInstruction[f'GET_{register.name.upper()}'].code = get_code
+    ExtraInstructions[f'GET_{register.name.upper()}'].action.code = get_code
 
     set_code = Code()
     set_code.extend(pop_code)
     set_code.append(f'{register.type} value;')
     set_code.extend(pop_stack('value', register.type))
     set_code.append(f'inner_state->{register.name} = value;')
-    ExtraInstruction[f'SET_{register.name.upper()}'].code = set_code
+    ExtraInstructions[f'SET_{register.name.upper()}'].action.code = set_code
 
 
-# Inject code for ImmediateInstruction.EXTRA
+# Inject code for EXTRA
 extra_code = Code('''\
     mit_uword extra_opcode = S->ir;
     S->ir = 0;
 ''')
-extra_code.extend(dispatch(ExtraInstruction, Code(
+extra_code.extend(ExtraInstructions.dispatch(Code(
     'RAISE(MIT_ERROR_INVALID_OPCODE);',
 ), 'extra_opcode'))
-ImmediateInstruction.EXTRA.code = extra_code
+Instructions.NEXT.action.terminal_action.code = extra_code

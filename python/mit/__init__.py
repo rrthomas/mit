@@ -22,10 +22,10 @@ provides a global Mit instance in VM, and defines various globals. See
 '''
 
 from .enums import (
-    Register, Instruction, TERMINAL_OPCODES, ExtraInstruction,
+    Register, Instructions, TERMINAL_OPCODES, ExtraInstructions,
     MitErrorCode
 )
-from .trap_enums import LibC, LibInstruction
+from .trap_enums import LibC, LibInstructions
 from .binding import (
     Error, VMError,
     word_bytes,

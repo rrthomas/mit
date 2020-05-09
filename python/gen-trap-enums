@@ -31,7 +31,7 @@ code.append('')
 
 lib_code = Code(
     "'''",
-    traps.LibInstruction.__doc__,
+    traps.LibInstructions.__doc__,
     "'''",
     '''\
         def __init__(self, library, opcode):
@@ -43,13 +43,13 @@ lib_code = Code(
     ''',
 )
 lib_code.append('')
-for lib in traps.LibInstruction:
+for lib in traps.LibInstructions:
     lib_code.append(f'{lib.name} = ({lib.library.__name__}, {lib.opcode:#x})')
     code.extend(enum_to_python(lib.library, lambda i: f"{i.opcode:#x}"))
     code.append('')
 code.append('''\
     @unique
-    class LibInstruction(Enum):
+    class LibInstructions(Enum):
 ''')
 code.append(lib_code)
 

@@ -12,7 +12,7 @@ import argparse, json, textwrap
 from code_util import Code, copyright_banner, disable_warnings
 from spec import opcode_bit
 from specializer import CacheState, gen_case
-from specializer_spec import Instruction
+from specializer_spec import Instructions
 from path import Path, State
 
 
@@ -43,7 +43,7 @@ def _opcode_test(multiguess):
     '''
     Returns a C expression representing the condition "`ir` begins with
     `multiguess`".
-     - multiguess - list of Instruction.
+     - multiguess - list of Instructions.
     '''
     assert type(multiguess) is list
     opcode_value = 0 # Bit pattern to match.
@@ -52,7 +52,7 @@ def _opcode_test(multiguess):
         assert opcode_bits is not None
         opcode_value |= instruction.opcode << opcode_bits
         opcode_bits += opcode_bit
-        if instruction.terminal:
+        if instruction.action.terminal:
             opcode_bits = None # Must match all bits.
     # Generate the guess condition.
     if opcode_bits is None:
@@ -66,9 +66,9 @@ class Label:
     '''
      - index - int - the index of this Label.
      - path - Path - the instruction sequence just executed.
-     - preguess - list of Instruction - the longest unique probable
+     - preguess - list of Instructions - the longest unique probable
        continuation.
-     - guess - Instruction - the most probable next instruction.
+     - guess - Instructions - the most probable next instruction.
      - if_correct - int - the Label index to jump to if `guess` is correct,
        or `None` for the fallback label.
      - if_wrong - int - the Label index to jump to if `guess` is wrong,
@@ -84,14 +84,14 @@ class Label:
         if_wrong,
     ):
         '''
-         - path - str (space-separated Instruction names).
-         - preguess - str (space-separated Instruction names).
-         - guess - str (Instruction name).
+         - path - str (space-separated Instructions names).
+         - preguess - str (space-separated Instructions names).
+         - guess - str (Instructions name).
         '''
         self.index = index
-        self.path = Path(tuple(Instruction[name] for name in path.split()))
-        self.preguess = [Instruction[name] for name in preguess.split()]
-        self.guess = Instruction[guess]
+        self.path = Path(tuple(Instructions[name] for name in path.split()))
+        self.preguess = [Instructions[name] for name in preguess.split()]
+        self.guess = Instructions[guess]
         self.if_correct = if_correct
         self.if_wrong = if_wrong
 
@@ -143,14 +143,14 @@ class Label:
             w_code.append(f'state_guess_wrong[{self.index}]++;')
         cache_state = self.cache_state()
         w_code.extend(goto_label_by_index(cache_state, self.if_wrong))
-        # Compute the bit string of Instruction opcodes to guess.
+        # Compute the bit string of Instructions opcodes to guess.
         multiguess = [self.guess]
         if not no_preguess and self.if_correct is not None:
             multiguess.extend(labels[self.if_correct].preguess)
         opcode_test = _opcode_test(multiguess)
         # Compute the guard condition.
         cache_state = self.cache_state()
-        guard_code = self.guess.guard.format(
+        guard_code = self.guess.action.guard.format(
             stack_0=cache_state.lvalue(0),
             stack_1=cache_state.lvalue(1),
         )
@@ -231,7 +231,7 @@ def gen_labels_code(profiling=False):
         //  - On entry, `error` is `MIT_ERROR_BREAK`. `cached_depth` is a
         //    compile-time constant indicating how many top stack items are in
         //    C variables.
-        //  - Before running the `Instruction.code` for an
+        //  - Before running the `Instructions.code` for an
         //    instruction, record `initial_pc` and `initial_ir`, and right-shift
         //    `ir`.
         //  - When an error occurs, call `RAISE(code)`.

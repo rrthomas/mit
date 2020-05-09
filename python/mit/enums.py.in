@@ -34,23 +34,23 @@ Register = unique(AutoNumber(
 ))
 Register.__doc__ = 'VM registers.'
 
-Instruction = enum(
-    'Instruction',
+Instructions = enum(
+    'Instructions',
     'VM instruction opcodes.',
-    spec['Instruction'],
+    spec['Instructions'],
     value_extractor=lambda i: i['opcode'],
 )
 
 # The set of opcodes which must be the last in a word.
 TERMINAL_OPCODES = frozenset({
-    Instruction[name]
-    for name, i in spec['Instruction'].items() if i.get('terminal')
+    Instructions[name]
+    for name, i in spec['Instructions'].items() if i.get('terminal')
 })
 
-ExtraInstruction = enum(
-    'ExtraInstruction',
+ExtraInstructions = enum(
+    'ExtraInstructions',
     'Extra instruction opcodes.',
-    spec['ExtraInstruction'],
+    spec['ExtraInstructions'],
     value_extractor=lambda i: i['opcode'],
 )
 

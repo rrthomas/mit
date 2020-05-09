@@ -9,13 +9,16 @@ THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 RISK.
 '''
 
+from dataclasses import dataclass
+
 from code_util import Code
-from spec import Instruction, ExtraInstruction
+from action import Action, ActionEnum
+from spec import Instructions, ExtraInstructions
 from stack import StackEffect, Size
-import instruction
 
 
-class InstructionEnum(instruction.InstructionEnum):
+@dataclass
+class Instruction(Action):
     '''
     Specialized VM instruction descriptor.
     
@@ -30,15 +33,17 @@ class InstructionEnum(instruction.InstructionEnum):
 
     Specialized instructions cannot be variadic.
     '''
-    def __init__(self, guard, effect, code, opcode=None, terminal=False):
-        super().__init__(effect, code, opcode, terminal)
-        self.guard = guard
+    guard: str
+    terminal: bool=False
+
+    def __post_init__(self):
+        super().__post_init__()
         assert not self.is_variadic
-        if effect is not None:
+        if self.effect is not None:
             assert all(
                 item.size == Size(1)
-                for item in effect.by_name.values()
-            ), instruction
+                for item in self.effect.by_name.values()
+            ), self
 
     def __repr__(self):
         return self.name
@@ -58,11 +63,13 @@ def _replace_items(picture, replacement):
 
 def _gen_ordinary_instruction(instruction, guard='1'):
     return (
-        guard,
-        instruction.effect,
-        instruction.code,
+        Instruction(
+            instruction.action.effect,
+            instruction.action.code,
+            guard,
+            instruction.action.terminal_action is not None,
+        ),
         instruction.opcode,
-        instruction.terminal,
     )
 
 def _gen_variadic_instruction(instruction, count):
@@ -76,38 +83,40 @@ def _gen_variadic_instruction(instruction, count):
         code.append('// Suppress warnings about possibly unused variables.')
         for i in range(count):
             code.append(f'(void)x{i};')
-    code.extend(instruction.code)
+    code.extend(instruction.action.code)
     return (
-        f'{{stack_0}} == {count}',
-        StackEffect.of(
-            _replace_items(instruction.effect.args, replacement),
-            _replace_items(instruction.effect.results, replacement),
+        Instruction(
+            StackEffect.of(
+                _replace_items(instruction.action.effect.args, replacement),
+                _replace_items(instruction.action.effect.results, replacement),
+            ),
+            code,
+            f'{{stack_0}} == {count}',
+            instruction.action.terminal_action is not None,
         ),
-        code,
         instruction.opcode,
-        instruction.terminal,
     )
 
 specialized_instructions = {}
-for instruction in Instruction:
-    if instruction.is_variadic:
+for instruction in Instructions:
+    if instruction.action.is_variadic:
         for count in range(4):
             specialized_instructions[f'{instruction.name}_WITH_{count}'] = \
                 _gen_variadic_instruction(instruction, count)
-    elif instruction.effect is not None:
+    elif instruction.action.effect is not None:
         specialized_instructions[instruction.name] = \
             _gen_ordinary_instruction(instruction)
 
-Instruction = InstructionEnum(
-    'Instruction',
+Instructions = ActionEnum(
+    'Instructions',
     specialized_instructions,
 )
 
 # The set of Instructions that might modify the `ir` register.
 # We cannot guess beyond such an instruction.
 GUESS_LIMITING = frozenset([
-    Instruction.NEXT,
-    Instruction.JUMP,
-    Instruction.JUMPZ,
-    Instruction.CALL,
+    Instructions.NEXT,
+    Instructions.JUMP,
+    Instructions.JUMPZ,
+    Instructions.CALL,
 ])

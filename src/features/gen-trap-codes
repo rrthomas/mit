@@ -29,9 +29,9 @@ code.append('''
 #define INSTRUCTION(name, opcode) name = opcode,
 ''')
 code.append('')
-code.extend(enum_to_c(LibInstruction, lambda i: i.opcode))
+code.extend(enum_to_c(LibInstructions, lambda i: i.opcode))
 code.append('')
-for lib_instruction in LibInstruction:
+for lib_instruction in LibInstructions:
     code.extend(enum_to_c(lib_instruction.library, lambda i: i.opcode))
     code.append('')
 code.append('#undef INSTRUCTION')

@@ -15,26 +15,25 @@ from .binding import (
     opcode_bit, opcode_mask,
     hex0x_word_width,
 )
-from .enums import Instruction, ExtraInstruction, TERMINAL_OPCODES
-from .trap_enums import LibInstruction
+from .enums import Instructions, ExtraInstructions, TERMINAL_OPCODES
 
-NEXT = Instruction.NEXT
-JUMP = Instruction.JUMP
-JUMPZ = Instruction.JUMPZ
-CALL = Instruction.CALL
-PUSH = Instruction.PUSH
-PUSHI_0 = Instruction.PUSHI_0
-PUSHREL = Instruction.PUSHREL
-PUSHRELI_0 = Instruction.PUSHRELI_0
-NEXTFF = Instruction.NEXTFF
+NEXT = Instructions.NEXT
+JUMP = Instructions.JUMP
+JUMPZ = Instructions.JUMPZ
+CALL = Instructions.CALL
+PUSH = Instructions.PUSH
+PUSHI_0 = Instructions.PUSHI_0
+PUSHREL = Instructions.PUSHREL
+PUSHRELI_0 = Instructions.PUSHRELI_0
+NEXTFF = Instructions.NEXTFF
 
 mnemonic = {
     instruction.value: instruction.name
-    for instruction in Instruction
+    for instruction in Instructions
 }
 extra_mnemonic = {
     instruction.value: instruction.name
-    for instruction in ExtraInstruction
+    for instruction in ExtraInstructions
 }
 
 
