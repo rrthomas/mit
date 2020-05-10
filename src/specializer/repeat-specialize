@@ -9,7 +9,7 @@
 
 import os
 import sys
-from shutil import copy2
+from shutil import copy, copy2
 import re
 import argparse
 import subprocess
@@ -38,26 +38,30 @@ def parse_count(lines):
         if lines[i][:len(marker)] == marker:
             return int(re.search('\d+', lines[i + 1])[0])
 
-best_iteration = 0
-best_count = float('inf')
-for i in range(args.times):
-    copy_profile(i)
-    subprocess.check_call(['make', 'specialize-once'])
+def time_build_pforth():
     subprocess.check_call(['make', 'check', 'TESTS=specializer/build-pforth', 'TIME=' + os.environ['TIME_BINARY']])
     output = subprocess.check_output(['libtool', '--mode=execute', 'opreport',
                                       '--session-dir=./specializer/pforth/src/mit/oprofile_data',
                                       os.environ['MIT_BINARY']], universal_newlines=True)
-    count = parse_count(output.splitlines())
+    return parse_count(output.splitlines())
+
+best_iteration = 0
+best_count = float('inf')
+for i in range(args.times + 1):
+    copy_profile(i)
+    count = time_build_pforth()
     if count < 0.99 * best_count:
         best_count = count
-        best_iteration = i + 1
+        best_iteration = i
     print(
-        f'Iteration {i + 1}: count {count} (best so far iteration ' \
+        f'Iteration {i}: count {count} (best so far iteration ' \
         f'{best_iteration} with count {best_count})',
         file=sys.stderr
     )
-copy_profile(args.times)
+    if i < args.times:
+        subprocess.check_call(['make', 'specialize-once'])
 
 # Print result and copy best profile to profile.json
 print(f'Best iteration was {best_iteration} with count {best_count}', file=sys.stderr)
-copy2(f'specializer/profile-{best_iteration}.json', 'specializer/profile.json')
+# Copy without preserving time stamp, to trigger re-make on exit
+copy(f'specializer/profile-{best_iteration}.json', 'specializer/profile.json')

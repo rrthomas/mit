@@ -97,6 +97,7 @@ respecialize: mit@PACKAGE_SUFFIX@$(EXEEXT)
 	export MIT_BINARY=$(MIT_BINARY); \
 	export TIME_BINARY="operf $(OPERF_OPTIONS)"; \
 	$(PYTHON_WITH_PATH) $(srcdir)/specializer/repeat-specialize --times $(N)
+	$(MAKE)
 
 EXTRA_DIST += \
 	%D%/path.py \
