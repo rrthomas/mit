@@ -38,14 +38,12 @@ ass(LOAD)
 lit(0)
 ass(DUP)
 lit(LibC.STRLEN)
-lit(LIBC)
-ass(TRAP)
+trap(LIBC)
 breaks.append(label() + word_bytes)
 
 # Test LibC.STRNCPY
 lit(LibC.STRNCPY)
-lit(LIBC)
-ass(TRAP)
+trap(LIBC)
 breaks.append(label() + word_bytes)
 
 

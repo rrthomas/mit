@@ -22,8 +22,8 @@ COPYRIGHT_YEARS = '2018-2020'
 
 code = copyright_banner(GENERATOR_PROGRAM, PURPOSE, COPYRIGHT_YEARS)
 code.append('''
-#ifndef MIT_TRAP_CODES
-#define MIT_TRAP_CODES
+#ifndef MIT_TRAP_CODES_H
+#define MIT_TRAP_CODES_H
 
 
 #define INSTRUCTION(name, opcode) name = opcode,

@@ -17,7 +17,6 @@ pkgdata_DATA = spec.yaml
 LIB_CORE_SRCS = \
 	autonumber.py \
 	action.py \
-	instruction.py \
 	stack.py \
 	spec.py \
 	code_util.py \
@@ -67,11 +66,11 @@ include/mit/registers.h: gen-registers spec.py
 	$(MKDIR_P) include/mit
 	$(PYTHON_WITH_PATH) $(srcdir)/gen-registers > include/mit/registers.h || ( rm -f include/mit/registers.h; exit 1 )
 
-include/mit/opcodes.h: gen-opcodes spec.py action.py instruction.py
+include/mit/opcodes.h: gen-opcodes spec.py action.py
 	$(MKDIR_P) include/mit
 	$(PYTHON_WITH_PATH) $(srcdir)/gen-opcodes > include/mit/opcodes.h || ( rm -f include/mit/opcodes.h; exit 1 )
 
-instructions.c: gen-instructions spec.py action.py instruction.py stack.py code_util.py
+instructions.c: gen-instructions spec.py action.py stack.py code_util.py
 	$(PYTHON_WITH_PATH) $(srcdir)/gen-instructions > instructions.c || ( rm -f instructions.c; exit 1 )
 
 main.c: gen-main

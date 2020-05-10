@@ -37,6 +37,12 @@ extra_mnemonic = {
 }
 
 
+def sign_extend(x):
+    if x & sign_bit:
+        x |= -1 & ~word_mask
+    return x
+
+
 class Disassembler:
     '''
     Represents the state of a disassembler. This class simulates the pc and
@@ -58,9 +64,7 @@ class Disassembler:
         self.state = state
         if pc is None:
             self.pc = self.state.pc
-            self.ir = self.state.ir
-            if self.ir & sign_bit:
-                ir = ir | (-1 & ~word_mask)
+            self.ir = sign_extend(self.state.ir)
         else:
             self.pc = pc
             self.ir = ir
@@ -74,7 +78,7 @@ class Disassembler:
     def _fetch(self):
         if self.pc >= self.end:
             raise StopIteration
-        word = self.state.M_word[self.pc]
+        word = sign_extend(self.state.M_word[self.pc])
         self.pc += word_bytes
         return word
 
@@ -112,6 +116,13 @@ class Disassembler:
                     f'invalid extra instruction {self.ir:#x}'
                 )
                 comment = f' ({comment})'
+                self.ir = 0
+            elif opcode == NEXTFF:
+                # Call `self._fetch()` later, not now.
+                if self.ir != -1:
+                    comment = f' (trap {self.ir:#x})'
+                else:
+                    comment = ' (redundant!)'
                 self.ir = 0
             elif opcode in (JUMP, JUMPZ, CALL) and self.ir != 0:
                 # Call `self._fetch()` later, not now.
@@ -201,10 +212,11 @@ class Assembler:
         Determine whether the given extended opcode fits in the current word.
         If so, return the updated word; otherwise, None.
         '''
-        i = self.state.M_word[self.i_addr or self.pc]
+        i = sign_extend(self.state.M_word[self.i_addr or self.pc])
         i_shift = self.i_shift or 0
         i |= extended_opcode << i_shift
         i &= word_mask
+        i = sign_extend(i)
         sign_mask = (-1 if extended_opcode < 0 else 0) & (~word_mask)
         if (i | sign_mask) >> i_shift == extended_opcode:
             return i
@@ -222,7 +234,7 @@ class Assembler:
         extended_opcode = int(opcode)
         assert 0 <= extended_opcode <= opcode_mask
         if extra_opcode is not None:
-            assert extended_opcode in (NEXT, JUMP, JUMPZ, CALL)
+            assert extended_opcode in (NEXT, NEXTFF, JUMP, JUMPZ, CALL)
             extended_opcode |= (int(extra_opcode) << opcode_bit)
 
         # Store the extended opcode, starting a new word if necessary.
@@ -293,3 +305,6 @@ class Assembler:
 
     def extra(self, extra_opcode):
         self.instruction(NEXT, extra_opcode)
+
+    def trap(self, extra_opcode):
+        self.instruction(NEXTFF, extra_opcode)

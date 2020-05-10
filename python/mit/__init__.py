@@ -22,7 +22,7 @@ provides a global Mit instance in VM, and defines various globals. See
 '''
 
 from .enums import (
-    Register, Instructions, TERMINAL_OPCODES, ExtraInstructions,
+    Registers, Instructions, TERMINAL_OPCODES, ExtraInstructions,
     MitErrorCode
 )
 from .trap_enums import LibC, LibInstructions

@@ -20,7 +20,7 @@ from ctypes import (
 )
 from ctypes.util import find_library
 
-from .enums import MitErrorCode, Register
+from .enums import MitErrorCode, Registers
 
 
 library_file = find_library("mit")
@@ -101,7 +101,7 @@ else:
 class c_mit_state(Structure):
     _fields_ = [
         (register.name, c_uword)
-        for register in Register
+        for register in Registers
     ]
 
 c_mit_fn = CFUNCTYPE(c_word, POINTER(c_mit_state))

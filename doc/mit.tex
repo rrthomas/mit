@@ -19,9 +19,9 @@
 % Common stack items
 
 \newcommand{\x}[1]{\spic{x$_{#1}$}}
-\newcommand{\n}[1]{\spic{n$_{#1}$}}
+\newcommand{\n}[1]{\spic{s$_{#1}$}}
 \newcommand{\U}[1]{\spic{u$_{#1}$}}
-\newcommand{\noru}[1]{\spic{n$_#1${\tt |}u$_{#1}$}}
+\newcommand{\noru}[1]{\spic{n$_#1$}}
 \newcommand{\addr}[1]{\spic{addr$_{#1}$}}
 \newcommand{\aaddr}[1]{\spic{a-addr$_{#1}$}}
 
@@ -30,12 +30,15 @@
 % Define the widths of the stack effect and description columns
 \newlength{\itemwidth}\itemwidth=\textwidth \advance\itemwidth by -0.1in
 \newlength{\instname}\instname=1.5in
-\newlength{\stackcom}\stackcom=3.0in
-\newlength{\beforestackcom} \advance\beforestackcom by \instname
+\newlength{\opcodewidth}\opcodewidth=0.5in
+\newlength{\stackcom}\stackcom=2.5in
 
 \newcommand{\inst}[3]{\item[]\parbox{\itemwidth}%
-{\makebox[\instname][l]{\tt #1}%
+{\makebox[\instname][l]{\tt #1}\makebox[\opcodewidth]{}%
 \makebox[\stackcom][r]{\tt ( \spic{#2} )}\\[0.5ex]#3}}
+\newcommand{\extra}[4]{\item[]\parbox{\itemwidth}%
+{\makebox[\instname][l]{\tt #1}\makebox[\opcodewidth]{#2}%
+\makebox[\stackcom][r]{\tt ( \spic{#3} )}\\[0.5ex]#4}}
 
 % Lay out a line of the opcode table
 
@@ -45,7 +48,7 @@
 
 \title{The Mit virtual machine}
 \author{Reuben Thomas}
-\date{3rd May 2020}
+\date{9th May 2020}
 
 \begin{document}
 \maketitle
@@ -172,6 +175,8 @@ of a stack before and after the instruction is executed.
 An instruction only affects the items shown in its
 stack effects. The brackets and dashes serve merely to delimit the stack
 effect and to separate \spic{before} from \spic{after}.
+Alternative stack effects are separated by ``{\tt |}'', and the
+circumstances under which each occurs are detailed in the instruction description.
 
 {\bf Stack pictures}
 are a representation of the top-most items on the stack, and are written
@@ -185,9 +190,9 @@ are a representation of the top-most items on the stack, and are written
 \begin{tabular}{cl} \toprule
 \bf Symbol & \bf Data type \\ \midrule
 \spic{flag} & a Boolean flag, $0$ for false or non-zero for true \\
-\spic{n} & signed number \\
+\spic{s} & signed number \\
 \spic{u} & unsigned number \\
-\spic{n{\tt |}u} & number (signed or unsigned) \\
+\spic{n} & number (signed or unsigned) \\
 \spic{x} & unspecified word \\
 \spic{addr} & address \\
 \spic{a-addr} & word-aligned address \\
@@ -212,41 +217,44 @@ Ellipsis is used for indeterminate numbers of specified types of item.
 Extra instructions are introduced by the instruction {\tt extra}:
 
 \begin{description}
-\inst{extra}{{\rm see below}}{Perform extra instruction {\tt ir}; if {\tt ir} is not the opcode of a valid extra instruction, raise error $-1$.}
+\inst{extra}{{\rm see below}}{Perform extra instruction {\tt ir}; if {\tt ir} is not the code of a valid extra instruction, raise error $-1$.}
 \end{description}
 
 The following extra instructions are defined:
 
 \begin{description}
-\inst{next}{—}{Load the word pointed to by {\tt pc} into {\tt ir}, then add {\tt word\_bytes} to {\tt pc}. If an invalid or unaligned address is accessed when loading {\tt ir}, the appropriate error is raised (see section~\ref{errors}).}
-\inst{halt}{n —}{Raise error $n$.}
+\extra{next}{0}{—}{Load the word pointed to by {\tt pc} into {\tt ir}, then add {\tt word\_bytes} to {\tt pc}. If an invalid or unaligned address is accessed when loading {\tt ir}, the appropriate error is raised (see section~\ref{errors}).}
+\extra{halt}{1}{n —}{Raise error $n$.}
+\end{description}
+
+
+\subsection{Trap}
+\label{trap}
+
+An implementation may implement extra functionality using {\tt trap}:
+
+\nopagebreak
+\begin{description}
+\inst{trap}{}{Perform trap {\tt ir}; if {\tt ir} is not the code of a valid trap, raise error $-1$.}
+\end{description}
+
+The following trap is defined:
+
+\begin{description}
+\extra{nextff}{$-1$}{—}{Perform the action of {\tt next}.}
 \end{description}
 
 
 \subsection{Control}
 \label{control}
 
-These instructions implement unconditional and conditional branches, and subroutine call and return (subroutine return is {\tt jump}):
+These instructions implement unconditional and conditional branches, and subroutine call and return (subroutine return is {\tt jump}).
 
 \nopagebreak
 \begin{description}
-\inst{nextff}{—}{If {\tt ir} does not have all its bits set, raise error $-1$. Perform the action of {\tt next}.}
-\inst{jump}{a-addr —}{If {\tt ir} is not $0$, raise error $-1$. Set {\tt pc} to \spic{a-addr}.}
-\inst{jumpz}{flag a-addr —}{If \spic{flag} is false then set {\tt pc} to \spic{a-addr} and set {\tt ir} to $0$.}
-\inst{call}{\aaddr1 — \aaddr2}{If {\tt ir} is not $0$, raise error $-1$. Exchange {\tt pc} with the top stack value.}
-\end{description}
-
-There are also variants {\tt jumpi}, {\tt jumpzi} and {\tt calli}, which take the address encoded as a {\tt pc}-relative number of words in the remainder of {\tt ir}.
-
-
-\subsection{Trap}
-\label{trap}
-
-An implementation may implement extra functionality using the {\tt trap} instruction:
-
-\nopagebreak
-\begin{description}
-\inst{trap}{{\rm undefined}}{Perform arbitrary actions. Note in particular that {\tt trap} may change the stack.}
+\inst{jump}{a-addr — {\tt |} —}{If {\tt ir} is $0$, set {\tt pc} to \spic{a-addr}; otherwise, add $\texttt{ir}\times\texttt{word\_bytes}$ to {\tt pc}.}
+\inst{jumpz}{flag a-addr — {\tt |} flag —}{If \spic{flag} is false then perform the action of {\tt jump}; otherwise, set {\tt ir} to $0$.}
+\inst{call}{\aaddr1 — \aaddr2 {\tt |} — a-addr}{Perform the action of {\tt jump}, then push {\tt pc}’s old value on to the stack.}
 \end{description}
 
 
@@ -360,16 +368,16 @@ Instructions are encoded as $8$-bit opcodes; opcodes are packed into words, whic
     \bitbox{6}{{\tt pushi} operand}\bitboxes*{1}{10}\\[1ex]
     \bitbox{7}{{\tt pushreli} operand}\bitbox{1}{1}\\
     except\\[0.5ex]
-    \bitbox{8}{11111111 = {\tt nextff}}
+    \bitbox{8}{11111111 = {\tt trap}}
   \end{bytefield}
 \end{center}
 
-The operands for {\tt pushi} and {\tt pushreli} are interpreted as signed numbers; the operand of {\tt pushreli} is multiplied by {\tt word\_bytes}. Note that {\tt pushreli}’s immediate constant cannot be $-1$, as the corresponding opcode is used for {\tt nextff}.
+The operands for {\tt pushi} and {\tt pushreli} are interpreted as signed numbers; the operand of {\tt pushreli} is multiplied by {\tt word\_bytes}. Note that {\tt pushreli}’s immediate constant cannot be $-1$, as the corresponding opcode is used for {\tt trap}.
 
 \subsection{Instruction opcodes}
 \label{opcodes}
 
-Table~\ref{opcodetable} lists the instruction opcodes, and table~\ref{extraopcodetable} the extra instruction opcodes (see section~\ref{extra}). Other instruction opcodes are invalid.
+Table~\ref{opcodetable} lists the instruction opcodes. Other instruction opcodes are invalid.
 
 \begin{table}[htb]
 \begin{center}
@@ -383,7 +391,7 @@ Table~\ref{opcodetable} lists the instruction opcodes, and table~\ref{extraopcod
 \opcodetbl{5}{dup}			{15}{xor}
 \opcodetbl{6}{swap}			{16}{lt}
 \smallskip% For some reason needs to be here rather than after the next line
-\opcodetbl{7}{trap}			{17}{ult}
+\opcodetbl{7}{\rm undefined}			{17}{ult}
 \opcodetbl{8}{load}			{18}{lshift}
 \opcodetbl{9}{store}			{19}{rshift}
 \opcodetbl{a}{load1}			{1a}{arshift}
@@ -398,23 +406,13 @@ Table~\ref{opcodetable} lists the instruction opcodes, and table~\ref{extraopcod
 \end{center}
 \end{table}
 
-\begin{table}[htb]
-\begin{center}
-\begin{tabular}{*{1}{cc}} \toprule
-\bf Opcode & \bf Instruction \\ \midrule
-\opcodetblone{0}{next}
-\opcodetblone{1}{halt}
- \bottomrule
-\end{tabular}
-\caption{\label{extraopcodetable}Extra instruction opcodes}
-\end{center}
-\end{table}
 
 \section{External interface}
 
 \begin{itemize}
-\item Implementations should provide an \textbf{API} to create and run virtual machine instances, and provide access to its registers, stack and memory.
-\item Implementations can add \textbf{traps} (see section~\ref{trap}) to provide extra computational primitives, and to offer access to system facilities, previously written code, native libraries and so on.
+\item Implementations should provide an API to create and run virtual machine instances, and provide access to its registers, stack and memory, and add traps.
+\item Implementations can add extra instructions (see section~\ref{extra}) to provide extra computational primitives and other deeply-integrated facilities.
+\item Implementations can allow users to add traps (see section~\ref{trap}) to offer access to system facilities, native libraries and so on.
 \end{itemize}
 
 

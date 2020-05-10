@@ -81,10 +81,10 @@ specialize-once: mit@PACKAGE_SUFFIX@$(EXEEXT)
 	cd $(abs_builddir) && \
 	$(MAKE)
 
-%D%/labels.json: code_util.py params.py instruction.py spec.py %D%/profile.json %D%/simulate-jit %D%/path.py %D%/profile.py
+%D%/labels.json: code_util.py params.py action.py spec.py %D%/profile.json %D%/simulate-jit %D%/path.py %D%/profile.py
 	$(PYTHON_WITH_PATH) $(srcdir)/%D%/simulate-jit $(srcdir)/%D%/profile.json $@
 
-%D%/specializer.c: code_util.py instruction.py stack.py spec.py %D%/specializer.am %D%/gen-specializer %D%/specializer.py %D%/specializer_spec.py %D%/labels.json
+%D%/specializer.c: code_util.py action.py stack.py spec.py %D%/specializer.am %D%/gen-specializer %D%/specializer.py %D%/specializer_spec.py %D%/labels.json
 	$(PYTHON_WITH_PATH) $(srcdir)/%D%/gen-specializer %D%/labels.json > %D%/specializer.c || ( rm -f %D%/specializer.c; exit 1 )
 
 %D%/specializer.lo: include/mit/mit.h
@@ -97,6 +97,7 @@ respecialize: mit@PACKAGE_SUFFIX@$(EXEEXT)
 	export MIT_BINARY=$(MIT_BINARY); \
 	export TIME_BINARY="operf $(OPERF_OPTIONS)"; \
 	$(PYTHON_WITH_PATH) $(srcdir)/specializer/repeat-specialize --times $(N)
+	$(MAKE)
 
 EXTRA_DIST += \
 	%D%/path.py \

@@ -1,4 +1,4 @@
-# TRAP functions.
+# Trap functions.
 #
 # (c) Mit authors 1994-2020
 #

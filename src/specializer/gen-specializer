@@ -56,7 +56,8 @@ def _opcode_test(multiguess):
             opcode_bits = None # Must match all bits.
     # Generate the guess condition.
     if opcode_bits is None:
-        return f'S->ir == {opcode_value:#x}'
+        opcode_mask = (0 if opcode_value & 80 == 0 else -1) << opcode_bit
+        return f'S->ir == {opcode_value | opcode_mask:#x}'
     else:
         mask = (1 << opcode_bits) - 1
         return f'(S->ir & {mask:#x}) == {opcode_value:#x}'

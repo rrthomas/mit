@@ -15,7 +15,6 @@ from autonumber import AutoNumber
 from params import word_bytes
 from code_util import Code
 from action import Action, ActionEnum
-from instruction import Instruction
 from stack import StackEffect, pop_stack, push_stack
 
 
@@ -28,7 +27,7 @@ class RegisterEnum(AutoNumber):
         self.type = type
 
 @unique
-class Register(RegisterEnum):
+class Registers(RegisterEnum):
     '''VM registers.'''
     pc = ('mit_word *',)
     ir = ('mit_word',)
@@ -52,13 +51,45 @@ class MitErrorCode(IntEnum):
 
 
 # Core instructions.
+@dataclass
+class Instruction(Action):
+    '''
+    VM instruction descriptor.
+
+     - opcode - int - the instruction's opcode.
+     - terminal_action - Action or None - if given, this instruction is
+       terminal: the rest of `ir` is its argument, and the Action gives the
+       implementation for the case when `ir` is not zero (if the opcode's
+       top bit is clear) or -1 (if it is set).
+
+    C variables are created for the arguments and results; the arguments are
+    popped and results pushed.
+
+    There are special macros available to instructions; see run.h.
+    '''
+    opcode: int
+    terminal_action: Action
+
+    def gen_case(self):
+        code = super().gen_case()
+        if self.terminal_action is not None:
+            ir_all_bits = 0 if self.opcode & 0x80 == 0 else -1
+            code = Code(
+                f'if (S->ir != {ir_all_bits}) {{',
+                self.terminal_action.gen_case(),
+                '} else {',
+                code,
+                '}',
+            )
+        return code
+
 instructions = [
     {
         'name': 'NEXT',
         'effect': StackEffect.of([], []),
         'code': Code('S->ir = *(mit_word *)S->pc++;'),
         'opcode': 0x0,
-        'terminal': Action (
+        'terminal': Action(
             None,
             Code(), # Computed below.
         ),
@@ -67,12 +98,18 @@ instructions = [
     {
         'name': 'NEXTFF',
         'effect': StackEffect.of([], []),
-        'code': Code('''\
-            if (S->ir != -1)
-                RAISE(MIT_ERROR_INVALID_OPCODE);
-            S->ir = *(mit_word *)S->pc++;
-        '''),
+        'code': Code('S->ir = *(mit_word *)S->pc++;'),
         'opcode': 0xff,
+        'terminal': Action(
+            None,
+            Code('''\
+                {
+                    mit_word inner_error = mit_trap(S);
+                    if (inner_error != MIT_ERROR_OK)
+                        RAISE(inner_error);
+                }
+            '''),
+        ),
     },
 
     {
@@ -155,19 +192,6 @@ instructions = [
         'effect': StackEffect.of(['x', 'ITEMS', 'y', 'COUNT'], ['y', 'ITEMS', 'x']),
         'code': Code(),
         'opcode': 0x6,
-    },
-
-    {
-        'name': 'TRAP',
-        'effect': None,
-        'code': Code('''\
-            {
-                mit_word inner_error = mit_trap(S);
-                if (inner_error != MIT_ERROR_OK)
-                    RAISE(inner_error);
-            }
-        '''),
-        'opcode': 0x7,
     },
 
     {
@@ -417,7 +441,7 @@ Instructions = unique(ActionEnum(
     ((
         i['name'],
         (
-            Instruction(i['effect'], i['code'], i.get('terminal', None)),
+            Instruction(i['effect'], i['code'], i['opcode'], i.get('terminal', None)),
             i['opcode'],
         )
     ) for i in instructions)
@@ -596,7 +620,7 @@ class ExtraInstructions(ActionEnum):
         0x101,
     )
 
-for register in Register:
+for register in Registers:
     pop_code = Code()
     pop_code.append('mit_state *inner_state;')
     pop_code.extend(pop_stack('inner_state', type='mit_state *'))

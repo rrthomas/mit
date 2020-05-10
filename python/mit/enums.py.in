@@ -28,11 +28,11 @@ with open(os.path.join('@pkgdatadir@', 'spec.yaml'), encoding='utf-8') as f:
     spec = yaml.safe_load(f.read())
 
 
-Register = unique(AutoNumber(
-    'Register',
-    spec['Register'],
+Registers = unique(AutoNumber(
+    'Registers',
+    spec['Registers'],
 ))
-Register.__doc__ = 'VM registers.'
+Registers.__doc__ = 'VM registers.'
 
 Instructions = enum(
     'Instructions',
