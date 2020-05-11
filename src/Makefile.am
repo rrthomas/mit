@@ -35,7 +35,7 @@ nodist_pkginclude_HEADERS = include/mit/opcodes.h include/mit/registers.h
 pkginclude_HEADERS = include/mit/mit.h
 noinst_HEADERS = run.h
 
-warn.c $(C_SRCS) specializer.c instructions.c main.c: include/mit/registers.h include/mit/opcodes.h
+warn.c $(C_SRCS) specializer.c instructions.c main.c: include/mit/mit.h include/mit/registers.h include/mit/opcodes.h
 
 .c.s:
 	$(COMPILE) -c -S -o $@ $<
