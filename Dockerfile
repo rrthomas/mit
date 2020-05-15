@@ -22,8 +22,9 @@ RUN apt-get update -qq && \
   libtool \
   libtool-bin \
   help2man \
-  ipython3 \
   oprofile \
+  python3-setuptools \
+  python3-pip \
   python3-yaml \
   python3.8 \
   sloccount \
@@ -50,5 +51,8 @@ ENV LC_ALL en_US.UTF-8
 
 # Enable sudo without password for convenience.
 RUN echo "${TEST_USER} ALL = NOPASSWD: ALL" >> /etc/sudoers
+
+# Install IPython for python3.8
+RUN python3.8 -m pip install --user ipython
 
 USER "${TEST_USER}"
