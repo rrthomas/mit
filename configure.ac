@@ -182,8 +182,8 @@ AM_CONDITIONAL([USING_PACKAGE_SUFFIX], [test "$gl_package_suffix" = "yes"])
 
 # pForth tests, run if the pforth source tree is present and Mit is
 # configured compatibly with pForth.
-AM_CONDITIONAL([USING_PFORTH],
-   [test -d src/specializer/pforth -a "$SIZEOF_SIZE_T" = 4 -a "$ac_cv_c_bigendian" != "yes"])
+dnl AM_CONDITIONAL([USING_PFORTH],
+dnl    [test -d src/specializer/pforth -a "$SIZEOF_SIZE_T" = 4 -a "$ac_cv_c_bigendian" != "yes"])
 
 # Generate output files
 AC_CONFIG_HEADERS([config.h])
@@ -199,7 +199,6 @@ AC_CONFIG_FILES([
         python/Makefile
         python/mit-shell-include.man
         tests/Makefile
-        tests/test_pickle.py
         doc/Makefile
 ])
 AC_CONFIG_FILES([python/mit-profile], [chmod +x python/mit-profile])

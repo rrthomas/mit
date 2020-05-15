@@ -19,7 +19,7 @@ libmit_la_SOURCES = %D%/traps.c
 
 # Note: we grep config.log because the generated header file has the symbols
 # sorted lexically, and we need the output in the same order as the input.
-%D%/type_sizes.py: $(top_builddir)/config.status %D%/gen-type-sizes %D%/collate-type-sizes include/mit/registers.h include/mit/opcodes.h %D%/traps.py action.py
+%D%/type_sizes.py: $(top_builddir)/config.status %D%/gen-type-sizes %D%/collate-type-sizes include/mit/opcodes.h %D%/traps.py action.py
 	cd %D% && \
 	$(PYTHON_WITH_PATH) $(abs_srcdir)/%D%/gen-type-sizes > type-sizes.ac && \
 	autoconf type-sizes.ac > type-sizes && \

@@ -58,7 +58,7 @@
 
 \title{The Mit virtual machine}
 \author{Reuben Thomas}
-\date{9th May 2020}
+\date{10th May 2020}
 
 \begin{document}
 \maketitle
@@ -98,7 +98,7 @@ The registers are word quantities; they are listed, with their functions, in tab
  \midrule
 {\tt pc} & The {\tt p}rogram {\tt c}ounter. Points to the next word from which {\tt i} may be loaded. \\
 {\tt ir} & The {\tt i}nstruction {\tt r}egister. Contains instructions to be executed. \\
-{\tt stack\_depth} & The number of words on the stack. \\
+{\tt stack\_depth} & The number of words in the current stack frame. \\
  \bottomrule
 \end{tabular}
 \caption{\label{regtable}Registers}
@@ -113,7 +113,7 @@ Mit's memory consists of discontiguous words in a flat address space. The addres
 
 \subsection{Stack}
 
-The stack is a LIFO stack of words used for passing values to instructions and routines and for holding subroutine return addresses. To {\bf push} a word on to the stack means to add a new word to the top of the stack, increasing the stack depth by $1$; to {\bf pop} a word means to reduce the stack depth by $1$. Instructions that change the number of words on the stack implicitly pop their arguments and push their results.
+The stack is a last-in-first-out stack of call frames. Each frame is a stack of words. The phrase “the stack” usually refers to the current frame, and all references to stack items refer to the current frame. To {\bf push} a word on to the stack means to add a new word to the top of the stack, increasing the stack depth by $1$; to {\bf pop} a word means to reduce the stack depth by $1$. Instructions that change the number of words on the stack implicitly pop their arguments and push their results.
 
 
 \subsection{Execution}
@@ -185,8 +185,7 @@ of a stack before and after the instruction is executed.
 An instruction only affects the items shown in its
 stack effects. The brackets and dashes serve merely to delimit the stack
 effect and to separate \spic{before} from \spic{after}.
-Alternative stack effects are separated by ``{\tt |}'', and the
-circumstances under which each occurs are detailed in the instruction description.
+An stack item \spic{[x]} in square brackets is optional.
 
 {\bf Stack pictures}
 are a representation of the top-most items on the stack, and are written
@@ -255,19 +254,6 @@ The following trap is defined:
 \end{description}
 
 
-\subsection{Control}
-\label{control}
-
-These instructions implement unconditional and conditional branches, and subroutine call and return (subroutine return is {\tt jump}).
-
-\nopagebreak
-\begin{description}
-\inst{jump}{a-addr — {\tt |} —}{If {\tt ir} is $0$, set {\tt pc} to \spic{a-addr}; otherwise, add $\texttt{ir}\times\texttt{word\_bytes}$ to {\tt pc}.}
-\inst{jumpz}{flag a-addr — {\tt |} flag —}{If \spic{flag} is false then perform the action of {\tt jump}; otherwise, set {\tt ir} to $0$.}
-\inst{call}{\aaddr1 — \aaddr2 {\tt |} — a-addr}{Perform the action of {\tt jump}, then push {\tt pc}’s old value on to the stack.}
-\end{description}
-
-
 \subsection{Stack manipulation}
 
 These instructions manage the stack:
@@ -277,6 +263,20 @@ These instructions manage the stack:
 \inst{pop}{x —}{Remove \spic{x} from the stack.}
 \inst{dup}{\x{u}\dots\x0 u — \x{u}\dots\x0 \x{u}}{Remove \spic{u}. Copy \x{u} to the top of the stack.}
 \inst{swap}{\x{u+1}\dots\x0 u — \x0 \x{u}\dots\x1 \x{u+1}}{Exchange the top stack word with the \spic{u+1}th.}
+\end{description}
+
+
+\subsection{Control}
+\label{control}
+
+These instructions implement unconditional and conditional branches, and subroutine call and return.
+
+\nopagebreak
+\begin{description}
+\inst{jump}{[a-addr] —}{If {\tt ir} is $0$, set {\tt pc} to \spic{a-addr}; otherwise, add $\texttt{ir}\times\texttt{word\_bytes}$ to {\tt pc}, and set {\tt ir} to $0$.}
+\inst{jumpz}{flag [a-addr] —}{If \spic{flag} is false then perform the action of {\tt jump}; otherwise, set {\tt ir} to $0$.}
+\inst{call}{\x{u}\dots\x0 \U1 \U2 [\aaddr1] — \U2 \aaddr2 {\tt ||} \x{u}\dots\x0}{Perform the action of {\tt jump}. Move \spic{\x{\U1}\dots\x0} to a new call frame. Push the initial value of {\tt pc} to the old frame.}
+\inst{ret}{\U2 a-addr {\tt ||} \x{\U2}\dots\x0 — \x{u}\dots\x0}{Pop the current stack frame, set {\tt pc} to \spic{a-addr}, and move \spic{\x{\U2}\dots\x0} to it. Set {\tt ir} to $0$.}
 \end{description}
 
 
@@ -314,7 +314,7 @@ Logic functions:
 \nopagebreak
 \begin{description}
 \inst{not}{\x1 — \x2}{Invert all bits of \x1, giving its logical inverse \x2.}
-\inst{and}{\x1 \x2 — \x3}{\x3 is the bit-by-bit logical ``and'' of \x1 with \x2.}
+\inst{and}{\x1 \x2 — \x3}{\x3 is the bit-by-bit logical “and” of \x1 with \x2.}
 \inst{or}{\x1 \x2 — \x3}{\x3 is the bit-by-bit inclusive-or of \x1 with \x2.}
 \inst{xor}{\x1 \x2 — \x3}{\x3 is the bit-by-bit exclusive-or of \x1 with \x2.}
 \end{description}
@@ -389,19 +389,20 @@ The operands for {\tt pushi} and {\tt pushreli} are interpreted as signed number
 
 Table~\ref{opcodetable} lists the instruction opcodes. Other instruction opcodes are invalid.
 
+% FIXME: use “Tabular hex numerals”
 \begin{table}[htb]
 \begin{center}
 \begin{tabular}{*{2}{cc}} \toprule
 \bf Opcode & \bf Instruction & \bf Opcode & \bf Instruction \\ \midrule
 \opcodetbl{0}{extra}			{10}{push}
-\opcodetbl{1}{jump}			{11}{pushrel}
-\opcodetbl{2}{jumpz}			{12}{not}
-\opcodetbl{3}{call}			{13}{and}
-\opcodetbl{4}{pop}			{14}{or}
-\opcodetbl{5}{dup}			{15}{xor}
-\opcodetbl{6}{swap}			{16}{lt}
+\opcodetbl{1}{pop}			{11}{pushrel}
+\opcodetbl{2}{dup}			{12}{not}
+\opcodetbl{3}{swap}			{13}{and}
+\opcodetbl{4}{jump}			{14}{or}
+\opcodetbl{5}{jumpz}			{15}{xor}
+\opcodetbl{6}{call}			{16}{lt}
 \smallskip% For some reason needs to be here rather than after the next line
-\opcodetbl{7}{\rm undefined}			{17}{ult}
+\opcodetbl{7}{ret}			{17}{ult}
 \opcodetbl{8}{load}			{18}{lshift}
 \opcodetbl{9}{store}			{19}{rshift}
 \opcodetbl{a}{load1}			{1a}{arshift}
@@ -420,7 +421,7 @@ Table~\ref{opcodetable} lists the instruction opcodes. Other instruction opcodes
 \section{External interface}
 
 \begin{itemize}
-\item Implementations should provide an API to create and run virtual machine instances, and provide access to its registers, stack and memory, and add traps.
+\item Implementations should provide an API to create and run virtual machine code, and to add traps.
 \item Implementations can add extra instructions (see section~\ref{extra}) to provide extra computational primitives and other deeply-integrated facilities.
 \item Implementations can allow users to add traps (see section~\ref{trap}) to offer access to system facilities, native libraries and so on.
 \end{itemize}

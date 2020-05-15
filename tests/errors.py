@@ -11,16 +11,18 @@ import sys
 from functools import partial
 
 from mit import *
-from mit.binding import libmit
+from mit.binding import libmit, stack_words_ptr
 
 
-VM = State(memory_words=4096, stack_words=3)
+VM = State(memory_words=4096)
+stack_words_ptr.value = 3
 assembler = Assembler(VM)
 lit = assembler.lit
 label = assembler.label
 ass = assembler.instruction
 vars().update(Instructions.__members__)
-UNDEFINED = 1 + max(Instructions)
+UNDEFINED = 0x20 << 2
+assert UNDEFINED not in Instructions.__members__.values(), Instructions.__members__.values()
 
 # Test results and data
 result = []
@@ -49,12 +51,11 @@ print(f'Test "{test[-1]}": pc = {test_pc[-1]:#x}')
 lit(VM.M.addr + 1)
 ass(LOAD)
 
-if UNDEFINED < (1 << opcode_bit):
-    test.append('Try to execute invalid opcode')
-    test_pc.append(label())
-    result.append(MitErrorCode.INVALID_OPCODE)
-    print(f'Test "{test[-1]}": pc = {test_pc[-1]:#x}')
-    ass(UNDEFINED)
+test.append('Try to execute invalid opcode')
+test_pc.append(label())
+result.append(MitErrorCode.INVALID_OPCODE)
+print(f'Test "{test[-1]}": pc = {test_pc[-1]:#x}')
+ass(UNDEFINED)
 
 # Tests
 assert(len(test_pc) == len(result))
@@ -63,10 +64,7 @@ error = 0
 def do_tests(run_fn):
     global error
     for i, pc_value in enumerate(test_pc):
-        VM.stack_depth = 0 # reset stack pointer
-
         print(f'Test "{test[i]}"')
-        VM.ir = 0
         VM.pc = pc_value
         res = 0
         try:

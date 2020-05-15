@@ -32,12 +32,51 @@
     (((n) >> (p)) | ((mit_uword)(-((mit_word)(n) < 0)) << (MIT_WORD_BIT - (p))))
 #endif
 
+// Pop a stack item into a variable.
+#define POP(var)                                        \
+    mit_uword var;                                      \
+    if (stack_depth < 1)                                \
+        RAISE(MIT_ERROR_INVALID_STACK_READ);            \
+    var = *UNCHECKED_STACK(stack, stack_depth, 0);      \
+    stack_depth--;
+
 // Raise an error during the execution of an instruction.
 // RAISE must be called before writing any state.
 #define RAISE(code)                                           \
     do {                                                      \
         error = (code);                                       \
         goto error;                                           \
+    } while (0)
+
+// Perform the action of NEXT.
+#define DO_NEXT                                 \
+    ir = *pc++
+
+// Perform the action of JUMP.
+#define DO_JUMP                                         \
+    do {                                                \
+        if (unlikely(addr % MIT_WORD_BYTES != 0))       \
+            RAISE(MIT_ERROR_UNALIGNED_ADDRESS);         \
+        pc = (mit_word *)addr;                          \
+    } while (0)
+
+// Perform the action of JUMPI.
+#define DO_JUMPI                                        \
+    do {                                                \
+        pc += ir;                                       \
+        ir = 0;                                         \
+    } while (0)
+
+// Perform CALL, given an address.
+#define DO_CALL(addr)                                                   \
+    do {                                                                \
+        POP(callee_nres);                                               \
+        POP(callee_nargs);                                              \
+        if (callee_nargs > stack_depth || stack_depth - callee_nargs < callee_nres) \
+            RAISE(MIT_ERROR_INVALID_STACK_READ);                        \
+        stack_depth -= callee_nargs;                                    \
+        run_inner((mit_word *)addr, 0, stack, callee_nargs, callee_nres, jmp_buf_ptr); \
+        ir = 0; /* Set `ir` to 0 as part of `ret`. */                   \
     } while (0)
 
 

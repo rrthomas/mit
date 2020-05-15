@@ -40,7 +40,7 @@ VM.dump(VM.M.addr)
 VM.disassemble(VM.M.addr, 64)
 f = io.BytesIO()
 with stdout_redirector(f):
-    VM.run(optimize=False)
+    VM.run()
 output = f.getvalue()
 correct_file = re.sub(".bf$", ".correct", brainfuck_file)
 correct = open(correct_file, "rb").read()

@@ -11,8 +11,8 @@ AM_CPPFLAGS = -I$(abs_top_builddir)/lib -I$(abs_top_srcdir)/lib -I$(abs_builddir
 PYTHON_WITH_PATH = export PYTHONPATH=$(abs_top_srcdir)/python:$(abs_top_srcdir)/src:$(abs_top_builddir)/src:$(abs_top_srcdir)/src/specializer:$(abs_top_builddir)/src/specializer:$(abs_top_srcdir)/src/features:$(abs_top_builddir)/src/features; $(PYTHON)
 
 lib_LTLIBRARIES = libmit.la
-C_SRCS = constants.c stack.c args.c
-nodist_LIB_SRCS = include/mit/registers.h include/mit/opcodes.h instructions.c
+C_SRCS = constants.c args.c
+nodist_LIB_SRCS = include/mit/opcodes.h instructions.c
 pkgdata_DATA = spec.yaml
 LIB_CORE_SRCS = \
 	autonumber.py \
@@ -20,6 +20,7 @@ LIB_CORE_SRCS = \
 	stack.py \
 	spec.py \
 	code_util.py \
+	run_fn.py \
 	params.py.in
 nodist_libmit_la_SOURCES = $(C_SRCS) $(nodist_LIB_SRCS)
 libmit_la_LIBADD = $(top_builddir)/lib/libgnu.la
@@ -31,13 +32,12 @@ man_MANS = mit@PACKAGE_SUFFIX@.1
 mit@PACKAGE_SUFFIX@_LDADD = libmit.la $(top_builddir)/lib/libgnu.la
 nodist_mit@PACKAGE_SUFFIX@_SOURCES = main.c
 mit@PACKAGE_SUFFIX@_SOURCES = warn.c warn.h
-nodist_pkginclude_HEADERS = include/mit/opcodes.h include/mit/registers.h
+nodist_pkginclude_HEADERS = include/mit/opcodes.h
 pkginclude_HEADERS = include/mit/mit.h
 noinst_HEADERS = run.h
 
-warn.o constants.lo stack.lo args.lo: include/mit/registers.h
 warn.o constants.lo stack.lo args.lo main.o: include/mit/opcodes.h
-instructions.lo main.o: main.c include/mit/registers.h
+instructions.lo main.o: main.c
 
 .c.s:
 	$(COMPILE) -c -S -o $@ $<
@@ -61,15 +61,11 @@ mit@PACKAGE_SUFFIX@.1: mit@PACKAGE_SUFFIX@$(EXEEXT) $(top_builddir)/build-aux/ma
 include/mit:
 	cd include && if test ! -e mit@PACKAGE_SUFFIX@; then $(LN_S) mit mit@PACKAGE_SUFFIX@; fi
 
-include/mit/registers.h: gen-registers spec.py
-	$(MKDIR_P) include/mit
-	$(PYTHON_WITH_PATH) $(srcdir)/gen-registers > include/mit/registers.h || ( rm -f include/mit/registers.h; exit 1 )
-
 include/mit/opcodes.h: gen-opcodes spec.py action.py
 	$(MKDIR_P) include/mit
 	$(PYTHON_WITH_PATH) $(srcdir)/gen-opcodes > include/mit/opcodes.h || ( rm -f include/mit/opcodes.h; exit 1 )
 
-instructions.c: gen-instructions spec.py action.py stack.py code_util.py
+instructions.c: gen-instructions spec.py action.py stack.py code_util.py run_fn.py
 	$(PYTHON_WITH_PATH) $(srcdir)/gen-instructions > instructions.c || ( rm -f instructions.c; exit 1 )
 
 main.c: gen-main
@@ -85,7 +81,7 @@ loc:
 	    $(C_SRCS) \
 	    $(pkginclude_HEADERS) \
 	    $(LIB_CORE_SRCS) \
-	    gen-registers gen-opcodes gen-instructions gen-main gen-yaml-spec
+	    gen-opcodes gen-instructions gen-main gen-yaml-spec
 	for file in $(pkginclude_HEADERS); do \
 	    test -f $$file.in.bak && mv $$file.in.bak $$file.in || true; \
 	done
@@ -93,7 +89,6 @@ loc:
 EXTRA_DIST = \
 	$(LIB_CORE_SRCS) \
 	$(C_SRCS) \
-	gen-registers \
 	gen-opcodes \
 	gen-instructions \
 	gen-main \
@@ -125,4 +120,4 @@ distcleancheck_listfiles = \
 $(libmitfeatures_la_SOURCES): include/mit/mit.h
 
 include features/features.am
-include specializer/specializer.am
+#include specializer/specializer.am

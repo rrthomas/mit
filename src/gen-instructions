@@ -9,9 +9,8 @@
 
 import argparse
 
-from spec import Instructions
-from code_util import Code, copyright_banner
-import profile
+from code_util import copyright_banner
+from run_fn import run_fn, run_inner_fn
 
 
 GENERATOR_PROGRAM = 'gen-instructions'
@@ -33,7 +32,8 @@ code.append('''
 
     #include "config.h"
 
-    #include <stdbool.h>
+    #include <setjmp.h>
+    #include <string.h>
 
     #include "mit/mit.h"
     #include "mit/features.h"
@@ -42,68 +42,27 @@ code.append('''
 
 
     MIT_THREAD_LOCAL mit_fn *mit_run = mit_run_simple;
+    MIT_THREAD_LOCAL mit_uword mit_stack_words = 32;
 '''
 )
 
-body_code = Code()
-body_code.append('''\
-    mit_byte opcode = S->ir & MIT_OPCODE_MASK;
-    initial_pc = S->pc;
-    initial_ir = S->ir;
-    S->ir = ARSHIFT(S->ir, MIT_OPCODE_BIT);
+# `mit_run_simple()`.
+code.extend(run_inner_fn('simple', ''))
+code.extend(run_fn('simple'))
 
-    // Check stack_depth is valid
-    if (S->stack_depth > S->stack_words)
-        RAISE(MIT_ERROR_STACK_OVERFLOW);'''
-)
-body_code.extend(Instructions.dispatch(Code(
-    '/* Undefined instruction. */',
-    'RAISE(MIT_ERROR_INVALID_OPCODE);',
-)))
+code.append('')
 
-code.append('''
-    static mit_word run_or_step(mit_state * restrict real_S, bool run)
-    {'''
-)
-
-code.append(Code(*['''\
-    mit_state state = *real_S;
-    mit_state *const S = &state;
-    mit_word error;
-    mit_word *initial_pc;
-    mit_uword initial_ir;
-
-    do {''',
-    body_code,
-    '',
-    Code('''\
-    error = MIT_ERROR_BREAK;
-    continue;
-    '''),
-    'error:',
-    Code('''\
-        S->pc = initial_pc;
-        S->ir = initial_ir;'''
-    ),
-    '''\
-    } while (likely(run == true) && likely(error == MIT_ERROR_BREAK));
-
-    *real_S = state;
-    return error;''',
-]))
-
-code.append('''\
-    }
-
-    mit_word mit_single_step(mit_state * restrict S)
-    {
-        return run_or_step(S, false);
-    }
-
-    mit_word mit_run_simple(mit_state * restrict S)
-    {
-        return run_or_step(S, true);
-    }'''
-)
+# `mit_run_break()`, for debugging.
+code.append('MIT_THREAD_LOCAL mit_word (*mit_break_fn)(mit_word *, mit_word, mit_word * restrict, mit_uword) = NULL;')
+code.extend(run_inner_fn('break', '''\
+        if (mit_break_fn != NULL &&
+            !(opcode != MIT_INSTRUCTIONS_NEXT && opcode != MIT_INSTRUCTIONS_NEXTFF &&
+              (ir == 0 || ir == -1))) {
+            error = mit_break_fn(pc, ir, stack, stack_depth);
+            if (error != MIT_ERROR_BREAK)
+                RAISE(error);
+        }
+'''))
+code.extend(run_fn('break'))
 
 print(code)

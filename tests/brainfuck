@@ -64,6 +64,7 @@ try:
             lit(1); ass(POP)
         elif c == '[':
             loop = label()
+            print(f"{loop:#x}")
             dup()
             ass(LOAD1)
             lit_pc_rel(0, force_long=True)

@@ -51,18 +51,11 @@ typedef uintmax_t mit_max_stack_item_t;
 typedef mit_uword mit_max_stack_item_t;
 #endif
 
-// Forward declaration
-typedef struct mit_state mit_state;
-
 // The type of a function that mutates the VM
-typedef mit_word mit_fn(mit_state * restrict S);
+typedef mit_word mit_fn(mit_word *pc);
 
 // VM State
-struct mit_state {
-#define R(reg, type, return_type) type reg;
-#include <mit/registers.h>
-#undef R
-};
+extern MIT_THREAD_LOCAL mit_uword mit_stack_words;
 
 // Constants (for easy FFI binding)
 extern const unsigned mit_word_bytes;
@@ -74,11 +67,6 @@ extern const mit_uword mit_uword_max;
 extern const mit_word mit_word_min;
 extern const mit_word mit_word_max;
 
-// Implementation-defined errors
-enum {
-    MIT_ERROR_STARTUP_ERROR = 128,
-};
-
 // Instructions
 #define MIT_OPCODE_BIT 8
 #define MIT_OPCODE_MASK ((1 << MIT_OPCODE_BIT) - 1)
@@ -88,30 +76,6 @@ extern const unsigned mit_opcode_mask;
 
 // Stack access
 
-// These routines are used for bindings to other languages, and for the
-// extra instructions. Internally, libmit uses UNCHECKED_STACK, below.
-
-mit_word *mit_stack_position(mit_state *S, mit_uword pos);
-/* Return the address of element `pos` on the stack, or NULL if `pos` is
-   invalid.
-*/
-
-int mit_pop_stack(mit_state *S, mit_word *val_ptr);
-/* Load the word at position `0` on the stack into the word pointed to by
-   `val_ptr`, and decrement `stack_depth`.
-
-   Return 0 if OK, or error code if position `0` is invalid.
- */
-
-int mit_push_stack(mit_state *S, mit_word val);
-/* Increment `stack_depth`, then store the word `val` at position 0 on
-   the stack.
-
-   Return 0 if OK, or error code if `stack_depth` is greater than or equal
-   to `S->stack_words`.
-*/
-
-
 // Unchecked macro: UNSAFE!
 #define UNCHECKED_STACK(stack, stack_depth, pos) \
     ((stack) + (stack_depth) - (mit_uword)(pos) - 1)
@@ -119,36 +83,34 @@ int mit_push_stack(mit_state *S, mit_word val);
 
 // VM control
 
-extern @THREAD_LOCAL@ mit_fn *mit_run;
+extern MIT_THREAD_LOCAL mit_fn *mit_run;
 /* Execute VM code. Defaults to `mit_run_simple`. Can be set to any
    compatible function, which thereby propagates to nested VMs via the `RUN`
    extra instruction. This allows a different implementation (optimized,
    profiling) to be used globally.
 */
 
-mit_word mit_run_simple(mit_state * restrict S);
+mit_word mit_run_simple(mit_word *pc);
 /* Start the execution cycle in the given state as described in the spec.
    If an error is raised, the code is returned.
 
-   This is the default naive implementation.
+   This is a naive implementation.
 */
 
-mit_word mit_single_step(mit_state * restrict S);
-/* Execute a single pass of the execution cycle in the given state.
-   Return MIT_ERROR_BREAK if execution completes without error, or the error
-   code.
-*/
-
-mit_word mit_run_fast(mit_state * restrict S);
+mit_word mit_run_fast(mit_word *pc);
 /* Like `mit_run_simple`, but (hopefully) faster. */
 
-// N.B. The profiler is per-thread, not per-`mit_state`.
+// N.B. The profiler is per-thread.
 void mit_profile_reset(void);
 /* Clears the profile. */
-mit_word mit_run_profile(mit_state * restrict S);
+mit_word mit_run_profile(mit_word *pc);
 /* Like `mit_run_fast`, but records profiling information. */
 int mit_profile_dump(int fd);
 /* Dump profiling information to file descriptor `fd`. */
+
+extern MIT_THREAD_LOCAL mit_word (*mit_break_fn)(mit_word *pc, mit_word ir, mit_word * restrict stack, mit_uword stack_depth);
+mit_word mit_run_break(mit_word *pc);
+/* Like `mit_run_simple`, but calls `mit_break` after each instruction. */
 
 extern int mit_argc;
 /* The registered value of `argc`. */

@@ -9,23 +9,22 @@
 
 import sys
 
-from mit.assembler import Disassembler
-from mit import word_bit, uword_max
+from mit.enums import MitErrorCode
+from mit.binding import word_mask, sign_bit
 
-def cast_to_word(stack):
-    return [n if 0 <= n < (1 << (word_bit - 1)) else
-            ((n | ~uword_max) if n > -uword_max else 0)
-            for n in stack]
+
+def cast_to_word(n):
+    return ((n + sign_bit) & word_mask) - sign_bit
 
 def run_test(name, state, correct):
-    for i, stack in enumerate(correct):
-        stack = cast_to_word(stack)
-        print(Disassembler(state).__next__())
-        state.step(trace=True)
-        print(f"Data stack: {state.S}")
-        print(f"Correct stack: {stack}\n")
-        if stack != list(state.S):
-            print(f"Error in {name} tests: pc = {state.pc:#x}")
+    correct.insert(0, [])
+    def test_callback(handler, stack):
+        nonlocal correct
+        correct_stack = list(map(cast_to_word, correct[handler.done]))
+        print(f"Data stack: {stack}")
+        print(f"Correct stack: {correct_stack}\n")
+        if correct_stack != list(stack):
+            print(f"Error in {name} tests: pc = {handler.state.pc:#x}")
             sys.exit(1)
-
+    state.step(trace=True, n=len(correct), step_callback=test_callback)
     print(f"{name.capitalize()} tests ran OK")
