@@ -38,8 +38,7 @@ class State:
     A VM state.
 
          - args - list of str - command-line arguments to register.
-         - memory - ctypes.Array of c_char - main memory.
-         - stack - ctypes.Array of c_char - stack.
+         - memory - Memory - main memory.
 
     Note: For some reason, an array created as a "multiple" of c_char does
     not have the right type. ctypes.create_string_buffer must be used.
@@ -58,7 +57,7 @@ class State:
             state.stack = addressof(state._stack)
             state.stack_words = stack_words
         if memory_words is not None:
-            state.set_memory(create_string_buffer(memory_words * word_bytes))
+            state.set_memory(Memory(create_string_buffer(memory_words * word_bytes)))
         state.S = Stack(state.state)
         if args is None:
             args = []
@@ -67,10 +66,9 @@ class State:
         return state
 
     def set_memory(self, memory):
-        self.memory = memory
-        self.M = Memory(self.memory)
+        self.M = memory
+        self.M_word = Memory(self.M.buffer, element_size=word_bytes)
         self.pc = self.M.addr
-        self.M_word = Memory(self.memory, element_size=word_bytes)
 
     def __getattr__(self, name):
         if name in enums.Registers.__members__:
@@ -90,7 +88,6 @@ class State:
             for name in enums.Registers.__members__
             if name not in ('stack', 'stack_words')
         }
-        del state['memory']
         del state['M']
         del state['M_word']
         state['M'] = bytes(self.M.buffer)[0:-1] # Remove trailing NUL
@@ -108,7 +105,7 @@ class State:
     def __setstate__(self, state):
         for name, value in state['registers'].items():
             self.__setattr__(name, value)
-        self.set_memory(create_string_buffer(state['M']))
+        self.set_memory(Memory(create_string_buffer(state['M'])))
         for item in state['S']: self.S.push(item)
         if 'argv' in state:
             register_args(*state['argv'])
