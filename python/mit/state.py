@@ -162,10 +162,6 @@ class State:
     def trace_print(self, *args):
         print(*args, file=sys.stderr)
 
-    def trace(self, n=1, addr=None, auto_NEXT=True):
-        'A convenience wrapper for `step(trace=True)`.'
-        self.step(n=n, addr=addr, trace=True, auto_NEXT=auto_NEXT)
-
     def load(self, file, addr=None):
         '''
         Load a binary file at the given address (default is `memory`).
