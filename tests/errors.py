@@ -8,6 +8,7 @@
 # RISK.
 
 import sys
+from functools import partial
 
 from mit import *
 from mit.binding import libmit
@@ -58,10 +59,6 @@ if UNDEFINED < (1 << opcode_bit):
 # Tests
 assert(len(test_pc) == len(result))
 
-def step_trace():
-    while True:
-        VM.trace()
-
 error = 0
 def do_tests(run_fn):
     global error
@@ -83,10 +80,8 @@ def do_tests(run_fn):
              error += 1
         print()
 
-print('''
-Running tests with single_step
-''')
-do_tests(step_trace)
+print("Running tests with State.step()")
+do_tests(partial(VM.step, trace=True, addr=0))
 print("Running tests with run (optimized)")
 do_tests(VM.run)
 
