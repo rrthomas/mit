@@ -33,7 +33,6 @@ class Registers(RegisterEnum):
     ir = ('mit_word',)
     stack_depth = ()
     stack = ('mit_word * restrict',)
-    stack_words = ()
 
 @unique
 class MitErrorCode(IntEnum):
@@ -75,7 +74,7 @@ class Instruction(Action):
         if self.terminal_action is not None:
             ir_all_bits = 0 if self.opcode & 0x80 == 0 else -1
             code = Code(
-                f'if (S->ir != {ir_all_bits}) {{',
+                f'if (ir != {ir_all_bits}) {{',
                 self.terminal_action.gen_case(),
                 '} else {',
                 code,
@@ -87,7 +86,7 @@ instructions = [
     {
         'name': 'NEXT',
         'effect': StackEffect.of([], []),
-        'code': Code('S->ir = *(mit_word *)S->pc++;'),
+        'code': Code('DO_NEXT;'),
         'opcode': 0x0,
         'terminal': Action(
             None,
@@ -98,13 +97,13 @@ instructions = [
     {
         'name': 'NEXTFF',
         'effect': StackEffect.of([], []),
-        'code': Code('S->ir = *(mit_word *)S->pc++;'),
+        'code': Code('DO_NEXT;'),
         'opcode': 0xff,
         'terminal': Action(
             None,
             Code('''\
                 {
-                    mit_word inner_error = mit_trap(S);
+                    mit_word inner_error = mit_trap(ir, stack, &stack_depth);
                     if (inner_error != MIT_ERROR_OK)
                         RAISE(inner_error);
                 }
@@ -113,20 +112,34 @@ instructions = [
     },
 
     {
+        'name': 'POP',
+        'effect': StackEffect.of(['ITEMS', 'COUNT'], []),
+        'code': Code(), # No code.
+        'opcode': 0x1,
+    },
+
+    {
+        'name': 'DUP',
+        'effect': StackEffect.of(['x', 'ITEMS', 'COUNT'], ['x', 'ITEMS', 'x']),
+        'code': Code(), # No code.
+        'opcode': 0x2,
+    },
+
+    {
+        'name': 'SWAP',
+        'effect': StackEffect.of(['x', 'ITEMS', 'y', 'COUNT'], ['y', 'ITEMS', 'x']),
+        'code': Code(),
+        'opcode': 0x3,
+    },
+
+    {
         'name': 'JUMP',
         'effect': StackEffect.of(['addr'], []),
-        'code': Code('''\
-            if (unlikely(addr % MIT_WORD_BYTES != 0))
-                RAISE(MIT_ERROR_UNALIGNED_ADDRESS);
-            S->pc = (mit_word *)addr;
-        '''),
-        'opcode': 0x1,
+        'code': Code('DO_JUMP;'),
+        'opcode': 0x4,
         'terminal': Action(
             StackEffect.of([], []),
-            Code('''\
-                S->pc += S->ir;
-                S->ir = 0;
-            '''),
+            Code('DO_JUMPI;'),
         ),
     },
 
@@ -134,64 +147,45 @@ instructions = [
         'name': 'JUMPZ',
         'effect': StackEffect.of(['flag', 'addr'], []),
         'code': Code('''\
-            if (flag == 0) {
-                if (unlikely(addr % MIT_WORD_BYTES != 0))
-                    RAISE(MIT_ERROR_UNALIGNED_ADDRESS);
-                S->pc = (mit_word *)addr;
-                S->ir = 0;
-            }
-        '''),
-        'opcode': 0x2,
+            if (flag == 0)
+                DO_JUMP;'''),
+        'opcode': 0x5,
         'terminal': Action(
             StackEffect.of(['flag'], []),
             Code('''\
-                if (flag == 0) {
-                    S->pc += S->ir;
-                    S->ir = 0;
-                }
-            '''),
+                if (flag == 0)
+                    DO_JUMPI;'''),
         ),
     },
 
     {
         'name': 'CALL',
-        'effect': StackEffect.of(['addr'], ['ret_addr']),
+        'effect': None,
         'code': Code('''\
+            POP(addr);
             if (unlikely(addr % MIT_WORD_BYTES != 0))
-                RAISE(MIT_ERROR_UNALIGNED_ADDRESS);
-            ret_addr = (mit_uword)S->pc;
-            S->pc = (mit_word *)addr;
+               RAISE(MIT_ERROR_UNALIGNED_ADDRESS);
+            DO_CALL(addr);
         '''),
-        'opcode': 0x3,
+        'opcode': 0x6,
         'terminal': Action(
-            StackEffect.of([], ['ret_addr']),
+            None,
             Code('''\
-                ret_addr = (mit_uword)S->pc;
-                S->pc += S->ir;
-                S->ir = 0;
-            '''),
+                mit_word addr = (mit_uword)(pc + ir);
+                DO_CALL(addr);
+        '''),
         ),
     },
 
     {
-        'name': 'POP',
-        'effect': StackEffect.of(['ITEMS', 'COUNT'], []),
-        'code': Code(), # No code.
-        'opcode': 0x4,
-    },
-
-    {
-        'name': 'DUP',
-        'effect': StackEffect.of(['x', 'ITEMS', 'COUNT'], ['x', 'ITEMS', 'x']),
-        'code': Code(), # No code.
-        'opcode': 0x5,
-    },
-
-    {
-        'name': 'SWAP',
-        'effect': StackEffect.of(['x', 'ITEMS', 'y', 'COUNT'], ['y', 'ITEMS', 'x']),
-        'code': Code(),
-        'opcode': 0x6,
+        'name': 'RET',
+        'effect': None,
+        'code': Code('''\
+            memcpy(outer_stack, stack + stack_depth - nres, nres * MIT_WORD_BYTES);
+            // For `RET_ERROR`, see run_fn.py.
+            return RET_ERROR; // `call` sets `pc` and `ir` on return from `run_inner()`.
+        '''),
+        'opcode': 0x7,
     },
 
     {
@@ -277,7 +271,7 @@ instructions = [
     {
         'name': 'PUSH',
         'effect': StackEffect.of([], ['n']),
-        'code': Code('n = *S->pc++;'),
+        'code': Code('n = *pc++;'),
         'opcode': 0x10,
     },
 
@@ -285,8 +279,8 @@ instructions = [
         'name': 'PUSHREL',
         'effect': StackEffect.of([], ['n']),
         'code': Code('''\
-            n = (mit_uword)S->pc;
-            n += *S->pc++;
+            n = (mit_uword)pc;
+            n += *pc++;
         '''),
         'opcode': 0x11,
     },
@@ -428,7 +422,7 @@ instructions.extend([
     {
         'name': f'PUSHRELI_{n}'.replace('-', 'M'),
         'effect': StackEffect.of([], ['addr']),
-        'code': Code(f'addr = (mit_uword)(S->pc + {n});'),
+        'code': Code(f'addr = (mit_uword)(pc + {n});'),
         'opcode': ((n & 0x7f) << 1) | 0x1,
     }
     for n in range(-64, 64) if n != -1
@@ -453,8 +447,7 @@ Instructions.__docstring__ = 'VM instructions.'
 class ExtraInstructions(ActionEnum):
     '''VM extra instructions.'''
 
-    # FIXME: improve code generation so the stack effects of the following can
-    # be specified
+    # FIXME: improve code generation so the stack effect can be specified.
     HALT = (
         Action(
             None,
@@ -463,145 +456,13 @@ class ExtraInstructions(ActionEnum):
         0x1,
     )
 
-    SIZEOF_STATE = (
-        Action(
-            StackEffect.of([], ['size']),
-            Code('size = sizeof(mit_state);'),
-        ),
-        0x2,
-    )
-
-    THIS_STATE = (
-        Action(
-            StackEffect.of([], ['this_state:mit_state *']),
-            Code('this_state = S;'),
-        ),
-        0x3,
-    )
-
-    GET_PC = (
-        Action(
-            None,
-            Code(), # Code is computed below.
-        ),
-        0x4,
-    )
-
-    SET_PC = (
-        Action(
-            None,
-            Code(), # Code is computed below.
-        ),
-        0x5,
-    )
-
-    GET_IR = (
-        Action(
-            None,
-            Code(), # Code is computed below.
-        ),
-        0x6,
-    )
-
-    SET_IR = (
-        Action(
-            None,
-            Code(), # Code is computed below.
-        ),
-        0x7,
-    )
-
-    GET_STACK_DEPTH = (
-        Action(
-            None,
-            Code(), # Code is computed below.
-        ),
-        0x8,
-    )
-
-    SET_STACK_DEPTH = (
-        Action(
-            None,
-            Code(), # Code is computed below.
-        ),
-        0x9,
-    )
-
-    GET_STACK = (
-        Action(
-            None,
-            Code(), # Code is computed below.
-        ),
-        0xa,
-    )
-
-    SET_STACK = (
-        Action(
-            None,
-            Code(), # Code is computed below.
-        ),
-        0xb,
-    )
-
-    GET_STACK_WORDS = (
-        Action(
-            None,
-            Code(), # Code is computed below.
-        ),
-        0xc,
-    )
-
-    SET_STACK_WORDS = (
-        Action(
-            None,
-            Code(), # Code is computed below.
-        ),
-        0xd,
-    )
-
-    STACK_POSITION = (
-        Action(
-            StackEffect.of(['pos', 'inner_state:mit_state *'], ['ret:mit_word *']),
-            Code('''\
-               ret = mit_stack_position(inner_state, pos);
-            '''),
-        ),
-        0xe,
-    )
-
-    POP_STACK = (
-        Action(
-            StackEffect.of(['inner_state:mit_state *'], ['value', 'ret']),
-            Code('''\
-                value = 0;
-                ret = mit_pop_stack(inner_state, &value);
-            '''),
-        ),
-        0xf,
-    )
-
-    PUSH_STACK = (
-        Action(
-            StackEffect.of(['value', 'inner_state:mit_state *'], ['ret']),
-            Code('ret = mit_push_stack(inner_state, value);'),
-        ),
-        0x10,
-    )
-
+    # FIXME: Must take arguments and returns, like CALL. CATCH?
     RUN = (
         Action(
-            StackEffect.of(['inner_state:mit_state *'], ['ret']),
-            Code('ret = mit_run(inner_state);'),
+            StackEffect.of(['inner_pc:mit_word *'], ['ret']),
+            Code('ret = mit_run(inner_pc);'),
         ),
         0x11,
-    )
-
-    SINGLE_STEP = (
-        Action(
-            StackEffect.of(['inner_state:mit_state *'], ['ret']),
-            Code('ret = mit_single_step(inner_state);'),
-        ),
-        0x12,
     )
 
     ARGC = (
@@ -620,31 +481,10 @@ class ExtraInstructions(ActionEnum):
         0x101,
     )
 
-for register in Registers:
-    pop_code = Code()
-    pop_code.append('mit_state *inner_state;')
-    pop_code.extend(pop_stack('inner_state', type='mit_state *'))
-
-    get_code = Code()
-    get_code.extend(pop_code)
-    get_code.extend(push_stack(
-        f'inner_state->{register.name}',
-        type=register.type,
-    ))
-    ExtraInstructions[f'GET_{register.name.upper()}'].action.code = get_code
-
-    set_code = Code()
-    set_code.extend(pop_code)
-    set_code.append(f'{register.type} value;')
-    set_code.extend(pop_stack('value', register.type))
-    set_code.append(f'inner_state->{register.name} = value;')
-    ExtraInstructions[f'SET_{register.name.upper()}'].action.code = set_code
-
-
 # Inject code for EXTRA
 extra_code = Code('''\
-    mit_uword extra_opcode = S->ir;
-    S->ir = 0;
+    mit_uword extra_opcode = ir;
+    ir = 0;
 ''')
 extra_code.extend(ExtraInstructions.dispatch(Code(
     'RAISE(MIT_ERROR_INVALID_OPCODE);',

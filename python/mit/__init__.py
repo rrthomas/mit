@@ -5,7 +5,8 @@ This package provides Mit bindings for Python 3, and offers a convenient
 set of functions and variables to interact with Mit in a Python REPL.
 Module mit provides a Pythonic API.
 Module mit.binding provides direct access to libmit.
-Module mit.assembler provides Assembler and Disassembler.
+Module mit.assembler provides Assembler
+Module mit.disassembler provides Disassembler
 Module mit.globals provides a convenient set of globals for interactive use
 and for testing.
 
@@ -37,4 +38,5 @@ from .binding import (
     is_aligned, register_args,
 )
 from .state import State
-from .assembler import Assembler, Disassembler
+from .assembler import Assembler
+from .disassembler import Disassembler

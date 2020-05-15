@@ -199,7 +199,6 @@ AC_CONFIG_FILES([
         python/Makefile
         python/mit-shell-include.man
         tests/Makefile
-        tests/test_pickle.py
         doc/Makefile
 ])
 AC_CONFIG_FILES([python/mit-profile], [chmod +x python/mit-profile])

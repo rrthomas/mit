@@ -148,7 +148,7 @@ class LibraryEnum(ActionEnum):
                 mit_word function;''',
             pop_stack('function'),
             f'''
-                int ret = trap_{self.name.lower()}(S, function);
+                int ret = trap_{self.name.lower()}(function, stack, &stack_depth);
                 if (ret != 0)
                     RAISE(ret);
             }}'''

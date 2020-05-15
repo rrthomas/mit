@@ -10,6 +10,7 @@
 import argparse, json, textwrap
 
 from code_util import Code, copyright_banner, disable_warnings
+from run_fn import run_body, run_fn
 from spec import opcode_bit
 from specializer import CacheState, gen_case
 from specializer_spec import Instructions
@@ -58,10 +59,11 @@ def _opcode_test(multiguess):
             opcode_bits = None # Must match all bits.
     # Generate the guess condition.
     if opcode_bits is None:
-        return f'S->ir == {opcode_value:#x}'
+        opcode_mask = (0 if opcode_value & 80 == 0 else -1) << opcode_bit
+        return f'ir == {opcode_value | opcode_mask:#x}'
     else:
         mask = (1 << opcode_bits) - 1
-        return f'(S->ir & {mask:#x}) == {opcode_value:#x}'
+        return f'(ir & {mask:#x}) == {opcode_value:#x}'
 
 
 class Label:
@@ -129,9 +131,7 @@ class Label:
         cache_state = self.cache_state()
         state = state.step(self.guess)
         c_code.extend(Code('''\
-            initial_pc = S->pc;
-            initial_ir = S->ir;
-            S->ir = ARSHIFT(S->ir, MIT_OPCODE_BIT);''',
+            ir = ARSHIFT(ir, MIT_OPCODE_BIT);''',
             f'{{ // {self.guess.name}',
                 gen_case(self.guess, cache_state),
             '}',
@@ -217,25 +217,22 @@ def goto_label_by_index(cache_state, index):
 def gen_labels_code(profiling=False):
     code = Code()
     code.append(Code('''\
-        mit_word *initial_pc;
-        mit_uword initial_ir;
         // The number of stack items cached in C variables.
         int cached_depth = 0;
 
         // Each A_XXX label has an expectation of what instruction sequence
         // probably comes next. If correct, there is a fast path for executing
         // that sequence, otherwise we fall back on a slow path with broader
-        // expectations. Ultimately, we fall back to `A_FALLBACK` which calls
-        // `mit_single_step()` to handle corner cases.
+        // expectations. Ultimately, we fall back to `A_FALLBACK` which
+        // handles corner cases.
         //
         // The calling convention at each A_XXX label is as follows:
         //
         //  - On entry, `error` is `MIT_ERROR_BREAK`. `cached_depth` is a
         //    compile-time constant indicating how many top stack items are in
         //    C variables.
-        //  - Before running the `Instructions.code` for an
-        //    instruction, record `initial_pc` and `initial_ir`, and right-shift
-        //    `ir`.
+        //  - Before running the `Instructions.code` for an instruction,
+        //    right-shift `ir`.
         //  - When an error occurs, call `RAISE(code)`.
         //    It sets `error` to the return code; then it resets `pc` and
         //    `ir` to their initial values, and does "goto error".
@@ -253,14 +250,16 @@ def gen_labels_code(profiling=False):
         A_FALLBACK:
             assert(error == MIT_ERROR_BREAK);
             assert(cached_depth == 0);
-            *real_S = state;
-            error = mit_single_step(real_S);
-            state = *real_S;
+            mit_byte opcode = ir & MIT_OPCODE_MASK;
+            ir = ARSHIFT(ir, MIT_OPCODE_BIT);
+            #define run_inner run_inner_fast
+    ''')
+    code.extend(run_body('error'))
+    code.append('''
+            #undef run_inner
             continue;
 
         error:
-            S->pc = initial_pc;
-            S->ir = initial_ir;
             switch (cached_depth) {
     ''')
     switch_code = Code()
@@ -273,6 +272,12 @@ def gen_labels_code(profiling=False):
         switch_code.append(case_code)
     switch_code.append('''\
         case 0:
+            // We mustn't return 0 with longjmp(), or the caller of setjmp will assume
+            // it has just executed setjmp, not longjmp. MIT_ERROR_BREAK cannot be
+            // returned by `mit_run()`, so use it to stand in for 0.
+            if (error == 0)
+                error = MIT_ERROR_BREAK;
+            longjmp(*jmp_buf_ptr, error);
             break;
         default:
             assert(0); // Unreachable.
@@ -287,9 +292,12 @@ def gen_labels_code(profiling=False):
 def gen_body_code(profiling=False):
     code = Code()
     code.append('''\
-        mit_state state = *real_S;
-        mit_state *const S = &state;
-        int error = MIT_ERROR_BREAK;
+        mit_uword stack_words = mit_stack_words;
+        mit_word stack[mit_stack_words];
+        if (outer_stack != NULL)
+            memcpy(stack, outer_stack, nargs * MIT_WORD_BYTES);
+        mit_uword stack_depth = nargs;
+        mit_word error = MIT_ERROR_BREAK;
     ''')
     if max_cached_depth > 0:
         cache_state = CacheState(max_cached_depth, 0)
@@ -305,8 +313,7 @@ def gen_body_code(profiling=False):
     code.extend(gen_labels_code(profiling=profiling))
     code.append('''\
         } while (error == MIT_ERROR_BREAK);
-        *real_S = state;
-        return error;
+        longjmp(*jmp_buf_ptr, error);
     ''')
     return code
 
@@ -318,10 +325,13 @@ code.append(f'''
     #include "config.h"
 
     #include <assert.h>
+    #include <setjmp.h>
+    #include <string.h>
     #include <stdio.h>
     #include <unistd.h>
 
     #include "mit/mit.h"
+    #include "mit/features.h"
 
     #include "run.h"
 
@@ -407,12 +417,18 @@ code.append('''
 ''')
 
 for profiling, fn in [
-    (False, 'mit_run_fast'),
-    (True, 'mit_run_profile'),
+    (False, 'fast'),
+    (True, 'profile'),
 ]:
     code.append('')
-    code.append(f'mit_word {fn}(mit_state * restrict real_S) {{')
-    code.append(gen_body_code(profiling))
-    code.append('}')
+    code.extend(disable_warnings(
+        ['-Wstack-protector'], # Stack protection cannot cope with VLAs.
+        Code(
+            f'static mit_word run_inner_{fn}(mit_word *pc, mit_word ir, mit_word *outer_stack, mit_word nargs, mit_word nres, jmp_buf *jmp_buf_ptr) {{',
+                gen_body_code(profiling),
+            '}',
+        )
+    ))
+    code.extend(run_fn(fn))
 
 print(code)

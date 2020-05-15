@@ -41,8 +41,7 @@ class Action:
         '''
         Generate a Code for an Action.
 
-        In the code, S is the mit_state, and errors are reported by calling
-        RAISE().
+        In the code, errors are reported by calling RAISE().
         '''
         effect = self.effect
         code = Code()
@@ -63,7 +62,7 @@ class Action:
         code.extend(self.code)
         if effect is not None:
             # Store the results from C variables.
-            code.append(f'S->stack_depth += {effect.results.size - effect.args.size};')
+            code.append(f'stack_depth += {effect.results.size - effect.args.size};')
             code.extend(effect.store_results())
         return code
 

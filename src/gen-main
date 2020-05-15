@@ -89,11 +89,11 @@ Option('memory',
 )
 
 Option('stack',
-       ['size of stack in words [default %zu]', '(size_t)stack_words'],
+       ['size of stack frame in words [default %zu]', '(size_t)mit_stack_words'],
        short_name='s',
        arg='required_argument', arg_name='N',
        parse_code=Code('''\
-           stack_words = parse_num_words("stack size must be a positive number up to %zu");
+           mit_stack_words = parse_num_words("stack frame size must be a positive number up to %zu");
        ''')
 )
 
@@ -285,9 +285,8 @@ static int skip_hashbang(FILE *fp)
 }
 
 // Global state
-static mit_state *S;
 mit_word *memory;
-mit_uword memory_words, stack_words;
+mit_uword memory_words;
 const char *program_name;
 
 static void usage(void)
@@ -308,7 +307,6 @@ int main(int argc, char *argv[])
     program_name = getprogname();
 
     memory_words = 0x100000U;
-    stack_words = 16384U;
     mit_run = mit_run_fast;
 
     // Options string starts with '+' to stop option processing at first
@@ -342,15 +340,8 @@ int main(int argc, char *argv[])
     memory = calloc(memory_words, MIT_WORD_BYTES);
     if (memory == NULL)
         die("could not allocate virtual machine memory");
-    mit_state state;
-    S = &state;
-    memset(S, 0, sizeof(*S));
-    if ((S->stack = calloc(stack_words, MIT_WORD_BYTES)) == NULL)
-        die("could not allocate virtual machine stack");
-    S->stack_words = stack_words;
     mit_argc = argc;
     mit_argv = &argv[0];
-    S->pc = memory;
 
     // Load object file and report any error
     {
@@ -373,15 +364,13 @@ int main(int argc, char *argv[])
 
     // Run
     mit_word error;
-    S->ir = 0;
-    error = mit_run(S);
+    error = mit_run(memory);
 
     if (error < 0 && error >= -127) {
         warn("error %zd: %s", error, error_to_msg(error));
         error = 127 - error;
     }
 
-    free(S->stack);
     free(memory);
     return error;
 }'''

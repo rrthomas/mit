@@ -78,10 +78,8 @@ load_test(obj = b'#!/usr/bin/mit\n' + object_file())
 
 
 # Test ability to load & run saved file with assembler-generated contents
-correct = [-128, 12345]
-for n in correct:
-    lit(n)
-lit(MitErrorCode.OK)
+error_code = 42
+lit(error_code)
 extra(HALT)
 save(test_file_name, length=label() - M.addr)
 res = try_load(test_file_name)
@@ -91,14 +89,12 @@ if res != MitErrorCode.OK:
     sys.exit(1)
 try:
     run()
+    print(f'Error in State.load() test "{test}"; run() exited normally')
+    sys.exit(1)
 except VMError as e:
-    print(f'Error in State.load() test "{test}"; error {e.args[0]}: {e.args[1]}')
-    sys.exit(1)
-print(f"Data stack: {S}")
-print(f"Correct stack: {correct}")
-if correct != list(S):
-    print(f"Error in State.load() tests: pc = {VM.pc:#x}")
-    sys.exit(1)
+    if e.args[0] != error_code:
+        print(f'Error in State.load() test "{test}"; error {e.args[0]}: {e.args[1]}')
+        sys.exit(1)
 
 
 # Remove test file

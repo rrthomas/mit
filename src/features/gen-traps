@@ -51,8 +51,9 @@ code.append('''
 for lib in LibInstructions:
     code.append('')
     code.append(f'''\
-        static mit_word trap_{lib.name.lower()}(mit_state * restrict S, mit_word opcode)
+        static mit_word trap_{lib.name.lower()}(mit_word function, mit_word *stack, mit_uword *stack_depth_ptr)
         {{
+            mit_uword stack_depth = *stack_depth_ptr;
             mit_word error = MIT_ERROR_OK;'''
     )
     code.append('')
@@ -60,35 +61,37 @@ for lib in LibInstructions:
     body_code = Code()
     body_code.extend(lib.library.dispatch(Code(
         'RAISE(MIT_TRAP_ERROR_INVALID_FUNCTION);'
-    )))
+    ), 'function'))
     body_code.append('')
     code.append(body_code)
 
     code.append('''
         error:
+            *stack_depth_ptr = stack_depth;
             return error;
         }'''
     )
 
 code.append('')
 code.append('''\
-    mit_word mit_trap(mit_state * restrict S)
+    mit_word mit_trap(mit_word code, mit_word *stack, mit_uword *stack_depth_ptr)
     {
+        mit_uword stack_depth = *stack_depth_ptr;
         mit_word error = MIT_ERROR_OK;'''
 )
 code.append('')
 
 body_code = Code()
-body_code.append('mit_uword code = S->ir;')
 body_code.extend(LibInstructions.dispatch(Code(
     'return MIT_TRAP_ERROR_INVALID_LIBRARY;'
 ), 'code'))
-body_code.append('return error;')
+body_code.append('''\
+    *stack_depth_ptr = stack_depth;
+    return error;''')
 code.append(body_code)
 
 code.append('')
 code.append('''
-    error = MIT_ERROR_BREAK;
     error:
         return error;
     }'''

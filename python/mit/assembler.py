@@ -1,5 +1,5 @@
 '''
-Mit assembler/disassembler
+Mit assembler.
 
 (c) Mit authors 2019-2020
 
@@ -10,140 +10,10 @@ RISK.
 '''
 
 from .binding import (
-    is_aligned,
-    word_bytes, word_bit, word_mask, sign_bit,
-    opcode_bit, opcode_mask,
-    hex0x_word_width,
+    is_aligned, sign_extend,
+    word_bit, word_bytes, word_mask, opcode_bit, opcode_mask,
 )
-from .enums import Instructions, ExtraInstructions, TERMINAL_OPCODES
-
-NEXT = Instructions.NEXT
-JUMP = Instructions.JUMP
-JUMPZ = Instructions.JUMPZ
-CALL = Instructions.CALL
-PUSH = Instructions.PUSH
-PUSHI_0 = Instructions.PUSHI_0
-PUSHREL = Instructions.PUSHREL
-PUSHRELI_0 = Instructions.PUSHRELI_0
-NEXTFF = Instructions.NEXTFF
-
-mnemonic = {
-    instruction.value: instruction.name
-    for instruction in Instructions
-}
-extra_mnemonic = {
-    instruction.value: instruction.name
-    for instruction in ExtraInstructions
-}
-
-
-def sign_extend(x):
-    if x & sign_bit:
-        x |= -1 & ~word_mask
-    return x
-
-
-class Disassembler:
-    '''
-    Represents the state of a disassembler. This class simulates the pc and
-    ir registers. When it reaches one of the TERMINAL_OPCODES, it
-    continues at the next word. The `goto()` method sets a new disassembly
-    address. Each call to `__next__()` dissassembles one instruction.
-
-    Public fields:
-     - pc - the value of the simulated pc register.
-     - ir - the value of the simulated ir register.
-     - end - the pc value at which to stop.
-    '''
-    def __init__(self, state, pc=None, length=None, end=None, ir=0):
-        '''
-        Disassembles code from the memory of `state`. `pc` and `ir`
-        default to the current pc and ir values of `state`.
-        `length` is in words, and defaults to 16.
-        '''
-        self.state = state
-        if pc is None:
-            self.pc = self.state.pc
-            self.ir = sign_extend(self.state.ir)
-        else:
-            self.pc = pc
-            self.ir = ir
-        assert is_aligned(self.pc)
-        self.end = end
-        if length is None and end is None:
-            length = 16
-        if length is not None:
-            self.end = self.pc + length * word_bytes
-
-    def _fetch(self):
-        if self.pc >= self.end:
-            raise StopIteration
-        word = sign_extend(self.state.M_word[self.pc])
-        self.pc += word_bytes
-        return word
-
-    def __iter__(self):
-        return self
-
-    def disassemble(self):
-        try:
-            comment = ''
-            opcode = self.ir & opcode_mask
-            self.ir >>= opcode_bit
-            try:
-                name = mnemonic[opcode].lower()
-            except KeyError:
-                name = f"undefined opcode {opcode:#x}"
-            if opcode == PUSH or opcode == PUSHREL:
-                initial_pc = self.pc
-                value = self._fetch()
-                if opcode == PUSH:
-                    comment = f' ({value & word_mask:#x}={value})'
-                else: # opcode == PUSHREL
-                    comment = f' ({initial_pc + value:#x})'
-            elif opcode & 1 == 1 and opcode != NEXTFF: # PUSHRELI
-                value = (opcode - PUSHRELI_0) >> 1
-                if opcode & 0x80:
-                    value |= -1 & ~0x7f
-                comment = f' ({self.pc + value * word_bytes:#x})'
-            elif opcode == NEXT and self.ir != 0:
-                # Call `self._fetch()` later, not now.
-                comment = extra_mnemonic.get(
-                    self.ir,
-                    f'invalid extra instruction {self.ir:#x}'
-                )
-                comment = f' ({comment})'
-                self.ir = 0
-            elif opcode == NEXTFF:
-                # Call `self._fetch()` later, not now.
-                if self.ir != -1:
-                    comment = f' (trap {self.ir:#x})'
-                else:
-                    comment = ' (redundant!)'
-                self.ir = 0
-            elif opcode in (JUMP, JUMPZ, CALL) and self.ir != 0:
-                # Call `self._fetch()` later, not now.
-                comment = f' (to {self.pc + self.ir * word_bytes:#x})'
-                self.ir = 0
-        except IndexError:
-            name = "invalid address!"
-        return f'{name}{comment}'
-
-    def __next__(self):
-        pc_str = ('{:#0' + str(hex0x_word_width) + 'x}').format(self.pc)
-        addr = '.' * len(pc_str)
-        if self.ir == 0:
-            self.ir = self._fetch()
-            addr = pc_str
-        return f'{addr}: {self.disassemble()}'
-
-    def goto(self, pc):
-        '''
-        After calling this method, disassembly will start from `pc`.
-        '''
-        assert is_aligned(self.pc)
-        self.pc = pc
-        self.ir = 0
+from .enums import Instructions as I, TERMINAL_OPCODES
 
 
 class Assembler:
@@ -154,19 +24,16 @@ class Assembler:
      - pc - the value of the simulated pc register.
      - i_addr - the address of the latest opcode word, i.e. the word from
        which the simulated ir register was most recently loaded.
-       `None` indicates that we're about to start a new word.
-     - i_shift - the number of opcode bits already in the word at `i_addr`,
-       or `None`.
+     - i_shift - the number of opcode bits already in the word at `i_addr`.
     '''
     def __init__(self, state, pc=None):
         '''
         `pc` defaults to the current pc value of `state`.
         '''
         self.state = state
+        self.pc = pc
         if pc is None:
             self.pc = self.state.pc
-        else:
-            self.pc = pc
         assert is_aligned(self.pc)
         self.label()
 
@@ -174,9 +41,16 @@ class Assembler:
         '''
         Skips to the start of a word, and returns its address.
         '''
-        self.i_addr = None
-        self.i_shift = None
+        self.i_addr = self.pc
+        self.i_shift = 0
         return self.pc
+
+    def next_pc(self):
+        '''
+        Return the value of pc after executing the current instruction and any
+        implicit `next`.
+        '''
+        return self.pc + (word_bytes if self.i_shift == 0 else 0)
 
     def word(self, value):
         '''
@@ -189,7 +63,7 @@ class Assembler:
         '''
         Writes `bytes` at `pc`, followed by padding to the next word.
         '''
-        assert self.i_addr is None
+        assert self.i_shift == 0
         for b in bytes:
             self.state.M[self.pc] = b
             self.pc += 1
@@ -202,71 +76,76 @@ class Assembler:
         '''
         self.i_addr = self.pc
         self.word(0)
-        self.i_shift = 0
 
-    def fit(self, extended_opcode):
+    def fit(self, opcode, operand):
         '''
         Determine whether the given extended opcode fits in the current word.
         If so, return the updated word; otherwise, None.
         '''
-        i = sign_extend(self.state.M_word[self.i_addr or self.pc])
-        i_shift = self.i_shift or 0
-        i |= extended_opcode << i_shift
+        opcode = int(opcode)
+        if operand is not None:
+            operand = int(operand)
+        i = sign_extend(self.state.M_word[self.i_addr])
+        i |= (opcode << self.i_shift) | ((operand or 0) << (self.i_shift + opcode_bit))
         i &= word_mask
         i = sign_extend(i)
-        sign_mask = (-1 if extended_opcode < 0 else 0) & (~word_mask)
-        if (i | sign_mask) >> i_shift == extended_opcode:
+        if ((i >> self.i_shift) & opcode_mask == opcode and
+            (operand is None or i >> (self.i_shift + opcode_bit) == operand)
+        ):
             return i
         return None
 
-    def instruction(self, opcode, extra_opcode=None):
+    def instruction(self, opcode, operand=None):
         '''
         Appends an instruction opcode.
 
          - opcode - An Instruction or an `opcode_bit`-bit integer.
-         - extra_opcode - int - if `opcode` is `NEXT`, `JUMP`, `JUMPZ` or
+         - operand - int - if `opcode` is `NEXT`, `JUMP`, `JUMPZ` or
            `CALL`, the rest of the instruction word.
         '''
         # Compute the extended opcode.
-        extended_opcode = int(opcode)
-        assert 0 <= extended_opcode <= opcode_mask
-        if extra_opcode is not None:
-            assert extended_opcode in (NEXT, NEXTFF, JUMP, JUMPZ, CALL)
-            extended_opcode |= (int(extra_opcode) << opcode_bit)
+        opcode = int(opcode)
+        assert 0 <= opcode <= opcode_mask
+        if operand is not None:
+            assert opcode in TERMINAL_OPCODES
+
+        # Start a new word if we need to.
+        if self.i_shift == 0:
+            self._fetch()
 
         # Store the extended opcode, starting a new word if necessary.
-        if self.i_addr is None:
-            # Start of a new word.
-            assert self.i_shift is None
-            self._fetch()
-        i = self.fit(extended_opcode)
+        i = self.fit(opcode, operand)
         if i is None: # Doesn't fit in the current word.
+            self.label()
             self._fetch()
-            i = extended_opcode
+            i = self.fit(opcode, operand)
+            assert i
         self.state.M_word[self.i_addr] = i
 
-        # If the opcode is terminal, start a new word.
+        # Advance `self.i_shift` past used bits.
+        self.i_shift += opcode_bit
         if opcode in TERMINAL_OPCODES:
+            self.i_shift = word_bit
+
+        # If we finished a word, move to next.
+        if self.i_shift == word_bit:
             self.label()
-        else:
-            assert extended_opcode == int(opcode)
-            self.i_shift += opcode_bit
 
     def goto(self, pc):
         assert is_aligned(pc)
         self.pc = pc
         self.label()
 
-    def jump_rel(self, addr, opcode=JUMP):
+    def jump_rel(self, addr, opcode=I.JUMP):
         '''
         Assemble a relative `jump`, `jumpz` or `call` instruction to the given
         address. Selects the immediate form of the instruction if possible.
         '''
-        assert opcode in (JUMP, JUMPZ, CALL)
+        assert opcode in (I.JUMP, I.JUMPZ, I.CALL)
         assert is_aligned(addr)
         word_offset = (addr - self.pc - word_bytes) // word_bytes
         assert word_offset != 0, "immediate branch offset cannot be 0"
-        if self.fit(int(opcode) | (word_offset << opcode_bit)):
+        if self.fit(opcode, word_offset):
             self.instruction(opcode, word_offset)
         else:
             self.lit_pc_rel(addr)
@@ -275,33 +154,33 @@ class Assembler:
     def lit(self, value, force_long=False):
         '''
         Assemble a `push` instruction that pushes the specified `value`.
-        Uses `pushi` if possible and `!force_long`.
+        Uses `pushi` if possible and `force_long` is false.
         '''
         value = int(value)
         if not force_long and -32 <= value < 32:
-            self.instruction((PUSHI_0 + (value << 2)) & opcode_mask)
+            self.instruction((I.PUSHI_0 + (value << 2)) & opcode_mask)
         else:
-            self.instruction(PUSH)
+            self.instruction(I.PUSH)
             self.word(value)
 
     def lit_pc_rel(self, address, force_long=False):
         '''
         Assemble a `pushrel` instruction that pushes the specified `address`.
-        Uses `pushreli` if possible and `!force_long`.
+        Uses `pushreli` if possible and `force_long` is false.
         '''
         address = int(address)
         offset = address - self.pc
-        if self.i_addr == None:
+        if self.i_shift == 0:
             offset -= word_bytes
         offset_words = offset // word_bytes
         if not force_long and offset_words != -1 and -64 <= offset_words < 64:
-            self.instruction((PUSHRELI_0 + (offset_words << 1)) & opcode_mask)
+            self.instruction((I.PUSHRELI_0 + (offset_words << 1)) & opcode_mask)
         else:
-            self.instruction(PUSHREL)
+            self.instruction(I.PUSHREL)
             self.word(offset)
 
     def extra(self, extra_opcode):
-        self.instruction(NEXT, extra_opcode)
+        self.instruction(I.NEXT, extra_opcode)
 
     def trap(self, extra_opcode):
-        self.instruction(NEXTFF, extra_opcode)
+        self.instruction(I.NEXTFF, extra_opcode)

@@ -1,6 +1,6 @@
 // Header for warn() and die().
 //
-// (c) Mit authors 2019
+// (c) Mit authors 2019-2020
 //
 // The package is distributed under the MIT/X11 License.
 //
@@ -13,6 +13,11 @@
 
 #include <stdarg.h>
 
+
+// Implementation-defined errors
+enum {
+    MIT_ERROR_STARTUP_ERROR = 128,
+};
 
 void verror(const char *format, va_list args);
 void warn(const char *format, ...);

@@ -7,157 +7,85 @@ The package is distributed under the MIT/X11 License.
 
 THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 RISK.
-
-The mit_state: state
-Registers: a variable for each register
-Memory: M, M_word
-Stack: S
-Managing the VM state: load, save
-Controlling and observing execution: run, step, trace
-Examining memory: dump, disassemble, dump_files
 '''
 
 import sys
-from ctypes import create_string_buffer, byref, addressof
+from types import FunctionType
+from dataclasses import dataclass
+from ctypes import create_string_buffer, addressof, byref, cast, c_void_p
 
 from . import enums
 from .binding import (
-    libmit, run, run_ptr,
+    libmit, run, run_ptr, run_simple, run_fast, run_break, break_fn_ptr,
+    stack_words,
     Error, VMError, is_aligned,
     word_bytes, word_mask, opcode_mask,
-    c_word, c_uword, c_mit_state,
+    c_word, c_uword, c_break_fn,
     hex0x_word_width, register_args,
-    run_fast, run_profile,
 )
 from .memory import Memory
-from .assembler import Assembler, Disassembler
+from .assembler import Assembler
+from .disassembler import Disassembler
 
 
 class State:
     '''
     A VM state.
 
-         - args - list of str - command-line arguments to register.
-         - memory - Memory - main memory.
+     - args - list of str - command-line arguments to register.
+     - memory - Memory - main memory.
 
     Note: For some reason, an array created as a "multiple" of c_char does
     not have the right type. ctypes.create_string_buffer must be used.
     '''
-    def __new__(cls, memory_words=1024*1024, stack_words=1024, args=None):
+    def __new__(cls, memory_words=1024*1024, args=None):
         '''
         Create the VM state.
 
          - memory_words - int - number of words of main memory.
-         - stack_words - int - number of words of stack space.
         '''
         state = super().__new__(cls)
-        state.state = c_mit_state()
-        state._stack = create_string_buffer(stack_words * word_bytes)
-        if stack_words is not None:
-            state.stack = addressof(state._stack)
-            state.stack_words = stack_words
         if memory_words is not None:
             state.set_memory(Memory(create_string_buffer(memory_words * word_bytes)))
-        state.S = Stack(state.state)
-        if args is None:
-            args = []
-        args.insert(0, b"mit-shell")
-        register_args(*args)
+            state.pc = state.M.addr
+        else:
+            state.pc = None
+        if args is not None:
+            assert isinstance(args, list)
+            args.insert(0, b"mit-shell")
+            register_args(*args)
         return state
 
     def set_memory(self, memory):
         self.M = memory
         self.M_word = Memory(self.M.buffer, element_size=word_bytes)
-        self.pc = self.M.addr
 
-    def __getattr__(self, name):
-        if name in enums.Registers.__members__:
-            return self.state.__getattribute__(name)
-        raise AttributeError
-
-    def __setattr__(self, name, value):
-        if name in enums.Registers.__members__:
-            self.state.__setattr__(name, value)
-        else:
-            super().__setattr__(name, value)
-
-    def __getstate__(self):
-        state = self.__dict__.copy()
-        state['registers'] = {
-            name: self.__getattr__(name)
-            for name in enums.Registers.__members__
-            if name not in ('stack', 'stack_words')
-        }
-        del state['M']
-        del state['M_word']
-        state['M'] = bytes(self.M.buffer)[0:-1] # Remove trailing NUL
-        del state['S']
-        state['S'] = self.S[0:self.stack_depth]
-        del state['_stack']
-        del state['state']
-        if 'argv' in state:
-            state['argv'] = [cstr for cstr in state['argv']]
-        return state
-
-    def __getnewargs__(self):
-        return (self.stack_words,)
-
-    def __setstate__(self, state):
-        for name, value in state['registers'].items():
-            self.__setattr__(name, value)
-        self.set_memory(Memory(create_string_buffer(state['M'])))
-        for item in state['S']: self.S.push(item)
-        if 'argv' in state:
-            register_args(*state['argv'])
-
-    def run(self, optimize=True, profile=False):
+    def run(self, run_fn=run_fast):
         '''
         Run until `halt` or error.
 
-         - optimize - bool - if True, run with optimization.
-         - profile - bool - if True, run with profiling.
+         - run_fn - optional c_mit_fn - c_mit_fn to use. Defaults to
+           `run_fast`.
         '''
-        assert optimize or not profile
-        if profile:
-            run_ptr.contents = run_profile
-        elif optimize:
-            run_ptr.contents = run_fast
-        run(self.state)
+        run_ptr.contents = run_fn
+        run(self.pc)
 
-    def step(self, n=1, addr=None, trace=False, auto_NEXT=True):
-        '''
-        Single-step for n steps (excluding NEXT when pc does not change), or
-        until pc=addr.
-        '''
-        done = 0
-        ret = 0
-        while addr is not None or done < n:
-            if auto_NEXT and (self.ir == 0 or self.ir == word_mask):
-                try:
-                    libmit.mit_single_step(self.state)
-                    return
-                except VMError as e:
-                    if e.args[0] != enums.MitErrorCode.BREAK:
-                        raise
-            if self.pc == addr: break
-            if trace:
-                self.trace_print(f"trace: instruction={Disassembler(self).disassemble()}")
+    def _step_plural(self, n):
+        return "after {} step{}".format(n, 's' if n != 1 else '')
+
+    def step(self, n=1, addr=None, trace=False, step_callback=None, final_callback=None):
+        'Single-step for `n` steps, or until `pc`=addr.'
+        with BreakHandler(self, n, addr, trace, step_callback, final_callback) as handler:
             try:
-                libmit.mit_single_step(self.state)
-                return
+                self.run(run_fn=run_break)
             except VMError as e:
                 if e.args[0] != enums.MitErrorCode.BREAK:
                     ret = e.args[0]
-                    print(f"Error code {ret} was returned", end='')
-                    print(" after {} step{}".format(done, 's' if done != 1 else ''), end='')
+                    print(f"Error code {ret} was returned {self._step_plural(handler.done)}", end='')
                     if addr is not None:
                         print(f" at pc={self.pc:#x}", end='')
                     print()
                     raise
-            if trace:
-                self.trace_print(f"pc={self.pc:#x} ir={self.ir:#x}")
-                self.trace_print(str(self.S))
-            done += 1
 
     def trace_print(self, *args):
         print(*args, file=sys.stderr)
@@ -255,59 +183,73 @@ class State:
             self.dump(addr, length, file=h)
 
 
-class Stack:
+@dataclass
+class BreakHandler:
     '''
-    VM stack.
+    Callback provider for `mit_run()`'s `break_fn`.
 
-     - state - a c_mit_state.
+     - state - State - state to use and update
+     - n - int or None - number of instructions to run.
+     - addr - int or None - address to run to.
+     - trace - bool - if true, print tracing information for each
+       instruction.
+     - step_callback - optional function - if not None, a function `f(state,
+       stack)` to call before each instruction is executed, which returns a
+       MitErrorCode to pass as the return value of `break_fn`, or `None` to
+       return the default value.
+     - final_callback - optional function - like `step_callback`, but called
+       when the exit condition is reached.
+     - done - int - number of instructions run.
 
-    When specifying stack indices, this class uses the Python convention, so
-    0 is the base of the stack. In contrast, the C API (`mit_stack_position()`
-    etc.) use the convention that 0 is the top of the stack.
+    If both are set, `addr` takes priority.
     '''
-    def __init__(self, state):
-        self.state = state
+    state: State
+    n: int=1
+    addr: int=None
+    trace: bool=False
+    step_callback: FunctionType=None
+    final_callback: FunctionType=None
 
-    def __str__(self):
-        return '[{}]'.format(', '.join(
-            [f'{v} ({v & word_mask:#x})' for v in self])
-        )
+    def __post_init__(self):
+        self.done = 0
 
-    def __repr__(self):
-        return self.__str__()
+    def trace_print(self, *args):
+        print(*args, file=sys.stderr)
+        sys.stderr.flush()
 
-    def __len__(self):
-        return self.state.stack_depth
+    def __enter__(self):
+        self._old_break_fn = break_fn_ptr.value if break_fn_ptr else None
+        # Avoid c_break_fn being GC'ed.
+        self._new_break_fn = c_break_fn(self.break_fn)
+        # We need the actual C function entry point, not the address of the
+        # Python object, which is what we would get from a `CFunctionType`.
+        break_fn_ptr.value = cast(self._new_break_fn, c_void_p).value
+        return self
 
-    def __getitem__(self, index):
-        if isinstance(index, slice):
-            return [self[i] for i in range(*index.indices(len(self)))]
-        else:
-            ptr = libmit.mit_stack_position(self.state, len(self) - 1 - index)
-            if ptr is not None:
-                return ptr.contents.value
-            raise IndexError
+    def __exit__(self, exc_type, exc_value, traceback):
+        if self._old_break_fn is not None:
+            break_fn_ptr.value = self._old_break_fn
+        self._new_break_fn = None
 
-    def __setitem__(self, index, value):
-        if isinstance(index, slice):
-            for i, v in zip(range(*index.indices(len(self))), value):
-                self[i] = v
-        else:
-            ptr = libmit.mit_stack_position(self.state, len(self) - 1 - index)
-            if ptr is not None:
-                ptr.contents.value = value
-            else:
-                raise IndexError
-
-    def __iter__(self):
-        return (self[i] for i in range(len(self)))
-
-    def push(self, v):
-        '''Push a word on to the stack.'''
-        ret = libmit.mit_push_stack(self.state, v)
-
-    def pop(self):
-        '''Pop a word off the stack.'''
-        v = c_word()
-        ret = libmit.mit_pop_stack(self.state, byref(v))
-        return v.value
+    def break_fn(self, pc, ir, stack, stack_depth):
+        '''
+        The type of this method matches `mit_break_fn` in `run.h`.
+        '''
+        self.state.pc = cast(pc, c_void_p).value
+        stack = (c_word * stack_words.value).from_address(cast(stack, c_void_p).value)[0:stack_depth]
+        if (self.addr is not None and self.state.pc != self.addr) or self.done < self.n:
+            if self.trace:
+                self.trace_print(f"pc={self.state.pc:#x} ir={ir:#x}")
+                self.trace_print(f"{stack}")
+                self.trace_print(f"instruction={Disassembler(self.state, ir=ir).disassemble()}")
+            if self.step_callback is not None:
+                error = self.step_callback(self, stack)
+                if error is not None:
+                    return error
+            self.done += 1
+            return enums.MitErrorCode.BREAK
+        if self.final_callback is not None:
+            error = self.final_callback(self, stack)
+            if error is not None:
+                return error
+        return enums.MitErrorCode.OK

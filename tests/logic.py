@@ -21,6 +21,10 @@ penultimate_byte_set = 0xff << byte_bit
 
 # Test results
 correct = [
+     [byte_bit],
+     [byte_bit, top_byte_set],
+     [byte_bit, top_byte_set, 0xff],
+     [byte_bit, top_byte_set, 0xff, byte_bit],
      [byte_bit, top_byte_set, penultimate_byte_set],
      [byte_bit, top_byte_set, penultimate_byte_set, 1],
      [penultimate_byte_set, top_byte_set, byte_bit],
@@ -33,13 +37,11 @@ correct = [
      [~(second_byte_set | penultimate_byte_set) & -2],
 ]
 
-# Test data
-S.push(byte_bit)
-S.push(top_byte_set)
-S.push(0xff)
-S.push(byte_bit)
-
 # Code
+lit(byte_bit)
+lit(top_byte_set)
+lit(0xff)
+lit(byte_bit)
 ass(LSHIFT)
 lit(1)
 ass(SWAP)

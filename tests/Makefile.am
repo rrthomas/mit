@@ -27,15 +27,11 @@ TESTS =	\
 	memory.py	\
 	run.py		\
 	save_object.py	\
-	single_step.py	\
 	stack.py	\
+	step.py		\
 	hello-world.bf  \
 	cell-size.bf	\
 	test-mit-shell
-
-if USING_PFORTH
-TESTS += test_pickle.py
-endif
 
 BENCH_TESTS = \
 	mandelbrot.bf

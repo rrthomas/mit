@@ -31,7 +31,7 @@ VM = State()
 vars().update({
     name: VM.__getattribute__(name)
     for name in [
-        "M", "M_word", "S",
+        "M", "M_word",
         "load", "run", "step",
         "dump", "disassemble", "dump_files",
     ]

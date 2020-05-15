@@ -23,6 +23,6 @@ values = [
 correct = []
 for n, v in enumerate(values):
     lit(v)
-    correct.append(values[:n+1])
+    correct.append(values[:n + 1])
 
 run_test("constants", VM, correct)

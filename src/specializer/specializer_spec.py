@@ -118,5 +118,4 @@ GUESS_LIMITING = frozenset([
     Instructions.NEXT,
     Instructions.JUMP,
     Instructions.JUMPZ,
-    Instructions.CALL,
 ])

@@ -15,6 +15,6 @@
 #ifndef MIT_FEATURES_H
 #define MIT_FEATURES_H
 
-mit_word mit_trap(mit_state * restrict S);
+mit_word mit_trap(mit_word code, mit_word * restrict stack, mit_uword *stack_depth_ptr);
 
 #endif
