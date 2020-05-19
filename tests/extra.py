@@ -29,9 +29,9 @@ extra(ARGC)
 
 def argc_test_callback(handler, stack):
     argc = stack.pop()
-    handler.trace_print(f"argc is {argc}, and should be {len(args)}")
+    handler.log(f"argc is {argc}, and should be {len(args)}")
     if argc != len(args):
-        handler.trace_print(f"Error in ARGC test: pc = {handler.state.pc:#x}")
+        handler.log(f"Error in ARGC test: pc = {handler.state.pc:#x}")
         sys.exit(1)
 tests.append((start, label(), argc_test_callback))
 
@@ -47,9 +47,9 @@ trap(LIBC)
 
 def argv_test_callback(handler, stack):
     arg1len = stack.pop()
-    handler.trace_print(f"arg 1's length is {arg1len}, and should be {len(args[1])}")
+    handler.log(f"arg 1's length is {arg1len}, and should be {len(args[1])}")
     if arg1len != len(args[1]):
-        handler.trace_print(f"Error in extra instructions and trap tests: pc = {handler.state.pc:#x}")
+        handler.log(f"Error in extra instructions and trap tests: pc = {handler.state.pc:#x}")
         sys.exit(1)
 tests.append((start, label(), argv_test_callback))
 
@@ -65,11 +65,11 @@ lit(LibC.STRNCPY)
 trap(LIBC)
 
 def strncpy_test_callback(handler, stack):
-    handler.trace_print(f"addr: {buffer:#x}")
+    handler.log(f"addr: {buffer:#x}")
     c_str = string_at(cast(buffer, c_char_p))
-    handler.trace_print(f"arg 1 is {c_str}, and should be {args[1]}")
+    handler.log(f"arg 1 is {c_str}, and should be {args[1]}")
     if c_str != args[1]:
-        handler.trace_print(f"Error in extra instructions and trap tests: pc = {handler.state.pc:#x}")
+        handler.log(f"Error in extra instructions and trap tests: pc = {handler.state.pc:#x}")
         sys.exit(1)
 tests.append((start, label(), strncpy_test_callback))
 
