@@ -87,7 +87,7 @@ class State:
                     print()
                     raise
 
-    def trace_print(self, *args):
+    def log(self, *args):
         print(*args, file=sys.stderr)
 
     def load(self, file, addr=None):
@@ -213,7 +213,7 @@ class BreakHandler:
     def __post_init__(self):
         self.done = 0
 
-    def trace_print(self, *args):
+    def log(self, *args):
         print(*args, file=sys.stderr)
         sys.stderr.flush()
 
@@ -239,9 +239,9 @@ class BreakHandler:
         stack = (c_word * stack_words.value).from_address(cast(stack, c_void_p).value)[0:stack_depth]
         if (self.addr is not None and self.state.pc != self.addr) or self.done < self.n:
             if self.trace:
-                self.trace_print(f"pc={self.state.pc:#x} ir={ir:#x}")
-                self.trace_print(f"{stack}")
-                self.trace_print(f"instruction={Disassembler(self.state, ir=ir).disassemble()}")
+                self.log(f"pc={self.state.pc:#x} ir={ir:#x}")
+                self.log(f"{stack}")
+                self.log(f"instruction={Disassembler(self.state, ir=ir).disassemble()}")
             if self.step_callback is not None:
                 error = self.step_callback(self, stack)
                 if error is not None:

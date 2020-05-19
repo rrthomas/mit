@@ -135,7 +135,7 @@ correct.append(assembler.next_pc())
 def test_callback(handler, stack):
     correct_pc = correct[handler.done] - VM.M.addr
     pc = handler.state.pc - VM.M.addr
-    handler.trace_print(f"Instruction {handler.done}: pc = {pc:#x} should be {correct_pc:#x}")
+    handler.log(f"Instruction {handler.done}: pc = {pc:#x} should be {correct_pc:#x}")
     if pc != correct_pc:
         print(f"Error in branch tests: pc = {pc:#x}")
         sys.exit(1)
