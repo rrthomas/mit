@@ -42,8 +42,18 @@
 
 % Lay out a line of the opcode table
 
-\newcommand{\opcodetbl}[4]{0x#1 & {\tt #2} & 0x#3 & {\tt #4} \\}
-\newcommand{\opcodetblone}[2]{0x#1 & {\tt #2} \\}
+% Tabular hex numerals
+% From https://tex.stackexchange.com/questions/543464/tabular-hex-numerals/543466#543466
+\usepackage{tokcycle}
+\newsavebox\lettwd
+\savebox\lettwd{{\ooalign{0\cr a\cr b\cr c\cr d\cr e\cr f}}}
+\tokcycleenvironment\tblhex
+  {\addcytoks{\makebox[\wd\lettwd]{##1}}}
+  {\processtoks{##1}}
+  {\addcytoks{##1}}
+  {\addcytoks{\makebox[\wd\lettwd]{##1}}}
+
+\newcommand{\opcodetbl}[4]{0x\tblhex#1\endtblhex & {\tt #2} & \tblhex0x#3\endtblhex & {\tt #4} \\}
 
 
 \title{The Mit virtual machine}
