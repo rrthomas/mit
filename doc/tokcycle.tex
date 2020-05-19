@@ -1,0 +1,226 @@
+\def\tcname                     {tokcycle}
+\def\tcver                        {1.12}
+%
+\def\tcdate                    {2020/02/11}
+%
+% Author     : Steven B Segletes, Christian Tellechea (contributor)
+% Maintainer : Steven B Segletes
+% License    : Released under the LaTeX Project Public License v1.3c
+%              or later, see http://www.latex-project.org/lppl.txt
+% Files      : 1) tokcycle.tex
+%              2) tokcycle.sty
+%              3) tokcycle-doc.tex
+%              4) tokcycle-doc.pdf
+%              5) tokcycle-examples.tex
+%              6) tokcycle-examples.pdf
+%              7) README
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% MACRO FORM
+\long\def\tokcycle#1#2#3#4#5{\tokcycraw{#1}{#2}{#3}{#4}#5\endtokcycraw}
+% \expanded-ARGUMENT MACRO FORM
+\long\def\expandedtokcycle#1#2#3#4#5{\cytoks{\tokcycraw{#1}{#2}{#3}{#4}}%
+  \expandafter\the\expandafter\cytoks\expanded{#5}\endtokcycraw}
+% ENVIRONMENT FORM
+\long\def\tokencycle#1#2#3#4{\begingroup\let\endtokencycle\endtokcycraw  
+  \aftertokcycle{\the\cytoks\expandafter\endgroup\expandafter\tcenvscope
+  \expandafter{\the\cytoks}}\tokcycraw{#1}{#2}{#3}{#4}}
+% XPRESS-INTERFACE MACRO FORM
+\long\def\tokcyclexpress#1{\tokcycrawxpress#1\endtokcycraw}
+% XPRESS-INTERFACE \expanded-ARGUMENT MACRO FORM
+\long\def\expandedtokcyclexpress#1{%
+  \expandafter\tokcycrawxpress\expanded{#1}\endtokcycraw}
+% XPRESS-INTERFACE ENVIRONMENT FORM
+\def\tokencyclexpress{\begingroup\let\endtokencyclexpress\endtokcycraw
+  \aftertokcycle{\the\cytoks\expandafter\endgroup\expandafter\tcenvscope
+  \expandafter{\the\cytoks}}\tokcycrawxpress}
+% INITIALIZATION & INTERNAL TOOLS
+\def\tcenvscope{\cytoks}% CAN SET TO \global\cytoks TO OVERCOME SCOPE LIMITS
+\edef\restorecatcode{\catcode\number`\@=\number\catcode`\@\relax}
+\catcode`\@11
+\newif\iftc@implicitgrp
+\newif\if@argnext
+\newtoks\tc@tok
+\newcount\tc@depth
+\def\tc@gobble#1{}
+\def\tc@deftok#1#2{\let#1= #2\empty}
+\tc@deftok\tc@sptoken{ }
+\expandafter\def\expandafter\tc@absorbSpace\space{}
+\def\tc@ifempty#1{\tc@testxifx{\expandafter\relax\detokenize{#1}\relax}}
+\def\tc@defx#1{\tc@earg{\def\expandafter#1}}
+\long\def\tc@earg#1{\expandafter#1\expandafter}
+\long\def\tc@xarg#1#2{\tc@earg#1{\expanded{#2}}}
+\long\def\tc@exfirst#1#2{#1}
+\long\def\tc@exsecond#1#2{#2}
+\long\def\tc@testxifx{\tc@earg\tctestifx}
+\long\def\test@ifmacro#1{\tctestifcatnx#1\relax}
+\def\tc@addtoks#1#2{\toks#1\expandafter{\the\toks#1#2}}
+\def\addtc@depth{\advance\tc@depth 1}
+\def\subtc@depth{\tc@depth=\numexpr\tc@depth-1\relax}
+\def\tc@resetifs{\activetokfalse\implicittokfalse\tc@implicitgrpfalse
+  \catSIXfalse\activecharfalse\activetokunexpandablefalse}
+\long\def\count@stringtoks#1{\tc@earg\count@toks{\string#1}}
+\long\def\count@toks#1{\the\numexpr-1\count@@toks#1.\tc@endcnt}
+\long\def\count@@toks#1#2\tc@endcnt{+1\tc@ifempty{#2}{\relax}{\count@@toks#2\tc@endcnt}}
+\def\sv@hash{##}
+% EXTERNAL TOOLS
+\long\def\tctestifcon#1{#1\expandafter\tc@exfirst\else\expandafter\tc@exsecond\fi}
+\long\def\tctestifcatnx#1#2{\tctestifcon{\ifcat\noexpand#1\noexpand#2}}
+\long\def\tctestifx#1{\tctestifcon{\ifx#1}}
+\long\def\tctestifnum#1{\tctestifcon{\ifnum#1\relax}}
+\newif\ifstripgrouping
+\def\stripimplicitgroupingcase#1{\edef\@implicitgroupingcase{\the\numexpr1-#1}}
+\newif\ifcatSIX
+\newif\ifimplicittok
+\newif\ifactivetok
+\newif\ifactivechar
+\newif\ifactivetokunexpandable
+\newtoks\cytoks
+\long\def\tokcycleenvironment#1#2#3#4#5{\expandafter\def\expandafter#1%
+  \expandafter{\expandafter\let\csname end\expandafter\tc@gobble
+  \string#1\endcsname\endtokcycraw\tokencycle{#2}{#3}{#4}{#5}}}
+\long\def\processtoks#1{\addtc@depth\@tokcycle#1\endtokcycraw }
+\def\whennotprocessingparameter#1#2{\tctestifcon\if@argnext{\@argnextfalse\cytoks
+  \expandafter{\the\cytoks###1}}{\tctestifcon\ifcatSIX{\@argnexttrue}{#2}}}
+% ESSENTIAL METHOD: STREAMING MACRO WITH TERMINATOR:
+% \tokcycraw{<Char>}{<Group>}{<Macro>}{<Space>}<input-stream>\endtokcycraw
+\long\def\tokcycraw#1#2#3#4{\def\@chrT##1{#1}\long\def\@grpT##1{#2}%
+  \long\def\@macT##1{#3}\def\@spcT##1{#4}\tokcycrawxpress}
+% ENTRY POINT FOR XPRESS METHOD WITHOUT EXPLICIT ARGUMENTS
+\def\tokcycrawxpress{\cytoks{}\tc@depth=1\relax\@tokcycle}
+% CODE TO EXECUTE AT COMPLETION
+\long\def\aftertokcycle#1{\def\@aftertokcycle{#1}}
+\def\endtokcycraw{\subtc@depth\tctestifnum{\tc@depth=0}{\@aftertokcycle}{}}
+% LOOP ENTRY POINT
+\def\@tokcycle{\tc@resetifs\futurelet\tc@next\detect@CANTabsorb}
+\def\detect@CANTabsorb{\tctestifx{\tc@next\tc@sptoken}{\stringify\@@@@@spcT}%
+  {\tctestifx{\tc@next\bgroup}{\stringify\@@@@grpT}{\can@absorb}}}
+% NON cat1,10 TOKENS
+\long\def\can@absorb#1{\tc@tok{#1}\trapcatSIX{#1}\expandafter\can@absorb@
+  \the\tc@tok}
+\long\def\can@absorb@#1{\tctestifnum{\count@stringtoks{#1}>1}%
+  {\tctestifx{\endtokcycraw#1}{#1}{\backslashcmds#1\@tokcycle}}%
+  {\trapactives#1\tc@trapescape#1{\tc@escapecytoks}{\can@absorb@@#1}}}
+\long\def\can@absorb@@#1{\let\@tmp=#1\test@ifmacro\@tmp{\implicittokfalse
+  \@macT#1}{\trapimplicitegrp#1\implicitgrpfork#1}\@tokcycle}
+%CONVERT NEXT (SPACE OR BEGIN-GROUP) TOKEN TO STRING
+\def\stringify#1{\expandafter#1\string}% #1 WILL BE \@@@@@spcT or \@@@@grpT
+%SPACE DECODE
+\def\@@@@@spcT{\futurelet\tc@str\@@@@spcT}
+\def\@@@@spcT{\tctestifx{\tc@str\tc@sptoken}%
+ {\def\@tmp{\@@spcT{ }}\expandafter\@tmp\tc@absorbSpace}% EXPLICIT SPACE
+ {\implicittoktrue\expandafter\@@@spcT\tc@gobble}}% IMPLICIT SPACE
+\def\@@@spcT{\csmk{\expandafter\@@spcT\thecs}}
+\def\@@spcT#1{\@spcT{#1}\@tokcycle}
+% GROUP DECODE
+\def\@@@@grpT{\futurelet\tc@str\@@@grpT}
+\def\@@@grpT#1{\tctestifnum{\number\catcode`#1=1}%
+  {\expandafter\@@grpT\expandafter{\iffalse}\fi}% {
+  {\implicittoktrue\tc@implicitgrptrue%
+    \tctestifnum{`#1=92}% WORKS EVEN IF CAT-0 HAS CHANGED
+    {\csmk{\expandafter\backslashcmds\thecs\@tokcycle}}% \bgroup
+    {\begingroup\catcode`#1=\active \xdef\@tmp{\scantokens{#1\noexpand}}\endgroup
+      \expandafter\implicitgrpfork\@tmp\@tokcycle}% ACTIVE CHAR \bgroup
+  }}
+\def\@@grpT#1{\tctestifcon\ifstripgrouping{\@grpT{#1}}%
+  {\groupedcytoks{\@grpT{#1}}}\@tokcycle}
+% \ COMMANDS (MACROS AND IMPLICITS)
+\long\def\backslashcmds#1{%
+  \test@ifmacro#1{\tctestifcon\ifcatSIX{\implicittoktrue\@chrT#1}{\@macT#1}}%
+    {\implicittoktrue\trapimplicitegrp#1\implicitgrpfork#1}}
+% FORK BASED ON IMPLICIT GROUP TREATMENT
+\def\implicitgrpfork#1{\tctestifcon{\iftc@implicitgrp}{\ifcase
+  \@implicitgroupingcase\or\addcytoks{#1}\or\@chrT{#1}\fi}{\@chrT#1}}
+% SET UP ESCAPE MECHANISM
+\def\settcEscapechar#1{\let\@tcEscapeptr#1%
+  \def\tc@escapecytoks##1#1{\addcytoks{##1}\@tokcycle}}
+\def\tc@trapescape#1{\tctestifx{\@tcEscapeptr#1}}
+% TRAP CAT-6
+\long\def\trapcatSIX#1{\tctestifcatnx#1\relax{}{\trapcatSIXb#1}}
+\def\trapcatSIXb#1{\expandafter\tctestifcatnx\sv@hash#1{\catSIXtrue\trapcatSIXc#1}{}}
+\def\trapcatSIXc#1{\tctestifnum{\count@stringtoks{#1}>1}{\tc@defx\six@str{\string#1}%
+  \global\let\implicitsixtok\six@str\tc@tok{\implicitsixtok}}%
+  {\tc@tok\expandafter{\string#1}\tctestifnum{\number\catcode`#1=6}%
+  {}{\activetoktrue\implicittoktrue}}}
+% DIRECTIVES FOR HANDLING GROUPS RECURSIVELY; DEFINE tokcycle GROUPING CHARS
+\def\@defgroupedcytoks#1{\long\def\groupedcytoks##1{%
+  \begingroup\cytoks{}##1\expandafter\endgroup\expandafter
+  \addcytoks\expandafter{\expandafter#1}}}
+\def\settcGrouping#1{\def\@tmp##1{#1}\tc@defx\@@tmp{\@tmp{\the\cytoks}}%
+  \tc@earg\@defgroupedcytoks{\@@tmp}}
+% FAUX TOKENIZATION OF COMMAND NAME (WHEN cat0 TOKEN HAS BEEN MADE cat12)
+\def\csmk#1{\def\csaftermk{#1}\toks0{}\@csmkA}
+\def\@csmkA{\futurelet\@tmp\@csmkB}
+\def\@csmkB{\tctestifx{\@tmp\tc@sptoken}%
+  {\toks0{ }\expandafter\@csmkF\tc@absorbSpace}{\@csmkCA}}
+\def\@csmkCA#1{\tc@addtoks0{#1}\tctestifnum{\number\catcode`#1=11}%
+  {\futurelet\@tmp\@csmkD}{\@csmkF}}
+\def\@csmkC#1{\tctestifnum{\number\catcode`#1=11}
+  {\tc@addtoks0{#1}\futurelet\@tmp\@csmkD}{\@csmkE#1}}
+\def\@csmkD{\tctestifcatnx 0\@tmp\@csmkC\@csmkE}
+\def\@csmkE{\tctestifx{\@tmp\tc@sptoken}%
+  {\expandafter\@csmkF\tc@absorbSpace}{\@csmkF}}
+\def\@csmkF{\tc@defx\thecs{\csname\the\toks0\endcsname}\csaftermk}
+% TRAP IMPLICIT END GROUP TOK (e.g., \egroup); SET \iftc@implicitgrp
+\def\trapimplicitegrp#1{\tctestifx{#1\egroup}{%
+  \implicittoktrue\tc@implicitgrptrue}{}}
+% TRAP ACTIVE TOK
+\def\trapactives#1{\trapactivechar{#1}\trapactivetok{#1}}
+\def\trapactivechar#1{\tctestifnum{\number\catcode`#1=13}{\activechartrue}{}}
+\def\trapactivetok#1{\tctestifcatnx~#1{\activetoktrue}{\trapactivetokunexpandable#1}}
+%% WILL ALSO TRAP ACTIVE \let TO PRIMITIVES AS IMPLICIT; UNDO LATER IN \can@absorb@@
+\def\trapactivetokunexpandable#1{\tctestifcon{\expandafter\if
+  \detokenize{#1}#1}{}{\activetoktrue\activetokunexpandabletrue\implicittoktrue}}
+% EXPRESS-INTERFACE - ALLOWS TO EXTERNALLY DEFINE DIRECTIVES
+\def\Characterdirective{\def\@chrT##1}
+\def\Groupdirective{\long\def\@grpT##1}
+\def\Macrodirective{\long\def\@macT##1}
+\def\Spacedirective{\def\@spcT##1}
+% EXPRESS-INTERFACE - DEFAULT DIRECTIVES
+\def\resetCharacterdirective{\Characterdirective{\addcytoks{##1}}}
+\def\resetGroupdirective{\Groupdirective{\processtoks{##1}}}
+\def\resetMacrodirective{\Macrodirective{\addcytoks{##1}}}
+\def\resetSpacedirective{\Spacedirective{\addcytoks{##1}}}
+\def\resettokcycle{\resetCharacterdirective\resetGroupdirective
+  \resetMacrodirective\resetSpacedirective\aftertokcycle{}%
+  \stripgroupingfalse\stripimplicitgroupingcase{0}}
+% SUPPORT MACROS FOR TOKENIZED OUTPUT: \addcytoks[<expansion level>]{<arg>}
+% (CONTRIBUTED BY CHRISTIAN TELLECHEA)
+\def\addcytoks{\futurelet\nxttok\addcytoks@A}
+\long\def\tc@addtotoks#1{\cytoks\expandafter{\the\cytoks#1}}
+\def\addcytoks@A{\tctestifx{[\nxttok}\addcytoks@B\tc@addtotoks}
+\long\def\addcytoks@B[#1]#2{\tc@ifempty{#1}\tc@addtotoks
+  {\tctestifx{x#1}{\tc@xarg\tc@addtotoks}{\addcytoks@C{#1}}}{#2}}
+\def\addcytoks@C#1{\tctestifnum{#1>0}{\tc@earg\addcytoks@C
+  {\the\numexpr#1-1\expandafter}\expandafter}\tc@addtotoks}
+% SET INITIAL PARAMETERS
+\settcGrouping{{#1}}%          E.G. <<#1>> IF cat-1,2 SET TO < AND >
+\settcEscapechar{|}%           BYPASS TOKCYCLE PROCESSING BETWEEN |...|
+\resettokcycle%                WHICH ALSO CONTAINS THE FOLLOWING 3 RESETS:
+%  \stripimplicitgroupingcase{0}% DEFAULT RETAIN UNALTERED \b/e-groups
+%  \stripgroupingfalse%           DEFAULT RETAIN UNALTERED {} GROUPING
+%  \aftertokcycle{}% NO DEFAULT CODE EXECUTED AFTER EACH TOKCYCLE INVOCATION
+\restorecatcode
+\endinput
+
+EDIT HISTORY
+v1.0  2019/8/21
+      - Initial release
+
+v1.1  2019/9/27
+      - Introduced \ifactivechar, \ifactivetokunexpandable
+      - Tightened up consistent definition of implicit (to exclude primitives)
+      - Rewrote active token trapping logic, to differentiate between active 
+        token vs. active character code, in the event that an earlier tokenized 
+        token no longer shares the current characteristics of the character code
+      - Added ability to handle active-implicit grouping tokens
+      - Added ability to handle active-implicit cat-6 tokens
+
+v1.11 2020/02/04
+      - Fixed bug in \can@absorb@@ macro, which prevented the proper absorption/
+        handling of the = token.
+
+v1.12 2020/02/11
+      - Documentation correction: \tokcycleenvironment, not \tokencycleenvironment
+      - Documentation correction: misspelling in tokcycle-examples.tex
+      - Redefined \tc@defx and \tc@earg to omit #2 as part of definition
+      - Corrected \trapcatSIXb definition to account for revised \tc@earg definition.
