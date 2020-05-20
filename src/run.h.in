@@ -37,7 +37,7 @@
     mit_uword var;                                      \
     if (stack_depth < 1)                                \
         RAISE(MIT_ERROR_INVALID_STACK_READ);            \
-    var = *UNCHECKED_STACK(stack, stack_depth, 0);      \
+    var = *mit_stack_pos(stack, stack_depth, 0);      \
     stack_depth--;
 
 // Raise an error during the execution of an instruction.
