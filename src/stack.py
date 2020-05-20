@@ -43,12 +43,12 @@ def load_stack(name, depth=0, type='mit_word'):
     '''
     code = Code()
     code.append(
-        f'mit_max_stack_item_t temp = (mit_uword)(*UNCHECKED_STACK(stack, stack_depth, {depth}));'
+        f'mit_max_stack_item_t temp = (mit_uword)(*mit_stack_pos(stack, stack_depth, {depth}));'
     )
     for i in range(1, type_words(type)):
         code.append('temp <<= MIT_WORD_BIT;')
         code.append(
-            f'temp |= (mit_uword)(*UNCHECKED_STACK(stack, stack_depth, {depth + i}));'
+            f'temp |= (mit_uword)(*mit_stack_pos(stack, stack_depth, {depth + i}));'
         )
     code.extend(disable_warnings(
         ['-Wint-to-pointer-cast'],
@@ -70,11 +70,11 @@ def store_stack(value, depth=0, type='mit_word'):
     ))
     for i in reversed(range(1, type_words(type))):
         code.append(
-            f'*UNCHECKED_STACK(stack, stack_depth, {depth + i}) = (mit_uword)(temp & MIT_WORD_MASK);'
+            f'*mit_stack_pos(stack, stack_depth, {depth + i}) = (mit_uword)(temp & MIT_WORD_MASK);'
         )
         code.append('temp >>= MIT_WORD_BIT;')
     code.append(
-        '*UNCHECKED_STACK(stack, stack_depth, {}) = (mit_uword)({});'
+        '*mit_stack_pos(stack, stack_depth, {}) = (mit_uword)({});'
         .format(
             depth,
             'temp & MIT_WORD_MASK' if type_words(type) > 1 else 'temp',

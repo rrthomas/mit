@@ -73,11 +73,9 @@ extern const mit_word mit_word_max;
 extern const unsigned mit_opcode_bit;
 extern const unsigned mit_opcode_mask;
 
-
 // Stack access
-
-// Unchecked macro: UNSAFE!
-#define UNCHECKED_STACK(stack, stack_depth, pos) \
+// The stack is implemented as a `stack_words`-element array at `stack`.
+#define mit_stack_pos(stack, stack_depth, pos) \
     ((stack) + (stack_depth) - (mit_uword)(pos) - 1)
 
 

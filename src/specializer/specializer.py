@@ -121,7 +121,7 @@ class CacheState:
             return self.var(pos)
         else:
             # The item is really on the stack.
-            return f'*UNCHECKED_STACK(stack, stack_depth, {pos})'
+            return f'*mit_stack_pos(stack, stack_depth, {pos})'
 
     def flush(self, goal=0):
         '''
