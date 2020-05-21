@@ -7,32 +7,31 @@
 # THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 # RISK.
 
-import os
 from dataclasses import dataclass
 from enum import Enum, IntEnum, unique
+from ctypes import sizeof, c_size_t
 
 from autonumber import AutoNumber
-from params import word_bytes
 from code_util import Code
 from action import Action, ActionEnum
 from stack import StackEffect, pop_stack, push_stack
 
 
-# Global constants (see module params for build-time parameters)
+word_bytes = sizeof(c_size_t)
 word_bit = word_bytes * 8
 opcode_bit = 8
 
 class RegisterEnum(AutoNumber):
-    def __init__(self, type='mit_uword'):
+    def __init__(self, type='mit_uword_t'):
         self.type = type
 
 @unique
 class Registers(RegisterEnum):
     '''VM registers.'''
-    pc = ('mit_word *',)
-    ir = ('mit_word',)
+    pc = ('mit_word_t *',)
+    ir = ('mit_word_t',)
     stack_depth = ()
-    stack = ('mit_word * restrict',)
+    stack = ('mit_word_t * restrict',)
 
 @unique
 class MitErrorCode(IntEnum):
@@ -103,7 +102,7 @@ instructions = [
             None,
             Code('''\
                 {
-                    mit_word inner_error = mit_trap(ir, stack, &stack_depth);
+                    mit_word_t inner_error = mit_trap(ir, stack, &stack_depth);
                     if (inner_error != MIT_ERROR_OK)
                         RAISE(inner_error);
                 }
@@ -163,7 +162,7 @@ instructions = [
         'effect': None,
         'code': Code('''\
             POP(addr);
-            if (unlikely(addr % MIT_WORD_BYTES != 0))
+            if (unlikely(addr % sizeof(mit_word_t) != 0))
                RAISE(MIT_ERROR_UNALIGNED_ADDRESS);
             DO_CALL(addr);
         '''),
@@ -171,7 +170,7 @@ instructions = [
         'terminal': Action(
             None,
             Code('''\
-                mit_word addr = (mit_uword)(pc + ir);
+                mit_word_t addr = (mit_uword_t)(pc + ir);
                 DO_CALL(addr);
         '''),
         ),
@@ -181,7 +180,7 @@ instructions = [
         'name': 'RET',
         'effect': None,
         'code': Code('''\
-            memcpy(outer_stack, stack + stack_depth - nres, nres * MIT_WORD_BYTES);
+            memcpy(outer_stack, stack + stack_depth - nres, nres * sizeof(mit_word_t));
             // For `RET_ERROR`, see run_fn.py.
             return RET_ERROR; // `call` sets `pc` and `ir` on return from `run_inner()`.
         '''),
@@ -192,9 +191,9 @@ instructions = [
         'name': 'LOAD',
         'effect': StackEffect.of(['addr'], ['val']),
         'code': Code('''\
-            if (unlikely(addr % MIT_WORD_BYTES != 0))
+            if (unlikely(addr % sizeof(mit_word_t) != 0))
                 RAISE(MIT_ERROR_UNALIGNED_ADDRESS);
-            val = *(mit_word *)addr;
+            val = *(mit_word_t *)addr;
         '''),
         'opcode': 0x8,
     },
@@ -203,9 +202,9 @@ instructions = [
         'name': 'STORE',
         'effect': StackEffect.of(['val', 'addr'], []),
         'code': Code('''\
-            if (unlikely(addr % MIT_WORD_BYTES != 0))
+            if (unlikely(addr % sizeof(mit_word_t) != 0))
                 RAISE(MIT_ERROR_UNALIGNED_ADDRESS);
-            *(mit_word *)addr = val;
+            *(mit_word_t *)addr = val;
         '''),
         'opcode': 0x9,
     },
@@ -213,7 +212,7 @@ instructions = [
     {
         'name': 'LOAD1',
         'effect': StackEffect.of(['addr'], ['val']),
-        'code': Code('val = (mit_uword)*((uint8_t *)addr);'),
+        'code': Code('val = (mit_uword_t)*((uint8_t *)addr);'),
         'opcode': 0xa,
     },
 
@@ -230,7 +229,7 @@ instructions = [
         'code': Code('''\
             if (unlikely(addr % 2 != 0))
                 RAISE(MIT_ERROR_UNALIGNED_ADDRESS);
-            val = (mit_uword)*((uint16_t *)addr);
+            val = (mit_uword_t)*((uint16_t *)addr);
         '''),
         'opcode': 0xc,
     },
@@ -252,7 +251,7 @@ instructions = [
         'code': Code('''\
             if (unlikely(addr % 4 != 0))
                 RAISE(MIT_ERROR_UNALIGNED_ADDRESS);
-            val = (mit_uword)*((uint32_t *)addr);
+            val = (mit_uword_t)*((uint32_t *)addr);
         '''),
         'opcode': 0xe,
     },
@@ -279,7 +278,7 @@ instructions = [
         'name': 'PUSHREL',
         'effect': StackEffect.of([], ['n']),
         'code': Code('''\
-            n = (mit_uword)pc;
+            n = (mit_uword_t)pc;
             n += *pc++;
         '''),
         'opcode': 0x11,
@@ -323,7 +322,7 @@ instructions = [
     {
         'name': 'ULT',
         'effect': StackEffect.of(['a', 'b'], ['flag']),
-        'code': Code('flag = (mit_uword)a < (mit_uword)b;'),
+        'code': Code('flag = (mit_uword_t)a < (mit_uword_t)b;'),
         'opcode': 0x17,
     },
 
@@ -331,8 +330,8 @@ instructions = [
         'name': 'LSHIFT',
         'effect': StackEffect.of(['x', 'n'], ['r']),
         'code': Code('''\
-            r = n < (mit_word)MIT_WORD_BIT ?
-                (mit_word)((mit_uword)x << n) : 0;
+            r = n < (mit_word_t)MIT_WORD_BIT ?
+                (mit_word_t)((mit_uword_t)x << n) : 0;
         '''),
         'opcode': 0x18,
     },
@@ -341,8 +340,8 @@ instructions = [
         'name': 'RSHIFT',
         'effect': StackEffect.of(['x', 'n'], ['r']),
         'code': Code('''\
-            r = n < (mit_word)MIT_WORD_BIT ?
-                (mit_word)((mit_uword)x >> n) : 0;
+            r = n < (mit_word_t)MIT_WORD_BIT ?
+                (mit_word_t)((mit_uword_t)x >> n) : 0;
         '''),
         'opcode': 0x19,
     },
@@ -393,8 +392,8 @@ instructions = [
         'code': Code('''\
             if (b == 0)
                 RAISE(MIT_ERROR_DIVISION_BY_ZERO);
-            q = (mit_word)((mit_uword)a / (mit_uword)b);
-            r = (mit_word)((mit_uword)a % (mit_uword)b);
+            q = (mit_word_t)((mit_uword_t)a / (mit_uword_t)b);
+            r = (mit_word_t)((mit_uword_t)a % (mit_uword_t)b);
         '''),
         'opcode': 0x1f,
     },
@@ -422,7 +421,7 @@ instructions.extend([
     {
         'name': f'PUSHRELI_{n}'.replace('-', 'M'),
         'effect': StackEffect.of([], ['addr']),
-        'code': Code(f'addr = (mit_uword)(pc + {n});'),
+        'code': Code(f'addr = (mit_uword_t)(pc + {n});'),
         'opcode': ((n & 0x7f) << 1) | 0x1,
     }
     for n in range(-64, 64) if n != -1
@@ -451,7 +450,7 @@ class ExtraInstructions(ActionEnum):
     HALT = (
         Action(
             None,
-            Code('mit_word n;', str(pop_stack('n')), 'RAISE(n);'),
+            Code('mit_word_t n;', str(pop_stack('n')), 'RAISE(n);'),
         ),
         0x1,
     )
@@ -459,7 +458,7 @@ class ExtraInstructions(ActionEnum):
     # FIXME: Must take arguments and returns, like CALL. CATCH?
     RUN = (
         Action(
-            StackEffect.of(['inner_pc:mit_word *'], ['ret']),
+            StackEffect.of(['inner_pc:mit_word_t *'], ['ret']),
             Code('ret = mit_run(inner_pc);'),
         ),
         0x11,
@@ -468,7 +467,7 @@ class ExtraInstructions(ActionEnum):
     ARGC = (
         Action(
             StackEffect.of([], ['argc']),
-            Code('argc = (mit_word)mit_argc;'),
+            Code('argc = (mit_word_t)mit_argc;'),
         ),
         0x100,
     )
@@ -483,7 +482,7 @@ class ExtraInstructions(ActionEnum):
 
 # Inject code for EXTRA
 extra_code = Code('''\
-    mit_uword extra_opcode = ir;
+    mit_uword_t extra_opcode = ir;
     ir = 0;
 ''')
 extra_code.extend(ExtraInstructions.dispatch(Code(

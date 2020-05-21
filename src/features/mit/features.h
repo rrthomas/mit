@@ -7,7 +7,7 @@
 // THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 // RISK.
 
-#ifndef MIT_WORD_BYTES
+#ifndef MIT_MIT_H
 #error "mit/mit.h must be included before this header file"
 #endif
 
@@ -15,6 +15,6 @@
 #ifndef MIT_FEATURES_H
 #define MIT_FEATURES_H
 
-mit_word mit_trap(mit_word code, mit_word * restrict stack, mit_uword *stack_depth_ptr);
+mit_word_t mit_trap(mit_word_t code, mit_word_t * restrict stack, mit_uword_t *stack_depth_ptr);
 
 #endif

@@ -42,7 +42,7 @@ code.append('''
 
 
     MIT_THREAD_LOCAL mit_fn *mit_run = mit_run_simple;
-    MIT_THREAD_LOCAL mit_uword mit_stack_words = 32;
+    MIT_THREAD_LOCAL mit_uword_t mit_stack_words = 32;
 '''
 )
 
@@ -53,7 +53,7 @@ code.extend(run_fn('simple'))
 code.append('')
 
 # `mit_run_break()`, for debugging.
-code.append('MIT_THREAD_LOCAL mit_word (*mit_break_fn)(mit_word *, mit_word, mit_word * restrict, mit_uword) = NULL;')
+code.append('MIT_THREAD_LOCAL mit_word_t (*mit_break_fn)(mit_word_t *, mit_word_t, mit_word_t * restrict, mit_uword_t) = NULL;')
 code.extend(run_inner_fn('break', '''\
         if (mit_break_fn != NULL &&
             !(opcode != MIT_INSTRUCTIONS_NEXT && opcode != MIT_INSTRUCTIONS_NEXTFF &&

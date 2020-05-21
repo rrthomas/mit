@@ -10,11 +10,11 @@
 import sys
 
 from mit.enums import MitErrorCode
-from mit.binding import word_mask, sign_bit
+from mit.binding import uword_max, sign_bit
 
 
 def cast_to_word(n):
-    return ((n + sign_bit) & word_mask) - sign_bit
+    return ((n + sign_bit) & uword_max) - sign_bit
 
 def run_test(name, state, correct):
     correct.insert(0, [])

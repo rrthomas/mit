@@ -131,7 +131,7 @@ class Label:
         cache_state = self.cache_state()
         state = state.step(self.guess)
         c_code.extend(Code('''\
-            ir = ARSHIFT(ir, MIT_OPCODE_BIT);''',
+            ir = ARSHIFT(ir, 8);''',
             f'{{ // {self.guess.name}',
                 gen_case(self.guess, cache_state),
             '}',
@@ -250,8 +250,8 @@ def gen_labels_code(profiling=False):
         A_FALLBACK:
             assert(error == MIT_ERROR_BREAK);
             assert(cached_depth == 0);
-            mit_byte opcode = ir & MIT_OPCODE_MASK;
-            ir = ARSHIFT(ir, MIT_OPCODE_BIT);
+            uint8_t opcode = (uint8_t)ir;
+            ir = ARSHIFT(ir, 8);
             #define run_inner run_inner_fast
     ''')
     code.extend(run_body('error'))
@@ -292,18 +292,18 @@ def gen_labels_code(profiling=False):
 def gen_body_code(profiling=False):
     code = Code()
     code.append('''\
-        mit_uword stack_words = mit_stack_words;
-        mit_word stack[mit_stack_words];
+        mit_uword_t stack_words = mit_stack_words;
+        mit_word_t stack[mit_stack_words];
         if (outer_stack != NULL)
-            memcpy(stack, outer_stack, nargs * MIT_WORD_BYTES);
-        mit_uword stack_depth = nargs;
-        mit_word error = MIT_ERROR_BREAK;
+            memcpy(stack, outer_stack, nargs * sizeof(mit_word_t));
+        mit_uword_t stack_depth = nargs;
+        mit_word_t error = MIT_ERROR_BREAK;
     ''')
     if max_cached_depth > 0:
         cache_state = CacheState(max_cached_depth, 0)
         # Initialize the cache variables to avoid (incorrect) uninitialized
         # variable warning.
-        code.append('mit_word {};'.format(
+        code.append('mit_word_t {};'.format(
             ', '.join(
                 f'{cache_state.var(pos)} = 0'
                 for pos in reversed(range(max_cached_depth))
@@ -424,7 +424,7 @@ for profiling, fn in [
     code.extend(disable_warnings(
         ['-Wstack-protector'], # Stack protection cannot cope with VLAs.
         Code(
-            f'static mit_word run_inner_{fn}(mit_word *pc, mit_word ir, mit_word *outer_stack, mit_word nargs, mit_word nres, jmp_buf *jmp_buf_ptr) {{',
+            f'static mit_word_t run_inner_{fn}(mit_word_t *pc, mit_word_t ir, mit_word_t *outer_stack, mit_word_t nargs, mit_word_t nres, jmp_buf *jmp_buf_ptr) {{',
                 gen_body_code(profiling),
             '}',
         )

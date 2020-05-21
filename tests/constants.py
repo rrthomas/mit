@@ -13,6 +13,7 @@ from mit_test import *
 
 
 # Test results
+byte_bit = 8
 values = [
     0, 1, 2, 3,
     -257, 12345, 4, -1 << (word_bit - 1),

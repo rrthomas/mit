@@ -165,7 +165,7 @@ def gen_case(instruction, cache_state):
     num_results = len(instruction.action.effect.results.items)
     # Declare C variables for args and results.
     code.extend(Code(*[
-        f'mit_word {name};'
+        f'mit_word_t {name};'
         for name, item in instruction.action.effect.by_name.items()
     ]))
     # Load the arguments into their C variables.

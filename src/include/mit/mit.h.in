@@ -13,7 +13,6 @@
 
 
 #include <stddef.h>
-#include <limits.h>
 #include <inttypes.h>
 #include <sys/types.h>
 
@@ -23,60 +22,23 @@
 // Thread-local storage
 #define MIT_THREAD_LOCAL @THREAD_LOCAL@
 
-// Build-time parameters
-#define MIT_WORD_BYTES @SIZEOF_SIZE_T@
-#if MIT_WORD_BYTES != 4 && MIT_WORD_BYTES != 8
-#error "MIT_WORD_BYTES must be 4 or 8!"
-#endif
-
 // Types and constants
-#define MIT_BYTE_BIT 8
-#define MIT_BYTE_MASK ((1 << MIT_BYTE_BIT) - 1)
-#define MIT_WORD_BIT (MIT_BYTE_BIT * MIT_WORD_BYTES)
-
-#define MIT_UWORD_MAX SIZE_MAX
-#define MIT_WORD_MASK MIT_UWORD_MAX
-#define MIT_WORD_MIN (-SSIZE_MAX - 1)
-#define MIT_WORD_MAX SSIZE_MAX
-
-typedef unsigned char mit_byte;
-typedef ssize_t mit_word;
-typedef size_t mit_uword;
+typedef ssize_t mit_word_t;
+typedef size_t mit_uword_t;
+#define MIT_WORD_BIT (sizeof(mit_word_t) * 8)
+#define MIT_UWORD_MAX ((mit_uword_t)-1)
 
 // TODO: find largest type: bigger of long double and intmax_t?
-// Number in next line is sizeof(intmax_t)
-#if MIT_WORD_BYTES < @SIZEOF_INTMAX_T@
 typedef uintmax_t mit_max_stack_item_t;
-#else
-typedef mit_uword mit_max_stack_item_t;
-#endif
 
 // The type of a function that mutates the VM
-typedef mit_word mit_fn(mit_word *pc);
+typedef mit_word_t mit_fn(mit_word_t *pc);
 
-// VM State
-extern MIT_THREAD_LOCAL mit_uword mit_stack_words;
-
-// Constants (for easy FFI binding)
-extern const unsigned mit_word_bytes;
-extern const unsigned mit_byte_bit;
-extern const unsigned mit_byte_mask;
-extern const unsigned mit_word_bit;
-extern const mit_uword mit_word_mask;
-extern const mit_uword mit_uword_max;
-extern const mit_word mit_word_min;
-extern const mit_word mit_word_max;
-
-// Instructions
-#define MIT_OPCODE_BIT 8
-#define MIT_OPCODE_MASK ((1 << MIT_OPCODE_BIT) - 1)
-extern const unsigned mit_opcode_bit;
-extern const unsigned mit_opcode_mask;
-
-// Stack access
+// Stack
+extern MIT_THREAD_LOCAL mit_uword_t mit_stack_words;
 // The stack is implemented as a `stack_words`-element array at `stack`.
 #define mit_stack_pos(stack, stack_depth, pos) \
-    ((stack) + (stack_depth) - (mit_uword)(pos) - 1)
+    ((stack) + (stack_depth) - (mit_uword_t)(pos) - 1)
 
 
 // VM control
@@ -88,26 +50,26 @@ extern MIT_THREAD_LOCAL mit_fn *mit_run;
    profiling) to be used globally.
 */
 
-mit_word mit_run_simple(mit_word *pc);
+mit_word_t mit_run_simple(mit_word_t *pc);
 /* Start the execution cycle in the given state as described in the spec.
    If an error is raised, the code is returned.
 
    This is a naive implementation.
 */
 
-mit_word mit_run_fast(mit_word *pc);
+mit_word_t mit_run_fast(mit_word_t *pc);
 /* Like `mit_run_simple`, but (hopefully) faster. */
 
 // N.B. The profiler is per-thread.
 void mit_profile_reset(void);
 /* Clears the profile. */
-mit_word mit_run_profile(mit_word *pc);
+mit_word_t mit_run_profile(mit_word_t *pc);
 /* Like `mit_run_fast`, but records profiling information. */
 int mit_profile_dump(int fd);
 /* Dump profiling information to file descriptor `fd`. */
 
-extern MIT_THREAD_LOCAL mit_word (*mit_break_fn)(mit_word *pc, mit_word ir, mit_word * restrict stack, mit_uword stack_depth);
-mit_word mit_run_break(mit_word *pc);
+extern MIT_THREAD_LOCAL mit_word_t (*mit_break_fn)(mit_word_t *pc, mit_word_t ir, mit_word_t * restrict stack, mit_uword_t stack_depth);
+mit_word_t mit_run_break(mit_word_t *pc);
 /* Like `mit_run_simple`, but calls `mit_break` after each instruction. */
 
 extern int mit_argc;

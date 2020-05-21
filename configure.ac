@@ -152,6 +152,8 @@ AC_ARG_VAR([THREAD_LOCAL],
 AC_C_BIGENDIAN
 AC_CHECK_SIZEOF([size_t]) # word_bytes
 SIZEOF_SIZE_T=$ac_cv_sizeof_size_t
+AS_IF([test "$SIZEOF_SIZE_T" != 4 -a "$SIZEOF_SIZE_T" != 8],
+   AC_MSG_ERROR([sizeof(size_t) must be 4 or 8!]))
 AC_SUBST([SIZEOF_SIZE_T])
 AX_C_ARITHMETIC_RSHIFT
 AC_CHECK_SIZEOF([intmax_t]) # largest stack item
@@ -194,7 +196,6 @@ AC_CONFIG_FILES([
         src/Makefile
         src/run.h
         src/include/mit/mit.h
-        src/params.py
         src/mit-include.man
         python/Makefile
         python/mit-shell-include.man
