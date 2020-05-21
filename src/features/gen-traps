@@ -9,8 +9,7 @@
 # RISK.
 
 from code_util import Code, copyright_banner
-from params import word_bytes
-
+from spec import word_bytes
 
 # Get type sizes and inject them into instruction_gen
 from type_sizes import type_sizes
@@ -51,10 +50,10 @@ code.append('''
 for lib in LibInstructions:
     code.append('')
     code.append(f'''\
-        static mit_word trap_{lib.name.lower()}(mit_word function, mit_word *stack, mit_uword *stack_depth_ptr)
+        static mit_word_t trap_{lib.name.lower()}(mit_word_t function, mit_word_t *stack, mit_uword_t *stack_depth_ptr)
         {{
-            mit_uword stack_depth = *stack_depth_ptr;
-            mit_word error = MIT_ERROR_OK;'''
+            mit_uword_t stack_depth = *stack_depth_ptr;
+            mit_word_t error = MIT_ERROR_OK;'''
     )
     code.append('')
 
@@ -74,10 +73,10 @@ for lib in LibInstructions:
 
 code.append('')
 code.append('''\
-    mit_word mit_trap(mit_word code, mit_word *stack, mit_uword *stack_depth_ptr)
+    mit_word_t mit_trap(mit_word_t code, mit_word_t *stack, mit_uword_t *stack_depth_ptr)
     {
-        mit_uword stack_depth = *stack_depth_ptr;
-        mit_word error = MIT_ERROR_OK;'''
+        mit_uword_t stack_depth = *stack_depth_ptr;
+        mit_word_t error = MIT_ERROR_OK;'''
 )
 code.append('')
 

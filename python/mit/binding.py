@@ -16,7 +16,7 @@ from ctypes import (
     c_uint32, c_int32,
     c_uint64, c_int64,
     c_size_t,
-    pointer, POINTER, CFUNCTYPE, CDLL, Structure,
+    sizeof, pointer, POINTER, CFUNCTYPE, CDLL, Structure,
 )
 from ctypes.util import find_library
 
@@ -78,12 +78,8 @@ def errcheck(error_enum):
 
 
 # Constants (all of type unsigned)
-vars().update([(c, c_uint.in_dll(libmit, f"mit_{c}").value)
-               for c in [
-                       "word_bytes",
-                       "byte_bit", "byte_mask", "word_bit",
-                       "opcode_bit", "opcode_mask",
-               ]])
+word_bytes = sizeof(c_size_t)
+word_bit = word_bytes * 8
 sign_bit = 1 << (word_bit - 1)
 hex0x_word_width = word_bytes * 2 + 2 # Width of a hex word with leading "0x"
 
@@ -103,21 +99,13 @@ c_break_fn = CFUNCTYPE(c_word, POINTER(c_word), c_word, POINTER(c_word), c_uword
 
 
 # Constants that require VM types
-vars().update([(c, cty.in_dll(libmit, f"mit_{c}").value)
-               for (c, cty) in [
-                       ("word_mask", c_uword),
-                       ("uword_max", c_uword),
-                       ("word_min", c_word),
-                       ("word_max", c_word),
-               ]])
+uword_max = c_uword(-1).value
 
 
-# Functions
+# Functions from mit.h
 
 # Errors
 mit_error = errcheck(MitErrorCode)
-
-# mit.h
 
 # Bind `mit_run` as a function and as a function pointer, because
 # for some reason we can't call it when bound as a pointer.
@@ -150,7 +138,7 @@ def is_aligned(addr):
 
 def sign_extend(x):
     if x & sign_bit:
-        x |= -1 & ~word_mask
+        x |= -1 & ~uword_max
     return x
 
 vars().update([(c, cty.in_dll(libmit, f"mit_{c}"))

@@ -112,12 +112,12 @@ Option('version',
        'display version information and exit',
        parse_code=Code('''\
            {
-               printf(PACKAGE_NAME " " VERSION " (%d-byte word, %s-endian)\\n"
+               printf(PACKAGE_NAME " " VERSION " (%zu-byte word, %s-endian)\\n"
                       "Copyright (c) Mit authors 1994-2020.\\n"
                       PACKAGE_NAME " comes with ABSOLUTELY NO WARRANTY.\\n"
                       "You may redistribute copies of " PACKAGE_NAME "\\n"
                       "under the terms of the MIT/X11 License.\\n",
-                      MIT_WORD_BYTES, ENDISM_STRING);
+                      sizeof(mit_word_t), ENDISM_STRING);
                exit(EXIT_SUCCESS);
            }
        ''')
@@ -248,14 +248,14 @@ struct option longopts[] = {''',
               '''\
 };
 
-static mit_uword parse_num_words(const char *errfmt)
+static mit_uword_t parse_num_words(const char *errfmt)
 {
-    size_t max = SIZE_MAX / MIT_WORD_BYTES;
+    size_t max = SIZE_MAX / sizeof(mit_word_t);
     char *endptr;
     uintmax_t size = strtoumax(optarg, &endptr, 10);
     if (*optarg == '\\0' || *endptr != '\\0' || size == 0 || size > (uintmax_t)max)
         die(errfmt, max);
-    return (mit_uword)size;
+    return (mit_uword_t)size;
 }
 
 static off_t fleno(FILE *fp)
@@ -285,8 +285,8 @@ static int skip_hashbang(FILE *fp)
 }
 
 // Global state
-mit_word *memory;
-mit_uword memory_words;
+mit_word_t *memory;
+mit_uword_t memory_words;
 const char *program_name;
 
 static void usage(void)
@@ -337,7 +337,7 @@ int main(int argc, char *argv[])
         usage();
 
     // Set up VM
-    memory = calloc(memory_words, MIT_WORD_BYTES);
+    memory = calloc(memory_words, sizeof(mit_word_t));
     if (memory == NULL)
         die("could not allocate virtual machine memory");
     mit_argc = argc;
@@ -354,7 +354,7 @@ int main(int argc, char *argv[])
         off_t len = fleno(fp);
         if (len == -1)
             die("error finding size of file %s", argv[0]);
-        if ((size_t)len > memory_words * MIT_WORD_BYTES)
+        if ((size_t)len > memory_words * sizeof(mit_word_t))
             die("file %s is too big to fit in memory", argv[0]);
         if ((off_t)fread(memory, 1, len, fp) != len)
             die("error reading file %s", argv[0]);
@@ -363,7 +363,7 @@ int main(int argc, char *argv[])
     }
 
     // Run
-    mit_word error;
+    mit_word_t error;
     error = mit_run(memory);
 
     if (error < 0 && error >= -127) {

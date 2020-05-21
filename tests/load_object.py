@@ -25,8 +25,8 @@ def try_load(file):
 def word_to_bytes(w):
     l = []
     for i in range(word_bytes):
-        l.append(w & byte_mask)
-        w >>= byte_bit
+        l.append(w & 0xff)
+        w >>= 8
     if sys.byteorder == 'big':
         l.reverse()
     return bytes(l)
@@ -34,7 +34,7 @@ def word_to_bytes(w):
 def test_word():
     w = 0
     for i in range(word_bytes):
-        w = w << byte_bit | (i + 1)
+        w = w << 8 | (i + 1)
     return w
 
 def object_file(word_bytes=word_bytes):

@@ -15,6 +15,7 @@ from mit_test import *
 
 
 # Extra constants
+byte_bit = 8
 top_byte_set = -1 << (word_bit - byte_bit)
 second_byte_set = 0xff << (word_bit - 2 * byte_bit)
 penultimate_byte_set = 0xff << byte_bit

@@ -26,18 +26,18 @@
 // quantities is implementation-defined in C99).
 #if HAVE_ARITHMETIC_RSHIFT
 #define ARSHIFT(n, p) \
-    ((mit_word)(n) >> (p))
+    ((mit_word_t)(n) >> (p))
 #else
 #define ARSHIFT(n, p) \
-    (((n) >> (p)) | ((mit_uword)(-((mit_word)(n) < 0)) << (MIT_WORD_BIT - (p))))
+    (((n) >> (p)) | ((mit_uword_t)(-((mit_word_t)(n) < 0)) << (MIT_WORD_BIT - (p))))
 #endif
 
 // Pop a stack item into a variable.
 #define POP(var)                                        \
-    mit_uword var;                                      \
+    mit_uword_t var;                                    \
     if (stack_depth < 1)                                \
         RAISE(MIT_ERROR_INVALID_STACK_READ);            \
-    var = *mit_stack_pos(stack, stack_depth, 0);      \
+    var = *mit_stack_pos(stack, stack_depth, 0);        \
     stack_depth--;
 
 // Raise an error during the execution of an instruction.
@@ -55,9 +55,9 @@
 // Perform the action of JUMP.
 #define DO_JUMP                                         \
     do {                                                \
-        if (unlikely(addr % MIT_WORD_BYTES != 0))       \
+        if (unlikely(addr % sizeof(mit_word_t) != 0))   \
             RAISE(MIT_ERROR_UNALIGNED_ADDRESS);         \
-        pc = (mit_word *)addr;                          \
+        pc = (mit_word_t *)addr;                        \
     } while (0)
 
 // Perform the action of JUMPI.
@@ -75,7 +75,7 @@
         if (callee_nargs > stack_depth || stack_depth - callee_nargs < callee_nres) \
             RAISE(MIT_ERROR_INVALID_STACK_READ);                        \
         stack_depth -= callee_nargs;                                    \
-        run_inner((mit_word *)addr, 0, stack, callee_nargs, callee_nres, jmp_buf_ptr); \
+        run_inner((mit_word_t *)addr, 0, stack, callee_nargs, callee_nres, jmp_buf_ptr); \
         ir = 0; /* Set `ir` to 0 as part of `ret`. */                   \
     } while (0)
 

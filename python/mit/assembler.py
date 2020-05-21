@@ -11,7 +11,7 @@ RISK.
 
 from .binding import (
     is_aligned, sign_extend,
-    word_bit, word_bytes, word_mask, opcode_bit, opcode_mask,
+    word_bit, word_bytes, uword_max,
 )
 from .enums import Instructions as I, TERMINAL_OPCODES
 
@@ -68,7 +68,7 @@ class Assembler:
             self.state.M[self.pc] = b
             self.pc += 1
         # Align `pc`
-        self.pc = ((self.pc - 1) & word_mask) + word_bytes
+        self.pc = ((self.pc - 1) & uword_max) + word_bytes
 
     def _fetch(self):
         '''
@@ -86,11 +86,11 @@ class Assembler:
         if operand is not None:
             operand = int(operand)
         i = sign_extend(self.state.M_word[self.i_addr])
-        i |= (opcode << self.i_shift) | ((operand or 0) << (self.i_shift + opcode_bit))
-        i &= word_mask
+        i |= (opcode << self.i_shift) | ((operand or 0) << (self.i_shift + 8))
+        i &= uword_max
         i = sign_extend(i)
-        if ((i >> self.i_shift) & opcode_mask == opcode and
-            (operand is None or i >> (self.i_shift + opcode_bit) == operand)
+        if ((i >> self.i_shift) & 0xff == opcode and
+            (operand is None or i >> (self.i_shift + 8) == operand)
         ):
             return i
         return None
@@ -99,13 +99,13 @@ class Assembler:
         '''
         Appends an instruction opcode.
 
-         - opcode - An Instruction or an `opcode_bit`-bit integer.
+         - opcode - An Instruction or an 8-bit integer.
          - operand - int - if `opcode` is `NEXT`, `JUMP`, `JUMPZ` or
            `CALL`, the rest of the instruction word.
         '''
         # Compute the extended opcode.
         opcode = int(opcode)
-        assert 0 <= opcode <= opcode_mask
+        assert 0 <= opcode <= 0xff
         if operand is not None:
             assert opcode in TERMINAL_OPCODES
 
@@ -123,7 +123,7 @@ class Assembler:
         self.state.M_word[self.i_addr] = i
 
         # Advance `self.i_shift` past used bits.
-        self.i_shift += opcode_bit
+        self.i_shift += 8
         if opcode in TERMINAL_OPCODES:
             self.i_shift = word_bit
 
@@ -158,7 +158,7 @@ class Assembler:
         '''
         value = int(value)
         if not force_long and -32 <= value < 32:
-            self.instruction((I.PUSHI_0 + (value << 2)) & opcode_mask)
+            self.instruction((I.PUSHI_0 + (value << 2)) & 0xff)
         else:
             self.instruction(I.PUSH)
             self.word(value)
@@ -174,7 +174,7 @@ class Assembler:
             offset -= word_bytes
         offset_words = offset // word_bytes
         if not force_long and offset_words != -1 and -64 <= offset_words < 64:
-            self.instruction((I.PUSHRELI_0 + (offset_words << 1)) & opcode_mask)
+            self.instruction((I.PUSHRELI_0 + (offset_words << 1)) & 0xff)
         else:
             self.instruction(I.PUSHREL)
             self.word(offset)

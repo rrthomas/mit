@@ -19,7 +19,7 @@ from .binding import (
     run, run_ptr, run_simple, run_break, break_fn_ptr, # run_fast,
     stack_words,
     Error, VMError, is_aligned,
-    word_bytes, word_mask, opcode_mask,
+    word_bytes,
     c_word, c_uword, c_break_fn,
     hex0x_word_width, register_args,
 )

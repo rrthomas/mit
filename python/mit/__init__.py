@@ -29,12 +29,8 @@ from .enums import (
 from .trap_enums import LibC, LibInstructions
 from .binding import (
     Error, VMError,
-    word_bytes,
-    byte_bit, byte_mask,
-    word_bit, word_mask, sign_bit,
-    opcode_bit, opcode_mask,
-    c_uword, c_word,
-    word_min, word_max, uword_max,
+    c_uword, c_word, uword_max,
+    word_bytes, word_bit, sign_bit,
     is_aligned, register_args,
 )
 from .state import State

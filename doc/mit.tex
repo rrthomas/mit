@@ -123,8 +123,8 @@ Execution proceeds as follows:
 
 \begin{tabbing}
 \hspace{0.2in}\=rep\=eat\+\+ \\*
-let \textbf{opcode} be the least significant $8$ bits of {\tt ir} \\*
-shift {\tt ir} arithmetically $8$ bits to the right \\*
+let \textbf{opcode} be the least significant byte of {\tt ir} \\*
+shift {\tt ir} arithmetically one byte to the right \\*
 execute the instruction given by \textbf{opcode}, \\*
 \hspace{1em}or raise error $-1$ if the opcode is invalid \-
 \end{tabbing}
@@ -369,7 +369,7 @@ $-8$ if division by zero is attempted):
 \subsection{Instruction encoding}
 \label{encoding}
 
-Instructions are encoded as $8$-bit opcodes; opcodes are packed into words, which are executed starting at the least-significant bits. The opcodes have the following structure:
+Instructions are encoded as byte opcodes; opcodes are packed into words, which are executed starting at the least-significant bits. The opcodes have the following structure:
 
 \begin{center}
   \begin{bytefield}[endianness=big,bitwidth=2em]{8}

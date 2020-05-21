@@ -15,6 +15,7 @@ from mit_test import *
 
 
 # Test results
+byte_bit = 8
 last_word = M_word.addr + (len(M_word) - 1) * word_bytes
 magic_number = 0xf201
 endism = 0 if byteorder == 'little' else 1
@@ -35,7 +36,7 @@ correct = [
     [0xf2, M.addr + len(M) - ((word_bytes - 1) * endism + 1)],
     [],
     [last_word],
-    [(0xf2 << (word_bit - byte_bit)) | magic_number | -(word_mask + 1)],
+    [(0xf2 << (word_bit - byte_bit)) | magic_number | -(uword_max + 1)],
 ]
 
 # Test code

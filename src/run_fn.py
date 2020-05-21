@@ -41,19 +41,19 @@ def run_inner_fn(name, instrument):
         ['-Wstack-protector'], # Stack protection cannot cope with VLAs.
         Code(f'''
         #define run_inner run_inner_{name}
-        static void run_inner_{name}(mit_word *pc, mit_word ir, mit_word *outer_stack, mit_uword nargs, mit_uword nres, jmp_buf *jmp_buf_ptr)
+        static void run_inner_{name}(mit_word_t *pc, mit_word_t ir, mit_word_t *outer_stack, mit_uword_t nargs, mit_uword_t nres, jmp_buf *jmp_buf_ptr)
         {{''',
             Code(*['''\
-            mit_word error;
-            mit_word stack[mit_stack_words];
+            mit_word_t error;
+            mit_word_t stack[mit_stack_words];
             if (outer_stack != NULL)
-                memcpy(stack, outer_stack, nargs * MIT_WORD_BYTES);
-            mit_uword stack_depth = nargs;
+                memcpy(stack, outer_stack, nargs * sizeof(mit_word_t));
+            mit_uword_t stack_depth = nargs;
 
             for (;;) {''',
             Code('''\
-                mit_byte opcode = ir & MIT_OPCODE_MASK;
-                ir = ARSHIFT(ir, MIT_OPCODE_BIT);
+                uint8_t opcode = (uint8_t)ir;
+                ir = ARSHIFT(ir, 8);
 
                 // Check stack_depth is valid
                 if (stack_depth > mit_stack_words)
@@ -88,10 +88,10 @@ def run_fn(name):
     '''
     return Code(f'''
         #define run_inner run_inner_{name}
-        mit_word mit_run_{name}(mit_word *pc)
+        mit_word_t mit_run_{name}(mit_word_t *pc)
         {{
             jmp_buf env;
-            mit_word error = (mit_word)setjmp(env);
+            mit_word_t error = (mit_word_t)setjmp(env);
             if (error == 0) {{
                 run_inner(pc, 0, NULL, 0, 0, &env);
                 error = MIT_ERROR_OK;

@@ -11,7 +11,7 @@ RISK.
 
 from .binding import (
     is_aligned, sign_extend,
-    word_bytes, word_bit, word_mask, sign_bit, opcode_bit, opcode_mask,
+    word_bytes, word_bit, uword_max, sign_bit,
     hex0x_word_width,
 )
 from .enums import Instructions, Instructions as I, ExtraInstructions
@@ -68,8 +68,8 @@ class Disassembler:
     def disassemble(self):
         try:
             comment = ''
-            opcode = self.ir & opcode_mask
-            self.ir >>= opcode_bit
+            opcode = self.ir & 0xff
+            self.ir >>= 8
             try:
                 name = mnemonic[opcode].lower()
             except KeyError:
@@ -77,11 +77,11 @@ class Disassembler:
             if opcode in (I.PUSH, I.PUSHREL):
                 initial_pc = self.pc
                 value = self._fetch()
-                unsigned_value = value & word_mask
+                unsigned_value = value & uword_max
                 if opcode == I.PUSH:
                     comment = f' ({unsigned_value:#x}={value})'
                 else: # opcode == I.PUSHREL
-                    comment = f' ({(initial_pc + value) & word_mask:#x})'
+                    comment = f' ({(initial_pc + value) & uword_max:#x})'
             elif opcode & 1 == 1 and opcode != I.NEXTFF: # PUSHRELI_N
                 value = (opcode - I.PUSHRELI_0) >> 1
                 if opcode & 0x80:

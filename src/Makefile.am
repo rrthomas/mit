@@ -11,7 +11,7 @@ AM_CPPFLAGS = -I$(abs_top_builddir)/lib -I$(abs_top_srcdir)/lib -I$(abs_builddir
 PYTHON_WITH_PATH = export PYTHONPATH=$(abs_top_srcdir)/python:$(abs_top_srcdir)/src:$(abs_top_builddir)/src:$(abs_top_srcdir)/src/specializer:$(abs_top_builddir)/src/specializer:$(abs_top_srcdir)/src/features:$(abs_top_builddir)/src/features; $(PYTHON)
 
 lib_LTLIBRARIES = libmit.la
-C_SRCS = constants.c args.c
+C_SRCS = args.c
 nodist_LIB_SRCS = include/mit/opcodes.h instructions.c
 pkgdata_DATA = spec.yaml
 LIB_CORE_SRCS = \
@@ -20,8 +20,7 @@ LIB_CORE_SRCS = \
 	stack.py \
 	spec.py \
 	code_util.py \
-	run_fn.py \
-	params.py.in
+	run_fn.py
 nodist_libmit_la_SOURCES = $(C_SRCS) $(nodist_LIB_SRCS)
 libmit_la_LIBADD = $(top_builddir)/lib/libgnu.la
 libmit_la_LDFLAGS = -no-undefined -export-symbols-regex '^mit_.*'
