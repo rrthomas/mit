@@ -40,6 +40,13 @@
     var = *mit_stack_pos(stack, stack_depth, 0);        \
     stack_depth--;
 
+// Push an expression to the stack.
+#define PUSH(expr)                                      \
+    if (mit_stack_words - stack_depth < 1)              \
+        RAISE(MIT_ERROR_INVALID_STACK_WRITE);           \
+    stack_depth++;                                      \
+    *mit_stack_pos(stack, stack_depth, 0) = (expr);
+
 // Raise an error during the execution of an instruction.
 // RAISE must be called before writing any state.
 #define RAISE(code)                                           \
@@ -75,7 +82,7 @@
         if (callee_nargs > stack_depth || stack_depth - callee_nargs < callee_nres) \
             RAISE(MIT_ERROR_INVALID_STACK_READ);                        \
         stack_depth -= callee_nargs;                                    \
-        run_inner((mit_word_t *)addr, 0, stack, callee_nargs, callee_nres, jmp_buf_ptr); \
+        run_inner((mit_word_t *)addr, 0, stack + stack_depth, callee_nargs, callee_nres, jmp_buf_ptr); \
         ir = 0; /* Set `ir` to 0 as part of `ret`. */                   \
     } while (0)
 

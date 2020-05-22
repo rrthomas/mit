@@ -68,7 +68,7 @@ class State:
            `run_fast`.
         '''
         run_ptr.contents = run_fn
-        run(self.pc)
+        run(self.pc, 0, 0, 0)
 
     def _step_plural(self, n):
         return "after {} step{}".format(n, 's' if n != 1 else '')
