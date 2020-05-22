@@ -20,7 +20,7 @@ from .binding import (
     stack_words,
     Error, VMError, is_aligned,
     word_bytes, uword_max,
-    c_word, c_uword, c_callback_fn,
+    c_word, c_uword, c_callback,
     hex0x_word_width, register_args,
 )
 from .memory import Memory
@@ -64,7 +64,7 @@ class State:
         '''
         Run until `halt` or error.
 
-         - run_fn - optional c_mit_fn - c_mit_fn to use. Defaults to
+         - run_fn - optional c_run_t - c_run_t to use. Defaults to
            `run_fast`.
         '''
         run_ptr.contents = run_fn
@@ -220,7 +220,7 @@ class BreakHandler:
     def __enter__(self):
         self._old_break_fn = break_fn_ptr.value if break_fn_ptr else None
         # Prevent c_break_fn being GC'ed.
-        self._new_break_fn = c_callback_fn(self.break_fn)
+        self._new_break_fn = c_callback(self.break_fn)
         # We need the actual C function entry point, not the address of the
         # Python object, which is what we would get from a `CFunctionType`.
         break_fn_ptr.value = cast(self._new_break_fn, c_void_p).value
@@ -233,7 +233,7 @@ class BreakHandler:
 
     def break_fn(self, pc, ir, stack, stack_depth):
         '''
-        This is a `mit_callback_fn` (see run.h).
+        This is a `mit_callback_t` (see run.h).
         '''
         pc = cast(pc, c_void_p).value
         self.state.pc = pc
