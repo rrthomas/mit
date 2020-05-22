@@ -34,6 +34,9 @@ typedef uintmax_t mit_max_stack_item_t;
 // The type of a function that mutates the VM
 typedef mit_word_t mit_fn(mit_word_t *pc);
 
+// The type of a function that runs in the context of a VM frame
+typedef mit_word_t mit_callback_fn(mit_word_t *pc, mit_word_t ir, mit_word_t * restrict stack, mit_uword_t *stack_depth_ptr);
+
 // Stack
 extern MIT_THREAD_LOCAL mit_uword_t mit_stack_words;
 // The stack is implemented as a `stack_words`-element array at `stack`.
@@ -68,7 +71,7 @@ mit_word_t mit_run_profile(mit_word_t *pc);
 int mit_profile_dump(int fd);
 /* Dump profiling information to file descriptor `fd`. */
 
-extern MIT_THREAD_LOCAL mit_word_t (*mit_break_fn)(mit_word_t *pc, mit_word_t ir, mit_word_t * restrict stack, mit_uword_t stack_depth);
+extern MIT_THREAD_LOCAL mit_callback_fn *mit_break_fn;
 mit_word_t mit_run_break(mit_word_t *pc);
 /* Like `mit_run_simple`, but calls `mit_break` after each instruction. */
 

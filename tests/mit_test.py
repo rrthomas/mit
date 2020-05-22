@@ -9,7 +9,7 @@
 
 import sys
 
-from mit.enums import MitErrorCode
+from mit.enums import MitErrorCode, Instructions
 from mit.binding import uword_max, sign_bit
 
 
@@ -17,14 +17,23 @@ def cast_to_word(n):
     return ((n + sign_bit) & uword_max) - sign_bit
 
 def run_test(name, state, correct):
-    correct.insert(0, [])
+    opcode = None
+    done = 0
     def test_callback(handler, stack):
-        nonlocal correct
-        correct_stack = list(map(cast_to_word, correct[handler.done]))
+        nonlocal correct, opcode, done
+        # Check results after each non-NEXT instruction.
+        previous_opcode = opcode
+        opcode = handler.state.ir & 0xff
+        if previous_opcode in (None, Instructions.NEXT, Instructions.NEXTFF):
+            return
+        correct_stack = list(map(cast_to_word, correct[done]))
         print(f"Data stack: {stack}")
         print(f"Correct stack: {correct_stack}\n")
         if correct_stack != list(stack):
             print(f"Error in {name} tests: pc = {handler.state.pc:#x}")
             sys.exit(1)
-    state.step(trace=True, n=len(correct), step_callback=test_callback)
+        done += 1
+        if done == len(correct):
+            return MitErrorCode.OK
+    state.step(trace=True, addr=0, step_callback=test_callback)
     print(f"{name.capitalize()} tests ran OK")

@@ -19,8 +19,8 @@ from .binding import (
     libmit, run, run_ptr, run_simple, run_fast, run_break, break_fn_ptr,
     stack_words,
     Error, VMError, is_aligned,
-    word_bytes,
-    c_word, c_uword, c_break_fn,
+    word_bytes, uword_max,
+    c_word, c_uword, c_callback_fn,
     hex0x_word_width, register_args,
 )
 from .memory import Memory
@@ -219,8 +219,8 @@ class BreakHandler:
 
     def __enter__(self):
         self._old_break_fn = break_fn_ptr.value if break_fn_ptr else None
-        # Avoid c_break_fn being GC'ed.
-        self._new_break_fn = c_break_fn(self.break_fn)
+        # Prevent c_break_fn being GC'ed.
+        self._new_break_fn = c_callback_fn(self.break_fn)
         # We need the actual C function entry point, not the address of the
         # Python object, which is what we would get from a `CFunctionType`.
         break_fn_ptr.value = cast(self._new_break_fn, c_void_p).value
@@ -233,15 +233,18 @@ class BreakHandler:
 
     def break_fn(self, pc, ir, stack, stack_depth):
         '''
-        The type of this method matches `mit_break_fn` in `run.h`.
+        This is a `mit_callback_fn` (see run.h).
         '''
-        self.state.pc = cast(pc, c_void_p).value
-        stack = (c_word * stack_words.value).from_address(cast(stack, c_void_p).value)[0:stack_depth]
+        pc = cast(pc, c_void_p).value
+        self.state.pc = pc
+        self.state.ir = ir
+        stack = (c_word * stack_words.value).from_address(
+            cast(stack, c_void_p).value
+        )[0:stack_depth.contents.value]
         if (self.addr is not None and self.state.pc != self.addr) or self.done < self.n:
             if self.trace:
-                self.log(f"pc={self.state.pc:#x} ir={ir:#x}")
                 self.log(f"{stack}")
-                self.log(f"instruction={Disassembler(self.state, ir=ir).disassemble()}")
+                self.log(f"pc={self.state.pc:#x} ir={ir & uword_max:#x} {Disassembler(self.state, ir=ir).disassemble()}")
             if self.step_callback is not None:
                 error = self.step_callback(self, stack)
                 if error is not None:

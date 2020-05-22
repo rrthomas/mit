@@ -53,12 +53,10 @@ code.extend(run_fn('simple'))
 code.append('')
 
 # `mit_run_break()`, for debugging.
-code.append('MIT_THREAD_LOCAL mit_word_t (*mit_break_fn)(mit_word_t *, mit_word_t, mit_word_t * restrict, mit_uword_t) = NULL;')
+code.append('MIT_THREAD_LOCAL mit_callback_fn *mit_break_fn = NULL;')
 code.extend(run_inner_fn('break', '''\
-        if (mit_break_fn != NULL &&
-            !(opcode != MIT_INSTRUCTIONS_NEXT && opcode != MIT_INSTRUCTIONS_NEXTFF &&
-              (ir == 0 || ir == -1))) {
-            error = mit_break_fn(pc, ir, stack, stack_depth);
+        if (mit_break_fn != NULL) {
+            error = mit_break_fn(pc, ir, stack, &stack_depth);
             if (error != MIT_ERROR_BREAK)
                 RAISE(error);
         }

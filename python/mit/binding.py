@@ -12,7 +12,7 @@ RISK.
 from ctypes import (
     c_ubyte, c_char_p, c_void_p,
     c_uint, c_int,
-    c_uint16, c_int16,
+    c_uint8,
     c_uint32, c_int32,
     c_uint64, c_int64,
     c_size_t,
@@ -92,10 +92,10 @@ elif word_bytes == 8:
     c_word = c_int64
     c_uword = c_uint64
 else:
-    raise Exception(f"Could not make Python C type matching WORD (size {word_bytes})")
+    raise Exception(f"word_bytes must be 4 or 8 and is {word_bytes}!")
 
 c_mit_fn = CFUNCTYPE(c_word, c_uword)
-c_break_fn = CFUNCTYPE(c_word, POINTER(c_word), c_word, POINTER(c_word), c_uword)
+c_callback_fn = CFUNCTYPE(c_word, POINTER(c_word), c_word, POINTER(c_word), POINTER(c_uword))
 
 
 # Constants that require VM types

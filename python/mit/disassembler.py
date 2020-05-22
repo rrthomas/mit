@@ -99,8 +99,6 @@ class Disassembler:
                 # Call `self._fetch()` later, not now.
                 if self.ir != -1:
                     comment = f' (trap {self.ir:#x})'
-                else:
-                    comment = ' (redundant!)'
                 self.ir = 0
             elif opcode in (I.JUMP, I.JUMPZ, I.CALL) and self.ir != 0:
                 # Call `self._fetch()` later, not now.

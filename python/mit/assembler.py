@@ -45,13 +45,6 @@ class Assembler:
         self.i_shift = 0
         return self.pc
 
-    def next_pc(self):
-        '''
-        Return the value of pc after executing the current instruction and any
-        implicit `next`.
-        '''
-        return self.pc + (word_bytes if self.i_shift == 0 else 0)
-
     def word(self, value):
         '''
         Writes a word with value `value` at `pc` and increments `pc`.

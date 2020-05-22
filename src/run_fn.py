@@ -51,6 +51,7 @@ def run_inner_fn(name, instrument):
             mit_uword_t stack_depth = nargs;
 
             for (;;) {''',
+            instrument,
             Code('''\
                 uint8_t opcode = (uint8_t)ir;
                 ir = ARSHIFT(ir, 8);
@@ -60,7 +61,6 @@ def run_inner_fn(name, instrument):
                     RAISE(MIT_ERROR_STACK_OVERFLOW);'''
             ),
             run_body(),
-            instrument,
             Code('''\
             continue;
             '''),
