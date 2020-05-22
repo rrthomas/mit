@@ -31,11 +31,10 @@ typedef size_t mit_uword_t;
 // TODO: find largest type: bigger of long double and intmax_t?
 typedef uintmax_t mit_max_stack_item_t;
 
-// The type of a function that mutates the VM
-typedef mit_word_t mit_fn(mit_word_t *pc);
-
 // The type of a function that runs in the context of a VM frame
-typedef mit_word_t mit_callback_fn(mit_word_t *pc, mit_word_t ir, mit_word_t * restrict stack, mit_uword_t *stack_depth_ptr);
+typedef mit_word_t mit_callback_fn(mit_word_t *pc, mit_word_t ir,
+                                   mit_word_t * restrict stack,
+                                   mit_uword_t *stack_depth_ptr);
 
 // Stack
 extern MIT_THREAD_LOCAL mit_uword_t mit_stack_words;
@@ -46,33 +45,38 @@ extern MIT_THREAD_LOCAL mit_uword_t mit_stack_words;
 
 // VM control
 
-extern MIT_THREAD_LOCAL mit_fn *mit_run;
+// The type of a function that executes VM code.
+typedef mit_word_t mit_run_fn(mit_word_t *pc,
+                              mit_word_t * restrict args_base,
+                              unsigned nargs, unsigned nres);
+
+extern MIT_THREAD_LOCAL mit_run_fn *mit_run;
 /* Execute VM code. Defaults to `mit_run_simple`. Can be set to any
    compatible function, which thereby propagates to nested VMs via the `RUN`
    extra instruction. This allows a different implementation (optimized,
    profiling) to be used globally.
 */
 
-mit_word_t mit_run_simple(mit_word_t *pc);
+mit_run_fn mit_run_simple;
 /* Start the execution cycle in the given state as described in the spec.
    If an error is raised, the code is returned.
 
    This is a naive implementation.
 */
 
-mit_word_t mit_run_fast(mit_word_t *pc);
+mit_run_fn mit_run_fast;
 /* Like `mit_run_simple`, but (hopefully) faster. */
 
 // N.B. The profiler is per-thread.
 void mit_profile_reset(void);
 /* Clears the profile. */
-mit_word_t mit_run_profile(mit_word_t *pc);
+mit_run_fn mit_run_profile;
 /* Like `mit_run_fast`, but records profiling information. */
 int mit_profile_dump(int fd);
 /* Dump profiling information to file descriptor `fd`. */
 
 extern MIT_THREAD_LOCAL mit_callback_fn *mit_break_fn;
-mit_word_t mit_run_break(mit_word_t *pc);
+mit_run_fn mit_run_break;
 /* Like `mit_run_simple`, but calls `mit_break` after each instruction. */
 
 extern int mit_argc;

@@ -94,7 +94,8 @@ elif word_bytes == 8:
 else:
     raise Exception(f"word_bytes must be 4 or 8 and is {word_bytes}!")
 
-c_mit_fn = CFUNCTYPE(c_word, c_uword)
+# Bind pointers as `c_uword` to make it easier to pass.
+c_mit_fn = CFUNCTYPE(c_word, c_uword, c_uword, c_uword, c_uword)
 c_callback_fn = CFUNCTYPE(c_word, POINTER(c_word), c_word, POINTER(c_word), POINTER(c_uword))
 
 
@@ -125,8 +126,8 @@ vars().update([(c, cty.in_dll(libmit, f"mit_{c}"))
                ]])
 
 # Cannot add errcheck to a CFUNCTYPE, so wrap it manually.
-def run(pc):
-    return mit_error(_run(pc))
+def run(pc, args_base, nargs, nres):
+    return mit_error(_run(pc, args_base, nargs, nres))
 
 # libmit.mit_profile_reset.restype = None
 # libmit.mit_profile_reset.argtypes = None

@@ -41,7 +41,7 @@ code.append('''
     #include "run.h"
 
 
-    MIT_THREAD_LOCAL mit_fn *mit_run = mit_run_simple;
+    MIT_THREAD_LOCAL mit_run_fn *mit_run = mit_run_simple;
     MIT_THREAD_LOCAL mit_uword_t mit_stack_words = 32;
 '''
 )

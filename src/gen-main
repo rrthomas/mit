@@ -364,7 +364,7 @@ int main(int argc, char *argv[])
 
     // Run
     mit_word_t error;
-    error = mit_run(memory);
+    error = mit_run(memory, NULL, 0, 0);
 
     if (error < 0 && error >= -127) {
         warn("error %zd: %s", error, error_to_msg(error));

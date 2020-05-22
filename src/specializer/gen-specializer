@@ -294,8 +294,8 @@ def gen_body_code(profiling=False):
     code.append('''\
         mit_uword_t stack_words = mit_stack_words;
         mit_word_t stack[mit_stack_words];
-        if (outer_stack != NULL)
-            memcpy(stack, outer_stack, nargs * sizeof(mit_word_t));
+        if (args_base != NULL)
+            memcpy(stack, args_base, nargs * sizeof(mit_word_t));
         mit_uword_t stack_depth = nargs;
         mit_word_t error = MIT_ERROR_BREAK;
     ''')
@@ -424,7 +424,7 @@ for profiling, fn in [
     code.extend(disable_warnings(
         ['-Wstack-protector'], # Stack protection cannot cope with VLAs.
         Code(
-            f'static mit_word_t run_inner_{fn}(mit_word_t *pc, mit_word_t ir, mit_word_t *outer_stack, mit_word_t nargs, mit_word_t nres, jmp_buf *jmp_buf_ptr) {{',
+            f'static mit_word_t run_inner_{fn}(mit_word_t *pc, mit_word_t ir, mit_word_t *args_base, mit_word_t nargs, mit_word_t nres, jmp_buf *jmp_buf_ptr) {{',
                 gen_body_code(profiling),
             '}',
         )

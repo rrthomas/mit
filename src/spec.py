@@ -180,7 +180,7 @@ instructions = [
         'name': 'RET',
         'effect': None,
         'code': Code('''\
-            memcpy(outer_stack, stack + stack_depth - nres, nres * sizeof(mit_word_t));
+            memcpy(args_base, stack + stack_depth - nres, nres * sizeof(mit_word_t));
             // For `RET_ERROR`, see run_fn.py.
             return RET_ERROR; // `call` sets `pc` and `ir` on return from `run_inner()`.
         '''),
@@ -455,11 +455,21 @@ class ExtraInstructions(ActionEnum):
         0x1,
     )
 
-    # FIXME: Must take arguments and returns, like CALL. CATCH?
     RUN = (
         Action(
-            StackEffect.of(['inner_pc:mit_word_t *'], ['ret']),
-            Code('ret = mit_run(inner_pc);'),
+            None,
+            Code('''\
+                POP(inner_nres);
+                POP(inner_nargs);
+                POP(inner_pc);
+                if (inner_nargs > stack_depth)
+                    RAISE(MIT_ERROR_INVALID_STACK_READ);
+                if (inner_nres > mit_stack_words || inner_nres + 1 > mit_stack_words ||
+                    mit_stack_words - (stack_depth - inner_nargs) < inner_nres + 1)
+                    RAISE(MIT_ERROR_INVALID_STACK_WRITE);
+                mit_word_t ret = mit_run((mit_word_t *)inner_pc, stack + inner_nargs, inner_nargs, inner_nres);
+                PUSH(ret);
+            '''),
         ),
         0x11,
     )
