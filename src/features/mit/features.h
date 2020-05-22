@@ -15,6 +15,6 @@
 #ifndef MIT_FEATURES_H
 #define MIT_FEATURES_H
 
-mit_word_t mit_trap(mit_word_t code, mit_word_t * restrict stack, mit_uword_t *stack_depth_ptr);
+mit_callback_t mit_trap;
 
 #endif

@@ -73,8 +73,9 @@ for lib in LibInstructions:
 
 code.append('')
 code.append('''\
-    mit_word_t mit_trap(mit_word_t code, mit_word_t *stack, mit_uword_t *stack_depth_ptr)
+    mit_word_t mit_trap(mit_word_t *pc, mit_word_t ir, mit_word_t *stack, mit_uword_t *stack_depth_ptr)
     {
+        (void)pc;
         mit_uword_t stack_depth = *stack_depth_ptr;
         mit_word_t error = MIT_ERROR_OK;'''
 )
@@ -83,7 +84,7 @@ code.append('')
 body_code = Code()
 body_code.extend(LibInstructions.dispatch(Code(
     'return MIT_TRAP_ERROR_INVALID_LIBRARY;'
-), 'code'))
+), 'ir'))
 body_code.append('''\
     *stack_depth_ptr = stack_depth;
     return error;''')
