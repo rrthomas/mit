@@ -21,7 +21,7 @@ register_args(*args)
 
 # Test code
 buffer = M.addr + 0x200
-tests = [] # list of (start, end, final_callback_fn)
+tests = [] # list of (start, end, final_callback)
 
 # Test ARGC
 start = label()
