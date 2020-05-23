@@ -233,12 +233,12 @@ def gen_labels_code(profiling=False):
         //    C variables.
         //  - Before running the `Instructions.code` for an instruction,
         //    right-shift `ir`.
-        //  - When an error occurs, call `RAISE(code)`.
+        //  - When an error occurs, call `THROW(code)`.
         //    It sets `error` to the return code; then it resets `pc` and
         //    `ir` to their initial values, and does "goto error".
-        //  - On exit, whether by `RAISE` or otherwise, all Mit
+        //  - On exit, whether by `THROW` or otherwise, all Mit
         //    registers must be set according to the Mit spec. In particular,
-        //    there must be no side effects before a RAISE, except on `ir` and
+        //    there must be no side effects before a THROW, except on `ir` and
         //    `pc`, which will be reset as described above.
     '''))
     for label in labels:
@@ -272,7 +272,7 @@ def gen_labels_code(profiling=False):
         switch_code.append(case_code)
     switch_code.append('''\
         case 0:
-            RAISE_LONGJMP(error);
+            THROW_LONGJMP(error);
             break;
         default:
             assert(0); // Unreachable.
@@ -288,7 +288,6 @@ def gen_body_code(profiling=False):
     code = Code()
     code.append('''\
         mit_uword_t stack_words = mit_stack_words;
-        mit_uword_t stack_depth = *stack_depth_ptr;
         mit_word_t error = MIT_ERROR_BREAK;
     ''')
     if max_cached_depth > 0:
@@ -316,8 +315,6 @@ code.append(f'''
     #include "config.h"
 
     #include <assert.h>
-    #include <setjmp.h>
-    #include <string.h>
     #include <stdio.h>
     #include <unistd.h>
 
@@ -415,9 +412,12 @@ for profiling, fn in [
     code.extend(disable_warnings(
         ['-Wstack-protector'], # Stack protection cannot cope with VLAs.
         Code(
-            f'static void run_inner_{fn}(mit_word_t *pc, mit_word_t ir, mit_word_t * restrict stack, mit_uword_t *stack_depth_ptr, jmp_buf *jmp_buf_ptr) {{',
+            f'static void run_inner_{fn}(mit_word_t *pc, mit_word_t ir, mit_word_t * restrict stack, mit_uword_t * restrict stack_depth_ptr, jmp_buf *jmp_buf_ptr) {{',
+            '#define stack_depth (*stack_depth_ptr)',
                 gen_body_code(profiling),
-            '}',
+            '''\
+            #undef stack_depth
+            }''',
         )
     ))
     code.extend(run_fn(fn))

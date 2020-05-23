@@ -21,7 +21,7 @@ def run_body():
     '''
     return Instructions.dispatch(Code(
         '// Undefined instruction.',
-        'RAISE(MIT_ERROR_INVALID_OPCODE);'
+        'THROW(MIT_ERROR_INVALID_OPCODE);'
     ))
 
 def run_inner_fn(name, instrument):
@@ -37,10 +37,10 @@ def run_inner_fn(name, instrument):
         ['-Wstack-protector'], # TODO: Stack protection cannot cope with VLAs.
         Code(f'''
         #define run_inner run_inner_{name}
-        static void run_inner_{name}(mit_word_t *pc, mit_word_t ir, mit_word_t * restrict stack, mit_uword_t *stack_depth_ptr, jmp_buf *jmp_buf_ptr)
+        static void run_inner_{name}(mit_word_t *pc, mit_word_t ir, mit_word_t * restrict stack, mit_uword_t * restrict stack_depth_ptr, jmp_buf *jmp_buf_ptr)
         {{
-            mit_uword_t stack_words = mit_stack_words;
-            mit_uword_t stack_depth = *stack_depth_ptr;''',
+            #define stack_depth (*stack_depth_ptr)
+            mit_uword_t stack_words = mit_stack_words;''',
         Code(*['''\
             mit_word_t error;
 
@@ -52,17 +52,19 @@ def run_inner_fn(name, instrument):
 
                 // Check stack_depth is valid
                 if (stack_depth > stack_words)
-                    RAISE(MIT_ERROR_STACK_OVERFLOW);'''
+                    THROW(MIT_ERROR_STACK_OVERFLOW);'''
             ),
             run_body(),
             Code('continue;'),
             '''}
 
             error:
-            RAISE_LONGJMP(error);'''
+            THROW_LONGJMP(error);'''
         ]),
-        '}',
-        '#undef run_inner',
+        '''\
+        #undef stack_depth
+        }
+        #undef run_inner''',
     ))
 
 def run_fn(name):
@@ -82,7 +84,7 @@ def run_fn(name):
                 run_inner(pc, ir, stack, stack_depth_ptr, &env);
                 error = MIT_ERROR_OK;
             }} else if (error == MIT_ERROR_BREAK)
-                // Translate MIT_ERROR_BREAK as 0; see RAISE_LONGJMP in run.h.
+                // Translate MIT_ERROR_BREAK as 0; see THROW_LONGJMP in run.h.
                 error = 0;
             return error;
         }}

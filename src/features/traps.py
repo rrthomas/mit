@@ -150,7 +150,7 @@ class LibraryEnum(ActionEnum):
             f'''
                 int ret = trap_{self.name.lower()}(function, stack, &stack_depth);
                 if (ret != 0)
-                    RAISE(ret);
+                    THROW(ret);
             }}'''
         )), opcode=opcode)
         self.library = library

@@ -11,6 +11,10 @@
 #define MIT_RUN_H
 
 
+#include <string.h>
+#include <setjmp.h>
+
+
 // Optimization
 // Hint that `x` is usually true/false.
 // https://gcc.gnu.org/onlinedocs/gcc/Other-Builtins.html
@@ -36,20 +40,20 @@
 #define POP(var)                                        \
     mit_uword_t var;                                    \
     if (stack_depth < 1)                                \
-        RAISE(MIT_ERROR_INVALID_STACK_READ);            \
+        THROW(MIT_ERROR_INVALID_STACK_READ);            \
     var = *mit_stack_pos(stack, stack_depth, 0);        \
     stack_depth--;
 
 // Push an expression to the stack.
 #define PUSH(expr)                                      \
     if (stack_words - stack_depth < 1)                  \
-        RAISE(MIT_ERROR_INVALID_STACK_WRITE);           \
+        THROW(MIT_ERROR_INVALID_STACK_WRITE);           \
     stack_depth++;                                      \
     *mit_stack_pos(stack, stack_depth, 0) = (expr);
 
 // Raise an error during the execution of an instruction.
-// RAISE must be called before writing any state.
-#define RAISE(code)                                           \
+// THROW must be called before writing any state.
+#define THROW(code)                                           \
     do {                                                      \
         error = (code);                                       \
         goto error;                                           \
@@ -57,7 +61,7 @@
 
 // We must not return 0 with longjmp(), so instead return MIT_ERROR_BREAK,
 // which cannot be returned by `mit_run()`.
-#define RAISE_LONGJMP(error)                                    \
+#define THROW_LONGJMP(error)                                    \
     longjmp(*jmp_buf_ptr, error ? error : MIT_ERROR_BREAK);
 
 // Perform the action of `next`.
@@ -68,7 +72,7 @@
 #define DO_JUMP(addr)                                   \
     do {                                                \
         if (unlikely((addr) % sizeof(mit_word_t) != 0)) \
-            RAISE(MIT_ERROR_UNALIGNED_ADDRESS);         \
+            THROW(MIT_ERROR_UNALIGNED_ADDRESS);         \
         pc = (mit_word_t *)(addr);                      \
     } while (0)
 
@@ -81,24 +85,24 @@
 
 // Perform the action of `call` or `catch`. `run_function` gives the `mit_fn` to
 // call, and can be an assignment (used for `catch`).
-#define DO_CALL(addr, nargs, nres, CALL_RUN)                            \
+#define DO_CALL_ARGS(nargs, nres)                                     \
+    if (nargs > stack_depth)                                          \
+        THROW(MIT_ERROR_INVALID_STACK_READ);                          \
+    if (nres > stack_words - (stack_depth - nargs))                   \
+        THROW(MIT_ERROR_INVALID_STACK_WRITE);                         \
+    mit_word_t inner_stack[stack_words];                              \
+    mit_uword_t inner_stack_depth = nargs;                            \
+    memcpy(inner_stack, mit_stack_pos(stack, stack_depth, nargs - 1), \
+           nargs * sizeof(mit_word_t));                               \
+    stack_depth -= nargs;                                             \
+
+// Perform the rest of the action of `ret`.
+#define DO_CALL_RESULTS(nres)                                           \
     do {                                                                \
-        if (nargs > stack_depth)                                        \
-            RAISE(MIT_ERROR_INVALID_STACK_READ);                        \
-        if (nres > stack_words - (stack_depth - nargs))                 \
-            RAISE(MIT_ERROR_INVALID_STACK_WRITE);                       \
-        mit_word_t inner_stack[stack_words];                            \
-        mit_uword_t inner_stack_depth = nargs;                          \
-        memcpy(inner_stack, mit_stack_pos(stack, stack_depth, nargs - 1), \
-               nargs * sizeof(mit_word_t));                             \
-        stack_depth -= nargs;                                           \
-        CALL_RUN;                                                       \
-        /* Perform the rest of the action of `ret`. */                  \
         memcpy(stack + stack_depth,                                     \
                mit_stack_pos(inner_stack, inner_stack_depth, nres - 1), \
                nres * sizeof(mit_word_t));                              \
-        ir = 0; /* Set `ir` to 0 as part of `ret`. */                   \
+        stack_depth += nres;                                            \
     } while (0)
-
 
 #endif

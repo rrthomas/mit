@@ -16,7 +16,7 @@ from mit.globals import *
 final_pc = M.addr + word_bytes
 error_code = 42
 lit(error_code)
-extra(HALT)
+extra(THROW)
 
 # Test
 try:

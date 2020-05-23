@@ -32,9 +32,6 @@ code.append('''
 
     #include "config.h"
 
-    #include <setjmp.h>
-    #include <string.h>
-
     #include "mit/mit.h"
     #include "mit/features.h"
 
@@ -58,7 +55,7 @@ code.extend(run_inner_fn('break', '''\
         if (mit_break_fn != NULL) {
             error = mit_break_fn(pc, ir, stack, &stack_depth);
             if (error != MIT_ERROR_BREAK)
-                RAISE(error);
+                THROW(error);
         }
 '''))
 code.extend(run_fn('break'))
