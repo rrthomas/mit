@@ -41,7 +41,7 @@ code.append('''
     #include "run.h"
 
 
-    MIT_THREAD_LOCAL mit_run_t *mit_run = mit_run_simple;
+    MIT_THREAD_LOCAL mit_fn_t *mit_run = mit_run_simple;
     MIT_THREAD_LOCAL mit_uword_t mit_stack_words = 32;
 '''
 )
@@ -53,7 +53,7 @@ code.extend(run_fn('simple'))
 code.append('')
 
 # `mit_run_break()`, for debugging.
-code.append('MIT_THREAD_LOCAL mit_callback_t *mit_break_fn = NULL;')
+code.append('MIT_THREAD_LOCAL mit_fn_t *mit_break_fn = NULL;')
 code.extend(run_inner_fn('break', '''\
         if (mit_break_fn != NULL) {
             error = mit_break_fn(pc, ir, stack, &stack_depth);

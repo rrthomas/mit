@@ -15,6 +15,6 @@
 #ifndef MIT_FEATURES_H
 #define MIT_FEATURES_H
 
-mit_callback_t mit_trap;
+mit_fn_t mit_trap;
 
 #endif

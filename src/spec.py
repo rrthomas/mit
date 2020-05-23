@@ -134,7 +134,7 @@ instructions = [
     {
         'name': 'JUMP',
         'effect': StackEffect.of(['addr'], []),
-        'code': Code('DO_JUMP;'),
+        'code': Code('DO_JUMP(addr);'),
         'opcode': 0x4,
         'terminal': Action(
             StackEffect.of([], []),
@@ -147,7 +147,7 @@ instructions = [
         'effect': StackEffect.of(['flag', 'addr'], []),
         'code': Code('''\
             if (flag == 0)
-                DO_JUMP;'''),
+                DO_JUMP(addr);'''),
         'opcode': 0x5,
         'terminal': Action(
             StackEffect.of(['flag'], []),
@@ -164,14 +164,18 @@ instructions = [
             POP(addr);
             if (unlikely(addr % sizeof(mit_word_t) != 0))
                RAISE(MIT_ERROR_UNALIGNED_ADDRESS);
-            DO_CALL(addr);
+            POP(nres);
+            POP(nargs);
+            DO_CALL(addr, nargs, nres, run_inner((mit_word_t *)addr, 0, inner_stack, &inner_stack_depth, jmp_buf_ptr));
         '''),
         'opcode': 0x6,
         'terminal': Action(
             None,
             Code('''\
                 mit_word_t addr = (mit_uword_t)(pc + ir);
-                DO_CALL(addr);
+                POP(nres);
+                POP(nargs);
+                DO_CALL(addr, nargs, nres, run_inner((mit_word_t *)addr, 0, inner_stack, &inner_stack_depth, jmp_buf_ptr));
         '''),
         ),
     },
@@ -179,11 +183,9 @@ instructions = [
     {
         'name': 'RET',
         'effect': None,
-        'code': Code('''\
-            memcpy(args_base, stack + stack_depth - nres, nres * sizeof(mit_word_t));
-            // For `RET_ERROR`, see run_fn.py.
-            return RET_ERROR; // `call` sets `pc` and `ir` on return from `run_inner()`.
-        '''),
+        # `call` performs the rest of the action of `ret` on return from
+        # `run_inner()`.
+        'code': Code('return;'),
         'opcode': 0x7,
     },
 
@@ -455,20 +457,15 @@ class ExtraInstructions(ActionEnum):
         0x1,
     )
 
-    RUN = (
+    CATCH = (
         Action(
             None,
             Code('''\
-                POP(inner_nres);
-                POP(inner_nargs);
-                POP(inner_pc);
-                if (inner_nargs > stack_depth)
-                    RAISE(MIT_ERROR_INVALID_STACK_READ);
-                if (inner_nres > mit_stack_words || inner_nres + 1 > mit_stack_words ||
-                    mit_stack_words - (stack_depth - inner_nargs) < inner_nres + 1)
-                    RAISE(MIT_ERROR_INVALID_STACK_WRITE);
-                mit_word_t ret = mit_run((mit_word_t *)inner_pc, stack + inner_nargs, inner_nargs, inner_nres);
-                PUSH(ret);
+                POP(addr);
+                POP(nres);
+                POP(nargs);
+                DO_CALL(addr, nargs, nres, error = mit_run((mit_word_t *)addr, 0, inner_stack, &inner_stack_depth));
+                PUSH(error);
             '''),
         ),
         0x11,

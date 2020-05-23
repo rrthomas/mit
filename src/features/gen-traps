@@ -52,6 +52,7 @@ for lib in LibInstructions:
     code.append(f'''\
         static mit_word_t trap_{lib.name.lower()}(mit_word_t function, mit_word_t *stack, mit_uword_t *stack_depth_ptr)
         {{
+            mit_uword_t stack_words = mit_stack_words;
             mit_uword_t stack_depth = *stack_depth_ptr;
             mit_word_t error = MIT_ERROR_OK;'''
     )
