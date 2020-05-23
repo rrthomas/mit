@@ -45,6 +45,11 @@ class Assembler:
         self.i_shift = 0
         return self.pc
 
+    def goto(self, pc):
+        assert is_aligned(pc)
+        self.pc = pc
+        self.label()
+
     def word(self, value):
         '''
         Writes a word with value `value` at `pc` and increments `pc`.
@@ -61,14 +66,7 @@ class Assembler:
             self.state.M[self.pc] = b
             self.pc += 1
         # Align `pc`
-        self.pc = ((self.pc - 1) & uword_max) + word_bytes
-
-    def _fetch(self):
-        '''
-        Start a new word.
-        '''
-        self.i_addr = self.pc
-        self.word(0)
+        self.pc = ((self.pc - 1) & (word_bytes - 1)) + word_bytes
 
     def fit(self, opcode, operand):
         '''
@@ -104,13 +102,14 @@ class Assembler:
 
         # Start a new word if we need to.
         if self.i_shift == 0:
-            self._fetch()
+            self.i_addr = self.pc
+            self.word(0)
 
         # Store the extended opcode, starting a new word if necessary.
         i = self.fit(opcode, operand)
         if i is None: # Doesn't fit in the current word.
             self.label()
-            self._fetch()
+            self.word(0)
             i = self.fit(opcode, operand)
             assert i
         self.state.M_word[self.i_addr] = i
@@ -123,11 +122,6 @@ class Assembler:
         # If we finished a word, move to next.
         if self.i_shift == word_bit:
             self.label()
-
-    def goto(self, pc):
-        assert is_aligned(pc)
-        self.pc = pc
-        self.label()
 
     def jump_rel(self, addr, opcode=I.JUMP):
         '''
