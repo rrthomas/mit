@@ -254,7 +254,7 @@ def gen_labels_code(profiling=False):
             ir = ARSHIFT(ir, 8);
             #define run_inner run_inner_fast
     ''')
-    code.extend(run_body('error'))
+    code.append(run_body())
     code.append('''
             #undef run_inner
             continue;
@@ -272,12 +272,7 @@ def gen_labels_code(profiling=False):
         switch_code.append(case_code)
     switch_code.append('''\
         case 0:
-            // We mustn't return 0 with longjmp(), or the caller of setjmp will assume
-            // it has just executed setjmp, not longjmp. MIT_ERROR_BREAK cannot be
-            // returned by `mit_run()`, so use it to stand in for 0.
-            if (error == 0)
-                error = MIT_ERROR_BREAK;
-            longjmp(*jmp_buf_ptr, error);
+            RAISE_LONGJMP(error);
             break;
         default:
             assert(0); // Unreachable.
@@ -293,10 +288,7 @@ def gen_body_code(profiling=False):
     code = Code()
     code.append('''\
         mit_uword_t stack_words = mit_stack_words;
-        mit_word_t stack[mit_stack_words];
-        if (args_base != NULL)
-            memcpy(stack, args_base, nargs * sizeof(mit_word_t));
-        mit_uword_t stack_depth = nargs;
+        mit_uword_t stack_depth = *stack_depth_ptr;
         mit_word_t error = MIT_ERROR_BREAK;
     ''')
     if max_cached_depth > 0:
@@ -309,11 +301,10 @@ def gen_body_code(profiling=False):
                 for pos in reversed(range(max_cached_depth))
             )
         ))
-    code.append('do {')
+    code.append('for (;;) {')
     code.extend(gen_labels_code(profiling=profiling))
     code.append('''\
-        } while (error == MIT_ERROR_BREAK);
-        longjmp(*jmp_buf_ptr, error);
+        }
     ''')
     return code
 
@@ -424,7 +415,7 @@ for profiling, fn in [
     code.extend(disable_warnings(
         ['-Wstack-protector'], # Stack protection cannot cope with VLAs.
         Code(
-            f'static mit_word_t run_inner_{fn}(mit_word_t *pc, mit_word_t ir, mit_word_t *args_base, mit_word_t nargs, mit_word_t nres, jmp_buf *jmp_buf_ptr) {{',
+            f'static void run_inner_{fn}(mit_word_t *pc, mit_word_t ir, mit_word_t * restrict stack, mit_uword_t *stack_depth_ptr, jmp_buf *jmp_buf_ptr) {{',
                 gen_body_code(profiling),
             '}',
         )

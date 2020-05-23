@@ -395,6 +395,6 @@ def check_overflow(num_pops, num_pushes):
     # Ensure comparison will not overflow
     assert depth_change.count == 0
     return Code(f'''\
-        if (unlikely(mit_stack_words - stack_depth < {depth_change}))
+        if (unlikely(stack_words - stack_depth < {depth_change}))
             RAISE(MIT_ERROR_STACK_OVERFLOW);'''
     )

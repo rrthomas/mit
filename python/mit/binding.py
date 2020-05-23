@@ -94,9 +94,7 @@ elif word_bytes == 8:
 else:
     raise Exception(f"word_bytes must be 4 or 8 and is {word_bytes}!")
 
-# Bind pointers as `c_uword` to make it easier to pass.
-c_run = CFUNCTYPE(c_word, c_uword, c_uword, c_uword, c_uword)
-c_callback = CFUNCTYPE(c_word, POINTER(c_word), c_word, POINTER(c_word), POINTER(c_uword))
+c_mit_fn = CFUNCTYPE(c_word, POINTER(c_word), c_word, POINTER(c_word), POINTER(c_uword))
 
 
 # Constants that require VM types
@@ -110,8 +108,8 @@ mit_error = errcheck(MitErrorCode)
 
 # Bind `mit_run` as a function and as a function pointer, because
 # for some reason we can't call it when bound as a pointer.
-vars()["_run"] = c_run.in_dll(libmit, "mit_run")
-vars()["run_ptr"] = POINTER(c_run).in_dll(libmit, "mit_run")
+vars()["_run"] = c_mit_fn.in_dll(libmit, "mit_run")
+vars()["run_ptr"] = POINTER(c_mit_fn).in_dll(libmit, "mit_run")
 # `break_fn_ptr` must be bound as a `c_void_p` in order to be set to point
 # to a Python callback.
 vars()["break_fn_ptr"] = c_void_p.in_dll(libmit, "mit_break_fn")
@@ -119,15 +117,15 @@ vars()["stack_words_ptr"] = pointer(c_uword.in_dll(libmit, "mit_stack_words"))
 vars()["stack_words"] = c_uword.in_dll(libmit, "mit_stack_words")
 vars().update([(c, cty.in_dll(libmit, f"mit_{c}"))
                for (c, cty) in [
-                       ("run_simple", c_run),
-                       ("run_break", c_run),
-                       ("run_fast", c_run),
-                       ("run_profile", c_run),
+                       ("run_simple", c_mit_fn),
+                       ("run_break", c_mit_fn),
+                       ("run_fast", c_mit_fn),
+                       ("run_profile", c_mit_fn),
                ]])
 
 # Cannot add errcheck to a CFUNCTYPE, so wrap it manually.
-def run(pc, args_base, nargs, nres):
-    return mit_error(_run(pc, args_base, nargs, nres))
+def run(pc, ir, stack, stack_depth_ptr):
+    return mit_error(_run(pc, ir, stack, stack_depth_ptr))
 
 libmit.mit_profile_reset.restype = None
 libmit.mit_profile_reset.argtypes = None

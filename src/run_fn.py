@@ -11,7 +11,7 @@ from spec import Instructions
 from code_util import Code, disable_warnings
 
 
-def run_body(error=''):
+def run_body():
     '''
     Compute the instruction dispatch code for an inner run function.
 
@@ -19,14 +19,10 @@ def run_body(error=''):
        code is compiled into a `mit_fn`. `run_inner` functions have no
        return value.
     '''
-    return Code(
-        Code(f'#define RET_ERROR {error}'),
-        Instructions.dispatch(Code(
-            '// Undefined instruction.',
-            'RAISE(MIT_ERROR_INVALID_OPCODE);'
-        )),
-        Code(f'#undef RET_ERROR'),
-    )
+    return Instructions.dispatch(Code(
+        '// Undefined instruction.',
+        'RAISE(MIT_ERROR_INVALID_OPCODE);'
+    ))
 
 def run_inner_fn(name, instrument):
     '''
@@ -41,14 +37,12 @@ def run_inner_fn(name, instrument):
         ['-Wstack-protector'], # TODO: Stack protection cannot cope with VLAs.
         Code(f'''
         #define run_inner run_inner_{name}
-        static void run_inner_{name}(mit_word_t *pc, mit_word_t ir, mit_word_t *args_base, mit_uword_t nargs, mit_uword_t nres, jmp_buf *jmp_buf_ptr)
-        {{''',
-            Code(*['''\
+        static void run_inner_{name}(mit_word_t *pc, mit_word_t ir, mit_word_t * restrict stack, mit_uword_t *stack_depth_ptr, jmp_buf *jmp_buf_ptr)
+        {{
+            mit_uword_t stack_words = mit_stack_words;
+            mit_uword_t stack_depth = *stack_depth_ptr;''',
+        Code(*['''\
             mit_word_t error;
-            mit_word_t stack[mit_stack_words];
-            if (args_base != NULL)
-                memcpy(stack, args_base, nargs * sizeof(mit_word_t));
-            mit_uword_t stack_depth = nargs;
 
             for (;;) {''',
             instrument,
@@ -57,24 +51,16 @@ def run_inner_fn(name, instrument):
                 ir = ARSHIFT(ir, 8);
 
                 // Check stack_depth is valid
-                if (stack_depth > mit_stack_words)
+                if (stack_depth > stack_words)
                     RAISE(MIT_ERROR_STACK_OVERFLOW);'''
             ),
             run_body(),
-            Code('''\
-            continue;
-            '''),
-            '''\
-            }
+            Code('continue;'),
+            '''}
 
             error:
-            // We mustn't return 0 with longjmp(), or the caller of setjmp will assume
-            // it has just executed setjmp, not longjmp. MIT_ERROR_BREAK cannot be
-            // returned by `mit_run()`, so use it to stand in for 0.
-            if (error == 0)
-                error = MIT_ERROR_BREAK;
-            longjmp(*jmp_buf_ptr, error);''',
-            ]),
+            RAISE_LONGJMP(error);'''
+        ]),
         '}',
         '#undef run_inner',
     ))
@@ -88,19 +74,18 @@ def run_fn(name):
     '''
     return Code(f'''
         #define run_inner run_inner_{name}
-        mit_word_t mit_run_{name}(mit_word_t *pc, mit_word_t * restrict args_base, unsigned nargs, unsigned nres)
+        mit_word_t mit_run_{name}(mit_word_t *pc, mit_word_t ir, mit_word_t * restrict stack, mit_uword_t *stack_depth_ptr)
         {{
             jmp_buf env;
             mit_word_t error = (mit_word_t)setjmp(env);
             if (error == 0) {{
-                run_inner(pc, 0, args_base, nargs, nres, &env);
+                run_inner(pc, ir, stack, stack_depth_ptr, &env);
                 error = MIT_ERROR_OK;
             }} else if (error == MIT_ERROR_BREAK)
-                // Translate MIT_ERROR_BREAK as 0.
+                // Translate MIT_ERROR_BREAK as 0; see RAISE_LONGJMP in run.h.
                 error = 0;
             return error;
         }}
         #undef run_inner
         ''',
     )
-    return code
