@@ -17,8 +17,8 @@ from ctypes import create_string_buffer, byref, POINTER, cast, c_void_p
 from . import enums
 from .binding import (
     run, run_ptr, run_simple, run_break, break_fn_ptr, # run_fast,
-    stack_words,
     Error, VMError, is_aligned,
+    stack_words,
     word_bytes, uword_max,
     c_word, c_uword, c_mit_fn,
     hex0x_word_width, register_args,
@@ -33,7 +33,9 @@ class State:
     A VM state.
 
      - args - list of str - command-line arguments to register.
-     - memory - Memory - main memory.
+     - memory - Memory - the memory used. (The VM can use other memory, but
+       the block of memory supplied can be accessed conveniently from
+       Python.)
 
     Note: For some reason, an array created as a "multiple" of c_char does
     not have the right type. ctypes.create_string_buffer must be used.
@@ -46,19 +48,16 @@ class State:
         '''
         state = super().__new__(cls)
         if memory_words is not None:
-            state.set_memory(Memory(create_string_buffer(memory_words * word_bytes)))
+            state.M = Memory(create_string_buffer(memory_words * word_bytes))
+            state.M_word = Memory(state.M.buffer, element_size=word_bytes)
             state.pc = state.M.addr
         else:
             state.pc = None
         if args is not None:
             assert isinstance(args, list)
-            args.insert(0, b"mit-shell")
+            args.insert(0, b"python")
             register_args(*args)
         return state
-
-    def set_memory(self, memory):
-        self.M = memory
-        self.M_word = Memory(self.M.buffer, element_size=word_bytes)
 
     def run(self, run_fn=run_simple):
         '''
@@ -124,11 +123,16 @@ class State:
 
     def save(self, file, addr=None, length=None):
         '''
-        Save a binary file from the given address and length.
+        Save a binary image of the VM memory.
+
+         - addr - int - start address, defaults to `self.M.addr`.
+         - length - int - length in words, defaults to `len(self.M_word)`.
         '''
-        assert length is not None
         if addr is None:
             addr = self.M.addr
+            length = len(self.M_word)
+        else:
+            assert length is not None
         if (not is_aligned(addr) or
             addr < self.M.addr or addr + length * word_bytes > self.M.addr + len(self.M)):
             raise Error("invalid or unaligned address")
@@ -193,8 +197,9 @@ class BreakHandler:
     '''
     Callback provider for `mit_run()`'s `break_fn`.
 
-     - state - State - state to use and update
-     - n - int or None - number of instructions to run.
+     - state - State - state to use.
+     - n - int or None - number of instructions (including `next` and
+       `nextff`) to run.
      - addr - int or None - address to run to.
      - trace - bool - if true, print tracing information for each
        instruction.
@@ -204,9 +209,9 @@ class BreakHandler:
        return the default value.
      - final_callback - optional function - like `step_callback`, but called
        when the exit condition is reached.
-     - done - int - number of instructions run.
+     - done - int - number of instructions run so far.
 
-    If both are set, `addr` takes priority.
+    If both `addr` and `n` are set, `addr` takes priority.
     '''
     state: State
     n: int=1
