@@ -61,7 +61,7 @@ class State:
 
     def run(self, run_fn=run_simple):
         '''
-        Run until `halt` or error.
+        Run until execution halts.
 
          - run_fn - optional c_mit_fn - c_mit_fn to use. Defaults to
            `run_simple`.

@@ -60,7 +60,7 @@ for lib in LibInstructions:
 
     body_code = Code()
     body_code.extend(lib.library.dispatch(Code(
-        'RAISE(MIT_TRAP_ERROR_INVALID_FUNCTION);'
+        'THROW(MIT_TRAP_ERROR_INVALID_FUNCTION);'
     ), 'function'))
     body_code.append('')
     code.append(body_code)

@@ -152,8 +152,8 @@ def gen_case(instruction, cache_state):
     responsibility to ensure that it's the right instruction to execute, and
     that the stack won't underflow or overflow.
 
-    In the code, errors are reported by calling RAISE(). When calling
-    RAISE(), the C variable `cached_depth` will contain the number of stack
+    In the code, errors are reported by calling THROW(). When calling
+    THROW(), the C variable `cached_depth` will contain the number of stack
     items cached in C locals.
 
      - instruction - Instructions.
@@ -171,7 +171,7 @@ def gen_case(instruction, cache_state):
     # Load the arguments into their C variables.
     code.extend(cache_state.load_args(instruction.action.effect.args))
     # Inline `instruction.action.code`.
-    # Note: `stack_depth` and `cache_state` must be correct for RAISE().
+    # Note: `stack_depth` and `cache_state` must be correct for THROW().
     code.extend(instruction.action.code)
     # Update stack pointer and cache_state.
     code.append(f'stack_depth -= {num_args};')

@@ -104,7 +104,7 @@ instructions = [
                 {
                     mit_word_t inner_error = mit_trap(pc, ir, stack, &stack_depth);
                     if (inner_error != MIT_ERROR_OK)
-                        RAISE(inner_error);
+                        THROW(inner_error);
                 }
             '''),
         ),
@@ -163,10 +163,13 @@ instructions = [
         'code': Code('''\
             POP(addr);
             if (unlikely(addr % sizeof(mit_word_t) != 0))
-               RAISE(MIT_ERROR_UNALIGNED_ADDRESS);
+               THROW(MIT_ERROR_UNALIGNED_ADDRESS);
             POP(nres);
             POP(nargs);
-            DO_CALL(addr, nargs, nres, run_inner((mit_word_t *)addr, 0, inner_stack, &inner_stack_depth, jmp_buf_ptr));
+            DO_CALL_ARGS(nargs, nres);
+            run_inner((mit_word_t *)addr, 0, inner_stack, &inner_stack_depth, jmp_buf_ptr);
+            DO_CALL_RESULTS(nres);
+            ir = 0;
         '''),
         'opcode': 0x6,
         'terminal': Action(
@@ -175,7 +178,10 @@ instructions = [
                 mit_word_t addr = (mit_uword_t)(pc + ir);
                 POP(nres);
                 POP(nargs);
-                DO_CALL(addr, nargs, nres, run_inner((mit_word_t *)addr, 0, inner_stack, &inner_stack_depth, jmp_buf_ptr));
+                DO_CALL_ARGS(nargs, nres);
+                run_inner((mit_word_t *)addr, 0, inner_stack, &inner_stack_depth, jmp_buf_ptr);
+                DO_CALL_RESULTS(nres);
+                ir = 0;
         '''),
         ),
     },
@@ -183,8 +189,8 @@ instructions = [
     {
         'name': 'RET',
         'effect': None,
-        # `call` performs the rest of the action of `ret` on return from
-        # `run_inner()`.
+        # `call` or `catch` performs the rest of the action of `ret` on
+        # return from `run_inner()`.
         'code': Code('return;'),
         'opcode': 0x7,
     },
@@ -194,7 +200,7 @@ instructions = [
         'effect': StackEffect.of(['addr'], ['val']),
         'code': Code('''\
             if (unlikely(addr % sizeof(mit_word_t) != 0))
-                RAISE(MIT_ERROR_UNALIGNED_ADDRESS);
+                THROW(MIT_ERROR_UNALIGNED_ADDRESS);
             val = *(mit_word_t *)addr;
         '''),
         'opcode': 0x8,
@@ -205,7 +211,7 @@ instructions = [
         'effect': StackEffect.of(['val', 'addr'], []),
         'code': Code('''\
             if (unlikely(addr % sizeof(mit_word_t) != 0))
-                RAISE(MIT_ERROR_UNALIGNED_ADDRESS);
+                THROW(MIT_ERROR_UNALIGNED_ADDRESS);
             *(mit_word_t *)addr = val;
         '''),
         'opcode': 0x9,
@@ -230,7 +236,7 @@ instructions = [
         'effect': StackEffect.of(['addr'], ['val']),
         'code': Code('''\
             if (unlikely(addr % 2 != 0))
-                RAISE(MIT_ERROR_UNALIGNED_ADDRESS);
+                THROW(MIT_ERROR_UNALIGNED_ADDRESS);
             val = (mit_uword_t)*((uint16_t *)addr);
         '''),
         'opcode': 0xc,
@@ -241,7 +247,7 @@ instructions = [
         'effect': StackEffect.of(['val', 'addr'], []),
         'code': Code('''\
             if (unlikely(addr % 2 != 0))
-                RAISE(MIT_ERROR_UNALIGNED_ADDRESS);
+                THROW(MIT_ERROR_UNALIGNED_ADDRESS);
             *(uint16_t *)addr = (uint16_t)val;
         '''),
         'opcode': 0xd,
@@ -252,7 +258,7 @@ instructions = [
         'effect': StackEffect.of(['addr'], ['val']),
         'code': Code('''\
             if (unlikely(addr % 4 != 0))
-                RAISE(MIT_ERROR_UNALIGNED_ADDRESS);
+                THROW(MIT_ERROR_UNALIGNED_ADDRESS);
             val = (mit_uword_t)*((uint32_t *)addr);
         '''),
         'opcode': 0xe,
@@ -263,7 +269,7 @@ instructions = [
         'effect': StackEffect.of(['val', 'addr'], []),
         'code': Code('''\
             if (unlikely(addr % 4 != 0))
-                RAISE(MIT_ERROR_UNALIGNED_ADDRESS);
+                THROW(MIT_ERROR_UNALIGNED_ADDRESS);
             *(uint32_t *)addr = (uint32_t)val;
         '''),
         'opcode': 0xf,
@@ -381,7 +387,7 @@ instructions = [
         'effect': StackEffect.of(['a', 'b'], ['q', 'r']),
         'code': Code('''\
             if (b == 0)
-                RAISE(MIT_ERROR_DIVISION_BY_ZERO);
+                THROW(MIT_ERROR_DIVISION_BY_ZERO);
             q = a / b;
             r = a % b;
         '''),
@@ -393,7 +399,7 @@ instructions = [
         'effect': StackEffect.of(['a', 'b'], ['q', 'r']),
         'code': Code('''\
             if (b == 0)
-                RAISE(MIT_ERROR_DIVISION_BY_ZERO);
+                THROW(MIT_ERROR_DIVISION_BY_ZERO);
             q = (mit_word_t)((mit_uword_t)a / (mit_uword_t)b);
             r = (mit_word_t)((mit_uword_t)a % (mit_uword_t)b);
         '''),
@@ -449,10 +455,10 @@ class ExtraInstructions(ActionEnum):
     '''VM extra instructions.'''
 
     # FIXME: improve code generation so the stack effect can be specified.
-    HALT = (
+    THROW = (
         Action(
             None,
-            Code('mit_word_t n;', str(pop_stack('n')), 'RAISE(n);'),
+            Code('mit_word_t n;', str(pop_stack('n')), 'THROW(n);'),
         ),
         0x1,
     )
@@ -464,11 +470,14 @@ class ExtraInstructions(ActionEnum):
                 POP(addr);
                 POP(nres);
                 POP(nargs);
-                DO_CALL(addr, nargs, nres, error = mit_run((mit_word_t *)addr, 0, inner_stack, &inner_stack_depth));
+                DO_CALL_ARGS(nargs, nres);
+                if ((error = mit_run((mit_word_t *)addr, 0, inner_stack, &inner_stack_depth)) == MIT_ERROR_OK)
+                    DO_CALL_RESULTS(nres);
                 PUSH(error);
+                ir = 0;
             '''),
         ),
-        0x11,
+        0x2,
     )
 
     ARGC = (
@@ -493,6 +502,6 @@ extra_code = Code('''\
     ir = 0;
 ''')
 extra_code.extend(ExtraInstructions.dispatch(Code(
-    'RAISE(MIT_ERROR_INVALID_OPCODE);',
+    'THROW(MIT_ERROR_INVALID_OPCODE);',
 ), 'extra_opcode'))
 Instructions.NEXT.action.terminal_action.code = extra_code

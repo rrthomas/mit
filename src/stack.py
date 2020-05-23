@@ -373,7 +373,7 @@ def check_underflow(num_pops):
         )
     return Code(
         'if ({}) {{'.format(' || '.join(tests)),
-        Code('RAISE(MIT_ERROR_INVALID_STACK_READ);'),
+        Code('THROW(MIT_ERROR_INVALID_STACK_READ);'),
         '}',
     )
 
@@ -396,5 +396,5 @@ def check_overflow(num_pops, num_pushes):
     assert depth_change.count == 0
     return Code(f'''\
         if (unlikely(stack_words - stack_depth < {depth_change}))
-            RAISE(MIT_ERROR_STACK_OVERFLOW);'''
+            THROW(MIT_ERROR_STACK_OVERFLOW);'''
     )

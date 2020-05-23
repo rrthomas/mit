@@ -16,6 +16,7 @@ BF_LOG_COMPILER = env $(PY_LOG_ENV) $(TIME) $(PYTHON) $(srcdir)/run-brainfuck-te
 TESTS =	\
 	arithmetic.py	\
 	branch.py	\
+	catch.py	\
 	comparison.py	\
 	constants.py	\
 	extra.py	\

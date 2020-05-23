@@ -41,7 +41,7 @@ class Action:
         '''
         Generate a Code for an Action.
 
-        In the code, errors are reported by calling RAISE().
+        In the code, errors are reported by calling THROW().
         '''
         effect = self.effect
         code = Code()

@@ -80,7 +80,7 @@ load_test(obj = b'#!/usr/bin/mit\n' + object_file())
 # Test ability to load & run saved file with assembler-generated contents
 error_code = 42
 lit(error_code)
-extra(HALT)
+extra(THROW)
 save(test_file_name, length=label() - M.addr)
 res = try_load(test_file_name)
 print(f"; should be {MitErrorCode.OK}")
