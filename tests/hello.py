@@ -13,7 +13,7 @@ from mit.globals import *
 # Assemble test code
 
 text_addr = 0
-# Hack: two-pass assembly to calculate code_len
+# Hack: two-pass assembly to calculate `text_addr`
 for i in range(2):
     goto(M.addr)
     # Ensure the same length code is generated on each pass
