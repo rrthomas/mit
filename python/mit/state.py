@@ -74,9 +74,6 @@ class State:
             byref(c_uword(0)),
         )
 
-    def _step_plural(self, n):
-        return "after {} step{}".format(n, 's' if n != 1 else '')
-
     def step(self, n=1, addr=None, trace=False, step_callback=None, final_callback=None):
         'Single-step for `n` steps, or until `pc`=addr.'
         with BreakHandler(self, n, addr, trace, step_callback, final_callback) as handler:
@@ -85,7 +82,11 @@ class State:
             except VMError as e:
                 if e.args[0] != enums.MitErrorCode.BREAK:
                     ret = e.args[0]
-                    print(f"Error code {ret} was returned {self._step_plural(handler.done)}", end='')
+                    steps = " after {} step{}".format(
+                        handler.done,
+                        's' if handler.done != 1 else ''
+                    )
+                    print(f"Error code {ret} was returned{steps}", end='')
                     if addr is not None:
                         print(f" at pc={self.pc:#x}", end='')
                     print()
