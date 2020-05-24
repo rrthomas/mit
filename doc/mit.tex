@@ -232,8 +232,9 @@ The following extra instructions are defined:
 
 \begin{description}
 \extra{next}{0}{—}{Load the word pointed to by {\tt pc} into {\tt ir}, then add {\tt word\_bytes} to {\tt pc}.}
-\extra{throw}{1}{n —}{Throw error $n$.}
-\extra{catch}{2}{\x{u}\dots\x0 \U1 \U2 [\aaddr1] — h \U2 \aaddr2 {\tt ||} \x{u}\dots\x0}{Add an error handler \spic{h} to the current stack frame, then perform the action of {\tt call} (see section~\ref{control}).}
+\extra{stack\_depth}{1}{— u}{Push the value of {\tt stack\_depth} on to the stack.}
+\extra{throw}{2}{n —}{Throw error $n$.}
+\extra{catch}{3}{\x{u}\dots\x0 \U1 \U2 [\aaddr1] — h \U2 \aaddr2 {\tt ||} \x{u}\dots\x0}{Add an error handler \spic{h} to the current stack frame, then perform the action of {\tt call} (see section~\ref{control}).}
 \end{description}
 
 The following trap is defined:

@@ -35,7 +35,7 @@ typedef uintmax_t mit_max_stack_item_t;
 extern MIT_THREAD_LOCAL mit_uword_t mit_stack_words;
 // The stack is implemented as a `stack_words`-element array at `stack`.
 #define mit_stack_pos(stack, stack_depth, pos) \
-    ((stack) + (stack_depth) - (mit_uword_t)(pos) - 1)
+    (&stack[stack_depth - (mit_uword_t)(pos) - 1])
 
 
 // VM control

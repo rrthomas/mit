@@ -454,13 +454,21 @@ Instructions.__docstring__ = 'VM instructions.'
 class ExtraInstructions(ActionEnum):
     '''VM extra instructions.'''
 
-    # FIXME: improve code generation so the stack effect can be specified.
+    # FIXME: improve code generation so the stack effects can be specified.
+    STACK_DEPTH = (
+        Action(
+            None,
+            Code('PUSH(stack_depth);'),
+        ),
+        0x1,
+    )
+
     THROW = (
         Action(
             None,
             Code('mit_word_t n;', str(pop_stack('n')), 'THROW(n);'),
         ),
-        0x1,
+        0x2,
     )
 
     CATCH = (
@@ -477,7 +485,7 @@ class ExtraInstructions(ActionEnum):
                 ir = 0;
             '''),
         ),
-        0x2,
+        0x3,
     )
 
     ARGC = (

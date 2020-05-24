@@ -37,6 +37,11 @@ correct = [
     [2, 1, 0],
     [2, 1, 1],
     [2, 1, 2],
+    [2, 1, 2, 0],
+    [2, 1, 2, 2],
+    [2, 1, 2, 2, 0],
+    [2, 1, 2, 2, 2],
+    [2, 1, 2, 2, 2, 5],
 ]
 
 # Test code
@@ -64,6 +69,11 @@ lit(1)
 lit(0)
 ass(DUP)
 ass(DUP)
+lit(0)
+ass(DUP)
+lit(0)
+ass(DUP)
+extra(STACK_DEPTH)
 
 # Test
 run_test("stack", VM, correct)

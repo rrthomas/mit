@@ -41,15 +41,14 @@
     mit_uword_t var;                                    \
     if (stack_depth < 1)                                \
         THROW(MIT_ERROR_INVALID_STACK_READ);            \
-    var = *mit_stack_pos(stack, stack_depth, 0);        \
-    stack_depth--;
+    var = stack[--stack_depth];
 
 // Push an expression to the stack.
 #define PUSH(expr)                                      \
     if (stack_words - stack_depth < 1)                  \
         THROW(MIT_ERROR_INVALID_STACK_WRITE);           \
-    stack_depth++;                                      \
-    *mit_stack_pos(stack, stack_depth, 0) = (expr);
+    stack[stack_depth] = (expr);                        \
+    stack_depth++;
 
 // Raise an error during the execution of an instruction.
 // THROW must be called before writing any state.
@@ -85,24 +84,24 @@
 
 // Perform the action of `call` or `catch`. `run_function` gives the `mit_fn` to
 // call, and can be an assignment (used for `catch`).
-#define DO_CALL_ARGS(nargs, nres)                                     \
-    if (nargs > stack_depth)                                          \
-        THROW(MIT_ERROR_INVALID_STACK_READ);                          \
-    if (nres > stack_words - (stack_depth - nargs))                   \
-        THROW(MIT_ERROR_INVALID_STACK_WRITE);                         \
-    mit_word_t inner_stack[stack_words];                              \
-    mit_uword_t inner_stack_depth = nargs;                            \
-    memcpy(inner_stack, mit_stack_pos(stack, stack_depth, nargs - 1), \
-           nargs * sizeof(mit_word_t));                               \
-    stack_depth -= nargs;                                             \
+#define DO_CALL_ARGS(nargs, nres)                       \
+    if (nargs > stack_depth)                            \
+        THROW(MIT_ERROR_INVALID_STACK_READ);            \
+    if (nres > stack_words - (stack_depth - nargs))     \
+        THROW(MIT_ERROR_INVALID_STACK_WRITE);           \
+    mit_word_t inner_stack[stack_words];                \
+    mit_uword_t inner_stack_depth = nargs;              \
+    memcpy(inner_stack, &stack[stack_depth - nargs],    \
+           nargs * sizeof(mit_word_t));                 \
+    stack_depth -= nargs;                               \
 
 // Perform the rest of the action of `ret`.
-#define DO_CALL_RESULTS(nres)                                           \
-    do {                                                                \
-        memcpy(stack + stack_depth,                                     \
-               mit_stack_pos(inner_stack, inner_stack_depth, nres - 1), \
-               nres * sizeof(mit_word_t));                              \
-        stack_depth += nres;                                            \
+#define DO_CALL_RESULTS(nres)                           \
+    do {                                                \
+        memcpy(stack + stack_depth,                     \
+               &inner_stack[inner_stack_depth - nres],  \
+               nres * sizeof(mit_word_t));              \
+        stack_depth += nres;                            \
     } while (0)
 
 #endif
