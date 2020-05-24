@@ -67,7 +67,7 @@ ass(DIVMOD)
 ass(RET)
 goto(ret_addr)
 
-lit(4)
+extra(STACK_DEPTH)
 ass(POP)
 lit(0)
 lit(0)
