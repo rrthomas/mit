@@ -9,7 +9,7 @@
 
 import argparse
 
-from code_util import copyright_banner
+from code_util import copyright_banner, Code
 from run_fn import run_fn, run_inner_fn
 
 
@@ -51,13 +51,13 @@ code.append('')
 
 # `mit_run_break()`, for debugging.
 code.append('MIT_THREAD_LOCAL mit_fn_t *mit_break_fn = NULL;')
-code.extend(run_inner_fn('break', '''\
+code.extend(run_inner_fn('break', Code('''\
         if (mit_break_fn != NULL) {
             error = mit_break_fn(pc, ir, stack, &stack_depth);
             if (error != MIT_ERROR_BREAK)
                 THROW(error);
         }
-'''))
+''')))
 code.extend(run_fn('break'))
 
 print(code)
