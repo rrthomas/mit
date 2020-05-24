@@ -63,13 +63,6 @@
 \begin{document}
 \maketitle
 
-\subsection*{Typographical conventions}
-
-Instructions and registers are shown in {\tt typewriter} font.
-
-Addresses are given in bytes. Addresses are written in hexadecimal; hex numbers are prefixed with “0x”.
-
-
 \section{Introduction}
 
 Mit is a simple virtual machine. It is a stack machine, based on the more complex register machine Mite~\cite{mite0}.
@@ -133,6 +126,7 @@ execute the instruction given by \textbf{opcode}, \\*
 stack frames are popped until reaching one which contains an error handler.
 The error handler, return address and number of return items are discarded,
 and the error code is pushed on to the stack.
+
 
 \subsection{Errors and termination}
 \label{errors}
@@ -223,13 +217,14 @@ of type and suffix appears more than once in a stack effect, it refers each time
 Ellipsis is used for indeterminate numbers of specified types of item.
 
 
-\subsection{Extra instructions}
-\label{extra}
+\subsection{Extra instructions and traps}
+\label{extra}\label{trap}
 
-Extra instructions are introduced by the instruction {\tt extra}:
+Extra instructions offer functionality not available in the core instruction set, via the {\tt extra} instruction. Traps, using the {\tt trap} instruction, are similar, but intended to be implementable as add-ons to an implementation, rather than as an integrated part of it. Extra instructions and traps may modify the memory and stack, but may not directly change the values of registers.
 
 \begin{description}
 \inst{extra}{{\rm see below}}{Perform extra instruction {\tt ir}; if {\tt ir} is not the code of a valid extra instruction, throw error $-1$.}
+\inst{trap}{}{Perform trap {\tt ir}; if {\tt ir} is not the code of a valid trap, throw error $-1$.}
 \end{description}
 
 The following extra instructions are defined:
@@ -238,17 +233,6 @@ The following extra instructions are defined:
 \extra{next}{0}{—}{Load the word pointed to by {\tt pc} into {\tt ir}, then add {\tt word\_bytes} to {\tt pc}. If an invalid or unaligned address is accessed when loading {\tt ir}, the appropriate error is thrown (see section~\ref{errors}).}
 \extra{throw}{1}{n —}{Throw error $n$.}
 \extra{catch}{2}{\x{u}\dots\x0 \U1 \U2 [\aaddr1] — h \U2 \aaddr2 {\tt ||} \x{u}\dots\x0}{Add an error handler \spic{h} to the current stack frame, then perform the action of {\tt call} (see section~\ref{control}).}
-\end{description}
-
-
-\subsection{Trap}
-\label{trap}
-
-An implementation may implement extra functionality using {\tt trap}:
-
-\nopagebreak
-\begin{description}
-\inst{trap}{}{Perform trap {\tt ir}; if {\tt ir} is not the code of a valid trap, throw error $-1$.}
 \end{description}
 
 The following trap is defined:
@@ -289,8 +273,8 @@ These instructions implement unconditional and conditional branches, and subrout
 These instructions fetch and store quantities to and from memory. If an invalid or unaligned address is accessed, the appropriate error is thrown (see section~\ref{errors}).
 
 \begin{description}
-\inst{load}{addr — x}{Load the word \spic{x} stored at \spic{addr}, which must be a multiple of {\tt word\_bytes}.}
-\inst{store}{x addr —}{Store \spic{x} at \spic{addr}, which must be a multiple of {\tt word\_bytes}.}
+\inst{load}{a-addr — x}{Load the word \spic{x} stored at \spic{a-addr}.}
+\inst{store}{x a-addr —}{Store \spic{x} at \spic{a-addr}.}
 \inst{load1}{addr — x}{Load the byte \spic{x} stored at \spic{addr}. Unused high-order bits are set to zero.}
 \inst{store1}{x addr —}{Store the least-significant byte of \spic{x} at \spic{addr}.}
 \inst{load2}{addr — x}{Load the $2$-byte quantity \spic{x} stored at \spic{addr}, which must be a multiple of $2$. Unused high-order bits are set to zero.}
@@ -388,6 +372,7 @@ Instructions are encoded as byte opcodes; opcodes are packed into words, which a
 
 The operands for {\tt pushi} and {\tt pushreli} are interpreted as signed numbers; the operand of {\tt pushreli} is multiplied by {\tt word\_bytes}. Note that {\tt pushreli}’s immediate constant cannot be $-1$, as the corresponding opcode is used for {\tt trap}.
 
+
 \subsection{Instruction opcodes}
 \label{opcodes}
 
@@ -426,8 +411,7 @@ Table~\ref{opcodetable} lists the instruction opcodes. Other instruction opcodes
 
 \begin{itemize}
 \item Implementations should provide an API to create and run virtual machine code, and to add traps.
-\item Implementations can add extra instructions (see section~\ref{extra}) to provide extra computational primitives and other deeply-integrated facilities.
-\item Implementations can allow users to add traps (see section~\ref{trap}) to offer access to system facilities, native libraries and so on.
+\item Implementations can add extra instructions to provide extra computational primitives and other deeply-integrated facilities, and traps to offer access to system facilities, native libraries and so on; see section~\ref{extra}. Implementations may allow users to add their own traps.
 \end{itemize}
 
 
