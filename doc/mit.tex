@@ -131,7 +131,7 @@ and the error code is pushed on to the stack.
 \subsection{Errors and termination}
 \label{errors}
 
-When Mit encounters certain abnormal situations, such as an attempt to access an invalid address, or divide by zero, an {\bf error} is {\bf thrown}. If the error is non-zero, the effect of the current instruction is undone (see section~\ref{execution}). An {\bf error code} is returned to the caller.
+When Mit encounters certain abnormal situations, such as an attempt to access an invalid address, or divide by zero, an {\bf error} may be {\bf thrown}. If the error is non-zero, the effect of the current instruction is undone (see section~\ref{execution}). An {\bf error code} is returned to the caller.
 
 Execution can be terminated explicitly by a {\tt throw} instruction (see section~\ref{extra}), which throws an error.
 
@@ -150,12 +150,13 @@ $-5$ & Invalid memory read. \\
 $-6$ & Invalid memory write. \\
 $-7$ & Address alignment error: thrown when an instruction is given a valid address, but insufficiently aligned. \\
 $-8$ & Division by zero attempted (see section~\ref{arithmetic}). \\
-$-127$ & An instruction has completed without error. \\
  \bottomrule
 \end{tabular}
 \caption{\label{errortable}Errors thrown by Mit}
 \end{center}
 \end{table}
+
+Errors $-2$ to $-8$ inclusive are optional: an implementation may choose to raise them, or not.
 
 
 \section{Instruction set}
@@ -230,7 +231,7 @@ Extra instructions offer functionality not available in the core instruction set
 The following extra instructions are defined:
 
 \begin{description}
-\extra{next}{0}{—}{Load the word pointed to by {\tt pc} into {\tt ir}, then add {\tt word\_bytes} to {\tt pc}. If an invalid or unaligned address is accessed when loading {\tt ir}, the appropriate error is thrown (see section~\ref{errors}).}
+\extra{next}{0}{—}{Load the word pointed to by {\tt pc} into {\tt ir}, then add {\tt word\_bytes} to {\tt pc}.}
 \extra{throw}{1}{n —}{Throw error $n$.}
 \extra{catch}{2}{\x{u}\dots\x0 \U1 \U2 [\aaddr1] — h \U2 \aaddr2 {\tt ||} \x{u}\dots\x0}{Add an error handler \spic{h} to the current stack frame, then perform the action of {\tt call} (see section~\ref{control}).}
 \end{description}
@@ -270,7 +271,7 @@ These instructions implement unconditional and conditional branches, and subrout
 
 \subsection{Memory}
 
-These instructions fetch and store quantities to and from memory. If an invalid or unaligned address is accessed, the appropriate error is thrown (see section~\ref{errors}).
+These instructions fetch and store quantities to and from memory.
 
 \begin{description}
 \inst{load}{a-addr — x}{Load the word \spic{x} stored at \spic{a-addr}.}
@@ -343,14 +344,13 @@ Negation and addition:
 \inst{add}{\noru1 \noru2 — \noru3}{Add \noru2 to \noru1, giving the sum \noru3.}
 \end{description}
 
-Multiplication and division (note that division instructions throw error
-$-8$ if division by zero is attempted):
+Multiplication and division:
 
 \nopagebreak
 \begin{description}
 \inst{mul}{\noru1 \noru2 — \noru3}{Multiply \noru1 by \noru2 giving the product \noru3.}
-\inst{divmod}{\n1 \n2 — \n3 \n4}{Divide \n1 by \n2 using symmetric division, giving the single-word quotient \n3 and the single-word remainder \n4. The quotient is rounded towards zero.}
-\inst{udivmod}{\U1 \U2 — \U3 \U4}{Divide \U1 by \U2, giving the single-word quotient \U3 and the single-word remainder \U4.}
+\inst{divmod}{\n1 \n2 — \n3 \n4}{Divide \n1 by \n2 using symmetric division, giving the single-word quotient \n3 and the single-word remainder \n4. The quotient is rounded towards zero. If \n2 is zero, throw error $-8$.}
+\inst{udivmod}{\U1 \U2 — \U3 \U4}{Divide \U1 by \U2, giving the single-word quotient \U3 and the single-word remainder \U4. If \U2 is zero, throw error $-8$.}
 \end{description}
 
 
