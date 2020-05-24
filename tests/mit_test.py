@@ -17,14 +17,14 @@ def cast_to_word(n):
     return ((n + sign_bit) & uword_max) - sign_bit
 
 def run_test(name, state, correct):
-    opcode = None
+    ir = None
     done = 0
     def test_callback(handler, stack):
-        nonlocal correct, opcode, done
+        nonlocal correct, ir, done
         # Check results after each non-NEXT instruction.
-        previous_opcode = opcode
-        opcode = handler.state.ir & 0xff
-        if previous_opcode in (None, Instructions.NEXT, Instructions.NEXTFF):
+        previous_ir = ir
+        ir = handler.state.ir
+        if previous_ir in (None, 0, -1):
             return
         correct_stack = list(map(cast_to_word, correct[done]))
         print(f"Data stack: {stack}")
