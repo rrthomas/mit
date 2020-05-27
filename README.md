@@ -79,7 +79,7 @@ Mit’s instruction set.
 
 The documentation consists of:
 
-* _[The Mit Virtual Machine](doc/mit.pdf)_  
+* _[The Mit Virtual Machine](doc/mit.pdf)_
 The design of the Mit virtual machine is described. Essential reading
 for those programming or implementing the VM.
 * The comments in `mit.h`.
