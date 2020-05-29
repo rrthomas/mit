@@ -97,13 +97,10 @@ class Disassembler:
             if opcode == PUSH or opcode == PUSHREL:
                 initial_pc = self.pc
                 value = self._fetch()
-                signed_value = value
-                if value & sign_bit:
-                    signed_value -= 1 << word_bit
                 if opcode == PUSH:
-                    comment = f' ({value:#x}={signed_value})'
+                    comment = f' ({value & word_mask:#x}={value})'
                 else: # opcode == PUSHREL
-                    comment = f' ({initial_pc + signed_value:#x})'
+                    comment = f' ({initial_pc + value:#x})'
             elif opcode & 1 == 1 and opcode != NEXTFF: # PUSHRELI
                 value = (opcode - PUSHRELI_0) >> 1
                 if opcode & 0x80:
