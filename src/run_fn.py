@@ -30,42 +30,45 @@ def run_inner_fn(name, instrument):
 
      - suffix - str - the function is named `mit_run_{name}` and will call
        an inner function `run_inner_{name}`.
-     - instrument - Code or str - instrumentation to insert at end of main
+     - instrument - Code or str - instrumentation to insert at start of main
        loop.
     '''
     return disable_warnings(
         ['-Wstack-protector'], # TODO: Stack protection cannot cope with VLAs.
-        Code(f'''
-        #define run_inner run_inner_{name}
-        static void run_inner_{name}(mit_word_t *pc, mit_word_t ir, mit_word_t * restrict stack, mit_uword_t * restrict stack_depth_ptr, jmp_buf *jmp_buf_ptr)
-        {{
-            #define stack_depth (*stack_depth_ptr)
-            mit_uword_t stack_words = mit_stack_words;''',
-        Code(*['''\
-            mit_word_t error;
+        Code(
+            f'''\
+            #define run_inner run_inner_{name}
+            static void run_inner_{name}(mit_word_t *pc, mit_word_t ir, mit_word_t * restrict stack, mit_uword_t * restrict stack_depth_ptr, jmp_buf *jmp_buf_ptr)
+            {{''',
+            Code(*[
+                '''\
+                #define stack_depth (*stack_depth_ptr)
+                mit_uword_t stack_words = mit_stack_words;
+                mit_word_t error;
 
-            for (;;) {''',
-            instrument,
-            Code('''\
-                uint8_t opcode = (uint8_t)ir;
-                ir = ARSHIFT(ir, 8);
+                for (;;) {''',
+                instrument,
+                Code('''\
+                    uint8_t opcode = (uint8_t)ir;
+                    ir = ARSHIFT(ir, 8);
 
-                // Check stack_depth is valid
-                if (stack_depth > stack_words)
-                    THROW(MIT_ERROR_STACK_OVERFLOW);'''
-            ),
-            run_body(),
-            Code('continue;'),
-            '''}
-
+                    // Check stack_depth is valid
+                    if (stack_depth > stack_words)
+                        THROW(MIT_ERROR_STACK_OVERFLOW);'''
+                ),
+                run_body(),
+                Code('continue;'),
+                '''\
+                #undef stack_depth
+                }''',
+            ]),
+            '''\
             error:
-            THROW_LONGJMP(error);'''
-        ]),
-        '''\
-        #undef stack_depth
-        }
-        #undef run_inner''',
-    ))
+                THROW_LONGJMP(error);
+            }
+            #undef run_inner''',
+        )
+    )
 
 def run_fn(name):
     '''
