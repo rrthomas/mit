@@ -82,14 +82,11 @@ class State:
             except VMError as e:
                 if e.args[0] != enums.MitErrorCode.BREAK:
                     ret = e.args[0]
-                    steps = " after {} step{}".format(
+                    steps = "after {} step{}".format(
                         handler.done,
                         's' if handler.done != 1 else ''
                     )
-                    print(f"Error code {ret} was returned{steps}", end='')
-                    if addr is not None:
-                        print(f" at pc={self.pc:#x}", end='')
-                    print()
+                    print(f"Error code {ret} was returned {steps} at pc={self.pc:#x}")
                     raise
 
     def log(self, *args):
@@ -254,18 +251,24 @@ class BreakHandler:
             )[0:stack_depth.contents.value]
         else:
             stack = []
-        if (self.addr is not None and self.state.pc != self.addr) or self.done < self.n:
-            if self.trace:
-                self.log(f"{stack}")
-                self.log(f"pc={self.state.pc:#x} ir={ir & uword_max:#x} {Disassembler(self.state, ir=ir).disassemble()}")
-            if self.step_callback is not None:
-                error = self.step_callback(self, stack)
+
+        if self.addr is not None:
+            terminate = self.state.pc == self.addr
+        else:
+            terminate = self.done >= self.n
+        if terminate:
+            if self.final_callback is not None:
+                error = self.final_callback(self, stack)
                 if error is not None:
                     return error
-            self.done += 1
-            return enums.MitErrorCode.BREAK
-        if self.final_callback is not None:
-            error = self.final_callback(self, stack)
+            return enums.MitErrorCode.OK
+
+        if self.trace:
+            self.log(f"{stack}")
+            self.log(f"pc={self.state.pc:#x} ir={ir & uword_max:#x} {Disassembler(self.state, ir=ir).disassemble()}")
+        if self.step_callback is not None:
+            error = self.step_callback(self, stack)
             if error is not None:
                 return error
-        return enums.MitErrorCode.OK
+        self.done += 1
+        return enums.MitErrorCode.BREAK
