@@ -82,8 +82,7 @@
         ir = 0;                                         \
     } while (0)
 
-// Perform the action of `call` or `catch`. `run_function` gives the `mit_fn` to
-// call, and can be an assignment (used for `catch`).
+// Perform the action of `call` or `catch`.
 #define DO_CALL_ARGS(nargs, nres)                       \
     if (nargs > stack_depth)                            \
         THROW(MIT_ERROR_INVALID_STACK_READ);            \
@@ -93,7 +92,7 @@
     mit_uword_t inner_stack_depth = nargs;              \
     memcpy(inner_stack, &stack[stack_depth - nargs],    \
            nargs * sizeof(mit_word_t));                 \
-    stack_depth -= nargs;                               \
+    stack_depth -= nargs;
 
 // Perform the rest of the action of `ret`.
 #define DO_CALL_RESULTS(nres)                           \
