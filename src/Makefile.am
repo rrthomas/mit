@@ -35,16 +35,15 @@ nodist_pkginclude_HEADERS = include/mit/opcodes.h include/mit/registers.h
 pkginclude_HEADERS = include/mit/mit.h
 noinst_HEADERS = run.h
 
-warn.c $(C_SRCS) specializer.c instructions.c main.c: include/mit/mit.h include/mit/registers.h include/mit/opcodes.h
+warn.o constants.lo stack.lo args.lo: include/mit/registers.h
+warn.o constants.lo stack.lo args.lo main.o: include/mit/opcodes.h
+instructions.lo main.o: main.c include/mit/registers.h
 
 .c.s:
 	$(COMPILE) -c -S -o $@ $<
 
 spec.yaml: gen-yaml-spec spec.py
 	$(PYTHON_WITH_PATH) $(srcdir)/gen-yaml-spec > spec.yaml || ( rm -f spec.yaml; exit 1 )
-
-include/mit/mit.h: $(top_builddir)/config.status include/mit/mit.h.in include/mit/registers.h include/mit/opcodes.h
-	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
 
 # Depend on mit@PACKAGE_SUFFIX@$(EXEEXT) rather than explicitly make-ing it, as otherwise
 # we break parallel builds, as libmit.la can be built twice in parallel,
