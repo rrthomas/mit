@@ -29,15 +29,14 @@
 
 % Define the widths of the stack effect and description columns
 \newlength{\itemwidth}\itemwidth=\textwidth \advance\itemwidth by -0.1in
-\newlength{\instname}\instname=0.4in
-\newlength{\opcodewidth}\opcodewidth=0.3in
-\newlength{\stackcom}\stackcom=3.8in
+\newlength{\instname}\instname=0.8in
+\newlength{\stackcom}\stackcom=3.7in
 
 \newcommand{\inst}[3]{\item[]\parbox{\itemwidth}%
-{\makebox[\instname][l]{\tt #1}\makebox[\opcodewidth]{}%
+{\makebox[\instname][l]{\tt #1}%
 \makebox[\stackcom][r]{\spic{#2}}\\[0.5ex]#3}}
 \newcommand{\extra}[4]{\item[]\parbox{\itemwidth}%
-{\makebox[\instname][l]{\tt #1}\makebox[\opcodewidth]{#2}%
+{\makebox[\instname][l]{\tt #1}\makebox[0pt]{\quad{#2}}%
 \makebox[\stackcom][r]{\spic{#3}}\\[0.5ex]#4}}
 
 % Lay out a line of the opcode table
