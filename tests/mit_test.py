@@ -21,7 +21,7 @@ def run_test(name, state, correct):
     for i, stack in enumerate(correct):
         stack = cast_to_word(stack)
         print(Disassembler(state).__next__())
-        state.trace()
+        state.step(trace=True)
         print(f"Data stack: {state.S}")
         print(f"Correct stack: {stack}\n")
         if stack != list(state.S):

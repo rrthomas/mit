@@ -32,7 +32,7 @@ vars().update({
     name: VM.__getattribute__(name)
     for name in [
         "M", "M_word", "S",
-        "load", "run", "step", "trace",
+        "load", "run", "step",
         "dump", "disassemble", "dump_files",
     ]
 })
@@ -47,6 +47,10 @@ vars().update({
         "jump_rel", "lit", "lit_pc_rel", "extra", "trap",
     ]
 })
+
+def trace(**kwargs):
+    'A convenience wrapper for `step(trace=True)`.'
+    VM.step(trace=True, **kwargs)
 
 # Add a default length to `save()`.
 def _save(file, addr=None, length=None):
