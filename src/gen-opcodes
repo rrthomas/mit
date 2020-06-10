@@ -14,7 +14,7 @@ from code_util import Code, copyright_banner, enum_to_c
 
 GENERATOR_PROGRAM = 'gen-opcodes'
 PURPOSE = 'Instruction opcodes.'
-COPYRIGHT_YEARS = '2018-2019'
+COPYRIGHT_YEARS = '2018-2020'
 
 
 max_instruction = max([i.opcode for i in Instructions])
@@ -23,8 +23,6 @@ code.append(f'''
 #ifndef MIT_OPCODES_H
 #define MIT_OPCODES_H
 
-
-#define MIT_NUM_OPCODES {max_instruction + 1}
 
 ''')
 code.append('')
