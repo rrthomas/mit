@@ -36,14 +36,14 @@ parser.add_argument(
 args = parser.parse_args()
 
 
-def inc(): lit(1); ass(ADD)
-def dec(): lit(1); ass(NEGATE); ass(ADD)
-def dup(): lit(0); ass(DUP)
-def over(): lit(1); ass(DUP)
-def libc(fn): lit(fn); trap(LIBC)
+def inc(): push(1); ass(ADD)
+def dec(): push(1); ass(NEGATE); ass(ADD)
+def dup(): push(0); ass(DUP)
+def over(): push(1); ass(DUP)
+def libc(fn): push(fn); trap(LIBC)
 
 try:
-    lit_pc_rel(0, force_long=True) # Data pointer.
+    pushrel(0, force_long=True) # Data pointer.
     stack = [] # [(start of loop, word to patch)]
     for c in sys.stdin.read():
         if c == '>': inc()
@@ -52,32 +52,32 @@ try:
         elif c == '-': dup(); ass(LOAD1); dec(); over(); ass(STORE1)
         elif c == '.':
             dup() # buffer
-            lit(1) # length
+            push(1) # length
             libc(LibC.STDOUT)
             libc(LibC.WRITE)
-            lit(1); ass(POP)
+            push(1); ass(POP)
         elif c == ',':
             dup() # buffer
-            lit(1) # length
+            push(1) # length
             libc(LibC.STDIN)
             libc(LibC.READ)
-            lit(1); ass(POP)
+            push(1); ass(POP)
         elif c == '[':
             loop = label()
             print(f"{loop:#x}")
             dup()
             ass(LOAD1)
-            lit_pc_rel(0, force_long=True)
+            pushrel(0, force_long=True)
             patch = assembler.pc - word_bytes
             ass(JUMPZ)
             stack.append((loop, patch))
         elif c == ']':
             loop, patch = stack.pop()
             label()
-            lit_pc_rel(loop)
+            pushrel(loop)
             ass(JUMP)
             M_word[patch] = label() - patch
-    lit(MitErrorCode.OK)
+    push(MitErrorCode.OK)
     extra(THROW)
     M_word[M_word.addr + word_bytes] = label() - M_word.addr # Patch data pointer.
 except ErrorCode as e:

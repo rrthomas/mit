@@ -39,18 +39,18 @@ correct = [
 ]
 
 # Code
-lit(byte_bit)
-lit(top_byte_set)
-lit(0xff)
-lit(byte_bit)
+push(byte_bit)
+push(top_byte_set)
+push(0xff)
+push(byte_bit)
 ass(LSHIFT)
-lit(1)
+push(1)
 ass(SWAP)
 ass(RSHIFT)
 ass(OR)
 ass(NOT)
-lit(1)
-lit(-1)
+push(1)
+push(-1)
 ass(XOR)
 ass(AND)
 

@@ -123,7 +123,7 @@ class Assembler:
         if self.i_shift == word_bit:
             self.label()
 
-    def jump_rel(self, addr, opcode=I.JUMP):
+    def jumprel(self, addr, opcode=I.JUMP):
         '''
         Assemble a relative `jump`, `jumpz` or `call` instruction to the given
         address. Selects the immediate form of the instruction if possible.
@@ -138,10 +138,10 @@ class Assembler:
         if word_offset != 0 and word_offset != -1 and self.fit(opcode, word_offset):
             self.instruction(opcode, word_offset)
         else:
-            self.lit_pc_rel(addr)
+            self.pushrel(addr)
             self.instruction(opcode)
 
-    def lit(self, value, force_long=False):
+    def push(self, value, force_long=False):
         '''
         Assemble a `push` instruction that pushes the specified `value`.
         Uses `pushi` if possible and `force_long` is false.
@@ -153,7 +153,7 @@ class Assembler:
             self.instruction(I.PUSH)
             self.word(value)
 
-    def lit_pc_rel(self, address, force_long=False):
+    def pushrel(self, address, force_long=False):
         '''
         Assemble a `pushrel` instruction that pushes the specified `address`.
         Uses `pushreli` if possible and `force_long` is false.

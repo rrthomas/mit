@@ -16,7 +16,7 @@ Managing the VM state: load, save
 Controlling and observing execution: run, step, trace
 Memory: M[], M_word[], dump, dump_files
 Assembly: Assembler, Disassembler, assembler,
-    word, bytes, instruction, lit, lit_pc_rel, label, goto
+    label, goto, instruction, jumprel, push, pushrel, extra, trap
 Abbreviations: ass=assembler.instruction, dis=self.disassemble
 
 The instruction opcodes are available as constants.
@@ -44,7 +44,7 @@ vars().update({
     name: assembler.__getattribute__(name)
     for name in [
         "label", "goto", "instruction",
-        "jump_rel", "lit", "lit_pc_rel", "extra", "trap",
+        "jumprel", "push", "pushrel", "extra", "trap",
     ]
 })
 

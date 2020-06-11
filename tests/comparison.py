@@ -17,10 +17,10 @@ def assemble_tests(inputs, outputs, op):
     assert(len(inputs) == len(outputs))
     # Assemble test and compile 'correct'
     for i, p in enumerate(inputs):
-        lit(p[0])
-        lit(p[1])
+        push(p[0])
+        push(p[1])
         ass(op)
-        lit(1)
+        push(1)
         ass(POP)
         correct.extend(([p[0]], [p[0], p[1]], [outputs[i]], [outputs[i], 1], []))
 

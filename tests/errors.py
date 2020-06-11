@@ -17,7 +17,7 @@ from mit.binding import libmit, stack_words_ptr
 VM = State(memory_words=4096)
 stack_words_ptr.value = 3
 assembler = Assembler(VM)
-lit = assembler.lit
+push = assembler.push
 label = assembler.label
 ass = assembler.instruction
 vars().update(Instructions.__members__)
@@ -34,8 +34,8 @@ test.append('Try to divide by zero')
 test_pc.append(label())
 result.append(MitErrorCode.DIVISION_BY_ZERO)
 print(f'Test "{test[-1]}": pc = {test_pc[-1]:#x}')
-lit(1)
-lit(0)
+push(1)
+push(0)
 ass(DIVMOD)
 
 test.append('Try to read from an invalid stack location')
@@ -48,7 +48,7 @@ test.append('Try to load from unaligned address')
 test_pc.append(label())
 result.append(MitErrorCode.UNALIGNED_ADDRESS)
 print(f'Test "{test[-1]}": pc = {test_pc[-1]:#x}')
-lit(VM.M.addr + 1)
+push(VM.M.addr + 1)
 ass(LOAD)
 
 test.append('Try to execute invalid opcode')

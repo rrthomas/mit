@@ -37,12 +37,12 @@ tests.append((start, label(), argc_test_callback))
 
 # Test ARGV
 start = label()
-lit(len(args))
+push(len(args))
 extra(ARGV)
-lit(word_bytes)
+push(word_bytes)
 ass(ADD)
 ass(LOAD)
-lit(LibC.STRLEN)
+push(LibC.STRLEN)
 trap(LIBC)
 
 def argv_test_callback(handler, stack):
@@ -55,13 +55,13 @@ tests.append((start, label(), argv_test_callback))
 
 # Test LibC.STRNCPY
 start = label()
-lit(buffer)
+push(buffer)
 extra(ARGV)
-lit(word_bytes)
+push(word_bytes)
 ass(ADD)
 ass(LOAD)
-lit(len(args[1]))
-lit(LibC.STRNCPY)
+push(len(args[1]))
+push(LibC.STRNCPY)
 trap(LIBC)
 
 def strncpy_test_callback(handler, stack):

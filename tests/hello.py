@@ -17,13 +17,13 @@ text_addr = 0
 for i in range(2):
     goto(M.addr)
     # Ensure the same length code is generated on each pass
-    lit(text_addr, force_long=True)
-    lit(14)
-    lit(LibC.STDOUT)
+    push(text_addr, force_long=True)
+    push(14)
+    push(LibC.STDOUT)
     trap(LIBC)
-    lit(LibC.WRITE)
+    push(LibC.WRITE)
     trap(LIBC)
-    lit(MitErrorCode.OK)
+    push(MitErrorCode.OK)
     extra(THROW)
     text_addr = assembler.pc
 

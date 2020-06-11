@@ -1,4 +1,4 @@
-# Test the control instructions and `lit_pc_rel`. Also uses instructions
+# Test the control instructions and `pushrel`. Also uses instructions
 # tested by earlier tests. See errors.py for address error handling tests.
 # The test program contains an infinite loop, but this is only executed
 # once.
@@ -20,70 +20,70 @@ from mit.enums import Instructions
 correct = []
 
 # Code
-jump_rel(M.addr + 0x60)
+jumprel(M.addr + 0x60)
 goto(M.addr + 0x60)
 
 correct.append(assembler.pc)
-lit_pc_rel(M.addr + 0x30)
+pushrel(M.addr + 0x30)
 correct.append(assembler.pc)
 ass(JUMP)
 goto(M.addr + 0x30)
 
 correct.append(assembler.pc)
-lit(3) # Ensure the following JUMP instruction is not the first in the word.
+push(3) # Ensure the following JUMP instruction is not the first in the word.
 correct.append(assembler.pc)
-jump_rel(M.addr + 0x1000)
+jumprel(M.addr + 0x1000)
 goto(M.addr + 0x1000)
 
 correct.append(assembler.pc)
-lit_pc_rel(M.addr + 0x3000)
+pushrel(M.addr + 0x3000)
 correct.append(assembler.pc)
 ass(JUMP)
 goto(M.addr + 0x3000)
 
 correct.append(assembler.pc)
-lit(1)
+push(1)
 correct.append(assembler.pc)
-lit(M.addr + 0x2fff)
-correct.append(assembler.pc)
-ass(JUMPZ)
-correct.append(assembler.pc)
-lit(1)
-correct.append(assembler.pc)
-lit(M.addr)
+push(M.addr + 0x2fff)
 correct.append(assembler.pc)
 ass(JUMPZ)
 correct.append(assembler.pc)
-lit(0)
-label() # Ensure that jump_rel will be able to assemble the jump using immediate operand
+push(1)
 correct.append(assembler.pc)
-jump_rel(M.addr + 0x4008, JUMPZ)
+push(M.addr)
+correct.append(assembler.pc)
+ass(JUMPZ)
+correct.append(assembler.pc)
+push(0)
+label() # Ensure that jumprel will be able to assemble the jump using immediate operand
+correct.append(assembler.pc)
+jumprel(M.addr + 0x4008, JUMPZ)
 goto(M.addr + 0x4008)
 
 correct.append(assembler.pc)
-lit(0)
-label() # Ensure that jump_rel will be able to assemble the jump using immediate operand
+push(0)
+label() # Ensure that jumprel will be able to assemble the jump using immediate operand
 correct.append(assembler.pc)
-jump_rel(M.addr + 0x4008 + word_bytes * 8, JUMPZ)
+jumprel(M.addr + 0x4008 + word_bytes * 8, JUMPZ)
 goto(M.addr + 0x4008 + word_bytes * 8)
 
 correct.append(assembler.pc)
-lit(42)
+push(42)
 correct.append(assembler.pc)
-lit(1)
+push(1)
 correct.append(assembler.pc)
-lit(0)
-label() # Ensure that jump_rel will be able to assemble the jump using immediate operand
+push(0)
+label() # Ensure that jumprel will be able to assemble the jump using immediate operand
 correct.append(assembler.pc)
-jump_rel(M.addr + 0x260, CALL)
+jumprel(M.addr + 0x260, CALL)
 goto(M.addr + 0x260)
 
 correct.append(assembler.pc)
-lit(0)
+push(0)
 correct.append(assembler.pc)
-lit(0)
+push(0)
 correct.append(assembler.pc)
-lit_pc_rel(M.addr + 0xd0)
+pushrel(M.addr + 0xd0)
 correct.append(assembler.pc)
 ass(CALL)
 # Record address we will return to later.
@@ -91,17 +91,17 @@ ret_addr = label()
 goto(M.addr + 0xd0)
 
 correct.append(assembler.pc)
-lit(0)
+push(0)
 correct.append(assembler.pc)
-lit(1)
+push(1)
 correct.append(assembler.pc)
-lit(M.addr + 0x130)
+push(M.addr + 0x130)
 correct.append(assembler.pc)
 ass(CALL)
 goto(M.addr + 0x130)
 
 correct.append(assembler.pc)
-lit(3)
+push(3)
 correct.append(assembler.pc)
 ass(RET)
 goto(M.addr + 0xd0 + word_bytes * 2)
@@ -111,15 +111,15 @@ ass(RET)
 goto(ret_addr)
 
 correct.append(assembler.pc)
-lit(M.addr + 0x400)
+push(M.addr + 0x400)
 correct.append(assembler.pc)
-lit(M.addr + 0x20)
+push(M.addr + 0x20)
 correct.append(assembler.pc)
-lit(0)
+push(0)
 correct.append(assembler.pc)
 ass(SWAP)
 correct.append(assembler.pc)
-lit(1)
+push(1)
 correct.append(assembler.pc)
 ass(DUP)
 correct.append(assembler.pc)
@@ -127,11 +127,11 @@ ass(STORE)
 correct.append(assembler.pc)
 ass(LOAD)
 correct.append(assembler.pc)
-lit(0)
+push(0)
 correct.append(assembler.pc)
-lit(0)
+push(0)
 correct.append(assembler.pc)
-lit(1)
+push(1)
 correct.append(assembler.pc)
 ass(SWAP)
 correct.append(assembler.pc)
@@ -142,14 +142,14 @@ correct.append(assembler.pc)
 # Test generating a jump with offset of 0, which cannot be generated as a
 # JUMPI instruction. Therefore, the following should assemble PUSHRELI_0 JUMP.
 # First, push a decoy value on the stack: it should not be used.
-lit_pc_rel(M.addr + 0x400 - word_bytes * 4)
+pushrel(M.addr + 0x400 - word_bytes * 4)
 correct.append(assembler.pc)
 dest = assembler.pc
-jump_rel(dest)
+jumprel(dest)
 goto(dest)
 correct.append(dest)
 # Assemble a jump with a relative offset of -1 word.
-jump_rel(dest)
+jumprel(dest)
 goto(dest)
 correct.append(dest)
 
