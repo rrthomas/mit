@@ -30,6 +30,12 @@ ass(JUMP)
 goto(M.addr + 0x30)
 
 correct.append(assembler.pc)
+lit(3) # Ensure the following JUMP instruction is not the first in the word.
+correct.append(assembler.pc)
+jump_rel(M.addr + 0x1000)
+goto(M.addr + 0x1000)
+
+correct.append(assembler.pc)
 lit_pc_rel(M.addr + 0x3000)
 correct.append(assembler.pc)
 ass(JUMP)
@@ -105,7 +111,7 @@ ass(RET)
 goto(ret_addr)
 
 correct.append(assembler.pc)
-lit(M.addr + 0x40)
+lit(M.addr + 0x400)
 correct.append(assembler.pc)
 lit(M.addr + 0x20)
 correct.append(assembler.pc)
@@ -130,8 +136,22 @@ correct.append(assembler.pc)
 ass(SWAP)
 correct.append(assembler.pc)
 ass(CALL)
-goto(M.addr + 0x40)
+goto(M.addr + 0x400)
 correct.append(assembler.pc)
+
+# Test generating a jump with offset of 0, which cannot be generated as a
+# JUMPI instruction. Therefore, the following should assemble PUSHRELI_0 JUMP.
+# First, push a decoy value on the stack: it should not be used.
+lit_pc_rel(M.addr + 0x400 - word_bytes * 4)
+correct.append(assembler.pc)
+dest = assembler.pc
+jump_rel(dest)
+goto(dest)
+correct.append(dest)
+# Assemble a jump with a relative offset of -1 word.
+jump_rel(dest)
+goto(dest)
+correct.append(dest)
 
 # Test
 opcode = None

@@ -130,9 +130,12 @@ class Assembler:
         '''
         assert opcode in (I.JUMP, I.JUMPZ, I.CALL)
         assert is_aligned(addr)
-        word_offset = (addr - self.pc - word_bytes) // word_bytes
-        assert word_offset != 0, "immediate branch offset cannot be 0"
-        if self.fit(opcode, word_offset):
+        # Compute value of `pc` that will be added to offset.
+        effective_pc = self.pc
+        if self.i_shift == 0:
+            effective_pc += word_bytes
+        word_offset = (addr - effective_pc) // word_bytes
+        if word_offset != 0 and word_offset != -1 and self.fit(opcode, word_offset):
             self.instruction(opcode, word_offset)
         else:
             self.lit_pc_rel(addr)
