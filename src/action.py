@@ -25,7 +25,10 @@ class Action:
     VM instruction action descriptor.
 
      - effect - StackEffect or None.
-     - code - Code.
+     - code - Code - may use macros defined in run.h. If `effect` is not
+       `None`, `gen_case()` creates C variables for the arguments and
+       results, pops the arguments and pushes the results; otherwise,
+       `code` is responsible for managing the stack.
      - is_variadic - bool - true if this action is variadic.
     '''
     effect: StackEffect

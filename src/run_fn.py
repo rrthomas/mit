@@ -14,10 +14,6 @@ from code_util import Code, disable_warnings
 def run_body():
     '''
     Compute the instruction dispatch code for an inner run function.
-
-     - error - str - expression for error code to return, needed when the
-       code is compiled into a `mit_fn`. `run_inner` functions have no
-       return value.
     '''
     return Instructions.dispatch(Code(
         '// Undefined instruction.',
