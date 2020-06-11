@@ -19,8 +19,12 @@ from code_util import Code, c_symbol
 from stack import StackEffect, Size, check_underflow, check_overflow
 
 
+class AbstractAction:
+    def gen_case(self):
+        raise NotImplementedError
+
 @dataclass
-class Action:
+class Action(AbstractAction):
     '''
     VM instruction action descriptor.
 
@@ -73,7 +77,7 @@ class ActionEnum(Enum):
     '''
     Base class for instruction-set–like enumerations.
 
-     - action - Action
+     - action - AbstractAction
      - opcode - optional int - opcode number, defaults to numbering
        sequentially from 0.
 
@@ -86,7 +90,7 @@ class ActionEnum(Enum):
         return obj
 
     def __init__(self, action, opcode=None):
-        assert isinstance(action, Action), action
+        assert isinstance(action, AbstractAction), action
         self.action = action
         if opcode is not None:
             self.opcode = opcode
