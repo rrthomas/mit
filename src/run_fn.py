@@ -29,7 +29,7 @@ def run_inner_fn(suffix, instrument):
        loop.
     '''
     return disable_warnings(
-        ['-Wstack-protector'], # TODO: Stack protection cannot cope with VLAs.
+        ['-Wstack-protector', '-Wvla-larger-than='], # TODO: Stack protection cannot cope with VLAs.
         Code(
             f'''\
             // Define run_inner for the benefit of `call`.

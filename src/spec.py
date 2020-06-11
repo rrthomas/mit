@@ -22,7 +22,7 @@ word_bit = word_bytes * 8
 opcode_bit = 8
 
 class RegisterEnum(AutoNumber):
-    def __init__(self, type='mit_uword_t'):
+    def __init__(self, type):
         self.type = type
 
 @unique
@@ -30,7 +30,7 @@ class Registers(RegisterEnum):
     '''VM registers.'''
     pc = ('mit_word_t *',)
     ir = ('mit_word_t',)
-    stack_depth = ()
+    stack_depth = ('mit_uword_t',)
     stack = ('mit_word_t * restrict',)
 
 @unique
@@ -46,6 +46,71 @@ class MitErrorCode(IntEnum):
     UNALIGNED_ADDRESS = -7
     DIVISION_BY_ZERO = -8
     BREAK = -127
+
+
+@unique
+class ExtraInstructions(ActionEnum):
+    '''VM extra instructions.'''
+
+    STACK_DEPTH = (
+        Action(
+            None, # Manage stack manually because we use the value of
+                  # `stack_depth`.
+            Code('PUSH(stack_depth);'),
+        ),
+        0x1,
+    )
+
+    THROW = (
+        Action(
+            None, # Manage stack manually so that `stack_depth` is
+                  # decremented before THROW().
+            Code('''
+                POP(n);
+                THROW(n);
+            '''),
+        ),
+        0x2,
+    )
+
+    CATCH = (
+        Action(
+            None, # Manage stack manually because the stack module doesn't
+                  # understand multiple stack frames.
+            Code('''\
+                POP(addr);
+                if (unlikely(addr % sizeof(mit_word_t) != 0))
+                   THROW(MIT_ERROR_UNALIGNED_ADDRESS);
+                DO_CATCH(addr);
+            '''),
+        ),
+        0x3,
+    )
+
+    ARGC = (
+        Action(
+            StackEffect.of([], ['argc']),
+            Code('argc = (mit_word_t)mit_argc;'),
+        ),
+        0x100,
+    )
+
+    ARGV = (
+        Action(
+            StackEffect.of([], ['argv:char **']),
+            Code('argv = mit_argv;'),
+        ),
+        0x101,
+    )
+
+# Inject code for EXTRA
+extra_code = Code('''\
+    mit_uword_t extra_opcode = ir;
+    ir = 0;
+''')
+extra_code.extend(ExtraInstructions.dispatch(Code(
+    'THROW(MIT_ERROR_INVALID_OPCODE);',
+), 'extra_opcode'))
 
 
 # Core instructions.
@@ -88,7 +153,7 @@ instructions = [
         ),
         'terminal': Action(
             None,
-            Code(), # Computed below.
+            extra_code, # Computed above.
         ),
     },
 
@@ -174,29 +239,19 @@ instructions = [
         'name': 'CALL',
         'opcode': 0x6,
         'action': Action(
-            None,
+            None, # Manage stack manually because of changing stack frames.
             Code('''\
                 POP(addr);
                 if (unlikely(addr % sizeof(mit_word_t) != 0))
                    THROW(MIT_ERROR_UNALIGNED_ADDRESS);
-                POP(nres);
-                POP(nargs);
-                DO_CALL_ARGS(nargs, nres);
-                run_inner((mit_word_t *)addr, 0, inner_stack, &inner_stack_depth, jmp_buf_ptr);
-                DO_CALL_RESULTS(nres);
-                ir = 0;
+                DO_CALL(addr);
             '''),
         ),
         'terminal': Action(
-            None,
+            None, # Manage stack manually because of changing stack frames.
             Code('''\
                 mit_word_t addr = (mit_uword_t)(pc + ir);
-                POP(nres);
-                POP(nargs);
-                DO_CALL_ARGS(nargs, nres);
-                run_inner((mit_word_t *)addr, 0, inner_stack, &inner_stack_depth, jmp_buf_ptr);
-                DO_CALL_RESULTS(nres);
-                ir = 0;
+                DO_CALL(addr);
             '''),
         ),
     },
@@ -479,7 +534,7 @@ for i in instructions:
 
 
 # `pushi`
-instructions.extend([
+instructions.extend(
     {
         'name': f'PUSHI_{n}'.replace('-', 'M'),
         'opcode': ((n & 0x3f) << 2) | 0x2,
@@ -489,10 +544,10 @@ instructions.extend([
         ),
     }
     for n in range(-32, 32)
-])
+)
 
 # `pushreli`
-instructions.extend([
+instructions.extend(
     {
         'name': f'PUSHRELI_{n}'.replace('-', 'M'),
         'opcode': ((n & 0x7f) << 1) | 0x1,
@@ -502,7 +557,7 @@ instructions.extend([
         ),
     }
     for n in range(-64, 64) if n != -1
-])
+)
 
 
 # Full instruction enumeration.
@@ -517,73 +572,3 @@ Instructions = unique(ActionEnum(
     ) for i in instructions)
 ))
 Instructions.__docstring__ = 'VM instructions.'
-
-
-@unique
-class ExtraInstructions(ActionEnum):
-    '''VM extra instructions.'''
-
-    STACK_DEPTH = (
-        Action(
-            None, # Manage stack manually because we use the value of
-                  # `stack_depth`.
-            Code('PUSH(stack_depth);'),
-        ),
-        0x1,
-    )
-
-    THROW = (
-        Action(
-            None, # Manage stack manually so that `stack_depth` is
-                  # decremented before THROW().
-            Code('''
-                POP(n);
-                THROW(n);
-            '''),
-        ),
-        0x2,
-    )
-
-    CATCH = (
-        Action(
-            None, # Manage stack manually because the stack module doesn't
-                  # understand multiple stack frames.
-            Code('''\
-                POP(addr);
-                POP(nres);
-                POP(nargs);
-                DO_CALL_ARGS(nargs, nres);
-                if ((error = mit_run((mit_word_t *)addr, 0, inner_stack, &inner_stack_depth)) == MIT_ERROR_OK)
-                    DO_CALL_RESULTS(nres);
-                PUSH(error);
-                ir = 0;
-            '''),
-        ),
-        0x3,
-    )
-
-    ARGC = (
-        Action(
-            StackEffect.of([], ['argc']),
-            Code('argc = (mit_word_t)mit_argc;'),
-        ),
-        0x100,
-    )
-
-    ARGV = (
-        Action(
-            StackEffect.of([], ['argv:char **']),
-            Code('argv = mit_argv;'),
-        ),
-        0x101,
-    )
-
-# Inject code for EXTRA
-extra_code = Code('''\
-    mit_uword_t extra_opcode = ir;
-    ir = 0;
-''')
-extra_code.extend(ExtraInstructions.dispatch(Code(
-    'THROW(MIT_ERROR_INVALID_OPCODE);',
-), 'extra_opcode'))
-Instructions.NEXT.action.terminal.code = extra_code
