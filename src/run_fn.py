@@ -1,4 +1,4 @@
-# Generate the body of `run_inner()` functions.
+# Generate the body of `run_inner()` and `run()` functions.
 #
 # (c) Mit authors 1994-2020
 #
@@ -20,12 +20,11 @@ def run_body():
         'THROW(MIT_ERROR_INVALID_OPCODE);'
     ))
 
-def run_inner_fn(name, instrument):
+def run_inner_fn(suffix, instrument):
     '''
     Generate a `run_inner` function.
 
-     - suffix - str - the function is named `mit_run_{name}` and will call
-       an inner function `run_inner_{name}`.
+     - suffix - str - the function is named `run_inner_{suffix}`.
      - instrument - Code or str - instrumentation to insert at start of main
        loop.
     '''
@@ -33,8 +32,9 @@ def run_inner_fn(name, instrument):
         ['-Wstack-protector'], # TODO: Stack protection cannot cope with VLAs.
         Code(
             f'''\
-            #define run_inner run_inner_{name}
-            static void run_inner_{name}(mit_word_t *pc, mit_word_t ir, mit_word_t * restrict stack, mit_uword_t * restrict stack_depth_ptr, jmp_buf *jmp_buf_ptr)
+            // Define run_inner for the benefit of `call`.
+            #define run_inner run_inner_{suffix}
+            static void run_inner_{suffix}(mit_word_t *pc, mit_word_t ir, mit_word_t * restrict stack, mit_uword_t * restrict stack_depth_ptr, jmp_buf *jmp_buf_ptr)
             {{''',
             Code(*[
                 '''\
@@ -53,7 +53,6 @@ def run_inner_fn(name, instrument):
                         THROW(MIT_ERROR_STACK_OVERFLOW);'''
                 ),
                 run_body(),
-                Code('continue;'),
                 '''\
                 #undef stack_depth
                 }''',
@@ -66,27 +65,25 @@ def run_inner_fn(name, instrument):
         )
     )
 
-def run_fn(name):
+def run_fn(suffix):
     '''
     Generate a `mit_run`-like function.
 
-     - suffix - str - the function is named `mit_run_{name}` and will call
-       an inner function `run_inner_{name}`.
+     - suffix - str - the function is named `mit_run_{suffix}` and will call
+       an inner function `run_inner_{suffix}`.
     '''
     return Code(f'''
-        #define run_inner run_inner_{name}
-        mit_word_t mit_run_{name}(mit_word_t *pc, mit_word_t ir, mit_word_t * restrict stack, mit_uword_t *stack_depth_ptr)
+        mit_word_t mit_run_{suffix}(mit_word_t *pc, mit_word_t ir, mit_word_t * restrict stack, mit_uword_t *stack_depth_ptr)
         {{
             jmp_buf env;
             mit_word_t error = (mit_word_t)setjmp(env);
             if (error == 0) {{
-                run_inner(pc, ir, stack, stack_depth_ptr, &env);
+                run_inner_{suffix}(pc, ir, stack, stack_depth_ptr, &env);
                 error = MIT_ERROR_OK;
             }} else if (error == MIT_ERROR_BREAK)
                 // Translate MIT_ERROR_BREAK as 0; see THROW_LONGJMP in run.h.
                 error = 0;
             return error;
         }}
-        #undef run_inner
         ''',
     )
