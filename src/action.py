@@ -100,8 +100,9 @@ class ActionEnum(Enum):
         code = Code()
         else_text = ''
         for (_, value) in enumerate(cls):
+            opcode_symbol = f'{c_symbol(cls.__name__)}_{value.name}'
             code.append(
-                f'{else_text}if ({opcode} == {c_symbol(cls.__name__)}_{value.name}) {{'
+                f'{else_text}if ({opcode} == {opcode_symbol}) {{'
             )
             code.append(value.action.gen_case())
             code.append('}')
