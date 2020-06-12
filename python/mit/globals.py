@@ -48,9 +48,9 @@ vars().update({
     ]
 })
 
-def trace(**kwargs):
+def trace(*args, **kwargs):
     'A convenience wrapper for `step(trace=True)`.'
-    VM.step(trace=True, **kwargs)
+    VM.step(*args, trace=True, **kwargs)
 
 # Add a default length to `save()`.
 def _save(file, addr=None, length=None):
