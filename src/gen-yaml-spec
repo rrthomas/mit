@@ -27,19 +27,29 @@ print(code)
 
 # Write YAML description.
 # TODO: When we have PyYAML 5.1, use sort_keys=False
-# FIXME: Make the classes dumped directly representable
-def action_spec(a, opcode):
+def action_spec(a):
     assert isinstance(a, Action)
-    spec = {'opcode': opcode}
+    spec = {}
     if a.effect is not None:
         spec['args'] = [item.name for item in a.effect.args.items]
         spec['results'] = [item.name for item in a.effect.results.items]
     return spec
 
+def extra_instruction_spec(i, code):
+    spec = {
+        'code': code,
+        'action': action_spec(i),
+    }
+    return spec
+
 def instruction_spec(i, opcode):
     assert isinstance(i, Instruction)
-    spec = action_spec(i.action, opcode)
-    spec['terminal'] = i.terminal is not None
+    spec = {
+        'opcode': opcode,
+        'action': action_spec(i.action),
+    }
+    if i.terminal is not None:
+        spec['terminal'] = action_spec(i.terminal)
     return spec
 
 print(dump({
@@ -50,7 +60,7 @@ print(dump({
         for i in Instructions
     },
     'ExtraInstructions': {
-        i.name: action_spec(i.action, i.opcode)
+        i.name: extra_instruction_spec(i.action, i.opcode)
         for i in ExtraInstructions
     },
 }), end='')
