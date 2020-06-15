@@ -99,7 +99,7 @@ respecialize: mit@PACKAGE_SUFFIX@$(EXEEXT)
 	$(PYTHON_WITH_PATH) $(srcdir)/specializer/repeat-specialize --times $(N)
 	$(MAKE)
 
-EXTRA_DIST += \
+DIST_SRCS += \
 	%D%/path.py \
 	%D%/profile.py \
 	%D%/specializer_spec.py \
@@ -110,5 +110,4 @@ EXTRA_DIST += \
 	%D%/profile.json
 
 DISTCLEANFILES += \
-	%D%/labels.json \
-	%D%/specializer.c
+	%D%/labels.json

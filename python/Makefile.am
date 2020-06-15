@@ -86,4 +86,4 @@ EXTRA_DIST = \
 	mit-profile.in			\
 	mit-shell.in
 
-DISTCLEANFILES = $(bin_SCRIPTS) $(man_MANS) mit/enums.py
+DISTCLEANFILES = $(bin_SCRIPTS) $(man_MANS) mit/enums.py mit-shell mit-shell.1
