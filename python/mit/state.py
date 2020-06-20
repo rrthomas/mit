@@ -221,8 +221,8 @@ class BreakHandler:
     def __post_init__(self):
         self.done = 0
 
-    def log(self, *args):
-        print(*args, file=sys.stderr)
+    def log(self, *args, **kwargs):
+        print(*args, file=sys.stderr, **kwargs)
         sys.stderr.flush()
 
     def __enter__(self):
