@@ -105,13 +105,15 @@ Option('no-optimize',
 Doc('\nMiscellaneous:')
 Option('help',
        'display this help message and exit',
-       parse_code=Code('usage();'),
+       parse_code=Code('''\
+           usage();
+           exit(EXIT_SUCCESS);
+       '''),
 )
 
 Option('version',
        'display version information and exit',
        parse_code=Code('''\
-           {
                printf(PACKAGE_NAME " " VERSION " (%zu-byte word, %s-endian)\\n"
                       "Copyright (c) Mit authors 1994-2020.\\n"
                       PACKAGE_NAME " comes with ABSOLUTELY NO WARRANTY.\\n"
@@ -119,7 +121,6 @@ Option('version',
                       "under the terms of the MIT/X11 License.\\n",
                       sizeof(mit_word_t), ENDISM_STRING);
                exit(EXIT_SUCCESS);
-           }
        ''')
 )
 
@@ -189,9 +190,11 @@ for i, option in enumerate(Option.options):
                 longindex = {i};'''
         )
     if option.parse_code:
-        long_options_code.append(f'{else_code}if (longindex == {i})')
+        long_options_code.append(f'{else_code}if (longindex == {i}) {{')
         long_options_code.append(option.parse_code)
-        else_code = 'else '
+        else_code = '} else '
+long_options_code.append('}')
+
 longopts_struct.append('{0, 0, 0, 0}')
 short_options_assignment = Code(f'const char *shortopts = "+:{shortopts}";')
 
@@ -288,14 +291,13 @@ const char *program_name;
 
 static void usage(void)
 {
-    printf("Usage: %s [OPTION...] [OBJECT-FILE ARGUMENT...]\\n"
+    printf("Usage: %s [OPTION...] OBJECT-FILE [ARGUMENT...]\\n"
            "\\n"
            "Run " PACKAGE_NAME " virtual machine code.\\n"
            "\\n",
            program_name);''',
     help_code,
     '''
-    exit(EXIT_SUCCESS);
 }
 
 int main(int argc, char *argv[])
@@ -331,9 +333,11 @@ int main(int argc, char *argv[])
     mit_argv = &argv[optind];
     const char *object_file = mit_argv[0];
 
-    // If invoked without an object file, give usage message and exit
-    if (mit_argc < 1)
+    // If invoked without an object file, give usage message and exit with error
+    if (mit_argc < 1) {
         usage();
+        exit(EXIT_FAILURE);
+    }
 
     // Set up VM
     mit_word_t *memory = calloc(memory_words, sizeof(mit_word_t));

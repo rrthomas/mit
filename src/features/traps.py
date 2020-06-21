@@ -78,7 +78,7 @@ class LibC(ActionEnum):
         Code('nwritten = write(fd, buf, nbytes);'),
     )
 
-    SEEK_SEAT = Action(StackEffect.of([], ['whence']), Code('''\
+    SEEK_SET = Action(StackEffect.of([], ['whence']), Code('''\
         whence = (mit_word_t)SEEK_SET;
     '''))
 
