@@ -571,4 +571,4 @@ Instructions = unique(ActionEnum(
         )
     ) for i in instructions)
 ))
-Instructions.__docstring__ = 'VM instructions.'
+Instructions.__doc__ = 'VM instructions.'
