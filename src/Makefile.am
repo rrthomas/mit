@@ -77,6 +77,7 @@ main.c: gen-main
 # sloccount --autogen doesn't work (Debian bug #929000), so temporarily move
 # *.h.in during count.
 loc:
+	cd $(srcdir); \
 	for file in $(pkginclude_HEADERS); do \
 	    test -f $$file.in && mv $$file.in $$file.in.bak || true; \
 	done && \

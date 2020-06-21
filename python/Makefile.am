@@ -60,6 +60,7 @@ install-data-hook: mit/enums.py
 # sloccount --autogen doesn't work (Debian bug #929000), so temporarily move
 # *.py.in during count.
 loc:
+	cd $(srcdir); \
 	for file in $(nodist_mit_pkgpython_PYTHON); do \
 	    test -f $$file.in && mv $$file.in $$file.in.bak || true; \
 	done && \
