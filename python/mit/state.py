@@ -71,6 +71,7 @@ class State:
             cast(self.pc, POINTER(c_word)),
             0,
             cast((c_word * stack_words.value)(), POINTER(c_word)),
+            stack_words.value,
             byref(c_uword(0)),
         )
 
@@ -239,14 +240,14 @@ class BreakHandler:
             break_fn_ptr.value = self._old_break_fn
         self._new_break_fn = None
 
-    def break_fn(self, pc, ir, stack, stack_depth):
+    def break_fn(self, pc, ir, stack, stack_words, stack_depth):
         '''
         This is a `mit_fn_t` (see run.h).
         '''
         self.state.pc = cast(pc, c_void_p).value
         self.state.ir = ir
         if stack:
-            stack = (c_word * stack_words.value).from_address(
+            stack = (c_word * stack_words).from_address(
                 cast(stack, c_void_p).value
             )[0:stack_depth.contents.value]
         else:

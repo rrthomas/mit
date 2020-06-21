@@ -31,15 +31,6 @@ typedef size_t mit_uword_t;
 // TODO: find largest type: bigger of long double and intmax_t?
 typedef uintmax_t mit_max_stack_item_t;
 
-// Stack
-extern MIT_THREAD_LOCAL mit_uword_t mit_stack_words;
-// The stack is implemented as a `stack_words`-element array at `stack`.
-#define mit_stack_pos(stack, stack_depth, pos) \
-    (&stack[stack_depth - (mit_uword_t)(pos) - 1])
-
-
-// VM control
-
 // The type of a function that mutates the VM stack and memory.
 //
 // `pc` and `ir` are the initial values of the corresponding registers.
@@ -48,8 +39,17 @@ extern MIT_THREAD_LOCAL mit_uword_t mit_stack_words;
 // Returns the exit status: `MIT_ERROR_OK` on success, or some other value
 // on error.
 typedef mit_word_t mit_fn_t(mit_word_t *pc, mit_word_t ir,
-                             mit_word_t * restrict stack,
-                             mit_uword_t *stack_depth_ptr);
+                            mit_word_t * restrict stack,
+                            mit_uword_t stack_words,
+                            mit_uword_t *stack_depth_ptr);
+
+// Stack
+// The stack is implemented as a `stack_words`-element array at `stack`.
+#define mit_stack_pos(stack, stack_depth, pos) \
+    (&stack[stack_depth - (mit_uword_t)(pos) - 1])
+
+// The recommended stack size.
+extern MIT_THREAD_LOCAL mit_uword_t mit_stack_words;
 
 // Execute VM code. Defaults to `mit_run_simple`. Can be set to any
 // compatible function, which thereby propagates to nested VMs via the `catch`

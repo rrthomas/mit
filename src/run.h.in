@@ -114,7 +114,7 @@
         mit_uword_t inner_stack_depth = nargs;          \
         DO_CALL_ARGS(nargs, nres);                      \
         run_inner((mit_word_t *)addr, 0, inner_stack,   \
-                  &inner_stack_depth, jmp_buf_ptr);     \
+                  stack_words, &inner_stack_depth, jmp_buf_ptr); \
         DO_CALL_RESULTS(nres);                          \
         ir = 0;                                         \
     } while (0)
@@ -128,7 +128,7 @@
         mit_uword_t inner_stack_depth = nargs;                  \
         DO_CALL_ARGS(nargs, nres);                              \
         error = mit_run((mit_word_t *)addr, 0,                  \
-                        inner_stack, &inner_stack_depth);       \
+                        inner_stack, stack_words, &inner_stack_depth);  \
         if (error == MIT_ERROR_OK)                              \
             DO_CALL_RESULTS(nres);                              \
         PUSH(error);                                            \

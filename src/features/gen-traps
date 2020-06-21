@@ -74,9 +74,9 @@ for lib in LibInstructions:
 
 code.append('')
 code.append('''\
-    mit_word_t mit_trap(mit_word_t *pc, mit_word_t ir, mit_word_t *stack, mit_uword_t *stack_depth_ptr)
+    mit_word_t mit_trap(mit_word_t *pc, mit_word_t ir, mit_word_t *stack, mit_uword_t stack_words, mit_uword_t *stack_depth_ptr)
     {
-        (void)pc;
+        (void)pc, (void)stack_words;
         mit_uword_t stack_depth = *stack_depth_ptr;
         mit_word_t error = MIT_ERROR_OK;'''
 )

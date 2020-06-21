@@ -34,12 +34,11 @@ def run_inner_fn(suffix, instrument):
             f'''\
             // Define run_inner for the benefit of `call`.
             #define run_inner run_inner_{suffix}
-            static void run_inner_{suffix}(mit_word_t *pc, mit_word_t ir, mit_word_t * restrict stack, mit_uword_t * restrict stack_depth_ptr, jmp_buf *jmp_buf_ptr)
+            static void run_inner_{suffix}(mit_word_t *pc, mit_word_t ir, mit_word_t * restrict stack, mit_uword_t stack_words, mit_uword_t * restrict stack_depth_ptr, jmp_buf *jmp_buf_ptr)
             {{''',
             Code(*[
                 '''\
                 #define stack_depth (*stack_depth_ptr)
-                mit_uword_t stack_words = mit_stack_words;
                 mit_word_t error;
 
                 for (;;) {''',
@@ -73,12 +72,12 @@ def run_fn(suffix):
        an inner function `run_inner_{suffix}`.
     '''
     return Code(f'''
-        mit_word_t mit_run_{suffix}(mit_word_t *pc, mit_word_t ir, mit_word_t * restrict stack, mit_uword_t *stack_depth_ptr)
+        mit_word_t mit_run_{suffix}(mit_word_t *pc, mit_word_t ir, mit_word_t * restrict stack, mit_uword_t stack_words, mit_uword_t *stack_depth_ptr)
         {{
             jmp_buf env;
             mit_word_t error = (mit_word_t)setjmp(env);
             if (error == 0) {{
-                run_inner_{suffix}(pc, ir, stack, stack_depth_ptr, &env);
+                run_inner_{suffix}(pc, ir, stack, stack_words, stack_depth_ptr, &env);
                 error = MIT_ERROR_OK;
             }} else if (error == MIT_ERROR_BREAK)
                 // Translate MIT_ERROR_BREAK as 0; see THROW_LONGJMP in run.h.
