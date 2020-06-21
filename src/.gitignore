@@ -15,6 +15,5 @@ __pycache__/
 /main.c
 /run.h
 /include/mit/mit.h
-/params.py
 /spec.yaml
 /mit-include.man

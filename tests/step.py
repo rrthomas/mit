@@ -1,4 +1,4 @@
-# Test single_step() and `next`.
+# Test State.step() and `next`.
 #
 # (c) Mit authors 1994-2020
 #
@@ -15,7 +15,7 @@ from mit.globals import *
 iterations = 10
 for i in range(iterations):
     print(f"pc = {VM.pc:#x}")
-    step(auto_NEXT=False)
+    step()
 
 final_pc = M.addr + iterations * word_bytes
 print(f"pc should now be {final_pc:#x}")

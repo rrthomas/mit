@@ -19,7 +19,7 @@ class LibC(ActionEnum):
     'Function codes for the LIBC trap.'
 
     STRLEN = Action(StackEffect.of(['s:const char *'], ['len']), Code('''\
-        len = (mit_word)(mit_uword)strlen(s);
+        len = (mit_word_t)(mit_uword_t)strlen(s);
     '''))
 
     STRNCPY = Action(StackEffect.of(['dest:char *', 'src:const char *', 'n'], ['ret:char *']),
@@ -27,35 +27,35 @@ class LibC(ActionEnum):
     )
 
     STDIN = Action(StackEffect.of([], ['fd:int']), Code('''\
-        fd = (mit_word)STDIN_FILENO;
+        fd = (mit_word_t)STDIN_FILENO;
     '''))
 
     STDOUT = Action(StackEffect.of([], ['fd:int']), Code('''\
-        fd = (mit_word)STDOUT_FILENO;
+        fd = (mit_word_t)STDOUT_FILENO;
     '''))
 
     STDERR = Action(StackEffect.of([], ['fd:int']), Code('''\
-        fd = (mit_word)STDERR_FILENO;
+        fd = (mit_word_t)STDERR_FILENO;
     '''))
 
     O_RDONLY = Action(StackEffect.of([], ['flag']), Code('''\
-        flag = (mit_word)O_RDONLY;
+        flag = (mit_word_t)O_RDONLY;
     '''))
 
     O_WRONLY = Action(StackEffect.of([], ['flag']), Code('''\
-        flag = (mit_word)O_WRONLY;
+        flag = (mit_word_t)O_WRONLY;
     '''))
 
     O_RDWR = Action(StackEffect.of([], ['flag']), Code('''\
-        flag = (mit_word)O_RDWR;
+        flag = (mit_word_t)O_RDWR;
     '''))
 
     O_CREAT = Action(StackEffect.of([], ['flag']), Code('''\
-        flag = (mit_word)O_CREAT;
+        flag = (mit_word_t)O_CREAT;
     '''))
 
     O_TRUNC = Action(StackEffect.of([], ['flag']), Code('''\
-        flag = (mit_word)O_TRUNC;
+        flag = (mit_word_t)O_TRUNC;
     '''))
 
     OPEN = Action(StackEffect.of(['str:char *', 'flags'], ['fd:int']), Code('''\
@@ -65,7 +65,7 @@ class LibC(ActionEnum):
 
     CLOSE = Action(
         StackEffect.of(['fd:int'], ['ret:int']),
-        Code('ret = (mit_word)close(fd);'),
+        Code('ret = (mit_word_t)close(fd);'),
     )
 
     READ = Action(
@@ -79,15 +79,15 @@ class LibC(ActionEnum):
     )
 
     SEEK_SEAT = Action(StackEffect.of([], ['whence']), Code('''\
-        whence = (mit_word)SEEK_SET;
+        whence = (mit_word_t)SEEK_SET;
     '''))
 
     SEEK_CUR = Action(StackEffect.of([], ['whence']), Code('''\
-        whence = (mit_word)SEEK_CUR;
+        whence = (mit_word_t)SEEK_CUR;
     '''))
 
     SEEK_END = Action(StackEffect.of([], ['whence']), Code('''\
-        whence = (mit_word)SEEK_END;
+        whence = (mit_word_t)SEEK_END;
     '''))
 
     LSEEK = Action(
@@ -145,12 +145,12 @@ class LibraryEnum(ActionEnum):
         super().__init__(Action(None, Code(
             '''\
             {
-                mit_word function;''',
+                mit_word_t function;''',
             pop_stack('function'),
             f'''
-                int ret = trap_{self.name.lower()}(S, function);
+                int ret = trap_{self.name.lower()}(function, stack, &stack_depth);
                 if (ret != 0)
-                    RAISE(ret);
+                    THROW(ret);
             }}'''
         )), opcode=opcode)
         self.library = library

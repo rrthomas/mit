@@ -64,10 +64,10 @@ def _replace_items(picture, replacement):
 def _gen_ordinary_instruction(instruction, guard='1'):
     return (
         Instruction(
-            instruction.action.effect,
-            instruction.action.code,
+            instruction.action.action.effect,
+            instruction.action.action.code,
             guard,
-            instruction.action.terminal_action is not None,
+            instruction.action.terminal is not None,
         ),
         instruction.opcode,
     )
@@ -83,27 +83,27 @@ def _gen_variadic_instruction(instruction, count):
         code.append('// Suppress warnings about possibly unused variables.')
         for i in range(count):
             code.append(f'(void)x{i};')
-    code.extend(instruction.action.code)
+    code.extend(instruction.action.action.code)
     return (
         Instruction(
             StackEffect.of(
-                _replace_items(instruction.action.effect.args, replacement),
-                _replace_items(instruction.action.effect.results, replacement),
+                _replace_items(instruction.action.action.effect.args, replacement),
+                _replace_items(instruction.action.action.effect.results, replacement),
             ),
             code,
             f'{{stack_0}} == {count}',
-            instruction.action.terminal_action is not None,
+            instruction.action.terminal is not None,
         ),
         instruction.opcode,
     )
 
 specialized_instructions = {}
 for instruction in Instructions:
-    if instruction.action.is_variadic:
+    if instruction.action.action.is_variadic:
         for count in range(4):
             specialized_instructions[f'{instruction.name}_WITH_{count}'] = \
                 _gen_variadic_instruction(instruction, count)
-    elif instruction.action.effect is not None:
+    elif instruction.action.action.effect is not None:
         specialized_instructions[instruction.name] = \
             _gen_ordinary_instruction(instruction)
 
@@ -118,5 +118,4 @@ GUESS_LIMITING = frozenset([
     Instructions.NEXT,
     Instructions.JUMP,
     Instructions.JUMPZ,
-    Instructions.CALL,
 ])

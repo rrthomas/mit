@@ -5,7 +5,8 @@ This package provides Mit bindings for Python 3, and offers a convenient
 set of functions and variables to interact with Mit in a Python REPL.
 Module mit provides a Pythonic API.
 Module mit.binding provides direct access to libmit.
-Module mit.assembler provides Assembler and Disassembler.
+Module mit.assembler provides Assembler
+Module mit.disassembler provides Disassembler
 Module mit.globals provides a convenient set of globals for interactive use
 and for testing.
 
@@ -28,13 +29,10 @@ from .enums import (
 from .trap_enums import LibC, LibInstructions
 from .binding import (
     Error, VMError,
-    word_bytes,
-    byte_bit, byte_mask,
-    word_bit, word_mask, sign_bit,
-    opcode_bit, opcode_mask,
-    c_uword, c_word,
-    word_min, word_max, uword_max,
+    c_uword, c_word, uword_max,
+    word_bytes, word_bit, sign_bit,
     is_aligned, register_args,
 )
 from .state import State
-from .assembler import Assembler, Disassembler
+from .assembler import Assembler
+from .disassembler import Disassembler

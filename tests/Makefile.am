@@ -16,6 +16,7 @@ BF_LOG_COMPILER = env $(PY_LOG_ENV) $(TIME) $(PYTHON) $(srcdir)/run-brainfuck-te
 TESTS =	\
 	arithmetic.py	\
 	branch.py	\
+	catch.py	\
 	comparison.py	\
 	constants.py	\
 	extra.py	\
@@ -27,15 +28,11 @@ TESTS =	\
 	memory.py	\
 	run.py		\
 	save_object.py	\
-	single_step.py	\
 	stack.py	\
+	step.py		\
 	hello-world.bf  \
 	cell-size.bf	\
 	test-mit-shell
-
-if USING_PFORTH
-TESTS += test_pickle.py
-endif
 
 BENCH_TESTS = \
 	mandelbrot.bf

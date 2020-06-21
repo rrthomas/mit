@@ -14,16 +14,18 @@ from mit.globals import *
 
 # Test code
 final_pc = M.addr + word_bytes
-lit(MitErrorCode.OK)
-extra(HALT)
+error_code = 42
+push(error_code)
+extra(THROW)
 
 # Test
-ret = run() # will raise an exception on error
-print("run() returned without an exception")
-
-print(f"pc should now be {final_pc:#x}")
-if VM.pc != final_pc:
-    print(f"Error in run() tests: pc = {VM.pc:#x}")
+try:
+    ret = run() # will raise an exception on error
+    print("Error in run() tests: run() did not return an error when it should have")
     sys.exit(1)
+except VMError as e:
+    if e.args[0] != error_code:
+        print(f"Error in run() tests: error code {e.args[0]} returned; expected {error_code}")
+        sys.exit(1)
 
 print("run() tests ran OK")

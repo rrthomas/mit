@@ -11,6 +11,10 @@
 #define MIT_RUN_H
 
 
+#include <string.h>
+#include <setjmp.h>
+
+
 // Optimization
 // Hint that `x` is usually true/false.
 // https://gcc.gnu.org/onlinedocs/gcc/Other-Builtins.html
@@ -26,18 +30,108 @@
 // quantities is implementation-defined in C99).
 #if HAVE_ARITHMETIC_RSHIFT
 #define ARSHIFT(n, p) \
-    ((mit_word)(n) >> (p))
+    ((mit_word_t)(n) >> (p))
 #else
 #define ARSHIFT(n, p) \
-    (((n) >> (p)) | ((mit_uword)(-((mit_word)(n) < 0)) << (MIT_WORD_BIT - (p))))
+    (((n) >> (p)) | ((mit_uword_t)(-((mit_word_t)(n) < 0)) << (MIT_WORD_BIT - (p))))
 #endif
 
+// Pop a stack item into a variable.
+#define POP(var)                                        \
+    mit_uword_t var;                                    \
+    if (stack_depth < 1)                                \
+        THROW(MIT_ERROR_INVALID_STACK_READ);            \
+    var = stack[--stack_depth];
+
+// Push an expression to the stack.
+#define PUSH(expr)                                      \
+    if (stack_words - stack_depth < 1)                  \
+        THROW(MIT_ERROR_INVALID_STACK_WRITE);           \
+    stack[stack_depth] = (expr);                        \
+    stack_depth++;
+
 // Raise an error during the execution of an instruction.
-// RAISE must be called before writing any state.
-#define RAISE(code)                                           \
+// THROW must be called before writing any state.
+#define THROW(code)                                           \
     do {                                                      \
         error = (code);                                       \
         goto error;                                           \
+    } while (0)
+
+// We must not return 0 with longjmp(), so instead return MIT_ERROR_BREAK,
+// which cannot be returned by `mit_run()`.
+#define THROW_LONGJMP(error)                                    \
+    longjmp(*jmp_buf_ptr, error ? error : MIT_ERROR_BREAK);
+
+// Perform the action of `next`.
+#define DO_NEXT                                 \
+    ir = *pc++
+
+// Perform the action of `jump`.
+#define DO_JUMP(addr)                                   \
+    do {                                                \
+        if (unlikely((addr) % sizeof(mit_word_t) != 0)) \
+            THROW(MIT_ERROR_UNALIGNED_ADDRESS);         \
+        pc = (mit_word_t *)(addr);                      \
+    } while (0)
+
+// Perform the action of `jumpi`.
+#define DO_JUMPI                                        \
+    do {                                                \
+        pc += ir;                                       \
+        ir = 0;                                         \
+    } while (0)
+
+// Perform the setup for `call` or `catch`.
+#define DO_CALL_ARGS(nargs, nres)                           \
+    do {                                                    \
+        if (nargs > stack_depth)                            \
+            THROW(MIT_ERROR_INVALID_STACK_READ);            \
+        if (nres > stack_words - (stack_depth - nargs))     \
+            THROW(MIT_ERROR_INVALID_STACK_WRITE);           \
+        memcpy(inner_stack, &stack[stack_depth - nargs],    \
+               nargs * sizeof(mit_word_t));                 \
+        stack_depth -= nargs;                               \
+    } while (0)
+
+// Perform the rest of the action of `ret`.
+#define DO_CALL_RESULTS(nres)                           \
+    do {                                                \
+        if (nres > inner_stack_depth)                   \
+            THROW(MIT_ERROR_INVALID_STACK_READ);        \
+        memcpy(stack + stack_depth,                     \
+               &inner_stack[inner_stack_depth - nres],  \
+               nres * sizeof(mit_word_t));              \
+        stack_depth += nres;                            \
+    } while (0)
+
+// Perform a `call`.
+#define DO_CALL(addr)                                   \
+    do {                                                \
+        POP(nres);                                      \
+        POP(nargs);                                     \
+        mit_word_t inner_stack[stack_words];            \
+        mit_uword_t inner_stack_depth = nargs;          \
+        DO_CALL_ARGS(nargs, nres);                      \
+        run_inner((mit_word_t *)addr, 0, inner_stack,   \
+                  &inner_stack_depth, jmp_buf_ptr);     \
+        DO_CALL_RESULTS(nres);                          \
+        ir = 0;                                         \
+    } while (0)
+
+// Perform a `catch`.
+#define DO_CATCH(addr)                                          \
+    do {                                                        \
+        POP(nres);                                              \
+        POP(nargs);                                             \
+        mit_word_t inner_stack[stack_words];                    \
+        mit_uword_t inner_stack_depth = nargs;                  \
+        DO_CALL_ARGS(nargs, nres);                              \
+        error = mit_run((mit_word_t *)addr, 0,                  \
+                        inner_stack, &inner_stack_depth);       \
+        if (error == MIT_ERROR_OK)                              \
+            DO_CALL_RESULTS(nres);                              \
+        PUSH(error);                                            \
     } while (0)
 
 

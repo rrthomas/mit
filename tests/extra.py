@@ -21,56 +21,63 @@ register_args(*args)
 
 # Test code
 buffer = M.addr + 0x200
-breaks = []
-
-# Put address of buffer on stack for later
-lit(buffer)
+tests = [] # list of (start, end, final_callback)
 
 # Test ARGC
+start = label()
 extra(ARGC)
-breaks.append(label() + word_bytes)
+
+def argc_test_callback(handler, stack):
+    argc = stack.pop()
+    handler.log(f"argc is {argc}, and should be {len(args)}")
+    if argc != len(args):
+        handler.log(f"Error in ARGC test: pc = {handler.state.pc:#x}")
+        sys.exit(1)
+tests.append((start, label(), argc_test_callback))
 
 # Test ARGV
+start = label()
+push(len(args))
 extra(ARGV)
-lit(word_bytes)
+push(word_bytes)
 ass(ADD)
 ass(LOAD)
-lit(0)
-ass(DUP)
-lit(LibC.STRLEN)
+push(LibC.STRLEN)
 trap(LIBC)
-breaks.append(label() + word_bytes)
+
+def argv_test_callback(handler, stack):
+    arg1len = stack.pop()
+    handler.log(f"arg 1's length is {arg1len}, and should be {len(args[1])}")
+    if arg1len != len(args[1]):
+        handler.log(f"Error in extra instructions and trap tests: pc = {handler.state.pc:#x}")
+        sys.exit(1)
+tests.append((start, label(), argv_test_callback))
 
 # Test LibC.STRNCPY
-lit(LibC.STRNCPY)
+start = label()
+push(buffer)
+extra(ARGV)
+push(word_bytes)
+ass(ADD)
+ass(LOAD)
+push(len(args[1]))
+push(LibC.STRNCPY)
 trap(LIBC)
-breaks.append(label() + word_bytes)
+
+def strncpy_test_callback(handler, stack):
+    handler.log(f"addr: {buffer:#x}")
+    c_str = string_at(cast(buffer, c_char_p))
+    handler.log(f"arg 1 is {c_str}, and should be {args[1]}")
+    if c_str != args[1]:
+        handler.log(f"Error in extra instructions and trap tests: pc = {handler.state.pc:#x}")
+        sys.exit(1)
+tests.append((start, label(), strncpy_test_callback))
 
 
-# Run ARGC test
-trace(addr=breaks.pop(0))
-argc = S.pop()
-print(f"argc is {argc}, and should be {len(args)}")
-if argc != len(args):
-    print(f"Error in extra instruction and trap tests: pc = {VM.pc:#x}")
-    sys.exit(1)
+# Run tests
+for i, (start, end, final_callback) in enumerate(tests):
+    print(f"Test {i + 1}", file=sys.stderr)
+    VM.pc = start
+    trace(addr=end + word_bytes, final_callback=final_callback)
 
-# Run ARGV test
-trace(addr=breaks.pop(0))
-arg1len = S.pop()
-print(f"arg 1's length is {arg1len}, and should be {len(args[1])}")
-if arg1len != len(args[1]):
-    print(f"Error in extra instruction and trap tests: pc = {VM.pc:#x}")
-    sys.exit(1)
-S.push(arg1len) # push length back for next test
-
-# Run LibC.STRNCPY test
-trace(addr=breaks.pop(0))
-print(f"addr: {buffer:#x}")
-c_str = string_at(cast(buffer, c_char_p))
-print(f"arg 1 is {c_str}, and should be {args[1]}")
-if c_str != args[1]:
-    print(f"Error in extra instruction tests: pc = {VM.pc:#x}")
-    sys.exit(1)
-
-print("extra instruction and trap tests ran OK")
+print("Extra instructions and trap tests ran OK")

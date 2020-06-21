@@ -44,14 +44,15 @@ Instructions = enum(
 # The set of opcodes which must be the last in a word.
 TERMINAL_OPCODES = frozenset({
     Instructions[name]
-    for name, i in spec['Instructions'].items() if i.get('terminal')
+    for name, i in spec['Instructions'].items()
+    if i.get('terminal') is not None
 })
 
 ExtraInstructions = enum(
     'ExtraInstructions',
-    'Extra instruction opcodes.',
+    'Extra instruction codes.',
     spec['ExtraInstructions'],
-    value_extractor=lambda i: i['opcode'],
+    value_extractor=lambda i: i['code'],
 )
 
 MitErrorCode = enum(

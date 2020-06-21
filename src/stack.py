@@ -17,7 +17,7 @@ from code_util import Code, unrestrict, disable_warnings
 
 # Enough for the core
 # FIXME: Should be able to assume pointers fit in a word
-type_wordses = {'mit_word': 1, 'mit_uword': 1, 'mit_word *': 1, 'mit_state *': 1, 'mit_fn *': 1, 'char **':1}
+type_wordses = {'mit_word_t': 1, 'mit_uword_t': 1, 'mit_word_t *': 1, 'mit_fn *': 1, 'char **':1}
 
 # Set to 0 to allow type_words to work without types information
 TYPE_SIZE_UNKNOWN = None
@@ -34,7 +34,7 @@ def type_words(type):
         print(f'type {type} not found; type_words: "{type_wordses}"', file=sys.stderr)
     return ret
 
-def load_stack(name, depth=0, type='mit_word'):
+def load_stack(name, depth=0, type='mit_word_t'):
     '''
     Generate C code to load the variable `name` of type `type` occupying
     stack slots `depth`, `depth+1`, ... . Does not check the stack.
@@ -43,12 +43,12 @@ def load_stack(name, depth=0, type='mit_word'):
     '''
     code = Code()
     code.append(
-        f'mit_max_stack_item_t temp = (mit_uword)(*UNCHECKED_STACK(S->stack, S->stack_depth, {depth}));'
+        f'mit_max_stack_item_t temp = (mit_uword_t)(*mit_stack_pos(stack, stack_depth, {depth}));'
     )
     for i in range(1, type_words(type)):
         code.append('temp <<= MIT_WORD_BIT;')
         code.append(
-            f'temp |= (mit_uword)(*UNCHECKED_STACK(S->stack, S->stack_depth, {depth + i}));'
+            f'temp |= (mit_uword_t)(*mit_stack_pos(stack, stack_depth, {depth + i}));'
         )
     code.extend(disable_warnings(
         ['-Wint-to-pointer-cast'],
@@ -56,7 +56,7 @@ def load_stack(name, depth=0, type='mit_word'):
     ))
     return Code('{', code, '}')
 
-def store_stack(value, depth=0, type='mit_word'):
+def store_stack(value, depth=0, type='mit_word_t'):
     '''
     Generate C code to store the value `value` of type `type` occupying
     stack slots `depth`, `depth+1`, ... . Does not check the stack.
@@ -70,30 +70,30 @@ def store_stack(value, depth=0, type='mit_word'):
     ))
     for i in reversed(range(1, type_words(type))):
         code.append(
-            f'*UNCHECKED_STACK(S->stack, S->stack_depth, {depth + i}) = (mit_uword)(temp & MIT_WORD_MASK);'
+            f'*mit_stack_pos(stack, stack_depth, {depth + i}) = (mit_uword_t)(temp & MIT_UWORD_MAX);'
         )
         code.append('temp >>= MIT_WORD_BIT;')
     code.append(
-        '*UNCHECKED_STACK(S->stack, S->stack_depth, {}) = (mit_uword)({});'
+        '*mit_stack_pos(stack, stack_depth, {}) = (mit_uword_t)({});'
         .format(
             depth,
-            'temp & MIT_WORD_MASK' if type_words(type) > 1 else 'temp',
+            'temp & MIT_UWORD_MAX' if type_words(type) > 1 else 'temp',
         )
     )
     return Code('{', code, '}')
 
-def pop_stack(name, type='mit_word'):
+def pop_stack(name, type='mit_word_t'):
     code = Code()
     code.extend(check_underflow(Size(type_words(type))))
     code.extend(load_stack(name, type=type))
-    code.append(f'S->stack_depth -= {type_words(type)};')
+    code.append(f'stack_depth -= {type_words(type)};')
     return code
 
-def push_stack(value, type='mit_word'):
+def push_stack(value, type='mit_word_t'):
     code = Code()
     code.extend(check_overflow(Size(0), Size(type_words(type))))
     code.extend(store_stack(value, depth=-type_words(type), type=type))
-    code.append(f'S->stack_depth += {type_words(type)};')
+    code.append(f'stack_depth += {type_words(type)};')
     return code
 
 
@@ -198,12 +198,12 @@ class StackItem:
     def of(name_type):
         '''
         `name_type` has the syntax `NAME[:TYPE]`, where `NAME` is a C
-        identifier and `TYPE` a C type (defaulting to `mit_word`).
+        identifier and `TYPE` a C type (defaulting to `mit_word_t`).
         '''
         m = re.match('([^:=]+)(?::([^:]+))?$', name_type)
         return StackItem(
             m.group(1),
-            m.group(2) or 'mit_word',
+            m.group(2) or 'mit_word_t',
         )
 
     def __eq__(self, item):
@@ -334,7 +334,7 @@ class StackEffect:
         Returns a Code to read the arguments from the stack into C
         variables, skipping 'ITEMS' and 'COUNT'.
 
-        `S->stack_depth` is not modified.
+        `stack_depth` is not modified.
         '''
         code = Code()
         for item in self.args.items:
@@ -347,7 +347,7 @@ class StackEffect:
         Returns a Code to write the results from C variables into the stack,
         skipping 'ITEMS'.
 
-        `S->stack_depth` must be modified first.
+        `stack_depth` must be modified first.
         '''
         code = Code()
         for item in self.results.items:
@@ -366,14 +366,14 @@ def check_underflow(num_pops):
     assert num_pops >= 0, num_pops
     if num_pops == 0: return Code()
     tests = []
-    tests.append(f'unlikely(S->stack_depth < (mit_uword)({num_pops.size}))')
+    tests.append(f'unlikely(stack_depth < (mit_uword_t)({num_pops.size}))')
     if num_pops.count == 1:
         tests.append(
-            f'unlikely(S->stack_depth - (mit_uword)({num_pops.size}) < (mit_uword)(COUNT))'
+            f'unlikely(stack_depth - (mit_uword_t)({num_pops.size}) < (mit_uword_t)(COUNT))'
         )
     return Code(
         'if ({}) {{'.format(' || '.join(tests)),
-        Code('RAISE(MIT_ERROR_INVALID_STACK_READ);'),
+        Code('THROW(MIT_ERROR_INVALID_STACK_READ);'),
         '}',
     )
 
@@ -395,6 +395,6 @@ def check_overflow(num_pops, num_pushes):
     # Ensure comparison will not overflow
     assert depth_change.count == 0
     return Code(f'''\
-        if (unlikely(S->stack_words - S->stack_depth < {depth_change}))
-            RAISE(MIT_ERROR_STACK_OVERFLOW);'''
+        if (unlikely(stack_words - stack_depth < {depth_change}))
+            THROW(MIT_ERROR_STACK_OVERFLOW);'''
     )

@@ -20,7 +20,7 @@ class CacheState:
     in C variables, as they are likely to be popped soon.
     This class represents the current cacheing situation.
 
-    Caching items does not affect `S->stack_depth`.
+    Caching items does not affect `stack_depth`.
     If `item.depth < self.cached_depth`, then `item` is cached in variable
     `self.var(item.depth)`.
 
@@ -46,7 +46,7 @@ class CacheState:
         '''
         assert type(num_pops) is int
         if self.cached_depth >= num_pops: return '1'
-        return f'S->stack_depth >= {num_pops}'
+        return f'stack_depth >= {num_pops}'
 
     def overflow_test(self, num_pops, num_pushes):
         '''
@@ -60,12 +60,12 @@ class CacheState:
         assert type(num_pushes) is int
         depth_change = num_pushes - num_pops
         if self.checked_depth >= depth_change: return '1'
-        return f'(S->stack_words - S->stack_depth) >= {depth_change}'
+        return f'(stack_words - stack_depth) >= {depth_change}'
 
     def load_args(self, args):
         '''
         Returns a Code to read the arguments from the stack into C
-        variables. `S->stack_depth` is not modified.
+        variables. `stack_depth` is not modified.
 
          - args - list of str.
         '''
@@ -77,7 +77,7 @@ class CacheState:
     def store_results(self, results):
         '''
         Returns a Code to write the results from C variables into the
-        stack. `S->stack_depth` must be modified first.
+        stack. `stack_depth` must be modified first.
 
          - results - list of str.
         '''
@@ -121,7 +121,7 @@ class CacheState:
             return self.var(pos)
         else:
             # The item is really on the stack.
-            return f'*UNCHECKED_STACK(S->stack, S->stack_depth, {pos})'
+            return f'*mit_stack_pos(stack, stack_depth, {pos})'
 
     def flush(self, goal=0):
         '''
@@ -152,9 +152,9 @@ def gen_case(instruction, cache_state):
     responsibility to ensure that it's the right instruction to execute, and
     that the stack won't underflow or overflow.
 
-    In the code, S is the mit_state, and errors are reported by calling
-    RAISE(). When calling RAISE(), the C variable `cached_depth` will contain
-    the number of stack items cached in C locals.
+    In the code, errors are reported by calling THROW(). When calling
+    THROW(), the C variable `cached_depth` will contain the number of stack
+    items cached in C locals.
 
      - instruction - Instructions.
      - cache_state - CacheState - Which StackItems are cached.
@@ -165,19 +165,19 @@ def gen_case(instruction, cache_state):
     num_results = len(instruction.action.effect.results.items)
     # Declare C variables for args and results.
     code.extend(Code(*[
-        f'mit_word {name};'
+        f'mit_word_t {name};'
         for name, item in instruction.action.effect.by_name.items()
     ]))
     # Load the arguments into their C variables.
     code.extend(cache_state.load_args(instruction.action.effect.args))
     # Inline `instruction.action.code`.
-    # Note: `S->stack_depth` and `cache_state` must be correct for RAISE().
+    # Note: `stack_depth` and `cache_state` must be correct for THROW().
     code.extend(instruction.action.code)
     # Update stack pointer and cache_state.
-    code.append(f'S->stack_depth -= {num_args};')
+    code.append(f'stack_depth -= {num_args};')
     code.extend(cache_state.add(-num_args))
     code.extend(cache_state.add(num_results))
-    code.append(f'S->stack_depth += {num_results};')
+    code.append(f'stack_depth += {num_results};')
     # Store the results from their C variables.
     code.extend(cache_state.store_results(instruction.action.effect.results))
     return code

@@ -15,6 +15,7 @@ from mit_test import *
 
 
 # Test results
+byte_bit = 8
 last_word = M_word.addr + (len(M_word) - 1) * word_bytes
 magic_number = 0xf201
 endism = 0 if byteorder == 'little' else 1
@@ -35,26 +36,26 @@ correct = [
     [0xf2, M.addr + len(M) - ((word_bytes - 1) * endism + 1)],
     [],
     [last_word],
-    [(0xf2 << (word_bit - byte_bit)) | magic_number | -(word_mask + 1)],
+    [(0xf2 << (word_bit - byte_bit)) | magic_number | -(uword_max + 1)],
 ]
 
 # Test code
-lit(magic_number)
-lit(last_word)
+push(magic_number)
+push(last_word)
 ass(STORE)
-lit(last_word)
+push(last_word)
 ass(LOAD)
-lit(1)
+push(1)
 ass(POP)
-lit(last_word + (word_bytes - 2) * endism)
+push(last_word + (word_bytes - 2) * endism)
 ass(LOAD2)
-lit(1)
+push(1)
 ass(POP)
-lit(last_word + (word_bytes - 2) * endism + 1 * (1 - endism))
+push(last_word + (word_bytes - 2) * endism + 1 * (1 - endism))
 ass(LOAD1)
-lit(M.addr + len(M) - ((word_bytes - 1) * endism + 1))
+push(M.addr + len(M) - ((word_bytes - 1) * endism + 1))
 ass(STORE1)
-lit(last_word)
+push(last_word)
 ass(LOAD)
 
 # Test

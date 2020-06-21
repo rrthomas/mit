@@ -152,6 +152,8 @@ AC_ARG_VAR([THREAD_LOCAL],
 AC_C_BIGENDIAN
 AC_CHECK_SIZEOF([size_t]) # word_bytes
 SIZEOF_SIZE_T=$ac_cv_sizeof_size_t
+AS_IF([test "$SIZEOF_SIZE_T" != 4 -a "$SIZEOF_SIZE_T" != 8],
+   AC_MSG_ERROR([sizeof(size_t) must be 4 or 8!]))
 AC_SUBST([SIZEOF_SIZE_T])
 AX_C_ARITHMETIC_RSHIFT
 AC_CHECK_SIZEOF([intmax_t]) # largest stack item
@@ -182,8 +184,8 @@ AM_CONDITIONAL([USING_PACKAGE_SUFFIX], [test "$gl_package_suffix" = "yes"])
 
 # pForth tests, run if the pforth source tree is present and Mit is
 # configured compatibly with pForth.
-AM_CONDITIONAL([USING_PFORTH],
-   [test -d src/specializer/pforth -a "$SIZEOF_SIZE_T" = 4 -a "$ac_cv_c_bigendian" != "yes"])
+dnl AM_CONDITIONAL([USING_PFORTH],
+dnl    [test -d src/specializer/pforth -a "$SIZEOF_SIZE_T" = 4 -a "$ac_cv_c_bigendian" != "yes"])
 
 # Generate output files
 AC_CONFIG_HEADERS([config.h])
@@ -194,12 +196,10 @@ AC_CONFIG_FILES([
         src/Makefile
         src/run.h
         src/include/mit/mit.h
-        src/params.py
         src/mit-include.man
         python/Makefile
         python/mit-shell-include.man
         tests/Makefile
-        tests/test_pickle.py
         doc/Makefile
 ])
 AC_CONFIG_FILES([python/mit-profile], [chmod +x python/mit-profile])

@@ -1,3 +1,0 @@
-# Build-time parameters
-
-word_bytes = @SIZEOF_SIZE_T@

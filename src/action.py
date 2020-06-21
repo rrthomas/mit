@@ -19,13 +19,20 @@ from code_util import Code, c_symbol
 from stack import StackEffect, Size, check_underflow, check_overflow
 
 
+class AbstractAction:
+    def gen_case(self):
+        raise NotImplementedError
+
 @dataclass
-class Action:
+class Action(AbstractAction):
     '''
     VM instruction action descriptor.
 
      - effect - StackEffect or None.
-     - code - Code.
+     - code - Code - may use macros defined in run.h. If `effect` is not
+       `None`, `gen_case()` creates C variables for the arguments and
+       results, pops the arguments and pushes the results; otherwise,
+       `code` is responsible for managing the stack.
      - is_variadic - bool - true if this action is variadic.
     '''
     effect: StackEffect
@@ -41,8 +48,7 @@ class Action:
         '''
         Generate a Code for an Action.
 
-        In the code, S is the mit_state, and errors are reported by calling
-        RAISE().
+        In the code, errors are reported by calling THROW().
         '''
         effect = self.effect
         code = Code()
@@ -63,7 +69,7 @@ class Action:
         code.extend(self.code)
         if effect is not None:
             # Store the results from C variables.
-            code.append(f'S->stack_depth += {effect.results.size - effect.args.size};')
+            code.append(f'stack_depth += {effect.results.size - effect.args.size};')
             code.extend(effect.store_results())
         return code
 
@@ -71,7 +77,7 @@ class ActionEnum(Enum):
     '''
     Base class for instruction-set–like enumerations.
 
-     - action - Action
+     - action - AbstractAction
      - opcode - optional int - opcode number, defaults to numbering
        sequentially from 0.
 
@@ -84,7 +90,7 @@ class ActionEnum(Enum):
         return obj
 
     def __init__(self, action, opcode=None):
-        assert isinstance(action, Action), action
+        assert isinstance(action, AbstractAction), action
         self.action = action
         if opcode is not None:
             self.opcode = opcode
@@ -101,8 +107,9 @@ class ActionEnum(Enum):
         code = Code()
         else_text = ''
         for (_, value) in enumerate(cls):
+            opcode_symbol = f'{c_symbol(cls.__name__)}_{value.name}'
             code.append(
-                f'{else_text}if ({opcode} == {c_symbol(cls.__name__)}_{value.name}) {{'
+                f'{else_text}if ({opcode} == {opcode_symbol}) {{'
             )
             code.append(value.action.gen_case())
             code.append('}')

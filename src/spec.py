@@ -7,33 +7,31 @@
 # THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 # RISK.
 
-import os
 from dataclasses import dataclass
 from enum import Enum, IntEnum, unique
+from ctypes import sizeof, c_size_t
 
 from autonumber import AutoNumber
-from params import word_bytes
 from code_util import Code
-from action import Action, ActionEnum
-from stack import StackEffect, pop_stack, push_stack
+from action import AbstractAction, Action, ActionEnum
+from stack import StackEffect, pop_stack
 
 
-# Global constants (see module params for build-time parameters)
+word_bytes = sizeof(c_size_t)
 word_bit = word_bytes * 8
 opcode_bit = 8
 
 class RegisterEnum(AutoNumber):
-    def __init__(self, type='mit_uword'):
+    def __init__(self, type):
         self.type = type
 
 @unique
 class Registers(RegisterEnum):
     '''VM registers.'''
-    pc = ('mit_word *',)
-    ir = ('mit_word',)
-    stack_depth = ()
-    stack = ('mit_word * restrict',)
-    stack_words = ()
+    pc = ('mit_word_t *',)
+    ir = ('mit_word_t',)
+    stack_depth = ('mit_uword_t',)
+    stack = ('mit_word_t * restrict',)
 
 @unique
 class MitErrorCode(IntEnum):
@@ -50,564 +48,49 @@ class MitErrorCode(IntEnum):
     BREAK = -127
 
 
-# Core instructions.
-@dataclass
-class Instruction(Action):
-    '''
-    VM instruction descriptor.
-
-     - opcode - int - the instruction's opcode.
-     - terminal_action - Action or None - if given, this instruction is
-       terminal: the rest of `ir` is its argument, and the Action gives the
-       implementation for the case when `ir` is not zero (if the opcode's
-       top bit is clear) or -1 (if it is set).
-
-    C variables are created for the arguments and results; the arguments are
-    popped and results pushed.
-
-    There are special macros available to instructions; see run.h.
-    '''
-    opcode: int
-    terminal_action: Action
-
-    def gen_case(self):
-        code = super().gen_case()
-        if self.terminal_action is not None:
-            ir_all_bits = 0 if self.opcode & 0x80 == 0 else -1
-            code = Code(
-                f'if (S->ir != {ir_all_bits}) {{',
-                self.terminal_action.gen_case(),
-                '} else {',
-                code,
-                '}',
-            )
-        return code
-
-instructions = [
-    {
-        'name': 'NEXT',
-        'effect': StackEffect.of([], []),
-        'code': Code('S->ir = *(mit_word *)S->pc++;'),
-        'opcode': 0x0,
-        'terminal': Action(
-            None,
-            Code(), # Computed below.
-        ),
-    },
-
-    {
-        'name': 'NEXTFF',
-        'effect': StackEffect.of([], []),
-        'code': Code('S->ir = *(mit_word *)S->pc++;'),
-        'opcode': 0xff,
-        'terminal': Action(
-            None,
-            Code('''\
-                {
-                    mit_word inner_error = mit_trap(S);
-                    if (inner_error != MIT_ERROR_OK)
-                        RAISE(inner_error);
-                }
-            '''),
-        ),
-    },
-
-    {
-        'name': 'JUMP',
-        'effect': StackEffect.of(['addr'], []),
-        'code': Code('''\
-            if (unlikely(addr % MIT_WORD_BYTES != 0))
-                RAISE(MIT_ERROR_UNALIGNED_ADDRESS);
-            S->pc = (mit_word *)addr;
-        '''),
-        'opcode': 0x1,
-        'terminal': Action(
-            StackEffect.of([], []),
-            Code('''\
-                S->pc += S->ir;
-                S->ir = 0;
-            '''),
-        ),
-    },
-
-    {
-        'name': 'JUMPZ',
-        'effect': StackEffect.of(['flag', 'addr'], []),
-        'code': Code('''\
-            if (flag == 0) {
-                if (unlikely(addr % MIT_WORD_BYTES != 0))
-                    RAISE(MIT_ERROR_UNALIGNED_ADDRESS);
-                S->pc = (mit_word *)addr;
-                S->ir = 0;
-            }
-        '''),
-        'opcode': 0x2,
-        'terminal': Action(
-            StackEffect.of(['flag'], []),
-            Code('''\
-                if (flag == 0) {
-                    S->pc += S->ir;
-                    S->ir = 0;
-                }
-            '''),
-        ),
-    },
-
-    {
-        'name': 'CALL',
-        'effect': StackEffect.of(['addr'], ['ret_addr']),
-        'code': Code('''\
-            if (unlikely(addr % MIT_WORD_BYTES != 0))
-                RAISE(MIT_ERROR_UNALIGNED_ADDRESS);
-            ret_addr = (mit_uword)S->pc;
-            S->pc = (mit_word *)addr;
-        '''),
-        'opcode': 0x3,
-        'terminal': Action(
-            StackEffect.of([], ['ret_addr']),
-            Code('''\
-                ret_addr = (mit_uword)S->pc;
-                S->pc += S->ir;
-                S->ir = 0;
-            '''),
-        ),
-    },
-
-    {
-        'name': 'POP',
-        'effect': StackEffect.of(['ITEMS', 'COUNT'], []),
-        'code': Code(), # No code.
-        'opcode': 0x4,
-    },
-
-    {
-        'name': 'DUP',
-        'effect': StackEffect.of(['x', 'ITEMS', 'COUNT'], ['x', 'ITEMS', 'x']),
-        'code': Code(), # No code.
-        'opcode': 0x5,
-    },
-
-    {
-        'name': 'SWAP',
-        'effect': StackEffect.of(['x', 'ITEMS', 'y', 'COUNT'], ['y', 'ITEMS', 'x']),
-        'code': Code(),
-        'opcode': 0x6,
-    },
-
-    {
-        'name': 'LOAD',
-        'effect': StackEffect.of(['addr'], ['val']),
-        'code': Code('''\
-            if (unlikely(addr % MIT_WORD_BYTES != 0))
-                RAISE(MIT_ERROR_UNALIGNED_ADDRESS);
-            val = *(mit_word *)addr;
-        '''),
-        'opcode': 0x8,
-    },
-
-    {
-        'name': 'STORE',
-        'effect': StackEffect.of(['val', 'addr'], []),
-        'code': Code('''\
-            if (unlikely(addr % MIT_WORD_BYTES != 0))
-                RAISE(MIT_ERROR_UNALIGNED_ADDRESS);
-            *(mit_word *)addr = val;
-        '''),
-        'opcode': 0x9,
-    },
-
-    {
-        'name': 'LOAD1',
-        'effect': StackEffect.of(['addr'], ['val']),
-        'code': Code('val = (mit_uword)*((uint8_t *)addr);'),
-        'opcode': 0xa,
-    },
-
-    {
-        'name': 'STORE1',
-        'effect': StackEffect.of(['val', 'addr'], []),
-        'code': Code('*(uint8_t *)addr = (uint8_t)val;'),
-        'opcode': 0xb,
-    },
-
-    {
-        'name': 'LOAD2',
-        'effect': StackEffect.of(['addr'], ['val']),
-        'code': Code('''\
-            if (unlikely(addr % 2 != 0))
-                RAISE(MIT_ERROR_UNALIGNED_ADDRESS);
-            val = (mit_uword)*((uint16_t *)addr);
-        '''),
-        'opcode': 0xc,
-    },
-
-    {
-        'name': 'STORE2',
-        'effect': StackEffect.of(['val', 'addr'], []),
-        'code': Code('''\
-            if (unlikely(addr % 2 != 0))
-                RAISE(MIT_ERROR_UNALIGNED_ADDRESS);
-            *(uint16_t *)addr = (uint16_t)val;
-        '''),
-        'opcode': 0xd,
-    },
-
-    {
-        'name': 'LOAD4',
-        'effect': StackEffect.of(['addr'], ['val']),
-        'code': Code('''\
-            if (unlikely(addr % 4 != 0))
-                RAISE(MIT_ERROR_UNALIGNED_ADDRESS);
-            val = (mit_uword)*((uint32_t *)addr);
-        '''),
-        'opcode': 0xe,
-    },
-
-    {
-        'name': 'STORE4',
-        'effect': StackEffect.of(['val', 'addr'], []),
-        'code': Code('''\
-            if (unlikely(addr % 4 != 0))
-                RAISE(MIT_ERROR_UNALIGNED_ADDRESS);
-            *(uint32_t *)addr = (uint32_t)val;
-        '''),
-        'opcode': 0xf,
-    },
-
-    {
-        'name': 'PUSH',
-        'effect': StackEffect.of([], ['n']),
-        'code': Code('n = *S->pc++;'),
-        'opcode': 0x10,
-    },
-
-    {
-        'name': 'PUSHREL',
-        'effect': StackEffect.of([], ['n']),
-        'code': Code('''\
-            n = (mit_uword)S->pc;
-            n += *S->pc++;
-        '''),
-        'opcode': 0x11,
-    },
-
-    {
-        'name': 'NOT',
-        'effect': StackEffect.of(['x'], ['r']),
-        'code': Code('r = ~x;'),
-        'opcode': 0x12,
-    },
-
-    {
-        'name': 'AND',
-        'effect': StackEffect.of(['x', 'y'], ['r']),
-        'code': Code('r = x & y;'),
-        'opcode': 0x13,
-    },
-
-    {
-        'name': 'OR',
-        'effect': StackEffect.of(['x', 'y'], ['r']),
-        'code': Code('r = x | y;'),
-        'opcode': 0x14,
-    },
-
-    {
-        'name': 'XOR',
-        'effect': StackEffect.of(['x', 'y'], ['r']),
-        'code': Code('r = x ^ y;'),
-        'opcode': 0x15,
-    },
-
-    {
-        'name': 'LT',
-        'effect': StackEffect.of(['a', 'b'], ['flag']),
-        'code': Code('flag = a < b;'),
-        'opcode': 0x16,
-    },
-
-    {
-        'name': 'ULT',
-        'effect': StackEffect.of(['a', 'b'], ['flag']),
-        'code': Code('flag = (mit_uword)a < (mit_uword)b;'),
-        'opcode': 0x17,
-    },
-
-    {
-        'name': 'LSHIFT',
-        'effect': StackEffect.of(['x', 'n'], ['r']),
-        'code': Code('''\
-            r = n < (mit_word)MIT_WORD_BIT ?
-                (mit_word)((mit_uword)x << n) : 0;
-        '''),
-        'opcode': 0x18,
-    },
-
-    {
-        'name': 'RSHIFT',
-        'effect': StackEffect.of(['x', 'n'], ['r']),
-        'code': Code('''\
-            r = n < (mit_word)MIT_WORD_BIT ?
-                (mit_word)((mit_uword)x >> n) : 0;
-        '''),
-        'opcode': 0x19,
-    },
-
-    {
-        'name': 'ARSHIFT',
-        'effect': StackEffect.of(['x', 'n'], ['r']),
-        'code': Code('r = ARSHIFT(x, n);'),
-        'opcode': 0x1a,
-    },
-
-    {
-        'name': 'NEGATE',
-        'effect': StackEffect.of(['a'], ['r']),
-        'code': Code('r = -a;'),
-        'opcode': 0x1b,
-    },
-
-    {
-        'name': 'ADD',
-        'effect': StackEffect.of(['a', 'b'], ['r']),
-        'code': Code('r = a + b;'),
-        'opcode': 0x1c,
-    },
-
-    {
-        'name': 'MUL',
-        'effect': StackEffect.of(['a', 'b'], ['r']),
-        'code': Code('r = a * b;'),
-        'opcode': 0x1d,
-    },
-
-    {
-        'name': 'DIVMOD',
-        'effect': StackEffect.of(['a', 'b'], ['q', 'r']),
-        'code': Code('''\
-            if (b == 0)
-                RAISE(MIT_ERROR_DIVISION_BY_ZERO);
-            q = a / b;
-            r = a % b;
-        '''),
-        'opcode': 0x1e,
-    },
-
-    {
-        'name': 'UDIVMOD',
-        'effect': StackEffect.of(['a', 'b'], ['q', 'r']),
-        'code': Code('''\
-            if (b == 0)
-                RAISE(MIT_ERROR_DIVISION_BY_ZERO);
-            q = (mit_word)((mit_uword)a / (mit_uword)b);
-            r = (mit_word)((mit_uword)a % (mit_uword)b);
-        '''),
-        'opcode': 0x1f,
-    },
-]
-
-# Turn instruction codes into full opcodes
-for i in instructions:
-    if i['opcode'] != 0xff:
-        i['opcode'] <<= 2
-
-
-# `pushi`
-instructions.extend([
-    {
-        'name': f'PUSHI_{n}'.replace('-', 'M'),
-        'effect': StackEffect.of([], ['n']),
-        'code': Code(f'n = {n};'),
-        'opcode': ((n & 0x3f) << 2) | 0x2,
-    }
-    for n in range(-32, 32)
-])
-
-# `pushreli`
-instructions.extend([
-    {
-        'name': f'PUSHRELI_{n}'.replace('-', 'M'),
-        'effect': StackEffect.of([], ['addr']),
-        'code': Code(f'addr = (mit_uword)(S->pc + {n});'),
-        'opcode': ((n & 0x7f) << 1) | 0x1,
-    }
-    for n in range(-64, 64) if n != -1
-])
-
-
-# Full instruction enumeration.
-Instructions = unique(ActionEnum(
-    'Instructions',
-    ((
-        i['name'],
-        (
-            Instruction(i['effect'], i['code'], i['opcode'], i.get('terminal', None)),
-            i['opcode'],
-        )
-    ) for i in instructions)
-))
-Instructions.__docstring__ = 'VM instructions.'
-
-
 @unique
 class ExtraInstructions(ActionEnum):
     '''VM extra instructions.'''
 
-    # FIXME: improve code generation so the stack effects of the following can
-    # be specified
-    HALT = (
+    STACK_DEPTH = (
         Action(
-            None,
-            Code('mit_word n;', str(pop_stack('n')), 'RAISE(n);'),
+            None, # Manage stack manually because we use the value of
+                  # `stack_depth`.
+            Code('PUSH(stack_depth);'),
         ),
         0x1,
     )
 
-    SIZEOF_STATE = (
+    THROW = (
         Action(
-            StackEffect.of([], ['size']),
-            Code('size = sizeof(mit_state);'),
+            None, # Manage stack manually so that `stack_depth` is
+                  # decremented before THROW().
+            Code('''
+                POP(n);
+                THROW(n);
+            '''),
         ),
         0x2,
     )
 
-    THIS_STATE = (
+    CATCH = (
         Action(
-            StackEffect.of([], ['this_state:mit_state *']),
-            Code('this_state = S;'),
+            None, # Manage stack manually because the stack module doesn't
+                  # understand multiple stack frames.
+            Code('''\
+                POP(addr);
+                if (unlikely(addr % sizeof(mit_word_t) != 0))
+                   THROW(MIT_ERROR_UNALIGNED_ADDRESS);
+                DO_CATCH(addr);
+            '''),
         ),
         0x3,
-    )
-
-    GET_PC = (
-        Action(
-            None,
-            Code(), # Code is computed below.
-        ),
-        0x4,
-    )
-
-    SET_PC = (
-        Action(
-            None,
-            Code(), # Code is computed below.
-        ),
-        0x5,
-    )
-
-    GET_IR = (
-        Action(
-            None,
-            Code(), # Code is computed below.
-        ),
-        0x6,
-    )
-
-    SET_IR = (
-        Action(
-            None,
-            Code(), # Code is computed below.
-        ),
-        0x7,
-    )
-
-    GET_STACK_DEPTH = (
-        Action(
-            None,
-            Code(), # Code is computed below.
-        ),
-        0x8,
-    )
-
-    SET_STACK_DEPTH = (
-        Action(
-            None,
-            Code(), # Code is computed below.
-        ),
-        0x9,
-    )
-
-    GET_STACK = (
-        Action(
-            None,
-            Code(), # Code is computed below.
-        ),
-        0xa,
-    )
-
-    SET_STACK = (
-        Action(
-            None,
-            Code(), # Code is computed below.
-        ),
-        0xb,
-    )
-
-    GET_STACK_WORDS = (
-        Action(
-            None,
-            Code(), # Code is computed below.
-        ),
-        0xc,
-    )
-
-    SET_STACK_WORDS = (
-        Action(
-            None,
-            Code(), # Code is computed below.
-        ),
-        0xd,
-    )
-
-    STACK_POSITION = (
-        Action(
-            StackEffect.of(['pos', 'inner_state:mit_state *'], ['ret:mit_word *']),
-            Code('''\
-               ret = mit_stack_position(inner_state, pos);
-            '''),
-        ),
-        0xe,
-    )
-
-    POP_STACK = (
-        Action(
-            StackEffect.of(['inner_state:mit_state *'], ['value', 'ret']),
-            Code('''\
-                value = 0;
-                ret = mit_pop_stack(inner_state, &value);
-            '''),
-        ),
-        0xf,
-    )
-
-    PUSH_STACK = (
-        Action(
-            StackEffect.of(['value', 'inner_state:mit_state *'], ['ret']),
-            Code('ret = mit_push_stack(inner_state, value);'),
-        ),
-        0x10,
-    )
-
-    RUN = (
-        Action(
-            StackEffect.of(['inner_state:mit_state *'], ['ret']),
-            Code('ret = mit_run(inner_state);'),
-        ),
-        0x11,
-    )
-
-    SINGLE_STEP = (
-        Action(
-            StackEffect.of(['inner_state:mit_state *'], ['ret']),
-            Code('ret = mit_single_step(inner_state);'),
-        ),
-        0x12,
     )
 
     ARGC = (
         Action(
             StackEffect.of([], ['argc']),
-            Code('argc = (mit_word)mit_argc;'),
+            Code('argc = (mit_word_t)mit_argc;'),
         ),
         0x100,
     )
@@ -620,33 +103,472 @@ class ExtraInstructions(ActionEnum):
         0x101,
     )
 
-for register in Registers:
-    pop_code = Code()
-    pop_code.append('mit_state *inner_state;')
-    pop_code.extend(pop_stack('inner_state', type='mit_state *'))
-
-    get_code = Code()
-    get_code.extend(pop_code)
-    get_code.extend(push_stack(
-        f'inner_state->{register.name}',
-        type=register.type,
-    ))
-    ExtraInstructions[f'GET_{register.name.upper()}'].action.code = get_code
-
-    set_code = Code()
-    set_code.extend(pop_code)
-    set_code.append(f'{register.type} value;')
-    set_code.extend(pop_stack('value', register.type))
-    set_code.append(f'inner_state->{register.name} = value;')
-    ExtraInstructions[f'SET_{register.name.upper()}'].action.code = set_code
-
-
 # Inject code for EXTRA
 extra_code = Code('''\
-    mit_uword extra_opcode = S->ir;
-    S->ir = 0;
+    mit_uword_t extra_opcode = ir;
+    ir = 0;
 ''')
 extra_code.extend(ExtraInstructions.dispatch(Code(
-    'RAISE(MIT_ERROR_INVALID_OPCODE);',
+    'THROW(MIT_ERROR_INVALID_OPCODE);',
 ), 'extra_opcode'))
-Instructions.NEXT.action.terminal_action.code = extra_code
+
+
+# Core instructions.
+@dataclass
+class Instruction(AbstractAction):
+    '''
+    VM instruction descriptor.
+
+     - opcode - int - the instruction's opcode.
+     - action - Action
+     - terminal - Action or None - if given, this instruction is
+       terminal, and its action depends on the rest of `ir`. If all bits of
+       `ir` match the top bit of `opcode`, the action is `action`,
+       otherwise it is `terminal`.
+    '''
+    opcode: int
+    action: Action
+    terminal: Action
+
+    def gen_case(self):
+        code = self.action.gen_case()
+        if self.terminal is not None:
+            ir_all_bits = 0 if self.opcode & 0x80 == 0 else -1
+            code = Code(
+                f'if (ir != {ir_all_bits}) {{',
+                self.terminal.gen_case(),
+                '} else {',
+                code,
+                '}',
+            )
+        return code
+
+instructions = [
+    {
+        'name': 'NEXT',
+        'opcode': 0x0,
+        'action': Action(
+            StackEffect.of([], []),
+            Code('DO_NEXT;'),
+        ),
+        'terminal': Action(
+            None,
+            extra_code, # Computed above.
+        ),
+    },
+
+    {
+        'name': 'NEXTFF',
+        'opcode': 0xff,
+        'action': Action(
+            StackEffect.of([], []),
+            Code('DO_NEXT;'),
+        ),
+        'terminal': Action(
+            None,
+            Code('''\
+                {
+                    mit_word_t inner_error = mit_trap(pc, ir, stack, &stack_depth);
+                    if (inner_error != MIT_ERROR_OK)
+                        THROW(inner_error);
+                }
+            '''),
+        ),
+    },
+
+    {
+        'name': 'POP',
+        'opcode': 0x1,
+        'action': Action(
+            StackEffect.of(['ITEMS', 'COUNT'], []),
+            Code(), # No code.
+        ),
+    },
+
+    {
+        'name': 'DUP',
+        'opcode': 0x2,
+        'action': Action(
+            StackEffect.of(['x', 'ITEMS', 'COUNT'], ['x', 'ITEMS', 'x']),
+            Code(), # No code.
+        ),
+    },
+
+    {
+        'name': 'SWAP',
+        'opcode': 0x3,
+        'action': Action(
+            StackEffect.of(['x', 'ITEMS', 'y', 'COUNT'], ['y', 'ITEMS', 'x']),
+            Code(),
+        ),
+    },
+
+    {
+        'name': 'JUMP',
+        'opcode': 0x4,
+        'action': Action(
+            StackEffect.of(['addr'], []),
+            Code('DO_JUMP(addr);'),
+        ),
+        'terminal': Action(
+            StackEffect.of([], []),
+            Code('DO_JUMPI;'),
+        ),
+    },
+
+    {
+        'name': 'JUMPZ',
+        'opcode': 0x5,
+        'action': Action(
+            StackEffect.of(['flag', 'addr'], []),
+            Code('''\
+                if (flag == 0)
+                    DO_JUMP(addr);
+            '''),
+        ),
+        'terminal': Action(
+            StackEffect.of(['flag'], []),
+            Code('''\
+                if (flag == 0)
+                    DO_JUMPI;
+            '''),
+        ),
+    },
+
+    {
+        'name': 'CALL',
+        'opcode': 0x6,
+        'action': Action(
+            None, # Manage stack manually because of changing stack frames.
+            Code('''\
+                POP(addr);
+                if (unlikely(addr % sizeof(mit_word_t) != 0))
+                   THROW(MIT_ERROR_UNALIGNED_ADDRESS);
+                DO_CALL(addr);
+            '''),
+        ),
+        'terminal': Action(
+            None, # Manage stack manually because of changing stack frames.
+            Code('''\
+                mit_word_t addr = (mit_uword_t)(pc + ir);
+                DO_CALL(addr);
+            '''),
+        ),
+    },
+
+    {
+        'name': 'RET',
+        'opcode': 0x7,
+        'action': Action(
+            None,
+            # `call` or `catch` performs the rest of the action of `ret` on
+            # return from `run_inner()`.
+            Code('return;'),
+        ),
+    },
+
+    {
+        'name': 'LOAD',
+        'opcode': 0x8,
+        'action': Action(
+            StackEffect.of(['addr'], ['val']),
+            Code('''\
+                if (unlikely(addr % sizeof(mit_word_t) != 0))
+                    THROW(MIT_ERROR_UNALIGNED_ADDRESS);
+                val = *(mit_word_t *)addr;
+            '''),
+        ),
+    },
+
+    {
+        'name': 'STORE',
+        'opcode': 0x9,
+        'action': Action(
+            StackEffect.of(['val', 'addr'], []),
+            Code('''\
+                if (unlikely(addr % sizeof(mit_word_t) != 0))
+                    THROW(MIT_ERROR_UNALIGNED_ADDRESS);
+                *(mit_word_t *)addr = val;
+            '''),
+        ),
+    },
+
+    {
+        'name': 'LOAD1',
+        'opcode': 0xa,
+        'action': Action(
+            StackEffect.of(['addr'], ['val']),
+            Code('val = (mit_uword_t)*((uint8_t *)addr);'),
+        ),
+    },
+
+    {
+        'name': 'STORE1',
+        'opcode': 0xb,
+        'action': Action(
+            StackEffect.of(['val', 'addr'], []),
+            Code('*(uint8_t *)addr = (uint8_t)val;'),
+        ),
+    },
+
+    {
+        'name': 'LOAD2',
+        'opcode': 0xc,
+        'action': Action(
+            StackEffect.of(['addr'], ['val']),
+            Code('''\
+                if (unlikely(addr % 2 != 0))
+                    THROW(MIT_ERROR_UNALIGNED_ADDRESS);
+                val = (mit_uword_t)*((uint16_t *)addr);
+            '''),
+        ),
+    },
+
+    {
+        'name': 'STORE2',
+        'opcode': 0xd,
+        'action': Action(
+            StackEffect.of(['val', 'addr'], []),
+            Code('''\
+                if (unlikely(addr % 2 != 0))
+                    THROW(MIT_ERROR_UNALIGNED_ADDRESS);
+                *(uint16_t *)addr = (uint16_t)val;
+            '''),
+        ),
+    },
+
+    {
+        'name': 'LOAD4',
+        'opcode': 0xe,
+        'action': Action(
+            StackEffect.of(['addr'], ['val']),
+            Code('''\
+                if (unlikely(addr % 4 != 0))
+                    THROW(MIT_ERROR_UNALIGNED_ADDRESS);
+                val = (mit_uword_t)*((uint32_t *)addr);
+            '''),
+        ),
+    },
+
+    {
+        'name': 'STORE4',
+        'opcode': 0xf,
+        'action': Action(
+            StackEffect.of(['val', 'addr'], []),
+            Code('''\
+                if (unlikely(addr % 4 != 0))
+                    THROW(MIT_ERROR_UNALIGNED_ADDRESS);
+                *(uint32_t *)addr = (uint32_t)val;
+            '''),
+        ),
+    },
+
+    {
+        'name': 'PUSH',
+        'opcode': 0x10,
+        'action': Action(
+            StackEffect.of([], ['n']),
+            Code('n = *pc++;'),
+        ),
+    },
+
+    {
+        'name': 'PUSHREL',
+        'opcode': 0x11,
+        'action': Action(
+            StackEffect.of([], ['n']),
+            Code('''\
+                n = (mit_uword_t)pc;
+                n += *pc++;
+            '''),
+        ),
+    },
+
+    {
+        'name': 'NOT',
+        'opcode': 0x12,
+        'action': Action(
+            StackEffect.of(['x'], ['r']),
+            Code('r = ~x;'),
+        ),
+    },
+
+    {
+        'name': 'AND',
+        'opcode': 0x13,
+        'action': Action(
+            StackEffect.of(['x', 'y'], ['r']),
+            Code('r = x & y;'),
+        ),
+    },
+
+    {
+        'name': 'OR',
+        'opcode': 0x14,
+        'action': Action(
+            StackEffect.of(['x', 'y'], ['r']),
+            Code('r = x | y;'),
+        ),
+    },
+
+    {
+        'name': 'XOR',
+        'opcode': 0x15,
+        'action': Action(
+            StackEffect.of(['x', 'y'], ['r']),
+            Code('r = x ^ y;'),
+        ),
+    },
+
+    {
+        'name': 'LT',
+        'opcode': 0x16,
+        'action': Action(
+            StackEffect.of(['a', 'b'], ['flag']),
+            Code('flag = a < b;'),
+        ),
+    },
+
+    {
+        'name': 'ULT',
+        'opcode': 0x17,
+        'action': Action(
+            StackEffect.of(['a', 'b'], ['flag']),
+            Code('flag = (mit_uword_t)a < (mit_uword_t)b;'),
+        ),
+    },
+
+    {
+        'name': 'LSHIFT',
+        'opcode': 0x18,
+        'action': Action(
+            StackEffect.of(['x', 'n'], ['r']),
+            Code('''\
+                r = n < (mit_word_t)MIT_WORD_BIT ?
+                    (mit_word_t)((mit_uword_t)x << n) : 0;
+            '''),
+        ),
+    },
+
+    {
+        'name': 'RSHIFT',
+        'opcode': 0x19,
+        'action': Action(
+            StackEffect.of(['x', 'n'], ['r']),
+            Code('''\
+                r = n < (mit_word_t)MIT_WORD_BIT ?
+                    (mit_word_t)((mit_uword_t)x >> n) : 0;
+            '''),
+        ),
+    },
+
+    {
+        'name': 'ARSHIFT',
+        'opcode': 0x1a,
+        'action': Action(
+            StackEffect.of(['x', 'n'], ['r']),
+            Code('r = ARSHIFT(x, n);'),
+        ),
+    },
+
+    {
+        'name': 'NEGATE',
+        'opcode': 0x1b,
+        'action': Action(
+            StackEffect.of(['a'], ['r']),
+            Code('r = -a;'),
+        ),
+    },
+
+    {
+        'name': 'ADD',
+        'opcode': 0x1c,
+        'action': Action(
+            StackEffect.of(['a', 'b'], ['r']),
+            Code('r = a + b;'),
+        ),
+    },
+
+    {
+        'name': 'MUL',
+        'opcode': 0x1d,
+        'action': Action(
+            StackEffect.of(['a', 'b'], ['r']),
+            Code('r = a * b;'),
+        ),
+    },
+
+    {
+        'name': 'DIVMOD',
+        'opcode': 0x1e,
+        'action': Action(
+            StackEffect.of(['a', 'b'], ['q', 'r']),
+            Code('''\
+                if (b == 0)
+                    THROW(MIT_ERROR_DIVISION_BY_ZERO);
+                q = a / b;
+                r = a % b;
+            '''),
+        ),
+    },
+
+    {
+        'name': 'UDIVMOD',
+        'opcode': 0x1f,
+        'action': Action(
+            StackEffect.of(['a', 'b'], ['q', 'r']),
+            Code('''\
+                if (b == 0)
+                    THROW(MIT_ERROR_DIVISION_BY_ZERO);
+                q = (mit_word_t)((mit_uword_t)a / (mit_uword_t)b);
+                r = (mit_word_t)((mit_uword_t)a % (mit_uword_t)b);
+            '''),
+        ),
+    },
+]
+
+# Turn instruction codes into full opcodes
+for i in instructions:
+    if i['opcode'] != 0xff:
+        i['opcode'] <<= 2
+
+
+# `pushi`
+instructions.extend(
+    {
+        'name': f'PUSHI_{n}'.replace('-', 'M'),
+        'opcode': ((n & 0x3f) << 2) | 0x2,
+        'action': Action(
+            StackEffect.of([], ['n']),
+            Code(f'n = {n};'),
+        ),
+    }
+    for n in range(-32, 32)
+)
+
+# `pushreli`
+instructions.extend(
+    {
+        'name': f'PUSHRELI_{n}'.replace('-', 'M'),
+        'opcode': ((n & 0x7f) << 1) | 0x1,
+        'action': Action(
+            StackEffect.of([], ['addr']),
+            Code(f'addr = (mit_uword_t)(pc + {n});'),
+        ),
+    }
+    for n in range(-64, 64) if n != -1
+)
+
+
+# Full instruction enumeration.
+Instructions = unique(ActionEnum(
+    'Instructions',
+    ((
+        i['name'],
+        (
+            Instruction(i['opcode'], i['action'], i.get('terminal', None)),
+            i['opcode'],
+        )
+    ) for i in instructions)
+))
+Instructions.__docstring__ = 'VM instructions.'

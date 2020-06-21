@@ -13,6 +13,7 @@ from mit_test import *
 
 
 # Test results
+byte_bit = 8
 values = [
     0, 1, 2, 3,
     -257, 12345, 4, -1 << (word_bit - 1),
@@ -22,7 +23,7 @@ values = [
 # Test
 correct = []
 for n, v in enumerate(values):
-    lit(v)
-    correct.append(values[:n+1])
+    push(v)
+    correct.append(values[:n + 1])
 
 run_test("constants", VM, correct)

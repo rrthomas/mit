@@ -15,11 +15,11 @@ pkginclude_HEADERS += %D%/mit/features.h
 nodist_pkginclude_HEADERS += %D%/mit/trap-codes.h
 # FIXME: temporarily build traps.c into libmit, to avoid a
 # recursive dependency between libmit and libmitfeatures.
-libmit_la_SOURCES = %D%/traps.c
+nodist_libmit_la_SOURCES += %D%/traps.c
 
 # Note: we grep config.log because the generated header file has the symbols
 # sorted lexically, and we need the output in the same order as the input.
-%D%/type_sizes.py: $(top_builddir)/config.status %D%/gen-type-sizes %D%/collate-type-sizes include/mit/registers.h include/mit/opcodes.h %D%/traps.py action.py
+%D%/type_sizes.py: $(top_builddir)/config.status %D%/gen-type-sizes %D%/collate-type-sizes include/mit/opcodes.h %D%/traps.py action.py
 	cd %D% && \
 	$(PYTHON_WITH_PATH) $(abs_srcdir)/%D%/gen-type-sizes > type-sizes.ac && \
 	autoconf type-sizes.ac > type-sizes && \
@@ -36,7 +36,7 @@ libmit_la_SOURCES = %D%/traps.c
 	cd %D% && \
 	$(PYTHON_WITH_PATH) $(abs_srcdir)/%D%/gen-trap-codes > mit/trap-codes.h || ( rm -f mit/trap-codes.h; exit 1 )
 
-EXTRA_DIST += \
+DIST_SRCS += \
 	%D%/traps.py \
 	%D%/trap_errors.py \
 	%D%/gen-traps \
@@ -48,7 +48,6 @@ DISTCLEANLOCALDIRS += %D%/autom4te.cache %D%/__pycache__
 
 DISTCLEANFILES += \
 	%D%/mit/trap-codes.h \
-	%D%/traps.c \
 	%D%/type-sizes.ac \
 	%D%/type-sizes \
 	%D%/config.log \

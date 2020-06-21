@@ -15,12 +15,17 @@ from mit_test import *
 
 
 # Extra constants
+byte_bit = 8
 top_byte_set = -1 << (word_bit - byte_bit)
 second_byte_set = 0xff << (word_bit - 2 * byte_bit)
 penultimate_byte_set = 0xff << byte_bit
 
 # Test results
 correct = [
+     [byte_bit],
+     [byte_bit, top_byte_set],
+     [byte_bit, top_byte_set, 0xff],
+     [byte_bit, top_byte_set, 0xff, byte_bit],
      [byte_bit, top_byte_set, penultimate_byte_set],
      [byte_bit, top_byte_set, penultimate_byte_set, 1],
      [penultimate_byte_set, top_byte_set, byte_bit],
@@ -33,21 +38,19 @@ correct = [
      [~(second_byte_set | penultimate_byte_set) & -2],
 ]
 
-# Test data
-S.push(byte_bit)
-S.push(top_byte_set)
-S.push(0xff)
-S.push(byte_bit)
-
 # Code
+push(byte_bit)
+push(top_byte_set)
+push(0xff)
+push(byte_bit)
 ass(LSHIFT)
-lit(1)
+push(1)
 ass(SWAP)
 ass(RSHIFT)
 ass(OR)
 ass(NOT)
-lit(1)
-lit(-1)
+push(1)
+push(-1)
 ass(XOR)
 ass(AND)
 

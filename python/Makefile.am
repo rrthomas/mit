@@ -19,7 +19,8 @@ mit_pkgpython_PYTHON =				\
 	mit/ipython_suppress_traceback.py	\
 	mit/memory.py				\
 	mit/state.py				\
-	mit/assembler.py
+	mit/assembler.py			\
+	mit/disassembler.py
 nodist_mit_pkgpython_PYTHON = mit/binding.py mit/enums.py mit/trap_enums.py
 
 install_edit = sed \
@@ -85,4 +86,4 @@ EXTRA_DIST = \
 	mit-profile.in			\
 	mit-shell.in
 
-DISTCLEANFILES = $(bin_SCRIPTS) $(man_MANS) mit/enums.py
+DISTCLEANFILES = $(bin_SCRIPTS) $(man_MANS) mit/enums.py mit-shell mit-shell.1

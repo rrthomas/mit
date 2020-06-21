@@ -25,8 +25,8 @@ def try_load(file):
 def word_to_bytes(w):
     l = []
     for i in range(word_bytes):
-        l.append(w & byte_mask)
-        w >>= byte_bit
+        l.append(w & 0xff)
+        w >>= 8
     if sys.byteorder == 'big':
         l.reverse()
     return bytes(l)
@@ -34,7 +34,7 @@ def word_to_bytes(w):
 def test_word():
     w = 0
     for i in range(word_bytes):
-        w = w << byte_bit | (i + 1)
+        w = w << 8 | (i + 1)
     return w
 
 def object_file(word_bytes=word_bytes):
@@ -78,11 +78,9 @@ load_test(obj = b'#!/usr/bin/mit\n' + object_file())
 
 
 # Test ability to load & run saved file with assembler-generated contents
-correct = [-128, 12345]
-for n in correct:
-    lit(n)
-lit(MitErrorCode.OK)
-extra(HALT)
+error_code = 42
+push(error_code)
+extra(THROW)
 save(test_file_name, length=label() - M.addr)
 res = try_load(test_file_name)
 print(f"; should be {MitErrorCode.OK}")
@@ -91,14 +89,12 @@ if res != MitErrorCode.OK:
     sys.exit(1)
 try:
     run()
+    print(f'Error in State.load() test "{test}"; run() exited normally')
+    sys.exit(1)
 except VMError as e:
-    print(f'Error in State.load() test "{test}"; error {e.args[0]}: {e.args[1]}')
-    sys.exit(1)
-print(f"Data stack: {S}")
-print(f"Correct stack: {correct}")
-if correct != list(S):
-    print(f"Error in State.load() tests: pc = {VM.pc:#x}")
-    sys.exit(1)
+    if e.args[0] != error_code:
+        print(f'Error in State.load() test "{test}"; error {e.args[0]}: {e.args[1]}')
+        sys.exit(1)
 
 
 # Remove test file

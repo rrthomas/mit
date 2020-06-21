@@ -11,16 +11,18 @@ import sys
 from functools import partial
 
 from mit import *
-from mit.binding import libmit
+from mit.binding import libmit, stack_words_ptr
 
 
-VM = State(memory_words=4096, stack_words=3)
+VM = State(memory_words=4096)
+stack_words_ptr.value = 3
 assembler = Assembler(VM)
-lit = assembler.lit
+push = assembler.push
 label = assembler.label
 ass = assembler.instruction
 vars().update(Instructions.__members__)
-UNDEFINED = 1 + max(Instructions)
+UNDEFINED = 0x20 << 2
+assert UNDEFINED not in Instructions.__members__.values(), Instructions.__members__.values()
 
 # Test results and data
 result = []
@@ -32,8 +34,8 @@ test.append('Try to divide by zero')
 test_pc.append(label())
 result.append(MitErrorCode.DIVISION_BY_ZERO)
 print(f'Test "{test[-1]}": pc = {test_pc[-1]:#x}')
-lit(1)
-lit(0)
+push(1)
+push(0)
 ass(DIVMOD)
 
 test.append('Try to read from an invalid stack location')
@@ -46,15 +48,14 @@ test.append('Try to load from unaligned address')
 test_pc.append(label())
 result.append(MitErrorCode.UNALIGNED_ADDRESS)
 print(f'Test "{test[-1]}": pc = {test_pc[-1]:#x}')
-lit(VM.M.addr + 1)
+push(VM.M.addr + 1)
 ass(LOAD)
 
-if UNDEFINED < (1 << opcode_bit):
-    test.append('Try to execute invalid opcode')
-    test_pc.append(label())
-    result.append(MitErrorCode.INVALID_OPCODE)
-    print(f'Test "{test[-1]}": pc = {test_pc[-1]:#x}')
-    ass(UNDEFINED)
+test.append('Try to execute invalid opcode')
+test_pc.append(label())
+result.append(MitErrorCode.INVALID_OPCODE)
+print(f'Test "{test[-1]}": pc = {test_pc[-1]:#x}')
+ass(UNDEFINED)
 
 # Tests
 assert(len(test_pc) == len(result))
@@ -63,10 +64,7 @@ error = 0
 def do_tests(run_fn):
     global error
     for i, pc_value in enumerate(test_pc):
-        VM.stack_depth = 0 # reset stack pointer
-
         print(f'Test "{test[i]}"')
-        VM.ir = 0
         VM.pc = pc_value
         res = 0
         try:

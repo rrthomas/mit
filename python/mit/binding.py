@@ -1,7 +1,7 @@
 '''
 Python bindings for libmit.
 
-(c) Mit authors 2019
+(c) Mit authors 2019-2020
 
 The package is distributed under the MIT/X11 License.
 
@@ -10,13 +10,13 @@ RISK.
 '''
 
 from ctypes import (
-    c_ubyte, c_char_p,
+    c_ubyte, c_char_p, c_void_p,
     c_uint, c_int,
-    c_uint16, c_int16,
+    c_uint8,
     c_uint32, c_int32,
     c_uint64, c_int64,
     c_size_t,
-    POINTER, CFUNCTYPE, CDLL, Structure,
+    sizeof, pointer, POINTER, CFUNCTYPE, CDLL, Structure,
 )
 from ctypes.util import find_library
 
@@ -78,12 +78,8 @@ def errcheck(error_enum):
 
 
 # Constants (all of type unsigned)
-vars().update([(c, c_uint.in_dll(libmit, f"mit_{c}").value)
-               for c in [
-                       "word_bytes",
-                       "byte_bit", "byte_mask", "word_bit",
-                       "opcode_bit", "opcode_mask",
-               ]])
+word_bytes = sizeof(c_size_t)
+word_bit = word_bytes * 8
 sign_bit = 1 << (word_bit - 1)
 hex0x_word_width = word_bytes * 2 + 2 # Width of a hex word with leading "0x"
 
@@ -96,66 +92,53 @@ elif word_bytes == 8:
     c_word = c_int64
     c_uword = c_uint64
 else:
-    raise Exception(f"Could not make Python C type matching WORD (size {word_bytes})")
+    raise Exception(f"word_bytes must be 4 or 8 and is {word_bytes}!")
 
-class c_mit_state(Structure):
-    _fields_ = [
-        (register.name, c_uword)
-        for register in Registers
-    ]
-
-c_mit_fn = CFUNCTYPE(c_word, POINTER(c_mit_state))
+c_mit_fn = CFUNCTYPE(c_word, POINTER(c_word), c_word, POINTER(c_word), POINTER(c_uword))
 
 
 # Constants that require VM types
-vars().update([(c, cty.in_dll(libmit, f"mit_{c}").value)
-               for (c, cty) in [
-                       ("word_mask", c_uword),
-                       ("uword_max", c_uword),
-                       ("word_min", c_word),
-                       ("word_max", c_word),
-               ]])
+uword_max = c_uword(-1).value
 
 
-# Functions
+# Functions from mit.h
 
 # Errors
 mit_error = errcheck(MitErrorCode)
 
-# mit.h
-
-# Bind mit_run as a function and as a function pointer, because
+# Bind `mit_run` as a function and as a function pointer, because
 # for some reason we can't call it when bound as a pointer.
 vars()["_run"] = c_mit_fn.in_dll(libmit, "mit_run")
 vars()["run_ptr"] = POINTER(c_mit_fn).in_dll(libmit, "mit_run")
+# `break_fn_ptr` must be bound as a `c_void_p` in order to be set to point
+# to a Python callback.
+vars()["break_fn_ptr"] = c_void_p.in_dll(libmit, "mit_break_fn")
+vars()["stack_words_ptr"] = pointer(c_uword.in_dll(libmit, "mit_stack_words"))
+vars()["stack_words"] = c_uword.in_dll(libmit, "mit_stack_words")
 vars().update([(c, cty.in_dll(libmit, f"mit_{c}"))
                for (c, cty) in [
-                       ("run_fast", c_mit_fn),
-                       ("run_profile", c_mit_fn),
+                       ("run_simple", c_mit_fn),
+                       ("run_break", c_mit_fn),
+                       #("run_fast", c_mit_fn),
+                       #("run_profile", c_mit_fn),
                ]])
 
 # Cannot add errcheck to a CFUNCTYPE, so wrap it manually.
-def run(state):
-    return mit_error(_run(state))
+def run(pc, ir, stack, stack_depth_ptr):
+    return mit_error(_run(pc, ir, stack, stack_depth_ptr))
 
-libmit.mit_stack_position.argtypes = [POINTER(c_mit_state), c_uword]
-libmit.mit_stack_position.restype = POINTER(c_word)
-libmit.mit_pop_stack.argtypes = [POINTER(c_mit_state), POINTER(c_word)]
-libmit.mit_pop_stack.errcheck = mit_error
-libmit.mit_push_stack.argtypes = [POINTER(c_mit_state), c_word]
-libmit.mit_push_stack.errcheck = mit_error
+# libmit.mit_profile_reset.restype = None
+# libmit.mit_profile_reset.argtypes = None
 
-libmit.mit_single_step.restype = c_word
-libmit.mit_single_step.argtypes = [POINTER(c_mit_state)]
-libmit.mit_single_step.errcheck = mit_error
-
-libmit.mit_profile_reset.restype = None
-libmit.mit_profile_reset.argtypes = None
-
-libmit.mit_profile_dump.argtypes = [c_int]
+# libmit.mit_profile_dump.argtypes = [c_int]
 
 def is_aligned(addr):
     return (addr & (word_bytes - 1)) == 0
+
+def sign_extend(x):
+    if x & sign_bit:
+        x |= -1 & ~uword_max
+    return x
 
 vars().update([(c, cty.in_dll(libmit, f"mit_{c}"))
                for (c, cty) in [

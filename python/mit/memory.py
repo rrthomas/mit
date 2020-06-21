@@ -11,7 +11,7 @@ RISK.
 
 from ctypes import cast, addressof
 
-from .binding import word_bytes, word_mask
+from .binding import word_bytes, uword_max
 
 
 class Memory:
@@ -59,5 +59,5 @@ class Memory:
 
     def __setitem__(self, addr, value):
         if not isinstance(value, bytes):
-            value = int(value) & word_mask
+            value = int(value) & uword_max
         self._view.__setitem__(self._address_to_index(addr), value)
