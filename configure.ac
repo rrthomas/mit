@@ -185,7 +185,7 @@ AM_CONDITIONAL([USING_PACKAGE_SUFFIX], [test "$gl_package_suffix" = "yes"])
 # pForth tests, run if the pforth source tree is present and Mit is
 # configured compatibly with pForth.
 dnl AM_CONDITIONAL([USING_PFORTH],
-dnl    [test -d src/specializer/pforth -a "$SIZEOF_SIZE_T" = 4 -a "$ac_cv_c_bigendian" != "yes"])
+dnl    [test -d $srcdir/src/specializer/pforth -a "$SIZEOF_SIZE_T" = 4 -a "$ac_cv_c_bigendian" != "yes"])
 
 # Generate output files
 AC_CONFIG_HEADERS([config.h])
