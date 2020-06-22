@@ -82,10 +82,10 @@ class Disassembler:
                     comment = f' ({unsigned_value:#x}={value})'
                 else: # opcode == I.PUSHREL
                     comment = f' ({(initial_pc + value) & uword_max:#x})'
-            elif opcode & 1 == 1 and opcode != I.NEXTFF: # PUSHRELI_N
-                value = (opcode - I.PUSHRELI_0) >> 1
-                if opcode & 0x80:
-                    value |= -1 & ~0x7f
+            elif opcode & 0x3 in (0x1, 0x2): # PUSHRELI_N
+                value = (opcode - I.PUSHRELI_0) >> 2
+                if opcode & 0x3 == 0x2: # negative
+                    value |= ~0x3f
                 comment = f' ({self.pc + value * word_bytes:#x})'
             elif opcode == I.NEXT and self.ir != 0:
                 # Call `self._fetch()` later, not now.

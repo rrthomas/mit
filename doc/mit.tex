@@ -257,7 +257,7 @@ These instructions fetch and store quantities to and from memory.
 \inst{push}{— n}{Push the word pointed to by {\tt pc} on to the stack, and increment {\tt pc} to point to the following word.}
 \inst{pushrel}{— n}{Like {\tt push} but add {\tt pc} to the value pushed on to the stack.}
 \inst{pushi\_\spic{n}}{— n}{Push \spic{n} on to the stack. \spic{n} ranges from $-32$ to $31$ inclusive.}
-\inst{pushreli\_\spic{n}}{— n}{Push ${\tt pc} + {\tt word\_bytes}\times\spic{n}$ on to the stack. \spic{n} ranges from $-64$ to $63$ inclusive, excluding $-1$.}
+\inst{pushreli\_\spic{n}}{— n}{Push ${\tt pc} + {\tt word\_bytes}\times\spic{n}$ on to the stack. \spic{n} ranges from $-64$ to $63$ inclusive.}
 \end{description}
 
 The operand of {\tt pushi} and {\tt pushreli} is encoded in the instruction opcode; see section~\ref{encoding}.
@@ -348,15 +348,14 @@ Instructions are encoded as bytes, packed into words, which are executed as desc
 \begin{center}
   \begin{bytefield}[endianness=big,bitwidth=2em]{8}
     \bitheader{0-7}\\
-    \bitbox{6}{instruction}\bitboxes*{1}{00}\\[1ex]
-    \bitbox{6}{{\tt pushi} operand}\bitboxes*{1}{10}\\[1ex]
-    \bitbox{7}{{\tt pushreli} operand}\bitbox{1}{1}\\
-    except\\[0.5ex]
-    \bitbox{8}{11111111 = {\tt trap}}
+    \bitbox{5}{instruction}\bitboxes*{1}{000}\\[1ex]
+    \bitbox{6}{{\tt pushreli} $n\geq 0$}\bitboxes*{1}{01}\\[1ex]
+    \bitbox{5}{{\tt pushi} $n\geq 0$}\bitboxes*{1}{011}\\[1ex]
+    \bitbox{5}{{\tt pushi} $n < 0$}\bitboxes*{1}{100}\\[1ex]
+    \bitbox{6}{{\tt pushreli} $n < 0$}\bitboxes*{1}{10}\\[1ex]
+    \bitbox{5}{instruction}\bitboxes*{1}{111}
   \end{bytefield}
 \end{center}
-
-Note that {\tt pushreli}’s immediate constant cannot be $-1$, as the corresponding byte value is used for {\tt trap}.
 
 
 \subsection{Instruction opcodes}
