@@ -21,7 +21,7 @@ push = assembler.push
 label = assembler.label
 ass = assembler.instruction
 vars().update(Instructions.__members__)
-UNDEFINED = 0x20 << 2
+UNDEFINED = 0x7
 assert UNDEFINED not in Instructions.__members__.values(), Instructions.__members__.values()
 
 # Test results and data

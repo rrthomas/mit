@@ -148,7 +148,7 @@ class Assembler:
         '''
         value = int(value)
         if not force_long and -32 <= value < 32:
-            self.instruction((I.PUSHI_0 + (value << 2)) & 0xff)
+            self.instruction(((value << 3) | (0x3 if value >= 0 else 0x4)) & 0xff)
         else:
             self.instruction(I.PUSH)
             self.word(value)
@@ -164,7 +164,8 @@ class Assembler:
             offset -= word_bytes
         offset_words = offset // word_bytes
         if not force_long and offset_words != -1 and -64 <= offset_words < 64:
-            self.instruction((I.PUSHRELI_0 + (offset_words << 1)) & 0xff)
+            self.instruction((((offset_words << 2)) |
+                              (0x1 if offset_words >= 0 else 0x2)) & 0xff)
         else:
             self.instruction(I.PUSHREL)
             self.word(offset)

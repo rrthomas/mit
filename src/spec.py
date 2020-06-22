@@ -531,14 +531,14 @@ instructions = [
 # Turn instruction codes into full opcodes
 for i in instructions:
     if i['opcode'] != 0xff:
-        i['opcode'] <<= 2
+        i['opcode'] <<= 3
 
 
 # `pushi`
 instructions.extend(
     {
         'name': f'PUSHI_{n}'.replace('-', 'M'),
-        'opcode': ((n & 0x3f) << 2) | 0x2,
+        'opcode': ((n & 0x1f) << 3) | (0x3 if n >= 0 else 0x4),
         'action': Action(
             StackEffect.of([], ['n']),
             Code(f'n = {n};'),
@@ -551,13 +551,13 @@ instructions.extend(
 instructions.extend(
     {
         'name': f'PUSHRELI_{n}'.replace('-', 'M'),
-        'opcode': ((n & 0x7f) << 1) | 0x1,
+        'opcode': ((n & 0x3f) << 2) | (0x1 if n >= 0 else 0x2),
         'action': Action(
             StackEffect.of([], ['addr']),
             Code(f'addr = (mit_uword_t)(pc + {n});'),
         ),
     }
-    for n in range(-64, 64) if n != -1
+    for n in range(-64, 64)
 )
 
 
