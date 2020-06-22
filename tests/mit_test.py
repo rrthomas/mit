@@ -34,6 +34,6 @@ def run_test(name, state, correct):
             sys.exit(1)
         done += 1
         if done == len(correct):
-            return MitErrorCode.OK
+            return MitErrorCode.BREAK
     state.step(trace=True, addr=0, step_callback=test_callback)
     print(f"{name.capitalize()} tests ran OK")

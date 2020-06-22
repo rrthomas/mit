@@ -262,7 +262,7 @@ class BreakHandler:
                 error = self.final_callback(self, stack)
                 if error is not None:
                     return error
-            return enums.MitErrorCode.OK
+            return enums.MitErrorCode.BREAK
 
         if self.trace:
             self.log(f"{stack}")
@@ -272,4 +272,4 @@ class BreakHandler:
             if error is not None:
                 return error
         self.done += 1
-        return enums.MitErrorCode.BREAK
+        return enums.MitErrorCode.OK

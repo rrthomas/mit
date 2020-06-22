@@ -45,7 +45,8 @@ class MitErrorCode(IntEnum):
     INVALID_MEMORY_WRITE = -6
     UNALIGNED_ADDRESS = -7
     DIVISION_BY_ZERO = -8
-    BREAK = -127
+    BREAK = -126
+    OK_LONGJMP = -127
 
 
 @unique
