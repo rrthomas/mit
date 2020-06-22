@@ -368,7 +368,7 @@ int main(int argc, char *argv[])
     }
 
     // Run
-    mit_word_t error = mit_run(memory, 0, stack, &stack_depth);
+    mit_word_t error = mit_run(memory, 0, stack, mit_stack_words, &stack_depth);
     if (error < 0 && error >= -127) {
         warn("error %zd: %s", error, error_to_msg(error));
         // Translate `error` into a process exit code

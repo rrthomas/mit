@@ -168,6 +168,7 @@ class LibraryEnum(ActionEnum):
 
 @unique
 class LibInstructions(LibraryEnum):
+    '''Library traps enumeration.'''
     LIBC = (0x0, LibC, '''
 #include <stdlib.h>
 #include <unistd.h>

@@ -53,7 +53,7 @@ code.append('')
 code.append('MIT_THREAD_LOCAL mit_fn_t *mit_break_fn = NULL;')
 code.extend(run_inner_fn('break', Code('''\
         if (mit_break_fn != NULL) {
-            error = mit_break_fn(pc, ir, stack, &stack_depth);
+            error = mit_break_fn(pc, ir, stack, stack_words, &stack_depth);
             if (error != MIT_ERROR_BREAK)
                 THROW(error);
         }

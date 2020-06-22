@@ -58,6 +58,7 @@ mit@PACKAGE_SUFFIX@.1: mit@PACKAGE_SUFFIX@$(EXEEXT) $(top_builddir)/build-aux/ma
 ## Exit gracefully if mit.1 is not writeable, such as during distcheck!
 	$(AM_V_GEN)if ( touch $@.w && rm -f $@.w; ) >/dev/null 2>&1; then \
 	  $(top_srcdir)/build-aux/missing --run $(HELP2MAN) --no-info \
+		--source="@PACKAGE_NAME@ @VERSION@" \
 		--name="Virtual machine" \
 		--include=$(top_builddir)/build-aux/man-include.man \
 		--include=$(builddir)/mit-include.man \

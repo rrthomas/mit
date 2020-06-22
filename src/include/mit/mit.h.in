@@ -31,59 +31,56 @@ typedef size_t mit_uword_t;
 // TODO: find largest type: bigger of long double and intmax_t?
 typedef uintmax_t mit_max_stack_item_t;
 
+// The type of a function that mutates the VM stack and memory.
+//
+// `pc` and `ir` are the initial values of the corresponding registers.
+// `stack` is the base address of the stack, and `*stack_depth_ptr` is the
+// value of the `stack_depth` register.
+// Returns the exit status: `MIT_ERROR_OK` on success, or some other value
+// on error.
+typedef mit_word_t mit_fn_t(mit_word_t *pc, mit_word_t ir,
+                            mit_word_t * restrict stack,
+                            mit_uword_t stack_words,
+                            mit_uword_t *stack_depth_ptr);
+
 // Stack
-extern MIT_THREAD_LOCAL mit_uword_t mit_stack_words;
 // The stack is implemented as a `stack_words`-element array at `stack`.
 #define mit_stack_pos(stack, stack_depth, pos) \
     (&stack[stack_depth - (mit_uword_t)(pos) - 1])
 
+// The recommended stack size.
+extern MIT_THREAD_LOCAL mit_uword_t mit_stack_words;
 
-// VM control
-
-/* The type of a function that mutates the VM stack and memory.
-
-   `pc` and `ir` are the initial values of the corresponding registers.
-   `stack` is the base address of the stack, and `*stack_depth_ptr` is the
-   value of the `stack_depth` register.
-   Returns the exit status: `MIT_ERROR_OK` on success, or some other value
-   on error.
-*/
-typedef mit_word_t mit_fn_t(mit_word_t *pc, mit_word_t ir,
-                             mit_word_t * restrict stack,
-                             mit_uword_t *stack_depth_ptr);
-
+// Execute VM code. Defaults to `mit_run_simple`. Can be set to any
+// compatible function, which thereby propagates to nested VMs via the `catch`
+// extra instruction. This allows a different implementation (optimized,
+// profiling) to be used globally.
 extern MIT_THREAD_LOCAL mit_fn_t *mit_run;
-/* Execute VM code. Defaults to `mit_run_simple`. Can be set to any
-   compatible function, which thereby propagates to nested VMs via the `catch`
-   extra instruction. This allows a different implementation (optimized,
-   profiling) to be used globally.
-*/
 
+// Start the execution cycle in the given state as described in the spec.
+// If an error is raised, the code is returned.
+//
+// This is a naive implementation.
 mit_fn_t mit_run_simple;
-/* Start the execution cycle in the given state as described in the spec.
-   If an error is raised, the code is returned.
 
-   This is a naive implementation.
-*/
-
+// Like `mit_run_simple`, but (hopefully) faster.
 mit_fn_t mit_run_fast;
-/* Like `mit_run_simple`, but (hopefully) faster. */
 
 // N.B. The profiler is per-thread.
+// Clear the profile.
 void mit_profile_reset(void);
-/* Clears the profile. */
+// Like `mit_run_fast`, but records profiling information.
 mit_fn_t mit_run_profile;
-/* Like `mit_run_fast`, but records profiling information. */
+// Dump profiling information to file descriptor `fd`.
 int mit_profile_dump(int fd);
-/* Dump profiling information to file descriptor `fd`. */
 
 extern MIT_THREAD_LOCAL mit_fn_t *mit_break_fn;
+// Like `mit_run_simple`, but calls `mit_break_fn` before each instruction.
 mit_fn_t mit_run_break;
-/* Like `mit_run_simple`, but calls `mit_break_fn` before each instruction. */
 
+// The registered value of `argc`.
 extern int mit_argc;
-/* The registered value of `argc`. */
+// The registered value of `argv`.
 extern char **mit_argv;
-/* The registered value of `argv`. */
 
 #endif

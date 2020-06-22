@@ -168,7 +168,7 @@ instructions = [
             None,
             Code('''\
                 {
-                    mit_word_t inner_error = mit_trap(pc, ir, stack, &stack_depth);
+                    mit_word_t inner_error = mit_trap(pc, ir, stack, stack_words, &stack_depth);
                     if (inner_error != MIT_ERROR_OK)
                         THROW(inner_error);
                 }
@@ -571,4 +571,4 @@ Instructions = unique(ActionEnum(
         )
     ) for i in instructions)
 ))
-Instructions.__docstring__ = 'VM instructions.'
+Instructions.__doc__ = 'VM instructions.'
