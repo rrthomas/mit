@@ -171,7 +171,7 @@ def test_callback(handler, stack):
         sys.exit(1)
     done += 1
     if done == len(correct):
-        return MitErrorCode.OK
+        return MitErrorCode.BREAK
 trace(addr=0, step_callback=test_callback)
 
 print("Branch tests ran OK")

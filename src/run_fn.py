@@ -79,8 +79,7 @@ def run_fn(suffix):
             if (error == 0) {{
                 run_inner_{suffix}(pc, ir, stack, stack_words, stack_depth_ptr, &env);
                 error = MIT_ERROR_OK;
-            }} else if (error == MIT_ERROR_BREAK)
-                // Translate MIT_ERROR_BREAK as 0; see THROW_LONGJMP in run.h.
+            }} else if (error == MIT_ERROR_OK_LONGJMP) // see THROW_LONGJMP in run.h.in
                 error = 0;
             return error;
         }}
