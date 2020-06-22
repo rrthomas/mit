@@ -8,8 +8,9 @@
 # THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 # RISK.
 
-from code_util import Code, copyright_banner
 from spec import word_bytes
+from code_util import Code, copyright_banner
+from code_gen import dispatch
 
 # Get type sizes and inject them into instruction_gen
 from type_sizes import type_sizes
@@ -59,9 +60,13 @@ for lib in LibInstructions:
     code.append('')
 
     body_code = Code()
-    body_code.extend(lib.library.dispatch(Code(
-        'THROW(MIT_TRAP_ERROR_INVALID_FUNCTION);'
-    ), 'function'))
+    body_code.extend(dispatch(
+        lib.library,
+        Code(
+            'THROW(MIT_TRAP_ERROR_INVALID_FUNCTION);'
+        ),
+        'function',
+    ))
     body_code.append('')
     code.append(body_code)
 
@@ -83,9 +88,12 @@ code.append('''\
 code.append('')
 
 body_code = Code()
-body_code.extend(LibInstructions.dispatch(Code(
-    'return MIT_TRAP_ERROR_INVALID_LIBRARY;'
-), 'ir'))
+body_code.extend(dispatch(
+    LibInstructions, Code(
+        'return MIT_TRAP_ERROR_INVALID_LIBRARY;'
+    ),
+    'ir',
+))
 body_code.append('''\
     *stack_depth_ptr = stack_depth;
     return error;''')

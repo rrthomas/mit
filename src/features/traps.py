@@ -9,9 +9,10 @@
 
 from enum import Enum, unique
 
-from code_util import Code
+from stack import StackEffect
 from action import Action, ActionEnum
-from stack import StackEffect, pop_stack
+from code_util import Code
+from code_gen import pop_stack
 
 
 @unique

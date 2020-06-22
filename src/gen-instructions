@@ -9,8 +9,9 @@
 
 import argparse
 
+from spec import Instructions
 from code_util import copyright_banner, Code
-from run_fn import run_fn, run_inner_fn
+from code_gen import run_fn, run_inner_fn
 
 
 GENERATOR_PROGRAM = 'gen-instructions'
@@ -44,14 +45,14 @@ code.append('''
 )
 
 # `mit_run_simple()`.
-code.extend(run_inner_fn('simple', ''))
+code.extend(run_inner_fn(Instructions, 'simple', ''))
 code.extend(run_fn('simple'))
 
 code.append('')
 
 # `mit_run_break()`, for debugging.
 code.append('MIT_THREAD_LOCAL mit_fn_t *mit_break_fn = NULL;')
-code.extend(run_inner_fn('break', Code('''\
+code.extend(run_inner_fn(Instructions, 'break', Code('''\
         if (mit_break_fn != NULL) {
             error = mit_break_fn(pc, ir, stack, stack_words, &stack_depth);
             if (error != MIT_ERROR_OK)
