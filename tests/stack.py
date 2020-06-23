@@ -37,11 +37,6 @@ correct = [
     [2, 1, 0],
     [2, 1, 1],
     [2, 1, 2],
-    [2, 1, 2, 0],
-    [2, 1, 2, 2],
-    [2, 1, 2, 2, 0],
-    [2, 1, 2, 2, 2],
-    [2, 1, 2, 2, 2, 5],
 ]
 
 # Test code
@@ -69,11 +64,6 @@ push(1)
 push(0)
 ass(DUP)
 ass(DUP)
-push(0)
-ass(DUP)
-push(0)
-ass(DUP)
-extra(STACK_DEPTH)
 
 # Test
 run_test("stack", VM, correct)

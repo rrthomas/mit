@@ -31,8 +31,6 @@ class Registers(RegisterEnum):
     '''VM registers.'''
     pc = ('mit_word_t *',)
     ir = ('mit_word_t',)
-    stack_depth = ('mit_uword_t',)
-    stack = ('mit_word_t * restrict',)
 
 @unique
 class MitErrorCode(IntEnum):
@@ -54,15 +52,6 @@ class MitErrorCode(IntEnum):
 class ExtraInstructions(ActionEnum):
     '''VM extra instructions.'''
 
-    STACK_DEPTH = (
-        Action(
-            None, # Manage stack manually because we use the value of
-                  # `stack_depth`.
-            Code('PUSH(stack_depth);'),
-        ),
-        0x1,
-    )
-
     THROW = (
         Action(
             None, # Manage stack manually so that `stack_depth` is
@@ -72,7 +61,7 @@ class ExtraInstructions(ActionEnum):
                 THROW(n);
             '''),
         ),
-        0x2,
+        0x1,
     )
 
     CATCH = (
@@ -86,7 +75,7 @@ class ExtraInstructions(ActionEnum):
                 DO_CATCH(addr);
             '''),
         ),
-        0x3,
+        0x2,
     )
 
     ARGC = (
