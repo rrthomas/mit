@@ -10,8 +10,8 @@
 import argparse, json, textwrap
 
 from code_util import Code, copyright_banner, disable_warnings
-from run_fn import run_body, run_fn
-from spec import opcode_bit
+from code_gen import run_body, run_fn
+from spec import opcode_bit, Instructions as BasicInstructions
 from specializer import CacheState, gen_case
 from specializer_spec import Instructions
 from path import Path, State
@@ -254,7 +254,7 @@ def gen_labels_code(profiling=False):
             ir = ARSHIFT(ir, 8);
             #define run_inner run_inner_fast
     ''')
-    code.append(run_body())
+    code.append(run_body(BasicInstructions))
     code.append('''
             #undef run_inner
             continue;

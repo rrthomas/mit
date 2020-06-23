@@ -15,24 +15,20 @@ RISK.
 from dataclasses import dataclass
 from enum import Enum
 
-from code_util import Code, c_symbol
-from stack import StackEffect, Size, check_underflow, check_overflow
+from code_util import Code
+from stack import StackEffect
 
-
-class AbstractAction:
-    def gen_case(self):
-        raise NotImplementedError
 
 @dataclass
-class Action(AbstractAction):
+class Action:
     '''
     VM instruction action descriptor.
 
      - effect - StackEffect or None.
      - code - Code - may use macros defined in run.h. If `effect` is not
-       `None`, `gen_case()` creates C variables for the arguments and
-       results, pops the arguments and pushes the results; otherwise,
-       `code` is responsible for managing the stack.
+       `None`, `run_py.gen_action_case()` creates C variables for the
+       arguments and results, pops the arguments and pushes the results;
+       otherwise, `code` is responsible for managing the stack.
      - is_variadic - bool - true if this action is variadic.
     '''
     effect: StackEffect
@@ -44,40 +40,11 @@ class Action(AbstractAction):
             any(item.name == 'ITEMS' for item in self.effect.args.items)
         )
 
-    def gen_case(self):
-        '''
-        Generate a Code for an Action.
-
-        In the code, errors are reported by calling THROW().
-        '''
-        effect = self.effect
-        code = Code()
-        if effect is not None:
-            # Load the arguments into C variables.
-            code.extend(effect.declare_vars())
-            count = effect.args.by_name.get('COUNT')
-            if count is not None:
-                # If we have COUNT, check its stack position is valid, and load it.
-                # We actually check `effect.args.size.size` (more than we need),
-                # because this check will be generated anyway by the next
-                # check_underflow call, so the compiler can elide one check.
-                code.extend(check_underflow(Size(effect.args.size.size)))
-                code.extend(count.load())
-            code.extend(check_underflow(effect.args.size))
-            code.extend(check_overflow(effect.args.size, effect.results.size))
-            code.extend(effect.load_args())
-        code.extend(self.code)
-        if effect is not None:
-            # Store the results from C variables.
-            code.append(f'stack_depth += {effect.results.size - effect.args.size};')
-            code.extend(effect.store_results())
-        return code
-
 class ActionEnum(Enum):
     '''
     Base class for instruction-set–like enumerations.
 
-     - action - AbstractAction
+     - action - Action or Instruction.
      - opcode - optional int - opcode number, defaults to numbering
        sequentially from 0.
 
@@ -90,31 +57,6 @@ class ActionEnum(Enum):
         return obj
 
     def __init__(self, action, opcode=None):
-        assert isinstance(action, AbstractAction), action
         self.action = action
         if opcode is not None:
             self.opcode = opcode
-
-    @classmethod
-    def dispatch(cls, undefined_case, opcode='opcode'):
-        '''
-        Generate dispatch code.
-
-         - undefined_case - Code - the fallback behaviour.
-         - opcode - str - a C expression for the opcode.
-        '''
-        assert isinstance(undefined_case, Code), undefined_case
-        code = Code()
-        else_text = ''
-        for (_, value) in enumerate(cls):
-            opcode_symbol = f'{c_symbol(cls.__name__)}_{value.name}'
-            code.append(
-                f'{else_text}if ({opcode} == {opcode_symbol}) {{'
-            )
-            code.append(value.action.gen_case())
-            code.append('}')
-            else_text = 'else '
-        code.append(f'{else_text}{{')
-        code.append(undefined_case)
-        code.append('}')
-        return code

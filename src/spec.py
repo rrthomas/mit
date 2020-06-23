@@ -12,9 +12,10 @@ from enum import Enum, IntEnum, unique
 from ctypes import sizeof, c_size_t
 
 from autonumber import AutoNumber
+from stack import StackEffect
+from action import Action, ActionEnum
 from code_util import Code
-from action import AbstractAction, Action, ActionEnum
-from stack import StackEffect, pop_stack
+from code_gen import dispatch
 
 
 word_bytes = sizeof(c_size_t)
@@ -109,14 +110,18 @@ extra_code = Code('''\
     mit_uword_t extra_opcode = ir;
     ir = 0;
 ''')
-extra_code.extend(ExtraInstructions.dispatch(Code(
-    'THROW(MIT_ERROR_INVALID_OPCODE);',
-), 'extra_opcode'))
+extra_code.extend(dispatch(
+    ExtraInstructions,
+    Code(
+        'THROW(MIT_ERROR_INVALID_OPCODE);',
+    ),
+    'extra_opcode',
+))
 
 
 # Core instructions.
 @dataclass
-class Instruction(AbstractAction):
+class Instruction:
     '''
     VM instruction descriptor.
 
@@ -130,19 +135,6 @@ class Instruction(AbstractAction):
     opcode: int
     action: Action
     terminal: Action
-
-    def gen_case(self):
-        code = self.action.gen_case()
-        if self.terminal is not None:
-            ir_all_bits = 0 if self.opcode & 0x80 == 0 else -1
-            code = Code(
-                f'if (ir != {ir_all_bits}) {{',
-                self.terminal.gen_case(),
-                '} else {',
-                code,
-                '}',
-            )
-        return code
 
 instructions = [
     {
