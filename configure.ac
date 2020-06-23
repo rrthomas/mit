@@ -1,7 +1,7 @@
 # configure.ac for Mit
 # Process this file with autoconf to produce a configure script
 #
-# (c) Mit authors 2011-2019
+# (c) Mit authors 2011-2020
 #
 # The package is distributed under the MIT/X11 License.
 #
@@ -135,18 +135,28 @@ AC_SUBST([PY_LOG_ENV])
 AC_SUBST([objdir])
 
 # Thread-local storage
-case $host in
-  # Disable by default on some platforms
-  # MingW/MSYS: see https://sourceforge.net/p/mingw-w64/bugs/827/
-  # macOS: segfault when a library with a _Thread_local is dlopened (e.g. in Python)
-  *mingw32|*msys|*darwin*) AC_MSG_WARN([Thread-local storage is disabled by default on this platform]);;
-  *) AX_TLS ;;
-esac
-AS_IF([test "$ac_cv_tls" = "" -o "$ac_cv_tls" = "none"],
-  AC_MSG_WARN([Define THREAD_LOCAL to a storage specifier if desired.]))
-AC_ARG_VAR([THREAD_LOCAL],
-  [storage specifier for thread-local storage [default: auto-detected]])
-: "${THREAD_LOCAL=$ac_cv_tls}"
+AC_ARG_ENABLE([tls],
+  [AS_HELP_STRING([--disable-tls],
+                  [do not use thread-local storage])],
+  [
+  case $enableval in
+    yes|no) ;;
+    *)      AC_MSG_ERROR([bad value $enableval for tls option]) ;;
+  esac
+  if test "$enableval" = yes; then
+    case $host in
+      # Disable by default on some platforms
+      # MingW/MSYS: see https://sourceforge.net/p/mingw-w64/bugs/827/
+      # macOS: segfault when a library with a _Thread_local is dlopened (e.g. in Python)
+      *mingw32|*msys|*darwin*) AC_MSG_WARN([Thread-local storage is disabled by default on this platform]);;
+      *) AX_TLS ;;
+    esac
+  fi
+  AS_IF([test "$ac_cv_tls" = "" -o "$ac_cv_tls" = "none"],
+    AC_MSG_WARN([Define THREAD_LOCAL to a storage specifier if desired.]))
+  AC_ARG_VAR([THREAD_LOCAL],
+    [storage specifier for thread-local storage [default: auto-detected]])
+  : "${THREAD_LOCAL=$ac_cv_tls}"])
 
 # Check features
 AC_C_BIGENDIAN
