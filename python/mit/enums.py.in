@@ -16,6 +16,15 @@ from .autonumber import AutoNumber
 
 
 def enum(enum_name, docstring, spec, value_extractor=lambda x: x):
+    '''
+    Returns a subclass of IntEnum with elements derived from `spec`.
+
+     - enum_name - str - the class name to define.
+     - docstring - str - the docstring for the class.
+     - spec - iterable returning (str, t) where `t` is acceptable to
+       `value_extractor`.
+     - value_extractor - function from `t` to int.
+    '''
     enum = unique(IntEnum(
         enum_name,
         ((name, value_extractor(i)) for name, i in spec.items())
