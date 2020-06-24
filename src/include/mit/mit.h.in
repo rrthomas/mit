@@ -74,6 +74,8 @@ mit_fn_t mit_run_profile;
 // Dump profiling information to file descriptor `fd`.
 int mit_profile_dump(int fd);
 
+// The callback called by `mit_run_break`. The default is `NULL`, which
+// is equivalent to a mit_fn_t that always returns `MIT_ERROR_OK`.
 extern MIT_THREAD_LOCAL mit_fn_t *mit_break_fn;
 // Like `mit_run_simple`, but calls `mit_break_fn` before each instruction.
 mit_fn_t mit_run_break;
