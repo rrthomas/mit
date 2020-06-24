@@ -11,89 +11,6 @@ from code_util import Code, unrestrict, disable_warnings, c_symbol
 from stack import StackEffect, Size, type_words
 
 
-def declare_vars(stack_effect):
-    '''
-    Returns a Code to declare C variables for arguments and results other
-    than 'ITEMS'.
-     - stack_effect - StackEffect
-    '''
-    return Code(*[
-        f'{item.type} {item.name};'
-        for item in stack_effect.by_name.values()
-        if item.name != 'ITEMS'
-    ])
-
-def load_args(stack_effect):
-    '''
-    Returns a Code to read the arguments from the stack into C variables,
-    skipping 'ITEMS' and 'COUNT'.
-     - stack_effect - StackEffect
-
-    `stack_depth` is not modified.
-    '''
-    code = Code()
-    for item in stack_effect.args.items:
-        if item.name != 'ITEMS' and item.name != 'COUNT':
-            code.extend(load_item(item))
-    return code
-
-def store_results(stack_effect):
-    '''
-    Returns a Code to write the results from C variables into the stack,
-    skipping 'ITEMS'.
-     - stack_effect - StackEffect
-
-    `stack_depth` must be modified first.
-    '''
-    code = Code()
-    for item in stack_effect.results.items:
-        if item.name != 'ITEMS':
-            code.extend(store_item(item))
-    return code
-
-def check_underflow(num_pops):
-    '''
-    Returns a Code to check that the stack contains enough items to
-    pop the specified number of items.
-     - num_pops - Size, with non-negative `count`.
-    '''
-    assert isinstance(num_pops, Size)
-    assert num_pops >= 0, num_pops
-    if num_pops == 0: return Code()
-    tests = []
-    tests.append(f'unlikely(stack_depth < (mit_uword_t)({num_pops.size}))')
-    if num_pops.count == 1:
-        tests.append(
-            f'unlikely(stack_depth - (mit_uword_t)({num_pops.size}) < (mit_uword_t)(COUNT))'
-        )
-    return Code(
-        'if ({}) {{'.format(' || '.join(tests)),
-        Code('THROW(MIT_ERROR_INVALID_STACK_READ);'),
-        '}',
-    )
-
-def check_overflow(num_pops, num_pushes):
-    '''
-    Returns a Code to check that the stack contains enough space to
-    push `num_pushes` items, given that `num_pops` items will first be
-    popped successfully.
-     - num_pops - Size.
-     - num_pushes - Size.
-    `num_pops` and `num_pushes` must both be variadic or both not.
-    '''
-    assert isinstance(num_pops, Size)
-    assert isinstance(num_pushes, Size)
-    assert num_pops >= 0
-    assert num_pushes >= 0
-    depth_change = num_pushes - num_pops
-    if depth_change <= 0: return Code()
-    # Ensure comparison will not overflow
-    assert depth_change.count == 0
-    return Code(f'''\
-        if (unlikely(stack_words - stack_depth < {depth_change}))
-            THROW(MIT_ERROR_STACK_OVERFLOW);'''
-    )
-
 def load_stack(name, depth=0, type='mit_word_t'):
     '''
     Generate C code to load the variable `name` of type `type` occupying
@@ -170,11 +87,94 @@ def store_item(item):
     '''
     return store_stack(item.name, item.depth, item.type)
 
-def gen_action_case(action):
+def check_underflow(num_pops):
+    '''
+    Returns a Code to check that the stack contains enough items to
+    pop the specified number of items.
+     - num_pops - Size, with non-negative `count`.
+    '''
+    assert isinstance(num_pops, Size)
+    assert num_pops >= 0, num_pops
+    if num_pops == 0: return Code()
+    tests = []
+    tests.append(f'unlikely(stack_depth < (mit_uword_t)({num_pops.size}))')
+    if num_pops.count == 1:
+        tests.append(
+            f'unlikely(stack_depth - (mit_uword_t)({num_pops.size}) < (mit_uword_t)(COUNT))'
+        )
+    return Code(
+        'if ({}) {{'.format(' || '.join(tests)),
+        Code('THROW(MIT_ERROR_INVALID_STACK_READ);'),
+        '}',
+    )
+
+def check_overflow(num_pops, num_pushes):
+    '''
+    Returns a Code to check that the stack contains enough space to
+    push `num_pushes` items, given that `num_pops` items will first be
+    popped successfully.
+     - num_pops - Size.
+     - num_pushes - Size.
+    `num_pops` and `num_pushes` must both be variadic or both not.
+    '''
+    assert isinstance(num_pops, Size)
+    assert isinstance(num_pushes, Size)
+    assert num_pops >= 0
+    assert num_pushes >= 0
+    depth_change = num_pushes - num_pops
+    if depth_change <= 0: return Code()
+    # Ensure comparison will not overflow
+    assert depth_change.count == 0
+    return Code(f'''\
+        if (unlikely(stack_words - stack_depth < {depth_change}))
+            THROW(MIT_ERROR_STACK_OVERFLOW);'''
+    )
+
+def declare_vars(stack_effect):
+    '''
+    Returns a Code to declare C variables for arguments and results other
+    than 'ITEMS'.
+     - stack_effect - StackEffect
+    '''
+    return Code(*[
+        f'{item.type} {item.name};'
+        for item in stack_effect.by_name.values()
+        if item.name != 'ITEMS'
+    ])
+
+def load_args(stack_effect):
+    '''
+    Returns a Code to read the arguments from the stack into C variables,
+    skipping 'ITEMS' and 'COUNT'.
+     - stack_effect - StackEffect
+
+    `stack_depth` is not modified.
+    '''
+    code = Code()
+    for item in stack_effect.args.items:
+        if item.name != 'ITEMS' and item.name != 'COUNT':
+            code.extend(load_item(item))
+    return code
+
+def store_results(stack_effect):
+    '''
+    Returns a Code to write the results from C variables into the stack,
+    skipping 'ITEMS'.
+     - stack_effect - StackEffect
+
+    `stack_depth` must be modified first.
+    '''
+    code = Code()
+    for item in stack_effect.results.items:
+        if item.name != 'ITEMS':
+            code.extend(store_item(item))
+    return code
+
+def gen_action_code(action):
     '''
     Generate a Code for an Action.
 
-    In the code, errors are reported by calling THROW().
+    This is suitable for passing as the `gen_code` argument of `dispatch()`.
     '''
     effect = action.effect
     code = Code()
@@ -199,27 +199,33 @@ def gen_action_case(action):
         code.extend(store_results(effect))
     return code
 
-def gen_instruction_case(instruction):
-    code = gen_action_case(instruction.action)
+def gen_instruction_code(instruction):
+    '''
+    Generate a Code for an Instruction.
+
+    This is suitable for passing as the `gen_code` argument of `dispatch()`.
+    '''
+    code = gen_action_code(instruction.action)
     if instruction.terminal is not None:
         ir_all_bits = 0 if instruction.opcode & 0x80 == 0 else -1
         code = Code(
             f'if (ir != {ir_all_bits}) {{',
-            gen_action_case(instruction.terminal),
+            gen_action_code(instruction.terminal),
             '} else {',
             code,
             '}',
         )
     return code
 
-def dispatch(actions, undefined_case, opcode='opcode', gen_case=gen_action_case):
+def dispatch(actions, undefined_case, opcode='opcode', gen_code=gen_action_code):
     '''
     Generate dispatch code for an ActionEnum.
      - actions - ActionEnum.
      - undefined_case - Code - the fallback behaviour.
      - opcode - str - a C expression for the opcode.
-     - gen_case - function - a function to generate a C case from an element
-       of `actions`.
+     - gen_code - function - a function that takes an ActionEnum instance and
+       returns C code to implement it. In the code, errors are reported by
+       calling THROW().
     '''
     assert isinstance(undefined_case, Code), undefined_case
     code = Code()
@@ -229,7 +235,7 @@ def dispatch(actions, undefined_case, opcode='opcode', gen_case=gen_action_case)
         code.append(
             f'{else_text}if ({opcode} == {opcode_symbol}) {{'
         )
-        code.append(gen_case(value.action))
+        code.append(gen_code(value.action))
         code.append('}')
         else_text = 'else '
     code.append(f'{else_text}{{')
@@ -247,7 +253,7 @@ def run_body(instructions):
             '// Undefined instruction.',
             'THROW(MIT_ERROR_INVALID_OPCODE);'
         ),
-        gen_case=gen_instruction_case,
+        gen_code=gen_instruction_code,
     )
 
 def run_inner_fn(instructions, suffix, instrument):
