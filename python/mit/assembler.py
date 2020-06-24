@@ -135,7 +135,7 @@ class Assembler:
         if self.i_shift == 0:
             effective_pc += word_bytes
         word_offset = (addr - effective_pc) // word_bytes
-        if word_offset != 0 and word_offset != -1 and self.fit(opcode, word_offset):
+        if word_offset != 0 and self.fit(opcode, word_offset):
             self.instruction(opcode, word_offset)
         else:
             self.pushrel(addr)
@@ -163,7 +163,7 @@ class Assembler:
         if self.i_shift == 0:
             offset -= word_bytes
         offset_words = offset // word_bytes
-        if not force_long and offset_words != -1 and -64 <= offset_words < 64:
+        if not force_long and -64 <= offset_words < 64:
             self.instruction((((offset_words << 2)) |
                               (0x1 if offset_words >= 0 else 0x2)) & 0xff)
         else:
