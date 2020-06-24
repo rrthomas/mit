@@ -347,10 +347,10 @@ Instructions are encoded as bytes, packed into words, which are executed as desc
   \begin{bytefield}[endianness=big,bitwidth=2em]{8}
     \bitheader{0-7}\\
     \bitbox{5}{instruction}\bitboxes*{1}{000}\\[1ex]
-    \bitbox{6}{{\tt pushreli} $n\geq 0$}\bitboxes*{1}{01}\\[1ex]
-    \bitbox{5}{{\tt pushi} $n\geq 0$}\bitboxes*{1}{011}\\[1ex]
     \bitbox{5}{{\tt pushi} $n < 0$}\bitboxes*{1}{100}\\[1ex]
     \bitbox{6}{{\tt pushreli} $n < 0$}\bitboxes*{1}{10}\\[1ex]
+    \bitbox{6}{{\tt pushreli} $n\geq 0$}\bitboxes*{1}{01}\\[1ex]
+    \bitbox{5}{{\tt pushi} $n\geq 0$}\bitboxes*{1}{011}\\[1ex]
     \bitbox{5}{instruction}\bitboxes*{1}{111}
   \end{bytefield}
 \end{center}
