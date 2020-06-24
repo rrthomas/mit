@@ -34,8 +34,8 @@ typedef uintmax_t mit_max_stack_item_t;
 // The type of a function that mutates the VM stack and memory.
 //
 // `pc` and `ir` are the initial values of the corresponding registers.
-// `stack` is the base address of the stack, and `*stack_depth_ptr` is the
-// value of the `stack_depth` register.
+// `stack` is the base address of the stack, which has a capacity of
+// `stack_words` words, and `*stack_depth_ptr` is the current stack depth.
 // Returns the exit status: `MIT_ERROR_OK` on success, or some other value
 // on error.
 typedef mit_word_t mit_fn_t(mit_word_t *pc, mit_word_t ir,
