@@ -1,16 +1,17 @@
 '''
 Mit
 
-This package provides Mit bindings for Python 3, and offers a convenient
-set of functions and variables to interact with Mit in a Python REPL.
-Module mit provides a Pythonic API.
-Module mit.binding provides direct access to libmit.
-Module mit.assembler provides Assembler
-Module mit.disassembler provides Disassembler
-Module mit.globals provides a convenient set of globals for interactive use
-and for testing.
+This package provides Mit bindings for Python 3.
 
-(c) Mit authors 2019-2020
+The following more specialized modules can be accessed directly if necessary:
+ - binding provides direct access to libmit.
+ - state provides State, which represents a Mit instance.
+ - assembler provides Assembler.
+ - disassembler provides Disassembler.
+ - globals provides a convenient set of functions and variables to
+   interact with Mit in a Python REPL.
+
+(c) Mit authors 2019-2020.
 
 The package is distributed under the MIT/X11 License.
 

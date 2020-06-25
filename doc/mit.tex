@@ -57,7 +57,7 @@
 
 \title{The Mit virtual machine}
 \author{Reuben Thomas}
-\date{10th May 2020}
+\date{23rd June 2020}
 
 \begin{document}
 \maketitle
@@ -82,7 +82,7 @@ The choice of byte and word size enable efficient implementation on the vast maj
 \subsection{Registers}
 \label{registers}
 
-The registers are word quantities; they are listed, with their functions, in table~\ref{regtable}. The registers are initialised to~$0$.
+The registers are word quantities; they are listed, with their functions, in table~\ref{regtable}.
 
 \begin{table}[htbp]
 \begin{center}
@@ -91,7 +91,6 @@ The registers are word quantities; they are listed, with their functions, in tab
  \midrule
 {\tt pc} & The {\tt p}rogram {\tt c}ounter. Points to the next word from which {\tt ir} may be loaded. \\
 {\tt ir} & The {\tt i}nstruction {\tt r}egister. Contains instructions to be executed. \\
-{\tt stack\_depth} & The number of words in the current stack frame. \\
  \bottomrule
 \end{tabular}
 \caption{\label{regtable}Registers}
@@ -107,7 +106,7 @@ The stack is a last-in-first-out stack of call frames. The {\bf current frame} i
 \subsection{Execution}
 \label{execution}
 
-Execution proceeds as follows:
+The registers are initialised to appropriate values. Execution proceeds as follows:
 
 \begin{tabbing}
 \hspace{0.2in}\=rep\=eat\+\+ \\*
@@ -334,9 +333,8 @@ Extra instructions, using the {\tt extra} instruction, offer necessary functiona
 The following extra instructions are defined:
 
 \begin{description}
-\extra{stack\_depth}{1}{— u}{Push the value of {\tt stack\_depth} on to the stack.}
-\extra{throw}{2}{n —}{Throw error \spic{n}.}
-\extra{catch}{3}{\x{u}\dots\x0 \U1 \U2 [\aaddr1] — h \U2 \aaddr2 {\tt ||} \x{u}\dots\x0}{Add an error handler \spic{h} to the current stack frame, then perform the action of {\tt call} (see section~\ref{control}).}
+\extra{throw}{1}{n —}{Throw error \spic{n}.}
+\extra{catch}{2}{\x{u}\dots\x0 \U1 \U2 [\aaddr1] — h \U2 \aaddr2 {\tt ||} \x{u}\dots\x0}{Add an error handler \spic{h} to the current stack frame, then perform the action of {\tt call} (see section~\ref{control}).}
 \end{description}
 
 
@@ -349,10 +347,10 @@ Instructions are encoded as bytes, packed into words, which are executed as desc
   \begin{bytefield}[endianness=big,bitwidth=2em]{8}
     \bitheader{0-7}\\
     \bitbox{5}{instruction}\bitboxes*{1}{000}\\[1ex]
-    \bitbox{6}{{\tt pushreli} $n\geq 0$}\bitboxes*{1}{01}\\[1ex]
-    \bitbox{5}{{\tt pushi} $n\geq 0$}\bitboxes*{1}{011}\\[1ex]
     \bitbox{5}{{\tt pushi} $n < 0$}\bitboxes*{1}{100}\\[1ex]
     \bitbox{6}{{\tt pushreli} $n < 0$}\bitboxes*{1}{10}\\[1ex]
+    \bitbox{6}{{\tt pushreli} $n\geq 0$}\bitboxes*{1}{01}\\[1ex]
+    \bitbox{5}{{\tt pushi} $n\geq 0$}\bitboxes*{1}{011}\\[1ex]
     \bitbox{5}{instruction}\bitboxes*{1}{111}
   \end{bytefield}
 \end{center}

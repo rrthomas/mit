@@ -12,7 +12,7 @@ from spec import word_bytes
 from code_util import Code, copyright_banner
 from code_gen import dispatch
 
-# Get type sizes and inject them into instruction_gen
+# Get type sizes and inject them into `stack.type_wordses`.
 from type_sizes import type_sizes
 import stack
 stack.type_wordses.update(
