@@ -51,6 +51,31 @@ class MitErrorCode(IntEnum):
 @unique
 class ExtraInstructions(ActionEnum):
     '''VM extra instructions.'''
+    DIVMOD = (
+        Action(
+            StackEffect.of(['a', 'b'], ['q', 'r']),
+            Code('''\
+                if (b == 0)
+                    THROW(MIT_ERROR_DIVISION_BY_ZERO);
+                q = a / b;
+                r = a % b;
+            ''')
+        ),
+        0x1,
+    )
+
+    UDIVMOD = (
+        Action(
+            StackEffect.of(['a', 'b'], ['q', 'r']),
+            Code('''\
+                if (b == 0)
+                    THROW(MIT_ERROR_DIVISION_BY_ZERO);
+                q = (mit_word_t)((mit_uword_t)a / (mit_uword_t)b);
+                r = (mit_word_t)((mit_uword_t)a % (mit_uword_t)b);
+            ''')
+        ),
+        0x2,
+    )
 
     THROW = (
         Action(
@@ -61,7 +86,7 @@ class ExtraInstructions(ActionEnum):
                 THROW(n);
             '''),
         ),
-        0x1,
+        0x3,
     )
 
     CATCH = (
@@ -75,7 +100,7 @@ class ExtraInstructions(ActionEnum):
                 DO_CATCH(addr);
             '''),
         ),
-        0x2,
+        0x4,
     )
 
     ARGC = (
@@ -159,8 +184,77 @@ instructions = [
     },
 
     {
+        'name': 'NOT',
+        'opcode': 0x08,
+        'action': Action(
+            StackEffect.of(['x'], ['r']),
+            Code('r = ~x;'),
+        ),
+    },
+
+    {
+        'name': 'AND',
+        'opcode': 0x10,
+        'action': Action(
+            StackEffect.of(['x', 'y'], ['r']),
+            Code('r = x & y;'),
+        ),
+    },
+
+    {
+        'name': 'OR',
+        'opcode': 0x18,
+        'action': Action(
+            StackEffect.of(['x', 'y'], ['r']),
+            Code('r = x | y;'),
+        ),
+    },
+
+    {
+        'name': 'XOR',
+        'opcode': 0x20,
+        'action': Action(
+            StackEffect.of(['x', 'y'], ['r']),
+            Code('r = x ^ y;'),
+        ),
+    },
+
+    {
+        'name': 'LSHIFT',
+        'opcode': 0x28,
+        'action': Action(
+            StackEffect.of(['x', 'n'], ['r']),
+            Code('''\
+                r = n < (mit_word_t)MIT_WORD_BIT ?
+                    (mit_word_t)((mit_uword_t)x << n) : 0;
+            '''),
+        ),
+    },
+
+    {
+        'name': 'RSHIFT',
+        'opcode': 0x30,
+        'action': Action(
+            StackEffect.of(['x', 'n'], ['r']),
+            Code('''\
+                r = n < (mit_word_t)MIT_WORD_BIT ?
+                    (mit_word_t)((mit_uword_t)x >> n) : 0;
+            '''),
+        ),
+    },
+
+    {
+        'name': 'ARSHIFT',
+        'opcode': 0x38,
+        'action': Action(
+            StackEffect.of(['x', 'n'], ['r']),
+            Code('r = ARSHIFT(x, n);'),
+        ),
+    },
+
+    {
         'name': 'POP',
-        'opcode': 0x1,
+        'opcode': 0x40,
         'action': Action(
             StackEffect.of(['ITEMS', 'COUNT'], []),
             Code(), # No code.
@@ -169,7 +263,7 @@ instructions = [
 
     {
         'name': 'DUP',
-        'opcode': 0x2,
+        'opcode': 0x48,
         'action': Action(
             StackEffect.of(['x', 'ITEMS', 'COUNT'], ['x', 'ITEMS', 'x']),
             Code(), # No code.
@@ -177,8 +271,17 @@ instructions = [
     },
 
     {
+        'name': 'SET',
+        'opcode': 0x50,
+        'action': Action(
+            StackEffect.of(['x', 'ITEMS', 'y', 'COUNT'], ['y', 'ITEMS']),
+            Code(),
+        ),
+    },
+
+    {
         'name': 'SWAP',
-        'opcode': 0x3,
+        'opcode': 0x58,
         'action': Action(
             StackEffect.of(['x', 'ITEMS', 'y', 'COUNT'], ['y', 'ITEMS', 'x']),
             Code(),
@@ -187,7 +290,7 @@ instructions = [
 
     {
         'name': 'JUMP',
-        'opcode': 0x4,
+        'opcode': 0x60,
         'action': Action(
             StackEffect.of(['addr'], []),
             Code('DO_JUMP(addr);'),
@@ -200,7 +303,7 @@ instructions = [
 
     {
         'name': 'JUMPZ',
-        'opcode': 0x5,
+        'opcode': 0x68,
         'action': Action(
             StackEffect.of(['flag', 'addr'], []),
             Code('''\
@@ -219,7 +322,7 @@ instructions = [
 
     {
         'name': 'CALL',
-        'opcode': 0x6,
+        'opcode': 0x70,
         'action': Action(
             None, # Manage stack manually because of changing stack frames.
             Code('''\
@@ -240,7 +343,7 @@ instructions = [
 
     {
         'name': 'RET',
-        'opcode': 0x7,
+        'opcode': 0x78,
         'action': Action(
             None,
             # `call` or `catch` performs the rest of the action of `ret` on
@@ -251,7 +354,7 @@ instructions = [
 
     {
         'name': 'LOAD',
-        'opcode': 0x8,
+        'opcode': 0x80,
         'action': Action(
             StackEffect.of(['addr'], ['val']),
             Code('''\
@@ -264,7 +367,7 @@ instructions = [
 
     {
         'name': 'STORE',
-        'opcode': 0x9,
+        'opcode': 0x88,
         'action': Action(
             StackEffect.of(['val', 'addr'], []),
             Code('''\
@@ -277,7 +380,7 @@ instructions = [
 
     {
         'name': 'LOAD1',
-        'opcode': 0xa,
+        'opcode': 0x90,
         'action': Action(
             StackEffect.of(['addr'], ['val']),
             Code('val = (mit_uword_t)*((uint8_t *)addr);'),
@@ -286,7 +389,7 @@ instructions = [
 
     {
         'name': 'STORE1',
-        'opcode': 0xb,
+        'opcode': 0x98,
         'action': Action(
             StackEffect.of(['val', 'addr'], []),
             Code('*(uint8_t *)addr = (uint8_t)val;'),
@@ -295,7 +398,7 @@ instructions = [
 
     {
         'name': 'LOAD2',
-        'opcode': 0xc,
+        'opcode': 0xa0,
         'action': Action(
             StackEffect.of(['addr'], ['val']),
             Code('''\
@@ -308,7 +411,7 @@ instructions = [
 
     {
         'name': 'STORE2',
-        'opcode': 0xd,
+        'opcode': 0xa8,
         'action': Action(
             StackEffect.of(['val', 'addr'], []),
             Code('''\
@@ -321,7 +424,7 @@ instructions = [
 
     {
         'name': 'LOAD4',
-        'opcode': 0xe,
+        'opcode': 0xb0,
         'action': Action(
             StackEffect.of(['addr'], ['val']),
             Code('''\
@@ -334,7 +437,7 @@ instructions = [
 
     {
         'name': 'STORE4',
-        'opcode': 0xf,
+        'opcode': 0xb8,
         'action': Action(
             StackEffect.of(['val', 'addr'], []),
             Code('''\
@@ -347,7 +450,7 @@ instructions = [
 
     {
         'name': 'PUSH',
-        'opcode': 0x10,
+        'opcode': 0xc0,
         'action': Action(
             StackEffect.of([], ['n']),
             Code('n = *pc++;'),
@@ -356,7 +459,7 @@ instructions = [
 
     {
         'name': 'PUSHREL',
-        'opcode': 0x11,
+        'opcode': 0xc8,
         'action': Action(
             StackEffect.of([], ['n']),
             Code('''\
@@ -367,95 +470,8 @@ instructions = [
     },
 
     {
-        'name': 'NOT',
-        'opcode': 0x12,
-        'action': Action(
-            StackEffect.of(['x'], ['r']),
-            Code('r = ~x;'),
-        ),
-    },
-
-    {
-        'name': 'AND',
-        'opcode': 0x13,
-        'action': Action(
-            StackEffect.of(['x', 'y'], ['r']),
-            Code('r = x & y;'),
-        ),
-    },
-
-    {
-        'name': 'OR',
-        'opcode': 0x14,
-        'action': Action(
-            StackEffect.of(['x', 'y'], ['r']),
-            Code('r = x | y;'),
-        ),
-    },
-
-    {
-        'name': 'XOR',
-        'opcode': 0x15,
-        'action': Action(
-            StackEffect.of(['x', 'y'], ['r']),
-            Code('r = x ^ y;'),
-        ),
-    },
-
-    {
-        'name': 'LT',
-        'opcode': 0x16,
-        'action': Action(
-            StackEffect.of(['a', 'b'], ['flag']),
-            Code('flag = a < b;'),
-        ),
-    },
-
-    {
-        'name': 'ULT',
-        'opcode': 0x17,
-        'action': Action(
-            StackEffect.of(['a', 'b'], ['flag']),
-            Code('flag = (mit_uword_t)a < (mit_uword_t)b;'),
-        ),
-    },
-
-    {
-        'name': 'LSHIFT',
-        'opcode': 0x18,
-        'action': Action(
-            StackEffect.of(['x', 'n'], ['r']),
-            Code('''\
-                r = n < (mit_word_t)MIT_WORD_BIT ?
-                    (mit_word_t)((mit_uword_t)x << n) : 0;
-            '''),
-        ),
-    },
-
-    {
-        'name': 'RSHIFT',
-        'opcode': 0x19,
-        'action': Action(
-            StackEffect.of(['x', 'n'], ['r']),
-            Code('''\
-                r = n < (mit_word_t)MIT_WORD_BIT ?
-                    (mit_word_t)((mit_uword_t)x >> n) : 0;
-            '''),
-        ),
-    },
-
-    {
-        'name': 'ARSHIFT',
-        'opcode': 0x1a,
-        'action': Action(
-            StackEffect.of(['x', 'n'], ['r']),
-            Code('r = ARSHIFT(x, n);'),
-        ),
-    },
-
-    {
         'name': 'NEGATE',
-        'opcode': 0x1b,
+        'opcode': 0xd0,
         'action': Action(
             StackEffect.of(['a'], ['r']),
             Code('r = -a;'),
@@ -464,7 +480,7 @@ instructions = [
 
     {
         'name': 'ADD',
-        'opcode': 0x1c,
+        'opcode': 0xd8,
         'action': Action(
             StackEffect.of(['a', 'b'], ['r']),
             Code('r = a + b;'),
@@ -473,7 +489,7 @@ instructions = [
 
     {
         'name': 'MUL',
-        'opcode': 0x1d,
+        'opcode': 0xe0,
         'action': Action(
             StackEffect.of(['a', 'b'], ['r']),
             Code('r = a * b;'),
@@ -481,39 +497,32 @@ instructions = [
     },
 
     {
-        'name': 'DIVMOD',
-        'opcode': 0x1e,
+        'name': 'EQ',
+        'opcode': 0xe8,
         'action': Action(
-            StackEffect.of(['a', 'b'], ['q', 'r']),
-            Code('''\
-                if (b == 0)
-                    THROW(MIT_ERROR_DIVISION_BY_ZERO);
-                q = a / b;
-                r = a % b;
-            '''),
+            StackEffect.of(['a', 'b'], ['flag']),
+            Code('flag = a == b;'),
         ),
     },
 
     {
-        'name': 'UDIVMOD',
-        'opcode': 0x1f,
+        'name': 'LT',
+        'opcode': 0xf0,
         'action': Action(
-            StackEffect.of(['a', 'b'], ['q', 'r']),
-            Code('''\
-                if (b == 0)
-                    THROW(MIT_ERROR_DIVISION_BY_ZERO);
-                q = (mit_word_t)((mit_uword_t)a / (mit_uword_t)b);
-                r = (mit_word_t)((mit_uword_t)a % (mit_uword_t)b);
-            '''),
+            StackEffect.of(['a', 'b'], ['flag']),
+            Code('flag = a < b;'),
+        ),
+    },
+
+    {
+        'name': 'ULT',
+        'opcode': 0xf8,
+        'action': Action(
+            StackEffect.of(['a', 'b'], ['flag']),
+            Code('flag = (mit_uword_t)a < (mit_uword_t)b;'),
         ),
     },
 ]
-
-# Turn instruction codes into full opcodes
-for i in instructions:
-    if i['opcode'] != 0xff:
-        i['opcode'] <<= 3
-
 
 # `pushi`
 instructions.extend(

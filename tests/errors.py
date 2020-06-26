@@ -20,7 +20,9 @@ assembler = Assembler(VM)
 push = assembler.push
 label = assembler.label
 ass = assembler.instruction
+extra = assembler.extra
 vars().update(Instructions.__members__)
+vars().update(ExtraInstructions.__members__)
 UNDEFINED = 0x7
 assert UNDEFINED not in Instructions.__members__.values(), Instructions.__members__.values()
 
@@ -36,7 +38,7 @@ result.append(MitErrorCode.DIVISION_BY_ZERO)
 print(f'Test "{test[-1]}": pc = {test_pc[-1]:#x}')
 push(1)
 push(0)
-ass(DIVMOD)
+extra(DIVMOD)
 
 test.append('Try to read from an invalid stack location')
 test_pc.append(label())

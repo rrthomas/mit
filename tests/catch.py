@@ -50,7 +50,7 @@ extra(CATCH)
 ret_addr = label()
 goto(M.addr + 0x200)
 
-ass(DIVMOD)
+extra(DIVMOD)
 ass(RET)
 goto(ret_addr)
 
@@ -63,7 +63,7 @@ extra(CATCH)
 ret_addr = label()
 goto(M.addr + 0x400)
 
-ass(DIVMOD)
+extra(DIVMOD)
 ass(RET)
 goto(ret_addr)
 
@@ -82,6 +82,8 @@ goto(ret_addr)
 
 push(MitErrorCode.OK)
 extra(THROW)
+
+dis(M.addr + 0x600, 3)
 
 # Test
 run_test("catch", VM, correct)
