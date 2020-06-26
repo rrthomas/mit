@@ -1,7 +1,7 @@
 # Test the comparison instructions. We only test simple cases here, assuming
 # that the C compiler's comparison routines will work for other cases.
 #
-# (c) Mit authors 1994-2019
+# (c) Mit authors 1994-2020
 #
 # The package is distributed under the MIT/X11 License.
 #
@@ -20,9 +20,8 @@ def assemble_tests(inputs, outputs, op):
         push(p[0])
         push(p[1])
         ass(op)
-        push(1)
         ass(POP)
-        correct.extend(([p[0]], [p[0], p[1]], [outputs[i]], [outputs[i], 1], []))
+        correct.extend(([p[0]], [p[0], p[1]], [outputs[i]], []))
 
 less_than_pairs = [(3, 1),  (1, 3),  (2, 2),  (-4, 3)]
 equality_pairs = [(237, 237),  (1, -1)]

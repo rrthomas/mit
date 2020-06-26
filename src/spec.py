@@ -256,7 +256,7 @@ instructions = [
         'name': 'POP',
         'opcode': 0x40,
         'action': Action(
-            StackEffect.of(['ITEMS', 'COUNT'], []),
+            StackEffect.of(['x'], []),
             Code(), # No code.
         ),
     },

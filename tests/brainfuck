@@ -55,13 +55,13 @@ try:
             push(1) # length
             libc(LibC.STDOUT)
             libc(LibC.WRITE)
-            push(1); ass(POP)
+            ass(POP)
         elif c == ',':
             dup() # buffer
             push(1) # length
             libc(LibC.STDIN)
             libc(LibC.READ)
-            push(1); ass(POP)
+            ass(POP)
         elif c == '[':
             loop = label()
             print(f"{loop:#x}")

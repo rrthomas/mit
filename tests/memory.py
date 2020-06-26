@@ -25,11 +25,9 @@ correct = [
     [],
     [last_word],
     [magic_number],
-    [magic_number, 1],
     [],
     [last_word + (word_bytes - 2) * endism],
     [magic_number],
-    [magic_number, 1],
     [],
     [last_word + (word_bytes - 2) * endism + 1 * (1 - endism)],
     [0xf2],
@@ -45,11 +43,9 @@ push(last_word)
 ass(STORE)
 push(last_word)
 ass(LOAD)
-push(1)
 ass(POP)
 push(last_word + (word_bytes - 2) * endism)
 ass(LOAD2)
-push(1)
 ass(POP)
 push(last_word + (word_bytes - 2) * endism + 1 * (1 - endism))
 ass(LOAD1)

@@ -4,7 +4,7 @@
 # basic correctness of the instructions here, assuming that if the arithmetic
 # works in one case, it will work in all.
 #
-# (c) Mit authors 1994-2019
+# (c) Mit authors 1994-2020
 #
 # The package is distributed under the MIT/X11 License.
 #
@@ -33,27 +33,25 @@ correct = [
     [2, 0, -word_bytes],
     [2, 0, -word_bytes, 0],
     [2, -word_bytes, 0],
-    [2, -word_bytes, 0, 2],
+    [2, -word_bytes],
     [2],
     [-2],
     [-2, -1],
     [2, 0],
     [2, 0, 0],
     [0, 2],
-    [0, 2, 2],
+    [0],
     [],
     [word_bytes],
     [-word_bytes],
-    [-word_bytes, 1],
     [],
     [-8],
     [-8, 7],
     [-1, -1],
-    [-1, -1, 1],
     [-1],
     [-1, -2],
     [1, 1],
-    [1, 1, 2],
+    [1],
     [],
     [4],
     [4, 2],
@@ -77,27 +75,25 @@ push(word_bytes)
 ass(MUL)
 push(0)
 ass(SWAP)
-push(2)
+ass(POP)
 ass(POP)
 ass(NEGATE)
 push(-1)
 extra(DIVMOD)
 push(0)
 ass(SWAP)
-push(2)
+ass(POP)
 ass(POP)
 push(word_bytes)
 ass(NEGATE)
-push(1)
 ass(POP)
 push(-8)
 push(7)
 extra(DIVMOD)
-push(1)
 ass(POP)
 push(-2)
 extra(UDIVMOD)
-push(2)
+ass(POP)
 ass(POP)
 push(4)
 push(2)
