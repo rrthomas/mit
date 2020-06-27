@@ -32,36 +32,37 @@ class State:
     '''
     A VM state.
 
-     - args - list of str - command-line arguments to register.
-     - memory - Memory - the memory used. (The VM can use other memory, but
-       the block of memory supplied can be accessed conveniently from
-       Python.)
-
-    Note: For some reason, an array created as a "multiple" of c_char does
-    not have the right type. ctypes.create_string_buffer must be used.
+     - pc - the initial value of `pc` used by `step()` and `run()`.
+     - M - Memory - a byte view of some memory.
+     - M_word - Memory - a word view of the same memory as `M`.
     '''
-    def __new__(cls, memory_words=1024*1024, args=None):
+    def __init__(self, memory_words=1024*1024, args=None):
         '''
         Create the VM state.
 
-         - memory_words - int - number of words of main memory.
+         - memory_words - optional int - number of words of main memory to
+           allocate. The VM can use other memory, but the block of memory
+           allocated can be accessed conveniently from Python.
+         - args - optional list of str - command-line arguments to register.
         '''
-        state = super().__new__(cls)
         if memory_words is not None:
-            state.M = Memory(create_string_buffer(memory_words * word_bytes))
-            state.M_word = Memory(state.M.buffer, element_size=word_bytes)
-            state.pc = state.M.addr
+            # Note: For some reason, an array created as a "multiple" of c_char
+            # does not have the right type. ctypes.create_string_buffer must be
+            # used.
+            self.M = Memory(create_string_buffer(memory_words * word_bytes))
+            self.M_word = Memory(self.M.buffer, element_size=word_bytes)
+            self.pc = self.M.addr
         else:
-            state.pc = None
+            self.pc = None
         if args is not None:
             assert isinstance(args, list)
             args.insert(0, b"python")
             register_args(*args)
-        return state
 
     def run(self, run_fn=run_simple):
         '''
-        Run until execution halts.
+        Run until execution halts. Execution will start at `self.pc` with an
+        empty stack of capacity `stack_words`.
 
          - run_fn - optional c_mit_fn - c_mit_fn to use. Defaults to
            `run_simple`.
@@ -69,14 +70,17 @@ class State:
         run_ptr.contents = run_fn
         run(
             cast(self.pc, POINTER(c_word)),
-            0,
+            0, # ir
             cast((c_word * stack_words.value)(), POINTER(c_word)),
             stack_words.value,
             byref(c_uword(0)),
         )
 
     def step(self, n=1, addr=None, trace=False, step_callback=None, final_callback=None):
-        'Single-step for `n` steps, or until `pc`=addr.'
+        '''
+        Single-step for `n` steps, or until `pc`=addr. Initial conditions are
+        as for `run()`.
+        '''
         with BreakHandler(self, n, addr, trace, step_callback, final_callback) as handler:
             try:
                 self.run(run_fn=run_break)
