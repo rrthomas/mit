@@ -47,6 +47,9 @@ class Memory:
     def __len__(self):
         return len(self.view)
 
+    def __iter__(self):
+        raise NotImplementedError
+
     def _address_to_index(self, addr):
         if isinstance(addr, slice):
             assert addr.step in (None, self.element_size)
