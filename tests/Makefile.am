@@ -42,13 +42,13 @@ bench:
 
 # Python will not try a relative import from a different directory, so copy
 # modules from srcdir to builddir.
-check_DATA = $(top_builddir)/copied-python-module-to-build
+check_DATA = copied-python-module-to-build
 
-$(top_builddir)/copied-python-module-to-build:
-	if ! test -e $(top_builddir)/python/mit/__init__.py; then \
+.PHONY:	copied-python-module-to-build
+copied-python-module-to-build:
+	if test "$(top_srcdir)" != "$(top_builddir)"; then \
 	    $(MKDIR_P) $(top_builddir)/python/mit && \
-	    cp -fL $(top_srcdir)/python/mit/*.py $(top_builddir)/python/mit/ && \
-	    touch $@; \
+	    cp -fL $(top_srcdir)/python/mit/*.py $(top_builddir)/python/mit/; \
 	fi
 
 # Augment PATH (for Windows) and LD_LIBRARY_PATH (for Linux) so that
