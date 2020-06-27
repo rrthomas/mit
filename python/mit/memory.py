@@ -59,7 +59,10 @@ class Memory:
             )
         else:
             assert addr % self.element_size == 0
-            return (addr - self.addr) // self.element_size
+            index = (addr - self.addr) // self.element_size
+            if index < 0 or index >= len(self):
+                raise IndexError(addr)
+            return index
 
     def __getitem__(self, addr):
         return self.view.__getitem__(self._address_to_index(addr))

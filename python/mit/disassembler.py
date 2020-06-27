@@ -43,7 +43,7 @@ class Disassembler:
         '''
         Disassembles code from the memory of `state`. `pc` and `ir`
         default to the current pc and ir values of `state`.
-        `length` is in words, and defaults to 16.
+        `length` is in words, and defaults to 16. `length` overrides `end`.
         '''
         self.state = state
         self.pc = self.state.pc if pc is None else pc
@@ -54,6 +54,7 @@ class Disassembler:
             length = 16
         if length is not None:
             self.end = self.pc + length * word_bytes
+        assert is_aligned(self.end)
 
     def _fetch(self):
         if self.pc >= self.end:
