@@ -23,7 +23,7 @@ ass = assembler.instruction
 extra = assembler.extra
 vars().update(Instructions.__members__)
 vars().update(ExtraInstructions.__members__)
-UNDEFINED = 0x7
+UNDEFINED = 0xf7
 assert UNDEFINED not in Instructions.__members__.values(), Instructions.__members__.values()
 
 # Test results and data

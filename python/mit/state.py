@@ -32,36 +32,37 @@ class State:
     '''
     A VM state.
 
-     - args - list of str - command-line arguments to register.
-     - memory - Memory - the memory used. (The VM can use other memory, but
-       the block of memory supplied can be accessed conveniently from
-       Python.)
-
-    Note: For some reason, an array created as a "multiple" of c_char does
-    not have the right type. ctypes.create_string_buffer must be used.
+     - pc - the initial value of `pc` used by `step()` and `run()`.
+     - M - Memory - a byte view of some memory.
+     - M_word - Memory - a word view of the same memory as `M`.
     '''
-    def __new__(cls, memory_words=1024*1024, args=None):
+    def __init__(self, memory_words=1024*1024, args=None):
         '''
         Create the VM state.
 
-         - memory_words - int - number of words of main memory.
+         - memory_words - optional int - number of words of main memory to
+           allocate. The VM can use other memory, but the block of memory
+           allocated can be accessed conveniently from Python.
+         - args - optional list of str - command-line arguments to register.
         '''
-        state = super().__new__(cls)
         if memory_words is not None:
-            state.M = Memory(create_string_buffer(memory_words * word_bytes))
-            state.M_word = Memory(state.M.buffer, element_size=word_bytes)
-            state.pc = state.M.addr
+            # Note: For some reason, an array created as a "multiple" of c_char
+            # does not have the right type. ctypes.create_string_buffer must be
+            # used.
+            self.M = Memory(create_string_buffer(memory_words * word_bytes))
+            self.M_word = Memory(self.M.buffer, element_size=word_bytes)
+            self.pc = self.M.addr
         else:
-            state.pc = None
+            self.pc = None
         if args is not None:
             assert isinstance(args, list)
             args.insert(0, b"python")
             register_args(*args)
-        return state
 
     def run(self, run_fn=run_simple):
         '''
-        Run until execution halts.
+        Run until execution halts. Execution will start at `self.pc` with an
+        empty stack of capacity `stack_words`.
 
          - run_fn - optional c_mit_fn - c_mit_fn to use. Defaults to
            `run_simple`.
@@ -69,101 +70,108 @@ class State:
         run_ptr.contents = run_fn
         run(
             cast(self.pc, POINTER(c_word)),
-            0,
+            0, # ir
             cast((c_word * stack_words.value)(), POINTER(c_word)),
             stack_words.value,
             byref(c_uword(0)),
         )
 
     def step(self, n=1, addr=None, trace=False, step_callback=None, final_callback=None):
-        'Single-step for `n` steps, or until `pc`=addr.'
+        '''
+        Single-step for `n` steps, or until `pc`=addr. Initial conditions are
+        as for `run()`.
+        '''
         with BreakHandler(self, n, addr, trace, step_callback, final_callback) as handler:
             try:
                 self.run(run_fn=run_break)
             except VMError as e:
-                if e.args[0] != enums.MitErrorCode.BREAK:
-                    ret = e.args[0]
-                    steps = "after {} step{}".format(
-                        handler.done,
-                        's' if handler.done != 1 else ''
-                    )
-                    print(f"Error code {ret} was returned {steps} at pc={self.pc:#x}")
-                    raise
-
-    def log(self, *args):
-        print(*args, file=sys.stderr)
+                if e.args[0] == enums.MitErrorCode.BREAK:
+                    return
+                ret = e.args[0]
+                steps = "{} step{}".format(
+                    handler.done,
+                    's' if handler.done != 1 else ''
+                )
+                print(f"Error code {ret} was returned after {steps} at pc={self.pc:#x}")
+                raise
 
     def load(self, file, addr=None):
         '''
-        Load a binary file at the given address (default is `memory`).
-        Returns the length in words.
+        Load a binary file at the given address, which must be in `M`.
+        `addr` defaults to `M.addr`. The length of `file` must be a whole
+        number of words, not including any "#!" line.
+
+        Returns the length of `file` in words.
         '''
         def strip_hashbang(data):
-            if data[:2] == b'#!':
-                try:
-                    i = data.index(b'\n')
-                except ValueError: # No \n, so just a #! line
-                    i = len(data) - 1
-                data = data[i + 1:]
-            return data
+            if data[:2] != b'#!':
+                return data
+            try:
+                return data[data.index(b'\n') + 1:]
+            except ValueError: # No \n, so just a #! line
+                return b''
 
         with open(file, 'rb') as h:
             data = h.read()
         data = strip_hashbang(data)
-        length = len(data)
-        if length > len(self.M):
-            raise Error(f'file {file} is too big to fit in memory')
-        if length % word_bytes != 0:
+        if len(data) % word_bytes != 0:
             raise Error(f'file {file} is not a whole number of words')
+        assert self.M is not None
         if addr is None:
             addr = self.M.addr
-        self.M[addr:addr + length] = data
-        return length // word_bytes
+        end_addr = addr + len(data)
+        if end_addr > self.M.addr + len(self.M):
+            raise Error(f'file {file} does not fit in memory at {addr:#x}')
+        try:
+            self.M[addr:end_addr] = data
+        except IndexError:
+            raise Error("invalid or unaligned address")
+        return len(data) // word_bytes
 
     def save(self, file, addr=None, length=None):
         '''
-        Save a binary image of the VM memory.
+        Save a binary image of part of `M`.
 
          - addr - int - start address, defaults to `self.M.addr`.
          - length - int - length in words, defaults to `len(self.M_word)`.
         '''
         if addr is None:
             addr = self.M.addr
-            length = len(self.M_word)
+        if length is None:
+            end_addr = self.M.addr + len(self.M)
         else:
-            assert length is not None
-        if (not is_aligned(addr) or
-            addr < self.M.addr or addr + length * word_bytes > self.M.addr + len(self.M)):
+            end_addr = addr + length * word_bytes
+        try:
+            data = bytes(self.M[addr:end_addr])
+        except IndexError:
             raise Error("invalid or unaligned address")
-
         with open(file, 'wb') as h:
-            h.write(bytes(self.M[addr:addr + length * word_bytes]))
+            h.write(data)
 
     def disassemble(self, start=None, length=None, end=None, file=sys.stdout):
         '''
         Disassemble `length` words from `start`, or from `start` to `end`.
+        Arguments `start`, `length` and `end` are passed to Disassembler.
         '''
-        if length is not None:
-            end = start + length * word_bytes
-        for inst in Disassembler(self, pc=start, end=end):
+        for inst in Disassembler(self, pc=start, length=length, end=end):
             print(inst, file=file)
 
     def dump(self, start=None, length=None, end=None, file=sys.stdout):
         '''
         Dump `length` words from `start` (rounded down to nearest 16),
         or from `start` to `end`.
-        Defaults to 64 words from `start`.
+        Defaults to 64 words from `start`, which defaults to `pc`.
         '''
-        chunk = 16
         if start is None:
-            start = max(0, self.pc)
-        start -= start % chunk
+            start = self.pc
         if length is not None:
             end = start + length * word_bytes
         elif end is None:
-            end = start + 64 * word_bytes
+            end = min(start + 64 * word_bytes, self.M.addr + len(self.M))
+        assert self.M.addr <= start <= end <= self.M.addr + len(self.M)
 
-        p = start
+        chunk = 16
+        p = start - start % chunk
         while p < end:
             print(("{:#0" + str(hex0x_word_width) + "x} ").format(p), end='', file=file)
             ascii = ""
@@ -171,11 +179,17 @@ class State:
             while i < chunk and p < end:
                 if i % 8 == 0:
                     print(" ", end='', file=file)
-                byte = self.M[p + i]
-                print(f"{byte:02x} ", end='', file=file)
+                if start <= p + i < end:
+                    byte = self.M[p + i]
+                    byte_hex = f"{byte:02x}"
+                    c = chr(byte)
+                    c = c if c.isprintable() else '.'
+                else:
+                    byte_hex = "  "
+                    c = " "
+                print(f"{byte_hex} ", end='', file=file)
+                ascii += c
                 i += 1
-                c = chr(byte)
-                ascii += c if c.isprintable() else '.'
             p += chunk
             print(f" |{ascii:.{chunk}}|", file=file)
 

@@ -57,7 +57,7 @@
 
 \title{The Mit virtual machine}
 \author{Reuben Thomas}
-\date{25th June 2020}
+\date{26th June 2020}
 
 \begin{document}
 \maketitle
@@ -214,7 +214,7 @@ These instructions manage the stack:
 
 \nopagebreak
 \begin{description}
-\inst{pop}{\x{u}\dots\x0 u —}{Remove \spic{\x{u}\dots\x0} from the stack.}
+\inst{pop}{x —}{Remove \spic{x} from the stack.}
 \inst{dup}{\x{u}\dots\x0 u — \x{u}\dots\x0 \x{u}}{Remove \spic{u}. Copy \x{u} to the top of the stack.}
 \inst{set}{\x{u+1}\dots\x0 u — \x0 \x{u}\dots\x1}{Set the \spic{u+1}th stack word to \spic{\x0}, then discard \x0.}
 \inst{swap}{\x{u+1}\dots\x0 u — \x0 \x{u}\dots\x1 \x{u+1}}{Exchange the top stack word with the \spic{u+1}th.}

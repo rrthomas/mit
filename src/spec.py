@@ -256,8 +256,8 @@ instructions = [
         'name': 'POP',
         'opcode': 0x40,
         'action': Action(
-            StackEffect.of(['ITEMS', 'COUNT'], []),
-            Code(), # No code.
+            StackEffect.of(['_x'], []),
+            Code('(void)_x;'),
         ),
     },
 
@@ -274,8 +274,8 @@ instructions = [
         'name': 'SET',
         'opcode': 0x50,
         'action': Action(
-            StackEffect.of(['x', 'ITEMS', 'y', 'COUNT'], ['y', 'ITEMS']),
-            Code(),
+            StackEffect.of(['_x', 'ITEMS', 'y', 'COUNT'], ['y', 'ITEMS']),
+            Code('(void)_x;'),
         ),
     },
 

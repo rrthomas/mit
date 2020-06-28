@@ -63,9 +63,6 @@ def load_test(obj, error_code=0):
             sys.exit(1)
 
 
-src_dir = os.environ['srcdir']
-
-
 # Tests
 
 # Test ability to load valid object files

@@ -29,7 +29,9 @@ correct = [
     [1, 3, 0, 3, 0, 2, 2, M.addr + 0x400],
     [3, 0],
     [1, 3, 0, MitErrorCode.DIVISION_BY_ZERO],
-    [1, 3, 0, MitErrorCode.DIVISION_BY_ZERO, 4],
+    [1, 3, 0],
+    [1, 3],
+    [1],
     [],
     [0],
     [0, 0],
@@ -67,7 +69,9 @@ extra(DIVMOD)
 ass(RET)
 goto(ret_addr)
 
-push(4)
+ass(POP)
+ass(POP)
+ass(POP)
 ass(POP)
 push(0)
 push(0)
