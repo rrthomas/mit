@@ -13,11 +13,18 @@ from mit.globals import *
 
 
 iterations = 10
+
+for i in range(0, iterations, 2):
+    # Test that we can assemble both kinds of NEXT instruction.
+    ass(NEXT)
+    ass(NEXTFF)
+final_pc = label()
+assert final_pc == M.addr + iterations * word_bytes, final_pc - M.addr
+
 for i in range(iterations):
     print(f"pc = {VM.pc:#x}")
     step()
 
-final_pc = M.addr + iterations * word_bytes
 print(f"pc should now be {final_pc:#x}")
 if VM.pc != final_pc:
     print(f"Error in single_step() tests: pc = {VM.pc:#x}")

@@ -77,10 +77,17 @@ class Assembler:
         if operand is not None:
             operand = int(operand)
         i = self.state.M_word[self.i_addr]
-        i |= (opcode << self.i_shift) | ((operand or 0) << (self.i_shift + 8))
-        i &= uword_max
-        if ((i >> self.i_shift) & 0xff == opcode and
-            (operand is None or sign_extend(i) >> (self.i_shift + 8) == operand)
+        i |= opcode << self.i_shift
+        if opcode in TERMINAL_OPCODES:
+            if operand is None:
+                operand = 0 if opcode & 0x80 == 0 else -1
+            i |= operand << (self.i_shift + 8)
+        else:
+            assert operand is None
+        i = sign_extend(i & uword_max)
+        if (
+            (i >> self.i_shift) & 0xff == opcode and
+            (operand is None or i >> (self.i_shift + 8) == operand)
         ):
             return i
         return None
@@ -89,9 +96,9 @@ class Assembler:
         '''
         Appends an instruction opcode.
 
-         - opcode - An Instruction or an 8-bit integer.
-         - operand - int - if `opcode` is `NEXT`, `JUMP`, `JUMPZ` or
-           `CALL`, the rest of the instruction word.
+         - opcode - an Instruction or an 8-bit integer.
+         - operand - int - if `opcode` is in `TERMINAL_OPCODES`, the optional
+           immediate operand, or `None`.
         '''
         # Compute the extended opcode.
         opcode = int(opcode)
@@ -110,16 +117,12 @@ class Assembler:
             self.label()
             self.word(0)
             i = self.fit(opcode, operand)
-            assert i
+            assert i is not None
         self.state.M_word[self.i_addr] = i
 
         # Advance `self.i_shift` past used bits.
         self.i_shift += 8
         if opcode in TERMINAL_OPCODES:
-            self.i_shift = word_bit
-
-        # If we finished a word, move to next.
-        if self.i_shift == word_bit:
             self.label()
 
     def jumprel(self, addr, opcode=I.JUMP):
