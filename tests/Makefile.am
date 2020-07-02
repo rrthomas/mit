@@ -26,6 +26,7 @@ TESTS =	\
 	load_object.py	\
 	logic.py	\
 	memory.py	\
+	next.py		\
 	run.py		\
 	save_object.py	\
 	stack.py	\
