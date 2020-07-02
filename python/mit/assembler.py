@@ -22,9 +22,10 @@ class Assembler:
 
     Public fields:
      - pc - the value of the simulated pc register.
-     - i_addr - the address of the latest opcode word, i.e. the word from
-       which the simulated `ir` register was most recently loaded.
-     - i_shift - the number of opcode bits already in the word at `i_addr`.
+     - ir_addr - the address of the current opcode word, i.e. the word from
+       which the simulated `ir` register was loaded, if any. Otherwise, i.e.
+       after a terminal instruction or in the initial state, `ir_addr == pc`.
+     - ir_shift - the number of opcode bits already in the word at `ir_addr`.
     '''
     def __init__(self, state, pc=None):
         '''
@@ -41,8 +42,8 @@ class Assembler:
         '''
         Skips to the start of a word, and returns its address.
         '''
-        self.i_addr = self.pc
-        self.i_shift = 0
+        self.ir_addr = self.pc
+        self.ir_shift = 0
         return self.pc
 
     def goto(self, pc):
@@ -57,11 +58,19 @@ class Assembler:
         self.state.M_word[self.pc] = value
         self.pc += word_bytes
 
+    def _fetch(self):
+        '''
+        Start a new word if we need to.
+        '''
+        if self.ir_addr == self.pc:
+            assert self.ir_shift == 0
+            self.word(0)
+
     def bytes(self, bytes):
         '''
         Writes `bytes` at `pc`, followed by padding to the next word.
         '''
-        assert self.i_shift == 0
+        assert self.ir_shift == 0
         for b in bytes:
             self.state.M[self.pc] = b
             self.pc += 1
@@ -73,23 +82,26 @@ class Assembler:
         Determine whether the given extended opcode fits in the current word.
         If so, return the updated word; otherwise, None.
         '''
+        assert self.ir_addr != self.pc, "Forgot to call `_fetch()`"
+
         opcode = int(opcode)
         if operand is not None:
             operand = int(operand)
-        i = self.state.M_word[self.i_addr]
-        i |= opcode << self.i_shift
+
+        ir = self.state.M_word[self.ir_addr]
+        ir |= opcode << self.ir_shift
         if opcode in TERMINAL_OPCODES:
             if operand is None:
                 operand = 0 if opcode & 0x80 == 0 else -1
-            i |= operand << (self.i_shift + 8)
+            ir |= operand << (self.ir_shift + 8)
         else:
             assert operand is None
-        i = sign_extend(i & uword_max)
+        ir = sign_extend(ir & uword_max)
         if (
-            (i >> self.i_shift) & 0xff == opcode and
-            (operand is None or i >> (self.i_shift + 8) == operand)
+            (ir >> self.ir_shift) & 0xff == opcode and
+            (operand is None or ir >> (self.ir_shift + 8) == operand)
         ):
-            return i
+            return ir
         return None
 
     def instruction(self, opcode, operand=None):
@@ -106,22 +118,18 @@ class Assembler:
         if operand is not None:
             assert opcode in TERMINAL_OPCODES
 
-        # Start a new word if we need to.
-        if self.i_shift == 0:
-            self.i_addr = self.pc
-            self.word(0)
-
         # Store the extended opcode, starting a new word if necessary.
-        i = self.fit(opcode, operand)
-        if i is None: # Doesn't fit in the current word.
+        self._fetch()
+        ir = self.fit(opcode, operand)
+        if ir is None: # Doesn't fit in the current word.
             self.label()
             self.word(0)
-            i = self.fit(opcode, operand)
-            assert i is not None
-        self.state.M_word[self.i_addr] = i
+            ir = self.fit(opcode, operand)
+            assert ir is not None
+        self.state.M_word[self.ir_addr] = ir
 
-        # Advance `self.i_shift` past used bits.
-        self.i_shift += 8
+        # Advance `self.ir_shift` past used bits.
+        self.ir_shift += 8
         if opcode in TERMINAL_OPCODES:
             self.label()
 
@@ -133,13 +141,13 @@ class Assembler:
         assert opcode in (I.JUMP, I.JUMPZ, I.CALL)
         assert is_aligned(addr)
         # Compute value of `pc` that will be added to offset.
-        effective_pc = self.pc
-        if self.i_shift == 0:
-            effective_pc += word_bytes
-        word_offset = (addr - effective_pc) // word_bytes
+        self._fetch()
+        word_offset = (addr - self.pc) // word_bytes
         if word_offset != 0 and self.fit(opcode, word_offset):
+            # Use the immediate mode.
             self.instruction(opcode, word_offset)
         else:
+            # Use PUSHREL then the indirect mode.
             self.pushrel(addr)
             self.instruction(opcode)
 
@@ -161,9 +169,8 @@ class Assembler:
         Uses `pushreli` if possible and `force_long` is false.
         '''
         address = int(address)
+        self._fetch()
         offset = address - self.pc
-        if self.i_shift == 0:
-            offset -= word_bytes
         offset_words = offset // word_bytes
         if not force_long and -64 <= offset_words < 64:
             self.instruction((((offset_words << 2)) |
