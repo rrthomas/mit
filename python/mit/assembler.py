@@ -23,7 +23,7 @@ class Assembler:
     Public fields:
      - pc - the value of the simulated pc register.
      - i_addr - the address of the latest opcode word, i.e. the word from
-       which the simulated ir register was most recently loaded.
+       which the simulated `ir` register was most recently loaded.
      - i_shift - the number of opcode bits already in the word at `i_addr`.
     '''
     def __init__(self, state, pc=None):
@@ -76,12 +76,11 @@ class Assembler:
         opcode = int(opcode)
         if operand is not None:
             operand = int(operand)
-        i = sign_extend(self.state.M_word[self.i_addr])
+        i = self.state.M_word[self.i_addr]
         i |= (opcode << self.i_shift) | ((operand or 0) << (self.i_shift + 8))
         i &= uword_max
-        i = sign_extend(i)
         if ((i >> self.i_shift) & 0xff == opcode and
-            (operand is None or i >> (self.i_shift + 8) == operand)
+            (operand is None or sign_extend(i) >> (self.i_shift + 8) == operand)
         ):
             return i
         return None
