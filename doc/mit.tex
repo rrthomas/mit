@@ -333,7 +333,7 @@ These instructions implement unconditional and conditional branches, and subrout
 
 \inst{call}{\x{\U1}\dots\x0 \U1 \U2 [\aaddr1] → \U2 \aaddr2 {\tt ;} \x{\U1}\dots\x0}{Let the initial value of {\tt pc} be \aaddr2. Perform the action of {\tt jump}. Move \spic{\x{\U1}\dots\x0} from the caller’s stack to the callee’s.}
 
-\inst{ret}{\pbox[t]{\stackcom}{\raggedleft u a-addr {\tt ;} \x{u}\dots\x0 → \x{u}\dots\x0 \\{\rm or\quad} u a-addr {\tt |} \x{u}\dots\x0 → \x{u}\dots\x0 $0$}}{Pop the current computation stack from the call stack; if the call stack is now empty, pop the current call stack. Set {\tt pc} to \spic{a-addr}, and move \spic{\x{u}\dots\x0} to the new stack. Set {\tt ir} to $0$. If a call stack was popped, push $0$ on top of the stack.}
+\inst{ret}{\pbox[t]{\stackcom}{\qquad\quad u a-addr {\tt ;} \x{u}\dots\x0 → \x{u}\dots\x0 \\{\rm or\quad} u a-addr {\tt |} \x{u}\dots\x0 → \x{u}\dots\x0 $0$}}{Pop the current computation stack from the call stack; if the call stack is now empty, pop the current call stack. Set {\tt pc} to \spic{a-addr}, and move \spic{\x{u}\dots\x0} to the new stack. Set {\tt ir} to $0$. If a call stack was popped, push $0$ on top of the stack.}
 
 \inst{throw}{u a-addr {\tt |} n → n}{Throw error \spic{n}. Pop the current call stack from the catch stack. Pop the return address and number of return items, and push the error code.}
 
