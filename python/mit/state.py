@@ -227,11 +227,11 @@ class BreakHandler:
     If both `addr` and `n` are set, `addr` takes priority.
     '''
     state: State
-    n: int=1
-    addr: int=None
-    trace: bool=False
-    step_callback: FunctionType=None
-    final_callback: FunctionType=None
+    n: int = 1
+    addr: int = None
+    trace: bool = False
+    step_callback: FunctionType = None
+    final_callback: FunctionType = None
 
     def __post_init__(self):
         self.done = 0

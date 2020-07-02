@@ -39,7 +39,6 @@ vars().update({
 
 # An Assembler.
 assembler = Assembler(VM)
-vars()['assembler'] = assembler
 vars().update({
     name: assembler.__getattribute__(name)
     for name in [
@@ -48,16 +47,18 @@ vars().update({
     ]
 })
 
+
 def trace(*args, **kwargs):
     'A convenience wrapper for `step(trace=True)`.'
     VM.step(*args, trace=True, **kwargs)
 
+
 # Add a default length to `save()`.
-def _save(file, addr=None, length=None):
+def save(file, addr=None, length=None):
     if addr is None and length is None:
         length = assembler.pc - VM.M.addr
     VM.save(file, addr, length // word_bytes)
-vars()['save'] = _save
+
 
 # Abbreviations and disambiguations
 ass_word = assembler.word

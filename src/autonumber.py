@@ -13,6 +13,7 @@ class NoValue(Enum):
     def __repr__(self):
         return '<%s.%s>' % (self.__class__.__name__, self.name)
 
+
 # See https://bugs.python.org/issue37062
 class AutoNumber(NoValue):
     def __new__(cls, *args):

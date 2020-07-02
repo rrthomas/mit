@@ -30,12 +30,14 @@ assert(library_file)
 libmit = CDLL(library_file)
 assert(libmit)
 
+
 # Errors
 class Error(Exception):
     '''
     An error from the Python bindings for Mit.
     '''
     pass
+
 
 class VMError(Error):
     '''
@@ -47,6 +49,7 @@ class VMError(Error):
     '''
     def __init__(self, error_code, message):
         super().__init__(error_code, message)
+
 
 def errcheck(error_enum):
     '''
@@ -60,6 +63,7 @@ def errcheck(error_enum):
     code_to_message = {error.value: error.name.lower().translate(str.maketrans('_', ' '))
                        for error in error_enum}
     require_match = 'ok' in code_to_message.values()
+
     def callback(result, _func=None, _args=None):
         result = int(result)
         if result in code_to_message:
@@ -71,6 +75,7 @@ def errcheck(error_enum):
         else:
             return result
         raise VMError(result, message)
+
     return callback
 
 
@@ -107,8 +112,9 @@ stack_words_ptr = pointer(c_uword.in_dll(libmit, "mit_stack_words"))
 stack_words = c_uword.in_dll(libmit, "mit_stack_words")
 run_simple = c_mit_fn.in_dll(libmit, "mit_run_simple")
 run_break = c_mit_fn.in_dll(libmit, "mit_run_break")
-#run_fast = c_mit_fn.in_dll(libmit, "mit_run_fast")
-#run_profile = c_mit_fn.in_dll(libmit, "mit_run_profile")
+# run_fast = c_mit_fn.in_dll(libmit, "mit_run_fast")
+# run_profile = c_mit_fn.in_dll(libmit, "mit_run_profile")
+
 
 # Cannot add errcheck to a CFUNCTYPE, so wrap it manually.
 def run(pc, ir, stack, stack_words, stack_depth_ptr):
@@ -119,16 +125,20 @@ def run(pc, ir, stack, stack_words, stack_depth_ptr):
 
 # libmit.mit_profile_dump.argtypes = [c_int]
 
+
 def is_aligned(addr):
     return (addr & (word_bytes - 1)) == 0
+
 
 def sign_extend(x):
     if x & sign_bit:
         x |= -1 & ~uword_max
     return x
 
+
 argc = c_int.in_dll(libmit, "mit_argc")
 argv = POINTER(c_char_p).in_dll(libmit, "mit_argv")
+
 
 def register_args(*args):
     '''
