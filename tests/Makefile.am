@@ -60,8 +60,6 @@ TESTS_ENVIRONMENT = \
 	export PYTHON=$(PYTHON); \
 	export PYTHONPATH=$(top_builddir)/python;
 
-DISTCLEANFILES = $(top_builddir)/copied-python-module-to-build
-
 distclean-local:
 	if test "$(top_builddir)" != "$(top_srcdir)"; then \
 	    rm -rf $(top_builddir)/python/mit/*.py; \
