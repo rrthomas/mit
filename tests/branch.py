@@ -20,20 +20,34 @@ from mit.enums import Instructions
 correct = []
 
 # Code
-jumprel(M.addr + 0x60)
-goto(M.addr + 0x60)
+correct.append(assembler.pc)
+push(3) # For later use by padding instructions.
 
 correct.append(assembler.pc)
-pushrel(M.addr + 0x30)
-correct.append(assembler.pc)
-ass(JUMP)
+jumprel(M.addr + 0x30) # Immediate mode.
 goto(M.addr + 0x30)
 
 correct.append(assembler.pc)
-push(3) # Ensure the following JUMP instruction is not the first in the word.
+pushrel(M.addr + 0x60)
 correct.append(assembler.pc)
-jumprel(M.addr + 0x1000)
-goto(M.addr + 0x1000)
+ass(JUMP) # Indirect jump.
+goto(M.addr + 0x60)
+
+# Try assembling CALL instructions at all byte-in-word offsets.
+target = M.addr + 0x1000
+for alignment in range(word_bytes + 1):
+    label()
+    for _ in range(alignment):
+        correct.append(assembler.pc)
+        ass(NOT) # Padding instruction.
+    correct.append(assembler.pc)
+    jumprel(target)
+    ret_addr = label()
+    goto(target)
+    correct.append(assembler.pc)
+    jumprel(ret_addr)
+    target = label()
+    goto(ret_addr)
 
 correct.append(assembler.pc)
 pushrel(M.addr + 0x3000)
@@ -55,14 +69,12 @@ correct.append(assembler.pc)
 ass(JUMPZ)
 correct.append(assembler.pc)
 push(0)
-label() # Ensure that jumprel will be able to assemble the jump using immediate operand
 correct.append(assembler.pc)
 jumprel(M.addr + 0x4008, JUMPZ)
 goto(M.addr + 0x4008)
 
 correct.append(assembler.pc)
 push(0)
-label() # Ensure that jumprel will be able to assemble the jump using immediate operand
 correct.append(assembler.pc)
 jumprel(M.addr + 0x4008 + word_bytes * 8, JUMPZ)
 goto(M.addr + 0x4008 + word_bytes * 8)
@@ -73,7 +85,6 @@ correct.append(assembler.pc)
 push(1)
 correct.append(assembler.pc)
 push(0)
-label() # Ensure that jumprel will be able to assemble the jump using immediate operand
 correct.append(assembler.pc)
 jumprel(M.addr + 0x260, CALL)
 goto(M.addr + 0x260)
@@ -137,34 +148,40 @@ ass(SWAP)
 correct.append(assembler.pc)
 ass(CALL)
 goto(M.addr + 0x400)
-correct.append(assembler.pc)
 
 # Test generating a jump with offset of 0, which cannot be generated as a
 # JUMPI instruction. Therefore, the following should assemble PUSHRELI_0 JUMP.
 # First, push a decoy value on the stack: it should not be used.
-pushrel(M.addr + 0x400 - word_bytes * 4)
 correct.append(assembler.pc)
+pushrel(M.addr + 0x400 - word_bytes * 4)
 dest = assembler.pc
-jumprel(dest)
+correct.append(assembler.pc)
+pushrel(dest)
+correct.append(assembler.pc)
+ass(JUMP)
 goto(dest)
-correct.append(dest)
 # Assemble a jump with a relative offset of -1 word.
-jumprel(dest)
+correct.append(assembler.pc)
+pushrel(dest)
+correct.append(assembler.pc)
+ass(JUMP)
 goto(dest)
-correct.append(dest)
+correct.append(assembler.pc)
 
 # Test
-opcode = None
 done = 0
+previous_opcode = None
 def test_callback(handler, stack):
-    global opcode, done
-    # Check results after each non-NEXT instruction.
-    previous_opcode = opcode
+    global done, previous_opcode
+    # Check results before each instruction unless the previous one was NEXT.
+    skip = previous_opcode in (Instructions.NEXT, Instructions.NEXTFF)
     opcode = handler.state.ir & 0xff
-    if previous_opcode in (None, Instructions.NEXT, Instructions.NEXTFF):
+    previous_opcode = opcode
+    if skip:
+        handler.log("(pc checked before NEXT)")
         return
-    correct_pc = correct[done] - VM.M.addr
-    pc = handler.state.pc - VM.M.addr
+    correct_pc = correct[done] - M.addr
+    pc = handler.state.pc - M.addr
     handler.log(f"Instruction {done}: pc = {pc:#x} should be {correct_pc:#x}")
     if pc != correct_pc:
         print(f"Error in branch tests: pc = {pc:#x}")

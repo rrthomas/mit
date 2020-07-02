@@ -145,9 +145,14 @@ class Assembler:
             # Use the immediate mode.
             self.instruction(opcode, word_offset)
         else:
-            # Use PUSHREL then the indirect mode.
-            self.pushrel(addr)
-            self.instruction(opcode)
+            word_offset -= 1
+            if sign_extend((word_offset << 8) & uword_max) >> 8 == word_offset:
+                # Start a new word, and use the immediate mode.
+                self.instruction(opcode, word_offset)
+            else:
+                # Don't start a new word. Use PUSHREL then the indirect mode.
+                self.pushrel(addr)
+                self.instruction(opcode)
 
     def push(self, value, force_long=False):
         '''
