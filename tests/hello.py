@@ -25,7 +25,7 @@ for i in range(2):
     trap(LIBC)
     push(MitErrorCode.OK)
     extra(THROW)
-    text_addr = assembler.pc
+    text_addr = assembler.label()
 
 ass_bytes(b"Hello, world!\n")
 
