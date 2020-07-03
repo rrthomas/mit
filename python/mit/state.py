@@ -131,7 +131,8 @@ class State:
         Save a binary image of part of `M`.
 
          - addr - int - start address, defaults to `self.M.addr`.
-         - length - int - length in words, defaults to `len(self.M_word)`.
+         - length - int - length in words, defaults to saving up to the end of
+           `self.M`.
         '''
         if addr is None:
             addr = self.M.addr

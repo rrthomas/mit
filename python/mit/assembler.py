@@ -45,6 +45,9 @@ class Assembler:
         return self.pc
 
     def goto(self, pc):
+        '''
+        Set the assembly pointer to the given address.
+        '''
         assert is_aligned(pc)
         self.pc = pc
         self.label()
@@ -182,8 +185,14 @@ class Assembler:
             self.instruction(I.PUSHREL)
             self.word(offset)
 
-    def extra(self, extra_opcode):
-        self.instruction(I.NEXT, extra_opcode)
+    def extra(self, extra_code):
+        '''
+        Assemble the extra instruction given by `extra_code`.
+        '''
+        self.instruction(I.NEXT, extra_code)
 
-    def trap(self, extra_opcode):
-        self.instruction(I.NEXTFF, extra_opcode)
+    def trap(self, trap_code):
+        '''
+        Assemble the trap given by `trap_code`.
+        '''
+        self.instruction(I.NEXTFF, trap_code)
