@@ -10,10 +10,9 @@ RISK.
 '''
 
 from .binding import (
-    hex0x_word_width, is_aligned, sign_bit, sign_extend, uword_max, word_bit,
-    word_bytes
+    hex0x_word_width, is_aligned, sign_extend, uword_max, word_bytes
 )
-from .enums import Instructions, ExtraInstructions
+from .enums import Instructions, ExtraInstructions, TERMINAL_OPCODES
 from .enums import Instructions as I
 
 mnemonic = {
@@ -28,20 +27,20 @@ extra_mnemonic = {
 
 class Disassembler:
     '''
-    Represents the state of a disassembler. This class simulates the pc and
-    ir registers. When it reaches a terminal instruction, it continues at
+    Represents the state of a disassembler. This class simulates the `pc` and
+    `ir` registers. When it reaches a terminal instruction, it continues at
     the next word. The `goto()` method sets a new disassembly address. Each
     call to `__next__()` dissassembles one instruction.
 
     Public fields:
-     - pc - the value of the simulated pc register.
-     - ir - the value of the simulated ir register.
-     - end - the pc value at which to stop.
+     - pc - the value of the simulated `pc` register.
+     - ir - the value of the simulated `ir` register.
+     - end - the `pc` value at which to stop.
     '''
     def __init__(self, state, pc=None, length=None, end=None, ir=0):
         '''
         Disassembles code from the memory of `state`. `pc` and `ir`
-        default to the current pc and ir values of `state`.
+        default to the current `pc` and `ir` values of `state`.
         `length` is in words, and defaults to 16. `length` overrides `end`.
         '''
         self.state = state
@@ -65,47 +64,51 @@ class Disassembler:
     def __iter__(self):
         return self
 
-    def disassemble(self):
-        try:
-            comment = ''
-            opcode = self.ir & 0xff
-            self.ir >>= 8
+    def _comment(self, opcode):
+        comment = None
+        if opcode in [I.PUSH, I.PUSHREL]:
+            initial_pc = self.pc
             try:
-                name = mnemonic[opcode].lower()
-            except KeyError:
-                name = f"undefined opcode {opcode:#x}"
-            if opcode in (I.PUSH, I.PUSHREL):
-                initial_pc = self.pc
                 value = self._fetch()
                 unsigned_value = value & uword_max
                 if opcode == I.PUSH:
-                    comment = f' ({unsigned_value:#x}={value})'
+                    comment = f'{unsigned_value:#x}={value}'
                 else: # opcode == I.PUSHREL
-                    comment = f' ({(initial_pc + value) & uword_max:#x})'
-            elif opcode & 0x3 in (0x1, 0x2): # PUSHRELI_N
-                value = (opcode - I.PUSHRELI_0) >> 2
-                if opcode & 0x3 == 0x2: # negative
-                    value |= ~0x3f
-                comment = f' ({self.pc + value * word_bytes:#x})'
-            elif opcode == I.NEXT and self.ir != 0:
-                # Call `self._fetch()` later, not now.
-                comment = extra_mnemonic.get(
-                    self.ir,
-                    f'invalid extra instruction {self.ir:#x}'
-                )
-                comment = f' ({comment})'
-                self.ir = 0
-            elif opcode == I.NEXTFF:
-                # Call `self._fetch()` later, not now.
-                if self.ir != -1:
-                    comment = f' (trap {self.ir:#x})'
-                self.ir = 0
-            elif opcode in (I.JUMP, I.JUMPZ, I.CALL) and self.ir != 0:
-                # Call `self._fetch()` later, not now.
-                comment = f' (to {self.pc + self.ir * word_bytes:#x})'
-                self.ir = 0
-        except IndexError:
-            name = "invalid address!"
+                    comment = f'{(initial_pc + value) & uword_max:#x}'
+            except IndexError:
+                comment = 'invalid address!'
+        elif opcode & 0x3 in (0x1, 0x2): # PUSHRELI_N
+            value = (opcode - I.PUSHRELI_0) >> 2
+            if opcode & 0x3 == 0x2: # negative
+                value |= ~0x3f
+            comment = f'{self.pc + value * word_bytes:#x}'
+        elif opcode == I.NEXT and self.ir != 0:
+            # Call `self._fetch()` later, not now.
+            name = extra_mnemonic.get(
+                self.ir,
+                f'invalid extra instruction {self.ir:#x}'
+            )
+            comment = f'{name}'
+            self.ir = 0
+        elif opcode == I.NEXTFF:
+            # Call `self._fetch()` later, not now.
+            if self.ir != -1:
+                comment = f'trap {self.ir:#x}'
+            self.ir = 0
+        elif opcode in [I.JUMP, I.JUMPZ, I.CALL] and self.ir != 0:
+            # Call `self._fetch()` later, not now.
+            comment = f'to {self.pc + self.ir * word_bytes:#x}'
+            self.ir = 0
+        return '' if comment is None else f' ({comment})'
+
+    def disassemble(self):
+        opcode = self.ir & 0xff
+        self.ir >>= 8
+        try:
+            name = mnemonic[opcode].lower()
+        except KeyError:
+            name = f"undefined opcode {opcode:#x}"
+        comment = self._comment(opcode)
         return f'{name}{comment}'
 
     def __next__(self):
