@@ -231,6 +231,10 @@ class BreakHandler:
     step_callback: FunctionType = None
     final_callback: FunctionType = None
 
+    # Returned by `break_fn` if `step_callback` or `final_callback` raises
+    # an Exception.
+    EXCEPTION_IN_BREAK_FN = -1024
+
     def __post_init__(self):
         self.done = 0
 
@@ -271,7 +275,10 @@ class BreakHandler:
             terminate = self.done >= self.n
         if terminate:
             if self.final_callback is not None:
-                error = self.final_callback(self, stack)
+                try:
+                    error = self.final_callback(self, stack)
+                except:
+                    error = EXCEPTION_IN_BREAK_FN
                 if error is not None:
                     return error
             return enums.MitErrorCode.BREAK
@@ -280,7 +287,10 @@ class BreakHandler:
             self.log(f"{stack}")
             self.log(f"pc={self.state.pc:#x} ir={ir & uword_max:#x} {Disassembler(self.state, ir=ir).disassemble()}")
         if self.step_callback is not None:
-            error = self.step_callback(self, stack)
+            try:
+                error = self.step_callback(self, stack)
+            except:
+                error = EXCEPTION_IN_BREAK_FN
             if error is not None:
                 return error
         self.done += 1
