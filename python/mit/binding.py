@@ -10,15 +10,12 @@ RISK.
 '''
 
 from ctypes import (
-    c_char_p, c_void_p,
-    c_int,
-    c_size_t, c_ssize_t,
-    sizeof, pointer, POINTER, CFUNCTYPE, CDLL,
+    CDLL, CFUNCTYPE, POINTER, c_char_p, c_int, c_size_t, c_ssize_t, c_void_p,
+    pointer, sizeof
 )
 from ctypes.util import find_library
 
 from .enums import MitErrorCode, Registers
-
 
 library_file = find_library("mit")
 if not library_file:

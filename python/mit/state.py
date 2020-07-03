@@ -10,22 +10,20 @@ RISK.
 '''
 
 import sys
-from types import FunctionType
+from ctypes import POINTER, byref, c_void_p, cast, create_string_buffer
 from dataclasses import dataclass
-from ctypes import create_string_buffer, byref, POINTER, cast, c_void_p
+from types import FunctionType
 
 from . import enums
-from .binding import (
-    run, run_ptr, run_simple, run_break, break_fn_ptr, # run_fast,
-    Error, VMError, is_aligned,
-    stack_words,
-    word_bytes, uword_max,
-    c_word, c_uword, c_mit_fn,
-    hex0x_word_width, register_args,
-)
-from .memory import Memory
 from .assembler import Assembler
+# from .binding import run_fast
+from .binding import (
+    Error, VMError, break_fn_ptr, c_mit_fn, c_uword, c_word, hex0x_word_width,
+    is_aligned, register_args, run, run_break, run_ptr, run_simple,
+    stack_words, uword_max, word_bytes
+)
 from .disassembler import Disassembler
+from .memory import Memory
 
 
 class State:

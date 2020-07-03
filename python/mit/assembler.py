@@ -9,11 +9,9 @@ THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 RISK.
 '''
 
-from .binding import (
-    is_aligned, sign_extend,
-    word_bit, word_bytes, uword_max,
-)
-from .enums import Instructions as I, TERMINAL_OPCODES
+from .binding import is_aligned, sign_extend, uword_max, word_bit, word_bytes
+from .enums import TERMINAL_OPCODES
+from .enums import Instructions as I
 
 
 class Assembler:

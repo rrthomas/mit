@@ -24,7 +24,6 @@ The instruction opcodes are available as constants.
 
 from . import *
 
-
 VM = State()
 
 # Bits of the VM.

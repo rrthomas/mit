@@ -10,12 +10,11 @@ RISK.
 '''
 
 from .binding import (
-    is_aligned, sign_extend,
-    word_bytes, word_bit, uword_max, sign_bit,
-    hex0x_word_width,
+    hex0x_word_width, is_aligned, sign_bit, sign_extend, uword_max, word_bit,
+    word_bytes
 )
-from .enums import Instructions, Instructions as I, ExtraInstructions
-
+from .enums import Instructions, ExtraInstructions
+from .enums import Instructions as I
 
 mnemonic = {
     instruction.value: instruction.name
