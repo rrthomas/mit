@@ -78,7 +78,7 @@ class Assembler:
         # Align `pc`
         self.pc = ((self.pc - 1) & (word_bytes - 1)) + word_bytes
 
-    def fit(self, opcode, operand):
+    def fit(self, opcode, operand=None):
         '''
         Determine whether the given extended opcode fits in the current word.
         If so, return the updated word; otherwise, None.
@@ -157,33 +157,57 @@ class Assembler:
                 self.pushrel(addr)
                 self.instruction(opcode)
 
-    def push(self, value, force_long=False):
+    def push_long(self, value):
         '''
         Assemble a `push` instruction that pushes the specified `value`.
-        Uses `pushi` if possible and `force_long` is false.
+        '''
+        self.instruction(I.PUSH)
+        self.word(value)
+
+    def push(self, value):
+        '''
+        Assemble a `push` instruction that pushes the specified `value`.
+        Uses the shorter `pushi` if possible.
         '''
         value = int(value)
-        if not force_long and -32 <= value < 32:
-            self.instruction(((value << 3) | (0x3 if value >= 0 else 0x4)) & 0xff)
+        if -32 <= value < 32:
+            opcode = 0x3 if value >= 0 else 0x4
+            self.instruction((opcode | (value << 3)) & 0xff)
         else:
-            self.instruction(I.PUSH)
-            self.word(value)
+            self.push_long(value)
 
-    def pushrel(self, address, force_long=False):
+    def pushrel_long(self, addr):
         '''
-        Assemble a `pushrel` instruction that pushes the specified `address`.
-        Uses `pushreli` if possible and `force_long` is false.
+        Assemble a `pushrel` instruction that pushes the given address.
+        See also `pushrel()`.
         '''
-        address = int(address)
+        assert is_aligned(addr)
+        self.instruction(I.PUSHREL)
+        offset = addr - self.pc
+        word_offset = offset // word_bytes
+        self.word(offset)
+
+    def pushrel(self, addr):
+        '''
+        Assemble a `pushrel` instruction that pushes the given address.
+        Uses the shorter `pushreli` if possible.
+        '''
+        assert is_aligned(addr)
+        # Start a word if we need to.
         self._fetch()
-        offset = address - self.pc
-        offset_words = offset // word_bytes
-        if not force_long and -64 <= offset_words < 64:
-            self.instruction((((offset_words << 2)) |
-                              (0x1 if offset_words >= 0 else 0x2)) & 0xff)
+        # If no room for an opcode in the current word, or offset is 64 (so
+        # we can use PUSHRELI in the next word), move to next word.
+        if not self.fit(I.PUSHRELI_0) or (addr - self.pc) // word_bytes == 64:
+            self.label()
+            self._fetch()
+        offset = addr - self.pc
+        word_offset = offset // word_bytes
+        if -64 <= word_offset < 64:
+            # 1-byte form.
+            opcode = 0x1 if word_offset >= 0 else 0x2
+            self.instruction((opcode | (word_offset << 2)) & 0xff)
         else:
-            self.instruction(I.PUSHREL)
-            self.word(offset)
+            self.pushrel_long(addr)
 
     def extra(self, extra_code):
         '''

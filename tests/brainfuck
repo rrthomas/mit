@@ -43,7 +43,7 @@ def over(): push(1); ass(DUP)
 def libc(fn): push(fn); trap(LIBC)
 
 try:
-    pushrel(0, force_long=True) # Data pointer.
+    pushrel_long(0) # Data pointer.
     stack = [] # [(start of loop, word to patch)]
     for c in sys.stdin.read():
         if c == '>': inc()
@@ -67,7 +67,7 @@ try:
             print(f"{loop:#x}")
             dup()
             ass(LOAD1)
-            pushrel(0, force_long=True)
+            pushrel_long(0)
             patch = assembler.pc - word_bytes
             ass(JUMPZ)
             stack.append((loop, patch))
