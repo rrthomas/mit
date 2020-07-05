@@ -87,7 +87,5 @@ goto(ret_addr)
 push(MitErrorCode.OK)
 extra(THROW)
 
-dis(M.addr + 0x600, 3)
-
 # Test
 run_test("catch", VM, correct)
