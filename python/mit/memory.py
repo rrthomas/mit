@@ -11,7 +11,7 @@ RISK.
 
 from ctypes import addressof
 
-from .binding import word_bytes, uword_max
+from .binding import uword_max, word_bytes
 
 
 class Memory:

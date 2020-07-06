@@ -9,11 +9,9 @@ THIS PROGRAM IS PROVIDED AS IS, WITH NO WARRANTY. USE IS AT THE USER’S
 RISK.
 '''
 
-from .binding import (
-    is_aligned, sign_extend,
-    word_bit, word_bytes, uword_max,
-)
-from .enums import Instructions as I, TERMINAL_OPCODES
+from .binding import is_aligned, sign_extend, uword_max, word_bit, word_bytes
+from .enums import TERMINAL_OPCODES
+from .enums import Instructions as I
 
 
 class Assembler:
@@ -22,9 +20,10 @@ class Assembler:
 
     Public fields:
      - pc - the value of the simulated pc register.
-     - i_addr - the address of the latest opcode word, i.e. the word from
-       which the simulated ir register was most recently loaded.
-     - i_shift - the number of opcode bits already in the word at `i_addr`.
+     - ir_addr - the address of the current opcode word, i.e. the word from
+       which the simulated `ir` register was loaded, if any. Otherwise, i.e.
+       after a terminal instruction or in the initial state, `ir_addr == pc`.
+     - ir_shift - the number of opcode bits already in the word at `ir_addr`.
     '''
     def __init__(self, state, pc=None):
         '''
@@ -41,11 +40,14 @@ class Assembler:
         '''
         Skips to the start of a word, and returns its address.
         '''
-        self.i_addr = self.pc
-        self.i_shift = 0
+        self.ir_addr = self.pc
+        self.ir_shift = 0
         return self.pc
 
     def goto(self, pc):
+        '''
+        Set the assembly pointer to the given address.
+        '''
         assert is_aligned(pc)
         self.pc = pc
         self.label()
@@ -57,42 +59,59 @@ class Assembler:
         self.state.M_word[self.pc] = value
         self.pc += word_bytes
 
+    def _fetch(self):
+        '''
+        Start a new word if we need to.
+        '''
+        if self.ir_addr == self.pc:
+            assert self.ir_shift == 0
+            self.word(0)
+
     def bytes(self, bytes):
         '''
         Writes `bytes` at `pc`, followed by padding to the next word.
         '''
-        assert self.i_shift == 0
+        assert self.ir_shift == 0
         for b in bytes:
             self.state.M[self.pc] = b
             self.pc += 1
         # Align `pc`
         self.pc = ((self.pc - 1) & (word_bytes - 1)) + word_bytes
 
-    def fit(self, opcode, operand):
+    def fit(self, opcode, operand=None):
         '''
         Determine whether the given extended opcode fits in the current word.
         If so, return the updated word; otherwise, None.
         '''
+        assert self.ir_addr != self.pc, "Forgot to call `_fetch()`"
+
         opcode = int(opcode)
         if operand is not None:
             operand = int(operand)
-        i = sign_extend(self.state.M_word[self.i_addr])
-        i |= (opcode << self.i_shift) | ((operand or 0) << (self.i_shift + 8))
-        i &= uword_max
-        i = sign_extend(i)
-        if ((i >> self.i_shift) & 0xff == opcode and
-            (operand is None or i >> (self.i_shift + 8) == operand)
+
+        ir = self.state.M_word[self.ir_addr]
+        ir |= opcode << self.ir_shift
+        if opcode in TERMINAL_OPCODES:
+            if operand is None:
+                operand = 0 if opcode & 0x80 == 0 else -1
+            ir |= operand << (self.ir_shift + 8)
+        else:
+            assert operand is None
+        ir = sign_extend(ir & uword_max)
+        if (
+            (ir >> self.ir_shift) & 0xff == opcode and
+            (operand is None or ir >> (self.ir_shift + 8) == operand)
         ):
-            return i
+            return ir
         return None
 
     def instruction(self, opcode, operand=None):
         '''
         Appends an instruction opcode.
 
-         - opcode - An Instruction or an 8-bit integer.
-         - operand - int - if `opcode` is `NEXT`, `JUMP`, `JUMPZ` or
-           `CALL`, the rest of the instruction word.
+         - opcode - an Instruction or an 8-bit integer.
+         - operand - int - if `opcode` is in `TERMINAL_OPCODES`, the optional
+           immediate operand, or `None`.
         '''
         # Compute the extended opcode.
         opcode = int(opcode)
@@ -100,27 +119,19 @@ class Assembler:
         if operand is not None:
             assert opcode in TERMINAL_OPCODES
 
-        # Start a new word if we need to.
-        if self.i_shift == 0:
-            self.i_addr = self.pc
-            self.word(0)
-
         # Store the extended opcode, starting a new word if necessary.
-        i = self.fit(opcode, operand)
-        if i is None: # Doesn't fit in the current word.
+        self._fetch()
+        ir = self.fit(opcode, operand)
+        if ir is None: # Doesn't fit in the current word.
             self.label()
             self.word(0)
-            i = self.fit(opcode, operand)
-            assert i
-        self.state.M_word[self.i_addr] = i
+            ir = self.fit(opcode, operand)
+            assert ir is not None
+        self.state.M_word[self.ir_addr] = ir
 
-        # Advance `self.i_shift` past used bits.
-        self.i_shift += 8
+        # Advance `self.ir_shift` past used bits.
+        self.ir_shift += 8
         if opcode in TERMINAL_OPCODES:
-            self.i_shift = word_bit
-
-        # If we finished a word, move to next.
-        if self.i_shift == word_bit:
             self.label()
 
     def jumprel(self, addr, opcode=I.JUMP):
@@ -131,47 +142,81 @@ class Assembler:
         assert opcode in (I.JUMP, I.JUMPZ, I.CALL)
         assert is_aligned(addr)
         # Compute value of `pc` that will be added to offset.
-        effective_pc = self.pc
-        if self.i_shift == 0:
-            effective_pc += word_bytes
-        word_offset = (addr - effective_pc) // word_bytes
+        self._fetch()
+        word_offset = (addr - self.pc) // word_bytes
         if word_offset != 0 and self.fit(opcode, word_offset):
+            # Use the immediate mode.
             self.instruction(opcode, word_offset)
         else:
-            self.pushrel(addr)
-            self.instruction(opcode)
+            word_offset -= 1
+            if sign_extend((word_offset << 8) & uword_max) >> 8 == word_offset:
+                # Start a new word, and use the immediate mode.
+                self.instruction(opcode, word_offset)
+            else:
+                # Don't start a new word. Use PUSHREL then the indirect mode.
+                self.pushrel(addr)
+                self.instruction(opcode)
 
-    def push(self, value, force_long=False):
+    def push_long(self, value):
         '''
         Assemble a `push` instruction that pushes the specified `value`.
-        Uses `pushi` if possible and `force_long` is false.
+        '''
+        self.instruction(I.PUSH)
+        self.word(value)
+
+    def push(self, value):
+        '''
+        Assemble a `push` instruction that pushes the specified `value`.
+        Uses the shorter `pushi` if possible.
         '''
         value = int(value)
-        if not force_long and -32 <= value < 32:
-            self.instruction(((value << 3) | (0x3 if value >= 0 else 0x4)) & 0xff)
+        if -32 <= value < 32:
+            opcode = 0x3 if value >= 0 else 0x4
+            self.instruction((opcode | (value << 3)) & 0xff)
         else:
-            self.instruction(I.PUSH)
-            self.word(value)
+            self.push_long(value)
 
-    def pushrel(self, address, force_long=False):
+    def pushrel_long(self, addr):
         '''
-        Assemble a `pushrel` instruction that pushes the specified `address`.
-        Uses `pushreli` if possible and `force_long` is false.
+        Assemble a `pushrel` instruction that pushes the given address.
+        See also `pushrel()`.
         '''
-        address = int(address)
-        offset = address - self.pc
-        if self.i_shift == 0:
-            offset -= word_bytes
-        offset_words = offset // word_bytes
-        if not force_long and -64 <= offset_words < 64:
-            self.instruction((((offset_words << 2)) |
-                              (0x1 if offset_words >= 0 else 0x2)) & 0xff)
+        assert is_aligned(addr)
+        self.instruction(I.PUSHREL)
+        offset = addr - self.pc
+        word_offset = offset // word_bytes
+        self.word(offset)
+
+    def pushrel(self, addr):
+        '''
+        Assemble a `pushrel` instruction that pushes the given address.
+        Uses the shorter `pushreli` if possible.
+        '''
+        assert is_aligned(addr)
+        # Start a word if we need to.
+        self._fetch()
+        # If no room for an opcode in the current word, or offset is 64 (so
+        # we can use PUSHRELI in the next word), move to next word.
+        if not self.fit(I.PUSHRELI_0) or (addr - self.pc) // word_bytes == 64:
+            self.label()
+            self._fetch()
+        offset = addr - self.pc
+        word_offset = offset // word_bytes
+        if -64 <= word_offset < 64:
+            # 1-byte form.
+            opcode = 0x1 if word_offset >= 0 else 0x2
+            self.instruction((opcode | (word_offset << 2)) & 0xff)
         else:
-            self.instruction(I.PUSHREL)
-            self.word(offset)
+            self.pushrel_long(addr)
 
-    def extra(self, extra_opcode):
-        self.instruction(I.NEXT, extra_opcode)
+    def extra(self, extra_code):
+        '''
+        Assemble the extra instruction given by `extra_code`.
+        '''
+        self.instruction(I.NEXT, extra_code)
 
-    def trap(self, extra_opcode):
-        self.instruction(I.NEXTFF, extra_opcode)
+    def trap(self, trap_code):
+        '''
+        Assemble the trap given by `trap_code`.
+        '''
+        self.instruction(I.NEXTFF, trap_code)

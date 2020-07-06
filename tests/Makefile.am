@@ -26,6 +26,7 @@ TESTS =	\
 	load_object.py	\
 	logic.py	\
 	memory.py	\
+	next.py		\
 	run.py		\
 	save_object.py	\
 	stack.py	\
@@ -59,8 +60,6 @@ TESTS_ENVIRONMENT = \
 	export LD_LIBRARY_PATH=$(top_builddir)/src/@objdir@:$$LD_LIBRARY_PATH; \
 	export PYTHON=$(PYTHON); \
 	export PYTHONPATH=$(top_builddir)/python;
-
-DISTCLEANFILES = $(top_builddir)/copied-python-module-to-build
 
 distclean-local:
 	if test "$(top_builddir)" != "$(top_srcdir)"; then \

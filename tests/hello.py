@@ -17,7 +17,7 @@ text_addr = 0
 for i in range(2):
     goto(M.addr)
     # Ensure the same length code is generated on each pass
-    push(text_addr, force_long=True)
+    push_long(text_addr)
     push(14)
     push(LibC.STDOUT)
     trap(LIBC)
@@ -25,7 +25,7 @@ for i in range(2):
     trap(LIBC)
     push(MitErrorCode.OK)
     extra(THROW)
-    text_addr = assembler.pc
+    text_addr = label()
 
 ass_bytes(b"Hello, world!\n")
 

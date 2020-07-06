@@ -10,22 +10,20 @@ RISK.
 '''
 
 import sys
-from types import FunctionType
+from ctypes import POINTER, byref, c_void_p, cast, create_string_buffer
 from dataclasses import dataclass
-from ctypes import create_string_buffer, byref, POINTER, cast, c_void_p
+from types import FunctionType
 
 from . import enums
-from .binding import (
-    run, run_ptr, run_simple, run_break, break_fn_ptr, # run_fast,
-    Error, VMError, is_aligned,
-    stack_words,
-    word_bytes, uword_max,
-    c_word, c_uword, c_mit_fn,
-    hex0x_word_width, register_args,
-)
-from .memory import Memory
 from .assembler import Assembler
+# from .binding import run_fast
+from .binding import (
+    Error, VMError, break_fn_ptr, c_mit_fn, c_uword, c_word, hex0x_word_width,
+    is_aligned, register_args, run, run_break, run_ptr, run_simple,
+    stack_words, uword_max, word_bytes
+)
 from .disassembler import Disassembler
+from .memory import Memory
 
 
 class State:
@@ -133,7 +131,8 @@ class State:
         Save a binary image of part of `M`.
 
          - addr - int - start address, defaults to `self.M.addr`.
-         - length - int - length in words, defaults to `len(self.M_word)`.
+         - length - int - length in words, defaults to saving up to the end of
+           `self.M`.
         '''
         if addr is None:
             addr = self.M.addr
@@ -227,11 +226,15 @@ class BreakHandler:
     If both `addr` and `n` are set, `addr` takes priority.
     '''
     state: State
-    n: int=1
-    addr: int=None
-    trace: bool=False
-    step_callback: FunctionType=None
-    final_callback: FunctionType=None
+    n: int = 1
+    addr: int = None
+    trace: bool = False
+    step_callback: FunctionType = None
+    final_callback: FunctionType = None
+
+    # Returned by `break_fn` if `step_callback` or `final_callback` raises
+    # an Exception.
+    EXCEPTION_IN_BREAK_FN = -1024
 
     def __post_init__(self):
         self.done = 0
@@ -273,7 +276,10 @@ class BreakHandler:
             terminate = self.done >= self.n
         if terminate:
             if self.final_callback is not None:
-                error = self.final_callback(self, stack)
+                try:
+                    error = self.final_callback(self, stack)
+                except:
+                    error = EXCEPTION_IN_BREAK_FN
                 if error is not None:
                     return error
             return enums.MitErrorCode.BREAK
@@ -282,7 +288,10 @@ class BreakHandler:
             self.log(f"{stack}")
             self.log(f"pc={self.state.pc:#x} ir={ir & uword_max:#x} {Disassembler(self.state, ir=ir).disassemble()}")
         if self.step_callback is not None:
-            error = self.step_callback(self, stack)
+            try:
+                error = self.step_callback(self, stack)
+            except:
+                error = EXCEPTION_IN_BREAK_FN
             if error is not None:
                 return error
         self.done += 1
