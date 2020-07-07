@@ -31,6 +31,7 @@ _GL_ATTRIBUTE_FORMAT_PRINTF(1, 2) void warn(const char *format, ...)
 
     va_start(args, format);
     verror(format, args);
+    va_end(args);
 }
 
 noreturn _GL_ATTRIBUTE_FORMAT_PRINTF(1, 2) void die(const char *format, ...)
@@ -39,5 +40,6 @@ noreturn _GL_ATTRIBUTE_FORMAT_PRINTF(1, 2) void die(const char *format, ...)
 
     va_start(args, format);
     verror(format, args);
+    va_end(args);
     exit(MIT_ERROR_STARTUP_ERROR);
 }
