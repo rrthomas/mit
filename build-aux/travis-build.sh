@@ -1,6 +1,6 @@
 #!/bin/bash
 # Build on Travis
-# (c) Mit authors 2020
+# Written by the Mit authors 2020.
 # This file is in the public domain.
 
 set -e
