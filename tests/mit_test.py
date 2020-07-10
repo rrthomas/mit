@@ -30,7 +30,7 @@ def run_test(name, state, correct):
         '''Passed as `step_callback` to `State.step()`.'''
         nonlocal previous_ir, done
         # Check results before each instruction unless the previous one was NEXT.
-        skip = previous_ir in (None, 0, -1)
+        skip = previous_ir in (0, -1)
         previous_ir = handler.state.ir
         if skip:
             return

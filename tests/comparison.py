@@ -12,22 +12,27 @@ from mit.globals import *
 from mit_test import *
 
 
+correct = []
+
 # Utility function
 def assemble_tests(inputs, outputs, op):
     assert(len(inputs) == len(outputs))
     # Assemble test and compile 'correct'
-    for i, p in enumerate(inputs):
-        push(p[0])
-        push(p[1])
+    for (left, right), result in zip(inputs, outputs):
+        correct.append([])
+        push(left)
+        correct.append([left])
+        push(right)
+        correct.append([left, right])
         ass(op)
+        correct.append([result])
         ass(POP)
-        correct.extend(([p[0]], [p[0], p[1]], [outputs[i]], []))
 
 less_than_pairs = [(3, 1),  (1, 3),  (2, 2),  (-4, 3)]
-equality_pairs = [(237, 237),  (1, -1)]
-correct = []
-
 assemble_tests(less_than_pairs, [0, 1, 0, 1], LT)
 assemble_tests(less_than_pairs, [0, 1, 0, 0], ULT)
+
+equality_pairs = [(237, 237),  (1, -1)]
+assemble_tests(equality_pairs, [1, 0], EQ)
 
 run_test("comparison", VM, correct)

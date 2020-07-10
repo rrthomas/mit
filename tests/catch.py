@@ -13,78 +13,79 @@ from mit_test import *
 
 
 # Test results
-correct = [
-    [8],
-    [8, 5],
-    [8, 5, 2],
-    [8, 5, 2, 2],
-    [8, 5, 2, 2, M.addr + 0x200],
-    [8, 5],
-    [1, 3],
-    [1, 3, 0],
-    [1, 3, 0, 3],
-    [1, 3, 0, 3, 0],
-    [1, 3, 0, 3, 0, 2],
-    [1, 3, 0, 3, 0, 2, 2],
-    [1, 3, 0, 3, 0, 2, 2, M.addr + 0x400],
-    [3, 0],
-    [1, 3, 0, MitErrorCode.DIVISION_BY_ZERO],
-    [1, 3, 0],
-    [1, 3],
-    [1],
-    [],
-    [0],
-    [0, 0],
-    [0, 0, M.addr + 0x600],
-    [],
-    [MitErrorCode.DIVISION_BY_ZERO],
-    [MitErrorCode.DIVISION_BY_ZERO],
-    [MitErrorCode.DIVISION_BY_ZERO, 0],
-]
+correct = []
 
 # Code
+correct.append([])
 push(8)
+correct.append([8])
 push(5)
+correct.append([8, 5])
 push(2)
+correct.append([8, 5, 2])
 push(2)
+correct.append([8, 5, 2, 2])
 pushrel(M.addr + 0x200)
+correct.append([8, 5, 2, 2, M.addr + 0x200])
 extra(CATCH)
 ret_addr = label()
 goto(M.addr + 0x200)
 
+correct.append([8, 5])
 extra(DIVMOD)
+correct.append([1, 3])
 ass(RET)
 goto(ret_addr)
 
+correct.append([1, 3, 0])
 push(3)
+correct.append([1, 3, 0, 3])
 push(0)
+correct.append([1, 3, 0, 3, 0])
 push(2)
+correct.append([1, 3, 0, 3, 0, 2])
 push(2)
+correct.append([1, 3, 0, 3, 0, 2, 2])
 pushrel(M.addr + 0x400)
+correct.append([1, 3, 0, 3, 0, 2, 2, M.addr + 0x400])
 extra(CATCH)
 ret_addr = label()
 goto(M.addr + 0x400)
 
+correct.append([3, 0])
 extra(DIVMOD)
+# Not reached.
 ass(RET)
 goto(ret_addr)
 
+correct.append([1, 3, 0, MitErrorCode.DIVISION_BY_ZERO])
 ass(POP)
+correct.append([1, 3, 0])
 ass(POP)
+correct.append([1, 3])
 ass(POP)
+correct.append([1])
 ass(POP)
+correct.append([])
 push(0)
+correct.append([0])
 push(0)
+correct.append([0, 0])
 pushrel(M.addr + 0x600)
+correct.append([0, 0, M.addr + 0x600])
 extra(CATCH)
 ret_addr = label()
 goto(M.addr + 0x600)
 
+correct.append([])
 push(MitErrorCode.DIVISION_BY_ZERO)
+correct.append([MitErrorCode.DIVISION_BY_ZERO])
 extra(THROW)
 goto(ret_addr)
 
+correct.append([MitErrorCode.DIVISION_BY_ZERO])
 push(MitErrorCode.OK)
+correct.append([MitErrorCode.DIVISION_BY_ZERO, MitErrorCode.OK])
 extra(THROW)
 
 # Test

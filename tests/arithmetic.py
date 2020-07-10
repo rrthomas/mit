@@ -16,88 +16,75 @@ from mit_test import *
 
 
 # Test results
-correct = [
-    [0],
-    [0, 1],
-    [0, 1, word_bytes],
-    [0, 1, word_bytes, -word_bytes],
-    [0, 1, word_bytes, -word_bytes, -1],
-    [0, 1, word_bytes, -word_bytes - 1],
-    [0, 1, -1],
-    [0, 1, 1],
-    [0, 2],
-    [0, 2, 0],
-    [2, 0],
-    [2, 0, -1],
-    [2, 0, -1, word_bytes],
-    [2, 0, -word_bytes],
-    [2, 0, -word_bytes, 0],
-    [2, -word_bytes, 0],
-    [2, -word_bytes],
-    [2],
-    [-2],
-    [-2, -1],
-    [2, 0],
-    [2, 0, 0],
-    [0, 2],
-    [0],
-    [],
-    [word_bytes],
-    [-word_bytes],
-    [],
-    [-8],
-    [-8, 7],
-    [-1, -1],
-    [-1],
-    [-1, -2],
-    [1, 1],
-    [1],
-    [],
-    [4],
-    [4, 2],
-    [2, 0],
-]
+correct = []
 
 # Code
+correct.append([])
 push(0)
+correct.append([0])
 push(1)
+correct.append([0, 1])
 push(word_bytes)
+correct.append([0, 1, word_bytes])
 push(-word_bytes)
+correct.append([0, 1, word_bytes, -word_bytes])
 push(-1)
+correct.append([0, 1, word_bytes, -word_bytes, -1])
 ass(ADD)
+correct.append([0, 1, word_bytes, -word_bytes - 1])
 ass(ADD)
+correct.append([0, 1, -1])
 ass(NEGATE)
+correct.append([0, 1, 1])
 ass(ADD)
+correct.append([0, 2])
 push(0)
+correct.append([0, 2, 0])
 ass(SWAP)
+correct.append([2, 0])
 push(-1)
+correct.append([2, 0, -1])
 push(word_bytes)
+correct.append([2, 0, -1, word_bytes])
 ass(MUL)
-push(0)
-ass(SWAP)
+correct.append([2, 0, -word_bytes])
 ass(POP)
+correct.append([2, 0])
 ass(POP)
+correct.append([2])
 ass(NEGATE)
+correct.append([-2])
 push(-1)
+correct.append([-2, -1])
 extra(DIVMOD)
-push(0)
-ass(SWAP)
+correct.append([2, 0])
 ass(POP)
+correct.append([2])
 ass(POP)
-push(word_bytes)
-ass(NEGATE)
-ass(POP)
+correct.append([])
 push(-8)
+correct.append([-8])
 push(7)
+correct.append([-8, 7])
 extra(DIVMOD)
+correct.append([-1, -1])
 ass(POP)
+correct.append([-1])
 push(-2)
+correct.append([-1, -2])
 extra(UDIVMOD)
+correct.append([1, 1])
 ass(POP)
+correct.append([1])
 ass(POP)
+correct.append([])
 push(4)
+correct.append([4])
 push(2)
+correct.append([4, 2])
 extra(UDIVMOD)
+correct.append([2, 0])
+ass(NEXT)
 
 # Test
 run_test("arithmetic", VM, correct)
