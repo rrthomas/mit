@@ -10,82 +10,74 @@
 import sys
 from functools import partial
 
-from mit import *
-from mit.binding import libmit, stack_words_ptr
+from mit.globals import *
+from mit.binding import stack_words_ptr
 
 
-VM = State(memory_words=4096)
 stack_words_ptr.value = 3
-assembler = Assembler(VM)
-push = assembler.push
-label = assembler.label
-ass = assembler.instruction
-extra = assembler.extra
-vars().update(Instructions.__members__)
-vars().update(ExtraInstructions.__members__)
-UNDEFINED = 0xf7
-assert UNDEFINED not in Instructions.__members__.values(), Instructions.__members__.values()
 
 # Test results and data
-result = []
-invalid_address = VM.M.addr + len(VM.M) + 1000
-test = []
-test_pc = []
+tests = [] # (name, label, error_code)
 
-test.append('Try to divide by zero')
-test_pc.append(label())
-result.append(MitErrorCode.DIVISION_BY_ZERO)
-print(f'Test "{test[-1]}": pc = {test_pc[-1]:#x}')
+tests.append((
+    'Try to divide by zero',
+    label(),
+    MitErrorCode.DIVISION_BY_ZERO,
+))
 push(1)
 push(0)
 extra(DIVMOD)
 
-test.append('Try to read from an invalid stack location')
-test_pc.append(label())
-result.append(MitErrorCode.INVALID_STACK_READ)
-print(f'Test "{test[-1]}": pc = {test_pc[-1]:#x}')
+tests.append((
+    'Try to read from an invalid stack location',
+    label(),
+    MitErrorCode.INVALID_STACK_READ,
+))
 ass(DUP)
 
-test.append('Try to load from unaligned address')
-test_pc.append(label())
-result.append(MitErrorCode.UNALIGNED_ADDRESS)
-print(f'Test "{test[-1]}": pc = {test_pc[-1]:#x}')
-push(VM.M.addr + 1)
+tests.append((
+    'Try to load from unaligned address',
+    label(),
+    MitErrorCode.UNALIGNED_ADDRESS,
+))
+push(M.addr + 1)
 ass(LOAD)
 
-test.append('Try to execute invalid opcode')
-test_pc.append(label())
-result.append(MitErrorCode.INVALID_OPCODE)
-print(f'Test "{test[-1]}": pc = {test_pc[-1]:#x}')
+tests.append((
+    'Try to execute invalid opcode',
+    label(),
+    MitErrorCode.INVALID_OPCODE,
+))
+UNDEFINED = 0xf7
+assert UNDEFINED not in Instructions.__members__.values(), Instructions.__members__.values()
 ass(UNDEFINED)
 
 # Tests
-assert(len(test_pc) == len(result))
-
-error = 0
+success = 0
 def do_tests(run_fn):
-    global error
-    for i, pc_value in enumerate(test_pc):
-        print(f'Test "{test[i]}"')
+    global success
+    for name, pc_value, expected in tests:
+        print(f'Test "{name}": pc = {pc_value:#x}')
         VM.pc = pc_value
-        res = 0
+        observed = 0
         try:
             run_fn()
         except VMError as e:
-            res = e.args[0]
+            observed = e.args[0]
 
-        if result[i] != res:
-             print(f'Error in errors tests: test "{test[i]}" failed; pc = {VM.pc:#x}')
-             print(f"Error code is {res}; should be {result[i]}")
-             error += 1
+        if observed == expected:
+            success += 1
+        else:
+            print(f'Error in errors tests: test "{name}" failed; pc = {VM.pc:#x}')
+            print(f"Error code is {observed}; should be {expected}")
         print()
 
 print("Running tests with State.step()")
-do_tests(partial(VM.step, trace=True, addr=0))
-print("Running tests with run (optimized)")
-do_tests(VM.run)
+do_tests(partial(step, trace=True, addr=0))
+print("Running tests with run")
+do_tests(run)
 
-if error != 0:
+if success != 2 * len(tests):
     sys.exit(error)
 
 print("Errors tests ran OK")
