@@ -76,8 +76,8 @@ class State:
 
     def step(self, n=1, addr=None, trace=False, step_callback=None, final_callback=None):
         '''
-        Single-step for `n` steps, or until `pc`=addr. Initial conditions are
-        as for `run()`.
+        Single-step for `n` steps, or until `pc`=addr. See class BreakHandler
+        for details. Initial conditions are as for `run()`.
         '''
         with BreakHandler(self, n, addr, trace, step_callback, final_callback) as handler:
             try:
@@ -215,10 +215,10 @@ class BreakHandler:
      - addr - int or None - address to run to.
      - trace - bool - if true, print tracing information for each
        instruction.
-     - step_callback - optional function - if not None, a function `f(state,
-       stack)` to call before each instruction is executed, which returns a
-       MitErrorCode to pass as the return value of `break_fn`, or `None` to
-       return the default value.
+     - step_callback - optional function - if not None, a function
+       `f(BreakHandler, stack)` to call before each instruction is executed,
+       which returns a MitErrorCode to pass as the return value of `break_fn`,
+       or `None` to return the default value.
      - final_callback - optional function - like `step_callback`, but called
        when the exit condition is reached.
      - done - int - number of instructions run so far.
