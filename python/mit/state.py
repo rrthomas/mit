@@ -279,7 +279,7 @@ class BreakHandler:
                 try:
                     error = self.final_callback(self, stack)
                 except:
-                    error = EXCEPTION_IN_BREAK_FN
+                    error = BreakHandler.EXCEPTION_IN_BREAK_FN
                 if error is not None:
                     return error
             return enums.MitErrorCode.BREAK
@@ -291,7 +291,7 @@ class BreakHandler:
             try:
                 error = self.step_callback(self, stack)
             except:
-                error = EXCEPTION_IN_BREAK_FN
+                error = BreakHandler.EXCEPTION_IN_BREAK_FN
             if error is not None:
                 return error
         self.done += 1
