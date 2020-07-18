@@ -1,6 +1,6 @@
 #!/bin/sh
 # Pre-install script for appveyor: install build deps
-# (c) Reuben Thomas 2019.
+# Written by Reuben Thomas 2019.
 # This file is in the public domain.
 
 # Convert symlink files to actual links
