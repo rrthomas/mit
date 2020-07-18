@@ -61,7 +61,8 @@ class LibC(ActionEnum):
 
     OPEN = Action(StackEffect.of(['str:char *', 'flags'], ['fd:int']), Code('''\
         fd = open(str, flags, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
-        set_binary_mode(fd, O_BINARY); // Best effort
+        if (fd >= 0)
+            set_binary_mode(fd, O_BINARY); // Best effort
     '''))
 
     CLOSE = Action(

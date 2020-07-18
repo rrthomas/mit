@@ -12,7 +12,6 @@ import io
 import os
 import sys
 import subprocess
-import re
 
 from mit.state import State
 
@@ -24,10 +23,10 @@ if len(sys.argv) != 2:
     sys.exit(1)
 brainfuck_file = sys.argv[1]
 
-object_file = re.sub(".bf$", ".obj", os.path.basename(brainfuck_file))
+object_file = os.path.splitext(os.path.basename(brainfuck_file))[0] + ".obj"
 with open(brainfuck_file, 'rb') as f:
     returncode = subprocess.run(
-        [os.environ['PYTHON'], os.path.join(os.environ['srcdir'], './brainfuck'), object_file],
+        [os.environ['PYTHON'], os.path.join(os.environ['srcdir'], 'brainfuck'), object_file],
         input=f.read(),
     ).returncode
     if returncode == 2:
@@ -42,7 +41,7 @@ f = io.BytesIO()
 with stdout_redirector(f):
     VM.run()
 output = f.getvalue()
-correct_file = re.sub(".bf$", ".correct", brainfuck_file)
+correct_file = os.path.splitext(brainfuck_file)[0] + ".correct"
 correct = open(correct_file, "rb").read()
 os.remove(object_file)
 

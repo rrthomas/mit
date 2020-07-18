@@ -22,8 +22,10 @@ values = [
 
 # Test
 correct = []
+correct.append([])
 for n, v in enumerate(values):
     push(v)
-    correct.append(values[:n + 1])
+    correct.append(values[:n+1])
+ass(NEXT)
 
 run_test("constants", VM, correct)

@@ -169,14 +169,14 @@ goto(dest)
 correct.append(assembler.pc)
 
 # Test
+previous_ir = None
 done = 0
-previous_opcode = None
 def test_callback(handler, stack):
-    global done, previous_opcode
+    '''Passed as `step_callback` to `State.step()`.'''
+    global previous_ir, done
     # Check results before each instruction unless the previous one was NEXT.
-    skip = previous_opcode in (Instructions.NEXT, Instructions.NEXTFF)
-    opcode = handler.state.ir & 0xff
-    previous_opcode = opcode
+    skip = previous_ir in (0, -1)
+    previous_ir = handler.state.ir
     if skip:
         handler.log("(pc checked before NEXT)")
         return

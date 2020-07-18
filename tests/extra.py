@@ -37,7 +37,6 @@ tests.append((start, label(), argc_test_callback))
 
 # Test ARGV
 start = label()
-push(len(args))
 extra(ARGV)
 push(word_bytes)
 ass(ADD)

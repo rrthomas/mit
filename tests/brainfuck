@@ -64,7 +64,6 @@ try:
             ass(POP)
         elif c == '[':
             loop = label()
-            print(f"{loop:#x}")
             dup()
             ass(LOAD1)
             pushrel_long(0)
@@ -74,16 +73,13 @@ try:
         elif c == ']':
             loop, patch = stack.pop()
             label()
-            pushrel(loop)
-            ass(JUMP)
+            jumprel(loop)
             M_word[patch] = label() - patch
     push(MitErrorCode.OK)
     extra(THROW)
     M_word[M_word.addr + word_bytes] = label() - M_word.addr # Patch data pointer.
-except ErrorCode as e:
-    if e.args[0] == MitError.INVALID_MEMORY_WRITE:
-        sys.exit(2)
-    else:
-        sys.exit(1)
+except IndexError as e:
+    print("Out of memory", file=sys.stderr)
+    sys.exit(2)
 
 save(args.object_file)

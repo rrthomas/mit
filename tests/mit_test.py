@@ -9,28 +9,36 @@
 
 import sys
 
-from mit.enums import MitErrorCode, Instructions
+from mit.enums import MitErrorCode
 from mit.binding import uword_max, sign_bit
 
 
 def cast_to_word(n):
+    '''Truncate int to a signed word_bytes-sized quantity.'''
     return ((n + sign_bit) & uword_max) - sign_bit
 
 def run_test(name, state, correct):
-    ir = None
+    '''
+     - name - str - the name of the test (for error reporting).
+     - state - State
+     - correct - list of list of int - expected stack contents before each
+       non-NEXT instruction.
+    '''
+    previous_ir = None
     done = 0
     def test_callback(handler, stack):
-        nonlocal correct, ir, done
-        # Check results after each non-NEXT instruction.
-        previous_ir = ir
-        ir = handler.state.ir
-        if previous_ir in (None, 0, -1):
+        '''Passed as `step_callback` to `State.step()`.'''
+        nonlocal previous_ir, done
+        # Check results before each instruction unless the previous one was NEXT.
+        skip = previous_ir in (0, -1)
+        previous_ir = handler.state.ir
+        if skip:
             return
         correct_stack = list(map(cast_to_word, correct[done]))
-        print(f"Data stack: {stack}")
-        print(f"Correct stack: {correct_stack}\n")
+        handler.log(f"Data stack: {stack}")
+        handler.log(f"Correct stack: {correct_stack}\n")
         if correct_stack != list(stack):
-            print(f"Error in {name} tests: pc = {handler.state.pc:#x}")
+            handler.log(f"Error in {name} tests: pc = {handler.state.pc:#x}")
             sys.exit(1)
         done += 1
         if done == len(correct):
