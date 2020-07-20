@@ -474,7 +474,7 @@ instructions = [
         'opcode': 0xd0,
         'action': Action(
             StackEffect.of(['a'], ['r']),
-            Code('r = -a;'),
+            Code('r = -(mit_uword_t)a;'),
         ),
     },
 
@@ -483,7 +483,7 @@ instructions = [
         'opcode': 0xd8,
         'action': Action(
             StackEffect.of(['a', 'b'], ['r']),
-            Code('r = a + b;'),
+            Code('r = (mit_uword_t)a + (mit_uword_t)b;'),
         ),
     },
 
@@ -492,7 +492,7 @@ instructions = [
         'opcode': 0xe0,
         'action': Action(
             StackEffect.of(['a', 'b'], ['r']),
-            Code('r = a * b;'),
+            Code('r = (mit_uword_t)a * (mit_uword_t)b;'),
         ),
     },
 
