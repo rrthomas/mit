@@ -470,7 +470,7 @@ instructions = [
     },
 
     {
-        'name': 'NEGATE',
+        'name': 'NEG',
         'opcode': 0xd0,
         'action': Action(
             StackEffect.of(['a'], ['r']),

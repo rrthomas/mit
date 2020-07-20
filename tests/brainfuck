@@ -37,7 +37,7 @@ args = parser.parse_args()
 
 
 def inc(): push(1); ass(ADD)
-def dec(): push(1); ass(NEGATE); ass(ADD)
+def dec(): push(1); ass(NEG); ass(ADD)
 def dup(): push(0); ass(DUP)
 def over(): push(1); ass(DUP)
 def libc(fn): push(fn); trap(LIBC)

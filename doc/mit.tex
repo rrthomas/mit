@@ -57,7 +57,7 @@
 
 \title{Mit virtual machine specification}
 \author{Reuben Thomas}
-\date{27th June 2020}
+\date{20th July 2020}
 
 \begin{document}
 \maketitle
@@ -277,7 +277,7 @@ as detailed for certain instructions.
 
 \nopagebreak
 \begin{description}
-\inst{negate}{\n1 → \n2}{Negate \n1, giving \n2.}
+\inst{neg}{\n1 → \n2}{Negate \n1, giving \n2.}
 \inst{add}{\noru1 \noru2 → \noru3}{Add \noru2 to \noru1, giving the sum \noru3.}
 \inst{mul}{\noru1 \noru2 → \noru3}{Multiply \noru1 by \noru2 giving the product \noru3.}
 \inst{divmod}{\n1 \n2 → \n3 \n4}{Divide \n1 by \n2, giving the single-word quotient \n3 and the single-word remainder \n4. The quotient is rounded towards zero. If \n2 is zero, throw error $-8$. If \n1 is $-2^{(8\times{\tt word\_bytes} - 1)}$ and \n2 is $-1$, throw error $-9$.}
