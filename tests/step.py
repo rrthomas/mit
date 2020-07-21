@@ -19,15 +19,15 @@ for i in range(0, iterations, 2):
     ass(NEXT)
     ass(NEXTFF)
 final_pc = label()
-assert final_pc == M.addr + iterations * word_bytes, final_pc - M.addr
+assert final_pc == M.start + iterations * word_bytes, final_pc - M.start
 
 for i in range(iterations):
-    print(f"pc = {VM.pc - M.addr:#x}")
+    print(f"pc = {VM.pc - M.start:#x}")
     step()
 
-print(f"pc should now be {final_pc - M.addr:#x}")
+print(f"pc should now be {final_pc - M.start:#x}")
 if VM.pc != final_pc:
-    print(f"Error in single_step() tests: pc = {VM.pc - M.addr:#x}")
+    print(f"Error in single_step() tests: pc = {VM.pc - M.start:#x}")
     sys.exit(1)
 
 print("single_step() tests ran OK")

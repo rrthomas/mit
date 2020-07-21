@@ -40,7 +40,7 @@ tests.append((
     label(),
     MitErrorCode.UNALIGNED_ADDRESS,
 ))
-push(M.addr + 1)
+push(M.start + 1)
 ass(LOAD)
 
 tests.append((

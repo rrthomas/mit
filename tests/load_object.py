@@ -45,8 +45,8 @@ def load_test(obj):
     '''
     with open(test_file_name, 'wb') as h: h.write(obj)
     load(test_file_name)
-    print(f"Word 0 of memory is {M_word[M_word.addr]:#x}; should be {test_word():#x}")
-    if M_word[M_word.addr] != test_word():
+    print(f"Word 0 of memory is {M_word[M_word.start]:#x}; should be {test_word():#x}")
+    if M_word[M_word.start] != test_word():
         print(f'Error in State.load() test "{test}"')
         sys.exit(1)
 
@@ -67,7 +67,7 @@ test = 'Assemble, save, load, run'
 error_code = 42
 push(error_code)
 extra(THROW)
-save(test_file_name, length=label() - M.addr)
+save(test_file_name, length=label() - M.start)
 load(test_file_name)
 try:
     run()

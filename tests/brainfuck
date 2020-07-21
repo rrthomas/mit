@@ -77,7 +77,7 @@ try:
             M_word[patch] = label() - patch
     push(MitErrorCode.OK)
     extra(THROW)
-    M_word[M_word.addr + word_bytes] = label() - M_word.addr # Patch data pointer.
+    M_word[M_word.start + word_bytes] = label() - M_word.start # Patch data pointer.
 except IndexError as e:
     print("Out of memory", file=sys.stderr)
     sys.exit(2)

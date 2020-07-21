@@ -11,18 +11,16 @@ import os
 import sys
 
 from mit.globals import *
-start_addr = M_word.addr
-end_addr = start_addr + len(M_word) * word_bytes
 
 # Test data
 for i in range(2 * word_bytes):
-    M[M.addr + i] = i
+    M[M.start + i] = i
 
 # Test results
 tests = [
-    (end_addr + word_bytes, 2, "invalid or unaligned address"),
-    (start_addr, len(M_word) + 1, "invalid or unaligned address"),
-    (start_addr, 2, None),
+    (M_word.end + word_bytes, 2, "invalid or unaligned address"),
+    (M_word.start, len(M_word) + 1, "invalid or unaligned address"),
+    (M_word.start, 2, None),
 ]
 
 # Test
@@ -46,13 +44,13 @@ for i, (addr, length, message) in enumerate(tests):
 
 RANGE = 4
 save(FILENAME, addr, RANGE)
-new_addr = start_addr + RANGE * word_bytes
+new_addr = M_word.start + RANGE * word_bytes
 load_length = load(FILENAME, new_addr)
 assert load_length == RANGE, load_length
 os.remove(FILENAME)
 
 for i in range(RANGE):
-    old = M_word[start_addr + i * word_bytes]
+    old = M_word[M_word.start + i * word_bytes]
     new = M_word[new_addr + i * word_bytes]
     print(f"Word {i} of memory is {new}; should be {old}")
     if new != old:

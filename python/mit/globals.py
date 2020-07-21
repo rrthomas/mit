@@ -59,7 +59,7 @@ def save(filename, addr=None, length=None):
     '''
     if addr is None and length is None:
         assert is_aligned(assembler.pc)
-        length = (assembler.pc - VM.M.addr) // word_bytes
+        length = (assembler.pc - VM.M.start) // word_bytes
     VM.save(filename, addr, length)
 
 # Abbreviations and disambiguations
