@@ -52,15 +52,15 @@ def trace(*args, **kwargs):
 
 
 # Change the default length of `save()`.
-def save(file, addr=None, length=None):
+def save(filename, addr=None, length=None):
     '''
     Save a binary image of part of `M`. Works like `State.save()` but if `addr`
     and `length` are omitted it will save up to `assembler.pc`.
     '''
     if addr is None and length is None:
         assert is_aligned(assembler.pc)
-        length = assembler.pc - VM.M.addr
-    VM.save(file, addr, length // word_bytes)
+        length = (assembler.pc - VM.M.addr) // word_bytes
+    VM.save(filename, addr, length)
 
 # Abbreviations and disambiguations
 ass_word = assembler.word
