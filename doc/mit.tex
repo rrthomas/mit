@@ -5,7 +5,7 @@
 
 \documentclass[a4paper]{article}
 \usepackage[british]{babel}
-\usepackage[utf8x]{inputenc}
+\usepackage[utf8]{inputenc}
 \usepackage{newpxtext,booktabs,hyperref,bytefield,pbox,amsmath}
 \frenchspacing
 
@@ -24,9 +24,10 @@
 \newlength{\instname}\instname=0.8in
 \newlength{\stackcom}\stackcom=3.7in
 
-\newcommand{\inst}[3]{\item[]\parbox{\itemwidth}%
+\newcommand{\instprim}[3]{\item[]\parbox{\itemwidth}%
 {\makebox[\instname][l]{\tt #1}%
-\makebox[\stackcom][r]{\spic{#2}}\\[0.5ex]#3}}
+\makebox[\stackcom][r]{\spic{\pbox[t]{\stackcom}{#2}}}\\[0.5ex]#3}}
+\newcommand{\inst}[4]{\instprim{#1}{\tt …#2 → …#3}{#4}}
 
 % Tabular hex numerals
 % From https://tex.stackexchange.com/questions/543464/tabular-hex-numerals/543466#543466
@@ -49,7 +50,7 @@
 
 \title{Mit virtual machine specification}
 \author{Reuben Thomas}
-\date{21st July 2020}
+\date{22nd July 2020}
 
 \begin{document}
 \maketitle
@@ -93,47 +94,45 @@ The registers are word quantities:
 \end{center}
 
 
-\section{Computation stack}
+\section{Stack}
 
-Computation is performed with a last in, first out stack of words. The computation stack is usually referred to simply as “the stack”. To {\bf push} a word on to the stack means to add a new word to the top; to {\bf pop} a word means to remove the top item. Instructions implicitly pop their arguments and push their results.
+Computation is performed with series of nested last in, first out stacks. The {\bf catch stack} is a stack of call stacks; a {\bf call stack} is a stack of computation stacks; and a {\bf computation stack} is a stack of words. To {\bf push} an item on to a stack means to add a new item to the top; to {\bf pop} an item means to remove the top item.
 
-{\bf Stack effects} are written
+The stack of each sort implicitly used by instructions at a given moment is called the {\bf current} stack; the current stack is normally the top-most. Where it is not ambiguous, we refer simply to “the stack”.
+
+Instructions implicitly pop their arguments from and push their results to the current computation stack. Subroutine call and return respectively push and pop a computation stack to and from the call stack; error handling call ({\tt catch}) pushes a call stack to the catch stack, and raising an error ({\tt throw}) pops one or more call stacks from the catch stack.
+
+The effect of an instruction on the catch stack is shown by its {\bf stack effect}:
 
 \begin{center}
   {\tt \spic{before → after}}
 \end{center}
 
-\noindent where \spic{before} and \spic{after} are stack pictures showing the items on top of the stack before and after the instruction is executed. An instruction only affects the items shown in its stack effect. A stack item \spic{[x]} in square brackets is optional.
+\noindent where \spic{before} and \spic{after} are stack pictures showing the items on top of the stack before and after the instruction is executed. An instruction only affects the items shown in its stack effect.
 
-{\bf Stack pictures} represent the topmost stack items, and are written
-
-\begin{center}
-\spic{i$_n$ i$_{n-1}$\dots i$_2$ i$_1$}
-\end{center}
-
-\noindent where the \spic{i$_k$} are stack items, with \spic{i$_1$} being on top of the stack.
-
-
-\section{Call stack and catch stack}
-\label{callstack}
-
-Subroutines are implemented with the call stack: a last in, first out stack of computation stacks. The top-most is the current computation stack, which is used by instructions.
-
-When a subroutine call is performed, a new computation stack is pushed on to the call stack. This is shown as:
+A {\bf stack picture} represents the call stack. Ellipsis is used to elide parts of the stack. A computation stack picture looks like this:
 
 \begin{center}
-  {\tt \spic{caller ; callee}}
+\spic{…i$_n$\dots i$_1$}
 \end{center}
 
-\noindent where \spic{caller} and \spic{callee} are stack pictures for the caller and callee respectively.
+\noindent Each \spic{i$_k$} is a stack item, and \spic{i$_1$} is on top of the stack. A stack item \spic{[x]} in square brackets is optional.
 
-Error handling is implemented with the catch stack, a last in, first out stack of call stacks. The top-most is the current call stack. This is shown as:
+Computation stacks in a call stack are shown separated by a vertical bar {\rm |}. A caller–callee pair of adjacent computation stacks is shown thus:
 
 \begin{center}
-  {\tt \spic{handler | handlee}}
+\spic{…j$_m$\dots j$_1$ {\rm |} …i$_n$\dots i$_1$}
 \end{center}
 
-\noindent where \spic{handler} and \spic{handlee} are stack pictures for the top-most computation stacks in adjacent call stacks.
+\noindent where the \spic{j$_k$} are on the caller’s computation stack and the \spic{i$_k$} on the callee’s stack.
+
+Call stacks in a catch stack are shown separated by a double vertical bar {\rm ‖}. A catcher–catchee pair of adjacent call stacks is shown thus:
+
+\begin{center}
+\spic{…j$_m$\dots j$_1$ {\rm ‖} …i$_n$\dots i$_1$}
+\end{center}
+
+\noindent where the \spic{j$_k$} are on the catcher’s top-most computation stack and the \spic{i$_k$} on the catchee’s top-most stack. Note that the ellipsis at the left-hand end of each computation stack may therefore elide whole call stacks.
 
 
 \section{Execution}
@@ -155,7 +154,7 @@ Execute the instruction given by \textbf{opcode}, \\*
 \subsection{Errors and termination}
 \label{errors}
 
-In exceptional situations, such as an invalid memory access or division by zero, an {\bf error} may be {\bf thrown}; see section~\ref{control}. A {\bf status code} is returned to the handler.
+In exceptional situations, such as an invalid memory access or division by zero, an {\bf error} may be {\bf thrown}; see section~\ref{control}. A {\bf status code} is returned to the catcher.
 
 Execution can be terminated explicitly by a {\tt throw} instruction (see section~\ref{control}), which throws an error.
 
@@ -189,24 +188,24 @@ $-9$ & Division overflow (see section~\ref{arithmetic}). \\
 The instructions are listed below, grouped according to function, in the following format:
 
 \begin{description}
-\inst{NAME}{before → after}{Description.}
+\inst{NAME}{before}{after}{Description.}
 \end{description}
 
-\noindent The first line consists of the name of the instruction on the left, and the stack effect on the right. Underneath is the description.
+\noindent The first line consists of the instruction’s name on the left, and its stack effect on the right; underneath is its description.
 
 Numbers are represented in two’s complement form. Where a stack item’s name (including any numerical suffix) appears more than once in a stack effect, it refers each time to the identical stack item. Ellipsis is used for indeterminate numbers of items. An item called \spic{count} is interpreted as an unsigned number.
 
 
 \subsection{Stack manipulation}
 
-These instructions manage the stack.
+These instructions manage the computation stack.
 
 \nopagebreak
 \begin{description}
-\inst{pop}{x →}{Pop \spic{x} from the stack.}
-\inst{dup}{\x{\spic{count}}\dots\x0 count → \x{\spic{count}}\dots\x0 \x{\spic{count}}}{Pop \spic{count}. Copy \x{\spic{count}} to the top of the stack.}
-\inst{set}{\x{\spic{count}+1}\dots\x0 count → \x0 \x{\spic{count}}\dots\x1}{Set the \spic{count}$+1$th stack word to \spic{\x0}, then pop \x0.}
-\inst{swap}{\x{\spic{count}+1}\dots\x0 count → \x0 \x{\spic{count}}\dots\x1 \x{\spic{count}+1}}{Exchange the top stack word with the \spic{count}$+1$th.}
+\inst{pop}{x}{}{Pop \spic{x} from the stack.}
+\inst{dup}{\x{\spic{count}}\dots\x0 count}{\x{\spic{count}}\dots\x0 \x{\spic{count}}}{Pop \spic{count}. Copy \x{\spic{count}} to the top of the stack.}
+\inst{set}{\x{\spic{count}+1}\dots\x0 count}{\x0 \x{\spic{count}}\dots\x1}{Set the \spic{count}$+1$th stack word to \spic{\x0}, then pop \x0.}
+\inst{swap}{\x{\spic{count}+1}\dots\x0 count}{\x0 \x{\spic{count}}\dots\x1 \x{\spic{count}+1}}{Exchange the top stack word with the \spic{count}$+1$th.}
 \end{description}
 
 
@@ -215,24 +214,24 @@ These instructions manage the stack.
 These instructions fetch and store quantities to and from memory.
 
 \begin{description}
-\inst{load}{addr → x}{Push the word stored at \spic{addr}, which must be word-aligned.}
-\inst{store}{x addr →}{Store \spic{x} at \spic{addr}, which must be word-aligned.}
-\inst{load1}{addr → x}{Push the byte stored at \spic{addr}, setting unused high-order bits to zero, giving \spic{x}.}
-\inst{store1}{x addr →}{Store the least-significant byte of \spic{x} at \spic{addr}.}
-\inst{load2}{addr → x}{Push the $2$-byte quantity stored at \spic{addr}, setting unused high-order bits to zero, giving \spic{x}. \spic{addr} must be a multiple of $2$.}
-\inst{store2}{x addr →}{Store the $2$ least-significant bytes of \spic{x} at \spic{addr}, which must be a multiple of $2$.}
-\inst{load4}{addr → x}{Push the $4$-byte quantity stored at \spic{addr}, setting any unused high-order bits to zero, giving \spic{x}. \spic{addr} must be a multiple of $4$.}
-\inst{store4}{x addr →}{Store the $4$ least-significant bytes of \spic{x} at \spic{addr}, which must be a multiple of $4$.}
+\inst{load}{addr}{x}{Push the word stored at \spic{addr}, which must be word-aligned.}
+\inst{store}{x addr}{}{Store \spic{x} at \spic{addr}, which must be word-aligned.}
+\inst{load1}{addr}{x}{Push the byte stored at \spic{addr}, setting unused high-order bits to zero, giving \spic{x}.}
+\inst{store1}{x addr}{}{Store the least-significant byte of \spic{x} at \spic{addr}.}
+\inst{load2}{addr}{x}{Push the $2$-byte quantity stored at \spic{addr}, setting unused high-order bits to zero, giving \spic{x}. \spic{addr} must be a multiple of $2$.}
+\inst{store2}{x addr}{}{Store the $2$ least-significant bytes of \spic{x} at \spic{addr}, which must be a multiple of $2$.}
+\inst{load4}{addr}{x}{Push the $4$-byte quantity stored at \spic{addr}, setting any unused high-order bits to zero, giving \spic{x}. \spic{addr} must be a multiple of $4$.}
+\inst{store4}{x addr}{}{Store the $4$ least-significant bytes of \spic{x} at \spic{addr}, which must be a multiple of $4$.}
 \end{description}
 
 
 \subsection{Constants}
 
 \begin{description}
-\inst{push}{→ x}{Push the word pointed to by {\tt pc} on to the stack, and increment {\tt pc} to point to the following word.}
-\inst{pushrel}{→ addr}{Like {\tt push} but add {\tt pc} to the value pushed on to the stack.}
-\inst{pushi\_\spic{n}}{→ n}{Push \spic{n} on to the stack. \spic{n} ranges from $-32$ to $31$ inclusive.}
-\inst{pushreli\_\spic{n}}{→ addr}{Push ${\tt pc} + {\tt word\_bytes}\times\spic{n}$ on to the stack. \spic{n} ranges from $-64$ to $63$ inclusive.}
+\inst{push}{}{x}{Push the word pointed to by {\tt pc} on to the stack, and increment {\tt pc} to point to the following word.}
+\inst{pushrel}{}{addr}{Like {\tt push} but add {\tt pc} to the value pushed on to the stack.}
+\inst{pushi\_\spic{n}}{}{n}{Push \spic{n} on to the stack. \spic{n} ranges from $-32$ to $31$ inclusive.}
+\inst{pushreli\_\spic{n}}{}{addr}{Push ${\tt pc} + {\tt word\_bytes}\times\spic{n}$ on to the stack. \spic{n} ranges from $-64$ to $63$ inclusive.}
 \end{description}
 
 \noindent The operand of {\tt pushi} and of {\tt pushreli} is encoded in the instruction opcode; see section~\ref{encoding}.
@@ -246,11 +245,11 @@ as detailed below.
 
 \nopagebreak
 \begin{description}
-\inst{neg}{a → b}{Negate \spic{a}, giving \spic{b}.}
-\inst{add}{a b → c}{Add \spic{a} to \spic{b}, giving the sum \spic{c}.}
-\inst{mul}{a b → c}{Multiply \spic{a} by \spic{b}, giving the product \spic{c}.}
-\inst{divmod}{a b → q r}{Divide \spic{a} by \spic{b}, giving the quotient \spic{q} and remainder \spic{r}. The quotient is rounded towards zero. If \spic{b} is zero, throw error $-8$. If \spic{a} is $-2^{(8\times{\tt word\_bytes} - 1)}$ and \spic{b} is $-1$, throw error $-9$.}
-\inst{udivmod}{a b → q r}{Divide \spic{a} by \spic{b}, giving the quotient \spic{q} and remainder \spic{r}. If \spic{b} is zero, throw error $-8$.}
+\inst{neg}{a}{b}{Negate \spic{a}, giving \spic{b}.}
+\inst{add}{a b}{c}{Add \spic{a} to \spic{b}, giving the sum \spic{c}.}
+\inst{mul}{a b}{c}{Multiply \spic{a} by \spic{b}, giving the product \spic{c}.}
+\inst{divmod}{a b}{q r}{Divide \spic{a} by \spic{b}, giving the quotient \spic{q} and remainder \spic{r}. The quotient is rounded towards zero. If \spic{b} is zero, throw error $-8$. If \spic{a} is $-2^{(8\times{\tt word\_bytes} - 1)}$ and \spic{b} is $-1$, throw error $-9$.}
+\inst{udivmod}{a b}{q r}{Divide \spic{a} by \spic{b}, giving the quotient \spic{q} and remainder \spic{r}. If \spic{b} is zero, throw error $-8$.}
 \end{description}
 
 
@@ -261,19 +260,19 @@ Logic functions:
 
 \nopagebreak
 \begin{description}
-\inst{not}{a → b}{\spic{b} is the bitwise complement of \spic{a}.}
-\inst{and}{a b → c}{\spic{c} is the bitwise “and” of \spic{a} with \spic{b}.}
-\inst{or}{a b → c}{\spic{c} is the bitwise inclusive-or of \spic{a} with \spic{b}.}
-\inst{xor}{a b → c}{\spic{c} is the bitwise exclusive-or of \spic{a} with \spic{b}.}
+\inst{not}{a}{b}{\spic{b} is the bitwise complement of \spic{a}.}
+\inst{and}{a b}{c}{\spic{c} is the bitwise “and” of \spic{a} with \spic{b}.}
+\inst{or}{a b}{c}{\spic{c} is the bitwise inclusive-or of \spic{a} with \spic{b}.}
+\inst{xor}{a b}{c}{\spic{c} is the bitwise exclusive-or of \spic{a} with \spic{b}.}
 \end{description}
 
 
 \subsection{Shifts}
 
 \begin{description}
-\inst{lshift}{a count → b}{Shift \spic{a} left by \spic{count} bits, filling vacated bits with zero, giving \spic{b}.}
-\inst{rshift}{a count → b}{Shift \spic{a} right by \spic{count} bits, filling vacated bits with zero, giving \spic{b}.}
-\inst{arshift}{a count → b}{Shift \spic{a} right by \spic{count} bits, filling vacated bits with the most significant bit of \spic{a}, giving \spic{b}.}
+\inst{lshift}{a count}{b}{Shift \spic{a} left by \spic{count} bits, filling vacated bits with zero, giving \spic{b}.}
+\inst{rshift}{a count}{b}{Shift \spic{a} right by \spic{count} bits, filling vacated bits with zero, giving \spic{b}.}
+\inst{arshift}{a count}{b}{Shift \spic{a} right by \spic{count} bits, filling vacated bits with the most significant bit of \spic{a}, giving \spic{b}.}
 \end{description}
 
 
@@ -283,9 +282,9 @@ These instructions compare two numbers on the stack:
 
 \nopagebreak
 \begin{description}
-\inst{eq}{a b → flag}{\spic{flag} is~$1$ if \spic{a} is equal to \spic{b}, otherwise $0$.}
-\inst{lt}{a b → flag}{\spic{flag} is~$1$ if \spic{a} is less than \spic{b} when considered as signed numbers, otherwise~$0$.}
-\inst{ult}{a b → flag}{\spic{flag} is~$1$ if \spic{a} is less than \spic{b} when considered as unsigned numbers, otherwise~$0$.}
+\inst{eq}{a b}{flag}{\spic{flag} is~$1$ if \spic{a} is equal to \spic{b}, otherwise $0$.}
+\inst{lt}{a b}{flag}{\spic{flag} is~$1$ if \spic{a} is less than \spic{b} when considered as signed numbers, otherwise~$0$.}
+\inst{ult}{a b}{flag}{\spic{flag} is~$1$ if \spic{a} is less than \spic{b} when considered as unsigned numbers, otherwise~$0$.}
 \end{description}
 
 
@@ -296,25 +295,25 @@ Unconditional and conditional branches:
 
 \nopagebreak
 \begin{description}
-\inst{jump}{[addr] →}{If {\tt ir} is zero, set {\tt pc} to \spic{addr}, which must be aligned, otherwise to ${\tt pc} + \texttt{ir}\times\texttt{word\_bytes}$. Set {\tt ir} to $0$.}
+\inst{jump}{[addr]}{}{If {\tt ir} is zero, set {\tt pc} to \spic{addr}, which must be aligned, otherwise to ${\tt pc} + \texttt{ir}\times\texttt{word\_bytes}$. Set {\tt ir} to $0$.}
 
-\inst{jumpz}{flag [addr] →}{If \spic{flag} is $0$ then perform the action of {\tt jump}; otherwise, set {\tt ir} to $0$.}
+\inst{jumpz}{flag [addr]}{}{If \spic{flag} is $0$ then perform the action of {\tt jump}; otherwise, set {\tt ir} to $0$.}
 \end{description}
 
 Subroutine call and return; the quantities called \spic{args} and \spic{rets} are treated as unsigned numbers:
 
 \begin{description}
-\inst{call}{\x{\spic{args}}\dots\x1 args rets [addr] → rets ret-addr {\tt ;} \x{\spic{args}}\dots\x1}{Let \spic{ret-addr} be the value of {\tt pc}. Perform the action of {\tt jump}. Move \spic{\x{\spic{args}}\dots\x1} from the caller’s stack to the callee’s.}
+\instprim{call}{…\x{\spic{args}}\dots\x1 args rets [addr] {\rm →}\\ …rets ret-addr {\rm |} …\x{\spic{args}}\dots\x1}{Let \spic{ret-addr} be the value of {\tt pc}. Perform the action of {\tt jump}. Move \spic{\x{\spic{args}}\dots\x1} from the caller’s stack to the callee’s.}
 
-\inst{ret}{\pbox[t]{\stackcom}{\qquad\quad rets ret-addr {\tt ;} \x{\spic{rets}}\dots\x1 → \x{\spic{rets}}\dots\x1 \\{\rm or\quad} rets ret-addr {\tt |} \x{\spic{rets}}\dots\x1 → \x{\spic{rets}}\dots\x1 $0$}}{Pop the current computation stack from the call stack; if the call stack is now empty, pop the current call stack. Set {\tt pc} to \spic{ret-addr}, and move \spic{\x{\spic{rets}}\dots\x1} to the new computation stack. Set {\tt ir} to $0$. If a call stack was popped, push $0$ on to the computation stack.}
+\instprim{ret}{\pbox[t]{\stackcom}{\qquad\quad …rets ret-addr {\rm |} …\x{\spic{rets}}\dots\x1 → \x{\spic{rets}}\dots\x1 \\{\rm or\quad} …rets ret-addr {\rm ‖} …\x{\spic{rets}}\dots\x1 → \x{\spic{rets}}\dots\x1 $0$}}{Pop the current computation stack from the call stack; if the call stack is now empty, pop the current call stack. Set {\tt pc} to \spic{ret-addr}, and move \spic{\x{\spic{rets}}\dots\x1} to the new computation stack. Set {\tt ir} to $0$. If a call stack was popped, push $0$ on to the computation stack.}
 \end{description}
 
-Error handlers and raising errors:
+Error catchers and raising errors:
 
 \begin{description}
-\inst{catch}{\x{\spic{args}}\dots\x1 args rets addr → rets ret-addr {\tt |} \x{\spic{args}}\dots\x1}{Set {\tt ir} to $0$. Perform the action of {\tt call}, then push a new call stack on to the catch stack and move the top-most computation stack from the previous call stack to the new one.}
+\instprim{catch}{\pbox[t]{\stackcom}{…\x{\spic{args}}\dots\x1 args rets addr →\\ …rets ret-addr {\rm ‖} …\x{\spic{args}}\dots\x1}}{Set {\tt ir} to $0$. Perform the action of {\tt call}, then push a new call stack on to the catch stack and move the top-most computation stack from the previous call stack to the new one.}
 
-\inst{throw}{rets ret-addr {\tt |} n → n}{Pop the current call stack from the catch stack.}
+\inst{throw}{rets ret-addr {\rm ‖} …n}{n}{Pop the current call stack from the catch stack.}
 \end{description}
 
 
@@ -324,7 +323,7 @@ Error handlers and raising errors:
 Extra instructions, using the {\tt extra} instruction, offer necessary functionality too rare or slow to deserve a core instruction.
 
 \begin{description}
-\inst{extra}{}{Perform extra instruction {\tt ir}; if {\tt ir} is not the code of a valid extra instruction, throw error $-1$. The stack effect depends on the extra instruction. Extra instruction $0$ performs instruction fetch (see section~\ref{execution}).}
+\inst{extra}{}{}{Perform extra instruction {\tt ir}; if {\tt ir} is not the code of a valid extra instruction, throw error $-1$. The stack effect depends on the extra instruction. Extra instruction $0$ performs instruction fetch (see section~\ref{execution}).}
 \end{description}
 
 
@@ -334,7 +333,7 @@ Extra instructions, using the {\tt extra} instruction, offer necessary functiona
 Traps, using the {\tt trap} instruction, are similar to extra instructions, but are intended to be implementable as add-ons to an implementation, rather than as an integrated part of it. Traps may modify the memory and stack, but may not directly change the values of registers.
 
 \begin{description}
-\inst{trap}{}{Perform trap {\tt ir}; if {\tt ir} is not the code of a valid trap, throw error $-1$. The stack effect depends on the trap. Trap code $-1$ performs instruction fetch (see section~\ref{execution}).}
+\inst{trap}{}{}{Perform trap {\tt ir}; if {\tt ir} is not the code of a valid trap, throw error $-1$. The stack effect depends on the trap. Trap code $-1$ performs instruction fetch (see section~\ref{execution}).}
 \end{description}
 
 
@@ -433,4 +432,4 @@ has for many years been a fount of ideas and criticism for all my work in comput
 
 \end{document}
 
-% LocalWords:  Richards's addr Mit handlee
+% LocalWords:  Richards's addr Mit catchee catchee’s
