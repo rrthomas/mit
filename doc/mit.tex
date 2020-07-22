@@ -214,21 +214,21 @@ These instructions manage the computation stack.
 These instructions fetch and store quantities to and from memory.
 
 \begin{description}
-\inst{load}{addr}{x}{Push the word stored at \spic{addr}, which must be word-aligned.}
-\inst{store}{x addr}{}{Store \spic{x} at \spic{addr}, which must be word-aligned.}
-\inst{load1}{addr}{x}{Push the byte stored at \spic{addr}, setting unused high-order bits to zero, giving \spic{x}.}
-\inst{store1}{x addr}{}{Store the least-significant byte of \spic{x} at \spic{addr}.}
-\inst{load2}{addr}{x}{Push the $2$-byte quantity stored at \spic{addr}, setting unused high-order bits to zero, giving \spic{x}. \spic{addr} must be a multiple of $2$.}
-\inst{store2}{x addr}{}{Store the $2$ least-significant bytes of \spic{x} at \spic{addr}, which must be a multiple of $2$.}
-\inst{load4}{addr}{x}{Push the $4$-byte quantity stored at \spic{addr}, setting any unused high-order bits to zero, giving \spic{x}. \spic{addr} must be a multiple of $4$.}
-\inst{store4}{x addr}{}{Store the $4$ least-significant bytes of \spic{x} at \spic{addr}, which must be a multiple of $4$.}
+\inst{load}{addr}{val}{Push the word \spic{val} stored at \spic{addr}, which must be word-aligned.}
+\inst{store}{val addr}{}{Store \spic{val} at \spic{addr}, which must be word-aligned.}
+\inst{load1}{addr}{val}{Push the byte stored at \spic{addr}, setting unused high-order bits to zero, giving \spic{val}.}
+\inst{store1}{val addr}{}{Store the least-significant byte of \spic{val} at \spic{addr}.}
+\inst{load2}{addr}{val}{Push the $2$-byte quantity stored at \spic{addr}, setting unused high-order bits to zero, giving \spic{val}. \spic{addr} must be a multiple of $2$.}
+\inst{store2}{val addr}{}{Store the $2$ least-significant bytes of \spic{val} at \spic{addr}, which must be a multiple of $2$.}
+\inst{load4}{addr}{val}{Push the $4$-byte quantity stored at \spic{addr}, setting any unused high-order bits to zero, giving \spic{val}. \spic{addr} must be a multiple of $4$.}
+\inst{store4}{val addr}{}{Store the $4$ least-significant bytes of \spic{val} at \spic{addr}, which must be a multiple of $4$.}
 \end{description}
 
 
 \subsection{Constants}
 
 \begin{description}
-\inst{push}{}{x}{Push the word pointed to by {\tt pc} on to the stack, and increment {\tt pc} to point to the following word.}
+\inst{push}{}{val}{Push the word \spic{val} stored at {\tt pc}, and add {\tt word\_bytes} to {\tt pc}.}
 \inst{pushrel}{}{addr}{Like {\tt push} but add {\tt pc} to the value pushed on to the stack.}
 \inst{pushi\_\spic{n}}{}{n}{Push \spic{n} on to the stack. \spic{n} ranges from $-32$ to $31$ inclusive.}
 \inst{pushreli\_\spic{n}}{}{addr}{Push ${\tt pc} + {\tt word\_bytes}\times\spic{n}$ on to the stack. \spic{n} ranges from $-64$ to $63$ inclusive.}
