@@ -100,7 +100,7 @@ Computation is performed with series of nested last in, first out stacks. The {\
 
 The stack of each sort implicitly used by instructions at a given moment is called the {\bf current} stack; the current stack is normally the top-most. Where it is not ambiguous, we refer simply to “the stack”.
 
-Instructions implicitly pop their arguments from and push their results to the current computation stack. Subroutine call and return respectively push and pop a computation stack to and from the call stack; error handling call ({\tt catch}) pushes a call stack to the catch stack, and raising an error ({\tt throw}) pops one or more call stacks from the catch stack.
+Instructions implicitly pop their arguments from and push their results to the current computation stack. Subroutine call and return respectively push and pop a computation stack to and from the call stack; error handling call ({\tt catch}) pushes a call stack to the catch stack, and raising an error ({\tt throw}) pops a call stack from the catch stack.
 
 The effect of an instruction on the catch stack is shown by its {\bf stack effect}:
 
@@ -110,7 +110,7 @@ The effect of an instruction on the catch stack is shown by its {\bf stack effec
 
 \noindent where \spic{before} and \spic{after} are stack pictures showing the items on top of the stack before and after the instruction is executed. An instruction only affects the items shown in its stack effect.
 
-A {\bf stack picture} represents the call stack. Ellipsis is used to elide parts of the stack. A computation stack picture looks like this:
+A {\bf stack picture} represents the catch stack. Ellipsis is used to elide parts of the stack. A computation stack picture looks like this:
 
 \begin{center}
 \spic{…i$_n$\dots i$_1$}
@@ -180,7 +180,7 @@ $-9$ & Division overflow (see section~\ref{arithmetic}). \\
 \end{center}
 \end{table}
 
-\noindent Errors $-2$ to $-9$ inclusive are optional: an implementation choose not to detect these conditions.
+\noindent Errors $-2$ to $-9$ inclusive are optional: an implementation may choose not to detect these conditions.
 
 
 \section{Instructions}
@@ -305,7 +305,7 @@ Subroutine call and return; the quantities called \spic{args} and \spic{rets} ar
 \begin{description}
 \instprim{call}{…\x{\spic{args}}\dots\x1 args rets [addr] {\rm →}\\ …rets ret-addr {\rm |} …\x{\spic{args}}\dots\x1}{Let \spic{ret-addr} be the value of {\tt pc}. Perform the action of {\tt jump}. Move \spic{\x{\spic{args}}\dots\x1} from the caller’s stack to the callee’s.}
 
-\instprim{ret}{\pbox[t]{\stackcom}{\qquad\quad …rets ret-addr {\rm |} …\x{\spic{rets}}\dots\x1 → \x{\spic{rets}}\dots\x1 \\{\rm or\quad} …rets ret-addr {\rm ‖} …\x{\spic{rets}}\dots\x1 → \x{\spic{rets}}\dots\x1 $0$}}{Pop the current computation stack from the call stack; if the call stack is now empty, pop the current call stack. Set {\tt pc} to \spic{ret-addr}, and move \spic{\x{\spic{rets}}\dots\x1} to the new computation stack. Set {\tt ir} to $0$. If a call stack was popped, push $0$ on to the computation stack.}
+\instprim{ret}{\pbox[t]{\stackcom}{\qquad\quad …rets ret-addr {\rm |} …\x{\spic{rets}}\dots\x1 → …\x{\spic{rets}}\dots\x1 \\{\rm or\quad} …rets ret-addr {\rm ‖} …\x{\spic{rets}}\dots\x1 → …\x{\spic{rets}}\dots\x1 $0$}}{Pop the current computation stack from the call stack; if the call stack is now empty, pop the current call stack. Set {\tt pc} to \spic{ret-addr}, and move \spic{\x{\spic{rets}}\dots\x1} to the new computation stack. Set {\tt ir} to $0$. If a call stack was popped, push $0$ on to the computation stack.}
 \end{description}
 
 Error catchers and raising errors:
