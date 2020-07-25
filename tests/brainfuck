@@ -75,8 +75,7 @@ try:
             label()
             jumprel(loop)
             M_word[patch] = label() - patch
-    push(MitErrorCode.OK)
-    extra(THROW)
+    ass(RET)
     M_word[M_word.start + word_bytes] = label() - M_word.start # Patch data pointer.
 except IndexError as e:
     print("Out of memory", file=sys.stderr)

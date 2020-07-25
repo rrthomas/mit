@@ -148,7 +148,9 @@ Execute the instruction given by \textbf{opcode}, \\*
 \hspace{1em}or throw error $-1$ if the opcode is invalid. \-
 \end{tabbing}
 
-\noindent {\bf Instruction fetch} is the action of setting {\tt ir} to the word pointed to by {\tt pc} and making {\tt pc} point to the next word. This is done whenever extra instruction $0$ (see section~\ref{extra}) or trap $-1$ (see section~\ref{trap}) is executed.
+If an error condition is detected in the course of an instruction, the instruction has no effect other than throwing the error.
+
+{\bf Instruction fetch} is the action of setting {\tt ir} to the word pointed to by {\tt pc} and making {\tt pc} point to the next word. This is done whenever extra instruction $0$ (see section~\ref{extra}) or trap $-1$ (see section~\ref{trap}) is executed.
 
 
 \subsection{Errors and termination}
@@ -166,21 +168,22 @@ Status codes are signed numbers. $0$ to $-127$ are reserved for the specificatio
 \bf Code & \bf Meaning \\ \midrule
 $0$ & Normal termination. \\
 $-1$ & Invalid opcode (see section~\ref{encoding}). \\
-$-2$ & Stack overflow. \\
-$-3$ & Invalid stack read. \\
-$-4$ & Invalid stack write. \\
-$-5$ & Invalid memory read. \\
-$-6$ & Invalid memory write. \\
-$-7$ & Address is valid but insufficiently aligned. \\
-$-8$ & Division by zero attempted (see section~\ref{arithmetic}). \\
-$-9$ & Division overflow (see section~\ref{arithmetic}). \\
+$-2$ & Attempt to {\tt throw} $0$ (see section~\ref{control}). \\
+$-3$ & Stack overflow. \\
+$-4$ & Invalid stack read. \\
+$-5$ & Invalid stack write. \\
+$-6$ & Invalid memory read. \\
+$-7$ & Invalid memory write. \\
+$-8$ & Address is insufficiently aligned. \\
+$-9$ & Division by zero attempted (see section~\ref{arithmetic}). \\
+$-10$ & Division overflow (see section~\ref{arithmetic}). \\
  \bottomrule
 \end{tabular}
 \caption{\label{statustable}Status codes}
 \end{center}
 \end{table}
 
-\noindent Errors $-2$ to $-9$ inclusive are optional: an implementation may choose not to detect these conditions.
+\noindent Errors with code~$-3$ to~$-10$ are optional: an implementation may choose not to detect these conditions.
 
 
 \section{Instructions}
@@ -248,8 +251,8 @@ as detailed below.
 \inst{neg}{a}{b}{Negate \spic{a}, giving \spic{b}.}
 \inst{add}{a b}{c}{Add \spic{a} to \spic{b}, giving the sum \spic{c}.}
 \inst{mul}{a b}{c}{Multiply \spic{a} by \spic{b}, giving the product \spic{c}.}
-\inst{divmod}{a b}{q r}{Divide \spic{a} by \spic{b}, giving the quotient \spic{q} and remainder \spic{r}. The quotient is rounded towards zero. If \spic{b} is zero, throw error $-8$. If \spic{a} is $-2^{(8\times{\tt word\_bytes} - 1)}$ and \spic{b} is $-1$, throw error $-9$.}
-\inst{udivmod}{a b}{q r}{Divide \spic{a} by \spic{b}, giving the quotient \spic{q} and remainder \spic{r}. If \spic{b} is zero, throw error $-8$.}
+\inst{divmod}{a b}{q r}{Divide \spic{a} by \spic{b}, giving the quotient \spic{q} and remainder \spic{r}. The quotient is rounded towards zero. If \spic{b} is zero, throw error $-9$. If \spic{a} is $-2^{(8\times{\tt word\_bytes} - 1)}$ and \spic{b} is $-1$, throw error $-10$.}
+\inst{udivmod}{a b}{q r}{Divide \spic{a} by \spic{b}, giving the quotient \spic{q} and remainder \spic{r}. If \spic{b} is zero, throw error $-9$.}
 \end{description}
 
 
@@ -311,9 +314,9 @@ Subroutine call and return; the quantities called \spic{args} and \spic{rets} ar
 Error catchers and raising errors:
 
 \begin{description}
-\instprim{catch}{\pbox[t]{\stackcom}{…\x{\spic{args}}\dots\x1 args rets addr →\\ …rets ret-addr {\rm ‖} …\x{\spic{args}}\dots\x1}}{Set {\tt ir} to $0$. Perform the action of {\tt call}, then push a new call stack on to the catch stack and move the top-most computation stack from the previous call stack to the new one.}
+\instprim{catch}{\pbox[t]{\stackcom}{…\x{\spic{args}}\dots\x1 args rets addr →\\ …rets ret-addr {\rm ‖} …\x{\spic{args}}\dots\x1}}{Set {\tt ir} to $0$. Perform the action of {\tt call}, then push a new call stack on to the catch stack and move the top-most computation stack from the old call stack to the new one.}
 
-\inst{throw}{rets ret-addr {\rm ‖} …n}{n}{Pop the current call stack from the catch stack.}
+\inst{throw}{rets ret-addr {\rm ‖} …n}{n}{If \spic{n} is $0$, throw error~$-2$. Pop the current call stack from the catch stack. Set {\tt pc} to \spic{ret-addr}, and {\tt ir} to $0$. Pop {\tt rets}. Move \spic{n} from the old computation stack to the new one.}
 \end{description}
 
 

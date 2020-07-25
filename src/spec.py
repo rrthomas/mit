@@ -37,15 +37,16 @@ class MitErrorCode(IntEnum):
     '''VM error codes.'''
     OK = 0
     INVALID_OPCODE = -1
-    STACK_OVERFLOW = -2
-    INVALID_STACK_READ = -3
-    INVALID_STACK_WRITE = -4
-    INVALID_MEMORY_READ = -5
-    INVALID_MEMORY_WRITE = -6
-    UNALIGNED_ADDRESS = -7
-    DIVISION_BY_ZERO = -8
+    INVALID_THROW = -2
+    STACK_OVERFLOW = -3
+    INVALID_STACK_READ = -4
+    INVALID_STACK_WRITE = -5
+    INVALID_MEMORY_READ = -6
+    INVALID_MEMORY_WRITE = -7
+    UNALIGNED_ADDRESS = -8
+    DIVISION_BY_ZERO = -9
+    DIVISION_OVERFLOW = -10
     BREAK = -126
-    OK_LONGJMP = -127
 
 
 @unique
@@ -81,7 +82,7 @@ class ExtraInstructions(ActionEnum):
         Action(
             None, # Manage stack manually so that `stack_depth` is
                   # decremented before THROW().
-            Code('''
+            Code('''\
                 POP(n);
                 THROW(n);
             '''),

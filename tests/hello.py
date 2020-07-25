@@ -23,8 +23,7 @@ for i in range(2):
     trap(LIBC)
     push(LibC.WRITE)
     trap(LIBC)
-    push(MitErrorCode.OK)
-    extra(THROW)
+    ass(RET)
     text_addr = label()
 
 ass_bytes(b"Hello, world!\n")
