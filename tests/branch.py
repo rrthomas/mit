@@ -24,17 +24,17 @@ correct.append(assembler.pc)
 push(3) # For later use by padding instructions.
 
 correct.append(assembler.pc)
-jumprel(M.addr + 0x30) # Immediate mode.
-goto(M.addr + 0x30)
+jumprel(M.start + 0x30) # Immediate mode.
+goto(M.start + 0x30)
 
 correct.append(assembler.pc)
-pushrel(M.addr + 0x60)
+pushrel(M.start + 0x60)
 correct.append(assembler.pc)
 ass(JUMP) # Indirect jump.
-goto(M.addr + 0x60)
+goto(M.start + 0x60)
 
 # Try assembling CALL instructions at all byte-in-word offsets.
-target = M.addr + 0x1000
+target = M.start + 0x1000
 for alignment in range(word_bytes + 1):
     label()
     for _ in range(alignment):
@@ -50,34 +50,34 @@ for alignment in range(word_bytes + 1):
     goto(ret_addr)
 
 correct.append(assembler.pc)
-pushrel(M.addr + 0x3000)
+pushrel(M.start + 0x3000)
 correct.append(assembler.pc)
 ass(JUMP)
-goto(M.addr + 0x3000)
+goto(M.start + 0x3000)
 
 correct.append(assembler.pc)
 push(1)
 correct.append(assembler.pc)
-push(M.addr + 0x2fff)
+push(M.start + 0x2fff)
 correct.append(assembler.pc)
 ass(JUMPZ)
 correct.append(assembler.pc)
 push(1)
 correct.append(assembler.pc)
-push(M.addr)
+push(M.start)
 correct.append(assembler.pc)
 ass(JUMPZ)
 correct.append(assembler.pc)
 push(0)
 correct.append(assembler.pc)
-jumprel(M.addr + 0x4008, JUMPZ)
-goto(M.addr + 0x4008)
+jumprel(M.start + 0x4008, JUMPZ)
+goto(M.start + 0x4008)
 
 correct.append(assembler.pc)
 push(0)
 correct.append(assembler.pc)
-jumprel(M.addr + 0x4008 + word_bytes * 8, JUMPZ)
-goto(M.addr + 0x4008 + word_bytes * 8)
+jumprel(M.start + 0x4008 + word_bytes * 8, JUMPZ)
+goto(M.start + 0x4008 + word_bytes * 8)
 
 correct.append(assembler.pc)
 push(42)
@@ -86,45 +86,45 @@ push(1)
 correct.append(assembler.pc)
 push(0)
 correct.append(assembler.pc)
-jumprel(M.addr + 0x260, CALL)
-goto(M.addr + 0x260)
+jumprel(M.start + 0x260, CALL)
+goto(M.start + 0x260)
 
 correct.append(assembler.pc)
 push(0)
 correct.append(assembler.pc)
 push(0)
 correct.append(assembler.pc)
-pushrel(M.addr + 0xd0)
+pushrel(M.start + 0xd0)
 correct.append(assembler.pc)
 ass(CALL)
 # Record address we will return to later.
 ret_addr = label()
-goto(M.addr + 0xd0)
+goto(M.start + 0xd0)
 
 correct.append(assembler.pc)
 push(0)
 correct.append(assembler.pc)
 push(1)
 correct.append(assembler.pc)
-push(M.addr + 0x130)
+push(M.start + 0x130)
 correct.append(assembler.pc)
 ass(CALL)
-goto(M.addr + 0x130)
+goto(M.start + 0x130)
 
 correct.append(assembler.pc)
 push(3)
 correct.append(assembler.pc)
 ass(RET)
-goto(M.addr + 0xd0 + word_bytes * 2)
+goto(M.start + 0xd0 + word_bytes * 2)
 
 correct.append(assembler.pc)
 ass(RET)
 goto(ret_addr)
 
 correct.append(assembler.pc)
-push(M.addr + 0x400)
+push(M.start + 0x400)
 correct.append(assembler.pc)
-push(M.addr + 0x20)
+push(M.start + 0x20)
 correct.append(assembler.pc)
 push(0)
 correct.append(assembler.pc)
@@ -147,13 +147,13 @@ correct.append(assembler.pc)
 ass(SWAP)
 correct.append(assembler.pc)
 ass(CALL)
-goto(M.addr + 0x400)
+goto(M.start + 0x400)
 
 # Test generating a jump with offset of 0, which cannot be generated as a
 # JUMPI instruction. Therefore, the following should assemble PUSHRELI_0 JUMP.
 # First, push a decoy value on the stack: it should not be used.
 correct.append(assembler.pc)
-pushrel(M.addr + 0x400 - word_bytes * 4)
+pushrel(M.start + 0x400 - word_bytes * 4)
 dest = assembler.pc
 correct.append(assembler.pc)
 pushrel(dest)
@@ -180,8 +180,8 @@ def test_callback(handler, stack):
     if skip:
         handler.log("(pc checked before NEXT)")
         return
-    correct_pc = correct[done] - M.addr
-    pc = handler.state.pc - M.addr
+    correct_pc = correct[done] - M.start
+    pc = handler.state.pc - M.start
     handler.log(f"Instruction {done}: pc = {pc:#x} should be {correct_pc:#x}")
     if pc != correct_pc:
         print(f"Error in branch tests: pc = {pc:#x}")

@@ -15,7 +15,7 @@ from mit.globals import *
 text_addr = 0
 # Hack: two-pass assembly to calculate `text_addr`
 for i in range(2):
-    goto(M.addr)
+    goto(M.start)
     # Ensure the same length code is generated on each pass
     push_long(text_addr)
     push(14)
@@ -23,8 +23,7 @@ for i in range(2):
     trap(LIBC)
     push(LibC.WRITE)
     trap(LIBC)
-    push(MitErrorCode.OK)
-    extra(THROW)
+    ass(RET)
     text_addr = label()
 
 ass_bytes(b"Hello, world!\n")

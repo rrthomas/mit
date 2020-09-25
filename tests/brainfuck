@@ -37,7 +37,7 @@ args = parser.parse_args()
 
 
 def inc(): push(1); ass(ADD)
-def dec(): push(1); ass(NEGATE); ass(ADD)
+def dec(): push(1); ass(NEG); ass(ADD)
 def dup(): push(0); ass(DUP)
 def over(): push(1); ass(DUP)
 def libc(fn): push(fn); trap(LIBC)
@@ -75,9 +75,8 @@ try:
             label()
             jumprel(loop)
             M_word[patch] = label() - patch
-    push(MitErrorCode.OK)
-    extra(THROW)
-    M_word[M_word.addr + word_bytes] = label() - M_word.addr # Patch data pointer.
+    ass(RET)
+    M_word[M_word.start + word_bytes] = label() - M_word.start # Patch data pointer.
 except IndexError as e:
     print("Out of memory", file=sys.stderr)
     sys.exit(2)

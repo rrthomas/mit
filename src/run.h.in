@@ -52,16 +52,11 @@
 
 // Raise an error during the execution of an instruction.
 // THROW must be called before writing any state.
-#define THROW(code)                                           \
-    do {                                                      \
-        error = (code);                                       \
-        goto error;                                           \
+#define THROW(code)                                                     \
+    do {                                                                \
+        error = (code) != 0 ? (mit_word_t)code : MIT_ERROR_INVALID_THROW; \
+        goto error;                                                     \
     } while (0)
-
-// We must not return 0 with longjmp(), so instead return MIT_ERROR_OK_LONGJMP,
-// which is not returned by `mit_run()`.
-#define THROW_LONGJMP(error)                                    \
-    longjmp(*jmp_buf_ptr, error ? error : MIT_ERROR_OK_LONGJMP);
 
 // Perform the action of `next`.
 #define DO_NEXT                                 \

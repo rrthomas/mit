@@ -10,45 +10,48 @@
 import os
 import sys
 
-from mit import *
-memory_words = 256
-VM = State(memory_words)
-
+from mit.globals import *
 
 # Test data
-VM.M_word[VM.M_word.addr] = 0x01020304
-VM.M_word[VM.M_word.addr + word_bytes] = 0x05060708
+for i in range(2 * word_bytes):
+    M[M.start + i] = i
 
 # Test results
-addr = [VM.M_word.addr + (memory_words + 1) * word_bytes, VM.M_word.addr, VM.M_word.addr]
-length = [2, 5000, 2]
-correct = ["invalid or unaligned address", "invalid or unaligned address", None]
+tests = [
+    (M_word.end + word_bytes, 2, "invalid or unaligned address"),
+    (M_word.start, len(M_word) + 1, "invalid or unaligned address"),
+    (M_word.start, 2, None),
+]
 
 # Test
-def try_save(file, address, length):
+def try_save(filename, address, length):
     try:
-        VM.save(file, address, length)
-        err = None
+        save(filename, address, length)
+        os.remove(filename)
+        res = None
     except Error as e:
-        err = e.args[0]
-    print(f'State.save(\"{file}\", {address}, {length}) raises error "{err}"', end='')
-    return err
+        res = e.args[0]
+    print(f'State.save(\"{filename}\", {address}, {length}) raises error "{res}"', end='')
+    return res
 
-for i in range(3):
-    res = try_save("saveobj", addr[i], length[i])
-    print(f' should be "{correct[i]}"')
-    if res != correct[i]:
+FILENAME = "saveobj"
+for i, (addr, length, message) in enumerate(tests):
+    res = try_save(FILENAME, addr, length)
+    print(f' should be "{message}"')
+    if res != message:
         print(f"Error in State.save() test {i + 1}")
         sys.exit(1)
 
 RANGE = 4
-load_length = VM.load("saveobj", VM.M_word.addr + RANGE * word_bytes)
-assert load_length == length[2], load_length
-os.remove("saveobj")
+save(FILENAME, addr, RANGE)
+new_addr = M_word.start + RANGE * word_bytes
+load_length = load(FILENAME, new_addr)
+assert load_length == RANGE, load_length
+os.remove(FILENAME)
 
 for i in range(RANGE):
-    old = VM.M_word[VM.M_word.addr + i * word_bytes]
-    new = VM.M_word[VM.M_word.addr + (i + RANGE) * word_bytes]
+    old = M_word[M_word.start + i * word_bytes]
+    new = M_word[new_addr + i * word_bytes]
     print(f"Word {i} of memory is {new}; should be {old}")
     if new != old:
         print("Error in State.save() tests: loaded file does not match data saved")

@@ -352,19 +352,19 @@ int main(int argc, char *argv[])
     {
         FILE *fp = fopen(object_file, "rb");
         if (fp == NULL)
-            die("cannot not open file %s", object_file);
+            die("cannot not open file '%s'", object_file);
         int ret = skip_hashbang(fp);
         if (ret == -1)
-            die("error reading file %s", object_file);
+            die("error reading file '%s'", object_file);
         off_t len = fleno(fp);
         if (len == -1)
-            die("error finding size of file %s", object_file);
+            die("error finding size of file '%s'", object_file);
         if ((size_t)len > memory_words * sizeof(mit_word_t))
-            die("file %s is too big to fit in memory", object_file);
+            die("file '%s' is too big to fit in memory", object_file);
         if ((off_t)fread(memory, 1, len, fp) != len)
-            die("error reading file %s", object_file);
+            die("error reading file '%s'", object_file);
         if (fclose(fp) == EOF)
-            die("error closing file %s", object_file);
+            die("error closing file '%s'", object_file);
     }
 
     // Run

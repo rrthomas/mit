@@ -13,15 +13,6 @@ import sys
 from mit.globals import *
 
 
-def try_load(file):
-    try:
-        load(file)
-        ret = 0
-    except VMError as e:
-        ret = e.args[0]
-    print(f"State.load() returns {ret}", end='')
-    return ret
-
 def word_to_bytes(w):
     l = []
     for i in range(word_bytes):
@@ -45,22 +36,19 @@ def object_file(word_bytes=word_bytes):
 
 test_file_name = 'test.obj'
 
-def load_test(obj, error_code=0):
+def load_test(obj):
     '''
     Write the given binary data to a file, try to load it, and check that
     the error code is as given.
+
+     - obj - bytes
     '''
     with open(test_file_name, 'wb') as h: h.write(obj)
-    res = try_load(test_file_name)
-    print(f"; should be {error_code}")
-    if res != error_code:
+    load(test_file_name)
+    print(f"Word 0 of memory is {M_word[M_word.start]:#x}; should be {test_word():#x}")
+    if M_word[M_word.start] != test_word():
         print(f'Error in State.load() test "{test}"')
         sys.exit(1)
-    if error_code == 0:
-        print(f"Word 0 of memory is {M_word[M_word.addr]:#x}; should be {test_word():#x}")
-        if M_word[M_word.addr] != test_word():
-            print(f'Error in State.load() test "{test}"')
-            sys.exit(1)
 
 
 # Tests
@@ -75,23 +63,22 @@ load_test(obj = b'#!/usr/bin/mit\n' + object_file())
 
 
 # Test ability to load & run saved file with assembler-generated contents
+test = 'Assemble, save, load, run'
 error_code = 42
 push(error_code)
 extra(THROW)
-save(test_file_name, length=label() - M.addr)
-res = try_load(test_file_name)
-print(f"; should be {MitErrorCode.OK}")
-if res != MitErrorCode.OK:
-    print(f'Error in State.load() test "{test}"')
-    sys.exit(1)
+save(test_file_name, length=label() - M.start)
+load(test_file_name)
 try:
     run()
-    print(f'Error in State.load() test "{test}"; run() exited normally')
-    sys.exit(1)
+    res = 0
+    print(f'run() exited normally; should have raised an error')
 except VMError as e:
-    if e.args[0] != error_code:
-        print(f'Error in State.load() test "{test}"; error {e.args[0]}: {e.args[1]}')
-        sys.exit(1)
+    res = e.args[0]
+    print(f'Error is {res}: {e.args[1]}; should be {error_code}')
+if res != error_code:
+    print(f'Error in State.load() test "{test}"')
+    sys.exit(1)
 
 
 # Remove test file

@@ -37,15 +37,16 @@ class MitErrorCode(IntEnum):
     '''VM error codes.'''
     OK = 0
     INVALID_OPCODE = -1
-    STACK_OVERFLOW = -2
-    INVALID_STACK_READ = -3
-    INVALID_STACK_WRITE = -4
-    INVALID_MEMORY_READ = -5
-    INVALID_MEMORY_WRITE = -6
-    UNALIGNED_ADDRESS = -7
-    DIVISION_BY_ZERO = -8
+    INVALID_THROW = -2
+    STACK_OVERFLOW = -3
+    INVALID_STACK_READ = -4
+    INVALID_STACK_WRITE = -5
+    INVALID_MEMORY_READ = -6
+    INVALID_MEMORY_WRITE = -7
+    UNALIGNED_ADDRESS = -8
+    DIVISION_BY_ZERO = -9
+    DIVISION_OVERFLOW = -10
     BREAK = -126
-    OK_LONGJMP = -127
 
 
 @unique
@@ -81,7 +82,7 @@ class ExtraInstructions(ActionEnum):
         Action(
             None, # Manage stack manually so that `stack_depth` is
                   # decremented before THROW().
-            Code('''
+            Code('''\
                 POP(n);
                 THROW(n);
             '''),
@@ -153,7 +154,7 @@ class Instruction:
 instructions = [
     {
         'name': 'NEXT',
-        'opcode': 0x0,
+        'opcode': 0x00,
         'action': Action(
             StackEffect.of([], []),
             Code('DO_NEXT;'),
@@ -165,27 +166,8 @@ instructions = [
     },
 
     {
-        'name': 'NEXTFF',
-        'opcode': 0xff,
-        'action': Action(
-            StackEffect.of([], []),
-            Code('DO_NEXT;'),
-        ),
-        'terminal': Action(
-            None,
-            Code('''\
-                {
-                    mit_word_t inner_error = mit_trap(pc, ir, stack, stack_words, &stack_depth);
-                    if (inner_error != MIT_ERROR_OK)
-                        THROW(inner_error);
-                }
-            '''),
-        ),
-    },
-
-    {
         'name': 'NOT',
-        'opcode': 0x08,
+        'opcode': 0x01,
         'action': Action(
             StackEffect.of(['x'], ['r']),
             Code('r = ~x;'),
@@ -194,7 +176,7 @@ instructions = [
 
     {
         'name': 'AND',
-        'opcode': 0x10,
+        'opcode': 0x02,
         'action': Action(
             StackEffect.of(['x', 'y'], ['r']),
             Code('r = x & y;'),
@@ -203,7 +185,7 @@ instructions = [
 
     {
         'name': 'OR',
-        'opcode': 0x18,
+        'opcode': 0x03,
         'action': Action(
             StackEffect.of(['x', 'y'], ['r']),
             Code('r = x | y;'),
@@ -212,7 +194,7 @@ instructions = [
 
     {
         'name': 'XOR',
-        'opcode': 0x20,
+        'opcode': 0x04,
         'action': Action(
             StackEffect.of(['x', 'y'], ['r']),
             Code('r = x ^ y;'),
@@ -221,7 +203,7 @@ instructions = [
 
     {
         'name': 'LSHIFT',
-        'opcode': 0x28,
+        'opcode': 0x05,
         'action': Action(
             StackEffect.of(['x', 'n'], ['r']),
             Code('''\
@@ -233,7 +215,7 @@ instructions = [
 
     {
         'name': 'RSHIFT',
-        'opcode': 0x30,
+        'opcode': 0x06,
         'action': Action(
             StackEffect.of(['x', 'n'], ['r']),
             Code('''\
@@ -245,7 +227,7 @@ instructions = [
 
     {
         'name': 'ARSHIFT',
-        'opcode': 0x38,
+        'opcode': 0x07,
         'action': Action(
             StackEffect.of(['x', 'n'], ['r']),
             Code('r = ARSHIFT(x, n);'),
@@ -254,7 +236,7 @@ instructions = [
 
     {
         'name': 'POP',
-        'opcode': 0x40,
+        'opcode': 0x08,
         'action': Action(
             StackEffect.of(['_x'], []),
             Code('(void)_x;'),
@@ -263,7 +245,7 @@ instructions = [
 
     {
         'name': 'DUP',
-        'opcode': 0x48,
+        'opcode': 0x09,
         'action': Action(
             StackEffect.of(['x', 'ITEMS', 'COUNT'], ['x', 'ITEMS', 'x']),
             Code(), # No code.
@@ -272,16 +254,16 @@ instructions = [
 
     {
         'name': 'SET',
-        'opcode': 0x50,
+        'opcode': 0x0a,
         'action': Action(
-            StackEffect.of(['_x', 'ITEMS', 'y', 'COUNT'], ['y', 'ITEMS']),
-            Code('(void)_x;'),
+            StackEffect.of(['_x_count', 'ITEMS', 'x0', 'COUNT'], ['x0', 'ITEMS']),
+            Code('(void)_x_count;'),
         ),
     },
 
     {
         'name': 'SWAP',
-        'opcode': 0x58,
+        'opcode': 0x0b,
         'action': Action(
             StackEffect.of(['x', 'ITEMS', 'y', 'COUNT'], ['y', 'ITEMS', 'x']),
             Code(),
@@ -290,7 +272,7 @@ instructions = [
 
     {
         'name': 'JUMP',
-        'opcode': 0x60,
+        'opcode': 0x0c,
         'action': Action(
             StackEffect.of(['addr'], []),
             Code('DO_JUMP(addr);'),
@@ -303,7 +285,7 @@ instructions = [
 
     {
         'name': 'JUMPZ',
-        'opcode': 0x68,
+        'opcode': 0x0d,
         'action': Action(
             StackEffect.of(['flag', 'addr'], []),
             Code('''\
@@ -322,7 +304,7 @@ instructions = [
 
     {
         'name': 'CALL',
-        'opcode': 0x70,
+        'opcode': 0x0e,
         'action': Action(
             None, # Manage stack manually because of changing stack frames.
             Code('''\
@@ -343,7 +325,7 @@ instructions = [
 
     {
         'name': 'RET',
-        'opcode': 0x78,
+        'opcode': 0x0f,
         'action': Action(
             None,
             # `call` or `catch` performs the rest of the action of `ret` on
@@ -354,7 +336,7 @@ instructions = [
 
     {
         'name': 'LOAD',
-        'opcode': 0x80,
+        'opcode': 0x10,
         'action': Action(
             StackEffect.of(['addr'], ['val']),
             Code('''\
@@ -367,7 +349,7 @@ instructions = [
 
     {
         'name': 'STORE',
-        'opcode': 0x88,
+        'opcode': 0x11,
         'action': Action(
             StackEffect.of(['val', 'addr'], []),
             Code('''\
@@ -380,7 +362,7 @@ instructions = [
 
     {
         'name': 'LOAD1',
-        'opcode': 0x90,
+        'opcode': 0x12,
         'action': Action(
             StackEffect.of(['addr'], ['val']),
             Code('val = (mit_uword_t)*((uint8_t *)addr);'),
@@ -389,7 +371,7 @@ instructions = [
 
     {
         'name': 'STORE1',
-        'opcode': 0x98,
+        'opcode': 0x13,
         'action': Action(
             StackEffect.of(['val', 'addr'], []),
             Code('*(uint8_t *)addr = (uint8_t)val;'),
@@ -398,7 +380,7 @@ instructions = [
 
     {
         'name': 'LOAD2',
-        'opcode': 0xa0,
+        'opcode': 0x14,
         'action': Action(
             StackEffect.of(['addr'], ['val']),
             Code('''\
@@ -411,7 +393,7 @@ instructions = [
 
     {
         'name': 'STORE2',
-        'opcode': 0xa8,
+        'opcode': 0x15,
         'action': Action(
             StackEffect.of(['val', 'addr'], []),
             Code('''\
@@ -424,7 +406,7 @@ instructions = [
 
     {
         'name': 'LOAD4',
-        'opcode': 0xb0,
+        'opcode': 0x16,
         'action': Action(
             StackEffect.of(['addr'], ['val']),
             Code('''\
@@ -437,7 +419,7 @@ instructions = [
 
     {
         'name': 'STORE4',
-        'opcode': 0xb8,
+        'opcode': 0x17,
         'action': Action(
             StackEffect.of(['val', 'addr'], []),
             Code('''\
@@ -450,55 +432,55 @@ instructions = [
 
     {
         'name': 'PUSH',
-        'opcode': 0xc0,
+        'opcode': 0x18,
         'action': Action(
-            StackEffect.of([], ['n']),
-            Code('n = *pc++;'),
+            StackEffect.of([], ['val']),
+            Code('val = *pc++;'),
         ),
     },
 
     {
         'name': 'PUSHREL',
-        'opcode': 0xc8,
+        'opcode': 0x19,
         'action': Action(
-            StackEffect.of([], ['n']),
+            StackEffect.of([], ['addr']),
             Code('''\
-                n = (mit_uword_t)pc;
-                n += *pc++;
+                addr = (mit_uword_t)pc + *pc;
+                pc++;
             '''),
         ),
     },
 
     {
-        'name': 'NEGATE',
-        'opcode': 0xd0,
+        'name': 'NEG',
+        'opcode': 0x1a,
         'action': Action(
-            StackEffect.of(['a'], ['r']),
-            Code('r = -a;'),
+            StackEffect.of(['a'], ['b']),
+            Code('b = -(mit_uword_t)a;'),
         ),
     },
 
     {
         'name': 'ADD',
-        'opcode': 0xd8,
+        'opcode': 0x1b,
         'action': Action(
-            StackEffect.of(['a', 'b'], ['r']),
-            Code('r = a + b;'),
+            StackEffect.of(['a', 'b'], ['c']),
+            Code('c = (mit_uword_t)a + (mit_uword_t)b;'),
         ),
     },
 
     {
         'name': 'MUL',
-        'opcode': 0xe0,
+        'opcode': 0x1c,
         'action': Action(
-            StackEffect.of(['a', 'b'], ['r']),
-            Code('r = a * b;'),
+            StackEffect.of(['a', 'b'], ['c']),
+            Code('c = (mit_uword_t)a * (mit_uword_t)b;'),
         ),
     },
 
     {
         'name': 'EQ',
-        'opcode': 0xe8,
+        'opcode': 0x1d,
         'action': Action(
             StackEffect.of(['a', 'b'], ['flag']),
             Code('flag = a == b;'),
@@ -507,7 +489,7 @@ instructions = [
 
     {
         'name': 'LT',
-        'opcode': 0xf0,
+        'opcode': 0x1e,
         'action': Action(
             StackEffect.of(['a', 'b'], ['flag']),
             Code('flag = a < b;'),
@@ -516,13 +498,38 @@ instructions = [
 
     {
         'name': 'ULT',
-        'opcode': 0xf8,
+        'opcode': 0x1f,
         'action': Action(
             StackEffect.of(['a', 'b'], ['flag']),
             Code('flag = (mit_uword_t)a < (mit_uword_t)b;'),
         ),
     },
 ]
+# Compute the final opcodes
+for i in instructions:
+    i['opcode'] <<= 3
+
+# `trap`/`nextff`
+instructions.extend([
+    {
+        'name': 'NEXTFF',
+        'opcode': 0xff,
+        'action': Action(
+            StackEffect.of([], []),
+            Code('DO_NEXT;'),
+        ),
+        'terminal': Action(
+            None,
+            Code('''\
+                {
+                    mit_word_t inner_error = mit_trap(pc, ir, stack, stack_words, &stack_depth);
+                    if (inner_error != MIT_ERROR_OK)
+                        THROW(inner_error);
+                }
+            '''),
+        ),
+    }
+])
 
 # `pushi`
 instructions.extend(

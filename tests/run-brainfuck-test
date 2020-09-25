@@ -35,8 +35,8 @@ with open(brainfuck_file, 'rb') as f:
         raise
 VM = State()
 VM.load(object_file)
-VM.dump(VM.M.addr)
-VM.disassemble(VM.M.addr, 64)
+VM.dump(VM.M.start)
+VM.disassemble(VM.M.start, 64)
 f = io.BytesIO()
 with stdout_redirector(f):
     VM.run()

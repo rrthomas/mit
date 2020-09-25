@@ -13,7 +13,7 @@ from mit.globals import *
 
 
 # Test code
-final_pc = M.addr + word_bytes
+final_pc = M.start + word_bytes
 error_code = 42
 push(error_code)
 extra(THROW)

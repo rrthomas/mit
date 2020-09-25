@@ -21,6 +21,8 @@ class Memory:
      - buffer - a value returned by ctypes.create_string_buffer - the memory.
      - element_size - int - the number of bytes read/written at a time.
      - view - the underlying memoryview.
+     - start - int - the start address of the memory.
+     - end - int - the end address of the memory.
 
     Memory addresses are specified in bytes. Only addresses that are multiples
     of `element_size` are valid.
@@ -38,11 +40,8 @@ class Memory:
         self.view = memoryview(self.buffer).cast('B')
         if element_size == word_bytes:
             self.view = self.view.cast('N')
-
-    @property
-    def addr(self):
-        'The base address of the memory.'
-        return addressof(self.buffer)
+        self.start = addressof(self.buffer)
+        self.end = self.start + len(self) * self.element_size
 
     def __len__(self):
         return len(self.view)
@@ -59,7 +58,7 @@ class Memory:
             )
         else:
             assert addr % self.element_size == 0
-            index = (addr - self.addr) // self.element_size
+            index = (addr - self.start) // self.element_size
             if index < 0 or index >= len(self):
                 raise IndexError(addr)
             return index

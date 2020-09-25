@@ -49,7 +49,7 @@ class State:
             # used.
             self.M = Memory(create_string_buffer(memory_words * word_bytes))
             self.M_word = Memory(self.M.buffer, element_size=word_bytes)
-            self.pc = self.M.addr
+            self.pc = self.M.start
         else:
             self.pc = None
         if args is not None:
@@ -93,13 +93,13 @@ class State:
                 print(f"Error code {ret} was returned after {steps} at pc={self.pc:#x}")
                 raise
 
-    def load(self, file, addr=None):
+    def load(self, filename, addr=None):
         '''
         Load a binary file at the given address, which must be in `M`.
-        `addr` defaults to `M.addr`. The length of `file` must be a whole
+        `addr` defaults to `M.start`. The length of the file must be a whole
         number of words, not including any "#!" line.
 
-        Returns the length of `file` in words.
+        Returns the length of the file in words.
         '''
         def strip_hashbang(data):
             if data[:2] != b'#!':
@@ -109,42 +109,42 @@ class State:
             except ValueError: # No \n, so just a #! line
                 return b''
 
-        with open(file, 'rb') as h:
+        with open(filename, 'rb') as h:
             data = h.read()
         data = strip_hashbang(data)
         if len(data) % word_bytes != 0:
-            raise Error(f'file {file} is not a whole number of words')
+            raise Error(f"file '{filename}' is not a whole number of words")
         assert self.M is not None
         if addr is None:
-            addr = self.M.addr
+            addr = self.M.start
         end_addr = addr + len(data)
-        if end_addr > self.M.addr + len(self.M):
-            raise Error(f'file {file} does not fit in memory at {addr:#x}')
+        if end_addr > self.M.end:
+            raise Error(f"file '{filename}' does not fit in memory at {addr:#x}")
         try:
             self.M[addr:end_addr] = data
         except IndexError:
             raise Error("invalid or unaligned address")
         return len(data) // word_bytes
 
-    def save(self, file, addr=None, length=None):
+    def save(self, filename, addr=None, length=None):
         '''
         Save a binary image of part of `M`.
 
-         - addr - int - start address, defaults to `self.M.addr`.
+         - addr - int - start address, defaults to `self.M.start`.
          - length - int - length in words, defaults to saving up to the end of
            `self.M`.
         '''
         if addr is None:
-            addr = self.M.addr
+            addr = self.M.start
         if length is None:
-            end_addr = self.M.addr + len(self.M)
+            end_addr = self.M.end
         else:
             end_addr = addr + length * word_bytes
         try:
             data = bytes(self.M[addr:end_addr])
         except IndexError:
             raise Error("invalid or unaligned address")
-        with open(file, 'wb') as h:
+        with open(filename, 'wb') as h:
             h.write(data)
 
     def disassemble(self, start=None, length=None, end=None, file=sys.stdout):
@@ -166,8 +166,8 @@ class State:
         if length is not None:
             end = start + length * word_bytes
         elif end is None:
-            end = min(start + 64 * word_bytes, self.M.addr + len(self.M))
-        assert self.M.addr <= start <= end <= self.M.addr + len(self.M)
+            end = min(start + 64 * word_bytes, self.M.end)
+        assert self.M.start <= start <= end <= self.M.end
 
         chunk = 16
         p = start - start % chunk

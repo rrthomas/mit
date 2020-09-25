@@ -16,7 +16,7 @@ from mit_test import *
 
 # Test results
 byte_bit = 8
-last_word = M_word.addr + (len(M_word) - 1) * word_bytes
+last_word = M_word.end - word_bytes
 magic_number = 0xf201
 endism = 0 if byteorder == 'little' else 1
 correct = []
@@ -45,7 +45,7 @@ push(last_word + (word_bytes - 2) * endism + 1 * (1 - endism))
 correct.append([last_word + (word_bytes - 2) * endism + 1 * (1 - endism)])
 ass(LOAD1)
 correct.append([magic_number >> 8])
-push(M.addr + len(M) - ((word_bytes - 1) * endism + 1))
+push(M.end - ((word_bytes - 1) * endism + 1))
 correct.append([magic_number >> 8, last_word + (word_bytes - 1) * (1 - endism)])
 ass(STORE1)
 correct.append([])
