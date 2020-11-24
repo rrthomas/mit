@@ -1,27 +1,78 @@
 version: "{build}"
 
+services:
+  - docker
+
 environment:
   global:
     VERBOSE: 1 # Get test logs in output
   matrix:
-    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
+    - APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu
+    - APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu2004
+    - APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu
+      ASAN: 'yes'
+      LSAN_OPTIONS: verbosity=1:log_threads=1
+    - APPVEYOR_BUILD_WORKER_IMAGE: macos
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
       MSYSTEM: MSYS
-    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
       MSYSTEM: MINGW64
-    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
       MSYSTEM: MINGW32
+    - APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu
+      BASE_IMAGE: i386/ubuntu
+      BENCH_TEST: yes
+      <<: *test_in_container
+    - APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu
+      CC: clang
+      BASE_IMAGE: i386/ubuntu
+      BENCH_TEST: yes
+      <<: *test_in_container
+
+for:
+-
+  matrix:
+    only:
+      - APPVEYOR_BUILD_WORKER_IMAGE: /Ubuntu/
+  init:
+    - sudo apt-get -y install python3.8 texlive-latex-extra texlive-science texlive-fonts-recommended texlive-fonts-extra tex-gyre help2man latexmk hevea
+-
+  matrix:
+    only:
+      - APPVEYOR_BUILD_WORKER_IMAGE: macos
+  init:
+    - brew install help2man
+-
+  matrix:
+    only:
+      - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
+  init:
+    - cmd: git config --global core.autocrlf input
 
 test: off
-
-init:
-  - cmd: git config --global core.autocrlf input
 
 install:
   - cmd: C:\msys64\usr\bin\bash.exe -lc "cd c:/projects/mit && ./build-aux/appveyor-install.sh"
 
-# `git rm-symlinks` in pforth (defined in build-aux/appveyor-install.sh) to
-# fix symlinks for Windows.
 build_script:
+  # `git rm-symlinks` in pforth (defined in build-aux/appveyor-install.sh)
+  # to fix symlinks for Windows.
   - cmd: C:\msys64\usr\bin\bash.exe -lc "cd c:/projects/mit && ./bootstrap && cd src/specializer/pforth && git rm-symlinks && cd ../../.. && ./configure --enable-silent-rules && make"
   - cmd: C:\msys64\usr\bin\bash.exe -lc "if [[ \"$MSYSTEM\" = \"MSYS\" ]]; then cd c:/projects/mit && make install; fi"
   - cmd: C:\msys64\usr\bin\bash.exe -lc "cd c:/projects/mit && make check"
+  - sh: ./build-aux/appveyor-build.sh
+  - sh: if [[ "$BENCH_TEST" == "yes" ]]; then make bench; fi
+
+# Setup for Docker adapted from https://github.com/junaruga/ci-multi-arch-test
+.com.github.junaruga.ci-multi-arch-test.jobs-definitions:
+  - &test_in_container
+    install:
+      - ls /proc/sys/fs/binfmt_misc/
+      - |
+        if [ "$(uname -m)" = x86_64 ]; then
+          docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+        fi
+      - ls /proc/sys/fs/binfmt_misc/
+      - docker build --tag test --build-arg BASE_IMAGE=${BASE_IMAGE} .
+    build_script:
+      - docker run --tty --rm --env CC=${CC} test ./build-aux/appveyor-build.sh
