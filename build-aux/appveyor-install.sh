@@ -76,5 +76,6 @@ case $MSYSTEM in
         ;;
 esac
 
+pacman --noconfirm -S libtool autoconf automake help2man
 $PREFIX/bin/python -m ensurepip
 $PREFIX/bin/python -m pip install pyyaml
