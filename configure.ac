@@ -104,7 +104,7 @@ AC_ARG_ENABLE([gcc-warnings],
   [gl_gcc_warnings=yes]
 )
 if test "$gl_gcc_warnings" = yes; then
-  dnl Set up the list of undesired warnings.
+  # Set up the list of undesired warnings.
   nw=
   nw="$nw -Wvla"              # We require C99, so variable-length arrays are OK
   nw="$nw -Wsystem-headers"   # Don’t let system headers trigger warnings
@@ -112,13 +112,13 @@ if test "$gl_gcc_warnings" = yes; then
 
   gl_MANYWARN_ALL_GCC([warnings])
 
-  dnl Enable all GCC warnings not in this list.
+  # Enable all GCC warnings not in this list.
   gl_MANYWARN_COMPLEMENT([warnings], [$warnings], [$nw])
   for w in $warnings; do
     gl_WARN_ADD([$w])
   done
 
-  dnl Add some more safety measures
+  # Add some more safety measures
   gl_WARN_ADD([-Wimplicit-fallthrough])
   gl_WARN_ADD([-Wswitch-default])
 
@@ -194,8 +194,8 @@ AM_CONDITIONAL([USING_PACKAGE_SUFFIX], [test "$gl_package_suffix" = "yes"])
 
 # pForth tests, run if the pforth source tree is present and Mit is
 # configured compatibly with pForth.
-dnl AM_CONDITIONAL([USING_PFORTH],
-dnl    [test -d $srcdir/src/specializer/pforth -a "$SIZEOF_SIZE_T" = 4 -a "$ac_cv_c_bigendian" != "yes"])
+# AM_CONDITIONAL([USING_PFORTH],
+#    [test -d $srcdir/src/specializer/pforth -a "$SIZEOF_SIZE_T" = 4 -a "$ac_cv_c_bigendian" != "yes"])
 
 # Generate output files
 AC_CONFIG_HEADERS([config.h])
