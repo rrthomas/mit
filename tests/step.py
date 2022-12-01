@@ -27,7 +27,7 @@ for i in range(iterations):
 
 print(f"pc should now be {final_pc - M.start:#x}")
 if VM.pc != final_pc:
-    print(f"Error in single_step() tests: pc = {VM.pc - M.start:#x}")
+    print(f"Error in step() tests: pc = {VM.pc - M.start:#x}")
     sys.exit(1)
 
-print("single_step() tests ran OK")
+print("step() tests ran OK")
