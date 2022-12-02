@@ -9,7 +9,7 @@ See `src/specializer/specializer.am`.
 ## Testing
 
 ASAN (Address Sanitizer) is recommended for finding various classes of bug.
-See `.travis.yml` for sample settings to configure GCC to use ASAN. Note
+See `.appveyor.yml` for sample settings to configure GCC to use ASAN. Note
 the use of `PY_LOG_ENV` to set `LD_PRELOAD` and `PYTHONMALLOC` for the
 tests. This avoids needing to set these variables globally.
 
@@ -25,11 +25,14 @@ make check TIME="operf --events INST_RETIRED:100000"
 
 ## Using Docker
 
-To run a non-native version of mit; for example, to run 32-bit Mit on a 64-bit machine, which is currently necessary to run pForth, Docker is recommended. A `Dockerfile` is provided to run 32-bit Mit.
+To run a non-native version of mit; for example, to run 32-bit Mit on a
+64-bit machine, which is currently necessary to run pForth, Docker is
+recommended. A `Dockerfile` is provided to run 32-bit Mit.
 
-See `.travis.yml` for the recipe used to test Mit on arches unsupported by Travis.
+See `.appveyor.yml` for the recipe used to test Mit on arches unsupported by Travis.
 
-To develop Mit, it's more convenient to use a bind mount to share a git checkout between the host system (editor etc.) and Docker container, thus:
+To develop Mit, it's more convenient to use a bind mount to share a git
+checkout between the host system (editor etc.) and Docker container, thus:
 
 ```
 docker build --build-arg BASE_IMAGE=i386/ubuntu --tag test - < Dockerfile
