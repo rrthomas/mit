@@ -1,6 +1,6 @@
 # Top-level Makefile.am
 #
-# (c) Mit authors 2011-2019
+# (c) Mit authors 2011-2024
 #
 # The package is distributed under the MIT/X11 License.
 #
@@ -12,7 +12,6 @@ SUBDIRS = lib src python tests doc
 ACLOCAL_AMFLAGS = -I m4
 
 EXTRA_DIST = \
-	README.md			\
 	m4/gnulib-cache.m4		\
 	build-aux/man-include.man.in	\
 	$(top_srcdir)/.version
